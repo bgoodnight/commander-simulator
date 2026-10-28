@@ -49,3 +49,11 @@ python make_report.py
 - Keep the repository private while exploring experimental card/deck simulations. Avoid committing personal credentials or unrelated personal data.
 
 **Project checkpoint:** 2026-10-28 · first GitHub source import from verified local + Google Drive archives.
+
+
+## V6 diagnostic integration (October 28, 2026)
+
+- [Real-deck integration README](simulator/v6_real_deck/README.md) and [assessment](simulator/v6_real_deck/ASSESSMENT.md): actual Magnus v1.6 library and commander zone against three stochastic v5 opponents.
+- Run `python simulator/v6_real_deck/tests.py` (21 tests); from that folder, `python run_narratives.py` regenerates three random-opening games plus one explicitly forced-opening diagnostic.
+- **Do not infer win rates or propose deck changes yet:** 38 named nonland cards remain unimplemented, and selection, stack/priority, card-specific mechanics, and win conditions remain incomplete.
+- The v3/v4/v5 source code is unchanged; GitHub's prior v5 import commit can be restored or this v6 change reverted without force-pushing.

@@ -1,0 +1,105 @@
+[
+  {
+    "name": "01_unforced_mixed",
+    "seed": 102,
+    "opening_forced": false,
+    "opponents": [
+      "aggro",
+      "control",
+      "combo"
+    ],
+    "ending_round": null,
+    "outcome": "turn_limit",
+    "magnus_life": 28,
+    "magnus_casts": 2,
+    "magnus_spells_cast": 10,
+    "final_tokens": 2,
+    "named_support_cast": {
+      "supported": 7,
+      "approx": 3
+    },
+    "unsupported_remaining": 4,
+    "counters_used": 1,
+    "removal_used": 1,
+    "losses": []
+  },
+  {
+    "name": "02_unforced_pressure",
+    "seed": 105,
+    "opening_forced": false,
+    "opponents": [
+      "aggro",
+      "tokens",
+      "ramp_stompy"
+    ],
+    "ending_round": null,
+    "outcome": "turn_limit",
+    "magnus_life": -1,
+    "magnus_casts": 1,
+    "magnus_spells_cast": 6,
+    "final_tokens": 0,
+    "named_support_cast": {
+      "supported": 4,
+      "approx": 2
+    },
+    "unsupported_remaining": 0,
+    "counters_used": 0,
+    "removal_used": 0,
+    "losses": [
+      {
+        "round": 9,
+        "seat": 0,
+        "archetype": "magnus",
+        "cause": "combat"
+      }
+    ]
+  },
+  {
+    "name": "03_unforced_magnus",
+    "seed": 103,
+    "opening_forced": false,
+    "opponents": [
+      "control",
+      "spellslinger",
+      "midrange"
+    ],
+    "ending_round": null,
+    "outcome": "turn_limit",
+    "magnus_life": 27,
+    "magnus_casts": 2,
+    "magnus_spells_cast": 7,
+    "final_tokens": 2,
+    "named_support_cast": {
+      "supported": 6,
+      "approx": 1
+    },
+    "unsupported_remaining": 5,
+    "counters_used": 1,
+    "removal_used": 1,
+    "losses": []
+  },
+  {
+    "name": "04_forced_opening_diagnostic",
+    "seed": 404,
+    "opening_forced": true,
+    "opponents": [
+      "control",
+      "combo",
+      "tokens"
+    ],
+    "ending_round": null,
+    "outcome": "turn_limit",
+    "magnus_life": 27,
+    "magnus_casts": 2,
+    "magnus_spells_cast": 8,
+    "final_tokens": 6,
+    "named_support_cast": {
+      "supported": 6,
+      "approx": 2
+    },
+    "unsupported_remaining": 6,
+    "counters_used": 1,
+    "removal_used": 0,
+    "losses": []
+  }
+]
