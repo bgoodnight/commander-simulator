@@ -1,8 +1,13 @@
 # Commander Simulator
 
-A reproducible, modular four-player **Magic: The Gathering Commander** simulation project. Current milestone: **v11** (October 28, 2026): explicit ordinary turn steps and simultaneous ordinary combat damage, plus Abrade, Capsize/buyback, Arcane Adaptation's Wizard choice and upgraded Frantic Search. Shared zones, source-ID mana and typed priority remain active. **This is not a complete Magic rules engine, and the results are not validated deck win rates.**
+A reproducible, modular four-player **Magic: The Gathering Commander** simulation project. Current milestone: **v12** (October 28, 2026): card-by-card Magnus coverage audit, multiple blockers, trample, first strike and double strike. Live zones, source-ID mana, typed priority and the v11 card expansion remain active. **This is not a complete Magic rules engine, and the results are not validated deck win rates.**
 
 ## Current architecture and scope
+
+- [V12 combat/audit README](simulator/v12_combat/README.md) — allocation choices, trample and two damage steps.
+- [Magnus card coverage and triage](simulator/v12_combat/CARD_COVERAGE.md) — all 100 cards: 23 supported subsets, 25 partial and 35 unsupported distinct names.
+- [V12 interaction report](simulator/v12_combat/INTERACTION_REPORT.md) — six targeted narratives, source payments and the live sweep.
+- [V12 assessment](simulator/v12_combat/ASSESSMENT.md) — validation, timing and remaining limits.
 
 - [V11 steps/cards README](simulator/v11_steps/README.md) — ordinary turn windows, combat batch and the focused card/rule expansion.
 - [V11 interaction report](simulator/v11_steps/INTERACTION_REPORT.md) — observed results from five targeted stories and the seeded sweep.
@@ -21,7 +26,7 @@ A reproducible, modular four-player **Magic: The Gathering Commander** simulatio
 - [Real Magnus deck integration](simulator/v6_real_deck/README.md) — original partial real 99-card adapter.
 - [Magnus v1.6 decklist](decklists/magnus_thousand_sons_v1_6.txt), [v3 card catalog](simulator/v3_magnus_modular/cards.json), and [candidate combo lines](simulator/v3_magnus_modular/combos.json).
 
-**Live v11 limits:** one detailed Magnus deck plus synthetic opponents. Ordinary steps, priority around attacks/blocks, both main phases and one simultaneous ordinary combat damage batch are live. The card expansion covers three new named cards and one upgraded effect; it does not mark the whole deck complete. One blocker per attacker, limited combat keywords, selected card choices/cost forms, partial land/selection adapters and temporary-token cleanup remain boundaries. No multi-block, first/double strike, trample, planeswalker loyalty, copied spells, commander damage or verified loops. Unsupported behavior fails closed. No deck win-rate conclusions are supported.
+**Live v12 limits:** one detailed Magnus deck plus synthetic opponents. Explicit steps, priority, simultaneous batches, multiple blockers, trample and first/double strike are live. Each blocker still blocks only one attacker. No deathtouch/lifelink, damage prevention, planeswalker/battle attacks, commander damage, attachments, live spell copies or verified loops. Named-card, land/selection and delayed-trigger coverage remains partial as documented in the audit. Synthetic keyword fixtures validate mechanics without claiming additional named-card support. No deck win-rate conclusions are supported.
 
 ## Run all tests
 
@@ -31,21 +36,22 @@ Requires Python 3.10+ and only the standard library:
 python run_all_tests.py
 ```
 
-**372 tests across eleven suites** (v3:20, v4:15, v5:21, v6:21, v7:50, v8:32, v9a:29, v9b:34, v9c:49, v10:51, v11:50). The GitHub Actions workflow tests on Python 3.11, 3.12, and 3.13.
+**422 tests across twelve suites** (v3:20, v4:15, v5:21, v6:21, v7:50, v8:32, v9a:29, v9b:34, v9c:49, v10:51, v11:50, v12:50). The GitHub Actions workflow tests on Python 3.11, 3.12, and 3.13.
 
-Run live v11 and reproduce validation:
+Run live v12 and reproduce validation:
 
 ```bash
-python simulator/v11_steps/tests.py
-python simulator/v11_steps/validate.py
+python simulator/v12_combat/tests.py
+python simulator/v12_combat/audit.py
+python simulator/v12_combat/validate_combat.py
 ```
 
-`validate.py` writes five targeted interaction stories, two unforced live replays, an interaction report and `validation_results.json`. By default it checks 200 twelve-round games across all Magnus seats and compares 20 eight-round timing samples per engine. These are infrastructure diagnostics.
+The v12 validator writes six targeted interaction stories and their JSON diagnostics, an interaction report and validation_results.json. By default it checks 200 twelve-round games across all Magnus seats and compares 12 eight-round timing samples per engine. These are infrastructure diagnostics.
 
 ## Preservation and methodology
 
-Milestones are versioned under `simulator/`. The pre-v11 rollback point is `a1c3aa774b97708e5e16bd972255365ec82738f0`. V11 adds its own directory plus backward-compatible derived-subtype, announced-action and trigger-operation seams in the shared code. Historical suites pass; dated manifests remain checkpoint records. Earlier engines remain standalone; old synthetic calibration reports are **not empirical Commander metagame data**. The user prioritizes rule correctness, consistent shared state, narrated diagnostics, card coverage accounting, bounded computation, and normal rollback-safe commits. The [Google Drive recovery folder](https://drive.google.com/drive/folders/1Jy4spPc58pOKSvDOAwQXaBVlj_4pVU5Y) retains dated checkpoints.
+Milestones are versioned under `simulator/`. The pre-v12 rollback point is `12ea213bc140a84fcb917e26a8ed6c5104cff5f5`. V12 adds its own directory and a backward-compatible damage-step scheduling hook to the v11 driver. Historical suites pass; dated manifests remain checkpoint records. Earlier engines remain standalone; old synthetic calibration reports are **not empirical Commander metagame data**. The user prioritizes rule correctness, consistent shared state, narrated diagnostics, card coverage accounting, bounded computation, and normal rollback-safe commits. The [Google Drive recovery folder](https://drive.google.com/drive/folders/1Jy4spPc58pOKSvDOAwQXaBVlj_4pVU5Y) retains dated checkpoints.
 
 ## Next milestone
 
-Expand verified card/activation coverage in similarly small interaction-tested batches. Combat keywords/multiple blockers, delayed triggers, more land abilities and broader card choices remain gates before several detailed decks and statistical deck comparisons. Keep narrated diagnostics and independent state/payment/priority audits while profiling the added windows and choices.
+Use the coverage audit to prioritize exact selection/land behavior and missing text on live engines, then copying, creature activations/tutors, graveyard casting and combo validation. Deathtouch/lifelink and attachments remain future rule milestones. Keep source-paid narratives and independent state/payment/priority checks while profiling larger runs.

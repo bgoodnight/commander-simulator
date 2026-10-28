@@ -1,0 +1,295 @@
+{
+  "title": "Two damage steps create two Magnus triggers",
+  "forced": true,
+  "outcome": "Actual Magnus received an explicitly synthetic double-strike grant. Each 4-damage hit queued its own printed token trigger. Priority resolved one Spawn after each step: 8 player damage, 2 Spawn total.",
+  "consistent": true,
+  "fixture_limits": "Synthetic combat tokens or keyword grants; real-source spell costs; conserved physical inventories.",
+  "combat_batches": [
+    {
+      "stage": "first_strike_damage",
+      "attackers": [
+        [
+          523,
+          1,
+          false,
+          []
+        ]
+      ],
+      "assignments": [
+        {
+          "source": 523,
+          "controller": 0,
+          "creature_damage": {},
+          "player_damage": 4,
+          "defender": 1
+        }
+      ],
+      "creature_damage": {},
+      "player_damage": {
+        "1": 4
+      }
+    },
+    {
+      "stage": "combat_damage",
+      "attackers": [
+        [
+          523,
+          1,
+          false,
+          []
+        ]
+      ],
+      "assignments": [
+        {
+          "source": 523,
+          "controller": 0,
+          "creature_damage": {},
+          "player_damage": 4,
+          "defender": 1
+        }
+      ],
+      "creature_damage": {},
+      "player_damage": {
+        "1": 4
+      }
+    }
+  ],
+  "steps": [
+    [
+      1,
+      0,
+      "first_strike_damage"
+    ],
+    [
+      1,
+      0,
+      "combat_damage"
+    ]
+  ],
+  "payments": [
+    {
+      "seat": 0,
+      "cost": [
+        3,
+        1,
+        1
+      ],
+      "sources": [
+        434,
+        436,
+        438,
+        440,
+        446
+      ],
+      "unused": [
+        0,
+        0,
+        0
+      ]
+    }
+  ],
+  "priority": [
+    [
+      "push",
+      1,
+      "spell",
+      0,
+      "Magnus the Red"
+    ],
+    [
+      "pass",
+      0,
+      [
+        1
+      ]
+    ],
+    [
+      "pass",
+      1,
+      [
+        1
+      ]
+    ],
+    [
+      "pass",
+      2,
+      [
+        1
+      ]
+    ],
+    [
+      "pass",
+      3,
+      [
+        1
+      ]
+    ],
+    [
+      "resolve",
+      1,
+      "spell",
+      0
+    ],
+    [
+      "pass",
+      0,
+      []
+    ],
+    [
+      "pass",
+      1,
+      []
+    ],
+    [
+      "pass",
+      2,
+      []
+    ],
+    [
+      "pass",
+      3,
+      []
+    ],
+    [
+      "push",
+      2,
+      "triggered",
+      0,
+      "Magnus the Red: create_token"
+    ],
+    [
+      "pass",
+      0,
+      [
+        2
+      ]
+    ],
+    [
+      "pass",
+      1,
+      [
+        2
+      ]
+    ],
+    [
+      "pass",
+      2,
+      [
+        2
+      ]
+    ],
+    [
+      "pass",
+      3,
+      [
+        2
+      ]
+    ],
+    [
+      "resolve",
+      2,
+      "triggered",
+      0
+    ],
+    [
+      "pass",
+      0,
+      []
+    ],
+    [
+      "pass",
+      1,
+      []
+    ],
+    [
+      "pass",
+      2,
+      []
+    ],
+    [
+      "pass",
+      3,
+      []
+    ],
+    [
+      "push",
+      3,
+      "triggered",
+      0,
+      "Magnus the Red: create_token"
+    ],
+    [
+      "pass",
+      0,
+      [
+        3
+      ]
+    ],
+    [
+      "pass",
+      1,
+      [
+        3
+      ]
+    ],
+    [
+      "pass",
+      2,
+      [
+        3
+      ]
+    ],
+    [
+      "pass",
+      3,
+      [
+        3
+      ]
+    ],
+    [
+      "resolve",
+      3,
+      "triggered",
+      0
+    ],
+    [
+      "pass",
+      0,
+      []
+    ],
+    [
+      "pass",
+      1,
+      []
+    ],
+    [
+      "pass",
+      2,
+      []
+    ],
+    [
+      "pass",
+      3,
+      []
+    ]
+  ],
+  "narrative": [
+    "FORCED DIAGNOSTIC: actual deck source layout; declared synthetic combat tokens/keyword grants. Not a natural opening or newly supported named card.",
+    "    MANA P0: Island #434 -> (0, 1, 0)",
+    "    MANA P0: Island #436 -> (0, 1, 0)",
+    "    MANA P0: Island #438 -> (0, 1, 0)",
+    "    MANA P0: Island #440 -> (0, 1, 0)",
+    "    MANA P0: Mountain #446 -> (0, 0, 1)",
+    "  P0 (magnus) casts Magnus the Red [creature] for 5; mana=5.",
+    "    STACK +1 [spell] P0: Magnus the Red.",
+    "    Magnus the Red enters battlefield (4/5).",
+    "SYNTHETIC KEYWORD GRANT: double_strike added to the actual Magnus object for trigger testing; no printed grant card claimed.",
+    "    ATTACK: P0 Magnus the Red #523 -> P1.",
+    "  STEP P0: first_strike_damage.",
+    "    COMBAT DAMAGE first_strike_damage: creatures={}; players={1: 4}.",
+    "    STACK +2 [triggered] P0: Magnus the Red: create_token.",
+    "  STEP P0: combat_damage.",
+    "    COMBAT DAMAGE combat_damage: creatures={}; players={1: 4}.",
+    "    STACK +3 [triggered] P0: Magnus the Red: create_token."
+  ]
+}

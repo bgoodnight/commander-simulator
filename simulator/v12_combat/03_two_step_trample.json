@@ -1,0 +1,142 @@
+{
+  "title": "Double strike uses damage marked in the first step",
+  "forced": true,
+  "outcome": "First-strike damage marked 4 on the 1/6 blocker. In the normal damage step, another 2 was lethal; the remaining 2 trampled through. The blocker dealt 1 back only in the normal step.",
+  "consistent": true,
+  "fixture_limits": "Synthetic combat tokens or keyword grants; real-source spell costs; conserved physical inventories.",
+  "combat_batches": [
+    {
+      "stage": "first_strike_damage",
+      "attackers": [
+        [
+          536,
+          1,
+          true,
+          [
+            537
+          ]
+        ]
+      ],
+      "assignments": [
+        {
+          "source": 536,
+          "controller": 0,
+          "creature_damage": {
+            "537": 4
+          },
+          "player_damage": 0,
+          "defender": 1
+        }
+      ],
+      "creature_damage": {
+        "537": 4
+      },
+      "player_damage": {
+        "1": 0
+      }
+    },
+    {
+      "stage": "combat_damage",
+      "attackers": [
+        [
+          536,
+          1,
+          true,
+          [
+            537
+          ]
+        ]
+      ],
+      "assignments": [
+        {
+          "source": 536,
+          "controller": 0,
+          "creature_damage": {
+            "537": 2
+          },
+          "player_damage": 2,
+          "defender": 1
+        },
+        {
+          "source": 537,
+          "controller": 1,
+          "creature_damage": {
+            "536": 1
+          },
+          "player_damage": 0
+        }
+      ],
+      "creature_damage": {
+        "537": 2,
+        "536": 1
+      },
+      "player_damage": {
+        "1": 2
+      }
+    }
+  ],
+  "steps": [
+    [
+      1,
+      0,
+      "first_strike_damage"
+    ],
+    [
+      1,
+      0,
+      "combat_damage"
+    ]
+  ],
+  "payments": [],
+  "priority": [
+    [
+      "pass",
+      0,
+      []
+    ],
+    [
+      "pass",
+      1,
+      []
+    ],
+    [
+      "pass",
+      2,
+      []
+    ],
+    [
+      "pass",
+      3,
+      []
+    ],
+    [
+      "pass",
+      0,
+      []
+    ],
+    [
+      "pass",
+      1,
+      []
+    ],
+    [
+      "pass",
+      2,
+      []
+    ],
+    [
+      "pass",
+      3,
+      []
+    ]
+  ],
+  "narrative": [
+    "FORCED DIAGNOSTIC: actual deck source layout; declared synthetic combat tokens/keyword grants. Not a natural opening or newly supported named card.",
+    "    ATTACK: P0 Synthetic attacker #536 -> P1.",
+    "    BLOCK: #537 blocks #536.",
+    "  STEP P0: first_strike_damage.",
+    "    COMBAT DAMAGE first_strike_damage: creatures={537: 4}; players={1: 0}.",
+    "  STEP P0: combat_damage.",
+    "    COMBAT DAMAGE combat_damage: creatures={537: 2, 536: 1}; players={1: 2}."
+  ]
+}

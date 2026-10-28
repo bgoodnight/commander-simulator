@@ -1,0 +1,95 @@
+{
+  "title": "Multiple blockers: legal nonlethal split",
+  "forced": true,
+  "outcome": "The 4/8 attacker assigned 1 and 3 damage to 2/3 and 3/4 blockers. Both survived; their simultaneous return damage marked 5 on the attacker. No damage assignment order was imposed.",
+  "consistent": true,
+  "fixture_limits": "Synthetic combat tokens or keyword grants; real-source spell costs; conserved physical inventories.",
+  "combat_batches": [
+    {
+      "stage": "combat_damage",
+      "attackers": [
+        [
+          550,
+          1,
+          true,
+          [
+            551,
+            552
+          ]
+        ]
+      ],
+      "assignments": [
+        {
+          "source": 550,
+          "controller": 0,
+          "creature_damage": {
+            "551": 1,
+            "552": 3
+          },
+          "player_damage": 0,
+          "defender": 1
+        },
+        {
+          "source": 551,
+          "controller": 1,
+          "creature_damage": {
+            "550": 2
+          },
+          "player_damage": 0
+        },
+        {
+          "source": 552,
+          "controller": 1,
+          "creature_damage": {
+            "550": 3
+          },
+          "player_damage": 0
+        }
+      ],
+      "creature_damage": {
+        "551": 1,
+        "552": 3,
+        "550": 5
+      },
+      "player_damage": {}
+    }
+  ],
+  "steps": [
+    [
+      1,
+      0,
+      "combat_damage"
+    ]
+  ],
+  "payments": [],
+  "priority": [
+    [
+      "pass",
+      0,
+      []
+    ],
+    [
+      "pass",
+      1,
+      []
+    ],
+    [
+      "pass",
+      2,
+      []
+    ],
+    [
+      "pass",
+      3,
+      []
+    ]
+  ],
+  "narrative": [
+    "FORCED DIAGNOSTIC: actual deck source layout; declared synthetic combat tokens/keyword grants. Not a natural opening or newly supported named card.",
+    "    ATTACK: P0 Synthetic attacker #550 -> P1.",
+    "    BLOCK: #551 blocks #550.",
+    "    BLOCK: #552 blocks #550.",
+    "  STEP P0: combat_damage.",
+    "    COMBAT DAMAGE combat_damage: creatures={551: 1, 552: 3, 550: 5}; players={}."
+  ]
+}

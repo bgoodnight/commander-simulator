@@ -1,0 +1,710 @@
+{
+  "deck": "Thousand Sons Conclave v1.6",
+  "milestone": "v12",
+  "total_cards": 100,
+  "unique_names": 83,
+  "unique_counts": {
+    "partial": 25,
+    "unsupported": 35,
+    "supported subset": 23
+  },
+  "physical_counts": {
+    "partial": 25,
+    "unsupported": 35,
+    "supported subset": 40
+  },
+  "meaning": "Implementation audit, not full Oracle certification; includes commander and repeated basics.",
+  "priorities": [
+    {
+      "priority": "P1",
+      "area": "Exact selection and land rules",
+      "reason": "Selection spells and utility lands are already used; correct existing approximations before comparing decks."
+    },
+    {
+      "priority": "P1",
+      "area": "Engine omissions and delayed triggers",
+      "reason": "Harmonic prowess, Storm-Kiln power, Baral loot and Stormsplitter expiry affect live board states."
+    },
+    {
+      "priority": "P2",
+      "area": "Spell copying",
+      "reason": "Shared prerequisite for Twincast/Reiterate/Dualcaster/Sigil Tracer and magecraft/copy interactions."
+    },
+    {
+      "priority": "P2",
+      "area": "Creature activations and tutoring",
+      "reason": "Patron Wizard/Voidmage, Spellseeker, Mystical Tutor and transmute need explicit legal choices and costs."
+    },
+    {
+      "priority": "P3",
+      "area": "Graveyard casting, replacement/layer breadth and combos",
+      "reason": "Breach, alternate costs, type engines and candidate loops need reusable prerequisites and interruption tests."
+    }
+  ],
+  "cards": [
+    {
+      "name": "Magnus the Red",
+      "quantity": 1,
+      "status": "partial",
+      "effect": "named_creature",
+      "detail": "Flying, token discount and combat-hit token trigger live; commander damage and full Commander rules remain absent.",
+      "catalog_type": "commander"
+    },
+    {
+      "name": "Tzaangor Shaman",
+      "quantity": 1,
+      "status": "unsupported",
+      "effect": "unsupported",
+      "detail": "No live registered printed effect; drawn/reported but excluded from legal casts.",
+      "catalog_type": "creature"
+    },
+    {
+      "name": "Exalted Flamer of Tzeentch",
+      "quantity": 1,
+      "status": "unsupported",
+      "effect": "unsupported",
+      "detail": "No live registered printed effect; drawn/reported but excluded from legal casts.",
+      "catalog_type": "creature"
+    },
+    {
+      "name": "Pink Horror",
+      "quantity": 1,
+      "status": "unsupported",
+      "effect": "unsupported",
+      "detail": "No live registered printed effect; drawn/reported but excluded from legal casts.",
+      "catalog_type": "creature"
+    },
+    {
+      "name": "Heralds of Tzeentch",
+      "quantity": 1,
+      "status": "unsupported",
+      "effect": "unsupported",
+      "detail": "No live registered printed effect; drawn/reported but excluded from legal casts.",
+      "catalog_type": "creature"
+    },
+    {
+      "name": "Lord of Change",
+      "quantity": 1,
+      "status": "unsupported",
+      "effect": "unsupported",
+      "detail": "No live registered printed effect; drawn/reported but excluded from legal casts.",
+      "catalog_type": "creature"
+    },
+    {
+      "name": "Mutalith Vortex Beast",
+      "quantity": 1,
+      "status": "unsupported",
+      "effect": "unsupported",
+      "detail": "No live registered printed effect; drawn/reported but excluded from legal casts.",
+      "catalog_type": "creature"
+    },
+    {
+      "name": "Harmonic Prodigy",
+      "quantity": 1,
+      "status": "partial",
+      "effect": "named_creature",
+      "detail": "Wizard/Shaman trigger doubling live; prowess is absent.",
+      "catalog_type": "creature"
+    },
+    {
+      "name": "Young Pyromancer",
+      "quantity": 1,
+      "status": "supported subset",
+      "effect": "named_creature",
+      "detail": "Body and instant/sorcery cast token trigger.",
+      "catalog_type": "creature"
+    },
+    {
+      "name": "Storm-Kiln Artist",
+      "quantity": 1,
+      "status": "partial",
+      "effect": "named_creature",
+      "detail": "Cast/copy trigger descriptor creates Treasure; artifact-count power bonus and live spell-copy production absent.",
+      "catalog_type": "creature"
+    },
+    {
+      "name": "Docent of Perfection",
+      "quantity": 1,
+      "status": "unsupported",
+      "effect": "unsupported",
+      "detail": "No live registered printed effect; drawn/reported but excluded from legal casts.",
+      "catalog_type": "creature"
+    },
+    {
+      "name": "Archmage Emeritus",
+      "quantity": 1,
+      "status": "supported subset",
+      "effect": "named_creature",
+      "detail": "Body and magecraft trigger descriptors; live casts tested, spell copies not yet produced.",
+      "catalog_type": "creature"
+    },
+    {
+      "name": "Patron Wizard",
+      "quantity": 1,
+      "status": "unsupported",
+      "effect": "unsupported",
+      "detail": "No live registered printed effect; drawn/reported but excluded from legal casts.",
+      "catalog_type": "creature"
+    },
+    {
+      "name": "Voidmage Prodigy",
+      "quantity": 1,
+      "status": "unsupported",
+      "effect": "unsupported",
+      "detail": "No live registered printed effect; drawn/reported but excluded from legal casts.",
+      "catalog_type": "creature"
+    },
+    {
+      "name": "Spellseeker",
+      "quantity": 1,
+      "status": "unsupported",
+      "effect": "unsupported",
+      "detail": "No live registered printed effect; drawn/reported but excluded from legal casts.",
+      "catalog_type": "creature"
+    },
+    {
+      "name": "Veyran, Voice of Duality",
+      "quantity": 1,
+      "status": "unsupported",
+      "effect": "unsupported",
+      "detail": "No live registered printed effect; drawn/reported but excluded from legal casts.",
+      "catalog_type": "creature"
+    },
+    {
+      "name": "Baral, Chief of Compliance",
+      "quantity": 1,
+      "status": "partial",
+      "effect": "named_creature",
+      "detail": "Generic discount live; counter-triggered loot absent.",
+      "catalog_type": "creature"
+    },
+    {
+      "name": "Third Path Iconoclast",
+      "quantity": 1,
+      "status": "supported subset",
+      "effect": "named_creature",
+      "detail": "Body and noncreature cast artifact-Soldier trigger.",
+      "catalog_type": "creature"
+    },
+    {
+      "name": "Dualcaster Mage",
+      "quantity": 1,
+      "status": "unsupported",
+      "effect": "unsupported",
+      "detail": "No live registered printed effect; drawn/reported but excluded from legal casts.",
+      "catalog_type": "creature"
+    },
+    {
+      "name": "Stormsplitter",
+      "quantity": 1,
+      "status": "partial",
+      "effect": "named_creature",
+      "detail": "Cast-trigger token copies use a declared subset; expiry is cleanup rather than a delayed end-step trigger.",
+      "catalog_type": "creature"
+    },
+    {
+      "name": "Jace, Vryn's Prodigy",
+      "quantity": 1,
+      "status": "unsupported",
+      "effect": "unsupported",
+      "detail": "No live registered printed effect; drawn/reported but excluded from legal casts.",
+      "catalog_type": "creature"
+    },
+    {
+      "name": "Goblin Electromancer",
+      "quantity": 1,
+      "status": "supported subset",
+      "effect": "named_creature",
+      "detail": "Body and generic instant/sorcery discount with colored-cost floor.",
+      "catalog_type": "creature"
+    },
+    {
+      "name": "Sigil Tracer",
+      "quantity": 1,
+      "status": "unsupported",
+      "effect": "unsupported",
+      "detail": "No live registered printed effect; drawn/reported but excluded from legal casts.",
+      "catalog_type": "creature"
+    },
+    {
+      "name": "Sol Ring",
+      "quantity": 1,
+      "status": "supported subset",
+      "effect": "named_rock",
+      "detail": "Declared U/R/colorless mana ability; source-ID payment, tap and applicable costs.",
+      "catalog_type": "permanent"
+    },
+    {
+      "name": "Arcane Signet",
+      "quantity": 1,
+      "status": "supported subset",
+      "effect": "named_rock",
+      "detail": "Declared U/R/colorless mana ability; source-ID payment, tap and applicable costs.",
+      "catalog_type": "permanent"
+    },
+    {
+      "name": "Izzet Signet",
+      "quantity": 1,
+      "status": "supported subset",
+      "effect": "named_rock",
+      "detail": "Declared U/R/colorless mana ability; source-ID payment, tap and applicable costs.",
+      "catalog_type": "permanent"
+    },
+    {
+      "name": "Talisman of Creativity",
+      "quantity": 1,
+      "status": "supported subset",
+      "effect": "named_rock",
+      "detail": "Declared U/R/colorless mana ability; source-ID payment, tap and applicable costs.",
+      "catalog_type": "permanent"
+    },
+    {
+      "name": "Resonating Lute",
+      "quantity": 1,
+      "status": "unsupported",
+      "effect": "unsupported",
+      "detail": "No live registered printed effect; drawn/reported but excluded from legal casts.",
+      "catalog_type": "permanent"
+    },
+    {
+      "name": "Maskwood Nexus",
+      "quantity": 1,
+      "status": "unsupported",
+      "effect": "unsupported",
+      "detail": "No live registered printed effect; drawn/reported but excluded from legal casts.",
+      "catalog_type": "permanent"
+    },
+    {
+      "name": "Arcane Adaptation",
+      "quantity": 1,
+      "status": "partial",
+      "effect": "named_adaptation",
+      "detail": "Additive Wizard types live in declared zones; unrestricted creature-type choice/layers absent.",
+      "catalog_type": "permanent"
+    },
+    {
+      "name": "The Lost and the Damned",
+      "quantity": 1,
+      "status": "unsupported",
+      "effect": "unsupported",
+      "detail": "No live registered printed effect; drawn/reported but excluded from legal casts.",
+      "catalog_type": "permanent"
+    },
+    {
+      "name": "Underworld Breach",
+      "quantity": 1,
+      "status": "unsupported",
+      "effect": "unsupported",
+      "detail": "No live registered printed effect; drawn/reported but excluded from legal casts.",
+      "catalog_type": "permanent"
+    },
+    {
+      "name": "Sorcerer Class",
+      "quantity": 1,
+      "status": "unsupported",
+      "effect": "unsupported",
+      "detail": "No live registered printed effect; drawn/reported but excluded from legal casts.",
+      "catalog_type": "permanent"
+    },
+    {
+      "name": "Phyrexian Altar",
+      "quantity": 1,
+      "status": "unsupported",
+      "effect": "unsupported",
+      "detail": "No live registered printed effect; drawn/reported but excluded from legal casts.",
+      "catalog_type": "permanent"
+    },
+    {
+      "name": "Fellwar Stone",
+      "quantity": 1,
+      "status": "supported subset",
+      "effect": "named_rock",
+      "detail": "Declared U/R/colorless mana ability; source-ID payment, tap and applicable costs.",
+      "catalog_type": "permanent"
+    },
+    {
+      "name": "Mind Stone",
+      "quantity": 1,
+      "status": "supported subset",
+      "effect": "named_rock",
+      "detail": "Colorless source plus paid tap/sacrifice draw activation with source reservation.",
+      "catalog_type": "permanent"
+    },
+    {
+      "name": "Brainstorm",
+      "quantity": 1,
+      "status": "partial",
+      "effect": "named_selection",
+      "detail": "Selection adapter; exact draw/put-back ordering and choices absent.",
+      "catalog_type": "spell"
+    },
+    {
+      "name": "Ponder",
+      "quantity": 1,
+      "status": "partial",
+      "effect": "named_selection",
+      "detail": "Selection adapter; exact look/reorder/shuffle choices absent.",
+      "catalog_type": "spell"
+    },
+    {
+      "name": "Preordain",
+      "quantity": 1,
+      "status": "partial",
+      "effect": "named_selection",
+      "detail": "Selection adapter; full scry choices absent.",
+      "catalog_type": "spell"
+    },
+    {
+      "name": "Telling Time",
+      "quantity": 1,
+      "status": "partial",
+      "effect": "named_selection",
+      "detail": "Selection adapter; exact hand/top/bottom choice sequence absent.",
+      "catalog_type": "spell"
+    },
+    {
+      "name": "Impulse",
+      "quantity": 1,
+      "status": "partial",
+      "effect": "named_selection",
+      "detail": "Selection adapter; exact look/choose/bottom choices absent.",
+      "catalog_type": "spell"
+    },
+    {
+      "name": "Frantic Search",
+      "quantity": 1,
+      "status": "supported subset",
+      "effect": "named_selection",
+      "detail": "Atomic draw two/discard two/untap up to three lands; discard uses deterministic pilot selection.",
+      "catalog_type": "spell"
+    },
+    {
+      "name": "Mystical Tutor",
+      "quantity": 1,
+      "status": "unsupported",
+      "effect": "unsupported",
+      "detail": "No live registered printed effect; drawn/reported but excluded from legal casts.",
+      "catalog_type": "spell"
+    },
+    {
+      "name": "Muddle the Mixture",
+      "quantity": 1,
+      "status": "unsupported",
+      "effect": "unsupported",
+      "detail": "No live registered printed effect; drawn/reported but excluded from legal casts.",
+      "catalog_type": "spell"
+    },
+    {
+      "name": "Step Through",
+      "quantity": 1,
+      "status": "unsupported",
+      "effect": "unsupported",
+      "detail": "No live registered printed effect; drawn/reported but excluded from legal casts.",
+      "catalog_type": "spell"
+    },
+    {
+      "name": "Twincast",
+      "quantity": 1,
+      "status": "unsupported",
+      "effect": "unsupported",
+      "detail": "No live registered printed effect; drawn/reported but excluded from legal casts.",
+      "catalog_type": "spell"
+    },
+    {
+      "name": "Reiterate",
+      "quantity": 1,
+      "status": "unsupported",
+      "effect": "unsupported",
+      "detail": "No live registered printed effect; drawn/reported but excluded from legal casts.",
+      "catalog_type": "spell"
+    },
+    {
+      "name": "Counterspell",
+      "quantity": 1,
+      "status": "supported subset",
+      "effect": "counter",
+      "detail": "Target spell frame and counter destination.",
+      "catalog_type": "spell"
+    },
+    {
+      "name": "Arcane Denial",
+      "quantity": 1,
+      "status": "partial",
+      "effect": "counter",
+      "detail": "Counter live; printed delayed draw timing/choices incomplete.",
+      "catalog_type": "spell"
+    },
+    {
+      "name": "Swan Song",
+      "quantity": 1,
+      "status": "supported subset",
+      "effect": "counter",
+      "detail": "Restricted spell target and flying Bird compensation.",
+      "catalog_type": "spell"
+    },
+    {
+      "name": "An Offer You Can't Refuse",
+      "quantity": 1,
+      "status": "supported subset",
+      "effect": "counter",
+      "detail": "Noncreature spell counter and two actual source-ID Treasure tokens for its controller.",
+      "catalog_type": "spell"
+    },
+    {
+      "name": "Flusterstorm",
+      "quantity": 1,
+      "status": "partial",
+      "effect": "counter",
+      "detail": "Counter subset; storm copies and pay-one choice absent.",
+      "catalog_type": "spell"
+    },
+    {
+      "name": "Pongify",
+      "quantity": 1,
+      "status": "supported subset",
+      "effect": "named_pongify",
+      "detail": "Creature destruction, indestructible handling and Ape compensation.",
+      "catalog_type": "spell"
+    },
+    {
+      "name": "Abrade",
+      "quantity": 1,
+      "status": "supported subset",
+      "effect": "named_abrade",
+      "detail": "Announced modes, three creature damage or artifact destruction; target recheck.",
+      "catalog_type": "spell"
+    },
+    {
+      "name": "Chaos Warp",
+      "quantity": 1,
+      "status": "unsupported",
+      "effect": "unsupported",
+      "detail": "No live registered printed effect; drawn/reported but excluded from legal casts.",
+      "catalog_type": "spell"
+    },
+    {
+      "name": "Chaos Mutation",
+      "quantity": 1,
+      "status": "unsupported",
+      "effect": "unsupported",
+      "detail": "No live registered printed effect; drawn/reported but excluded from legal casts.",
+      "catalog_type": "spell"
+    },
+    {
+      "name": "Cyclonic Rift",
+      "quantity": 1,
+      "status": "unsupported",
+      "effect": "unsupported",
+      "detail": "No live registered printed effect; drawn/reported but excluded from legal casts.",
+      "catalog_type": "spell"
+    },
+    {
+      "name": "March of Swirling Mist",
+      "quantity": 1,
+      "status": "unsupported",
+      "effect": "unsupported",
+      "detail": "No live registered printed effect; drawn/reported but excluded from legal casts.",
+      "catalog_type": "spell"
+    },
+    {
+      "name": "Jeska's Will",
+      "quantity": 1,
+      "status": "unsupported",
+      "effect": "unsupported",
+      "detail": "No live registered printed effect; drawn/reported but excluded from legal casts.",
+      "catalog_type": "spell"
+    },
+    {
+      "name": "Mana Geyser",
+      "quantity": 1,
+      "status": "unsupported",
+      "effect": "unsupported",
+      "detail": "No live registered printed effect; drawn/reported but excluded from legal casts.",
+      "catalog_type": "spell"
+    },
+    {
+      "name": "Mathemagics",
+      "quantity": 1,
+      "status": "unsupported",
+      "effect": "unsupported",
+      "detail": "No live registered printed effect; drawn/reported but excluded from legal casts.",
+      "catalog_type": "spell"
+    },
+    {
+      "name": "Comet Storm",
+      "quantity": 1,
+      "status": "unsupported",
+      "effect": "unsupported",
+      "detail": "No live registered printed effect; drawn/reported but excluded from legal casts.",
+      "catalog_type": "spell"
+    },
+    {
+      "name": "Capsize",
+      "quantity": 1,
+      "status": "supported subset",
+      "effect": "named_capsize",
+      "detail": "Permanent bounce, optional buyback three, additional-cost reduction, counter/fizzle destinations.",
+      "catalog_type": "spell"
+    },
+    {
+      "name": "Searing Touch",
+      "quantity": 1,
+      "status": "unsupported",
+      "effect": "unsupported",
+      "detail": "No live registered printed effect; drawn/reported but excluded from legal casts.",
+      "catalog_type": "spell"
+    },
+    {
+      "name": "Mystic Speculation",
+      "quantity": 1,
+      "status": "unsupported",
+      "effect": "unsupported",
+      "detail": "No live registered printed effect; drawn/reported but excluded from legal casts.",
+      "catalog_type": "spell"
+    },
+    {
+      "name": "Command Tower",
+      "quantity": 1,
+      "status": "supported subset",
+      "effect": "none",
+      "detail": "Declared land mana source; ordinary land-play timing.",
+      "catalog_type": "land"
+    },
+    {
+      "name": "Steam Vents",
+      "quantity": 1,
+      "status": "partial",
+      "effect": "none",
+      "detail": "Mana/ETB adapter; printed land subtypes and full entry choice not audited.",
+      "catalog_type": "land"
+    },
+    {
+      "name": "Training Center",
+      "quantity": 1,
+      "status": "partial",
+      "effect": "none",
+      "detail": "Mana/ETB adapter; opponent-count entry condition not fully modeled.",
+      "catalog_type": "land"
+    },
+    {
+      "name": "Stormcarved Coast",
+      "quantity": 1,
+      "status": "partial",
+      "effect": "none",
+      "detail": "Mana/ETB adapter; printed land-count entry condition not fully modeled.",
+      "catalog_type": "land"
+    },
+    {
+      "name": "Sulfur Falls",
+      "quantity": 1,
+      "status": "partial",
+      "effect": "none",
+      "detail": "Mana/ETB adapter; Island/Mountain subtype entry condition not fully modeled.",
+      "catalog_type": "land"
+    },
+    {
+      "name": "Shivan Reef",
+      "quantity": 1,
+      "status": "supported subset",
+      "effect": "none",
+      "detail": "Declared land mana source; ordinary land-play timing.",
+      "catalog_type": "land"
+    },
+    {
+      "name": "Spirebluff Canal",
+      "quantity": 1,
+      "status": "partial",
+      "effect": "none",
+      "detail": "Mana/ETB adapter; printed land-count entry condition not fully modeled.",
+      "catalog_type": "land"
+    },
+    {
+      "name": "Riverglide Pathway",
+      "quantity": 1,
+      "status": "partial",
+      "effect": "none",
+      "detail": "Chosen U/R mana face adapter; full modal double-faced characteristics absent.",
+      "catalog_type": "land"
+    },
+    {
+      "name": "Fiery Islet",
+      "quantity": 1,
+      "status": "partial",
+      "effect": "none",
+      "detail": "U/R mana and life cost live; sacrifice-to-draw activation absent.",
+      "catalog_type": "land"
+    },
+    {
+      "name": "Cascade Bluffs",
+      "quantity": 1,
+      "status": "supported subset",
+      "effect": "none",
+      "detail": "Declared land mana source; ordinary land-play timing.",
+      "catalog_type": "land"
+    },
+    {
+      "name": "Exotic Orchard",
+      "quantity": 1,
+      "status": "supported subset",
+      "effect": "none",
+      "detail": "Declared land mana source; ordinary land-play timing.",
+      "catalog_type": "land"
+    },
+    {
+      "name": "Fabled Passage",
+      "quantity": 1,
+      "status": "partial",
+      "effect": "none",
+      "detail": "Prior fetch/ETB adapter; not a priority-aware printed activated ability.",
+      "catalog_type": "land"
+    },
+    {
+      "name": "Otawara, Soaring City",
+      "quantity": 1,
+      "status": "partial",
+      "effect": "none",
+      "detail": "Land mana live; channel absent.",
+      "catalog_type": "land"
+    },
+    {
+      "name": "Sokenzan, Crucible of Defiance",
+      "quantity": 1,
+      "status": "partial",
+      "effect": "none",
+      "detail": "Land mana live; channel absent.",
+      "catalog_type": "land"
+    },
+    {
+      "name": "Riptide Laboratory",
+      "quantity": 1,
+      "status": "partial",
+      "effect": "none",
+      "detail": "Land mana live; Wizard-bounce activation absent.",
+      "catalog_type": "land"
+    },
+    {
+      "name": "Mystic Sanctuary",
+      "quantity": 1,
+      "status": "partial",
+      "effect": "none",
+      "detail": "Mana/ETB adapter; complete Island-subtype condition and graveyard-to-top choice absent.",
+      "catalog_type": "land"
+    },
+    {
+      "name": "Island",
+      "quantity": 12,
+      "status": "supported subset",
+      "effect": "none",
+      "detail": "Declared land mana source; ordinary land-play timing.",
+      "catalog_type": "land"
+    },
+    {
+      "name": "Mountain",
+      "quantity": 7,
+      "status": "supported subset",
+      "effect": "none",
+      "detail": "Declared land mana source; ordinary land-play timing.",
+      "catalog_type": "land"
+    }
+  ]
+}

@@ -1,0 +1,194 @@
+{
+  "title": "Abrade between damage steps preserves blocked status",
+  "forced": true,
+  "outcome": "The double-striker marked 3 in the first step. Abrade then dealt 3 using actual source mana, killing the 1/5 blocker before it could retaliate. The attacker remained blocked and had no trample, so its second step dealt no player damage.",
+  "consistent": true,
+  "fixture_limits": "Synthetic combat tokens or keyword grants; real-source spell costs; conserved physical inventories.",
+  "combat_batches": [
+    {
+      "stage": "first_strike_damage",
+      "attackers": [
+        [
+          564,
+          1,
+          true,
+          [
+            565
+          ]
+        ]
+      ],
+      "assignments": [
+        {
+          "source": 564,
+          "controller": 0,
+          "creature_damage": {
+            "565": 3
+          },
+          "player_damage": 0,
+          "defender": 1
+        }
+      ],
+      "creature_damage": {
+        "565": 3
+      },
+      "player_damage": {}
+    },
+    {
+      "stage": "combat_damage",
+      "attackers": [
+        [
+          564,
+          1,
+          true,
+          [
+            565
+          ]
+        ]
+      ],
+      "assignments": [
+        {
+          "source": 564,
+          "controller": 0,
+          "creature_damage": {},
+          "player_damage": 0,
+          "defender": 1
+        }
+      ],
+      "creature_damage": {},
+      "player_damage": {}
+    }
+  ],
+  "steps": [
+    [
+      1,
+      0,
+      "first_strike_damage"
+    ],
+    [
+      1,
+      0,
+      "combat_damage"
+    ]
+  ],
+  "payments": [
+    {
+      "seat": 0,
+      "cost": [
+        1,
+        0,
+        1
+      ],
+      "sources": [
+        476,
+        488
+      ],
+      "unused": [
+        0,
+        0,
+        0
+      ]
+    }
+  ],
+  "priority": [
+    [
+      "action",
+      0,
+      "spell"
+    ],
+    [
+      "push",
+      1,
+      "spell",
+      0,
+      "Abrade"
+    ],
+    [
+      "pass",
+      0,
+      [
+        1
+      ]
+    ],
+    [
+      "pass",
+      1,
+      [
+        1
+      ]
+    ],
+    [
+      "pass",
+      2,
+      [
+        1
+      ]
+    ],
+    [
+      "pass",
+      3,
+      [
+        1
+      ]
+    ],
+    [
+      "resolve",
+      1,
+      "spell",
+      0
+    ],
+    [
+      "pass",
+      0,
+      []
+    ],
+    [
+      "pass",
+      1,
+      []
+    ],
+    [
+      "pass",
+      2,
+      []
+    ],
+    [
+      "pass",
+      3,
+      []
+    ],
+    [
+      "pass",
+      0,
+      []
+    ],
+    [
+      "pass",
+      1,
+      []
+    ],
+    [
+      "pass",
+      2,
+      []
+    ],
+    [
+      "pass",
+      3,
+      []
+    ]
+  ],
+  "narrative": [
+    "FORCED DIAGNOSTIC: actual deck source layout; declared synthetic combat tokens/keyword grants. Not a natural opening or newly supported named card.",
+    "    ATTACK: P0 Synthetic attacker #564 -> P1.",
+    "    BLOCK: #565 blocks #564.",
+    "  STEP P0: first_strike_damage.",
+    "    COMBAT DAMAGE first_strike_damage: creatures={565: 3}; players={}.",
+    "    MANA P0: Island #476 -> (0, 1, 0)",
+    "    MANA P0: Mountain #488 -> (0, 0, 1)",
+    "  P0 (magnus) casts Abrade [instant] for 2; mana=8.",
+    "    STACK +1 [spell] P0: Abrade.",
+    "    Abrade damage mode: 3 damage to Synthetic blocker.",
+    "  STEP P0: combat_damage.",
+    "    COMBAT DAMAGE combat_damage: creatures={}; players={}."
+  ]
+}

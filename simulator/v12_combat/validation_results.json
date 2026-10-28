@@ -1,0 +1,61 @@
+{
+  "games": 200,
+  "rounds": 12,
+  "consistent": true,
+  "safety_stops": [],
+  "steps": 100920,
+  "damage_batches": 3864,
+  "multi_block_batches": 295,
+  "payments": 10900,
+  "elapsed_seconds": 90.967,
+  "benchmark_games": 12,
+  "benchmark_rounds": 8,
+  "median_ms": {
+    "StepTable": 347.279,
+    "CombatTable": 314.807
+  },
+  "audit_counts": {
+    "partial": 25,
+    "unsupported": 35,
+    "supported subset": 23
+  },
+  "targeted_scenarios": [
+    {
+      "file": "01_free_assignment",
+      "title": "Multiple blockers: legal nonlethal split",
+      "result": "The 4/8 attacker assigned 1 and 3 damage to 2/3 and 3/4 blockers. Both survived; their simultaneous return damage marked 5 on the attacker. No damage assignment order was imposed.",
+      "passed": true
+    },
+    {
+      "file": "02_trample_bounce",
+      "title": "Trample recalculates after blocker bounce",
+      "result": "After two blockers were declared, Capsize bounced the 3/3 token (it ceased to exist). The 8-power trampler assigned 2 to the remaining 2/2 and 6 to the defending player. Capsize paid from actual lands.",
+      "passed": true
+    },
+    {
+      "file": "03_two_step_trample",
+      "title": "Double strike uses damage marked in the first step",
+      "result": "First-strike damage marked 4 on the 1/6 blocker. In the normal damage step, another 2 was lethal; the remaining 2 trampled through. The blocker dealt 1 back only in the normal step.",
+      "passed": true
+    },
+    {
+      "file": "04_abrade_between_steps",
+      "title": "Abrade between damage steps preserves blocked status",
+      "result": "The double-striker marked 3 in the first step. Abrade then dealt 3 using actual source mana, killing the 1/5 blocker before it could retaliate. The attacker remained blocked and had no trample, so its second step dealt no player damage.",
+      "passed": true
+    },
+    {
+      "file": "05_magnus_two_hits",
+      "title": "Two damage steps create two Magnus triggers",
+      "result": "Actual Magnus received an explicitly synthetic double-strike grant. Each 4-damage hit queued its own printed token trigger. Priority resolved one Spawn after each step: 8 player damage, 2 Spawn total.",
+      "passed": true
+    },
+    {
+      "file": "06_magnus_interrupted",
+      "title": "Capsize after first hit prevents the second hit",
+      "result": "The first 4-damage hit resolved its Spawn trigger. Capsize then returned Magnus to hand using actual lands and the token discount. The scheduled normal damage step still occurred, but the departed attacker dealt nothing: 4 damage, 1 Spawn.",
+      "passed": true
+    }
+  ],
+  "caveat": "Synthetic strike/trample fixtures validate mechanics; unforced detailed deck has no newly enabled keyword cards. No win-rate inference."
+}

@@ -60,10 +60,7 @@ class StepDriver:
             t.combat_engine.declare_blockers()
             t.spell_stack.holder = player.seat; t.spell_stack.resolve()
             if t.end_check(): return
-            self.window('combat_damage', 'combat', False)
-            t.combat_engine.damage(player)
-            t.spell_stack.holder = player.seat; t.spell_stack.resolve()
-            if t.end_check(): return
+            if not self.damage_steps(player): return
         if not self.window('end_combat', 'combat'): return
         t.main_actions = 0
         if not self.window('postcombat_main', 'main'): return
@@ -76,6 +73,12 @@ class StepDriver:
             t.spell_stack.holder = player.seat; t.spell_stack.resolve()
         else: t.safe_runner._stop('cleanup_repeat_budget')
         t.resources.empty_pools(); t.assert_consistent()
+
+    def damage_steps(self, player):
+        self.window('combat_damage', 'combat', False)
+        self.t.combat_engine.damage(player)
+        self.t.spell_stack.holder = player.seat; self.t.spell_stack.resolve()
+        return not self.t.end_check()
 
     def run(self, rounds):
         t = self.t
