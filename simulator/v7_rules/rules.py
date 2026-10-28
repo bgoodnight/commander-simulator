@@ -180,6 +180,21 @@ class GameKernel:
     def on_battlefield(self):return (o for o in self.objects.values() if o.zone=='battlefield')
     def controlled(self,seat,types=frozenset()):
         return [o for o in self.on_battlefield() if o.controller==seat and (not types or o.types & types)]
+    def subtypes(self,oid):
+        """Derived creature types from declared additive static effects, all zones.
+
+        Printed definitions stay unchanged. Unsupported layer/type-changing
+        operations are not inferred from names.
+        """
+        obj=self.get(oid)
+        result=obj.card.subtypes
+        if 'creature' not in obj.types:return result
+        seat=obj.controller if obj.zone in {'battlefield','stack'} else obj.owner
+        for source in self.controlled(seat):
+            for ability in source.card.abilities:
+                if ability.kind=='static' and ability.op=='add_creature_subtype':
+                    result=result|frozenset({ability.arg('subtype')})
+        return result
     def tokens(self,seat,creatures_only=False):
         return sum(o.token and (not creatures_only or 'creature' in o.types) for o in self.controlled(seat))
     def add_counter(self,oid,kind,quantity=1):
@@ -279,7 +294,7 @@ class GameKernel:
         for o,a in self._cached[cache_key]:
                 if not self._matches(o,a,event):continue
                 times=1
-                if o.subtypes & {'Wizard','Shaman'}:
+                if self.subtypes(o.object_id) & {'Wizard','Shaman'}:
                     times+=sum(1 for m in snapshot if m.controller==o.controller for ma in m.card.abilities
                                if ma.kind=='static' and ma.op=='double_wizard_shaman_triggers')
                 resolved.append(TriggerResult(o.object_id,o.controller,a.op,times,a.args))
@@ -364,3 +379,4 @@ class PlayerDamageResult:
 
 # Registry is deliberately per-kernel; adding a special handler to one game does
 # not change any other game, or turn common card text into global name tests.
+

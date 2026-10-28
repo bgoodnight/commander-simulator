@@ -109,7 +109,7 @@ class LiveTable(V9Table):
         else:
             p.mana -= action.cost
 
-    def expected_action(self, p, card):
+    def expected_action(self, p, card, announced=None):
         return (self.action_for(p, card) if p.payment_policy else
                 base.Action(p.seat, card.name, card.card_type, card.effect,
                             card.mana_value, parameters=dict(card.parameters)))
@@ -125,7 +125,7 @@ class LiveTable(V9Table):
         if card is None or not self.can_pay(p, action):
             return False
         # Reject stale/fabricated costs and effects before any payment or move.
-        expected = self.expected_action(p, card)
+        expected = self.expected_action(p, card, action)
         if (action.card_type, action.effect, action.cost, action.parameters) != (
                 expected.card_type, expected.effect, expected.cost, expected.parameters):
             raise ValueError('Action differs from current card/cost')

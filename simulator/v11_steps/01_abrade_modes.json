@@ -1,0 +1,1000 @@
+{
+  "record": {
+    "title": "Abrade: announced modes, damage and artifact destruction",
+    "result": "Creature mode marked 3 damage on a 1-toughness creature (survived=False); artifact mode destroyed its chosen ramp permanent.",
+    "checks": {
+      "damage_mode": true,
+      "artifact_destroyed": true,
+      "mode_locked": true
+    }
+  },
+  "fixture": "forced conserved board; actual source payments",
+  "branches": [
+    {
+      "events": [
+        "FORCED-BOARD DIAGNOSTIC: actual deck cards moved to declared source layout; no natural-opening claim.",
+        "    MANA P1: aggro:land:23 #475 -> (1, 0, 0)",
+        "  P1 (aggro) casts aggro:small:0 [creature] for 1; mana=7.",
+        "    STACK +1 [spell] P1: aggro:small:0.",
+        "    MANA P0: Island #448 -> (0, 1, 0)",
+        "    MANA P0: Mountain #460 -> (0, 0, 1)",
+        "  P0 (magnus) casts Abrade [instant] for 2; mana=8.",
+        "    STACK +2 [spell] P0: Abrade.",
+        "    Abrade damage mode: 3 damage to aggro:small:0."
+      ],
+      "priority": [
+        [
+          "push",
+          1,
+          "spell",
+          1,
+          "aggro:small:0"
+        ],
+        [
+          "pass",
+          1,
+          [
+            1
+          ]
+        ],
+        [
+          "pass",
+          2,
+          [
+            1
+          ]
+        ],
+        [
+          "pass",
+          3,
+          [
+            1
+          ]
+        ],
+        [
+          "pass",
+          0,
+          [
+            1
+          ]
+        ],
+        [
+          "resolve",
+          1,
+          "spell",
+          1
+        ],
+        [
+          "pass",
+          1,
+          []
+        ],
+        [
+          "pass",
+          2,
+          []
+        ],
+        [
+          "pass",
+          3,
+          []
+        ],
+        [
+          "pass",
+          0,
+          []
+        ],
+        [
+          "push",
+          2,
+          "spell",
+          0,
+          "Abrade"
+        ],
+        [
+          "pass",
+          0,
+          [
+            2
+          ]
+        ],
+        [
+          "pass",
+          1,
+          [
+            2
+          ]
+        ],
+        [
+          "pass",
+          2,
+          [
+            2
+          ]
+        ],
+        [
+          "pass",
+          3,
+          [
+            2
+          ]
+        ],
+        [
+          "resolve",
+          2,
+          "spell",
+          0
+        ],
+        [
+          "pass",
+          0,
+          []
+        ],
+        [
+          "pass",
+          1,
+          []
+        ],
+        [
+          "pass",
+          2,
+          []
+        ],
+        [
+          "pass",
+          3,
+          []
+        ]
+      ],
+      "steps": [],
+      "combat": [],
+      "diagnostics": {
+        "seed": 211,
+        "opening_forced": false,
+        "name": "Thousand Sons Conclave v1.6",
+        "library_total": 99,
+        "supported_definitions": 47,
+        "unsupported_definitions": [
+          "Chaos Warp",
+          "Exalted Flamer of Tzeentch",
+          "Pink Horror",
+          "Maskwood Nexus",
+          "Dualcaster Mage",
+          "Lord of Change",
+          "Twincast",
+          "Muddle the Mixture",
+          "Spellseeker",
+          "Sigil Tracer",
+          "Voidmage Prodigy",
+          "Underworld Breach",
+          "March of Swirling Mist",
+          "Heralds of Tzeentch",
+          "Tzaangor Shaman",
+          "Mystical Tutor",
+          "Comet Storm",
+          "Chaos Mutation",
+          "Step Through",
+          "Resonating Lute",
+          "Mutalith Vortex Beast",
+          "Jace, Vryn's Prodigy",
+          "Cyclonic Rift",
+          "Mana Geyser",
+          "Searing Touch",
+          "Mystic Speculation",
+          "The Lost and the Damned",
+          "Phyrexian Altar",
+          "Mathemagics",
+          "Jeska's Will",
+          "Sorcerer Class",
+          "Reiterate",
+          "Docent of Perfection",
+          "Patron Wizard",
+          "Veyran, Voice of Duality"
+        ],
+        "approx_definitions": [
+          "An Offer You Can't Refuse",
+          "Arcane Denial",
+          "Brainstorm",
+          "Flusterstorm",
+          "Impulse",
+          "Ponder",
+          "Preordain",
+          "Telling Time"
+        ],
+        "coverage_casts": {
+          "supported": 1
+        },
+        "unsupported_held": {},
+        "commander_casts": 0,
+        "commander_in_zone": true,
+        "mana_payments": [
+          {
+            "source": "Abrade",
+            "cost": 2,
+            "source_ids": [
+              448,
+              460
+            ],
+            "unused": [
+              0,
+              0,
+              0
+            ]
+          }
+        ],
+        "land_misses": 0,
+        "known_rules_gaps": [
+          "limited named-card subset; unsupported spells fail closed",
+          "one detailed deck; synthetic opponents and finishers",
+          "only U/R/colorless mana and U/R/generic costs; other mana text fails closed",
+          "only registered trigger/activation operations; creature tap abilities unsupported",
+          "single blockers; no first/double strike, trample or planeswalker attacks",
+          "Wizard choice only for Arcane Adaptation; other selection/land utilities still partial",
+          "Capsize buyback only; no general copy/loop or other buyback coverage",
+          "temporary-token expiry remains cleanup adapter; no full delayed-trigger system"
+        ],
+        "v7": {
+          "shared_trigger_instances": 0,
+          "shared_cost_queries": 0,
+          "safety_stop": null,
+          "modular_scope": "typed costs/triggers/block legality; live zones supplied by v9b"
+        },
+        "v8": {
+          "kernel_permanent_creatures": 34,
+          "kernel_view_consistent": true,
+          "creatures_entered": 1,
+          "permanents_entered": 0,
+          "zone_transitions": 1,
+          "combat_damage_batches": 0,
+          "shared_stack_max_depth": 1,
+          "shared_stack_resolved": 2,
+          "shared_stack_countered": 0,
+          "guard_stop": null,
+          "limits": [
+            "shared physical state and typed priority stack; partial card/step coverage"
+          ]
+        },
+        "v9": {
+          "providers": [
+            "magnus",
+            "aggro",
+            "control",
+            "combo"
+          ],
+          "detailed_seat": 0,
+          "kernel_view_consistent": true,
+          "migration_status": "shared physical zones, source-ID mana and typed priority stack",
+          "multi_detailed_games_supported": false,
+          "authoritative_card_zones_in_live_game": true
+        },
+        "v9b": {
+          "authoritative_card_zones_in_live_game": true,
+          "zone_index_consistent": true,
+          "kernel_view_consistent": true,
+          "physical_objects": 397,
+          "zone_counts": {
+            "0": {
+              "battlefield": 10,
+              "command": 1,
+              "exile": 0,
+              "graveyard": 1,
+              "hand": 0,
+              "library": 88,
+              "stack": 0
+            },
+            "1": {
+              "battlefield": 8,
+              "command": 0,
+              "exile": 0,
+              "graveyard": 1,
+              "hand": 0,
+              "library": 90,
+              "stack": 0
+            },
+            "2": {
+              "battlefield": 8,
+              "command": 0,
+              "exile": 0,
+              "graveyard": 0,
+              "hand": 0,
+              "library": 91,
+              "stack": 0
+            },
+            "3": {
+              "battlefield": 8,
+              "command": 0,
+              "exile": 0,
+              "graveyard": 0,
+              "hand": 0,
+              "library": 91,
+              "stack": 0
+            }
+          },
+          "limits": [
+            "source-ID mana supplied by v9c; synthetic abilities remain approximate",
+            "typed priority supplied by v10; incomplete card/step coverage remains",
+            "one detailed deck; selection/land rules still approximate"
+          ]
+        },
+        "v9c": {
+          "source_backed_live_payment": true,
+          "pools": {
+            "0": [
+              0,
+              0,
+              0
+            ],
+            "1": [
+              0,
+              0,
+              0
+            ],
+            "2": [
+              0,
+              0,
+              0
+            ],
+            "3": [
+              0,
+              0,
+              0
+            ]
+          },
+          "payments": [
+            {
+              "seat": 1,
+              "cost": [
+                1,
+                0,
+                0
+              ],
+              "sources": [
+                475
+              ],
+              "unused": [
+                0,
+                0,
+                0
+              ]
+            },
+            {
+              "seat": 0,
+              "cost": [
+                1,
+                0,
+                1
+              ],
+              "sources": [
+                448,
+                460
+              ],
+              "unused": [
+                0,
+                0,
+                0
+              ]
+            }
+          ],
+          "activations": [
+            {
+              "seat": 1,
+              "source_id": 475,
+              "source": "aggro:land:23",
+              "output": [
+                1,
+                0,
+                0
+              ],
+              "activation_cost": [
+                0,
+                0,
+                0
+              ],
+              "life_paid": 0,
+              "damage": 0,
+              "sacrifice": false
+            },
+            {
+              "seat": 0,
+              "source_id": 448,
+              "source": "Island",
+              "output": [
+                0,
+                1,
+                0
+              ],
+              "activation_cost": [
+                0,
+                0,
+                0
+              ],
+              "life_paid": 0,
+              "damage": 0,
+              "sacrifice": false
+            },
+            {
+              "seat": 0,
+              "source_id": 460,
+              "source": "Mountain",
+              "output": [
+                0,
+                0,
+                1
+              ],
+              "activation_cost": [
+                0,
+                0,
+                0
+              ],
+              "life_paid": 0,
+              "damage": 0,
+              "sacrifice": false
+            }
+          ],
+          "planner_max_states": 16,
+          "planner_budget": 20000,
+          "cache_hits": 6,
+          "limits": [
+            "typed priority supplied by v10; incomplete card/step coverage remains",
+            "one detailed deck; U/R/colorless source subset; synthetic sources approximate"
+          ]
+        },
+        "v10": {
+          "typed_priority_live": true,
+          "passes": 16,
+          "triggers_queued": 0,
+          "triggers_resolved": 0,
+          "activations_resolved": 0,
+          "fizzled": 0,
+          "max_depth": 1,
+          "remaining_frames": 0,
+          "pending_triggers": 0,
+          "limits": [
+            "one detailed deck",
+            "ordinary step driver supplied by v11; limited combat keywords/assignments",
+            "Mind Stone draw plus explicitly registered nonmana activations; not all named abilities"
+          ]
+        },
+        "v11": {
+          "explicit_steps": true,
+          "new_cards": [
+            "Abrade",
+            "Capsize",
+            "Arcane Adaptation"
+          ],
+          "upgraded_cards": [
+            "Frantic Search"
+          ],
+          "step_count": 0,
+          "combat_batches": 0,
+          "rule_events": [
+            [
+              "abrade_damage",
+              "aggro:small:0",
+              3
+            ]
+          ],
+          "limits": [
+            "one detailed deck",
+            "one blocker per attacker",
+            "limited keywords and card text",
+            "Arcane Adaptation Wizard choice; Capsize buyback subset"
+          ]
+        }
+      }
+    },
+    {
+      "events": [
+        "FORCED-BOARD DIAGNOSTIC: actual deck cards moved to declared source layout; no natural-opening claim.",
+        "    MANA P2: control:land:20 #484 -> (1, 0, 0)",
+        "    MANA P2: control:land:15 #486 -> (1, 0, 0)",
+        "    MANA P2: control:land:29 #488 -> (1, 0, 0)",
+        "  P2 (control) casts control:ramp:1 [artifact] for 3; mana=5.",
+        "    STACK +1 [spell] P2: control:ramp:1.",
+        "    MANA P0: Island #434 -> (0, 1, 0)",
+        "    MANA P0: Mountain #446 -> (0, 0, 1)",
+        "  P0 (magnus) casts Abrade [instant] for 2; mana=8.",
+        "    STACK +2 [spell] P0: Abrade.",
+        "    Abrade artifact mode: control:ramp:1; destroyed=True."
+      ],
+      "priority": [
+        [
+          "push",
+          1,
+          "spell",
+          2,
+          "control:ramp:1"
+        ],
+        [
+          "pass",
+          2,
+          [
+            1
+          ]
+        ],
+        [
+          "pass",
+          3,
+          [
+            1
+          ]
+        ],
+        [
+          "pass",
+          0,
+          [
+            1
+          ]
+        ],
+        [
+          "pass",
+          1,
+          [
+            1
+          ]
+        ],
+        [
+          "resolve",
+          1,
+          "spell",
+          2
+        ],
+        [
+          "pass",
+          2,
+          []
+        ],
+        [
+          "pass",
+          3,
+          []
+        ],
+        [
+          "pass",
+          0,
+          []
+        ],
+        [
+          "pass",
+          1,
+          []
+        ],
+        [
+          "push",
+          2,
+          "spell",
+          0,
+          "Abrade"
+        ],
+        [
+          "pass",
+          0,
+          [
+            2
+          ]
+        ],
+        [
+          "pass",
+          1,
+          [
+            2
+          ]
+        ],
+        [
+          "pass",
+          2,
+          [
+            2
+          ]
+        ],
+        [
+          "pass",
+          3,
+          [
+            2
+          ]
+        ],
+        [
+          "resolve",
+          2,
+          "spell",
+          0
+        ],
+        [
+          "pass",
+          0,
+          []
+        ],
+        [
+          "pass",
+          1,
+          []
+        ],
+        [
+          "pass",
+          2,
+          []
+        ],
+        [
+          "pass",
+          3,
+          []
+        ]
+      ],
+      "steps": [],
+      "combat": [],
+      "diagnostics": {
+        "seed": 212,
+        "opening_forced": false,
+        "name": "Thousand Sons Conclave v1.6",
+        "library_total": 99,
+        "supported_definitions": 47,
+        "unsupported_definitions": [
+          "Chaos Mutation",
+          "Mystical Tutor",
+          "Spellseeker",
+          "Veyran, Voice of Duality",
+          "Docent of Perfection",
+          "Twincast",
+          "Muddle the Mixture",
+          "Exalted Flamer of Tzeentch",
+          "Comet Storm",
+          "Mystic Speculation",
+          "Dualcaster Mage",
+          "Patron Wizard",
+          "Searing Touch",
+          "Maskwood Nexus",
+          "Step Through",
+          "The Lost and the Damned",
+          "Heralds of Tzeentch",
+          "Resonating Lute",
+          "Jace, Vryn's Prodigy",
+          "Phyrexian Altar",
+          "Underworld Breach",
+          "Sigil Tracer",
+          "Mathemagics",
+          "Reiterate",
+          "Jeska's Will",
+          "Mana Geyser",
+          "Pink Horror",
+          "Sorcerer Class",
+          "Tzaangor Shaman",
+          "Cyclonic Rift",
+          "March of Swirling Mist",
+          "Voidmage Prodigy",
+          "Chaos Warp",
+          "Mutalith Vortex Beast",
+          "Lord of Change"
+        ],
+        "approx_definitions": [
+          "An Offer You Can't Refuse",
+          "Arcane Denial",
+          "Brainstorm",
+          "Flusterstorm",
+          "Impulse",
+          "Ponder",
+          "Preordain",
+          "Telling Time"
+        ],
+        "coverage_casts": {
+          "supported": 1
+        },
+        "unsupported_held": {},
+        "commander_casts": 0,
+        "commander_in_zone": true,
+        "mana_payments": [
+          {
+            "source": "Abrade",
+            "cost": 2,
+            "source_ids": [
+              434,
+              446
+            ],
+            "unused": [
+              0,
+              0,
+              0
+            ]
+          }
+        ],
+        "land_misses": 0,
+        "known_rules_gaps": [
+          "limited named-card subset; unsupported spells fail closed",
+          "one detailed deck; synthetic opponents and finishers",
+          "only U/R/colorless mana and U/R/generic costs; other mana text fails closed",
+          "only registered trigger/activation operations; creature tap abilities unsupported",
+          "single blockers; no first/double strike, trample or planeswalker attacks",
+          "Wizard choice only for Arcane Adaptation; other selection/land utilities still partial",
+          "Capsize buyback only; no general copy/loop or other buyback coverage",
+          "temporary-token expiry remains cleanup adapter; no full delayed-trigger system"
+        ],
+        "v7": {
+          "shared_trigger_instances": 0,
+          "shared_cost_queries": 0,
+          "safety_stop": null,
+          "modular_scope": "typed costs/triggers/block legality; live zones supplied by v9b"
+        },
+        "v8": {
+          "kernel_permanent_creatures": 34,
+          "kernel_view_consistent": true,
+          "creatures_entered": 0,
+          "permanents_entered": 1,
+          "zone_transitions": 1,
+          "combat_damage_batches": 0,
+          "shared_stack_max_depth": 1,
+          "shared_stack_resolved": 2,
+          "shared_stack_countered": 0,
+          "guard_stop": null,
+          "limits": [
+            "shared physical state and typed priority stack; partial card/step coverage"
+          ]
+        },
+        "v9": {
+          "providers": [
+            "magnus",
+            "aggro",
+            "control",
+            "combo"
+          ],
+          "detailed_seat": 0,
+          "kernel_view_consistent": true,
+          "migration_status": "shared physical zones, source-ID mana and typed priority stack",
+          "multi_detailed_games_supported": false,
+          "authoritative_card_zones_in_live_game": true
+        },
+        "v9b": {
+          "authoritative_card_zones_in_live_game": true,
+          "zone_index_consistent": true,
+          "kernel_view_consistent": true,
+          "physical_objects": 397,
+          "zone_counts": {
+            "0": {
+              "battlefield": 10,
+              "command": 1,
+              "exile": 0,
+              "graveyard": 1,
+              "hand": 0,
+              "library": 88,
+              "stack": 0
+            },
+            "1": {
+              "battlefield": 8,
+              "command": 0,
+              "exile": 0,
+              "graveyard": 0,
+              "hand": 0,
+              "library": 91,
+              "stack": 0
+            },
+            "2": {
+              "battlefield": 8,
+              "command": 0,
+              "exile": 0,
+              "graveyard": 1,
+              "hand": 0,
+              "library": 90,
+              "stack": 0
+            },
+            "3": {
+              "battlefield": 8,
+              "command": 0,
+              "exile": 0,
+              "graveyard": 0,
+              "hand": 0,
+              "library": 91,
+              "stack": 0
+            }
+          },
+          "limits": [
+            "source-ID mana supplied by v9c; synthetic abilities remain approximate",
+            "typed priority supplied by v10; incomplete card/step coverage remains",
+            "one detailed deck; selection/land rules still approximate"
+          ]
+        },
+        "v9c": {
+          "source_backed_live_payment": true,
+          "pools": {
+            "0": [
+              0,
+              0,
+              0
+            ],
+            "1": [
+              0,
+              0,
+              0
+            ],
+            "2": [
+              0,
+              0,
+              0
+            ],
+            "3": [
+              0,
+              0,
+              0
+            ]
+          },
+          "payments": [
+            {
+              "seat": 2,
+              "cost": [
+                3,
+                0,
+                0
+              ],
+              "sources": [
+                484,
+                486,
+                488
+              ],
+              "unused": [
+                0,
+                0,
+                0
+              ]
+            },
+            {
+              "seat": 0,
+              "cost": [
+                1,
+                0,
+                1
+              ],
+              "sources": [
+                434,
+                446
+              ],
+              "unused": [
+                0,
+                0,
+                0
+              ]
+            }
+          ],
+          "activations": [
+            {
+              "seat": 2,
+              "source_id": 484,
+              "source": "control:land:20",
+              "output": [
+                1,
+                0,
+                0
+              ],
+              "activation_cost": [
+                0,
+                0,
+                0
+              ],
+              "life_paid": 0,
+              "damage": 0,
+              "sacrifice": false
+            },
+            {
+              "seat": 2,
+              "source_id": 486,
+              "source": "control:land:15",
+              "output": [
+                1,
+                0,
+                0
+              ],
+              "activation_cost": [
+                0,
+                0,
+                0
+              ],
+              "life_paid": 0,
+              "damage": 0,
+              "sacrifice": false
+            },
+            {
+              "seat": 2,
+              "source_id": 488,
+              "source": "control:land:29",
+              "output": [
+                1,
+                0,
+                0
+              ],
+              "activation_cost": [
+                0,
+                0,
+                0
+              ],
+              "life_paid": 0,
+              "damage": 0,
+              "sacrifice": false
+            },
+            {
+              "seat": 0,
+              "source_id": 434,
+              "source": "Island",
+              "output": [
+                0,
+                1,
+                0
+              ],
+              "activation_cost": [
+                0,
+                0,
+                0
+              ],
+              "life_paid": 0,
+              "damage": 0,
+              "sacrifice": false
+            },
+            {
+              "seat": 0,
+              "source_id": 446,
+              "source": "Mountain",
+              "output": [
+                0,
+                0,
+                1
+              ],
+              "activation_cost": [
+                0,
+                0,
+                0
+              ],
+              "life_paid": 0,
+              "damage": 0,
+              "sacrifice": false
+            }
+          ],
+          "planner_max_states": 16,
+          "planner_budget": 20000,
+          "cache_hits": 6,
+          "limits": [
+            "typed priority supplied by v10; incomplete card/step coverage remains",
+            "one detailed deck; U/R/colorless source subset; synthetic sources approximate"
+          ]
+        },
+        "v10": {
+          "typed_priority_live": true,
+          "passes": 16,
+          "triggers_queued": 0,
+          "triggers_resolved": 0,
+          "activations_resolved": 0,
+          "fizzled": 0,
+          "max_depth": 1,
+          "remaining_frames": 0,
+          "pending_triggers": 0,
+          "limits": [
+            "one detailed deck",
+            "ordinary step driver supplied by v11; limited combat keywords/assignments",
+            "Mind Stone draw plus explicitly registered nonmana activations; not all named abilities"
+          ]
+        },
+        "v11": {
+          "explicit_steps": true,
+          "new_cards": [
+            "Abrade",
+            "Capsize",
+            "Arcane Adaptation"
+          ],
+          "upgraded_cards": [
+            "Frantic Search"
+          ],
+          "step_count": 0,
+          "combat_batches": 0,
+          "rule_events": [
+            [
+              "abrade_destroy",
+              "control:ramp:1",
+              true
+            ]
+          ],
+          "limits": [
+            "one detailed deck",
+            "one blocker per attacker",
+            "limited keywords and card text",
+            "Arcane Adaptation Wizard choice; Capsize buyback subset"
+          ]
+        }
+      }
+    }
+  ]
+}

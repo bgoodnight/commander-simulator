@@ -1,0 +1,1362 @@
+{
+  "record": {
+    "title": "Arcane Adaptation: live Wizard types and captured triggers",
+    "result": "Adaptation made Iconoclast a Wizard. Harmonic Prodigy doubled triggers from Preordain and the responding Capsize (4 Soldiers). Capsize bounced Adaptation; already queued triggers survived. A later Ponder produced only 1 Soldier.",
+    "checks": {
+      "wizard_while_enchantment_present": true,
+      "wizard_after_bounce": false,
+      "captured_tokens": 4,
+      "later_tokens": 1
+    }
+  },
+  "fixture": "forced conserved board; actual source payments",
+  "branches": [
+    {
+      "events": [
+        "FORCED-BOARD DIAGNOSTIC: actual deck cards moved to declared source layout; no natural-opening claim.",
+        "    MANA P0: Island #448 -> (0, 1, 0)",
+        "    MANA P0: Mountain #460 -> (0, 0, 1)",
+        "  P0 (magnus) casts Third Path Iconoclast [creature] for 2; mana=8.",
+        "    STACK +1 [spell] P0: Third Path Iconoclast.",
+        "    Third Path Iconoclast enters battlefield (1/1).",
+        "    MANA P0: Island #450 -> (0, 1, 0)",
+        "    MANA P0: Mountain #462 -> (0, 0, 1)",
+        "  P0 (magnus) casts Harmonic Prodigy [creature] for 2; mana=6.",
+        "    STACK +2 [spell] P0: Harmonic Prodigy.",
+        "    Harmonic Prodigy enters battlefield (1/3).",
+        "    MANA P0: Island #452 -> (0, 1, 0)",
+        "    MANA P0: Island #454 -> (0, 1, 0)",
+        "    MANA P0: Island #456 -> (0, 1, 0)",
+        "  P0 (magnus) casts Arcane Adaptation [enchantment] for 3; mana=3.",
+        "    STACK +3 [spell] P0: Arcane Adaptation.",
+        "    STACK +4 [triggered] P0: Third Path Iconoclast: create_token.",
+        "    Arcane Adaptation enters: Wizard chosen; additive types apply in all declared zones.",
+        "  DIAGNOSTIC NEXT TURN: untap the detailed seat's actual sources.",
+        "    MANA P0: Island #448 -> (0, 1, 0)",
+        "  P0 (magnus) casts Preordain [sorcery] for 1; mana=9.",
+        "    STACK +5 [spell] P0: Preordain.",
+        "    STACK +6 [triggered] P0: Third Path Iconoclast: create_token.",
+        "    STACK +7 [triggered] P0: Third Path Iconoclast: create_token.",
+        "    MANA P0: Island #450 -> (0, 1, 0)",
+        "    MANA P0: Island #452 -> (0, 1, 0)",
+        "    MANA P0: Island #454 -> (0, 1, 0)",
+        "  P0 (magnus) casts Capsize [instant] for 3; mana=6.",
+        "    STACK +8 [spell] P0: Capsize.",
+        "    STACK +9 [triggered] P0: Third Path Iconoclast: create_token.",
+        "    STACK +10 [triggered] P0: Third Path Iconoclast: create_token.",
+        "    Capsize returns Arcane Adaptation to its owner's hand.",
+        "    Preordain: partial card selection (1 drawn; exact look/scry/untap not modeled).",
+        "    MANA P0: Island #456 -> (0, 1, 0)",
+        "  P0 (magnus) casts Ponder [sorcery] for 1; mana=5.",
+        "    STACK +11 [spell] P0: Ponder.",
+        "    STACK +12 [triggered] P0: Third Path Iconoclast: create_token.",
+        "    Ponder: partial card selection (1 drawn; exact look/scry/untap not modeled)."
+      ],
+      "priority": [
+        [
+          "push",
+          1,
+          "spell",
+          0,
+          "Third Path Iconoclast"
+        ],
+        [
+          "pass",
+          0,
+          [
+            1
+          ]
+        ],
+        [
+          "pass",
+          1,
+          [
+            1
+          ]
+        ],
+        [
+          "pass",
+          2,
+          [
+            1
+          ]
+        ],
+        [
+          "pass",
+          3,
+          [
+            1
+          ]
+        ],
+        [
+          "resolve",
+          1,
+          "spell",
+          0
+        ],
+        [
+          "pass",
+          0,
+          []
+        ],
+        [
+          "pass",
+          1,
+          []
+        ],
+        [
+          "pass",
+          2,
+          []
+        ],
+        [
+          "pass",
+          3,
+          []
+        ],
+        [
+          "push",
+          2,
+          "spell",
+          0,
+          "Harmonic Prodigy"
+        ],
+        [
+          "pass",
+          0,
+          [
+            2
+          ]
+        ],
+        [
+          "pass",
+          1,
+          [
+            2
+          ]
+        ],
+        [
+          "pass",
+          2,
+          [
+            2
+          ]
+        ],
+        [
+          "pass",
+          3,
+          [
+            2
+          ]
+        ],
+        [
+          "resolve",
+          2,
+          "spell",
+          0
+        ],
+        [
+          "pass",
+          0,
+          []
+        ],
+        [
+          "pass",
+          1,
+          []
+        ],
+        [
+          "pass",
+          2,
+          []
+        ],
+        [
+          "pass",
+          3,
+          []
+        ],
+        [
+          "push",
+          3,
+          "spell",
+          0,
+          "Arcane Adaptation"
+        ],
+        [
+          "push",
+          4,
+          "triggered",
+          0,
+          "Third Path Iconoclast: create_token"
+        ],
+        [
+          "pass",
+          0,
+          [
+            3,
+            4
+          ]
+        ],
+        [
+          "pass",
+          1,
+          [
+            3,
+            4
+          ]
+        ],
+        [
+          "pass",
+          2,
+          [
+            3,
+            4
+          ]
+        ],
+        [
+          "pass",
+          3,
+          [
+            3,
+            4
+          ]
+        ],
+        [
+          "resolve",
+          4,
+          "triggered",
+          0
+        ],
+        [
+          "pass",
+          0,
+          [
+            3
+          ]
+        ],
+        [
+          "pass",
+          1,
+          [
+            3
+          ]
+        ],
+        [
+          "pass",
+          2,
+          [
+            3
+          ]
+        ],
+        [
+          "pass",
+          3,
+          [
+            3
+          ]
+        ],
+        [
+          "resolve",
+          3,
+          "spell",
+          0
+        ],
+        [
+          "pass",
+          0,
+          []
+        ],
+        [
+          "pass",
+          1,
+          []
+        ],
+        [
+          "pass",
+          2,
+          []
+        ],
+        [
+          "pass",
+          3,
+          []
+        ],
+        [
+          "push",
+          5,
+          "spell",
+          0,
+          "Preordain"
+        ],
+        [
+          "push",
+          6,
+          "triggered",
+          0,
+          "Third Path Iconoclast: create_token"
+        ],
+        [
+          "push",
+          7,
+          "triggered",
+          0,
+          "Third Path Iconoclast: create_token"
+        ],
+        [
+          "action",
+          0,
+          "spell"
+        ],
+        [
+          "push",
+          8,
+          "spell",
+          0,
+          "Capsize"
+        ],
+        [
+          "push",
+          9,
+          "triggered",
+          0,
+          "Third Path Iconoclast: create_token"
+        ],
+        [
+          "push",
+          10,
+          "triggered",
+          0,
+          "Third Path Iconoclast: create_token"
+        ],
+        [
+          "pass",
+          0,
+          [
+            5,
+            6,
+            7,
+            8,
+            9,
+            10
+          ]
+        ],
+        [
+          "pass",
+          1,
+          [
+            5,
+            6,
+            7,
+            8,
+            9,
+            10
+          ]
+        ],
+        [
+          "pass",
+          2,
+          [
+            5,
+            6,
+            7,
+            8,
+            9,
+            10
+          ]
+        ],
+        [
+          "pass",
+          3,
+          [
+            5,
+            6,
+            7,
+            8,
+            9,
+            10
+          ]
+        ],
+        [
+          "resolve",
+          10,
+          "triggered",
+          0
+        ],
+        [
+          "pass",
+          0,
+          [
+            5,
+            6,
+            7,
+            8,
+            9
+          ]
+        ],
+        [
+          "pass",
+          1,
+          [
+            5,
+            6,
+            7,
+            8,
+            9
+          ]
+        ],
+        [
+          "pass",
+          2,
+          [
+            5,
+            6,
+            7,
+            8,
+            9
+          ]
+        ],
+        [
+          "pass",
+          3,
+          [
+            5,
+            6,
+            7,
+            8,
+            9
+          ]
+        ],
+        [
+          "resolve",
+          9,
+          "triggered",
+          0
+        ],
+        [
+          "pass",
+          0,
+          [
+            5,
+            6,
+            7,
+            8
+          ]
+        ],
+        [
+          "pass",
+          1,
+          [
+            5,
+            6,
+            7,
+            8
+          ]
+        ],
+        [
+          "pass",
+          2,
+          [
+            5,
+            6,
+            7,
+            8
+          ]
+        ],
+        [
+          "pass",
+          3,
+          [
+            5,
+            6,
+            7,
+            8
+          ]
+        ],
+        [
+          "resolve",
+          8,
+          "spell",
+          0
+        ],
+        [
+          "pass",
+          0,
+          [
+            5,
+            6,
+            7
+          ]
+        ],
+        [
+          "pass",
+          1,
+          [
+            5,
+            6,
+            7
+          ]
+        ],
+        [
+          "pass",
+          2,
+          [
+            5,
+            6,
+            7
+          ]
+        ],
+        [
+          "pass",
+          3,
+          [
+            5,
+            6,
+            7
+          ]
+        ],
+        [
+          "resolve",
+          7,
+          "triggered",
+          0
+        ],
+        [
+          "pass",
+          0,
+          [
+            5,
+            6
+          ]
+        ],
+        [
+          "pass",
+          1,
+          [
+            5,
+            6
+          ]
+        ],
+        [
+          "pass",
+          2,
+          [
+            5,
+            6
+          ]
+        ],
+        [
+          "pass",
+          3,
+          [
+            5,
+            6
+          ]
+        ],
+        [
+          "resolve",
+          6,
+          "triggered",
+          0
+        ],
+        [
+          "pass",
+          0,
+          [
+            5
+          ]
+        ],
+        [
+          "pass",
+          1,
+          [
+            5
+          ]
+        ],
+        [
+          "pass",
+          2,
+          [
+            5
+          ]
+        ],
+        [
+          "pass",
+          3,
+          [
+            5
+          ]
+        ],
+        [
+          "resolve",
+          5,
+          "spell",
+          0
+        ],
+        [
+          "pass",
+          0,
+          []
+        ],
+        [
+          "pass",
+          1,
+          []
+        ],
+        [
+          "pass",
+          2,
+          []
+        ],
+        [
+          "pass",
+          3,
+          []
+        ],
+        [
+          "push",
+          11,
+          "spell",
+          0,
+          "Ponder"
+        ],
+        [
+          "push",
+          12,
+          "triggered",
+          0,
+          "Third Path Iconoclast: create_token"
+        ],
+        [
+          "pass",
+          0,
+          [
+            11,
+            12
+          ]
+        ],
+        [
+          "pass",
+          1,
+          [
+            11,
+            12
+          ]
+        ],
+        [
+          "pass",
+          2,
+          [
+            11,
+            12
+          ]
+        ],
+        [
+          "pass",
+          3,
+          [
+            11,
+            12
+          ]
+        ],
+        [
+          "resolve",
+          12,
+          "triggered",
+          0
+        ],
+        [
+          "pass",
+          0,
+          [
+            11
+          ]
+        ],
+        [
+          "pass",
+          1,
+          [
+            11
+          ]
+        ],
+        [
+          "pass",
+          2,
+          [
+            11
+          ]
+        ],
+        [
+          "pass",
+          3,
+          [
+            11
+          ]
+        ],
+        [
+          "resolve",
+          11,
+          "spell",
+          0
+        ],
+        [
+          "pass",
+          0,
+          []
+        ],
+        [
+          "pass",
+          1,
+          []
+        ],
+        [
+          "pass",
+          2,
+          []
+        ],
+        [
+          "pass",
+          3,
+          []
+        ]
+      ],
+      "steps": [],
+      "combat": [],
+      "diagnostics": {
+        "seed": 214,
+        "opening_forced": false,
+        "name": "Thousand Sons Conclave v1.6",
+        "library_total": 99,
+        "supported_definitions": 47,
+        "unsupported_definitions": [
+          "Reiterate",
+          "Spellseeker",
+          "Jeska's Will",
+          "The Lost and the Damned",
+          "Chaos Mutation",
+          "Mystical Tutor",
+          "Mystic Speculation",
+          "Comet Storm",
+          "Sigil Tracer",
+          "Searing Touch",
+          "Jace, Vryn's Prodigy",
+          "Chaos Warp",
+          "Pink Horror",
+          "Mathemagics",
+          "Heralds of Tzeentch",
+          "Phyrexian Altar",
+          "Mutalith Vortex Beast",
+          "Tzaangor Shaman",
+          "Sorcerer Class",
+          "Exalted Flamer of Tzeentch",
+          "March of Swirling Mist",
+          "Patron Wizard",
+          "Docent of Perfection",
+          "Mana Geyser",
+          "Twincast",
+          "Resonating Lute",
+          "Lord of Change",
+          "Muddle the Mixture",
+          "Underworld Breach",
+          "Cyclonic Rift",
+          "Maskwood Nexus",
+          "Voidmage Prodigy",
+          "Dualcaster Mage",
+          "Step Through",
+          "Veyran, Voice of Duality"
+        ],
+        "approx_definitions": [
+          "An Offer You Can't Refuse",
+          "Arcane Denial",
+          "Brainstorm",
+          "Flusterstorm",
+          "Impulse",
+          "Ponder",
+          "Preordain",
+          "Telling Time"
+        ],
+        "coverage_casts": {
+          "supported": 4,
+          "approx": 2
+        },
+        "unsupported_held": {},
+        "commander_casts": 0,
+        "commander_in_zone": true,
+        "mana_payments": [
+          {
+            "source": "Third Path Iconoclast",
+            "cost": 2,
+            "source_ids": [
+              448,
+              460
+            ],
+            "unused": [
+              0,
+              0,
+              0
+            ]
+          },
+          {
+            "source": "Harmonic Prodigy",
+            "cost": 2,
+            "source_ids": [
+              450,
+              462
+            ],
+            "unused": [
+              0,
+              0,
+              0
+            ]
+          },
+          {
+            "source": "Arcane Adaptation",
+            "cost": 3,
+            "source_ids": [
+              452,
+              454,
+              456
+            ],
+            "unused": [
+              0,
+              0,
+              0
+            ]
+          },
+          {
+            "source": "Preordain",
+            "cost": 1,
+            "source_ids": [
+              448
+            ],
+            "unused": [
+              0,
+              0,
+              0
+            ]
+          },
+          {
+            "source": "Capsize",
+            "cost": 3,
+            "source_ids": [
+              450,
+              452,
+              454
+            ],
+            "unused": [
+              0,
+              0,
+              0
+            ]
+          },
+          {
+            "source": "Ponder",
+            "cost": 1,
+            "source_ids": [
+              456
+            ],
+            "unused": [
+              0,
+              0,
+              0
+            ]
+          }
+        ],
+        "land_misses": 0,
+        "known_rules_gaps": [
+          "limited named-card subset; unsupported spells fail closed",
+          "one detailed deck; synthetic opponents and finishers",
+          "only U/R/colorless mana and U/R/generic costs; other mana text fails closed",
+          "only registered trigger/activation operations; creature tap abilities unsupported",
+          "single blockers; no first/double strike, trample or planeswalker attacks",
+          "Wizard choice only for Arcane Adaptation; other selection/land utilities still partial",
+          "Capsize buyback only; no general copy/loop or other buyback coverage",
+          "temporary-token expiry remains cleanup adapter; no full delayed-trigger system"
+        ],
+        "v7": {
+          "shared_trigger_instances": 6,
+          "shared_cost_queries": 4,
+          "safety_stop": null,
+          "modular_scope": "typed costs/triggers/block legality; live zones supplied by v9b"
+        },
+        "v8": {
+          "kernel_permanent_creatures": 42,
+          "kernel_view_consistent": true,
+          "creatures_entered": 8,
+          "permanents_entered": 1,
+          "zone_transitions": 1,
+          "combat_damage_batches": 0,
+          "shared_stack_max_depth": 6,
+          "shared_stack_resolved": 6,
+          "shared_stack_countered": 0,
+          "guard_stop": null,
+          "limits": [
+            "shared physical state and typed priority stack; partial card/step coverage"
+          ]
+        },
+        "v9": {
+          "providers": [
+            "magnus",
+            "aggro",
+            "control",
+            "combo"
+          ],
+          "detailed_seat": 0,
+          "kernel_view_consistent": true,
+          "migration_status": "shared physical zones, source-ID mana and typed priority stack",
+          "multi_detailed_games_supported": false,
+          "authoritative_card_zones_in_live_game": true
+        },
+        "v9b": {
+          "authoritative_card_zones_in_live_game": true,
+          "zone_index_consistent": true,
+          "kernel_view_consistent": true,
+          "physical_objects": 403,
+          "zone_counts": {
+            "0": {
+              "battlefield": 18,
+              "command": 1,
+              "exile": 0,
+              "graveyard": 3,
+              "hand": 3,
+              "library": 81,
+              "stack": 0
+            },
+            "1": {
+              "battlefield": 8,
+              "command": 0,
+              "exile": 0,
+              "graveyard": 0,
+              "hand": 0,
+              "library": 91,
+              "stack": 0
+            },
+            "2": {
+              "battlefield": 8,
+              "command": 0,
+              "exile": 0,
+              "graveyard": 0,
+              "hand": 0,
+              "library": 91,
+              "stack": 0
+            },
+            "3": {
+              "battlefield": 8,
+              "command": 0,
+              "exile": 0,
+              "graveyard": 0,
+              "hand": 0,
+              "library": 91,
+              "stack": 0
+            }
+          },
+          "limits": [
+            "source-ID mana supplied by v9c; synthetic abilities remain approximate",
+            "typed priority supplied by v10; incomplete card/step coverage remains",
+            "one detailed deck; selection/land rules still approximate"
+          ]
+        },
+        "v9c": {
+          "source_backed_live_payment": true,
+          "pools": {
+            "0": [
+              0,
+              0,
+              0
+            ],
+            "1": [
+              0,
+              0,
+              0
+            ],
+            "2": [
+              0,
+              0,
+              0
+            ],
+            "3": [
+              0,
+              0,
+              0
+            ]
+          },
+          "payments": [
+            {
+              "seat": 0,
+              "cost": [
+                0,
+                1,
+                1
+              ],
+              "sources": [
+                448,
+                460
+              ],
+              "unused": [
+                0,
+                0,
+                0
+              ]
+            },
+            {
+              "seat": 0,
+              "cost": [
+                1,
+                0,
+                1
+              ],
+              "sources": [
+                450,
+                462
+              ],
+              "unused": [
+                0,
+                0,
+                0
+              ]
+            },
+            {
+              "seat": 0,
+              "cost": [
+                2,
+                1,
+                0
+              ],
+              "sources": [
+                452,
+                454,
+                456
+              ],
+              "unused": [
+                0,
+                0,
+                0
+              ]
+            },
+            {
+              "seat": 0,
+              "cost": [
+                0,
+                1,
+                0
+              ],
+              "sources": [
+                448
+              ],
+              "unused": [
+                0,
+                0,
+                0
+              ]
+            },
+            {
+              "seat": 0,
+              "cost": [
+                1,
+                2,
+                0
+              ],
+              "sources": [
+                450,
+                452,
+                454
+              ],
+              "unused": [
+                0,
+                0,
+                0
+              ]
+            },
+            {
+              "seat": 0,
+              "cost": [
+                0,
+                1,
+                0
+              ],
+              "sources": [
+                456
+              ],
+              "unused": [
+                0,
+                0,
+                0
+              ]
+            }
+          ],
+          "activations": [
+            {
+              "seat": 0,
+              "source_id": 448,
+              "source": "Island",
+              "output": [
+                0,
+                1,
+                0
+              ],
+              "activation_cost": [
+                0,
+                0,
+                0
+              ],
+              "life_paid": 0,
+              "damage": 0,
+              "sacrifice": false
+            },
+            {
+              "seat": 0,
+              "source_id": 460,
+              "source": "Mountain",
+              "output": [
+                0,
+                0,
+                1
+              ],
+              "activation_cost": [
+                0,
+                0,
+                0
+              ],
+              "life_paid": 0,
+              "damage": 0,
+              "sacrifice": false
+            },
+            {
+              "seat": 0,
+              "source_id": 450,
+              "source": "Island",
+              "output": [
+                0,
+                1,
+                0
+              ],
+              "activation_cost": [
+                0,
+                0,
+                0
+              ],
+              "life_paid": 0,
+              "damage": 0,
+              "sacrifice": false
+            },
+            {
+              "seat": 0,
+              "source_id": 462,
+              "source": "Mountain",
+              "output": [
+                0,
+                0,
+                1
+              ],
+              "activation_cost": [
+                0,
+                0,
+                0
+              ],
+              "life_paid": 0,
+              "damage": 0,
+              "sacrifice": false
+            },
+            {
+              "seat": 0,
+              "source_id": 452,
+              "source": "Island",
+              "output": [
+                0,
+                1,
+                0
+              ],
+              "activation_cost": [
+                0,
+                0,
+                0
+              ],
+              "life_paid": 0,
+              "damage": 0,
+              "sacrifice": false
+            },
+            {
+              "seat": 0,
+              "source_id": 454,
+              "source": "Island",
+              "output": [
+                0,
+                1,
+                0
+              ],
+              "activation_cost": [
+                0,
+                0,
+                0
+              ],
+              "life_paid": 0,
+              "damage": 0,
+              "sacrifice": false
+            },
+            {
+              "seat": 0,
+              "source_id": 456,
+              "source": "Island",
+              "output": [
+                0,
+                1,
+                0
+              ],
+              "activation_cost": [
+                0,
+                0,
+                0
+              ],
+              "life_paid": 0,
+              "damage": 0,
+              "sacrifice": false
+            },
+            {
+              "seat": 0,
+              "source_id": 448,
+              "source": "Island",
+              "output": [
+                0,
+                1,
+                0
+              ],
+              "activation_cost": [
+                0,
+                0,
+                0
+              ],
+              "life_paid": 0,
+              "damage": 0,
+              "sacrifice": false
+            },
+            {
+              "seat": 0,
+              "source_id": 450,
+              "source": "Island",
+              "output": [
+                0,
+                1,
+                0
+              ],
+              "activation_cost": [
+                0,
+                0,
+                0
+              ],
+              "life_paid": 0,
+              "damage": 0,
+              "sacrifice": false
+            },
+            {
+              "seat": 0,
+              "source_id": 452,
+              "source": "Island",
+              "output": [
+                0,
+                1,
+                0
+              ],
+              "activation_cost": [
+                0,
+                0,
+                0
+              ],
+              "life_paid": 0,
+              "damage": 0,
+              "sacrifice": false
+            },
+            {
+              "seat": 0,
+              "source_id": 454,
+              "source": "Island",
+              "output": [
+                0,
+                1,
+                0
+              ],
+              "activation_cost": [
+                0,
+                0,
+                0
+              ],
+              "life_paid": 0,
+              "damage": 0,
+              "sacrifice": false
+            },
+            {
+              "seat": 0,
+              "source_id": 456,
+              "source": "Island",
+              "output": [
+                0,
+                1,
+                0
+              ],
+              "activation_cost": [
+                0,
+                0,
+                0
+              ],
+              "life_paid": 0,
+              "damage": 0,
+              "sacrifice": false
+            }
+          ],
+          "planner_max_states": 21,
+          "planner_budget": 20000,
+          "cache_hits": 24,
+          "limits": [
+            "typed priority supplied by v10; incomplete card/step coverage remains",
+            "one detailed deck; U/R/colorless source subset; synthetic sources approximate"
+          ]
+        },
+        "v10": {
+          "typed_priority_live": true,
+          "passes": 68,
+          "triggers_queued": 6,
+          "triggers_resolved": 6,
+          "activations_resolved": 0,
+          "fizzled": 0,
+          "max_depth": 6,
+          "remaining_frames": 0,
+          "pending_triggers": 0,
+          "limits": [
+            "one detailed deck",
+            "ordinary step driver supplied by v11; limited combat keywords/assignments",
+            "Mind Stone draw plus explicitly registered nonmana activations; not all named abilities"
+          ]
+        },
+        "v11": {
+          "explicit_steps": true,
+          "new_cards": [
+            "Abrade",
+            "Capsize",
+            "Arcane Adaptation"
+          ],
+          "upgraded_cards": [
+            "Frantic Search"
+          ],
+          "step_count": 0,
+          "combat_batches": 0,
+          "rule_events": [
+            [
+              "adaptation",
+              0,
+              "Wizard"
+            ],
+            [
+              "capsize_bounce",
+              "Arcane Adaptation",
+              false
+            ]
+          ],
+          "limits": [
+            "one detailed deck",
+            "one blocker per attacker",
+            "limited keywords and card text",
+            "Arcane Adaptation Wizard choice; Capsize buyback subset"
+          ]
+        }
+      }
+    }
+  ]
+}

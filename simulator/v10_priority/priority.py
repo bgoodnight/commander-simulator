@@ -31,6 +31,7 @@ class Choice:
 
 
 class PriorityStack:
+    trigger_operations = frozenset({'draw', 'create_token'})
     def __init__(self, table):
         self.table = table; self.frames = []; self.pending = []
         self._ids = count(1); self.running = False; self.resolving = False
@@ -77,7 +78,7 @@ class PriorityStack:
             from catalog import DEFINITIONS
             if dict(item.args).get('token_id') not in DEFINITIONS:
                 raise NotImplementedError('Unknown trigger token definition')
-        if item.op not in ('draw', 'create_token'):
+        if item.op not in self.trigger_operations:
             raise NotImplementedError('Unsupported triggered stack operation ' + item.op)
         self.table.safe_runner.guard_trigger_count(item.quantity)
         for _ in range(item.quantity):

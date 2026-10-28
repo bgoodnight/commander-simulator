@@ -1,0 +1,904 @@
+{
+  "record": {
+    "title": "Capsize: successful buyback, then a countered recast",
+    "result": "First cast returned the target and Capsize to hand. After an explicitly advanced untap, the second bought-back cast was countered; Capsize entered the graveyard.",
+    "checks": {
+      "successful_buyback_return": true,
+      "countered_buyback_graveyard": true
+    }
+  },
+  "fixture": "forced conserved board; actual source payments",
+  "branches": [
+    {
+      "events": [
+        "FORCED-BOARD DIAGNOSTIC: actual deck cards moved to declared source layout; no natural-opening claim.",
+        "    MANA P2: control:land:36 #484 -> (1, 0, 0)",
+        "    MANA P2: control:land:26 #486 -> (1, 0, 0)",
+        "  P2 (control) casts control:small:1 [creature] for 2; mana=6.",
+        "    STACK +1 [spell] P2: control:small:1.",
+        "    MANA P0: Island #434 -> (0, 1, 0)",
+        "    MANA P0: Island #436 -> (0, 1, 0)",
+        "    MANA P0: Island #438 -> (0, 1, 0)",
+        "    MANA P0: Island #440 -> (0, 1, 0)",
+        "    MANA P0: Island #442 -> (0, 1, 0)",
+        "    MANA P0: Island #444 -> (0, 1, 0)",
+        "  P0 (magnus) casts Capsize [instant] for 6; mana=4.",
+        "    STACK +2 [spell] P0: Capsize.",
+        "    Capsize returns control:small:1 to its owner's hand.",
+        "    Buyback paid: Capsize returns to hand after successful resolution.",
+        "  DIAGNOSTIC NEXT TURN: untap the detailed seat's actual sources.",
+        "    MANA P0: Island #434 -> (0, 1, 0)",
+        "    MANA P0: Island #436 -> (0, 1, 0)",
+        "    MANA P0: Island #438 -> (0, 1, 0)",
+        "    MANA P0: Island #440 -> (0, 1, 0)",
+        "    MANA P0: Island #442 -> (0, 1, 0)",
+        "    MANA P0: Island #444 -> (0, 1, 0)",
+        "  P0 (magnus) casts Capsize [instant] for 6; mana=4.",
+        "    STACK +3 [spell] P0: Capsize.",
+        "    MANA P2: control:land:13 #488 -> (1, 0, 0)",
+        "    MANA P2: control:land:33 #490 -> (1, 0, 0)",
+        "  P2 (control) casts control:counter:0 [instant] for 2; mana=4.",
+        "    STACK +4 [spell] P2: control:counter:0.",
+        "    STACK -3: Capsize countered."
+      ],
+      "priority": [
+        [
+          "push",
+          1,
+          "spell",
+          2,
+          "control:small:1"
+        ],
+        [
+          "pass",
+          2,
+          [
+            1
+          ]
+        ],
+        [
+          "pass",
+          3,
+          [
+            1
+          ]
+        ],
+        [
+          "pass",
+          0,
+          [
+            1
+          ]
+        ],
+        [
+          "pass",
+          1,
+          [
+            1
+          ]
+        ],
+        [
+          "resolve",
+          1,
+          "spell",
+          2
+        ],
+        [
+          "pass",
+          2,
+          []
+        ],
+        [
+          "pass",
+          3,
+          []
+        ],
+        [
+          "pass",
+          0,
+          []
+        ],
+        [
+          "pass",
+          1,
+          []
+        ],
+        [
+          "push",
+          2,
+          "spell",
+          0,
+          "Capsize"
+        ],
+        [
+          "pass",
+          0,
+          [
+            2
+          ]
+        ],
+        [
+          "pass",
+          1,
+          [
+            2
+          ]
+        ],
+        [
+          "pass",
+          2,
+          [
+            2
+          ]
+        ],
+        [
+          "pass",
+          3,
+          [
+            2
+          ]
+        ],
+        [
+          "resolve",
+          2,
+          "spell",
+          0
+        ],
+        [
+          "pass",
+          0,
+          []
+        ],
+        [
+          "pass",
+          1,
+          []
+        ],
+        [
+          "pass",
+          2,
+          []
+        ],
+        [
+          "pass",
+          3,
+          []
+        ],
+        [
+          "push",
+          3,
+          "spell",
+          0,
+          "Capsize"
+        ],
+        [
+          "pass",
+          0,
+          [
+            3
+          ]
+        ],
+        [
+          "pass",
+          1,
+          [
+            3
+          ]
+        ],
+        [
+          "action",
+          2,
+          "spell"
+        ],
+        [
+          "push",
+          4,
+          "spell",
+          2,
+          "control:counter:0"
+        ],
+        [
+          "pass",
+          2,
+          [
+            3,
+            4
+          ]
+        ],
+        [
+          "pass",
+          3,
+          [
+            3,
+            4
+          ]
+        ],
+        [
+          "pass",
+          0,
+          [
+            3,
+            4
+          ]
+        ],
+        [
+          "pass",
+          1,
+          [
+            3,
+            4
+          ]
+        ],
+        [
+          "counter",
+          3,
+          "spell"
+        ],
+        [
+          "resolve",
+          4,
+          "spell",
+          2
+        ],
+        [
+          "pass",
+          0,
+          []
+        ],
+        [
+          "pass",
+          1,
+          []
+        ],
+        [
+          "pass",
+          2,
+          []
+        ],
+        [
+          "pass",
+          3,
+          []
+        ]
+      ],
+      "steps": [],
+      "combat": [],
+      "diagnostics": {
+        "seed": 213,
+        "opening_forced": false,
+        "name": "Thousand Sons Conclave v1.6",
+        "library_total": 99,
+        "supported_definitions": 47,
+        "unsupported_definitions": [
+          "Mutalith Vortex Beast",
+          "Mana Geyser",
+          "Maskwood Nexus",
+          "Cyclonic Rift",
+          "March of Swirling Mist",
+          "Docent of Perfection",
+          "Chaos Warp",
+          "Searing Touch",
+          "Patron Wizard",
+          "Mystic Speculation",
+          "Jeska's Will",
+          "Sigil Tracer",
+          "Mathemagics",
+          "Jace, Vryn's Prodigy",
+          "Spellseeker",
+          "Veyran, Voice of Duality",
+          "Exalted Flamer of Tzeentch",
+          "Resonating Lute",
+          "Reiterate",
+          "Twincast",
+          "Sorcerer Class",
+          "Voidmage Prodigy",
+          "Underworld Breach",
+          "Dualcaster Mage",
+          "Pink Horror",
+          "The Lost and the Damned",
+          "Chaos Mutation",
+          "Step Through",
+          "Lord of Change",
+          "Tzaangor Shaman",
+          "Mystical Tutor",
+          "Phyrexian Altar",
+          "Comet Storm",
+          "Muddle the Mixture",
+          "Heralds of Tzeentch"
+        ],
+        "approx_definitions": [
+          "An Offer You Can't Refuse",
+          "Arcane Denial",
+          "Brainstorm",
+          "Flusterstorm",
+          "Impulse",
+          "Ponder",
+          "Preordain",
+          "Telling Time"
+        ],
+        "coverage_casts": {
+          "supported": 2
+        },
+        "unsupported_held": {},
+        "commander_casts": 0,
+        "commander_in_zone": true,
+        "mana_payments": [
+          {
+            "source": "Capsize",
+            "cost": 6,
+            "source_ids": [
+              434,
+              436,
+              438,
+              440,
+              442,
+              444
+            ],
+            "unused": [
+              0,
+              0,
+              0
+            ]
+          },
+          {
+            "source": "Capsize",
+            "cost": 6,
+            "source_ids": [
+              434,
+              436,
+              438,
+              440,
+              442,
+              444
+            ],
+            "unused": [
+              0,
+              0,
+              0
+            ]
+          }
+        ],
+        "land_misses": 0,
+        "known_rules_gaps": [
+          "limited named-card subset; unsupported spells fail closed",
+          "one detailed deck; synthetic opponents and finishers",
+          "only U/R/colorless mana and U/R/generic costs; other mana text fails closed",
+          "only registered trigger/activation operations; creature tap abilities unsupported",
+          "single blockers; no first/double strike, trample or planeswalker attacks",
+          "Wizard choice only for Arcane Adaptation; other selection/land utilities still partial",
+          "Capsize buyback only; no general copy/loop or other buyback coverage",
+          "temporary-token expiry remains cleanup adapter; no full delayed-trigger system"
+        ],
+        "v7": {
+          "shared_trigger_instances": 0,
+          "shared_cost_queries": 0,
+          "safety_stop": null,
+          "modular_scope": "typed costs/triggers/block legality; live zones supplied by v9b"
+        },
+        "v8": {
+          "kernel_permanent_creatures": 34,
+          "kernel_view_consistent": true,
+          "creatures_entered": 1,
+          "permanents_entered": 0,
+          "zone_transitions": 1,
+          "combat_damage_batches": 0,
+          "shared_stack_max_depth": 2,
+          "shared_stack_resolved": 3,
+          "shared_stack_countered": 1,
+          "guard_stop": null,
+          "limits": [
+            "shared physical state and typed priority stack; partial card/step coverage"
+          ]
+        },
+        "v9": {
+          "providers": [
+            "magnus",
+            "aggro",
+            "control",
+            "combo"
+          ],
+          "detailed_seat": 0,
+          "kernel_view_consistent": true,
+          "migration_status": "shared physical zones, source-ID mana and typed priority stack",
+          "multi_detailed_games_supported": false,
+          "authoritative_card_zones_in_live_game": true
+        },
+        "v9b": {
+          "authoritative_card_zones_in_live_game": true,
+          "zone_index_consistent": true,
+          "kernel_view_consistent": true,
+          "physical_objects": 397,
+          "zone_counts": {
+            "0": {
+              "battlefield": 10,
+              "command": 1,
+              "exile": 0,
+              "graveyard": 1,
+              "hand": 0,
+              "library": 88,
+              "stack": 0
+            },
+            "1": {
+              "battlefield": 8,
+              "command": 0,
+              "exile": 0,
+              "graveyard": 0,
+              "hand": 0,
+              "library": 91,
+              "stack": 0
+            },
+            "2": {
+              "battlefield": 8,
+              "command": 0,
+              "exile": 0,
+              "graveyard": 1,
+              "hand": 1,
+              "library": 89,
+              "stack": 0
+            },
+            "3": {
+              "battlefield": 8,
+              "command": 0,
+              "exile": 0,
+              "graveyard": 0,
+              "hand": 0,
+              "library": 91,
+              "stack": 0
+            }
+          },
+          "limits": [
+            "source-ID mana supplied by v9c; synthetic abilities remain approximate",
+            "typed priority supplied by v10; incomplete card/step coverage remains",
+            "one detailed deck; selection/land rules still approximate"
+          ]
+        },
+        "v9c": {
+          "source_backed_live_payment": true,
+          "pools": {
+            "0": [
+              0,
+              0,
+              0
+            ],
+            "1": [
+              0,
+              0,
+              0
+            ],
+            "2": [
+              0,
+              0,
+              0
+            ],
+            "3": [
+              0,
+              0,
+              0
+            ]
+          },
+          "payments": [
+            {
+              "seat": 2,
+              "cost": [
+                2,
+                0,
+                0
+              ],
+              "sources": [
+                484,
+                486
+              ],
+              "unused": [
+                0,
+                0,
+                0
+              ]
+            },
+            {
+              "seat": 0,
+              "cost": [
+                4,
+                2,
+                0
+              ],
+              "sources": [
+                434,
+                436,
+                438,
+                440,
+                442,
+                444
+              ],
+              "unused": [
+                0,
+                0,
+                0
+              ]
+            },
+            {
+              "seat": 0,
+              "cost": [
+                4,
+                2,
+                0
+              ],
+              "sources": [
+                434,
+                436,
+                438,
+                440,
+                442,
+                444
+              ],
+              "unused": [
+                0,
+                0,
+                0
+              ]
+            },
+            {
+              "seat": 2,
+              "cost": [
+                2,
+                0,
+                0
+              ],
+              "sources": [
+                488,
+                490
+              ],
+              "unused": [
+                0,
+                0,
+                0
+              ]
+            }
+          ],
+          "activations": [
+            {
+              "seat": 2,
+              "source_id": 484,
+              "source": "control:land:36",
+              "output": [
+                1,
+                0,
+                0
+              ],
+              "activation_cost": [
+                0,
+                0,
+                0
+              ],
+              "life_paid": 0,
+              "damage": 0,
+              "sacrifice": false
+            },
+            {
+              "seat": 2,
+              "source_id": 486,
+              "source": "control:land:26",
+              "output": [
+                1,
+                0,
+                0
+              ],
+              "activation_cost": [
+                0,
+                0,
+                0
+              ],
+              "life_paid": 0,
+              "damage": 0,
+              "sacrifice": false
+            },
+            {
+              "seat": 0,
+              "source_id": 434,
+              "source": "Island",
+              "output": [
+                0,
+                1,
+                0
+              ],
+              "activation_cost": [
+                0,
+                0,
+                0
+              ],
+              "life_paid": 0,
+              "damage": 0,
+              "sacrifice": false
+            },
+            {
+              "seat": 0,
+              "source_id": 436,
+              "source": "Island",
+              "output": [
+                0,
+                1,
+                0
+              ],
+              "activation_cost": [
+                0,
+                0,
+                0
+              ],
+              "life_paid": 0,
+              "damage": 0,
+              "sacrifice": false
+            },
+            {
+              "seat": 0,
+              "source_id": 438,
+              "source": "Island",
+              "output": [
+                0,
+                1,
+                0
+              ],
+              "activation_cost": [
+                0,
+                0,
+                0
+              ],
+              "life_paid": 0,
+              "damage": 0,
+              "sacrifice": false
+            },
+            {
+              "seat": 0,
+              "source_id": 440,
+              "source": "Island",
+              "output": [
+                0,
+                1,
+                0
+              ],
+              "activation_cost": [
+                0,
+                0,
+                0
+              ],
+              "life_paid": 0,
+              "damage": 0,
+              "sacrifice": false
+            },
+            {
+              "seat": 0,
+              "source_id": 442,
+              "source": "Island",
+              "output": [
+                0,
+                1,
+                0
+              ],
+              "activation_cost": [
+                0,
+                0,
+                0
+              ],
+              "life_paid": 0,
+              "damage": 0,
+              "sacrifice": false
+            },
+            {
+              "seat": 0,
+              "source_id": 444,
+              "source": "Island",
+              "output": [
+                0,
+                1,
+                0
+              ],
+              "activation_cost": [
+                0,
+                0,
+                0
+              ],
+              "life_paid": 0,
+              "damage": 0,
+              "sacrifice": false
+            },
+            {
+              "seat": 0,
+              "source_id": 434,
+              "source": "Island",
+              "output": [
+                0,
+                1,
+                0
+              ],
+              "activation_cost": [
+                0,
+                0,
+                0
+              ],
+              "life_paid": 0,
+              "damage": 0,
+              "sacrifice": false
+            },
+            {
+              "seat": 0,
+              "source_id": 436,
+              "source": "Island",
+              "output": [
+                0,
+                1,
+                0
+              ],
+              "activation_cost": [
+                0,
+                0,
+                0
+              ],
+              "life_paid": 0,
+              "damage": 0,
+              "sacrifice": false
+            },
+            {
+              "seat": 0,
+              "source_id": 438,
+              "source": "Island",
+              "output": [
+                0,
+                1,
+                0
+              ],
+              "activation_cost": [
+                0,
+                0,
+                0
+              ],
+              "life_paid": 0,
+              "damage": 0,
+              "sacrifice": false
+            },
+            {
+              "seat": 0,
+              "source_id": 440,
+              "source": "Island",
+              "output": [
+                0,
+                1,
+                0
+              ],
+              "activation_cost": [
+                0,
+                0,
+                0
+              ],
+              "life_paid": 0,
+              "damage": 0,
+              "sacrifice": false
+            },
+            {
+              "seat": 0,
+              "source_id": 442,
+              "source": "Island",
+              "output": [
+                0,
+                1,
+                0
+              ],
+              "activation_cost": [
+                0,
+                0,
+                0
+              ],
+              "life_paid": 0,
+              "damage": 0,
+              "sacrifice": false
+            },
+            {
+              "seat": 0,
+              "source_id": 444,
+              "source": "Island",
+              "output": [
+                0,
+                1,
+                0
+              ],
+              "activation_cost": [
+                0,
+                0,
+                0
+              ],
+              "life_paid": 0,
+              "damage": 0,
+              "sacrifice": false
+            },
+            {
+              "seat": 2,
+              "source_id": 488,
+              "source": "control:land:13",
+              "output": [
+                1,
+                0,
+                0
+              ],
+              "activation_cost": [
+                0,
+                0,
+                0
+              ],
+              "life_paid": 0,
+              "damage": 0,
+              "sacrifice": false
+            },
+            {
+              "seat": 2,
+              "source_id": 490,
+              "source": "control:land:33",
+              "output": [
+                1,
+                0,
+                0
+              ],
+              "activation_cost": [
+                0,
+                0,
+                0
+              ],
+              "life_paid": 0,
+              "damage": 0,
+              "sacrifice": false
+            }
+          ],
+          "planner_max_states": 21,
+          "planner_budget": 20000,
+          "cache_hits": 16,
+          "limits": [
+            "typed priority supplied by v10; incomplete card/step coverage remains",
+            "one detailed deck; U/R/colorless source subset; synthetic sources approximate"
+          ]
+        },
+        "v10": {
+          "typed_priority_live": true,
+          "passes": 26,
+          "triggers_queued": 0,
+          "triggers_resolved": 0,
+          "activations_resolved": 0,
+          "fizzled": 0,
+          "max_depth": 2,
+          "remaining_frames": 0,
+          "pending_triggers": 0,
+          "limits": [
+            "one detailed deck",
+            "ordinary step driver supplied by v11; limited combat keywords/assignments",
+            "Mind Stone draw plus explicitly registered nonmana activations; not all named abilities"
+          ]
+        },
+        "v11": {
+          "explicit_steps": true,
+          "new_cards": [
+            "Abrade",
+            "Capsize",
+            "Arcane Adaptation"
+          ],
+          "upgraded_cards": [
+            "Frantic Search"
+          ],
+          "step_count": 0,
+          "combat_batches": 0,
+          "rule_events": [
+            [
+              "capsize_bounce",
+              "control:small:1",
+              true
+            ],
+            [
+              "buyback_return",
+              0
+            ]
+          ],
+          "limits": [
+            "one detailed deck",
+            "one blocker per attacker",
+            "limited keywords and card text",
+            "Arcane Adaptation Wizard choice; Capsize buyback subset"
+          ]
+        }
+      }
+    }
+  ]
+}

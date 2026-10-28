@@ -79,7 +79,7 @@ class ManaTable(LiveTable):
     def action_for_card(self, player, card):
         return self.action_for(player, card) if player is self.details else self.build_action(player, card)
 
-    def expected_action(self, player, card):
+    def expected_action(self, player, card, announced=None):
         return (self.action_for(player, card) if player is self.details else
                 base.Action(player.seat, card.name, card.card_type, card.effect,
                             card.mana_value, parameters=dict(card.parameters)))

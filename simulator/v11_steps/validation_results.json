@@ -1,0 +1,85 @@
+{
+  "smoke_games": 200,
+  "rounds": 12,
+  "consistent": true,
+  "safety_stops": [],
+  "steps": 99302,
+  "combat_batches": 3937,
+  "payments": 10692,
+  "expanded_rule_events": 220,
+  "elapsed_seconds": 92.999,
+  "benchmark_games": 20,
+  "benchmark_rounds": 8,
+  "median_ms": {
+    "PriorityTable": 152.606,
+    "StepTable": 308.3
+  },
+  "forced_scenarios": [
+    {
+      "title": "Abrade: announced modes, damage and artifact destruction",
+      "result": "Creature mode marked 3 damage on a 1-toughness creature (survived=False); artifact mode destroyed its chosen ramp permanent.",
+      "checks": {
+        "damage_mode": true,
+        "artifact_destroyed": true,
+        "mode_locked": true
+      }
+    },
+    {
+      "title": "Capsize: successful buyback, then a countered recast",
+      "result": "First cast returned the target and Capsize to hand. After an explicitly advanced untap, the second bought-back cast was countered; Capsize entered the graveyard.",
+      "checks": {
+        "successful_buyback_return": true,
+        "countered_buyback_graveyard": true
+      }
+    },
+    {
+      "title": "Arcane Adaptation: live Wizard types and captured triggers",
+      "result": "Adaptation made Iconoclast a Wizard. Harmonic Prodigy doubled triggers from Preordain and the responding Capsize (4 Soldiers). Capsize bounced Adaptation; already queued triggers survived. A later Ponder produced only 1 Soldier.",
+      "checks": {
+        "wizard_while_enchantment_present": true,
+        "wizard_after_bounce": false,
+        "captured_tokens": 4,
+        "later_tokens": 1
+      }
+    },
+    {
+      "title": "Frantic Search: atomic selection, untap and source reuse",
+      "result": "Drew 2, discarded 2, untapped 3 actual lands. Young Pyromancer then reused restored source IDs [434] in the same main phase.",
+      "checks": {
+        "discarded": 2,
+        "untapped_lands": 3,
+        "reused_source_ids": [
+          434
+        ]
+      }
+    },
+    {
+      "title": "Combat: response after blocks and persistent blocked status",
+      "result": "Goblin Electromancer was blocked. Capsize bounced the blocker in the post-block priority window. The attacker remained blocked and dealt zero player damage (no trample).",
+      "checks": {
+        "blocker_bounced": true,
+        "attacker_still_blocked": true,
+        "player_damage": {}
+      }
+    }
+  ],
+  "unforced_games": [
+    {
+      "title": "Unforced live game, seed 102",
+      "result": "turn_limit; safety=None; steps=428",
+      "checks": {
+        "consistent": true,
+        "safety_stop": null
+      }
+    },
+    {
+      "title": "Unforced live game, seed 104",
+      "result": "turn_limit; safety=None; steps=394",
+      "checks": {
+        "consistent": true,
+        "safety_stop": null
+      }
+    }
+  ],
+  "caveat": "Infrastructure diagnostics; not empirical Commander win rates"
+}
