@@ -1,0 +1,497 @@
+{
+  "title": "Baral loot is successful-counter-only and independently optional",
+  "result": "An actual Counterspell countered the control seat's creature spell. Harmonic doubled Baral into two separate loot triggers. The first was accepted (draw then discard); the second was declined. Counterspell's colored UU requirement was preserved despite Baral.",
+  "forced": true,
+  "consistent": true,
+  "branches": [
+    {
+      "events": [
+        "FORCED DIAGNOSTIC: declared late-game source layout and chosen hand/library cards from actual conserved decks. No natural opening or win-rate claim.",
+        "    MANA P0: Island #462 -> (0, 1, 0)",
+        "    MANA P0: Island #464 -> (0, 1, 0)",
+        "  P0 (magnus) casts Baral, Chief of Compliance [creature] for 2; mana=11.",
+        "    STACK +1 [spell] P0: Baral, Chief of Compliance.",
+        "    Baral, Chief of Compliance enters battlefield (1/3).",
+        "    MANA P0: Island #466 -> (0, 1, 0)",
+        "    MANA P0: Mountain #478 -> (0, 0, 1)",
+        "  P0 (magnus) casts Harmonic Prodigy [creature] for 2; mana=9.",
+        "    STACK +2 [spell] P0: Harmonic Prodigy.",
+        "    Harmonic Prodigy enters battlefield (1/3).",
+        "    MANA P2: control:land:11 #518 -> (1, 0, 0)",
+        "    MANA P2: control:land:10 #520 -> (1, 0, 0)",
+        "    MANA P2: control:land:35 #522 -> (1, 0, 0)",
+        "    MANA P2: control:land:36 #524 -> (1, 0, 0)",
+        "  P2 (control) casts control:medium:0 [creature] for 4; mana=4.",
+        "    STACK +3 [spell] P2: control:medium:0.",
+        "    MANA P0: Island #468 -> (0, 1, 0)",
+        "    MANA P0: Island #470 -> (0, 1, 0)",
+        "  P0 (magnus) casts Counterspell [instant] for 2; mana=7.",
+        "    STACK +4 [spell] P0: Counterspell.",
+        "    STACK +5 [triggered] P0: Harmonic Prodigy: pump_self.",
+        "    PROWESS #561: now 2/4 until cleanup.",
+        "    STACK -3: control:medium:0 countered.",
+        "    STACK +6 [triggered] P0: Baral, Chief of Compliance: optional_loot.",
+        "    STACK +7 [triggered] P0: Baral, Chief of Compliance: optional_loot.",
+        "    CHOICE baral_discard P0: ['Frantic Search']; {}.",
+        "    BARAL LOOT P0: accepted=True.",
+        "    BARAL LOOT P0: accepted=False."
+      ],
+      "selection": [
+        {
+          "kind": "baral_discard",
+          "controller": 0,
+          "ids": [
+            568
+          ]
+        }
+      ],
+      "engine": [
+        [
+          "prowess",
+          561,
+          2,
+          4
+        ],
+        [
+          "loot",
+          0,
+          true
+        ],
+        [
+          "loot",
+          0,
+          false
+        ]
+      ],
+      "priority": [
+        [
+          "push",
+          1,
+          "spell",
+          0,
+          "Baral, Chief of Compliance"
+        ],
+        [
+          "pass",
+          0,
+          [
+            1
+          ]
+        ],
+        [
+          "pass",
+          1,
+          [
+            1
+          ]
+        ],
+        [
+          "pass",
+          2,
+          [
+            1
+          ]
+        ],
+        [
+          "pass",
+          3,
+          [
+            1
+          ]
+        ],
+        [
+          "resolve",
+          1,
+          "spell",
+          0
+        ],
+        [
+          "pass",
+          0,
+          []
+        ],
+        [
+          "pass",
+          1,
+          []
+        ],
+        [
+          "pass",
+          2,
+          []
+        ],
+        [
+          "pass",
+          3,
+          []
+        ],
+        [
+          "push",
+          2,
+          "spell",
+          0,
+          "Harmonic Prodigy"
+        ],
+        [
+          "pass",
+          0,
+          [
+            2
+          ]
+        ],
+        [
+          "pass",
+          1,
+          [
+            2
+          ]
+        ],
+        [
+          "pass",
+          2,
+          [
+            2
+          ]
+        ],
+        [
+          "pass",
+          3,
+          [
+            2
+          ]
+        ],
+        [
+          "resolve",
+          2,
+          "spell",
+          0
+        ],
+        [
+          "pass",
+          0,
+          []
+        ],
+        [
+          "pass",
+          1,
+          []
+        ],
+        [
+          "pass",
+          2,
+          []
+        ],
+        [
+          "pass",
+          3,
+          []
+        ],
+        [
+          "push",
+          3,
+          "spell",
+          2,
+          "control:medium:0"
+        ],
+        [
+          "pass",
+          2,
+          [
+            3
+          ]
+        ],
+        [
+          "pass",
+          3,
+          [
+            3
+          ]
+        ],
+        [
+          "action",
+          0,
+          "spell"
+        ],
+        [
+          "push",
+          4,
+          "spell",
+          0,
+          "Counterspell"
+        ],
+        [
+          "push",
+          5,
+          "triggered",
+          0,
+          "Harmonic Prodigy: pump_self"
+        ],
+        [
+          "pass",
+          0,
+          [
+            3,
+            4,
+            5
+          ]
+        ],
+        [
+          "pass",
+          1,
+          [
+            3,
+            4,
+            5
+          ]
+        ],
+        [
+          "pass",
+          2,
+          [
+            3,
+            4,
+            5
+          ]
+        ],
+        [
+          "pass",
+          3,
+          [
+            3,
+            4,
+            5
+          ]
+        ],
+        [
+          "resolve",
+          5,
+          "triggered",
+          0
+        ],
+        [
+          "pass",
+          2,
+          [
+            3,
+            4
+          ]
+        ],
+        [
+          "pass",
+          3,
+          [
+            3,
+            4
+          ]
+        ],
+        [
+          "pass",
+          0,
+          [
+            3,
+            4
+          ]
+        ],
+        [
+          "pass",
+          1,
+          [
+            3,
+            4
+          ]
+        ],
+        [
+          "counter",
+          3,
+          "spell"
+        ],
+        [
+          "resolve",
+          4,
+          "spell",
+          0
+        ],
+        [
+          "push",
+          6,
+          "triggered",
+          0,
+          "Baral, Chief of Compliance: optional_loot"
+        ],
+        [
+          "push",
+          7,
+          "triggered",
+          0,
+          "Baral, Chief of Compliance: optional_loot"
+        ],
+        [
+          "pass",
+          2,
+          [
+            6,
+            7
+          ]
+        ],
+        [
+          "pass",
+          3,
+          [
+            6,
+            7
+          ]
+        ],
+        [
+          "pass",
+          0,
+          [
+            6,
+            7
+          ]
+        ],
+        [
+          "pass",
+          1,
+          [
+            6,
+            7
+          ]
+        ],
+        [
+          "resolve",
+          7,
+          "triggered",
+          0
+        ],
+        [
+          "pass",
+          2,
+          [
+            6
+          ]
+        ],
+        [
+          "pass",
+          3,
+          [
+            6
+          ]
+        ],
+        [
+          "pass",
+          0,
+          [
+            6
+          ]
+        ],
+        [
+          "pass",
+          1,
+          [
+            6
+          ]
+        ],
+        [
+          "resolve",
+          6,
+          "triggered",
+          0
+        ],
+        [
+          "pass",
+          2,
+          []
+        ],
+        [
+          "pass",
+          3,
+          []
+        ],
+        [
+          "pass",
+          0,
+          []
+        ],
+        [
+          "pass",
+          1,
+          []
+        ]
+      ],
+      "payments": [
+        {
+          "seat": 0,
+          "cost": [
+            1,
+            1,
+            0
+          ],
+          "sources": [
+            462,
+            464
+          ],
+          "unused": [
+            0,
+            0,
+            0
+          ]
+        },
+        {
+          "seat": 0,
+          "cost": [
+            1,
+            0,
+            1
+          ],
+          "sources": [
+            466,
+            478
+          ],
+          "unused": [
+            0,
+            0,
+            0
+          ]
+        },
+        {
+          "seat": 2,
+          "cost": [
+            4,
+            0,
+            0
+          ],
+          "sources": [
+            518,
+            520,
+            522,
+            524
+          ],
+          "unused": [
+            0,
+            0,
+            0
+          ]
+        },
+        {
+          "seat": 0,
+          "cost": [
+            0,
+            2,
+            0
+          ],
+          "sources": [
+            468,
+            470
+          ],
+          "unused": [
+            0,
+            0,
+            0
+          ]
+        }
+      ],
+      "steps": [],
+      "delayed": []
+    }
+  ]
+}

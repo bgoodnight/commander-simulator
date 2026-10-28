@@ -132,13 +132,15 @@ class PriorityStack:
         if self.holder is None or not self.alive(self.holder):
             self.holder = next((s for s in self.order() if self.alive(s)), None)
 
-    def counter(self, target_id, allowed_kinds):
+    def counter(self, target_id, allowed_kinds, controller=None):
         frame = self.get(target_id)
         if frame is None or frame.kind not in allowed_kinds: return None
         self.frames.remove(frame)
         if frame.kind == 'spell':
             self.spells_countered += 1; self.table.counts['spells_countered'] += 1
             self.table.emit('spell_countered', frame.action)
+            if controller is not None:
+                self.table.emit('spell_countered_by', controller=controller, countered_frame=target_id)
         self.history.append(('counter', target_id, frame.kind))
         self.table.note(f'    STACK -{target_id}: {frame.label} countered.')
         return frame
@@ -154,7 +156,7 @@ class PriorityStack:
                     if not target or target.kind != 'spell' or not t.counter_allowed(frame.action, target):
                         self.fizzled += 1; resolved = False; t.fizzle_spell(frame.action)
                     else:
-                        removed = self.counter(target.frame_id, {'spell'})
+                        removed = self.counter(target.frame_id, {'spell'}, frame.controller)
                         self.counters_resolved += 1; t.counts['counters_cast'] += 1
                         t.players[frame.controller].counters_used += 1
                         if removed.action.effect == 'counter': t.counts['counter_counters'] += 1

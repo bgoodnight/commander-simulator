@@ -1,0 +1,561 @@
+{
+  "title": "Exact selection across five spells",
+  "result": "Brainstorm: Abrade selected with exact requested top/bottom choices; Ponder: Abrade selected with exact requested top/bottom choices; Preordain: Abrade selected with exact requested top/bottom choices; Telling Time: Abrade selected with exact requested top/bottom choices; Impulse: Abrade selected with exact requested top/bottom choices. Brainstorm/Ponder/Preordain draw; Telling Time/Impulse put a looked-at card into hand.",
+  "forced": true,
+  "consistent": true,
+  "branches": [
+    {
+      "events": [
+        "FORCED DIAGNOSTIC: declared late-game source layout and chosen hand/library cards from actual conserved decks. No natural opening or win-rate claim.",
+        "FORCED LIBRARY TOP: ['Island', 'Mountain', 'Abrade']",
+        "    MANA P0: Island #434 -> (0, 1, 0)",
+        "  P0 (magnus) casts Brainstorm [instant] for 1; mana=12.",
+        "    STACK +1 [spell] P0: Brainstorm.",
+        "    CHOICE brainstorm_put_back P0: ['Mountain', 'Island']; {}."
+      ],
+      "selection": [
+        {
+          "kind": "brainstorm_put_back",
+          "controller": 0,
+          "ids": [
+            531,
+            530
+          ]
+        }
+      ],
+      "engine": [],
+      "priority": [
+        [
+          "push",
+          1,
+          "spell",
+          0,
+          "Brainstorm"
+        ],
+        [
+          "pass",
+          0,
+          [
+            1
+          ]
+        ],
+        [
+          "pass",
+          1,
+          [
+            1
+          ]
+        ],
+        [
+          "pass",
+          2,
+          [
+            1
+          ]
+        ],
+        [
+          "pass",
+          3,
+          [
+            1
+          ]
+        ],
+        [
+          "resolve",
+          1,
+          "spell",
+          0
+        ],
+        [
+          "pass",
+          0,
+          []
+        ],
+        [
+          "pass",
+          1,
+          []
+        ],
+        [
+          "pass",
+          2,
+          []
+        ],
+        [
+          "pass",
+          3,
+          []
+        ]
+      ],
+      "payments": [
+        {
+          "seat": 0,
+          "cost": [
+            0,
+            1,
+            0
+          ],
+          "sources": [
+            434
+          ],
+          "unused": [
+            0,
+            0,
+            0
+          ]
+        }
+      ],
+      "steps": [],
+      "delayed": []
+    },
+    {
+      "events": [
+        "FORCED DIAGNOSTIC: declared late-game source layout and chosen hand/library cards from actual conserved decks. No natural opening or win-rate claim.",
+        "FORCED LIBRARY TOP: ['Island', 'Mountain', 'Abrade']",
+        "    MANA P0: Island #434 -> (0, 1, 0)",
+        "  P0 (magnus) casts Ponder [sorcery] for 1; mana=12.",
+        "    STACK +1 [spell] P0: Ponder.",
+        "    CHOICE ponder_order P0: ['Abrade', 'Island', 'Mountain']; {}.",
+        "    CHOICE ponder_shuffle P0: []; {'shuffle': False}."
+      ],
+      "selection": [
+        {
+          "kind": "ponder_order",
+          "controller": 0,
+          "ids": [
+            49,
+            83,
+            81
+          ]
+        },
+        {
+          "kind": "ponder_shuffle",
+          "controller": 0,
+          "ids": [],
+          "shuffle": false
+        }
+      ],
+      "engine": [],
+      "priority": [
+        [
+          "push",
+          1,
+          "spell",
+          0,
+          "Ponder"
+        ],
+        [
+          "pass",
+          0,
+          [
+            1
+          ]
+        ],
+        [
+          "pass",
+          1,
+          [
+            1
+          ]
+        ],
+        [
+          "pass",
+          2,
+          [
+            1
+          ]
+        ],
+        [
+          "pass",
+          3,
+          [
+            1
+          ]
+        ],
+        [
+          "resolve",
+          1,
+          "spell",
+          0
+        ],
+        [
+          "pass",
+          0,
+          []
+        ],
+        [
+          "pass",
+          1,
+          []
+        ],
+        [
+          "pass",
+          2,
+          []
+        ],
+        [
+          "pass",
+          3,
+          []
+        ]
+      ],
+      "payments": [
+        {
+          "seat": 0,
+          "cost": [
+            0,
+            1,
+            0
+          ],
+          "sources": [
+            434
+          ],
+          "unused": [
+            0,
+            0,
+            0
+          ]
+        }
+      ],
+      "steps": [],
+      "delayed": []
+    },
+    {
+      "events": [
+        "FORCED DIAGNOSTIC: declared late-game source layout and chosen hand/library cards from actual conserved decks. No natural opening or win-rate claim.",
+        "FORCED LIBRARY TOP: ['Island', 'Mountain', 'Abrade']",
+        "    MANA P0: Island #434 -> (0, 1, 0)",
+        "  P0 (magnus) casts Preordain [sorcery] for 1; mana=12.",
+        "    STACK +1 [spell] P0: Preordain.",
+        "    CHOICE scry P0: ['Island', 'Mountain']; {'top': [], 'bottom': [72, 88]}."
+      ],
+      "selection": [
+        {
+          "kind": "scry",
+          "controller": 0,
+          "ids": [
+            72,
+            88
+          ],
+          "top": [],
+          "bottom": [
+            72,
+            88
+          ]
+        }
+      ],
+      "engine": [],
+      "priority": [
+        [
+          "push",
+          1,
+          "spell",
+          0,
+          "Preordain"
+        ],
+        [
+          "pass",
+          0,
+          [
+            1
+          ]
+        ],
+        [
+          "pass",
+          1,
+          [
+            1
+          ]
+        ],
+        [
+          "pass",
+          2,
+          [
+            1
+          ]
+        ],
+        [
+          "pass",
+          3,
+          [
+            1
+          ]
+        ],
+        [
+          "resolve",
+          1,
+          "spell",
+          0
+        ],
+        [
+          "pass",
+          0,
+          []
+        ],
+        [
+          "pass",
+          1,
+          []
+        ],
+        [
+          "pass",
+          2,
+          []
+        ],
+        [
+          "pass",
+          3,
+          []
+        ]
+      ],
+      "payments": [
+        {
+          "seat": 0,
+          "cost": [
+            0,
+            1,
+            0
+          ],
+          "sources": [
+            434
+          ],
+          "unused": [
+            0,
+            0,
+            0
+          ]
+        }
+      ],
+      "steps": [],
+      "delayed": []
+    },
+    {
+      "events": [
+        "FORCED DIAGNOSTIC: declared late-game source layout and chosen hand/library cards from actual conserved decks. No natural opening or win-rate claim.",
+        "FORCED LIBRARY TOP: ['Island', 'Mountain', 'Abrade']",
+        "    MANA P0: Island #462 -> (0, 1, 0)",
+        "    MANA P0: Island #464 -> (0, 1, 0)",
+        "  P0 (magnus) casts Telling Time [instant] for 2; mana=11.",
+        "    STACK +1 [spell] P0: Telling Time.",
+        "    CHOICE look_to_hand P0: ['Abrade']; {}.",
+        "    CHOICE telling_top P0: ['Island']; {}."
+      ],
+      "selection": [
+        {
+          "kind": "look_to_hand",
+          "controller": 0,
+          "ids": [
+            30
+          ]
+        },
+        {
+          "kind": "telling_top",
+          "controller": 0,
+          "ids": [
+            72
+          ]
+        }
+      ],
+      "engine": [],
+      "priority": [
+        [
+          "push",
+          1,
+          "spell",
+          0,
+          "Telling Time"
+        ],
+        [
+          "pass",
+          0,
+          [
+            1
+          ]
+        ],
+        [
+          "pass",
+          1,
+          [
+            1
+          ]
+        ],
+        [
+          "pass",
+          2,
+          [
+            1
+          ]
+        ],
+        [
+          "pass",
+          3,
+          [
+            1
+          ]
+        ],
+        [
+          "resolve",
+          1,
+          "spell",
+          0
+        ],
+        [
+          "pass",
+          0,
+          []
+        ],
+        [
+          "pass",
+          1,
+          []
+        ],
+        [
+          "pass",
+          2,
+          []
+        ],
+        [
+          "pass",
+          3,
+          []
+        ]
+      ],
+      "payments": [
+        {
+          "seat": 0,
+          "cost": [
+            1,
+            1,
+            0
+          ],
+          "sources": [
+            462,
+            464
+          ],
+          "unused": [
+            0,
+            0,
+            0
+          ]
+        }
+      ],
+      "steps": [],
+      "delayed": []
+    },
+    {
+      "events": [
+        "FORCED DIAGNOSTIC: declared late-game source layout and chosen hand/library cards from actual conserved decks. No natural opening or win-rate claim.",
+        "FORCED LIBRARY TOP: ['Island', 'Mountain', 'Abrade', 'Capsize']",
+        "    MANA P0: Island #434 -> (0, 1, 0)",
+        "    MANA P0: Island #436 -> (0, 1, 0)",
+        "  P0 (magnus) casts Impulse [instant] for 2; mana=11.",
+        "    STACK +1 [spell] P0: Impulse.",
+        "    CHOICE look_to_hand P0: ['Abrade']; {}.",
+        "    CHOICE impulse_bottom P0: ['Capsize', 'Island', 'Mountain']; {}."
+      ],
+      "selection": [
+        {
+          "kind": "look_to_hand",
+          "controller": 0,
+          "ids": [
+            35
+          ]
+        },
+        {
+          "kind": "impulse_bottom",
+          "controller": 0,
+          "ids": [
+            54,
+            49,
+            83
+          ]
+        }
+      ],
+      "engine": [],
+      "priority": [
+        [
+          "push",
+          1,
+          "spell",
+          0,
+          "Impulse"
+        ],
+        [
+          "pass",
+          0,
+          [
+            1
+          ]
+        ],
+        [
+          "pass",
+          1,
+          [
+            1
+          ]
+        ],
+        [
+          "pass",
+          2,
+          [
+            1
+          ]
+        ],
+        [
+          "pass",
+          3,
+          [
+            1
+          ]
+        ],
+        [
+          "resolve",
+          1,
+          "spell",
+          0
+        ],
+        [
+          "pass",
+          0,
+          []
+        ],
+        [
+          "pass",
+          1,
+          []
+        ],
+        [
+          "pass",
+          2,
+          []
+        ],
+        [
+          "pass",
+          3,
+          []
+        ]
+      ],
+      "payments": [
+        {
+          "seat": 0,
+          "cost": [
+            1,
+            1,
+            0
+          ],
+          "sources": [
+            434,
+            436
+          ],
+          "unused": [
+            0,
+            0,
+            0
+          ]
+        }
+      ],
+      "steps": [],
+      "delayed": []
+    }
+  ]
+}

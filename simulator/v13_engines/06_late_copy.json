@@ -1,0 +1,339 @@
+{
+  "title": "A copy made during an end step waits through cleanup",
+  "result": "Brainstorm was cast with actual source mana during end-step priority. Its Stormsplitter token was created after that step began. It survived cleanup, then its delayed exile triggered and resolved at the following player's end step.",
+  "forced": true,
+  "consistent": true,
+  "branches": [
+    {
+      "events": [
+        "FORCED DIAGNOSTIC: declared late-game source layout and chosen hand/library cards from actual conserved decks. No natural opening or win-rate claim.",
+        "    MANA P0: Island #462 -> (0, 1, 0)",
+        "    MANA P0: Island #464 -> (0, 1, 0)",
+        "    MANA P0: Island #466 -> (0, 1, 0)",
+        "    MANA P0: Mountain #478 -> (0, 0, 1)",
+        "  P0 (magnus) casts Stormsplitter [creature] for 4; mana=9.",
+        "    STACK +1 [spell] P0: Stormsplitter.",
+        "    Stormsplitter enters battlefield (1/4).",
+        "  STEP P0: end.",
+        "    END-STEP #1: 0 delayed exile abilities due.",
+        "    MANA P0: Island #468 -> (0, 1, 0)",
+        "  P0 (magnus) casts Brainstorm [instant] for 1; mana=8.",
+        "    STACK +2 [spell] P0: Brainstorm.",
+        "    STACK +3 [triggered] P0: Stormsplitter: copy_source_until_end.",
+        "    COPY #561: next end-step #2; copiable base only.",
+        "    CHOICE brainstorm_put_back P0: ['Cascade Bluffs', 'Riverglide Pathway']; {}.",
+        "  STEP P1: end.",
+        "    END-STEP #2: 1 delayed exile abilities due.",
+        "    STACK +4 [triggered] P0: Stormsplitter: exile_object.",
+        "    DELAYED EXILE #561: completed (departed objects are ignored)."
+      ],
+      "selection": [
+        {
+          "kind": "brainstorm_put_back",
+          "controller": 0,
+          "ids": [
+            562,
+            563
+          ]
+        }
+      ],
+      "engine": [
+        [
+          "copy_created",
+          558,
+          561,
+          2
+        ],
+        [
+          "delayed_exile",
+          561
+        ]
+      ],
+      "priority": [
+        [
+          "push",
+          1,
+          "spell",
+          0,
+          "Stormsplitter"
+        ],
+        [
+          "pass",
+          0,
+          [
+            1
+          ]
+        ],
+        [
+          "pass",
+          1,
+          [
+            1
+          ]
+        ],
+        [
+          "pass",
+          2,
+          [
+            1
+          ]
+        ],
+        [
+          "pass",
+          3,
+          [
+            1
+          ]
+        ],
+        [
+          "resolve",
+          1,
+          "spell",
+          0
+        ],
+        [
+          "pass",
+          0,
+          []
+        ],
+        [
+          "pass",
+          1,
+          []
+        ],
+        [
+          "pass",
+          2,
+          []
+        ],
+        [
+          "pass",
+          3,
+          []
+        ],
+        [
+          "action",
+          0,
+          "spell"
+        ],
+        [
+          "push",
+          2,
+          "spell",
+          0,
+          "Brainstorm"
+        ],
+        [
+          "push",
+          3,
+          "triggered",
+          0,
+          "Stormsplitter: copy_source_until_end"
+        ],
+        [
+          "pass",
+          0,
+          [
+            2,
+            3
+          ]
+        ],
+        [
+          "pass",
+          1,
+          [
+            2,
+            3
+          ]
+        ],
+        [
+          "pass",
+          2,
+          [
+            2,
+            3
+          ]
+        ],
+        [
+          "pass",
+          3,
+          [
+            2,
+            3
+          ]
+        ],
+        [
+          "resolve",
+          3,
+          "triggered",
+          0
+        ],
+        [
+          "pass",
+          0,
+          [
+            2
+          ]
+        ],
+        [
+          "pass",
+          1,
+          [
+            2
+          ]
+        ],
+        [
+          "pass",
+          2,
+          [
+            2
+          ]
+        ],
+        [
+          "pass",
+          3,
+          [
+            2
+          ]
+        ],
+        [
+          "resolve",
+          2,
+          "spell",
+          0
+        ],
+        [
+          "pass",
+          0,
+          []
+        ],
+        [
+          "pass",
+          1,
+          []
+        ],
+        [
+          "pass",
+          2,
+          []
+        ],
+        [
+          "pass",
+          3,
+          []
+        ],
+        [
+          "push",
+          4,
+          "triggered",
+          0,
+          "Stormsplitter: exile_object"
+        ],
+        [
+          "pass",
+          1,
+          [
+            4
+          ]
+        ],
+        [
+          "pass",
+          2,
+          [
+            4
+          ]
+        ],
+        [
+          "pass",
+          3,
+          [
+            4
+          ]
+        ],
+        [
+          "pass",
+          0,
+          [
+            4
+          ]
+        ],
+        [
+          "resolve",
+          4,
+          "triggered",
+          0
+        ],
+        [
+          "pass",
+          1,
+          []
+        ],
+        [
+          "pass",
+          2,
+          []
+        ],
+        [
+          "pass",
+          3,
+          []
+        ],
+        [
+          "pass",
+          0,
+          []
+        ]
+      ],
+      "payments": [
+        {
+          "seat": 0,
+          "cost": [
+            3,
+            0,
+            1
+          ],
+          "sources": [
+            462,
+            464,
+            466,
+            478
+          ],
+          "unused": [
+            0,
+            0,
+            0
+          ]
+        },
+        {
+          "seat": 0,
+          "cost": [
+            0,
+            1,
+            0
+          ],
+          "sources": [
+            468
+          ],
+          "unused": [
+            0,
+            0,
+            0
+          ]
+        }
+      ],
+      "steps": [
+        [
+          1,
+          0,
+          "end"
+        ],
+        [
+          1,
+          1,
+          "end"
+        ]
+      ],
+      "delayed": []
+    }
+  ]
+}

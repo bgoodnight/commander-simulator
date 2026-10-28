@@ -76,6 +76,7 @@ class GameObject:
     damage_marked:int=0
     counters:Counter=field(default_factory=Counter)
     modifiers:list[Modifier]=field(default_factory=list)
+    _power_bonus:Callable|None=field(default=None,repr=False,compare=False)
     @property
     def types(self):return self.card.types
     @property
@@ -83,7 +84,7 @@ class GameObject:
     @property
     def keywords(self):return self.card.keywords.union(*(m.keywords for m in self.modifiers))
     @property
-    def power(self):return self.card.base_power+self.counters['+1/+1']-self.counters['-1/-1']+sum(m.power for m in self.modifiers)
+    def power(self):return self.card.base_power+self.counters['+1/+1']-self.counters['-1/-1']+sum(m.power for m in self.modifiers)+(self._power_bonus(self) if self._power_bonus else 0)
     @property
     def toughness(self):return self.card.base_toughness+self.counters['+1/+1']-self.counters['-1/-1']+sum(m.toughness for m in self.modifiers)
     @property
@@ -174,12 +175,18 @@ class GameKernel:
         if zone not in ZONES:raise ValueError('Unknown zone')
         self.guard.guard_objects(len(self.objects)+1)
         obj=GameObject(self.next_object_id,card,owner,owner if controller is None else controller,zone,token)
+        obj._power_bonus=self.static_power
         self.next_object_id+=1;self.objects[obj.object_id]=obj;self._dirty()
         return obj
     def get(self,oid):return self.objects[oid]
     def on_battlefield(self):return (o for o in self.objects.values() if o.zone=='battlefield')
     def controlled(self,seat,types=frozenset()):
         return [o for o in self.on_battlefield() if o.controller==seat and (not types or o.types & types)]
+    def static_power(self,obj):
+        """Narrow self-bonus descriptors; not a general continuous-effect layer engine."""
+        if obj.zone!='battlefield':return 0
+        return sum(a.arg('per',1)*len(self.controlled(obj.controller,{a.arg('type')}))
+                   for a in obj.card.abilities if a.kind=='static' and a.op=='power_per_controlled_type')
     def subtypes(self,oid):
         """Derived creature types from declared additive static effects, all zones.
 
@@ -296,7 +303,9 @@ class GameKernel:
                 times=1
                 if self.subtypes(o.object_id) & {'Wizard','Shaman'}:
                     times+=sum(1 for m in snapshot if m.controller==o.controller for ma in m.card.abilities
-                               if ma.kind=='static' and ma.op=='double_wizard_shaman_triggers')
+                               if ma.kind=='static' and ma.op=='double_wizard_shaman_triggers'
+                               and (not ma.arg('exclude_self_wizard',False) or m.object_id!=o.object_id
+                                    or 'Shaman' in self.subtypes(o.object_id)))
                 resolved.append(TriggerResult(o.object_id,o.controller,a.op,times,a.args))
         self.guard.guard_trigger_count(sum(t.quantity for t in resolved))
         return resolved
@@ -306,6 +315,7 @@ class GameKernel:
         if a.condition=='controller_cast_noncreature':return event.controller==o.controller and 'creature' not in event.spell_types
         if a.condition=='controller_cast_or_copy_instant_sorcery':return event.controller==o.controller and bool(event.spell_types & SPELL_TYPES)
         if a.condition=='self_combat_damage_player':return event.source_id==o.object_id and event.amount>0
+        if a.condition=='controller_countered_spell':return event.controller==o.controller
         if a.condition=='always':return True
         raise ValueError('Unknown trigger predicate '+a.condition)
 

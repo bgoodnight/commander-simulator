@@ -1,0 +1,67 @@
+{
+  "games": 200,
+  "rounds": 12,
+  "consistent": true,
+  "safety_stops": [],
+  "steps": 100652,
+  "payments": 10948,
+  "selection_choices": 454,
+  "engine_events": 234,
+  "elapsed_seconds": 110.341,
+  "benchmark_games": 12,
+  "benchmark_rounds": 8,
+  "median_ms": {
+    "CombatTable": 331.252,
+    "EngineTable": 448.467
+  },
+  "audit_counts": {
+    "partial": 16,
+    "unsupported": 35,
+    "supported subset": 32
+  },
+  "targeted_scenarios": [
+    {
+      "file": "01_selection_choices",
+      "title": "Exact selection across five spells",
+      "result": "Brainstorm: Abrade selected with exact requested top/bottom choices; Ponder: Abrade selected with exact requested top/bottom choices; Preordain: Abrade selected with exact requested top/bottom choices; Telling Time: Abrade selected with exact requested top/bottom choices; Impulse: Abrade selected with exact requested top/bottom choices. Brainstorm/Ponder/Preordain draw; Telling Time/Impulse put a looked-at card into hand.",
+      "passed": true
+    },
+    {
+      "file": "02_prowess_types",
+      "title": "Prowess, trigger doubling and Wizard adaptation",
+      "result": "Ponder gave Harmonic exactly +1/+1, doubled Pyromancer to 2 Elementals, and created 1 Iconoclast Soldier. After Adaptation resolved, Preordain doubled Iconoclast too. Totals: 4 Elementals, 4 Soldiers. Harmonic reached 4/6 after three noncreature casts, then returned to 1/3 in cleanup.",
+      "passed": true
+    },
+    {
+      "file": "03_artifact_power",
+      "title": "Artifact power tracks tokens entering and being spent",
+      "result": "Artist was 4 power with Sol Ring plus an artifact Soldier. Ponder added 2 Treasures and another Soldier, raising it to 7. Activating an actual Treasure for U immediately lowered power to 6. That mana paid for Preordain; its triggers added 3 artifacts, raising power to 9.",
+      "passed": true
+    },
+    {
+      "file": "04_baral_counter",
+      "title": "Baral loot is successful-counter-only and independently optional",
+      "result": "An actual Counterspell countered the control seat's creature spell. Harmonic doubled Baral into two separate loot triggers. The first was accepted (draw then discard); the second was declined. Counterspell's colored UU requirement was preserved despite Baral.",
+      "passed": true
+    },
+    {
+      "file": "05_copy_expiry",
+      "title": "Copies trigger again and delayed exile is not doubled",
+      "result": "With Harmonic, the first spell produced 2 Stormsplitter tokens. The second produced 6 more: 9 Stormsplitters including the original. At the next end-step beginning, exactly 8 delayed exile abilities queued (not doubled). Tokens survived until those abilities resolved, then all 8 ceased; the original remained.",
+      "passed": true
+    },
+    {
+      "file": "06_late_copy",
+      "title": "A copy made during an end step waits through cleanup",
+      "result": "Brainstorm was cast with actual source mana during end-step priority. Its Stormsplitter token was created after that step began. It survived cleanup, then its delayed exile triggered and resolved at the following player's end step.",
+      "passed": true
+    },
+    {
+      "file": "07_copy_last_known",
+      "title": "Queued copies survive a source bounce without copying pumps",
+      "result": "Ponder queued a copy trigger. Capsize responded, queuing another before bouncing the pumped original Stormsplitter. Both copy triggers resolved: the older one used last-known copiable values. Both tokens were base 1/4, not the modified original's 4/7; the actual original card returned to hand.",
+      "passed": true
+    }
+  ],
+  "caveat": "One real detailed deck plus synthetic opponents; no win-rate inference. Safety stops, if any, remain unresolved games."
+}

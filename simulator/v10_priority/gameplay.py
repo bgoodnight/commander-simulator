@@ -146,7 +146,7 @@ class PriorityTable(ManaTable):
             player.draw(ability.amount)
             if not player.alive: self.eliminate(player, 'empty_library')
         elif ability.operation == 'counter_stack':
-            if not self.spell_stack.counter(frame.target_frame, ability.target_kinds): return False
+            if not self.spell_stack.counter(frame.target_frame, ability.target_kinds, frame.controller): return False
         else: raise NotImplementedError('Unknown activated operation ' + ability.operation)
         self.rules.events.append(Event('ability_resolved', frame.controller, frame.source_id))
         self.emit('ability_resolved', controller=frame.controller, source_id=frame.source_id, ability=ability.key)

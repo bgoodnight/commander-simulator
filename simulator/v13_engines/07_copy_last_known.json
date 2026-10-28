@@ -1,0 +1,410 @@
+{
+  "title": "Queued copies survive a source bounce without copying pumps",
+  "result": "Ponder queued a copy trigger. Capsize responded, queuing another before bouncing the pumped original Stormsplitter. Both copy triggers resolved: the older one used last-known copiable values. Both tokens were base 1/4, not the modified original's 4/7; the actual original card returned to hand.",
+  "forced": true,
+  "consistent": true,
+  "branches": [
+    {
+      "events": [
+        "FORCED DIAGNOSTIC: declared late-game source layout and chosen hand/library cards from actual conserved decks. No natural opening or win-rate claim.",
+        "    MANA P0: Island #476 -> (0, 1, 0)",
+        "    MANA P0: Island #478 -> (0, 1, 0)",
+        "    MANA P0: Island #480 -> (0, 1, 0)",
+        "    MANA P0: Mountain #492 -> (0, 0, 1)",
+        "  P0 (magnus) casts Stormsplitter [creature] for 4; mana=9.",
+        "    STACK +1 [spell] P0: Stormsplitter.",
+        "    Stormsplitter enters battlefield (1/4).",
+        "    MANA P0: Island #482 -> (0, 1, 0)",
+        "  P0 (magnus) casts Ponder [sorcery] for 1; mana=8.",
+        "    STACK +2 [spell] P0: Ponder.",
+        "    STACK +3 [triggered] P0: Stormsplitter: copy_source_until_end.",
+        "    MANA P0: Island #484 -> (0, 1, 0)",
+        "    MANA P0: Island #486 -> (0, 1, 0)",
+        "    MANA P0: Island #488 -> (0, 1, 0)",
+        "  P0 (magnus) casts Capsize [instant] for 3; mana=5.",
+        "    STACK +4 [spell] P0: Capsize.",
+        "    STACK +5 [triggered] P0: Stormsplitter: copy_source_until_end.",
+        "    COPY #577: next end-step #1; copiable base only.",
+        "    Capsize returns Stormsplitter to its owner's hand.",
+        "    COPY #580: next end-step #1; copiable base only.",
+        "    CHOICE ponder_order P0: ['Arcane Denial', 'Mountain', 'Step Through']; {}.",
+        "    CHOICE ponder_shuffle P0: []; {'shuffle': False}."
+      ],
+      "selection": [
+        {
+          "kind": "ponder_order",
+          "controller": 0,
+          "ids": [
+            473,
+            472,
+            474
+          ]
+        },
+        {
+          "kind": "ponder_shuffle",
+          "controller": 0,
+          "ids": [],
+          "shuffle": false
+        }
+      ],
+      "engine": [
+        [
+          "copy_created",
+          572,
+          577,
+          1
+        ],
+        [
+          "copy_created",
+          572,
+          580,
+          1
+        ]
+      ],
+      "priority": [
+        [
+          "push",
+          1,
+          "spell",
+          0,
+          "Stormsplitter"
+        ],
+        [
+          "pass",
+          0,
+          [
+            1
+          ]
+        ],
+        [
+          "pass",
+          1,
+          [
+            1
+          ]
+        ],
+        [
+          "pass",
+          2,
+          [
+            1
+          ]
+        ],
+        [
+          "pass",
+          3,
+          [
+            1
+          ]
+        ],
+        [
+          "resolve",
+          1,
+          "spell",
+          0
+        ],
+        [
+          "pass",
+          0,
+          []
+        ],
+        [
+          "pass",
+          1,
+          []
+        ],
+        [
+          "pass",
+          2,
+          []
+        ],
+        [
+          "pass",
+          3,
+          []
+        ],
+        [
+          "push",
+          2,
+          "spell",
+          0,
+          "Ponder"
+        ],
+        [
+          "push",
+          3,
+          "triggered",
+          0,
+          "Stormsplitter: copy_source_until_end"
+        ],
+        [
+          "action",
+          0,
+          "spell"
+        ],
+        [
+          "push",
+          4,
+          "spell",
+          0,
+          "Capsize"
+        ],
+        [
+          "push",
+          5,
+          "triggered",
+          0,
+          "Stormsplitter: copy_source_until_end"
+        ],
+        [
+          "pass",
+          0,
+          [
+            2,
+            3,
+            4,
+            5
+          ]
+        ],
+        [
+          "pass",
+          1,
+          [
+            2,
+            3,
+            4,
+            5
+          ]
+        ],
+        [
+          "pass",
+          2,
+          [
+            2,
+            3,
+            4,
+            5
+          ]
+        ],
+        [
+          "pass",
+          3,
+          [
+            2,
+            3,
+            4,
+            5
+          ]
+        ],
+        [
+          "resolve",
+          5,
+          "triggered",
+          0
+        ],
+        [
+          "pass",
+          0,
+          [
+            2,
+            3,
+            4
+          ]
+        ],
+        [
+          "pass",
+          1,
+          [
+            2,
+            3,
+            4
+          ]
+        ],
+        [
+          "pass",
+          2,
+          [
+            2,
+            3,
+            4
+          ]
+        ],
+        [
+          "pass",
+          3,
+          [
+            2,
+            3,
+            4
+          ]
+        ],
+        [
+          "resolve",
+          4,
+          "spell",
+          0
+        ],
+        [
+          "pass",
+          0,
+          [
+            2,
+            3
+          ]
+        ],
+        [
+          "pass",
+          1,
+          [
+            2,
+            3
+          ]
+        ],
+        [
+          "pass",
+          2,
+          [
+            2,
+            3
+          ]
+        ],
+        [
+          "pass",
+          3,
+          [
+            2,
+            3
+          ]
+        ],
+        [
+          "resolve",
+          3,
+          "triggered",
+          0
+        ],
+        [
+          "pass",
+          0,
+          [
+            2
+          ]
+        ],
+        [
+          "pass",
+          1,
+          [
+            2
+          ]
+        ],
+        [
+          "pass",
+          2,
+          [
+            2
+          ]
+        ],
+        [
+          "pass",
+          3,
+          [
+            2
+          ]
+        ],
+        [
+          "resolve",
+          2,
+          "spell",
+          0
+        ],
+        [
+          "pass",
+          0,
+          []
+        ],
+        [
+          "pass",
+          1,
+          []
+        ],
+        [
+          "pass",
+          2,
+          []
+        ],
+        [
+          "pass",
+          3,
+          []
+        ]
+      ],
+      "payments": [
+        {
+          "seat": 0,
+          "cost": [
+            3,
+            0,
+            1
+          ],
+          "sources": [
+            476,
+            478,
+            480,
+            492
+          ],
+          "unused": [
+            0,
+            0,
+            0
+          ]
+        },
+        {
+          "seat": 0,
+          "cost": [
+            0,
+            1,
+            0
+          ],
+          "sources": [
+            482
+          ],
+          "unused": [
+            0,
+            0,
+            0
+          ]
+        },
+        {
+          "seat": 0,
+          "cost": [
+            1,
+            2,
+            0
+          ],
+          "sources": [
+            484,
+            486,
+            488
+          ],
+          "unused": [
+            0,
+            0,
+            0
+          ]
+        }
+      ],
+      "steps": [],
+      "delayed": [
+        {
+          "controller": 0,
+          "object_id": 577,
+          "due_end": 1
+        },
+        {
+          "controller": 0,
+          "object_id": 580,
+          "due_end": 1
+        }
+      ]
+    }
+  ]
+}
