@@ -1,0 +1,172 @@
+{
+  "seed": 20261027,
+  "deck_file": "/mnt/data/magnus_thousand_sons_v1_3.txt",
+  "N_open": 18000,
+  "N_mull": 10000,
+  "N_mana": 7000,
+  "count": {
+    "Commander": 1,
+    "Creatures": 22,
+    "Artifacts and Enchantments": 12,
+    "Instants and Sorceries": 30,
+    "Lands": 35
+  },
+  "opening": {
+    "two_four_land_open": 72.95,
+    "zero_one_land_open": 22.26,
+    "five_plus_land_open": 4.79,
+    "two_four_land_earlytoken_open": 9.17,
+    "two_four_land_rock_open": 18.17
+  },
+  "opening_land_distribution": {
+    "0": 4.26,
+    "1": 17.99,
+    "2": 30.6,
+    "3": 28.32,
+    "4": 14.03,
+    "5": 4.16,
+    "6": 0.6,
+    "7": 0.04
+  },
+  "mulligan": {
+    "two_four_lands": 93.84,
+    "zero_one_lands": 5.99,
+    "five_plus_lands": 0.17,
+    "mulligan_taken": 26.72
+  },
+  "raw_access": {
+    "3": {
+      "lands_at_least_turn": 75.61,
+      "at_least_3_lands": 75.61,
+      "at_least_5_lands": 23.78,
+      "any_rock": 35.21,
+      "any_early_token": 18.94,
+      "any_token_maker": 53.99,
+      "any_counter": 47.81,
+      "any_removal": 54.43,
+      "any_mana_engine": 35.35,
+      "any_buyback": 41.62,
+      "any_mana_engine_and_buyback": 14.02
+    },
+    "4": {
+      "lands_at_least_turn": 58.74,
+      "at_least_3_lands": 81.54,
+      "at_least_5_lands": 32.73,
+      "any_rock": 38.14,
+      "any_early_token": 20.83,
+      "any_token_maker": 57.78,
+      "any_counter": 51.26,
+      "any_removal": 58.08,
+      "any_mana_engine": 38.02,
+      "any_buyback": 45.09,
+      "any_mana_engine_and_buyback": 16.47
+    },
+    "5": {
+      "lands_at_least_turn": 41.99,
+      "at_least_3_lands": 86.62,
+      "at_least_5_lands": 41.99,
+      "any_rock": 40.79,
+      "any_early_token": 22.57,
+      "any_token_maker": 61.43,
+      "any_counter": 54.51,
+      "any_removal": 61.39,
+      "any_mana_engine": 40.82,
+      "any_buyback": 48.11,
+      "any_mana_engine_and_buyback": 19.06
+    },
+    "6": {
+      "lands_at_least_turn": 27.81,
+      "at_least_3_lands": 90.31,
+      "at_least_5_lands": 50.76,
+      "any_rock": 43.72,
+      "any_early_token": 24.49,
+      "any_token_maker": 64.81,
+      "any_counter": 57.59,
+      "any_removal": 64.42,
+      "any_mana_engine": 43.46,
+      "any_buyback": 51.22,
+      "any_mana_engine_and_buyback": 21.7
+    },
+    "8": {
+      "lands_at_least_turn": 9.97,
+      "at_least_3_lands": 95.11,
+      "at_least_5_lands": 67.08,
+      "any_rock": 48.61,
+      "any_early_token": 27.78,
+      "any_token_maker": 70.36,
+      "any_counter": 63.3,
+      "any_removal": 69.84,
+      "any_mana_engine": 48.61,
+      "any_buyback": 56.84,
+      "any_mana_engine_and_buyback": 27.23
+    },
+    "10": {
+      "lands_at_least_turn": 2.8,
+      "at_least_3_lands": 97.81,
+      "at_least_5_lands": 79.44,
+      "any_rock": 53.23,
+      "any_early_token": 31.42,
+      "any_token_maker": 75.18,
+      "any_counter": 68.44,
+      "any_removal": 74.63,
+      "any_mana_engine": 53.61,
+      "any_buyback": 62.13,
+      "any_mana_engine_and_buyback": 32.86
+    }
+  },
+  "combo_by_turn8_unassisted_access": {
+    "searing_touch_kiln": 2.317,
+    "speculation_pyro_altar": 0.256,
+    "speculation_storm_class": 0.317,
+    "speculation_storm_altar": 0.283,
+    "any_buyback_and_any_engine": 27.228,
+    "all_engine_spells": 0.328,
+    "mathemagics_and_copy": 8.456,
+    "mathemagics_and_two_copy_spells": 0.828
+  },
+  "mana_only_optimistic": {
+    "1": {
+      "castable_5_mana": 0.0,
+      "have_5_raw_mana": 0.0,
+      "have_4_raw_mana": 0.0,
+      "land_count_3_plus": 0.0,
+      "land_count_4_plus": 0.0
+    },
+    "2": {
+      "castable_5_mana": 1.37,
+      "have_5_raw_mana": 1.37,
+      "have_4_raw_mana": 7.61,
+      "land_count_3_plus": 0.0,
+      "land_count_4_plus": 0.0
+    },
+    "3": {
+      "castable_5_mana": 7.0,
+      "have_5_raw_mana": 7.21,
+      "have_4_raw_mana": 24.11,
+      "land_count_3_plus": 74.79,
+      "land_count_4_plus": 0.0
+    },
+    "4": {
+      "castable_5_mana": 22.0,
+      "have_5_raw_mana": 22.19,
+      "have_4_raw_mana": 68.04,
+      "land_count_3_plus": 81.53,
+      "land_count_4_plus": 58.4
+    },
+    "5": {
+      "castable_5_mana": 53.79,
+      "have_5_raw_mana": 54.16,
+      "have_4_raw_mana": 76.47,
+      "land_count_3_plus": 86.47,
+      "land_count_4_plus": 66.66
+    },
+    "6": {
+      "castable_5_mana": 64.43,
+      "have_5_raw_mana": 64.76,
+      "have_4_raw_mana": 82.71,
+      "land_count_3_plus": 90.47,
+      "land_count_4_plus": 74.21
+    }
+  },
+  "caveat": "Openings and raw access are exact-shuffle empirical probabilities; combo assembly is card-seen only, not mana/board readiness. Mana curve ignores spending on nonrock cards, mulligans, tutors, full color and ETB constraints, and opponent interaction."
+}

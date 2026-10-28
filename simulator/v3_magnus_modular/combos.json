@@ -1,0 +1,74 @@
+{
+  "version": 1,
+  "notes": "Recipes are evaluated independently of card casting. Evaluator types must be implemented and tested in combo evaluator. Combo merely present != executable.",
+  "combos": [
+    {
+      "id": "searing_storm_kiln",
+      "name": "Searing Touch / Treasure loop",
+      "priority": 90,
+      "requires_battlefield": [
+        "Magnus the Red",
+        "Storm-Kiln Artist"
+      ],
+      "requires_hand": [
+        "Searing Touch"
+      ],
+      "evaluator": "searing_treasure",
+      "result": "repeatable direct damage and cast triggers",
+      "cycle": {
+        "cast": "Searing Touch",
+        "buyback": true,
+        "cast_cost": "{R} once generic discount reaches 4",
+        "produces": "1 damage plus >=1 Treasure on each cast",
+        "recycles": "Treasure funds the next R; buyback returns Searing Touch to hand"
+      }
+    },
+    {
+      "id": "speculation_pyromancer_altar",
+      "name": "Mystic Speculation / sacrificial token loop",
+      "priority": 80,
+      "requires_battlefield": [
+        "Magnus the Red",
+        "Young Pyromancer",
+        "Phyrexian Altar"
+      ],
+      "requires_hand": [
+        "Mystic Speculation"
+      ],
+      "evaluator": "speculation_altar",
+      "result": "repeatable scry and cast triggers; damage requires a separate payoff",
+      "cycle": {
+        "cast": "Mystic Speculation",
+        "buyback": true,
+        "cast_cost": "{U} once generic discount reaches 2",
+        "produces": "scry 3 and >=1 Elemental token on each cast",
+        "recycles": "Sacrifice generated token to Phyrexian Altar for U"
+      }
+    },
+    {
+      "id": "speculation_stormsplitter_class",
+      "name": "Mystic Speculation / hasty Wizard loop",
+      "priority": 80,
+      "requires_battlefield": [
+        "Magnus the Red",
+        "Stormsplitter",
+        "Sorcerer Class"
+      ],
+      "requires_hand": [
+        "Mystic Speculation"
+      ],
+      "evaluator": "speculation_class",
+      "requires_level": {
+        "Sorcerer Class": 2
+      },
+      "result": "repeatable scry and cast triggers; mana requires level 2 and hasty tokens",
+      "cycle": {
+        "cast": "Mystic Speculation",
+        "buyback": true,
+        "cast_cost": "{U} once generic discount reaches 2",
+        "produces": "scry 3 and >=1 hasty Stormsplitter copy on each cast",
+        "recycles": "Tap generated hasty copy for spell-only U at Sorcerer Class level 2"
+      }
+    }
+  ]
+}

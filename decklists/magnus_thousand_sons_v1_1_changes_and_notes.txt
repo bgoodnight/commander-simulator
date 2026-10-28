@@ -1,0 +1,41 @@
+MAGNUS THE RED — THOUSAND SONS CONCLAVE v1.1
+
+99-card main deck + 1 Commander. Format: blue/red Commander.
+
+Changes from v1.0
+ADDED: Chromatic Lantern, Scroll Rack, Brainstorm, Chaos Mutation
+REMOVED: Preordain, Mana Sculpt, Mystic Retrieval, Mountain
+
+CATEGORY COUNTS
+Commander: 1
+Creatures: 24
+Artifacts/enchantments: 11
+Instants/sorceries: 29
+Lands: 35
+Total: 100
+
+WHY THESE CHANGES
+- Brainstorm is an efficient standalone instant and can put expensive creatures in your hand on top of your library for Chaos Mutation.
+- Chaos Mutation can exile one of your tokens and put the first creature revealed from the library directly onto the battlefield. It can also target creatures controlled by other players, no more than one per player.
+- Scroll Rack provides repeatable hand-to-top-of-library setup even when Brainstorm is not available. It also works with library shuffling.
+- Chromatic Lantern adds creature-compatible ramp and color fixing, especially important for blue-heavy Wizard abilities. It replaces the 8th Mountain, taking the land count to 35; review opening hands and return to 36 if early mana is inconsistent.
+- Preordain and Mana Sculpt make room for new utility/interaction, and Mystic Retrieval is trimmed because Underworld Breach, Past in Flames, and Exalted Flamer already provide spell recursion. Mana Sculpt and Mystic Retrieval remain top candidates to bring back if performance needs more counterspells or targeted recursion.
+
+SEQUENCING NOTES
+1. With The Lost and the Damned already on the battlefield, casting Brainstorm from your graveyard via Underworld Breach creates a 3/3 Spawn BEFORE Brainstorm resolves (trigger resolves first). You can place a creature from your hand on top of your library with Brainstorm, then target the Spawn with Chaos Mutation.
+2. Chaos Mutation's creature replacement is not a cast. You get ETB effects, not cast triggers. It exiles your target token, so dies triggers do not occur.
+3. Underworld Breach escape for Brainstorm requires its usual {U} mana plus exiling three OTHER cards from your graveyard. Casting from graveyard triggers The Lost and the Damned. Once resolved, Brainstorm returns to your graveyard and could be cast again with sufficient cards and mana.
+4. Chaos Mutation itself may be cast via Underworld Breach when it is in the graveyard, but it requires a legal creature target WHEN CAST. A Spawn token triggered by casting that very Chaos Mutation is too late to select as its initial target.
+5. Magnus discounts Chaos Mutation by 1 per creature token controlled at the moment you cast it, not by the number after Mutation resolves.
+6. Scroll Rack's temporary exile is part of its activated ability; it puts chosen cards from your hand on top of your library, but exiled cards are not cast via this ability.
+7. Mathemagics with Underworld Breach or Past in Flames can be recast with a newly chosen X. A spell copy keeps its original X. A free cast that says 'without paying its mana cost' generally forces X=0.
+
+OWNERSHIP (cards visually confirmed in the prior photo or subsequently confirmed by the user)
+Brainstorm, Chaos Mutation, Chromatic Lantern, Mathemagics, Resonating Lute, Lord of Change, Mutalith Vortex Beast, Heralds of Tzeentch, Chaos Warp, Izzet Signet, Talisman of Creativity, Exotic Orchard, Shivan Reef.
+Other ownership remains unconfirmed, including Scroll Rack and Underworld Breach.
+
+TEST / POSSIBLE NEXT CHANGES
+- Track whether 35 lands is sufficient for frequent 5+ mana creatures. Restoring 1 Mountain at the expense of a slow utility slot is reasonable.
+- With only Brainstorm and Scroll Rack as direct hand-to-library creature stacking, Chaos Mutation can be random without them. Dream Cache is a cheap third enabler to consider, but don't overload the deck with setup-only cards.
+- Test whether cutting Mana Sculpt hurts your counterspell density; two wizard counter creatures provide repeatable interaction but still depend on mana/board state.
+- Watch graveyard density for Underworld Breach's escape costs; using too many recursions drains fuel.

@@ -1,0 +1,921 @@
+{
+  "method": "99-card synthetic archetype bags; 3 active opponents + passive Magnus seat; no real card names for opponents",
+  "goldfish": {
+    "aggro": {
+      "n": 600,
+      "trajectory": {
+        "2": {
+          "threat_p10_p50_p90": [
+            6.51,
+            8.71,
+            10.65
+          ],
+          "board_power_p10_p50_p90": [
+            0,
+            3,
+            5
+          ],
+          "mana_p10_p50_p90": [
+            2,
+            2,
+            2
+          ],
+          "missed_land_drop_pct": 2.5,
+          "below_3_mana_sources_pct": 92.7
+        },
+        "4": {
+          "threat_p10_p50_p90": [
+            11.76,
+            15.31,
+            18.97
+          ],
+          "board_power_p10_p50_p90": [
+            4,
+            8,
+            12
+          ],
+          "mana_p10_p50_p90": [
+            3,
+            4,
+            5
+          ],
+          "missed_land_drop_pct": 30.3,
+          "below_3_mana_sources_pct": 6.2
+        },
+        "6": {
+          "threat_p10_p50_p90": [
+            18.23,
+            23.42,
+            30.08
+          ],
+          "board_power_p10_p50_p90": [
+            9,
+            15,
+            21
+          ],
+          "mana_p10_p50_p90": [
+            4,
+            6,
+            7
+          ],
+          "missed_land_drop_pct": 61.0,
+          "below_3_mana_sources_pct": 1.8
+        },
+        "8": {
+          "threat_p10_p50_p90": [
+            24.56,
+            32.07,
+            41.9
+          ],
+          "board_power_p10_p50_p90": [
+            14,
+            22,
+            32
+          ],
+          "mana_p10_p50_p90": [
+            4,
+            7,
+            9
+          ],
+          "missed_land_drop_pct": 78.8,
+          "below_3_mana_sources_pct": 1.0
+        },
+        "10": {
+          "threat_p10_p50_p90": [
+            30.37,
+            40.81,
+            52.25
+          ],
+          "board_power_p10_p50_p90": [
+            18,
+            30,
+            42
+          ],
+          "mana_p10_p50_p90": [
+            5,
+            8,
+            10
+          ],
+          "missed_land_drop_pct": 90.0,
+          "below_3_mana_sources_pct": 0.3
+        }
+      },
+      "mean_cast_turn10": 10.6,
+      "combo_attempt_by_turn10_pct": 0.0
+    },
+    "tokens": {
+      "n": 600,
+      "trajectory": {
+        "2": {
+          "threat_p10_p50_p90": [
+            5.92,
+            7.6,
+            10.65
+          ],
+          "board_power_p10_p50_p90": [
+            0,
+            0,
+            3
+          ],
+          "mana_p10_p50_p90": [
+            2,
+            2,
+            3
+          ],
+          "missed_land_drop_pct": 0.8,
+          "below_3_mana_sources_pct": 80.0
+        },
+        "4": {
+          "threat_p10_p50_p90": [
+            10.95,
+            15.89,
+            20.88
+          ],
+          "board_power_p10_p50_p90": [
+            1,
+            5,
+            10
+          ],
+          "mana_p10_p50_p90": [
+            3,
+            4,
+            5
+          ],
+          "missed_land_drop_pct": 25.8,
+          "below_3_mana_sources_pct": 4.7
+        },
+        "6": {
+          "threat_p10_p50_p90": [
+            19.52,
+            27.86,
+            38.14
+          ],
+          "board_power_p10_p50_p90": [
+            6,
+            14,
+            24
+          ],
+          "mana_p10_p50_p90": [
+            4,
+            6,
+            7
+          ],
+          "missed_land_drop_pct": 52.7,
+          "below_3_mana_sources_pct": 1.0
+        },
+        "8": {
+          "threat_p10_p50_p90": [
+            29.05,
+            43.41,
+            62.71
+          ],
+          "board_power_p10_p50_p90": [
+            14,
+            26,
+            46
+          ],
+          "mana_p10_p50_p90": [
+            5,
+            8,
+            10
+          ],
+          "missed_land_drop_pct": 65.2,
+          "below_3_mana_sources_pct": 0.2
+        },
+        "10": {
+          "threat_p10_p50_p90": [
+            38.57,
+            59.05,
+            88.59
+          ],
+          "board_power_p10_p50_p90": [
+            22,
+            39,
+            69
+          ],
+          "mana_p10_p50_p90": [
+            6,
+            10,
+            12
+          ],
+          "missed_land_drop_pct": 75.2,
+          "below_3_mana_sources_pct": 0.0
+        }
+      },
+      "mean_cast_turn10": 12.0,
+      "combo_attempt_by_turn10_pct": 0.0
+    },
+    "ramp_stompy": {
+      "n": 600,
+      "trajectory": {
+        "2": {
+          "threat_p10_p50_p90": [
+            5.92,
+            6.51,
+            9.3
+          ],
+          "board_power_p10_p50_p90": [
+            0,
+            0,
+            3
+          ],
+          "mana_p10_p50_p90": [
+            2,
+            3,
+            4
+          ],
+          "missed_land_drop_pct": 1.5,
+          "below_3_mana_sources_pct": 45.7
+        },
+        "4": {
+          "threat_p10_p50_p90": [
+            9.39,
+            13.67,
+            18.73
+          ],
+          "board_power_p10_p50_p90": [
+            0,
+            3,
+            9
+          ],
+          "mana_p10_p50_p90": [
+            4,
+            6,
+            8
+          ],
+          "missed_land_drop_pct": 27.5,
+          "below_3_mana_sources_pct": 2.8
+        },
+        "6": {
+          "threat_p10_p50_p90": [
+            17.9,
+            25.58,
+            32.74
+          ],
+          "board_power_p10_p50_p90": [
+            5,
+            13,
+            20
+          ],
+          "mana_p10_p50_p90": [
+            6,
+            8,
+            10
+          ],
+          "missed_land_drop_pct": 52.3,
+          "below_3_mana_sources_pct": 1.2
+        },
+        "8": {
+          "threat_p10_p50_p90": [
+            26.28,
+            37.82,
+            48.31
+          ],
+          "board_power_p10_p50_p90": [
+            12,
+            24,
+            33
+          ],
+          "mana_p10_p50_p90": [
+            7,
+            10,
+            12
+          ],
+          "missed_land_drop_pct": 69.0,
+          "below_3_mana_sources_pct": 0.3
+        },
+        "10": {
+          "threat_p10_p50_p90": [
+            32.99,
+            47.48,
+            62.97
+          ],
+          "board_power_p10_p50_p90": [
+            17,
+            31,
+            45
+          ],
+          "mana_p10_p50_p90": [
+            9,
+            12,
+            15
+          ],
+          "missed_land_drop_pct": 80.3,
+          "below_3_mana_sources_pct": 0.0
+        }
+      },
+      "mean_cast_turn10": 11.3,
+      "combo_attempt_by_turn10_pct": 0.0
+    },
+    "control": {
+      "n": 600,
+      "trajectory": {
+        "2": {
+          "threat_p10_p50_p90": [
+            5.92,
+            6.51,
+            8.97
+          ],
+          "board_power_p10_p50_p90": [
+            0,
+            0,
+            2
+          ],
+          "mana_p10_p50_p90": [
+            2,
+            2,
+            3
+          ],
+          "missed_land_drop_pct": 1.2,
+          "below_3_mana_sources_pct": 65.5
+        },
+        "4": {
+          "threat_p10_p50_p90": [
+            8.47,
+            12.94,
+            17.76
+          ],
+          "board_power_p10_p50_p90": [
+            0,
+            2,
+            5
+          ],
+          "mana_p10_p50_p90": [
+            4,
+            5,
+            6
+          ],
+          "missed_land_drop_pct": 26.2,
+          "below_3_mana_sources_pct": 2.8
+        },
+        "6": {
+          "threat_p10_p50_p90": [
+            14.52,
+            21.37,
+            29.06
+          ],
+          "board_power_p10_p50_p90": [
+            2,
+            6,
+            13
+          ],
+          "mana_p10_p50_p90": [
+            5,
+            7,
+            9
+          ],
+          "missed_land_drop_pct": 47.5,
+          "below_3_mana_sources_pct": 1.2
+        },
+        "8": {
+          "threat_p10_p50_p90": [
+            20.77,
+            31.18,
+            42.97
+          ],
+          "board_power_p10_p50_p90": [
+            5,
+            12,
+            21
+          ],
+          "mana_p10_p50_p90": [
+            6,
+            9,
+            11
+          ],
+          "missed_land_drop_pct": 63.5,
+          "below_3_mana_sources_pct": 0.3
+        },
+        "10": {
+          "threat_p10_p50_p90": [
+            25.96,
+            40.9,
+            56.29
+          ],
+          "board_power_p10_p50_p90": [
+            9,
+            19,
+            30
+          ],
+          "mana_p10_p50_p90": [
+            8,
+            11,
+            13
+          ],
+          "missed_land_drop_pct": 74.0,
+          "below_3_mana_sources_pct": 0.3
+        }
+      },
+      "mean_cast_turn10": 10.8,
+      "combo_attempt_by_turn10_pct": 0.0
+    },
+    "spellslinger": {
+      "n": 600,
+      "trajectory": {
+        "2": {
+          "threat_p10_p50_p90": [
+            5.92,
+            6.51,
+            9.75
+          ],
+          "board_power_p10_p50_p90": [
+            0,
+            0,
+            2
+          ],
+          "mana_p10_p50_p90": [
+            2,
+            2,
+            3
+          ],
+          "missed_land_drop_pct": 2.5,
+          "below_3_mana_sources_pct": 65.5
+        },
+        "4": {
+          "threat_p10_p50_p90": [
+            8.8,
+            13.67,
+            19.21
+          ],
+          "board_power_p10_p50_p90": [
+            0,
+            2,
+            6
+          ],
+          "mana_p10_p50_p90": [
+            3,
+            5,
+            6
+          ],
+          "missed_land_drop_pct": 27.0,
+          "below_3_mana_sources_pct": 5.2
+        },
+        "6": {
+          "threat_p10_p50_p90": [
+            15.47,
+            24.84,
+            33.22
+          ],
+          "board_power_p10_p50_p90": [
+            2,
+            7,
+            14
+          ],
+          "mana_p10_p50_p90": [
+            5,
+            7,
+            9
+          ],
+          "missed_land_drop_pct": 46.8,
+          "below_3_mana_sources_pct": 2.0
+        },
+        "8": {
+          "threat_p10_p50_p90": [
+            24.68,
+            36.98,
+            48.5
+          ],
+          "board_power_p10_p50_p90": [
+            6,
+            15,
+            24
+          ],
+          "mana_p10_p50_p90": [
+            6,
+            9,
+            11
+          ],
+          "missed_land_drop_pct": 62.5,
+          "below_3_mana_sources_pct": 0.7
+        },
+        "10": {
+          "threat_p10_p50_p90": [
+            34.3,
+            51.01,
+            65.79
+          ],
+          "board_power_p10_p50_p90": [
+            11,
+            23,
+            35
+          ],
+          "mana_p10_p50_p90": [
+            8,
+            11,
+            13
+          ],
+          "missed_land_drop_pct": 72.5,
+          "below_3_mana_sources_pct": 0.2
+        }
+      },
+      "mean_cast_turn10": 13.2,
+      "combo_attempt_by_turn10_pct": 0.0
+    },
+    "midrange": {
+      "n": 600,
+      "trajectory": {
+        "2": {
+          "threat_p10_p50_p90": [
+            5.92,
+            6.51,
+            9.3
+          ],
+          "board_power_p10_p50_p90": [
+            0,
+            0,
+            3
+          ],
+          "mana_p10_p50_p90": [
+            2,
+            2,
+            3
+          ],
+          "missed_land_drop_pct": 1.2,
+          "below_3_mana_sources_pct": 66.3
+        },
+        "4": {
+          "threat_p10_p50_p90": [
+            9.47,
+            14.0,
+            18.0
+          ],
+          "board_power_p10_p50_p90": [
+            0,
+            5,
+            9
+          ],
+          "mana_p10_p50_p90": [
+            4,
+            5,
+            6
+          ],
+          "missed_land_drop_pct": 24.7,
+          "below_3_mana_sources_pct": 3.5
+        },
+        "6": {
+          "threat_p10_p50_p90": [
+            16.93,
+            23.74,
+            29.87
+          ],
+          "board_power_p10_p50_p90": [
+            6,
+            12,
+            18
+          ],
+          "mana_p10_p50_p90": [
+            5,
+            7,
+            8
+          ],
+          "missed_land_drop_pct": 52.0,
+          "below_3_mana_sources_pct": 1.2
+        },
+        "8": {
+          "threat_p10_p50_p90": [
+            23.67,
+            33.86,
+            43.63
+          ],
+          "board_power_p10_p50_p90": [
+            11,
+            20,
+            28
+          ],
+          "mana_p10_p50_p90": [
+            6,
+            8,
+            10
+          ],
+          "missed_land_drop_pct": 70.0,
+          "below_3_mana_sources_pct": 0.3
+        },
+        "10": {
+          "threat_p10_p50_p90": [
+            30.37,
+            42.58,
+            56.57
+          ],
+          "board_power_p10_p50_p90": [
+            17,
+            27,
+            39
+          ],
+          "mana_p10_p50_p90": [
+            7,
+            10,
+            13
+          ],
+          "missed_land_drop_pct": 82.2,
+          "below_3_mana_sources_pct": 0.0
+        }
+      },
+      "mean_cast_turn10": 10.4,
+      "combo_attempt_by_turn10_pct": 0.0
+    },
+    "combo": {
+      "n": 600,
+      "trajectory": {
+        "2": {
+          "threat_p10_p50_p90": [
+            5.92,
+            6.51,
+            9.3
+          ],
+          "board_power_p10_p50_p90": [
+            0,
+            0,
+            2
+          ],
+          "mana_p10_p50_p90": [
+            2,
+            2,
+            3
+          ],
+          "missed_land_drop_pct": 2.2,
+          "below_3_mana_sources_pct": 62.7
+        },
+        "4": {
+          "threat_p10_p50_p90": [
+            8.47,
+            13.15,
+            18.35
+          ],
+          "board_power_p10_p50_p90": [
+            0,
+            1,
+            4
+          ],
+          "mana_p10_p50_p90": [
+            4,
+            5,
+            7
+          ],
+          "missed_land_drop_pct": 24.8,
+          "below_3_mana_sources_pct": 4.2
+        },
+        "6": {
+          "threat_p10_p50_p90": [
+            15.02,
+            23.55,
+            31.44
+          ],
+          "board_power_p10_p50_p90": [
+            0,
+            4,
+            10
+          ],
+          "mana_p10_p50_p90": [
+            5,
+            7,
+            9
+          ],
+          "missed_land_drop_pct": 47.8,
+          "below_3_mana_sources_pct": 1.2
+        },
+        "8": {
+          "threat_p10_p50_p90": [
+            23.59,
+            36.11,
+            47.81
+          ],
+          "board_power_p10_p50_p90": [
+            3,
+            9,
+            17
+          ],
+          "mana_p10_p50_p90": [
+            7,
+            9,
+            12
+          ],
+          "missed_land_drop_pct": 62.0,
+          "below_3_mana_sources_pct": 0.5
+        },
+        "10": {
+          "threat_p10_p50_p90": [
+            31.47,
+            48.19,
+            64.86
+          ],
+          "board_power_p10_p50_p90": [
+            6,
+            15,
+            26
+          ],
+          "mana_p10_p50_p90": [
+            8,
+            12,
+            14
+          ],
+          "missed_land_drop_pct": 71.5,
+          "below_3_mana_sources_pct": 0.3
+        }
+      },
+      "mean_cast_turn10": 12.9,
+      "combo_attempt_by_turn10_pct": 8.0
+    }
+  },
+  "random_tables_no_interaction": {
+    "tables": 350,
+    "turns": 10,
+    "interaction": false,
+    "passive_magnus_eliminated_pct": 0.0,
+    "profiles": {
+      "tokens": {
+        "n": 165,
+        "median_life": 40,
+        "median_board_power": 40,
+        "median_threat": 61.2,
+        "avg_creatures_lost": 0,
+        "avg_attack_damage_dealt": 0,
+        "median_mana": 9
+      },
+      "combo": {
+        "n": 151,
+        "median_life": 40,
+        "median_board_power": 16,
+        "median_threat": 49.07,
+        "avg_creatures_lost": 0,
+        "avg_attack_damage_dealt": 0,
+        "median_mana": 11
+      },
+      "midrange": {
+        "n": 159,
+        "median_life": 40,
+        "median_board_power": 28,
+        "median_threat": 43.52,
+        "avg_creatures_lost": 0,
+        "avg_attack_damage_dealt": 0,
+        "median_mana": 10
+      },
+      "ramp_stompy": {
+        "n": 163,
+        "median_life": 40,
+        "median_board_power": 32,
+        "median_threat": 46.7,
+        "avg_creatures_lost": 0,
+        "avg_attack_damage_dealt": 0,
+        "median_mana": 12
+      },
+      "control": {
+        "n": 145,
+        "median_life": 40,
+        "median_board_power": 18,
+        "median_threat": 41.46,
+        "avg_creatures_lost": 0,
+        "avg_attack_damage_dealt": 0,
+        "median_mana": 11
+      },
+      "aggro": {
+        "n": 132,
+        "median_life": 40,
+        "median_board_power": 30,
+        "median_threat": 40.81,
+        "avg_creatures_lost": 0,
+        "avg_attack_damage_dealt": 0,
+        "median_mana": 8
+      },
+      "spellslinger": {
+        "n": 135,
+        "median_life": 40,
+        "median_board_power": 22,
+        "median_threat": 50.31,
+        "avg_creatures_lost": 0,
+        "avg_attack_damage_dealt": 0,
+        "median_mana": 11
+      }
+    },
+    "events_total": {
+      "cast_ramp": 2273,
+      "cast_draw": 1629,
+      "cast_engine": 1953,
+      "cast_medium": 1568,
+      "engine_extra_draws": 2982,
+      "land_misses": 2441,
+      "cast_tokens": 1126,
+      "cast_small": 1709,
+      "cast_large": 952,
+      "cast_buff": 301,
+      "cast_combo_piece": 240,
+      "cast_finisher": 98,
+      "cast_burn": 165,
+      "combo_win_attempts": 15
+    },
+    "targets_by_threat_rank": {},
+    "eligible_target_opportunities": {}
+  },
+  "random_tables_with_interaction": {
+    "tables": 350,
+    "turns": 10,
+    "interaction": true,
+    "passive_magnus_eliminated_pct": 7.1,
+    "profiles": {
+      "tokens": {
+        "n": 165,
+        "median_life": 26,
+        "median_board_power": 8,
+        "median_threat": 22.0,
+        "avg_creatures_lost": 10.95,
+        "avg_attack_damage_dealt": 28.33,
+        "median_mana": 9
+      },
+      "combo": {
+        "n": 151,
+        "median_life": 25,
+        "median_board_power": 5,
+        "median_threat": 29.93,
+        "avg_creatures_lost": 3.85,
+        "avg_attack_damage_dealt": 4.89,
+        "median_mana": 11
+      },
+      "midrange": {
+        "n": 159,
+        "median_life": 27,
+        "median_board_power": 9,
+        "median_threat": 20.17,
+        "avg_creatures_lost": 5.45,
+        "avg_attack_damage_dealt": 25.79,
+        "median_mana": 9
+      },
+      "ramp_stompy": {
+        "n": 163,
+        "median_life": 28,
+        "median_board_power": 9,
+        "median_threat": 22.56,
+        "avg_creatures_lost": 4.89,
+        "avg_attack_damage_dealt": 27.68,
+        "median_mana": 11
+      },
+      "control": {
+        "n": 145,
+        "median_life": 27,
+        "median_board_power": 5,
+        "median_threat": 22.65,
+        "avg_creatures_lost": 4.12,
+        "avg_attack_damage_dealt": 7.76,
+        "median_mana": 11
+      },
+      "aggro": {
+        "n": 132,
+        "median_life": 27,
+        "median_board_power": 6,
+        "median_threat": 16.35,
+        "avg_creatures_lost": 7.25,
+        "avg_attack_damage_dealt": 33.93,
+        "median_mana": 7
+      },
+      "spellslinger": {
+        "n": 135,
+        "median_life": 24,
+        "median_board_power": 6,
+        "median_threat": 26.34,
+        "avg_creatures_lost": 6.04,
+        "avg_attack_damage_dealt": 10.74,
+        "median_mana": 10
+      }
+    },
+    "events_total": {
+      "cast_ramp": 2157,
+      "cast_draw": 1535,
+      "cast_engine": 1822,
+      "cast_medium": 1453,
+      "engine_extra_draws": 2459,
+      "land_misses": 2486,
+      "cast_tokens": 1046,
+      "cast_small": 1614,
+      "combat_deaths": 4474,
+      "cast_removal": 1130,
+      "cast_buff": 275,
+      "counters_used": 439,
+      "spell_countered": 439,
+      "cast_large": 871,
+      "cast_combo_piece": 211,
+      "cast_wipe": 97,
+      "board_wipes_resolved": 97,
+      "cast_finisher": 75,
+      "cast_burn": 142,
+      "combo_win_attempts": 7
+    },
+    "targets_by_threat_rank": {
+      "attack_rank3": 2691,
+      "attack_rank4": 1861,
+      "attack_rank1": 2402,
+      "attack_rank2": 3584,
+      "removal_rank3": 66,
+      "removal_rank4": 24,
+      "removal_rank1": 91,
+      "removal_rank2": 55
+    },
+    "eligible_target_opportunities": {
+      "attack_rank4": 10011,
+      "attack_rank2": 7656,
+      "attack_rank3": 9193,
+      "attack_rank1": 4142,
+      "removal_rank4": 231,
+      "removal_rank3": 196,
+      "removal_rank1": 134,
+      "removal_rank2": 142
+    }
+  }
+}

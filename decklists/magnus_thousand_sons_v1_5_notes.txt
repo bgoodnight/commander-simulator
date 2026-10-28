@@ -1,0 +1,44 @@
+Magnus the Red — Thousand Sons Conclave v1.5: Changes and Analysis
+October 27, 2026
+
+CHANGES FROM V1.4
+ADD  Jace, Vryn's Prodigy        CUT  Kitsa, Otterball Elite
+ADD  Goblin Electromancer       CUT  Stormcatch Mentor
+ADD  Sigil Tracer              CUT  Whispers of the Muse
+ADD  Cryptic Gateway           CUT  Scroll Rack
+
+Counts: 1 commander, 23 creatures, 14 artifacts/enchantments, 27 instants/sorceries, 35 lands = 100.
+All six Tzeentch creatures remain: Tzaangor Shaman, Exalted Flamer of Tzeentch, Pink Horror, Heralds of Tzeentch, Lord of Change, Mutalith Vortex Beast. Magnus and The Lost and the Damned remain.
+Stormsplitter is the only Otter creature in the deck.
+
+WHAT THIS GAINS
+- Sigil Tracer copies any instant/sorcery (including X-spells) as an activated Wizard ability. Cost 1U plus tapping two untapped Wizards. This is independent of Magnus. Sigil Tracer can tap itself, even on the turn it enters.
+- Cryptic Gateway puts a creature card from hand directly onto battlefield, using two untapped creatures that share a creature type with it. Arcane Adaptation choosing Wizard, or Maskwood Nexus, makes the expensive Tzeentch creatures in hand Wizards. Newly created creatures can be tapped toward Gateway immediately.
+- Jace costs 1U, draws then discards on tapping; useful for developing graveyard and improving draws. If transformed, can cast a target instant or sorcery from graveyard once through planeswalker loyalty ability. It is no longer a Wizard on its planeswalker face.
+- Goblin Electromancer costs UR and reduces generic instant and sorcery costs by 1, stacking with Magnus. Helps generic buyback costs.
+
+WHAT IT COSTS
+- Whispers of the Muse was a cheap one-card cantrip with repeatable buyback, so spell density moves from 28 to 27. Its removal reduces card-flow redundancy.
+- Scroll Rack was repeatable hand-to-library setup for Chaos Mutation; now Brainstorm is the primary precise hand-to-top setup. Ponder can arrange the top cards already in library. Underworld Breach enables graveyard Brainstorm at a resource cost.
+- Cryptic Gateway is a five-mana artifact, and the deck now has one additional late-game setup piece. Its utility requires creatures in hand and compatible bodies; it is not an early mana source.
+- Kitsa's activated copying is replaced by Sigil Tracer; unlike Kitsa, Sigil Tracer needs two Wizards, but doesn't need a power threshold.
+- Goblin Electromancer lacks Stormcatch Mentor's haste/prowess, but both discount instants/sorceries identically.
+
+COMBOS TO TEST
+1. Turn-one/four ramp: can we cast Magnus by turn 4-5 without sacrificing early interaction?
+2. Wizard setup: how often do we access 2+ Wizards (or type converter) to use Patron Wizard, Voidmage Prodigy, Sigil Tracer, and Cryptic Gateway?
+3. Demon summoning: cryptic gateway needs a creature card in hand and 2 compatible creatures in play. With Arcane Adaptation/Maskwood Nexus, any tokens count as Wizards. Without them, 2 Demons can summon a Demon, or Wizards summon an actual Wizard.
+4. Underworld Breach can cast a spell from graveyard if escape paid (mana plus exiling three other cards); The Lost and the Damned rewards this cast, but not ordinary hand casting or putting a creature onto battlefield via Gateway.
+5. Mystic Speculation buyback loop: Requires a sustainable generic discount and mana/treasure/creature converter; verify actual battlefield requirements each run.
+6. Searing Touch buyback + Storm-Kiln Artist can generate repeated damage if generic buyback paid/discounted and each cast's Treasure pays R.
+7. Mathemagics X=7 and spell copying: Sigil Tracer can copy, retaining X=7; two copies or additional targets are required for a three-opponent table. Sigil Tracer's activated cost is NOT discounted by Magnus.
+
+NEXT SIMULATION COMPARISON
+Compare v1.4 to v1.5 with same mulligan rules and commander assumptions:
+- Magnus castable turns 4/5/6
+- Start of turn 6 access to Wizard-based control or copying
+- Source of blue blue / blue blue blue for Prodigy/Patron
+- cheap spells to trigger spellcaster engines
+- draw/selection access (Watch Whispers and Scroll Rack removals)
+- Cryptic Gateway availability AND usable creature card/compatible taps; not just drawing Gateway
+- threatened finishers and board recovery by turn 8-10; no unrealistic claims of goldfish win rates.

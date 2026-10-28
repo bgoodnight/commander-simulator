@@ -1,0 +1,30 @@
+game1_rush.md Magnus 6 spells 3 tokens 2 turn 8
+game2_delay_with_removal.md Magnus 7 spells 3 tokens 1 turn 8
+{
+  "rush": {
+    "trials": 80,
+    "seed_range": [
+      20261028,
+      20261107
+    ],
+    "magnus_by_t5_pct": 76.2,
+    "magnus_by_t6_pct": 86.2,
+    "mean_selection_spells_t8": 1.31,
+    "mean_instants_sorceries_t8": 1.46,
+    "combo_ready_t8_pct": 0.0,
+    "mean_mana_spent_t8": 21.23
+  },
+  "delay_one": {
+    "trials": 80,
+    "seed_range": [
+      20261028,
+      20261107
+    ],
+    "magnus_by_t5_pct": 30.0,
+    "magnus_by_t6_pct": 76.2,
+    "mean_selection_spells_t8": 1.31,
+    "mean_instants_sorceries_t8": 1.45,
+    "combo_ready_t8_pct": 0.0,
+    "mean_mana_spent_t8": 20.77
+  }
+}

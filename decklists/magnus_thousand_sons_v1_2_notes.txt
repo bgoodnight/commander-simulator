@@ -1,0 +1,44 @@
+MAGNUS THE RED — THOUSAND SONS CONCLAVE v1.2
+October 27, 2026
+
+V1.1 TO V1.2
++ 1 Capsize
+- 1 Expansion // Explosion
+Already present and retained: Chaos Warp, Chaos Mutation, Brainstorm, Scroll Rack, Underworld Breach, The Lost and the Damned, Resonating Lute, Mathemagics, Patron Wizard, Voidmage Prodigy.
+Totals (including commander): 1 commander + 24 creatures + 11 artifacts/enchantments + 29 instants/sorceries + 35 lands = 100.
+
+WHY THE CUT
+Explosion is a fine scalable damage/draw mode, but Comet Storm and Mathemagics already fill expensive X-spell roles. Expansion only copies an instant/sorcery spell with mana value 4 or less; at X=7 Mathemagics has mana value 16 and therefore CANNOT be copied with Expansion. By removing Expansion // Explosion instead of Reverberate, we retain more unrestricted copies of lethal Mathemagics.
+
+IDENTITY
+1. Deploy low-cost Wizard/Shaman engines, mana rocks, and token producers.
+2. Tokens discount all instant/sorcery spells through Magnus (regardless of token type).
+3. Arcane Adaptation (Wizard) / Maskwood Nexus let creature tokens use Patron Wizard and Voidmage Prodigy as defensive resources. Tapping does not remove token discount; sacrificing does.
+4. Harmonic Prodigy doubles triggers from Wizard/Shaman permanents and appropriate abilities, not the activated abilities of Patron/Voidmage or spell cost reductions.
+5. Cheap instants/sorceries interact, draw, and generate more tokens/Treasures. Reuse through Underworld Breach or Exalted Flamer.
+6. Win via copied Mathemagics, Comet Storm, Dualcaster Mage+Twinflame, or direct Guttersnipe/Pink Horror/Exalted Flamer damage and Wizard pressure.
+
+RULES-VERIFIED COMBOS
+- Chaos Mutation: put creature in the top of the library using Brainstorm or Scroll Rack. Chaos Mutation exiles target creature/token, then reveals until the first creature and puts it onto battlefield. Unlike Chaos Warp, it does NOT shuffle before revealing; only one target creature per player.
+- Chaos Warp: target any permanent, including your own Underworld Breach. It shuffles that permanent into the owner's library before revealing the top card. Thus Brainstorm does NOT guarantee the revealed permanent. Revealed instants and sorceries are not put onto the battlefield. A revealed land enters without using land play.
+- Capsize: {1}{U}{U} instant, buyback {3}; returns target permanent to its owner's hand. Under Magnus with four or more creature tokens, the generic {4} (base generic plus buyback) can be fully discounted, leaving {U}{U}. Repeat whenever you can pay its cost and have a legal target.
+- Capsize + Underworld Breach: cast Capsize from graveyard using escape (normal mana cost + exiling three other graveyard cards); you may ALSO pay buyback. If spell resolves, it returns to your hand. Escape does not exile the resolved spell by default. Other graveyard cards paid for escape are permanently exiled, so this is not resource-free.
+- Capsize + Tzaangor Shaman + Harmonic Prodigy: combat damage with Shaman produces two delayed copy effects for next instant/sorcery cast that turn. Casting Capsize can result in two copies with new targets; copy objects disappear after resolution. Original bought-back Capsize comes back to hand if it resolves.
+- Underworld Breach + The Lost and the Damned: cast spells from your graveyard to make 3/3 Spawn tokens. Merely copying instants/sorceries is not a cast and DOES NOT trigger Lost/Damned.
+- Mathemagics {X}{X}{U}{U}: X=7 means 128 cards and mana value 16 on stack. Two additional copies (Tzaangor/Harmonic or independent unrestricted copy spells) can target other opponents. This can fail against draw-replacement/loss-prevention effects, or with opposing interaction.
+- Expansion // Explosion (removed): Expansion's mana value 4 limit excludes lethal X=7 Mathemagics. This was a previously overlooked restriction and is corrected in v1.2.
+
+OWNERSHIP: CONFIRMED OR IDENTIFIED IN USER PHOTO
+Brainstorm; Chaos Mutation; Chaos Warp; Chromatic Lantern; Mathemagics; Resonating Lute; Talisman of Creativity; Izzet Signet; Exotic Orchard; Shivan Reef; Heralds of Tzeentch; Lord of Change; Mutalith Vortex Beast. Several additional cards were visible but photo text was not completely legible. This is an inventory starting point, not a verified shopping list.
+
+DECK RISK CHECK / TEST FIRST
+- 35 lands + five conventional rocks (Sol Ring, Arcane Signet, Izzet Signet, Talisman, Chromatic Lantern): moderate curve risk with many 4+ mana creatures. Lute's mana cannot cast creatures.
+- Only Brainstorm and Scroll Rack purposefully stack a creature from hand for Chaos Mutation, so this is a nice line, not the deck's foundational plan.
+- Backup combo requires important pieces and mana. Do not weaken unrestricted spell-copy package without replacing its primary function.
+- Important to keep counterspell and removal density high; Patron Wizard is a tax counter, not unconditional, and Voidmage needs {U}{U} plus a sacrificed Wizard for each activation.
+- Underworld Breach is vulnerable to graveyard hate and needs graveyard fuel; Capsize is a flexible reusable answer, not a guaranteed infinite loop.
+- Further candidates to evaluate: 36th land; additional 1–2 mana cantrips; March of Swirling Mist and better board-wipe protection; replacing one expensive thematic creature only if playtesting shows bottlenecks.
+
+DECK FILES
+magnus_thousand_sons_v1_2.txt: full organized list
+magnus_thousand_sons_v1_2_import.txt: 1 Card Name import format

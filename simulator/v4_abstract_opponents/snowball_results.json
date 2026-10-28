@@ -1,0 +1,139 @@
+{
+  "trials_per_archetype": 300,
+  "design": "Uninterrupted goldfish; observational grouping by turn-4 state, no intervention",
+  "results": [
+    {
+      "archetype": "aggro",
+      "early_mana_le_3": {
+        "n": 84,
+        "mean_t8_threat": 29.22
+      },
+      "early_mana_ge_5": {
+        "n": 47,
+        "mean_t8_threat": 35.03
+      },
+      "early_engine_yes": {
+        "n": 25,
+        "mean_t8_threat": 42.06
+      },
+      "early_engine_no": {
+        "n": 275,
+        "mean_t8_threat": 32.66
+      }
+    },
+    {
+      "archetype": "tokens",
+      "early_mana_le_3": {
+        "n": 53,
+        "mean_t8_threat": 33.57
+      },
+      "early_mana_ge_5": {
+        "n": 105,
+        "mean_t8_threat": 44.59
+      },
+      "early_engine_yes": {
+        "n": 172,
+        "mean_t8_threat": 47.9
+      },
+      "early_engine_no": {
+        "n": 128,
+        "mean_t8_threat": 37.88
+      }
+    },
+    {
+      "archetype": "ramp_stompy",
+      "early_mana_le_3": {
+        "n": 15,
+        "mean_t8_threat": 21.98
+      },
+      "early_mana_ge_5": {
+        "n": 235,
+        "mean_t8_threat": 38.14
+      },
+      "early_engine_yes": {
+        "n": 109,
+        "mean_t8_threat": 41.92
+      },
+      "early_engine_no": {
+        "n": 191,
+        "mean_t8_threat": 34.24
+      }
+    },
+    {
+      "archetype": "control",
+      "early_mana_le_3": {
+        "n": 29,
+        "mean_t8_threat": 22.58
+      },
+      "early_mana_ge_5": {
+        "n": 161,
+        "mean_t8_threat": 30.96
+      },
+      "early_engine_yes": {
+        "n": 188,
+        "mean_t8_threat": 34.02
+      },
+      "early_engine_no": {
+        "n": 112,
+        "mean_t8_threat": 24.0
+      }
+    },
+    {
+      "archetype": "spellslinger",
+      "early_mana_le_3": {
+        "n": 25,
+        "mean_t8_threat": 30.13
+      },
+      "early_mana_ge_5": {
+        "n": 183,
+        "mean_t8_threat": 38.48
+      },
+      "early_engine_yes": {
+        "n": 200,
+        "mean_t8_threat": 40.25
+      },
+      "early_engine_no": {
+        "n": 100,
+        "mean_t8_threat": 32.73
+      }
+    },
+    {
+      "archetype": "midrange",
+      "early_mana_le_3": {
+        "n": 21,
+        "mean_t8_threat": 25.39
+      },
+      "early_mana_ge_5": {
+        "n": 171,
+        "mean_t8_threat": 33.83
+      },
+      "early_engine_yes": {
+        "n": 93,
+        "mean_t8_threat": 38.49
+      },
+      "early_engine_no": {
+        "n": 207,
+        "mean_t8_threat": 31.35
+      }
+    },
+    {
+      "archetype": "combo",
+      "early_mana_le_3": {
+        "n": 25,
+        "mean_t8_threat": 22.94
+      },
+      "early_mana_ge_5": {
+        "n": 179,
+        "mean_t8_threat": 36.87
+      },
+      "early_engine_yes": {
+        "n": 197,
+        "mean_t8_threat": 38.12
+      },
+      "early_engine_no": {
+        "n": 103,
+        "mean_t8_threat": 29.29
+      }
+    }
+  ]
+}

@@ -1,0 +1,386 @@
+{
+  "N_per_policy_per_scenario": 2500,
+  "no_disruption": {
+    "rush": {
+      "rates_pct": {
+        "magnus_t4": 42.08,
+        "magnus_t5": 77.68,
+        "magnus_t6": 88.16,
+        "magnus_t7": 93.0,
+        "magnus_t8": 95.92,
+        "magnus_with_engine": 67.16,
+        "magnus_with_token": 3.2,
+        "magnus_with_2tokens": 0.52,
+        "magnus_with_live_protection": 9.2,
+        "magnus_with_counter_hand": 45.24,
+        "magnus_hard_protection": 6.76,
+        "token_engine_arrival": 24.92,
+        "cost_reducer_arrival": 19.96,
+        "engine_and_hard_defense": 4.56,
+        "online_t6": 74.88,
+        "online_t7": 82.8,
+        "online_t8": 87.84,
+        "magnus_alive_t6": 88.16,
+        "magnus_alive_t7": 93.0,
+        "selection_early": 47.76,
+        "any_selection": 65.92,
+        "class_level_2": 14.88,
+        "ramp_t4_2plus": 15.64,
+        "disrupted": 0.0,
+        "disruption_stopped": 0.0,
+        "tokens_ge2_t8": 57.8,
+        "tokens_ge4_t8": 8.52
+      },
+      "means": {
+        "tokens_t8": 1.809,
+        "engine_count_t8": 2.274,
+        "mulligans": 0.512
+      },
+      "distributions": {
+        "first_legal": {
+          "4": 34.88,
+          "6": 10.48,
+          "7": 4.84,
+          "8": 2.92,
+          "5": 35.6,
+          "3": 6.08,
+          "99": 4.08,
+          "2": 1.12
+        },
+        "magnus_turn": {
+          "4": 34.88,
+          "6": 10.48,
+          "7": 4.84,
+          "8": 2.92,
+          "5": 35.6,
+          "3": 6.08,
+          "99": 4.08,
+          "2": 1.12
+        },
+        "delay_from_legal": {
+          "0": 95.92,
+          "99": 4.08
+        }
+      }
+    },
+    "delay_one": {
+      "rates_pct": {
+        "magnus_t4": 7.16,
+        "magnus_t5": 41.44,
+        "magnus_t6": 76.6,
+        "magnus_t7": 88.0,
+        "magnus_t8": 92.88,
+        "magnus_with_engine": 77.6,
+        "magnus_with_token": 4.6,
+        "magnus_with_2tokens": 1.0,
+        "magnus_with_live_protection": 29.84,
+        "magnus_with_counter_hand": 45.92,
+        "magnus_hard_protection": 26.0,
+        "token_engine_arrival": 33.52,
+        "cost_reducer_arrival": 22.72,
+        "engine_and_hard_defense": 21.0,
+        "online_t6": 62.4,
+        "online_t7": 76.92,
+        "online_t8": 84.52,
+        "magnus_alive_t6": 76.6,
+        "magnus_alive_t7": 88.0,
+        "selection_early": 47.76,
+        "any_selection": 65.92,
+        "class_level_2": 14.76,
+        "ramp_t4_2plus": 15.76,
+        "disrupted": 0.0,
+        "disruption_stopped": 0.0,
+        "tokens_ge2_t8": 41.08,
+        "tokens_ge4_t8": 3.88
+      },
+      "means": {
+        "tokens_t8": 1.352,
+        "engine_count_t8": 2.283,
+        "mulligans": 0.512
+      },
+      "distributions": {
+        "first_legal": {
+          "4": 34.88,
+          "6": 10.48,
+          "7": 4.84,
+          "8": 2.92,
+          "5": 35.6,
+          "3": 6.08,
+          "99": 4.08,
+          "2": 1.12
+        },
+        "magnus_turn": {
+          "5": 34.28,
+          "7": 11.4,
+          "8": 4.88,
+          "99": 7.12,
+          "6": 35.16,
+          "4": 6.2,
+          "3": 0.96
+        },
+        "delay_from_legal": {
+          "1": 90.8,
+          "99": 7.12,
+          "2": 2.08
+        }
+      }
+    },
+    "prepared": {
+      "rates_pct": {
+        "magnus_t4": 1.2,
+        "magnus_t5": 14.24,
+        "magnus_t6": 34.16,
+        "magnus_t7": 87.56,
+        "magnus_t8": 92.88,
+        "magnus_with_engine": 82.92,
+        "magnus_with_token": 6.56,
+        "magnus_with_2tokens": 1.76,
+        "magnus_with_live_protection": 38.6,
+        "magnus_with_counter_hand": 50.36,
+        "magnus_hard_protection": 32.8,
+        "token_engine_arrival": 38.72,
+        "cost_reducer_arrival": 24.2,
+        "engine_and_hard_defense": 27.4,
+        "online_t6": 34.16,
+        "online_t7": 71.48,
+        "online_t8": 82.84,
+        "magnus_alive_t6": 34.16,
+        "magnus_alive_t7": 87.56,
+        "selection_early": 47.76,
+        "any_selection": 65.88,
+        "class_level_2": 14.8,
+        "ramp_t4_2plus": 15.76,
+        "disrupted": 0.0,
+        "disruption_stopped": 0.0,
+        "tokens_ge2_t8": 22.72,
+        "tokens_ge4_t8": 1.6
+      },
+      "means": {
+        "tokens_t8": 0.958,
+        "engine_count_t8": 2.278,
+        "mulligans": 0.512
+      },
+      "distributions": {
+        "first_legal": {
+          "4": 34.88,
+          "6": 10.48,
+          "7": 4.84,
+          "8": 2.92,
+          "5": 35.6,
+          "3": 6.08,
+          "99": 4.08,
+          "2": 1.12
+        },
+        "magnus_turn": {
+          "5": 13.04,
+          "7": 53.4,
+          "6": 19.92,
+          "8": 5.32,
+          "99": 7.12,
+          "4": 1.08,
+          "3": 0.12
+        },
+        "delay_from_legal": {
+          "1": 44.12,
+          "3": 20.48,
+          "2": 23.76,
+          "99": 7.12,
+          "4": 3.84,
+          "5": 0.68
+        }
+      }
+    }
+  },
+  "single_removal_after_turn5": {
+    "rush": {
+      "rates_pct": {
+        "magnus_t4": 42.08,
+        "magnus_t5": 77.68,
+        "magnus_t6": 88.08,
+        "magnus_t7": 92.8,
+        "magnus_t8": 95.8,
+        "magnus_with_engine": 75.0,
+        "magnus_with_token": 19.0,
+        "magnus_with_2tokens": 3.24,
+        "magnus_with_live_protection": 12.72,
+        "magnus_with_counter_hand": 44.56,
+        "magnus_hard_protection": 7.6,
+        "token_engine_arrival": 29.08,
+        "cost_reducer_arrival": 20.92,
+        "engine_and_hard_defense": 5.36,
+        "online_t6": 37.56,
+        "online_t7": 60.96,
+        "online_t8": 73.96,
+        "magnus_alive_t6": 48.72,
+        "magnus_alive_t7": 72.48,
+        "selection_early": 47.76,
+        "any_selection": 65.68,
+        "class_level_2": 14.24,
+        "ramp_t4_2plus": 15.64,
+        "disrupted": 98.0,
+        "disruption_stopped": 26.08,
+        "tokens_ge2_t8": 36.52,
+        "tokens_ge4_t8": 4.24
+      },
+      "means": {
+        "tokens_t8": 1.231,
+        "engine_count_t8": 2.128,
+        "mulligans": 0.512
+      },
+      "distributions": {
+        "first_legal": {
+          "4": 34.88,
+          "6": 10.4,
+          "7": 4.72,
+          "8": 3.0,
+          "5": 35.6,
+          "3": 6.08,
+          "99": 4.2,
+          "2": 1.12
+        },
+        "magnus_turn": {
+          "4": 34.88,
+          "6": 10.4,
+          "7": 4.72,
+          "8": 3.0,
+          "5": 35.6,
+          "3": 6.08,
+          "99": 4.2,
+          "2": 1.12
+        },
+        "delay_from_legal": {
+          "0": 95.8,
+          "99": 4.2
+        }
+      }
+    },
+    "delay_one": {
+      "rates_pct": {
+        "magnus_t4": 7.16,
+        "magnus_t5": 41.44,
+        "magnus_t6": 76.68,
+        "magnus_t7": 87.92,
+        "magnus_t8": 92.68,
+        "magnus_with_engine": 72.84,
+        "magnus_with_token": 8.56,
+        "magnus_with_2tokens": 1.32,
+        "magnus_with_live_protection": 23.0,
+        "magnus_with_counter_hand": 34.36,
+        "magnus_hard_protection": 18.72,
+        "token_engine_arrival": 26.36,
+        "cost_reducer_arrival": 17.84,
+        "engine_and_hard_defense": 13.96,
+        "online_t6": 45.72,
+        "online_t7": 65.32,
+        "online_t8": 76.52,
+        "magnus_alive_t6": 64.76,
+        "magnus_alive_t7": 80.8,
+        "selection_early": 47.76,
+        "any_selection": 65.64,
+        "class_level_2": 14.08,
+        "ramp_t4_2plus": 15.76,
+        "disrupted": 95.52,
+        "disruption_stopped": 32.92,
+        "tokens_ge2_t8": 31.0,
+        "tokens_ge4_t8": 1.72
+      },
+      "means": {
+        "tokens_t8": 1.086,
+        "engine_count_t8": 1.97,
+        "mulligans": 0.512
+      },
+      "distributions": {
+        "first_legal": {
+          "4": 34.88,
+          "6": 10.4,
+          "7": 4.72,
+          "8": 3.0,
+          "5": 35.6,
+          "3": 6.08,
+          "99": 4.2,
+          "2": 1.12
+        },
+        "magnus_turn": {
+          "5": 34.28,
+          "7": 11.24,
+          "8": 4.76,
+          "99": 7.32,
+          "6": 35.24,
+          "4": 6.2,
+          "3": 0.96
+        },
+        "delay_from_legal": {
+          "1": 90.68,
+          "99": 7.32,
+          "2": 2.0
+        }
+      }
+    },
+    "prepared": {
+      "rates_pct": {
+        "magnus_t4": 1.2,
+        "magnus_t5": 14.24,
+        "magnus_t6": 24.12,
+        "magnus_t7": 87.36,
+        "magnus_t8": 92.68,
+        "magnus_with_engine": 72.16,
+        "magnus_with_token": 6.32,
+        "magnus_with_2tokens": 1.2,
+        "magnus_with_live_protection": 27.68,
+        "magnus_with_counter_hand": 34.44,
+        "magnus_hard_protection": 22.36,
+        "token_engine_arrival": 26.08,
+        "cost_reducer_arrival": 15.44,
+        "engine_and_hard_defense": 17.32,
+        "online_t6": 20.24,
+        "online_t7": 59.12,
+        "online_t8": 73.56,
+        "magnus_alive_t6": 20.24,
+        "magnus_alive_t7": 84.92,
+        "selection_early": 47.76,
+        "any_selection": 65.64,
+        "class_level_2": 13.88,
+        "ramp_t4_2plus": 15.76,
+        "disrupted": 92.92,
+        "disruption_stopped": 33.6,
+        "tokens_ge2_t8": 16.08,
+        "tokens_ge4_t8": 0.56
+      },
+      "means": {
+        "tokens_t8": 0.787,
+        "engine_count_t8": 1.786,
+        "mulligans": 0.512
+      },
+      "distributions": {
+        "first_legal": {
+          "4": 34.88,
+          "6": 10.4,
+          "7": 4.72,
+          "8": 3.0,
+          "5": 35.6,
+          "3": 6.08,
+          "99": 4.2,
+          "2": 1.12
+        },
+        "magnus_turn": {
+          "5": 13.04,
+          "7": 63.24,
+          "6": 9.88,
+          "8": 5.32,
+          "99": 7.32,
+          "4": 1.08,
+          "3": 0.12
+        },
+        "delay_from_legal": {
+          "1": 35.76,
+          "3": 21.84,
+          "2": 30.24,
+          "99": 7.32,
+          "4": 4.16,
+          "5": 0.68
+        }
+      }
+    }
+  },
+  "description": "Illustrative heuristic policy goldfish with one free London mulligan, multiplayer Commander turn-one draw, land and six rock choices, exact colored mana unit spending (Izzet Signet modeled as input one / output UR), cheap cantrip resolution, early Wizard/engine casting, cost reducers on instant/sorceries, some spell-token and Treasure triggers. Magnus combat hit assumed 50%/turn after arrival. Does not model opponents strategic play, most spells or win loops, full tutors, real combat, the restricted Sorcerer Class mana (level 2 tracked only), or detailed Phyrexian Altar choices. Disruption: one targeted instant removal after turn5 development, may be countered with available counter/board defenses (Patron Wizard success assumed 50%). Rates are not actual game or win probabilities."
+}

@@ -1,0 +1,1220 @@
+{
+  "deck": "Thousand Sons Conclave v1.6",
+  "commander": "Magnus the Red",
+  "library_count": 99,
+  "legacy_status_counts": {
+    "unmodeled": 18,
+    "modeled": 61,
+    "partial": 20
+  },
+  "legacy_type_counts": {
+    "creature": 22,
+    "permanent": 13,
+    "spell": 29,
+    "land": 35
+  },
+  "conversion_status": "schema validated; actual colored-cost, combat, spell trigger, and card-specific adapters pending",
+  "cards_needing_validation": [
+    "Tzaangor Shaman",
+    "Exalted Flamer of Tzeentch",
+    "Pink Horror",
+    "Heralds of Tzeentch",
+    "Lord of Change",
+    "Mutalith Vortex Beast",
+    "Docent of Perfection",
+    "Patron Wizard",
+    "Voidmage Prodigy",
+    "Dualcaster Mage",
+    "Stormsplitter",
+    "Jace, Vryn's Prodigy",
+    "Sigil Tracer",
+    "Underworld Breach",
+    "Sorcerer Class",
+    "Phyrexian Altar",
+    "Mystical Tutor",
+    "Muddle the Mixture",
+    "Step Through",
+    "Twincast",
+    "Reiterate",
+    "Counterspell",
+    "Arcane Denial",
+    "Swan Song",
+    "An Offer You Can't Refuse",
+    "Flusterstorm",
+    "Pongify",
+    "Abrade",
+    "Chaos Warp",
+    "Chaos Mutation",
+    "Cyclonic Rift",
+    "March of Swirling Mist",
+    "Jeska's Will",
+    "Mana Geyser",
+    "Mathemagics",
+    "Comet Storm",
+    "Capsize",
+    "Searing Touch"
+  ],
+  "cards": {
+    "Tzaangor Shaman": {
+      "count": 1,
+      "v3_status": "unmodeled",
+      "card_type": "creature",
+      "v3_cost_URC": [
+        2,
+        1,
+        1
+      ],
+      "tagged_effects": [],
+      "reaction": null,
+      "v5_bridge_status": "needs adapter; not yet executable"
+    },
+    "Exalted Flamer of Tzeentch": {
+      "count": 1,
+      "v3_status": "unmodeled",
+      "card_type": "creature",
+      "v3_cost_URC": [
+        2,
+        0,
+        1
+      ],
+      "tagged_effects": [],
+      "reaction": null,
+      "v5_bridge_status": "needs adapter; not yet executable"
+    },
+    "Pink Horror": {
+      "count": 1,
+      "v3_status": "unmodeled",
+      "card_type": "creature",
+      "v3_cost_URC": [
+        3,
+        0,
+        1
+      ],
+      "tagged_effects": [],
+      "reaction": null,
+      "v5_bridge_status": "needs adapter; not yet executable"
+    },
+    "Heralds of Tzeentch": {
+      "count": 1,
+      "v3_status": "unmodeled",
+      "card_type": "creature",
+      "v3_cost_URC": [
+        4,
+        1,
+        0
+      ],
+      "tagged_effects": [],
+      "reaction": null,
+      "v5_bridge_status": "needs adapter; not yet executable"
+    },
+    "Lord of Change": {
+      "count": 1,
+      "v3_status": "unmodeled",
+      "card_type": "creature",
+      "v3_cost_URC": [
+        5,
+        2,
+        0
+      ],
+      "tagged_effects": [],
+      "reaction": null,
+      "v5_bridge_status": "needs adapter; not yet executable"
+    },
+    "Mutalith Vortex Beast": {
+      "count": 1,
+      "v3_status": "unmodeled",
+      "card_type": "creature",
+      "v3_cost_URC": [
+        4,
+        1,
+        1
+      ],
+      "tagged_effects": [],
+      "reaction": null,
+      "v5_bridge_status": "needs adapter; not yet executable"
+    },
+    "Harmonic Prodigy": {
+      "count": 1,
+      "v3_status": "modeled",
+      "card_type": "creature",
+      "v3_cost_URC": [
+        1,
+        0,
+        1
+      ],
+      "tagged_effects": [
+        {
+          "event": "static",
+          "op": "double_wizard_shaman_triggers"
+        }
+      ],
+      "reaction": null,
+      "v5_bridge_status": "needs adapter; not yet executable"
+    },
+    "Young Pyromancer": {
+      "count": 1,
+      "v3_status": "modeled",
+      "card_type": "creature",
+      "v3_cost_URC": [
+        1,
+        0,
+        1
+      ],
+      "tagged_effects": [
+        {
+          "event": "cast_instant_sorcery",
+          "op": "create_token",
+          "token": "Elemental",
+          "amount": 1
+        }
+      ],
+      "reaction": null,
+      "v5_bridge_status": "needs adapter; not yet executable"
+    },
+    "Storm-Kiln Artist": {
+      "count": 1,
+      "v3_status": "modeled",
+      "card_type": "creature",
+      "v3_cost_URC": [
+        3,
+        0,
+        1
+      ],
+      "tagged_effects": [
+        {
+          "event": "cast_or_copy_instant_sorcery",
+          "op": "treasure",
+          "amount": 1
+        }
+      ],
+      "reaction": null,
+      "v5_bridge_status": "needs adapter; not yet executable"
+    },
+    "Docent of Perfection": {
+      "count": 1,
+      "v3_status": "partial",
+      "card_type": "creature",
+      "v3_cost_URC": [
+        3,
+        2,
+        0
+      ],
+      "tagged_effects": [
+        {
+          "event": "cast_instant_sorcery",
+          "op": "create_token",
+          "token": "Wizard",
+          "amount": 1
+        }
+      ],
+      "reaction": null,
+      "v5_bridge_status": "needs adapter; not yet executable"
+    },
+    "Archmage Emeritus": {
+      "count": 1,
+      "v3_status": "modeled",
+      "card_type": "creature",
+      "v3_cost_URC": [
+        2,
+        2,
+        0
+      ],
+      "tagged_effects": [
+        {
+          "event": "cast_or_copy_instant_sorcery",
+          "op": "draw",
+          "amount": 1
+        }
+      ],
+      "reaction": null,
+      "v5_bridge_status": "needs adapter; not yet executable"
+    },
+    "Patron Wizard": {
+      "count": 1,
+      "v3_status": "partial",
+      "card_type": "creature",
+      "v3_cost_URC": [
+        0,
+        3,
+        0
+      ],
+      "tagged_effects": [],
+      "reaction": null,
+      "v5_bridge_status": "needs adapter; not yet executable"
+    },
+    "Voidmage Prodigy": {
+      "count": 1,
+      "v3_status": "partial",
+      "card_type": "creature",
+      "v3_cost_URC": [
+        0,
+        2,
+        0
+      ],
+      "tagged_effects": [],
+      "reaction": null,
+      "v5_bridge_status": "needs adapter; not yet executable"
+    },
+    "Spellseeker": {
+      "count": 1,
+      "v3_status": "modeled",
+      "card_type": "creature",
+      "v3_cost_URC": [
+        2,
+        1,
+        0
+      ],
+      "tagged_effects": [
+        {
+          "event": "enter",
+          "op": "tutor",
+          "filter": "spell_mv_lte_2",
+          "destination": "hand"
+        }
+      ],
+      "reaction": null,
+      "v5_bridge_status": "needs adapter; not yet executable"
+    },
+    "Veyran, Voice of Duality": {
+      "count": 1,
+      "v3_status": "modeled",
+      "card_type": "creature",
+      "v3_cost_URC": [
+        1,
+        1,
+        1
+      ],
+      "tagged_effects": [
+        {
+          "event": "static",
+          "op": "additional_spell_triggers"
+        }
+      ],
+      "reaction": null,
+      "v5_bridge_status": "needs adapter; not yet executable"
+    },
+    "Baral, Chief of Compliance": {
+      "count": 1,
+      "v3_status": "modeled",
+      "card_type": "creature",
+      "v3_cost_URC": [
+        1,
+        1,
+        0
+      ],
+      "tagged_effects": [
+        {
+          "event": "static",
+          "op": "discount_spells",
+          "value": 1
+        }
+      ],
+      "reaction": null,
+      "v5_bridge_status": "needs adapter; not yet executable"
+    },
+    "Third Path Iconoclast": {
+      "count": 1,
+      "v3_status": "modeled",
+      "card_type": "creature",
+      "v3_cost_URC": [
+        0,
+        1,
+        1
+      ],
+      "tagged_effects": [
+        {
+          "event": "cast_noncreature",
+          "op": "create_token",
+          "token": "Soldier",
+          "amount": 1
+        }
+      ],
+      "reaction": null,
+      "v5_bridge_status": "needs adapter; not yet executable"
+    },
+    "Dualcaster Mage": {
+      "count": 1,
+      "v3_status": "unmodeled",
+      "card_type": "creature",
+      "v3_cost_URC": [
+        1,
+        0,
+        2
+      ],
+      "tagged_effects": [],
+      "reaction": null,
+      "v5_bridge_status": "needs adapter; not yet executable"
+    },
+    "Stormsplitter": {
+      "count": 1,
+      "v3_status": "partial",
+      "card_type": "creature",
+      "v3_cost_URC": [
+        3,
+        0,
+        1
+      ],
+      "tagged_effects": [
+        {
+          "event": "cast_instant_sorcery",
+          "op": "create_token",
+          "token": "Stormsplitter",
+          "amount": 1
+        }
+      ],
+      "reaction": null,
+      "v5_bridge_status": "needs adapter; not yet executable"
+    },
+    "Jace, Vryn's Prodigy": {
+      "count": 1,
+      "v3_status": "partial",
+      "card_type": "creature",
+      "v3_cost_URC": [
+        1,
+        1,
+        0
+      ],
+      "tagged_effects": [],
+      "reaction": null,
+      "v5_bridge_status": "needs adapter; not yet executable"
+    },
+    "Goblin Electromancer": {
+      "count": 1,
+      "v3_status": "modeled",
+      "card_type": "creature",
+      "v3_cost_URC": [
+        0,
+        1,
+        1
+      ],
+      "tagged_effects": [
+        {
+          "event": "static",
+          "op": "discount_spells",
+          "value": 1
+        }
+      ],
+      "reaction": null,
+      "v5_bridge_status": "needs adapter; not yet executable"
+    },
+    "Sigil Tracer": {
+      "count": 1,
+      "v3_status": "unmodeled",
+      "card_type": "creature",
+      "v3_cost_URC": [
+        1,
+        2,
+        0
+      ],
+      "tagged_effects": [],
+      "reaction": null,
+      "v5_bridge_status": "needs adapter; not yet executable"
+    },
+    "Sol Ring": {
+      "count": 1,
+      "v3_status": "modeled",
+      "card_type": "permanent",
+      "v3_cost_URC": [
+        1,
+        0,
+        0
+      ],
+      "tagged_effects": [],
+      "reaction": null,
+      "v5_bridge_status": "needs adapter; not yet executable"
+    },
+    "Arcane Signet": {
+      "count": 1,
+      "v3_status": "modeled",
+      "card_type": "permanent",
+      "v3_cost_URC": [
+        2,
+        0,
+        0
+      ],
+      "tagged_effects": [],
+      "reaction": null,
+      "v5_bridge_status": "needs adapter; not yet executable"
+    },
+    "Izzet Signet": {
+      "count": 1,
+      "v3_status": "modeled",
+      "card_type": "permanent",
+      "v3_cost_URC": [
+        2,
+        0,
+        0
+      ],
+      "tagged_effects": [],
+      "reaction": null,
+      "v5_bridge_status": "needs adapter; not yet executable"
+    },
+    "Talisman of Creativity": {
+      "count": 1,
+      "v3_status": "modeled",
+      "card_type": "permanent",
+      "v3_cost_URC": [
+        2,
+        0,
+        0
+      ],
+      "tagged_effects": [],
+      "reaction": null,
+      "v5_bridge_status": "needs adapter; not yet executable"
+    },
+    "Resonating Lute": {
+      "count": 1,
+      "v3_status": "modeled",
+      "card_type": "permanent",
+      "v3_cost_URC": [
+        2,
+        1,
+        1
+      ],
+      "tagged_effects": [
+        {
+          "event": "static",
+          "op": "lands_spell_mana_ability"
+        }
+      ],
+      "reaction": null,
+      "v5_bridge_status": "needs adapter; not yet executable"
+    },
+    "Maskwood Nexus": {
+      "count": 1,
+      "v3_status": "modeled",
+      "card_type": "permanent",
+      "v3_cost_URC": [
+        4,
+        0,
+        0
+      ],
+      "tagged_effects": [
+        {
+          "event": "static",
+          "op": "all_creature_types"
+        }
+      ],
+      "reaction": null,
+      "v5_bridge_status": "needs adapter; not yet executable"
+    },
+    "Arcane Adaptation": {
+      "count": 1,
+      "v3_status": "modeled",
+      "card_type": "permanent",
+      "v3_cost_URC": [
+        2,
+        1,
+        0
+      ],
+      "tagged_effects": [
+        {
+          "event": "static",
+          "op": "choose_type",
+          "chosen": "Wizard"
+        }
+      ],
+      "reaction": null,
+      "v5_bridge_status": "needs adapter; not yet executable"
+    },
+    "The Lost and the Damned": {
+      "count": 1,
+      "v3_status": "modeled",
+      "card_type": "permanent",
+      "v3_cost_URC": [
+        1,
+        1,
+        1
+      ],
+      "tagged_effects": [
+        {
+          "event": "cast_from_outside_hand",
+          "op": "create_token",
+          "token": "Spawn",
+          "amount": 1
+        }
+      ],
+      "reaction": null,
+      "v5_bridge_status": "needs adapter; not yet executable"
+    },
+    "Underworld Breach": {
+      "count": 1,
+      "v3_status": "partial",
+      "card_type": "permanent",
+      "v3_cost_URC": [
+        1,
+        0,
+        1
+      ],
+      "tagged_effects": [
+        {
+          "event": "static",
+          "op": "escape_nonland_spells"
+        }
+      ],
+      "reaction": null,
+      "v5_bridge_status": "needs adapter; not yet executable"
+    },
+    "Sorcerer Class": {
+      "count": 1,
+      "v3_status": "partial",
+      "card_type": "permanent",
+      "v3_cost_URC": [
+        0,
+        1,
+        1
+      ],
+      "tagged_effects": [
+        {
+          "event": "enter",
+          "op": "draw_discard",
+          "draw": 2,
+          "discard": 2
+        },
+        {
+          "event": "level_2",
+          "op": "grant_spell_mana_to_creatures"
+        }
+      ],
+      "reaction": null,
+      "v5_bridge_status": "needs adapter; not yet executable"
+    },
+    "Phyrexian Altar": {
+      "count": 1,
+      "v3_status": "partial",
+      "card_type": "permanent",
+      "v3_cost_URC": [
+        3,
+        0,
+        0
+      ],
+      "tagged_effects": [
+        {
+          "event": "activated",
+          "op": "sacrifice_for_mana"
+        }
+      ],
+      "reaction": null,
+      "v5_bridge_status": "needs adapter; not yet executable"
+    },
+    "Fellwar Stone": {
+      "count": 1,
+      "v3_status": "modeled",
+      "card_type": "permanent",
+      "v3_cost_URC": [
+        2,
+        0,
+        0
+      ],
+      "tagged_effects": [],
+      "reaction": null,
+      "v5_bridge_status": "needs adapter; not yet executable"
+    },
+    "Mind Stone": {
+      "count": 1,
+      "v3_status": "modeled",
+      "card_type": "permanent",
+      "v3_cost_URC": [
+        2,
+        0,
+        0
+      ],
+      "tagged_effects": [],
+      "reaction": null,
+      "v5_bridge_status": "needs adapter; not yet executable"
+    },
+    "Brainstorm": {
+      "count": 1,
+      "v3_status": "modeled",
+      "card_type": "spell",
+      "v3_cost_URC": [
+        0,
+        1,
+        0
+      ],
+      "tagged_effects": [
+        {
+          "event": "resolve",
+          "op": "selection",
+          "method": "brainstorm"
+        }
+      ],
+      "reaction": null,
+      "v5_bridge_status": "needs adapter; not yet executable"
+    },
+    "Ponder": {
+      "count": 1,
+      "v3_status": "modeled",
+      "card_type": "spell",
+      "v3_cost_URC": [
+        0,
+        1,
+        0
+      ],
+      "tagged_effects": [
+        {
+          "event": "resolve",
+          "op": "selection",
+          "method": "ponder"
+        }
+      ],
+      "reaction": null,
+      "v5_bridge_status": "needs adapter; not yet executable"
+    },
+    "Preordain": {
+      "count": 1,
+      "v3_status": "modeled",
+      "card_type": "spell",
+      "v3_cost_URC": [
+        0,
+        1,
+        0
+      ],
+      "tagged_effects": [
+        {
+          "event": "resolve",
+          "op": "selection",
+          "method": "preordain"
+        }
+      ],
+      "reaction": null,
+      "v5_bridge_status": "needs adapter; not yet executable"
+    },
+    "Telling Time": {
+      "count": 1,
+      "v3_status": "modeled",
+      "card_type": "spell",
+      "v3_cost_URC": [
+        1,
+        1,
+        0
+      ],
+      "tagged_effects": [
+        {
+          "event": "resolve",
+          "op": "selection",
+          "method": "telling_time"
+        }
+      ],
+      "reaction": null,
+      "v5_bridge_status": "needs adapter; not yet executable"
+    },
+    "Impulse": {
+      "count": 1,
+      "v3_status": "modeled",
+      "card_type": "spell",
+      "v3_cost_URC": [
+        1,
+        1,
+        0
+      ],
+      "tagged_effects": [
+        {
+          "event": "resolve",
+          "op": "selection",
+          "method": "impulse"
+        }
+      ],
+      "reaction": null,
+      "v5_bridge_status": "needs adapter; not yet executable"
+    },
+    "Frantic Search": {
+      "count": 1,
+      "v3_status": "modeled",
+      "card_type": "spell",
+      "v3_cost_URC": [
+        2,
+        1,
+        0
+      ],
+      "tagged_effects": [
+        {
+          "event": "resolve",
+          "op": "selection",
+          "method": "frantic_search"
+        }
+      ],
+      "reaction": null,
+      "v5_bridge_status": "needs adapter; not yet executable"
+    },
+    "Mystical Tutor": {
+      "count": 1,
+      "v3_status": "unmodeled",
+      "card_type": "spell",
+      "v3_cost_URC": [
+        0,
+        1,
+        0
+      ],
+      "tagged_effects": [],
+      "reaction": null,
+      "v5_bridge_status": "needs adapter; not yet executable"
+    },
+    "Muddle the Mixture": {
+      "count": 1,
+      "v3_status": "unmodeled",
+      "card_type": "spell",
+      "v3_cost_URC": [
+        0,
+        2,
+        0
+      ],
+      "tagged_effects": [],
+      "reaction": null,
+      "v5_bridge_status": "needs adapter; not yet executable"
+    },
+    "Step Through": {
+      "count": 1,
+      "v3_status": "unmodeled",
+      "card_type": "spell",
+      "v3_cost_URC": [
+        3,
+        2,
+        0
+      ],
+      "tagged_effects": [],
+      "reaction": null,
+      "v5_bridge_status": "needs adapter; not yet executable"
+    },
+    "Twincast": {
+      "count": 1,
+      "v3_status": "unmodeled",
+      "card_type": "spell",
+      "v3_cost_URC": [
+        0,
+        2,
+        0
+      ],
+      "tagged_effects": [],
+      "reaction": null,
+      "v5_bridge_status": "needs adapter; not yet executable"
+    },
+    "Reiterate": {
+      "count": 1,
+      "v3_status": "unmodeled",
+      "card_type": "spell",
+      "v3_cost_URC": [
+        1,
+        0,
+        2
+      ],
+      "tagged_effects": [],
+      "reaction": null,
+      "v5_bridge_status": "needs adapter; not yet executable"
+    },
+    "Counterspell": {
+      "count": 1,
+      "v3_status": "partial",
+      "card_type": "spell",
+      "v3_cost_URC": [
+        0,
+        2,
+        0
+      ],
+      "tagged_effects": [],
+      "reaction": "counter",
+      "v5_bridge_status": "needs adapter; not yet executable"
+    },
+    "Arcane Denial": {
+      "count": 1,
+      "v3_status": "partial",
+      "card_type": "spell",
+      "v3_cost_URC": [
+        1,
+        1,
+        0
+      ],
+      "tagged_effects": [],
+      "reaction": "counter",
+      "v5_bridge_status": "needs adapter; not yet executable"
+    },
+    "Swan Song": {
+      "count": 1,
+      "v3_status": "partial",
+      "card_type": "spell",
+      "v3_cost_URC": [
+        0,
+        1,
+        0
+      ],
+      "tagged_effects": [],
+      "reaction": "counter",
+      "v5_bridge_status": "needs adapter; not yet executable"
+    },
+    "An Offer You Can't Refuse": {
+      "count": 1,
+      "v3_status": "partial",
+      "card_type": "spell",
+      "v3_cost_URC": [
+        0,
+        1,
+        0
+      ],
+      "tagged_effects": [],
+      "reaction": "counter",
+      "v5_bridge_status": "needs adapter; not yet executable"
+    },
+    "Flusterstorm": {
+      "count": 1,
+      "v3_status": "partial",
+      "card_type": "spell",
+      "v3_cost_URC": [
+        0,
+        1,
+        0
+      ],
+      "tagged_effects": [],
+      "reaction": "counter",
+      "v5_bridge_status": "needs adapter; not yet executable"
+    },
+    "Pongify": {
+      "count": 1,
+      "v3_status": "partial",
+      "card_type": "spell",
+      "v3_cost_URC": [
+        0,
+        1,
+        0
+      ],
+      "tagged_effects": [],
+      "reaction": "removal_or_protection",
+      "v5_bridge_status": "needs adapter; not yet executable"
+    },
+    "Abrade": {
+      "count": 1,
+      "v3_status": "partial",
+      "card_type": "spell",
+      "v3_cost_URC": [
+        1,
+        0,
+        1
+      ],
+      "tagged_effects": [],
+      "reaction": "removal_or_protection",
+      "v5_bridge_status": "needs adapter; not yet executable"
+    },
+    "Chaos Warp": {
+      "count": 1,
+      "v3_status": "partial",
+      "card_type": "spell",
+      "v3_cost_URC": [
+        2,
+        0,
+        1
+      ],
+      "tagged_effects": [],
+      "reaction": "removal_or_protection",
+      "v5_bridge_status": "needs adapter; not yet executable"
+    },
+    "Chaos Mutation": {
+      "count": 1,
+      "v3_status": "unmodeled",
+      "card_type": "spell",
+      "v3_cost_URC": [
+        3,
+        1,
+        1
+      ],
+      "tagged_effects": [],
+      "reaction": null,
+      "v5_bridge_status": "needs adapter; not yet executable"
+    },
+    "Cyclonic Rift": {
+      "count": 1,
+      "v3_status": "partial",
+      "card_type": "spell",
+      "v3_cost_URC": [
+        1,
+        1,
+        0
+      ],
+      "tagged_effects": [],
+      "reaction": "removal_or_protection",
+      "v5_bridge_status": "needs adapter; not yet executable"
+    },
+    "March of Swirling Mist": {
+      "count": 1,
+      "v3_status": "partial",
+      "card_type": "spell",
+      "v3_cost_URC": [
+        0,
+        1,
+        0
+      ],
+      "tagged_effects": [],
+      "reaction": "removal_or_protection",
+      "v5_bridge_status": "needs adapter; not yet executable"
+    },
+    "Jeska's Will": {
+      "count": 1,
+      "v3_status": "unmodeled",
+      "card_type": "spell",
+      "v3_cost_URC": [
+        2,
+        0,
+        1
+      ],
+      "tagged_effects": [],
+      "reaction": null,
+      "v5_bridge_status": "needs adapter; not yet executable"
+    },
+    "Mana Geyser": {
+      "count": 1,
+      "v3_status": "unmodeled",
+      "card_type": "spell",
+      "v3_cost_URC": [
+        3,
+        0,
+        2
+      ],
+      "tagged_effects": [],
+      "reaction": null,
+      "v5_bridge_status": "needs adapter; not yet executable"
+    },
+    "Mathemagics": {
+      "count": 1,
+      "v3_status": "unmodeled",
+      "card_type": "spell",
+      "v3_cost_URC": [
+        0,
+        2,
+        0
+      ],
+      "tagged_effects": [],
+      "reaction": null,
+      "v5_bridge_status": "needs adapter; not yet executable"
+    },
+    "Comet Storm": {
+      "count": 1,
+      "v3_status": "unmodeled",
+      "card_type": "spell",
+      "v3_cost_URC": [
+        0,
+        0,
+        2
+      ],
+      "tagged_effects": [],
+      "reaction": null,
+      "v5_bridge_status": "needs adapter; not yet executable"
+    },
+    "Capsize": {
+      "count": 1,
+      "v3_status": "partial",
+      "card_type": "spell",
+      "v3_cost_URC": [
+        1,
+        2,
+        0
+      ],
+      "tagged_effects": [
+        {
+          "event": "resolve",
+          "op": "utility",
+          "method": "capsize"
+        }
+      ],
+      "reaction": null,
+      "v5_bridge_status": "needs adapter; not yet executable"
+    },
+    "Searing Touch": {
+      "count": 1,
+      "v3_status": "partial",
+      "card_type": "spell",
+      "v3_cost_URC": [
+        0,
+        0,
+        1
+      ],
+      "tagged_effects": [
+        {
+          "event": "resolve",
+          "op": "utility",
+          "method": "searing_touch"
+        }
+      ],
+      "reaction": null,
+      "v5_bridge_status": "needs adapter; not yet executable"
+    },
+    "Mystic Speculation": {
+      "count": 1,
+      "v3_status": "modeled",
+      "card_type": "spell",
+      "v3_cost_URC": [
+        0,
+        1,
+        0
+      ],
+      "tagged_effects": [
+        {
+          "event": "resolve",
+          "op": "selection",
+          "method": "scry3"
+        }
+      ],
+      "reaction": null,
+      "v5_bridge_status": "needs adapter; not yet executable"
+    },
+    "Command Tower": {
+      "count": 1,
+      "v3_status": "modeled",
+      "card_type": "land",
+      "v3_cost_URC": null,
+      "tagged_effects": [],
+      "reaction": null,
+      "v5_bridge_status": "needs adapter; not yet executable"
+    },
+    "Steam Vents": {
+      "count": 1,
+      "v3_status": "modeled",
+      "card_type": "land",
+      "v3_cost_URC": null,
+      "tagged_effects": [],
+      "reaction": null,
+      "v5_bridge_status": "needs adapter; not yet executable"
+    },
+    "Training Center": {
+      "count": 1,
+      "v3_status": "modeled",
+      "card_type": "land",
+      "v3_cost_URC": null,
+      "tagged_effects": [],
+      "reaction": null,
+      "v5_bridge_status": "needs adapter; not yet executable"
+    },
+    "Stormcarved Coast": {
+      "count": 1,
+      "v3_status": "modeled",
+      "card_type": "land",
+      "v3_cost_URC": null,
+      "tagged_effects": [],
+      "reaction": null,
+      "v5_bridge_status": "needs adapter; not yet executable"
+    },
+    "Sulfur Falls": {
+      "count": 1,
+      "v3_status": "modeled",
+      "card_type": "land",
+      "v3_cost_URC": null,
+      "tagged_effects": [],
+      "reaction": null,
+      "v5_bridge_status": "needs adapter; not yet executable"
+    },
+    "Shivan Reef": {
+      "count": 1,
+      "v3_status": "modeled",
+      "card_type": "land",
+      "v3_cost_URC": null,
+      "tagged_effects": [],
+      "reaction": null,
+      "v5_bridge_status": "needs adapter; not yet executable"
+    },
+    "Spirebluff Canal": {
+      "count": 1,
+      "v3_status": "modeled",
+      "card_type": "land",
+      "v3_cost_URC": null,
+      "tagged_effects": [],
+      "reaction": null,
+      "v5_bridge_status": "needs adapter; not yet executable"
+    },
+    "Riverglide Pathway": {
+      "count": 1,
+      "v3_status": "modeled",
+      "card_type": "land",
+      "v3_cost_URC": null,
+      "tagged_effects": [],
+      "reaction": null,
+      "v5_bridge_status": "needs adapter; not yet executable"
+    },
+    "Fiery Islet": {
+      "count": 1,
+      "v3_status": "modeled",
+      "card_type": "land",
+      "v3_cost_URC": null,
+      "tagged_effects": [],
+      "reaction": null,
+      "v5_bridge_status": "needs adapter; not yet executable"
+    },
+    "Cascade Bluffs": {
+      "count": 1,
+      "v3_status": "modeled",
+      "card_type": "land",
+      "v3_cost_URC": null,
+      "tagged_effects": [],
+      "reaction": null,
+      "v5_bridge_status": "needs adapter; not yet executable"
+    },
+    "Exotic Orchard": {
+      "count": 1,
+      "v3_status": "modeled",
+      "card_type": "land",
+      "v3_cost_URC": null,
+      "tagged_effects": [],
+      "reaction": null,
+      "v5_bridge_status": "needs adapter; not yet executable"
+    },
+    "Fabled Passage": {
+      "count": 1,
+      "v3_status": "modeled",
+      "card_type": "land",
+      "v3_cost_URC": null,
+      "tagged_effects": [],
+      "reaction": null,
+      "v5_bridge_status": "needs adapter; not yet executable"
+    },
+    "Otawara, Soaring City": {
+      "count": 1,
+      "v3_status": "modeled",
+      "card_type": "land",
+      "v3_cost_URC": null,
+      "tagged_effects": [],
+      "reaction": null,
+      "v5_bridge_status": "needs adapter; not yet executable"
+    },
+    "Sokenzan, Crucible of Defiance": {
+      "count": 1,
+      "v3_status": "modeled",
+      "card_type": "land",
+      "v3_cost_URC": null,
+      "tagged_effects": [],
+      "reaction": null,
+      "v5_bridge_status": "needs adapter; not yet executable"
+    },
+    "Riptide Laboratory": {
+      "count": 1,
+      "v3_status": "modeled",
+      "card_type": "land",
+      "v3_cost_URC": null,
+      "tagged_effects": [],
+      "reaction": null,
+      "v5_bridge_status": "needs adapter; not yet executable"
+    },
+    "Mystic Sanctuary": {
+      "count": 1,
+      "v3_status": "modeled",
+      "card_type": "land",
+      "v3_cost_URC": null,
+      "tagged_effects": [],
+      "reaction": null,
+      "v5_bridge_status": "needs adapter; not yet executable"
+    },
+    "Island": {
+      "count": 12,
+      "v3_status": "modeled",
+      "card_type": "land",
+      "v3_cost_URC": null,
+      "tagged_effects": [],
+      "reaction": null,
+      "v5_bridge_status": "needs adapter; not yet executable"
+    },
+    "Mountain": {
+      "count": 7,
+      "v3_status": "modeled",
+      "card_type": "land",
+      "v3_cost_URC": null,
+      "tagged_effects": [],
+      "reaction": null,
+      "v5_bridge_status": "needs adapter; not yet executable"
+    }
+  }
+}

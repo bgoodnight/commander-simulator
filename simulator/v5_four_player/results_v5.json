@@ -1,0 +1,409 @@
+{
+  "meta": {
+    "mixed_trials": 2800,
+    "mirror_trials_per_type": 120,
+    "controlled_trials_per_matchup": 140,
+    "seed": 20261028,
+    "max_rounds": 30,
+    "runtime_seconds": 29.7
+  },
+  "random_tables": {
+    "summary": {
+      "games": 2800,
+      "completed": 2740,
+      "completion_pct": 97.9,
+      "median_finish_round": 18.0,
+      "p10_finish_round": 13,
+      "p90_finish_round": 24,
+      "censored_at_turn_limit": 60,
+      "win_causes": {
+        "persistent_finisher": 120,
+        "spell_burst": 84,
+        "combat": 2085,
+        "resolved_combo": 392,
+        "turn_limit": 60,
+        "burn": 32,
+        "empty_library": 27
+      },
+      "multi_elim_games": 484,
+      "first_elimination_round_median": 14.0
+    },
+    "archetypes": {
+      "aggro": {
+        "seat_exposures": 1574,
+        "wins": 276,
+        "wins_per_seat_pct": 17.5
+      },
+      "tokens": {
+        "seat_exposures": 1567,
+        "wins": 393,
+        "wins_per_seat_pct": 25.1
+      },
+      "ramp_stompy": {
+        "seat_exposures": 1605,
+        "wins": 474,
+        "wins_per_seat_pct": 29.5
+      },
+      "control": {
+        "seat_exposures": 1606,
+        "wins": 341,
+        "wins_per_seat_pct": 21.2
+      },
+      "spellslinger": {
+        "seat_exposures": 1641,
+        "wins": 408,
+        "wins_per_seat_pct": 24.9
+      },
+      "midrange": {
+        "seat_exposures": 1586,
+        "wins": 423,
+        "wins_per_seat_pct": 26.7
+      },
+      "combo": {
+        "seat_exposures": 1621,
+        "wins": 425,
+        "wins_per_seat_pct": 26.2
+      }
+    },
+    "winning_seats": {
+      "3": 674,
+      "1": 655,
+      "0": 696,
+      "2": 715
+    }
+  },
+  "mirrors": {
+    "aggro": {
+      "games": 120,
+      "completed": 120,
+      "completion_pct": 100.0,
+      "median_finish_round": 14.0,
+      "p10_finish_round": 12,
+      "p90_finish_round": 18,
+      "censored_at_turn_limit": 0,
+      "win_causes": {
+        "combat": 115,
+        "burn": 5
+      },
+      "multi_elim_games": 0,
+      "first_elimination_round_median": 11.0,
+      "seat_wins": {
+        "1": 26,
+        "0": 31,
+        "3": 28,
+        "2": 35
+      }
+    },
+    "tokens": {
+      "games": 120,
+      "completed": 120,
+      "completion_pct": 100.0,
+      "median_finish_round": 16.0,
+      "p10_finish_round": 13,
+      "p90_finish_round": 21,
+      "censored_at_turn_limit": 0,
+      "win_causes": {
+        "combat": 115,
+        "burn": 5
+      },
+      "multi_elim_games": 0,
+      "first_elimination_round_median": 13.0,
+      "seat_wins": {
+        "0": 34,
+        "3": 26,
+        "1": 33,
+        "2": 27
+      }
+    },
+    "ramp_stompy": {
+      "games": 120,
+      "completed": 118,
+      "completion_pct": 98.3,
+      "median_finish_round": 16.5,
+      "p10_finish_round": 12,
+      "p90_finish_round": 22,
+      "censored_at_turn_limit": 2,
+      "win_causes": {
+        "combat": 118,
+        "turn_limit": 2
+      },
+      "multi_elim_games": 0,
+      "first_elimination_round_median": 13,
+      "seat_wins": {
+        "2": 36,
+        "0": 34,
+        "3": 27,
+        "1": 21
+      }
+    },
+    "control": {
+      "games": 120,
+      "completed": 85,
+      "completion_pct": 70.8,
+      "median_finish_round": 27,
+      "p10_finish_round": 21,
+      "p90_finish_round": 30,
+      "censored_at_turn_limit": 35,
+      "win_causes": {
+        "persistent_finisher": 49,
+        "turn_limit": 35,
+        "combat": 28,
+        "empty_library": 8
+      },
+      "multi_elim_games": 0,
+      "first_elimination_round_median": 22,
+      "seat_wins": {
+        "0": 26,
+        "3": 23,
+        "2": 21,
+        "1": 15
+      }
+    },
+    "spellslinger": {
+      "games": 120,
+      "completed": 120,
+      "completion_pct": 100.0,
+      "median_finish_round": 17.0,
+      "p10_finish_round": 13,
+      "p90_finish_round": 23,
+      "censored_at_turn_limit": 0,
+      "win_causes": {
+        "combat": 89,
+        "spell_burst": 27,
+        "burn": 4
+      },
+      "multi_elim_games": 35,
+      "first_elimination_round_median": 13.0,
+      "seat_wins": {
+        "3": 27,
+        "2": 34,
+        "0": 35,
+        "1": 24
+      }
+    },
+    "midrange": {
+      "games": 120,
+      "completed": 118,
+      "completion_pct": 98.3,
+      "median_finish_round": 17.5,
+      "p10_finish_round": 14,
+      "p90_finish_round": 25,
+      "censored_at_turn_limit": 2,
+      "win_causes": {
+        "combat": 118,
+        "turn_limit": 2
+      },
+      "multi_elim_games": 0,
+      "first_elimination_round_median": 14.0,
+      "seat_wins": {
+        "0": 21,
+        "3": 31,
+        "1": 41,
+        "2": 25
+      }
+    },
+    "combo": {
+      "games": 120,
+      "completed": 119,
+      "completion_pct": 99.2,
+      "median_finish_round": 18,
+      "p10_finish_round": 12,
+      "p90_finish_round": 24,
+      "censored_at_turn_limit": 1,
+      "win_causes": {
+        "resolved_combo": 119,
+        "turn_limit": 1
+      },
+      "multi_elim_games": 117,
+      "first_elimination_round_median": 18.0,
+      "seat_wins": {
+        "0": 26,
+        "3": 26,
+        "2": 37,
+        "1": 30
+      }
+    }
+  },
+  "controlled": {
+    "aggro_control_combo_ramp": {
+      "games": 140,
+      "completed": 138,
+      "completion_pct": 98.6,
+      "median_finish_round": 20.0,
+      "p10_finish_round": 13,
+      "p90_finish_round": 26,
+      "censored_at_turn_limit": 2,
+      "win_causes": {
+        "combat": 93,
+        "persistent_finisher": 14,
+        "resolved_combo": 30,
+        "turn_limit": 2,
+        "empty_library": 1
+      },
+      "multi_elim_games": 28,
+      "first_elimination_round_median": 15.0,
+      "archetypes": [
+        "aggro",
+        "control",
+        "combo",
+        "ramp_stompy"
+      ],
+      "winner_archetypes": {
+        "control": 40,
+        "combo": 34,
+        "aggro": 32,
+        "ramp_stompy": 32,
+        "unresolved": 2
+      }
+    },
+    "aggro_aggro_control_combo": {
+      "games": 140,
+      "completed": 136,
+      "completion_pct": 97.1,
+      "median_finish_round": 19.5,
+      "p10_finish_round": 13,
+      "p90_finish_round": 25,
+      "censored_at_turn_limit": 4,
+      "win_causes": {
+        "combat": 98,
+        "persistent_finisher": 14,
+        "resolved_combo": 22,
+        "turn_limit": 4,
+        "burn": 2
+      },
+      "multi_elim_games": 20,
+      "first_elimination_round_median": 14.0,
+      "archetypes": [
+        "aggro",
+        "aggro",
+        "control",
+        "combo"
+      ],
+      "winner_archetypes": {
+        "control": 48,
+        "aggro": 62,
+        "combo": 26,
+        "unresolved": 4
+      }
+    },
+    "tokens_tokens_control_combo": {
+      "games": 140,
+      "completed": 135,
+      "completion_pct": 96.4,
+      "median_finish_round": 19,
+      "p10_finish_round": 14,
+      "p90_finish_round": 26,
+      "censored_at_turn_limit": 5,
+      "win_causes": {
+        "combat": 82,
+        "persistent_finisher": 13,
+        "resolved_combo": 38,
+        "turn_limit": 5,
+        "burn": 2
+      },
+      "multi_elim_games": 37,
+      "first_elimination_round_median": 15.0,
+      "archetypes": [
+        "tokens",
+        "tokens",
+        "control",
+        "combo"
+      ],
+      "winner_archetypes": {
+        "tokens": 60,
+        "combo": 39,
+        "control": 36,
+        "unresolved": 5
+      }
+    },
+    "control_spellslinger_combo_midrange": {
+      "games": 140,
+      "completed": 133,
+      "completion_pct": 95.0,
+      "median_finish_round": 20,
+      "p10_finish_round": 15,
+      "p90_finish_round": 27,
+      "censored_at_turn_limit": 7,
+      "win_causes": {
+        "combat": 76,
+        "resolved_combo": 38,
+        "persistent_finisher": 13,
+        "spell_burst": 5,
+        "turn_limit": 7,
+        "burn": 1
+      },
+      "multi_elim_games": 46,
+      "first_elimination_round_median": 17,
+      "archetypes": [
+        "control",
+        "spellslinger",
+        "combo",
+        "midrange"
+      ],
+      "winner_archetypes": {
+        "control": 36,
+        "combo": 41,
+        "spellslinger": 32,
+        "midrange": 24,
+        "unresolved": 7
+      }
+    },
+    "aggro_tokens_ramp_midrange": {
+      "games": 140,
+      "completed": 140,
+      "completion_pct": 100.0,
+      "median_finish_round": 14.0,
+      "p10_finish_round": 12,
+      "p90_finish_round": 20,
+      "censored_at_turn_limit": 0,
+      "win_causes": {
+        "combat": 140
+      },
+      "multi_elim_games": 0,
+      "first_elimination_round_median": 11.0,
+      "archetypes": [
+        "aggro",
+        "tokens",
+        "ramp_stompy",
+        "midrange"
+      ],
+      "winner_archetypes": {
+        "tokens": 26,
+        "midrange": 39,
+        "ramp_stompy": 55,
+        "aggro": 20
+      }
+    },
+    "control_control_combo_spellslinger": {
+      "games": 140,
+      "completed": 128,
+      "completion_pct": 91.4,
+      "median_finish_round": 23.0,
+      "p10_finish_round": 16,
+      "p90_finish_round": 29,
+      "censored_at_turn_limit": 12,
+      "win_causes": {
+        "combat": 40,
+        "empty_library": 8,
+        "resolved_combo": 46,
+        "persistent_finisher": 30,
+        "turn_limit": 12,
+        "spell_burst": 4
+      },
+      "multi_elim_games": 51,
+      "first_elimination_round_median": 19,
+      "archetypes": [
+        "control",
+        "control",
+        "combo",
+        "spellslinger"
+      ],
+      "winner_archetypes": {
+        "spellslinger": 31,
+        "control": 51,
+        "combo": 46,
+        "unresolved": 12
+      }
+    }
+  }
+}

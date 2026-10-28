@@ -1,0 +1,25 @@
+{
+  "source": [
+    "Young Pyromancer",
+    "Preordain",
+    "Pongify"
+  ],
+  "effects": [
+    "pre-resolution cast triggers",
+    "draw on resolve",
+    "creature-to-Ape removal"
+  ],
+  "trace": [
+    "  P0 (aggro) casts actual_card creature [creature] cost 2, mana left 6.",
+    "  P0 (aggro) casts actual_card sorcery [draw] cost 1, mana left 5.",
+    "  P0 (aggro) casts actual_card instant [pongify] cost 1, mana left 4."
+  ],
+  "p_creatures": [
+    "Young Pyromancer",
+    "Pyromancer Elemental",
+    "Pyromancer Elemental"
+  ],
+  "q_creatures": [
+    "Pongify Ape"
+  ]
+}

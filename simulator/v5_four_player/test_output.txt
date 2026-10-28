@@ -1,0 +1,27 @@
+test_action_contract_from_external_deck (__main__.TestTable.test_action_contract_from_external_deck)
+Same resolver accepts a named externally supplied card. ... ok
+test_blocker_not_tapped_and_only_blocks_once (__main__.TestTable.test_blocker_not_tapped_and_only_blocks_once) ... ok
+test_burst_simultaneous_eliminations (__main__.TestTable.test_burst_simultaneous_eliminations) ... ok
+test_counter_card_type_restrictions (__main__.TestTable.test_counter_card_type_restrictions) ... ok
+test_creature_vs_permanent_removal (__main__.TestTable.test_creature_vs_permanent_removal) ... ok
+test_custom_effect_and_cast_event (__main__.TestTable.test_custom_effect_and_cast_event) ... ok
+test_detailed_deck_can_decline_all_blocks (__main__.TestTable.test_detailed_deck_can_decline_all_blocks) ... ok
+test_external_pilot_fourth_seat_runs (__main__.TestTable.test_external_pilot_fourth_seat_runs) ... ok
+test_four_active_and_duplicate_archetypes (__main__.TestTable.test_four_active_and_duplicate_archetypes) ... ok
+test_land_resource_causality (__main__.TestTable.test_land_resource_causality) ... ok
+test_mana_spending_limited (__main__.TestTable.test_mana_spending_limited) ... ok
+test_multi_elimination (__main__.TestTable.test_multi_elimination) ... ok
+test_no_ghost_mana (__main__.TestTable.test_no_ghost_mana) ... ok
+test_own_board_not_removed_by_targeted_effect (__main__.TestTable.test_own_board_not_removed_by_targeted_effect) ... ok
+test_reproducible (__main__.TestTable.test_reproducible) ... ok
+test_response_hooks (__main__.TestTable.test_response_hooks) ... ok
+test_same_seed_goldfish_vs_interactive_same_opening (__main__.TestTable.test_same_seed_goldfish_vs_interactive_same_opening) ... ok
+test_single_life_elimination_cleans_board (__main__.TestTable.test_single_life_elimination_cleans_board) ... ok
+test_spell_counter_targets_permanent_spell (__main__.TestTable.test_spell_counter_targets_permanent_spell) ... ok
+test_synthetic_deck_counts (__main__.TestTable.test_synthetic_deck_counts) ... ok
+test_turn_order_random_and_life_tracks (__main__.TestTable.test_turn_order_random_and_life_tracks) ... ok
+
+----------------------------------------------------------------------
+Ran 21 tests in 0.047s
+
+OK

@@ -1,0 +1,101 @@
+Magnus the Red — Thousand Sons Conclave v1.4
+October 27, 2026
+100 cards including commander
+Aim: improve early Magnus deployment, Wizard-based filtering and independent spell discounts while keeping Tzeentch theme, Wizard control, Breach, and buyback/X-spell finishers.
+
+Commander (1)
+1 Magnus the Red
+
+
+Creatures (22)
+1 Tzaangor Shaman
+1 Exalted Flamer of Tzeentch
+1 Pink Horror
+1 Heralds of Tzeentch
+1 Lord of Change
+1 Mutalith Vortex Beast
+1 Harmonic Prodigy
+1 Young Pyromancer
+1 Storm-Kiln Artist
+1 Docent of Perfection
+1 Archmage Emeritus
+1 Patron Wizard
+1 Voidmage Prodigy
+1 Spellseeker
+1 Veyran, Voice of Duality
+1 Baral, Chief of Compliance
+1 Third Path Iconoclast
+1 Dualcaster Mage
+1 Guttersnipe
+1 Stormsplitter
+1 Kitsa, Otterball Elite
+1 Stormcatch Mentor
+
+
+Artifacts and Enchantments (14)
+1 Sol Ring
+1 Arcane Signet
+1 Izzet Signet
+1 Talisman of Creativity
+1 Resonating Lute
+1 Scroll Rack
+1 Maskwood Nexus
+1 Arcane Adaptation
+1 The Lost and the Damned
+1 Underworld Breach
+1 Sorcerer Class
+1 Phyrexian Altar
+1 Fellwar Stone
+1 Mind Stone
+
+
+Instants and Sorceries (28)
+1 Brainstorm
+1 Ponder
+1 Frantic Search
+1 Mystical Tutor
+1 Muddle the Mixture
+1 Step Through
+1 Twincast
+1 Reiterate
+1 Counterspell
+1 Arcane Denial
+1 Swan Song
+1 An Offer You Can't Refuse
+1 Flusterstorm
+1 Pongify
+1 Abrade
+1 Chaos Warp
+1 Chaos Mutation
+1 Cyclonic Rift
+1 March of Swirling Mist
+1 Jeska's Will
+1 Mana Geyser
+1 Past in Flames
+1 Mathemagics
+1 Comet Storm
+1 Capsize
+1 Searing Touch
+1 Mystic Speculation
+1 Whispers of the Muse
+
+
+Lands (35)
+1 Command Tower
+1 Steam Vents
+1 Training Center
+1 Stormcarved Coast
+1 Sulfur Falls
+1 Shivan Reef
+1 Spirebluff Canal
+1 Riverglide Pathway
+1 Fiery Islet
+1 Cascade Bluffs
+1 Exotic Orchard
+1 Fabled Passage
+1 Otawara, Soaring City
+1 Sokenzan, Crucible of Defiance
+1 Riptide Laboratory
+1 Mystic Sanctuary
+12 Island
+7 Mountain

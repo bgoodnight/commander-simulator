@@ -1,0 +1,1288 @@
+{
+  "version": 1,
+  "notes": "Reusable card behavior definitions. Status modeled means listed behavior is supported, partial means important text unsupported, unmodeled means costs/types only (a spell might still be drawn or an expensive creature cast with no printed effect). Read COVERAGE.md.",
+  "cards": {
+    "Magnus the Red": {
+      "type": "commander",
+      "cost": [
+        3,
+        1,
+        1
+      ],
+      "effects": [
+        {
+          "event": "static",
+          "op": "discount_per_token",
+          "value": 1
+        },
+        {
+          "event": "combat_damage",
+          "op": "create_token",
+          "token": "Spawn",
+          "amount": 1
+        }
+      ],
+      "status": "modeled",
+      "subtypes": [
+        "Demon",
+        "Primarch"
+      ]
+    },
+    "Tzaangor Shaman": {
+      "type": "creature",
+      "cost": [
+        2,
+        1,
+        1
+      ],
+      "effects": [],
+      "status": "unmodeled",
+      "subtypes": [
+        "Shaman"
+      ]
+    },
+    "Exalted Flamer of Tzeentch": {
+      "type": "creature",
+      "cost": [
+        2,
+        0,
+        1
+      ],
+      "effects": [],
+      "status": "unmodeled",
+      "subtypes": [
+        "Demon"
+      ]
+    },
+    "Pink Horror": {
+      "type": "creature",
+      "cost": [
+        3,
+        0,
+        1
+      ],
+      "effects": [],
+      "status": "unmodeled",
+      "subtypes": [
+        "Demon",
+        "Horror"
+      ]
+    },
+    "Heralds of Tzeentch": {
+      "type": "creature",
+      "cost": [
+        4,
+        1,
+        0
+      ],
+      "effects": [],
+      "status": "unmodeled",
+      "subtypes": [
+        "Demon"
+      ]
+    },
+    "Lord of Change": {
+      "type": "creature",
+      "cost": [
+        5,
+        2,
+        0
+      ],
+      "effects": [],
+      "status": "unmodeled",
+      "subtypes": [
+        "Demon"
+      ]
+    },
+    "Mutalith Vortex Beast": {
+      "type": "creature",
+      "cost": [
+        4,
+        1,
+        1
+      ],
+      "effects": [],
+      "status": "unmodeled",
+      "subtypes": [
+        "Mutant",
+        "Beast"
+      ]
+    },
+    "Harmonic Prodigy": {
+      "type": "creature",
+      "cost": [
+        1,
+        0,
+        1
+      ],
+      "effects": [
+        {
+          "event": "static",
+          "op": "double_wizard_shaman_triggers"
+        }
+      ],
+      "status": "modeled",
+      "subtypes": [
+        "Human",
+        "Wizard"
+      ],
+      "tags": [
+        "early_engine",
+        "trigger_booster"
+      ]
+    },
+    "Young Pyromancer": {
+      "type": "creature",
+      "cost": [
+        1,
+        0,
+        1
+      ],
+      "effects": [
+        {
+          "event": "cast_instant_sorcery",
+          "op": "create_token",
+          "token": "Elemental",
+          "amount": 1
+        }
+      ],
+      "status": "modeled",
+      "subtypes": [
+        "Human",
+        "Shaman"
+      ],
+      "tags": [
+        "early_engine",
+        "token_engine"
+      ]
+    },
+    "Storm-Kiln Artist": {
+      "type": "creature",
+      "cost": [
+        3,
+        0,
+        1
+      ],
+      "effects": [
+        {
+          "event": "cast_or_copy_instant_sorcery",
+          "op": "treasure",
+          "amount": 1
+        }
+      ],
+      "status": "modeled",
+      "subtypes": [
+        "Dwarf",
+        "Shaman"
+      ],
+      "tags": [
+        "mana_engine"
+      ]
+    },
+    "Docent of Perfection": {
+      "type": "creature",
+      "cost": [
+        3,
+        2,
+        0
+      ],
+      "effects": [
+        {
+          "event": "cast_instant_sorcery",
+          "op": "create_token",
+          "token": "Wizard",
+          "amount": 1
+        }
+      ],
+      "status": "partial",
+      "subtypes": [
+        "Insect",
+        "Horror"
+      ],
+      "tags": [
+        "token_engine"
+      ]
+    },
+    "Archmage Emeritus": {
+      "type": "creature",
+      "cost": [
+        2,
+        2,
+        0
+      ],
+      "effects": [
+        {
+          "event": "cast_or_copy_instant_sorcery",
+          "op": "draw",
+          "amount": 1
+        }
+      ],
+      "status": "modeled",
+      "subtypes": [
+        "Human",
+        "Wizard"
+      ],
+      "tags": [
+        "draw_engine"
+      ]
+    },
+    "Patron Wizard": {
+      "type": "creature",
+      "cost": [
+        0,
+        3,
+        0
+      ],
+      "effects": [],
+      "status": "partial",
+      "subtypes": [
+        "Human",
+        "Wizard"
+      ],
+      "tags": [
+        "control_engine"
+      ],
+      "activated_abilities": [
+        {
+          "id": "tax",
+          "tap_wizard": true,
+          "effect": "counter_unless_pay_one"
+        }
+      ]
+    },
+    "Voidmage Prodigy": {
+      "type": "creature",
+      "cost": [
+        0,
+        2,
+        0
+      ],
+      "effects": [],
+      "status": "partial",
+      "subtypes": [
+        "Human",
+        "Wizard"
+      ],
+      "tags": [
+        "control_engine"
+      ],
+      "activated_abilities": [
+        {
+          "id": "counterspell",
+          "mana_cost": [
+            0,
+            2,
+            0
+          ],
+          "sacrifice_wizard": true,
+          "effect": "counter_target_spell"
+        }
+      ]
+    },
+    "Spellseeker": {
+      "type": "creature",
+      "cost": [
+        2,
+        1,
+        0
+      ],
+      "effects": [
+        {
+          "event": "enter",
+          "op": "tutor",
+          "filter": "spell_mv_lte_2",
+          "destination": "hand"
+        }
+      ],
+      "status": "modeled",
+      "subtypes": [
+        "Human",
+        "Wizard"
+      ],
+      "tags": [
+        "tutor_engine"
+      ]
+    },
+    "Veyran, Voice of Duality": {
+      "type": "creature",
+      "cost": [
+        1,
+        1,
+        1
+      ],
+      "effects": [
+        {
+          "event": "static",
+          "op": "additional_spell_triggers"
+        }
+      ],
+      "status": "modeled",
+      "subtypes": [
+        "Efreet",
+        "Wizard"
+      ]
+    },
+    "Baral, Chief of Compliance": {
+      "type": "creature",
+      "cost": [
+        1,
+        1,
+        0
+      ],
+      "effects": [
+        {
+          "event": "static",
+          "op": "discount_spells",
+          "value": 1
+        }
+      ],
+      "status": "modeled",
+      "subtypes": [
+        "Human",
+        "Wizard"
+      ],
+      "tags": [
+        "early_engine",
+        "discount_engine"
+      ]
+    },
+    "Third Path Iconoclast": {
+      "type": "creature",
+      "cost": [
+        0,
+        1,
+        1
+      ],
+      "effects": [
+        {
+          "event": "cast_noncreature",
+          "op": "create_token",
+          "token": "Soldier",
+          "amount": 1
+        }
+      ],
+      "status": "modeled",
+      "subtypes": [
+        "Human",
+        "Monk"
+      ],
+      "tags": [
+        "early_engine",
+        "token_engine"
+      ]
+    },
+    "Dualcaster Mage": {
+      "type": "creature",
+      "cost": [
+        1,
+        0,
+        2
+      ],
+      "effects": [],
+      "status": "unmodeled",
+      "subtypes": [
+        "Human",
+        "Wizard"
+      ]
+    },
+    "Stormsplitter": {
+      "type": "creature",
+      "cost": [
+        3,
+        0,
+        1
+      ],
+      "effects": [
+        {
+          "event": "cast_instant_sorcery",
+          "op": "create_token",
+          "token": "Stormsplitter",
+          "amount": 1
+        }
+      ],
+      "status": "partial",
+      "subtypes": [
+        "Otter",
+        "Wizard"
+      ],
+      "tags": [
+        "token_engine",
+        "combo_piece"
+      ]
+    },
+    "Jace, Vryn's Prodigy": {
+      "type": "creature",
+      "cost": [
+        1,
+        1,
+        0
+      ],
+      "effects": [],
+      "status": "partial",
+      "subtypes": [
+        "Human",
+        "Wizard"
+      ],
+      "tags": [
+        "early_engine",
+        "looter"
+      ],
+      "activated_abilities": [
+        {
+          "id": "loot",
+          "cost": {
+            "tap_self": true
+          },
+          "effect": "draw_discard",
+          "draw": 1,
+          "discard": 1,
+          "needs_untap": true
+        }
+      ]
+    },
+    "Goblin Electromancer": {
+      "type": "creature",
+      "cost": [
+        0,
+        1,
+        1
+      ],
+      "effects": [
+        {
+          "event": "static",
+          "op": "discount_spells",
+          "value": 1
+        }
+      ],
+      "status": "modeled",
+      "subtypes": [
+        "Goblin",
+        "Wizard"
+      ],
+      "tags": [
+        "early_engine",
+        "discount_engine"
+      ]
+    },
+    "Sigil Tracer": {
+      "type": "creature",
+      "cost": [
+        1,
+        2,
+        0
+      ],
+      "effects": [],
+      "status": "unmodeled",
+      "subtypes": [
+        "Merfolk",
+        "Wizard"
+      ],
+      "tags": [
+        "copy_engine"
+      ]
+    },
+    "Sol Ring": {
+      "type": "permanent",
+      "cost": [
+        1,
+        0,
+        0
+      ],
+      "effects": [],
+      "status": "modeled",
+      "mana_rock": true,
+      "tags": [
+        "ramp"
+      ],
+      "mana_production": {
+        "modes": [
+          "CC"
+        ]
+      }
+    },
+    "Arcane Signet": {
+      "type": "permanent",
+      "cost": [
+        2,
+        0,
+        0
+      ],
+      "effects": [],
+      "status": "modeled",
+      "mana_rock": true,
+      "tags": [
+        "ramp"
+      ],
+      "mana_production": {
+        "modes": [
+          "U",
+          "R"
+        ]
+      }
+    },
+    "Izzet Signet": {
+      "type": "permanent",
+      "cost": [
+        2,
+        0,
+        0
+      ],
+      "effects": [],
+      "status": "modeled",
+      "mana_rock": true,
+      "tags": [
+        "ramp"
+      ],
+      "mana_production": {
+        "modes": [
+          "UR"
+        ],
+        "activation_generic": 1
+      }
+    },
+    "Talisman of Creativity": {
+      "type": "permanent",
+      "cost": [
+        2,
+        0,
+        0
+      ],
+      "effects": [],
+      "status": "modeled",
+      "mana_rock": true,
+      "tags": [
+        "ramp"
+      ],
+      "mana_production": {
+        "modes": [
+          "U",
+          "R",
+          "C"
+        ]
+      }
+    },
+    "Resonating Lute": {
+      "type": "permanent",
+      "cost": [
+        2,
+        1,
+        1
+      ],
+      "effects": [
+        {
+          "event": "static",
+          "op": "lands_spell_mana_ability"
+        }
+      ],
+      "status": "modeled",
+      "tags": [
+        "mana_engine"
+      ]
+    },
+    "Maskwood Nexus": {
+      "type": "permanent",
+      "cost": [
+        4,
+        0,
+        0
+      ],
+      "effects": [
+        {
+          "event": "static",
+          "op": "all_creature_types"
+        }
+      ],
+      "status": "modeled",
+      "tags": [
+        "type_engine"
+      ]
+    },
+    "Arcane Adaptation": {
+      "type": "permanent",
+      "cost": [
+        2,
+        1,
+        0
+      ],
+      "effects": [
+        {
+          "event": "static",
+          "op": "choose_type",
+          "chosen": "Wizard"
+        }
+      ],
+      "status": "modeled",
+      "tags": [
+        "type_engine"
+      ]
+    },
+    "The Lost and the Damned": {
+      "type": "permanent",
+      "cost": [
+        1,
+        1,
+        1
+      ],
+      "effects": [
+        {
+          "event": "cast_from_outside_hand",
+          "op": "create_token",
+          "token": "Spawn",
+          "amount": 1
+        }
+      ],
+      "status": "modeled",
+      "tags": [
+        "token_engine"
+      ]
+    },
+    "Underworld Breach": {
+      "type": "permanent",
+      "cost": [
+        1,
+        0,
+        1
+      ],
+      "effects": [
+        {
+          "event": "static",
+          "op": "escape_nonland_spells"
+        }
+      ],
+      "status": "partial",
+      "tags": [
+        "grave_engine"
+      ]
+    },
+    "Sorcerer Class": {
+      "type": "permanent",
+      "cost": [
+        0,
+        1,
+        1
+      ],
+      "effects": [
+        {
+          "event": "enter",
+          "op": "draw_discard",
+          "draw": 2,
+          "discard": 2
+        },
+        {
+          "event": "level_2",
+          "op": "grant_spell_mana_to_creatures"
+        }
+      ],
+      "status": "partial",
+      "tags": [
+        "mana_engine",
+        "draw_engine"
+      ],
+      "activated_abilities": [
+        {
+          "id": "level_2",
+          "mana_cost": [
+            3,
+            1,
+            0
+          ],
+          "effect": "class_level",
+          "level": 2,
+          "sorcery_speed": true
+        }
+      ]
+    },
+    "Phyrexian Altar": {
+      "type": "permanent",
+      "cost": [
+        3,
+        0,
+        0
+      ],
+      "effects": [
+        {
+          "event": "activated",
+          "op": "sacrifice_for_mana"
+        }
+      ],
+      "status": "partial",
+      "tags": [
+        "mana_engine"
+      ]
+    },
+    "Fellwar Stone": {
+      "type": "permanent",
+      "cost": [
+        2,
+        0,
+        0
+      ],
+      "effects": [],
+      "status": "modeled",
+      "mana_rock": true,
+      "tags": [
+        "ramp"
+      ],
+      "mana_production": {
+        "modes": [
+          "U",
+          "R"
+        ],
+        "assumption": "An opponent controls a source producing U or R"
+      }
+    },
+    "Mind Stone": {
+      "type": "permanent",
+      "cost": [
+        2,
+        0,
+        0
+      ],
+      "effects": [],
+      "status": "modeled",
+      "mana_rock": true,
+      "tags": [
+        "ramp"
+      ],
+      "mana_production": {
+        "modes": [
+          "C"
+        ]
+      }
+    },
+    "Brainstorm": {
+      "type": "spell",
+      "cost": [
+        0,
+        1,
+        0
+      ],
+      "effects": [
+        {
+          "event": "resolve",
+          "op": "selection",
+          "method": "brainstorm"
+        }
+      ],
+      "status": "modeled",
+      "tags": [
+        "selection"
+      ]
+    },
+    "Ponder": {
+      "type": "spell",
+      "cost": [
+        0,
+        1,
+        0
+      ],
+      "effects": [
+        {
+          "event": "resolve",
+          "op": "selection",
+          "method": "ponder"
+        }
+      ],
+      "status": "modeled",
+      "tags": [
+        "selection"
+      ]
+    },
+    "Preordain": {
+      "type": "spell",
+      "cost": [
+        0,
+        1,
+        0
+      ],
+      "effects": [
+        {
+          "event": "resolve",
+          "op": "selection",
+          "method": "preordain"
+        }
+      ],
+      "status": "modeled",
+      "tags": [
+        "selection"
+      ]
+    },
+    "Telling Time": {
+      "type": "spell",
+      "cost": [
+        1,
+        1,
+        0
+      ],
+      "effects": [
+        {
+          "event": "resolve",
+          "op": "selection",
+          "method": "telling_time"
+        }
+      ],
+      "status": "modeled",
+      "tags": [
+        "selection"
+      ]
+    },
+    "Impulse": {
+      "type": "spell",
+      "cost": [
+        1,
+        1,
+        0
+      ],
+      "effects": [
+        {
+          "event": "resolve",
+          "op": "selection",
+          "method": "impulse"
+        }
+      ],
+      "status": "modeled",
+      "tags": [
+        "selection"
+      ]
+    },
+    "Frantic Search": {
+      "type": "spell",
+      "cost": [
+        2,
+        1,
+        0
+      ],
+      "effects": [
+        {
+          "event": "resolve",
+          "op": "selection",
+          "method": "frantic_search"
+        }
+      ],
+      "status": "modeled",
+      "tags": [
+        "selection"
+      ]
+    },
+    "Mystical Tutor": {
+      "type": "spell",
+      "cost": [
+        0,
+        1,
+        0
+      ],
+      "effects": [],
+      "status": "unmodeled"
+    },
+    "Muddle the Mixture": {
+      "type": "spell",
+      "cost": [
+        0,
+        2,
+        0
+      ],
+      "effects": [],
+      "status": "unmodeled"
+    },
+    "Step Through": {
+      "type": "spell",
+      "cost": [
+        3,
+        2,
+        0
+      ],
+      "effects": [],
+      "status": "unmodeled"
+    },
+    "Twincast": {
+      "type": "spell",
+      "cost": [
+        0,
+        2,
+        0
+      ],
+      "effects": [],
+      "status": "unmodeled"
+    },
+    "Reiterate": {
+      "type": "spell",
+      "cost": [
+        1,
+        0,
+        2
+      ],
+      "effects": [],
+      "status": "unmodeled"
+    },
+    "Counterspell": {
+      "type": "spell",
+      "cost": [
+        0,
+        2,
+        0
+      ],
+      "effects": [],
+      "status": "partial",
+      "reaction": "counter",
+      "tags": [
+        "counter"
+      ]
+    },
+    "Arcane Denial": {
+      "type": "spell",
+      "cost": [
+        1,
+        1,
+        0
+      ],
+      "effects": [],
+      "status": "partial",
+      "reaction": "counter",
+      "tags": [
+        "counter"
+      ]
+    },
+    "Swan Song": {
+      "type": "spell",
+      "cost": [
+        0,
+        1,
+        0
+      ],
+      "effects": [],
+      "status": "partial",
+      "reaction": "counter",
+      "tags": [
+        "counter"
+      ]
+    },
+    "An Offer You Can't Refuse": {
+      "type": "spell",
+      "cost": [
+        0,
+        1,
+        0
+      ],
+      "effects": [],
+      "status": "partial",
+      "reaction": "counter",
+      "tags": [
+        "counter"
+      ]
+    },
+    "Flusterstorm": {
+      "type": "spell",
+      "cost": [
+        0,
+        1,
+        0
+      ],
+      "effects": [],
+      "status": "partial",
+      "reaction": "counter",
+      "tags": [
+        "counter"
+      ]
+    },
+    "Pongify": {
+      "type": "spell",
+      "cost": [
+        0,
+        1,
+        0
+      ],
+      "effects": [],
+      "status": "partial",
+      "reaction": "removal_or_protection"
+    },
+    "Abrade": {
+      "type": "spell",
+      "cost": [
+        1,
+        0,
+        1
+      ],
+      "effects": [],
+      "status": "partial",
+      "reaction": "removal_or_protection"
+    },
+    "Chaos Warp": {
+      "type": "spell",
+      "cost": [
+        2,
+        0,
+        1
+      ],
+      "effects": [],
+      "status": "partial",
+      "reaction": "removal_or_protection"
+    },
+    "Chaos Mutation": {
+      "type": "spell",
+      "cost": [
+        3,
+        1,
+        1
+      ],
+      "effects": [],
+      "status": "unmodeled"
+    },
+    "Cyclonic Rift": {
+      "type": "spell",
+      "cost": [
+        1,
+        1,
+        0
+      ],
+      "effects": [],
+      "status": "partial",
+      "reaction": "removal_or_protection"
+    },
+    "March of Swirling Mist": {
+      "type": "spell",
+      "cost": [
+        0,
+        1,
+        0
+      ],
+      "effects": [],
+      "status": "partial",
+      "reaction": "removal_or_protection"
+    },
+    "Jeska's Will": {
+      "type": "spell",
+      "cost": [
+        2,
+        0,
+        1
+      ],
+      "effects": [],
+      "status": "unmodeled"
+    },
+    "Mana Geyser": {
+      "type": "spell",
+      "cost": [
+        3,
+        0,
+        2
+      ],
+      "effects": [],
+      "status": "unmodeled"
+    },
+    "Mathemagics": {
+      "type": "spell",
+      "cost": [
+        0,
+        2,
+        0
+      ],
+      "effects": [],
+      "status": "unmodeled",
+      "tags": [
+        "finisher"
+      ]
+    },
+    "Comet Storm": {
+      "type": "spell",
+      "cost": [
+        0,
+        0,
+        2
+      ],
+      "effects": [],
+      "status": "unmodeled",
+      "tags": [
+        "finisher"
+      ]
+    },
+    "Capsize": {
+      "type": "spell",
+      "cost": [
+        1,
+        2,
+        0
+      ],
+      "effects": [
+        {
+          "event": "resolve",
+          "op": "utility",
+          "method": "capsize"
+        }
+      ],
+      "status": "partial",
+      "buyback_generic": 3,
+      "tags": [
+        "buyback_engine",
+        "bounce"
+      ]
+    },
+    "Searing Touch": {
+      "type": "spell",
+      "cost": [
+        0,
+        0,
+        1
+      ],
+      "effects": [
+        {
+          "event": "resolve",
+          "op": "utility",
+          "method": "searing_touch"
+        }
+      ],
+      "status": "partial",
+      "buyback_generic": 4,
+      "tags": [
+        "buyback_engine",
+        "damage"
+      ]
+    },
+    "Mystic Speculation": {
+      "type": "spell",
+      "cost": [
+        0,
+        1,
+        0
+      ],
+      "effects": [
+        {
+          "event": "resolve",
+          "op": "selection",
+          "method": "scry3"
+        }
+      ],
+      "status": "modeled",
+      "buyback_generic": 2,
+      "tags": [
+        "selection",
+        "buyback_engine"
+      ]
+    },
+    "Command Tower": {
+      "type": "land",
+      "cost": null,
+      "effects": [],
+      "status": "modeled",
+      "land_profile": "D"
+    },
+    "Steam Vents": {
+      "type": "land",
+      "cost": null,
+      "effects": [],
+      "status": "modeled",
+      "land_profile": "D"
+    },
+    "Training Center": {
+      "type": "land",
+      "cost": null,
+      "effects": [],
+      "status": "modeled",
+      "land_profile": "D"
+    },
+    "Stormcarved Coast": {
+      "type": "land",
+      "cost": null,
+      "effects": [],
+      "status": "modeled",
+      "land_profile": "D"
+    },
+    "Sulfur Falls": {
+      "type": "land",
+      "cost": null,
+      "effects": [],
+      "status": "modeled",
+      "land_profile": "D"
+    },
+    "Shivan Reef": {
+      "type": "land",
+      "cost": null,
+      "effects": [],
+      "status": "modeled",
+      "land_profile": "D"
+    },
+    "Spirebluff Canal": {
+      "type": "land",
+      "cost": null,
+      "effects": [],
+      "status": "modeled",
+      "land_profile": "D"
+    },
+    "Riverglide Pathway": {
+      "type": "land",
+      "cost": null,
+      "effects": [],
+      "status": "modeled",
+      "land_profile": "pathway"
+    },
+    "Fiery Islet": {
+      "type": "land",
+      "cost": null,
+      "effects": [],
+      "status": "modeled",
+      "land_profile": "D"
+    },
+    "Cascade Bluffs": {
+      "type": "land",
+      "cost": null,
+      "effects": [],
+      "status": "modeled",
+      "land_profile": "D"
+    },
+    "Exotic Orchard": {
+      "type": "land",
+      "cost": null,
+      "effects": [],
+      "status": "modeled",
+      "land_profile": "D"
+    },
+    "Fabled Passage": {
+      "type": "land",
+      "cost": null,
+      "effects": [],
+      "status": "modeled",
+      "land_profile": "fetch"
+    },
+    "Otawara, Soaring City": {
+      "type": "land",
+      "cost": null,
+      "effects": [],
+      "status": "modeled",
+      "land_profile": "U"
+    },
+    "Sokenzan, Crucible of Defiance": {
+      "type": "land",
+      "cost": null,
+      "effects": [],
+      "status": "modeled",
+      "land_profile": "R"
+    },
+    "Riptide Laboratory": {
+      "type": "land",
+      "cost": null,
+      "effects": [],
+      "status": "modeled",
+      "land_profile": "C"
+    },
+    "Mystic Sanctuary": {
+      "type": "land",
+      "cost": null,
+      "effects": [],
+      "status": "modeled",
+      "land_profile": "U"
+    },
+    "Island": {
+      "type": "land",
+      "cost": null,
+      "effects": [],
+      "status": "modeled",
+      "land_profile": "U"
+    },
+    "Mountain": {
+      "type": "land",
+      "cost": null,
+      "effects": [],
+      "status": "modeled",
+      "land_profile": "R"
+    }
+  }
+}

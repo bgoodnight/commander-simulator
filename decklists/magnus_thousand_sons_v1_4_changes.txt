@@ -1,0 +1,21 @@
+Magnus v1.4 — Changes and follow-up testing notes
+
+Adds
+- Fellwar Stone: 2-mana colored acceleration toward Magnus and repeated U/U interaction, color depends on opponents' lands.
+- Mind Stone: 2-mana generic acceleration toward Magnus, convertible into one card later.
+- Kitsa, Otterball Elite: 2-mana Wizard, repeatable draw/discard to stock graveyard for Underworld Breach; when power >=3, can tap and pay 2 to copy your instant or sorcery. Harmonic Prodigy doubles Kitsa's prowess triggers because she is a Wizard.
+- Stormcatch Mentor: 2-mana haste/prowess Wizard that reduces instant/sorcery spell generic costs by 1 even without Magnus. Discount also covers buyback generic costs.
+
+Cuts
+- Haze of Rage: situational storm-combat pump / secondary Treasure loop. Searing Touch, Mystic Speculation and Capsize remain primary buyback plan.
+- Reverberate: redundant one-shot copy effect; Twincast, Reiterate, Dualcaster Mage, Tzaangor Shaman and Kitsa remain. Cutting this makes two-copy Mathemagics sequences slightly less reliable.
+- Deekah, Fractal Theorist: excellent high-end Wizard token generator, but competes at 5 mana with commander and Docent. Revisit if token production is inadequate after Magnus resolves.
+- Feldon of the Third Path: valuable creature reanimation-as-token/defense interaction but needs several setup resources; retain on shortlist if creature removal proves a major problem. Underworld Breach is still able to recast key creatures from graveyard with escape.
+
+Preserved: all six other Tzeentch creatures; Magnus; Patron Wizard / Voidmage Prodigy / Harmonic Prodigy; 4 buyback spells (Capsize, Searing Touch, Mystic Speculation, Whispers of the Muse); original two big X spells; Arcane Adaptation / Maskwood Nexus; Brainstorm / Chaos Mutation; Chaos Warp; Phyrexian Altar / Sorcerer Class / Stormsplitter.
+
+Deck totals: commander 1; creatures 22; artifacts+enchantments 14; instants+sorceries 28; lands 35 = 100.
+
+Before full simulations: verify Kitsa's once-per-turn tap bottleneck, two-color sources for commander, correct land and mana-rock sequencing, Kitsa copy availability requiring 3 power, and interaction availability after resolving commander. The earlier mana simulation's assumptions about rocks should be updated to handle the 2 added rocks.
+
+Note: Sapphire Medallion is a potential alternative to Mind Stone if testing shows spell-based generic cost reduction outperforming flexible colorless mana. Unlike mana rocks, it does not make mana for activated abilities or colored costs.

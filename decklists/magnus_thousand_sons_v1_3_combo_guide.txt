@@ -1,0 +1,60 @@
+Magnus the Red — v1.3: Changes, Combo Guide & Testing Notes
+October 27, 2026
+
+NEW CARDS (7):
+1 Stormsplitter (Otter Wizard; makes hasty Wizard token copies on instant/sorcery casts)
+1 Sorcerer Class (looting, creature-to-mana at level 2, scaling damage at level 3)
+1 Phyrexian Altar (creatures to any-color mana)
+1 Searing Touch (R; 1 damage to any target; buyback {4})
+1 Mystic Speculation (U; scry 3; buyback {2})
+1 Haze of Rage ({1}{R}; creature pump, storm; buyback {2})
+1 Whispers of the Muse (U; draw a card; buyback {5})
+
+CUT (7):
+Azami, Lady of Scrolls (expensive and competes with Sorcerer Class for tapping Wizards)
+Kaza, Roil Chaser (another tap-to-discount engine less essential after adding Class/Altar)
+Talrand, Sky Summoner (4-mana token producer replaced by Stormsplitter as loop enabler)
+Chromatic Lantern (3-mana fixing rock, cut for engine space; mana consistency risk)
+Wizard's Retort (conditional hard counter; still plenty of stack protection)
+Reality Shift (redundant creature removal; can restore if exile removal needed)
+Twinflame (removes Dualcaster/Twinflame combo, Dualcaster remains a spell copy Wizard)
+
+CATEGORY COUNTS:
+1 Commander / 22 creatures / 12 artifacts/enchantments / 30 instants/sorceries / 35 lands.
+
+PRIMARY INFINITE/REPEATING LOOPS:
+A) Magnus + 4 creature tokens + Storm-Kiln Artist + Searing Touch in hand: Searing Touch with buyback costs {R}; Artist makes Treasure; sacrifice Treasure for {R}; repeat for arbitrary damage.
+B) Magnus + at least 2 creature tokens + Young Pyromancer + Phyrexian Altar + Mystic Speculation in hand: spell with buyback costs {U}; Pyromancer generates a creature, sacrifice it to Altar for {U}, repeat while preserving 2 baseline tokens. Repeated scry/cast triggers, NOT standalone damage. Guttersnipe or level-3 Sorcerer Class turns cast loop into table-wide damage. Harmonic Prodigy gives net additional tokens each cycle.
+C) Magnus + at least 2 tokens + Stormsplitter + Sorcerer Class at least level 2 + Mystic Speculation: cast discounted Speculation for {U}; Stormsplitter creates a hasty token copy (a Wizard) that taps for {U} via Class; repeat, accumulating hasty Wizard tokens and recurring casts. At Class level 3, cast triggers deal lethal damage; otherwise use Guttersnipe, Haze of Rage combat, or generate resources toward an X finisher. Prior initial {U} is needed if no untapped eligible creature.
+D) Storm-Kiln Artist + Haze of Rage: its storm copies trigger the Artist to create Treasures; with >=3 spells cast before Haze and enough starting mana, produces more Treasures than Haze with buyback costs. With Magnus and >=3 tokens, cost is {R}, lowering start conditions and yielding indefinite casts and Treasures. Requires a payoff to kill without combat (Guttersnipe or Class level 3).
+E) Stormsplitter + Phyrexian Altar + Mystic Speculation: repeated spellcasting produces more hasty Stormsplitters; Altar can fund the next buyback cast after enough token copies accrue. Magnus makes this substantially easier.
+
+X FINISHERS:
+Mathemagics: cheap card draw early at smaller X; late cast with X=7 and copying effects to exhaust opponent libraries. It is retrievable and recast with Underworld Breach at a new X.
+Comet Storm: removal early; scalable instant-speed multi-target damage late. Can be cast from graveyard via Breach, paying chosen X and multikicker as usual.
+
+SYNERGY AND RULES LIMITATIONS:
+* Magnus discounts generic portions of total instant/sorcery spell cost INCLUDING buyback, but never colored pips and not the nonmana exile-three cost of escape.
+* Sorcerer Class level 2 adds a tap ability to creatures. Creature tokens without haste generally cannot tap for it on their first turn; Stormsplitter copies have haste.
+* Each Altar sacrifice reduces creature count; loops must replenish at least as many token creatures as they consume to maintain Magnus discounts.
+* Stormsplitter is naturally a Wizard, so Harmonic Prodigy doubles its token-producing cast trigger. Its token copies are Wizards with haste; they are exiled at end step.
+* Underworld Breach makes spells castable FROM graveyard, but each escaped spell requires exiling three OTHER cards. A spell returned to hand using buyback can be recast from hand without further escape costs. Breach itself must be saved before the end step, e.g. Capsize with buyback.
+* Buyback works when paying the escape cost of an instant/sorcery and casting from the graveyard, if its buyback cost is paid and the spell resolves. Copies of buyback spells do not create physical cards in hand.
+* Sorcerer Class level 3 damage needs casts, not copies. Guttersnipe also triggers on casts only. Storm-Kiln Artist and Deekah magecraft trigger on casts OR copies.
+* Mathemagics copied on stack retains its chosen X; free casting an X spell without paying its mana cost typically fixes X=0.
+* Chaos Mutation turns a token into a creature but cannot reveal an enchantment/artifact without creature type. Chaos Warp shuffles before revealing, so Brainstorm cannot arrange its hit.
+
+WHY THESE CUTS:
+All six non-commander Tzeentch creatures and core cards Patron Wizard, Voidmage Prodigy, Arcane Adaptation, Maskwood Nexus, Harmonic Prodigy, The Lost and the Damned, Underworld Breach, Brainstorm, Scroll Rack, Chaos Mutation, Chaos Warp, Capsize, and both X finishers remain.
+We replaced a redundant late-game tap-to-draw creature, a tap-to-discount Wizard, and a four-mana token Wizard with more deterministic spell-replay engines. Reduced counterspell and removal counts may require restoration after games.
+
+EARLY TESTING PRIORITIES:
+1. Is 35 lands with four low-cost rocks enough to cast 4-5 mana Wizards on time? Lantern and Kaza have moved out.
+2. Does losing Talrand reduce baseline token generation too much when Sorcerer Class, Altar, or Stormsplitter is absent?
+3. Are the buyback loops too strong or repetitive for intended playgroup?
+4. Is 30 instants/sorceries enough for a spellslinger engine (7 are now buyback/finishers)?
+5. Does reduced interaction coverage require Reality Shift or Wizard's Retort back?
+6. Consider Fanning the Flames as a hybrid X-spell with buyback if Comet Storm underperforms, but do not yet add.
+
+OWNED CARDS, AS PREVIOUSLY CONFIRMED (NONEXHAUSTIVE):
+Mathemagics; Resonating Lute; Heralds of Tzeentch; Lord of Change; Mutalith Vortex Beast; Pink Horror; Brainstorm; Chaos Mutation; Chaos Warp; Talisman of Creativity; Izzet Signet; Exotic Orchard; Shivan Reef; Chromatic Lantern. Ownership of newly proposed combo pieces is not confirmed.
