@@ -1,0 +1,14 @@
+"""Run each version in its own interpreter to prevent module name collisions."""
+import subprocess,sys
+from pathlib import Path
+ROOT=Path(__file__).resolve().parent
+VERSIONS=[('v3_magnus_modular',20),('v4_abstract_opponents',15),('v5_four_player',21),
+          ('v6_real_deck',21),('v7_rules',50),('v8_central',32)]
+for folder,expected in VERSIONS:
+    path=ROOT/'simulator'/folder
+    result=subprocess.run([sys.executable,'tests.py','-q'],cwd=path,text=True,capture_output=True)
+    print(f'{folder}:',('PASS' if result.returncode==0 else 'FAIL'),f'(expected {expected} tests)')
+    if result.returncode:
+        print(result.stdout+result.stderr)
+        raise SystemExit(result.returncode)
+print('All six versioned suites completed successfully (159 tests expected).')

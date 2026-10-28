@@ -1,0 +1,14 @@
+{
+  "ModularTable": {
+    "n": 40,
+    "median_ms": 9.119,
+    "mean_ms": 11.867,
+    "max_ms": 86.198
+  },
+  "CentralTable": {
+    "n": 40,
+    "median_ms": 9.435,
+    "mean_ms": 9.763,
+    "max_ms": 16.868
+  }
+}

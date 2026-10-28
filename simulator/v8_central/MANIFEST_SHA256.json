@@ -1,0 +1,23 @@
+{
+  ".github/workflows/commander-tests.yml": "da8a5c5de98fc4e569f0724325e680fbb04dde7b3d175467a090e91941bf88d5",
+  "run_all_tests.py": "8798ec23a3f43884b44a82780a45cf8e9888c39c9cd1c329d51687f045224b5f",
+  "simulator/v8_central/01_mixed.json": "67fd8eb78efb093b8ada473fc653eca6584a0b5ba2cfd32ae61d25e388c5177c",
+  "simulator/v8_central/01_mixed.md": "762e0c3ed798d878d7cab40183248c35fab58babf3ed0c612dea13fc9ed8563f",
+  "simulator/v8_central/02_pressure.json": "d47191557e2ae3261e475833d7141b30bcf95a23ae774156c9fccc5550bfeff1",
+  "simulator/v8_central/02_pressure.md": "e5806bfc0f0b6273973b34e792314cbf0f5da365ef5c5be1d0a92885a8308f72",
+  "simulator/v8_central/03_control_heavy.json": "c9f4c479fd5e4ab46fa08a13ee7f06c642b3fcdd6012c032275df0b5a22b0899",
+  "simulator/v8_central/03_control_heavy.md": "36a5ebed6fd74ee1f6c5f8bd6d70337f7ed4e994da04ee6f78a43d5ee3584162",
+  "simulator/v8_central/04_forced_triggers.json": "03d896e2179b730072daf29a9aee838bb902c65cf183bcbb45bd774ed76657e9",
+  "simulator/v8_central/04_forced_triggers.md": "55127c14df1fc6d468afdbe16074cf9ba2fe08d0df6d7d9a61dd0c1efcf77bde",
+  "simulator/v8_central/ASSESSMENT.md": "757fac9589eb35f1b55a72b8f59665b0e55d82a69409fb88255ebbf48e3edcbb",
+  "simulator/v8_central/README.md": "609c709f2a01c7ef1bbe7a8a642bfefaf0acba6dfcf01bef4d797889919e012f",
+  "simulator/v8_central/benchmark_diagnostic.json": "86caf928759dbaa83ac2a51c6e5a057e2632f4dd84590ad1ff2a5ce22a84d6b7",
+  "simulator/v8_central/kernel.py": "a9f6e1be6a197476a96b706ebde5ee67c12475cb6459d2378bd2b741efedd588",
+  "simulator/v8_central/narrative_results.json": "476a48f457c33c8a3e051a517db01457d63ef6dc0931806f2b540adcbd78adf8",
+  "simulator/v8_central/responses.py": "3f3c199b6981d6fe698a21562b2ec47647667e4ae8254e3dad80ec9927fa2cc0",
+  "simulator/v8_central/run_narratives.py": "529d193260f5f2f1db085f2eda25f71144d938ad4fe489e3e1a163c6c0f8991b",
+  "simulator/v8_central/stack.py": "4237a8cc58cccaef2d8a17d81996332c54aff7018d903d0ddcce42f33dc85f6e",
+  "simulator/v8_central/table.py": "2049d7a4cb24f6602c43ded0be55dd1ba3526c038b850dad71930af0f446e7c6",
+  "simulator/v8_central/tests.py": "549db05db3cc4f53e7edabc051e382a66bce8fa62b0f35983e96e63a839de7f1",
+  "simulator/v8_central/turns.py": "9506f3c320551fec3f38e5c8b4682115f18ddb9712a9605bd7b2d79abb022774"
+}

@@ -66,3 +66,12 @@ python make_report.py
 - [Loop safety](simulator/v7_rules/loops.py): fail-closed resource/action/time limits, repeated-state detection, and finite symbolic summaries for **separately verified** repeatable loops. No actual Magnus infinite combo has been certified yet.
 - **Scope:** V7 is a shared rules kernel and incremental v6 bridge; the full multiplayer stack, precise mana source activations and the remaining unimplemented Magnus cards are not yet integrated. Do not interpret the short replay outcomes as deck win rates.
 - GitHub history retains the prior V6 baseline, and a separate V7 recovery ZIP is backed up in the same Google Drive Commander Simulator folder.
+
+
+## V8 persistent shared multiplayer kernel (October 28, 2026)
+
+- [V8 code, 32 new tests, and four diagnostic replays](simulator/v8_central/README.md) | [assessment of limitations](simulator/v8_central/ASSESSMENT.md).
+- `simulator/v8_central/kernel.py`: **persistent** per-game creature/permanent/token state, shared combat/damage/zone rules across all four seats. `stack.py`: bounded nested counterspell responses. `turns.py`: one four-seat turn driver. `responses.py`: declarative counterspell riders.
+- Run `python run_all_tests.py` from the repository root (159 passing regression tests across v3-v8); a GitHub Actions workflow also runs all suites on pushes and pull requests.
+- **Scope:** the real Magnus deck still has unsupported named cards; hand/library/land/mana source policies and general spell/trigger priority are not yet fully migrated. These are diagnostic simulations, **not** validated deck win-rate data.
+- The independent v7 commit (`622ec87a6249ec7726af705c74084a31d993619b`) remains available for revert/branch. Recovery ZIP also saved to the existing Google Drive backup folder.

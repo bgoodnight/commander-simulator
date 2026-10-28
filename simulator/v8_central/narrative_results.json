@@ -1,0 +1,201 @@
+[
+  {
+    "case": "01_mixed",
+    "seed": 102,
+    "opponents": [
+      "aggro",
+      "control",
+      "combo"
+    ],
+    "opening_forced": false,
+    "winner": null,
+    "reason": "turn_limit",
+    "rounds": 10,
+    "magnus_life": 9,
+    "magnus_casts": 1,
+    "magnus_spells": 9,
+    "tokens": 6,
+    "opponent_lives": {
+      "1": 39,
+      "2": 20,
+      "3": 16
+    },
+    "eliminations": [],
+    "v8": {
+      "kernel_permanent_creatures": 37,
+      "kernel_view_consistent": true,
+      "creatures_entered": 39,
+      "permanents_entered": 13,
+      "zone_transitions": 15,
+      "combat_damage_batches": 8,
+      "shared_stack_max_depth": 3,
+      "shared_stack_resolved": 45,
+      "shared_stack_countered": 4,
+      "guard_stop": null,
+      "limits": [
+        "shared battlefield/keyword/combat/damage/spell stack",
+        "some land/mana, hand/library, and legacy synthetic finishers remain adapters",
+        "counter-only response priority; triggered abilities resolve before responses"
+      ]
+    },
+    "v7_paired_reference": {
+      "magnus_life": 19,
+      "outcome": "turn_limit",
+      "magnus_spells": 9
+    }
+  },
+  {
+    "case": "02_pressure",
+    "seed": 104,
+    "opponents": [
+      "aggro",
+      "tokens",
+      "ramp_stompy"
+    ],
+    "opening_forced": false,
+    "winner": 3,
+    "reason": "combat",
+    "rounds": 10,
+    "magnus_life": 0,
+    "magnus_casts": 1,
+    "magnus_spells": 4,
+    "tokens": 0,
+    "opponent_lives": {
+      "1": -2,
+      "2": -7,
+      "3": 17
+    },
+    "eliminations": [
+      {
+        "round": 9,
+        "seat": 2,
+        "archetype": "tokens",
+        "cause": "combat"
+      },
+      {
+        "round": 10,
+        "seat": 0,
+        "archetype": "magnus",
+        "cause": "combat"
+      },
+      {
+        "round": 10,
+        "seat": 1,
+        "archetype": "aggro",
+        "cause": "combat"
+      }
+    ],
+    "v8": {
+      "kernel_permanent_creatures": 11,
+      "kernel_view_consistent": true,
+      "creatures_entered": 43,
+      "permanents_entered": 11,
+      "zone_transitions": 50,
+      "combat_damage_batches": 17,
+      "shared_stack_max_depth": 1,
+      "shared_stack_resolved": 40,
+      "shared_stack_countered": 0,
+      "guard_stop": null,
+      "limits": [
+        "shared battlefield/keyword/combat/damage/spell stack",
+        "some land/mana, hand/library, and legacy synthetic finishers remain adapters",
+        "counter-only response priority; triggered abilities resolve before responses"
+      ]
+    },
+    "v7_paired_reference": {
+      "magnus_life": -5,
+      "outcome": "combat",
+      "magnus_spells": 4
+    }
+  },
+  {
+    "case": "03_control_heavy",
+    "seed": 103,
+    "opponents": [
+      "control",
+      "spellslinger",
+      "midrange"
+    ],
+    "opening_forced": false,
+    "winner": null,
+    "reason": "turn_limit",
+    "rounds": 10,
+    "magnus_life": 20,
+    "magnus_casts": 2,
+    "magnus_spells": 7,
+    "tokens": 3,
+    "opponent_lives": {
+      "1": 27,
+      "2": 30,
+      "3": 22
+    },
+    "eliminations": [],
+    "v8": {
+      "kernel_permanent_creatures": 24,
+      "kernel_view_consistent": true,
+      "creatures_entered": 22,
+      "permanents_entered": 13,
+      "zone_transitions": 11,
+      "combat_damage_batches": 3,
+      "shared_stack_max_depth": 3,
+      "shared_stack_resolved": 38,
+      "shared_stack_countered": 2,
+      "guard_stop": null,
+      "limits": [
+        "shared battlefield/keyword/combat/damage/spell stack",
+        "some land/mana, hand/library, and legacy synthetic finishers remain adapters",
+        "counter-only response priority; triggered abilities resolve before responses"
+      ]
+    },
+    "v7_paired_reference": {
+      "magnus_life": 30,
+      "outcome": "turn_limit",
+      "magnus_spells": 7
+    }
+  },
+  {
+    "case": "04_forced_triggers",
+    "seed": 404,
+    "opponents": [
+      "control",
+      "combo",
+      "tokens"
+    ],
+    "opening_forced": true,
+    "winner": null,
+    "reason": "turn_limit",
+    "rounds": 10,
+    "magnus_life": 28,
+    "magnus_casts": 2,
+    "magnus_spells": 8,
+    "tokens": 2,
+    "opponent_lives": {
+      "1": 34,
+      "2": 40,
+      "3": 25
+    },
+    "eliminations": [],
+    "v8": {
+      "kernel_permanent_creatures": 32,
+      "kernel_view_consistent": true,
+      "creatures_entered": 27,
+      "permanents_entered": 20,
+      "zone_transitions": 15,
+      "combat_damage_batches": 8,
+      "shared_stack_max_depth": 1,
+      "shared_stack_resolved": 48,
+      "shared_stack_countered": 0,
+      "guard_stop": null,
+      "limits": [
+        "shared battlefield/keyword/combat/damage/spell stack",
+        "some land/mana, hand/library, and legacy synthetic finishers remain adapters",
+        "counter-only response priority; triggered abilities resolve before responses"
+      ]
+    },
+    "v7_paired_reference": {
+      "magnus_life": 32,
+      "outcome": "turn_limit",
+      "magnus_spells": 8
+    }
+  }
+]
