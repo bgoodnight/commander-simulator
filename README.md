@@ -57,3 +57,12 @@ python make_report.py
 - Run `python simulator/v6_real_deck/tests.py` (21 tests); from that folder, `python run_narratives.py` regenerates three random-opening games plus one explicitly forced-opening diagnostic.
 - **Do not infer win rates or propose deck changes yet:** 38 named nonland cards remain unimplemented, and selection, stack/priority, card-specific mechanics, and win conditions remain incomplete.
 - The v3/v4/v5 source code is unchanged; GitHub's prior v5 import commit can be restored or this v6 change reverted without force-pushing.
+
+
+## V7 modular rules and loop-safety prototype (October 28, 2026)
+
+- [V7 rules kernel README](simulator/v7_rules/README.md) and [V7 assessment](simulator/v7_rules/ASSESSMENT.md): reusable typed card/object descriptions, static and triggered abilities, zones, keyword/counter rules, damage and targeting, plus four qualitative mixed-table game traces.
+- Run `python simulator/v7_rules/tests.py` (50 tests). All five versioned suites currently pass (127 tests total).
+- [Loop safety](simulator/v7_rules/loops.py): fail-closed resource/action/time limits, repeated-state detection, and finite symbolic summaries for **separately verified** repeatable loops. No actual Magnus infinite combo has been certified yet.
+- **Scope:** V7 is a shared rules kernel and incremental v6 bridge; the full multiplayer stack, precise mana source activations and the remaining unimplemented Magnus cards are not yet integrated. Do not interpret the short replay outcomes as deck win rates.
+- GitHub history retains the prior V6 baseline, and a separate V7 recovery ZIP is backed up in the same Google Drive Commander Simulator folder.

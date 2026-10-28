@@ -1,0 +1,140 @@
+{
+  "games": [
+    {
+      "case": "01_mixed",
+      "seed": 102,
+      "opponents": [
+        "aggro",
+        "control",
+        "combo"
+      ],
+      "forced_opening": false,
+      "outcome": "turn_limit",
+      "winner": null,
+      "rounds": 10,
+      "magnus_life": 19,
+      "magnus_casts": 2,
+      "casts": 9,
+      "tokens": 2,
+      "shared_triggers": 4,
+      "cost_queries": 39,
+      "safety_stop": null,
+      "total_casts": 47,
+      "eliminations": []
+    },
+    {
+      "case": "02_pressure",
+      "seed": 104,
+      "opponents": [
+        "aggro",
+        "tokens",
+        "ramp_stompy"
+      ],
+      "forced_opening": false,
+      "outcome": "combat",
+      "winner": 3,
+      "rounds": 10,
+      "magnus_life": -5,
+      "magnus_casts": 1,
+      "casts": 4,
+      "tokens": 0,
+      "shared_triggers": 4,
+      "cost_queries": 3,
+      "safety_stop": null,
+      "total_casts": 42,
+      "eliminations": [
+        {
+          "round": 9,
+          "seat": 0,
+          "archetype": "magnus",
+          "cause": "combat"
+        },
+        {
+          "round": 9,
+          "seat": 2,
+          "archetype": "tokens",
+          "cause": "combat"
+        },
+        {
+          "round": 10,
+          "seat": 1,
+          "archetype": "aggro",
+          "cause": "combat"
+        }
+      ]
+    },
+    {
+      "case": "03_control_heavy",
+      "seed": 103,
+      "opponents": [
+        "control",
+        "spellslinger",
+        "midrange"
+      ],
+      "forced_opening": false,
+      "outcome": "turn_limit",
+      "winner": null,
+      "rounds": 10,
+      "magnus_life": 30,
+      "magnus_casts": 2,
+      "casts": 7,
+      "tokens": 3,
+      "shared_triggers": 4,
+      "cost_queries": 9,
+      "safety_stop": null,
+      "total_casts": 37,
+      "eliminations": []
+    },
+    {
+      "case": "04_forced_triggers",
+      "seed": 404,
+      "opponents": [
+        "control",
+        "combo",
+        "tokens"
+      ],
+      "forced_opening": true,
+      "outcome": "turn_limit",
+      "winner": null,
+      "rounds": 10,
+      "magnus_life": 28,
+      "magnus_casts": 1,
+      "casts": 7,
+      "tokens": 7,
+      "shared_triggers": 9,
+      "cost_queries": 16,
+      "safety_stop": null,
+      "total_casts": 49,
+      "eliminations": []
+    }
+  ],
+  "hypothetical_loop_demonstration": {
+    "compressed_lethal": {
+      "kind": "lethal",
+      "cycles": 40,
+      "reason": "",
+      "damage": [
+        [
+          1,
+          40
+        ],
+        [
+          2,
+          40
+        ],
+        [
+          3,
+          40
+        ]
+      ],
+      "symbolic_mana": false
+    },
+    "draw_loop": {
+      "kind": "declined",
+      "cycles": 0,
+      "reason": "would_deck_before_lethal",
+      "damage": [],
+      "symbolic_mana": false
+    }
+  }
+}
