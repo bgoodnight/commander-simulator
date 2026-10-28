@@ -1,0 +1,7838 @@
+{
+  "record": {
+    "case": "03_third_seat",
+    "seed": 103,
+    "providers": [
+      "control",
+      "spellslinger",
+      "magnus",
+      "midrange"
+    ],
+    "forced_opening": false,
+    "reason": "turn_limit",
+    "safety_stop": null,
+    "consistent": true,
+    "magnus_life": 19,
+    "magnus_casts": 6
+  },
+  "rounds": [
+    {
+      "round": 1,
+      "players": [
+        {
+          "round": 1,
+          "life": 40,
+          "lands": 1,
+          "sources": 1,
+          "creatures": 0,
+          "power": 0,
+          "engines": 0,
+          "combo": 0,
+          "clocks": 0,
+          "hand": 7,
+          "public_threat": 5.6,
+          "objective_proximity": 10.6,
+          "cards_cast": 0,
+          "alive": true,
+          "mana_pool": [
+            0,
+            0,
+            0
+          ],
+          "ready_source_ids": [
+            447
+          ],
+          "mana_capacity_upper_bound": 1
+        },
+        {
+          "round": 1,
+          "life": 40,
+          "lands": 1,
+          "sources": 1,
+          "creatures": 0,
+          "power": 0,
+          "engines": 0,
+          "combo": 0,
+          "clocks": 0,
+          "hand": 7,
+          "public_threat": 5.6,
+          "objective_proximity": 8.1,
+          "cards_cast": 0,
+          "alive": true,
+          "mana_pool": [
+            0,
+            0,
+            0
+          ],
+          "ready_source_ids": [
+            445
+          ],
+          "mana_capacity_upper_bound": 1
+        },
+        {
+          "round": 1,
+          "life": 40,
+          "lands": 1,
+          "sources": 1,
+          "creatures": 0,
+          "power": 0,
+          "engines": 0,
+          "combo": 0,
+          "clocks": 0,
+          "hand": 7,
+          "public_threat": 5.6,
+          "objective_proximity": 5.6,
+          "cards_cast": 0,
+          "alive": true,
+          "mana_pool": [
+            0,
+            0,
+            0
+          ],
+          "ready_source_ids": [
+            441
+          ],
+          "mana_capacity_upper_bound": 1,
+          "tokens": 0,
+          "named_hand": [
+            "Island",
+            "Twincast",
+            "Third Path Iconoclast",
+            "Mountain",
+            "Flusterstorm",
+            "Pongify",
+            "Exotic Orchard"
+          ],
+          "commander_zone": true,
+          "commander_casts": 0,
+          "unsupported_in_hand": 1
+        },
+        {
+          "round": 1,
+          "life": 40,
+          "lands": 1,
+          "sources": 1,
+          "creatures": 0,
+          "power": 0,
+          "engines": 0,
+          "combo": 0,
+          "clocks": 0,
+          "hand": 7,
+          "public_threat": 5.6,
+          "objective_proximity": 5.6,
+          "cards_cast": 0,
+          "alive": true,
+          "mana_pool": [
+            0,
+            0,
+            0
+          ],
+          "ready_source_ids": [
+            443
+          ],
+          "mana_capacity_upper_bound": 1
+        }
+      ],
+      "rankings": {
+        "0": 1,
+        "1": 2,
+        "2": 3,
+        "3": 4
+      }
+    },
+    {
+      "round": 2,
+      "players": [
+        {
+          "round": 2,
+          "life": 40,
+          "lands": 2,
+          "sources": 2,
+          "creatures": 0,
+          "power": 0,
+          "engines": 0,
+          "combo": 0,
+          "clocks": 0,
+          "hand": 7,
+          "public_threat": 6.3,
+          "objective_proximity": 11.3,
+          "cards_cast": 0,
+          "alive": true,
+          "mana_pool": [
+            0,
+            0,
+            0
+          ],
+          "ready_source_ids": [
+            447,
+            459
+          ],
+          "mana_capacity_upper_bound": 2
+        },
+        {
+          "round": 2,
+          "life": 40,
+          "lands": 2,
+          "sources": 2,
+          "creatures": 0,
+          "power": 0,
+          "engines": 0,
+          "combo": 0,
+          "clocks": 0,
+          "hand": 6,
+          "public_threat": 6.0,
+          "objective_proximity": 8.5,
+          "cards_cast": 1,
+          "alive": true,
+          "mana_pool": [
+            0,
+            0,
+            0
+          ],
+          "ready_source_ids": [],
+          "mana_capacity_upper_bound": 0
+        },
+        {
+          "round": 2,
+          "life": 40,
+          "lands": 2,
+          "sources": 2,
+          "creatures": 0,
+          "power": 0,
+          "engines": 0,
+          "combo": 0,
+          "clocks": 0,
+          "hand": 7,
+          "public_threat": 6.3,
+          "objective_proximity": 6.3,
+          "cards_cast": 0,
+          "alive": true,
+          "mana_pool": [
+            0,
+            0,
+            0
+          ],
+          "ready_source_ids": [
+            441,
+            449
+          ],
+          "mana_capacity_upper_bound": 2,
+          "tokens": 0,
+          "named_hand": [
+            "Twincast",
+            "Third Path Iconoclast",
+            "Mountain",
+            "Flusterstorm",
+            "Pongify",
+            "Exotic Orchard",
+            "Capsize"
+          ],
+          "commander_zone": true,
+          "commander_casts": 0,
+          "unsupported_in_hand": 2
+        },
+        {
+          "round": 2,
+          "life": 34,
+          "lands": 2,
+          "sources": 3,
+          "creatures": 0,
+          "power": 0,
+          "engines": 0,
+          "combo": 0,
+          "clocks": 0,
+          "hand": 6,
+          "public_threat": 6.3,
+          "objective_proximity": 6.28,
+          "cards_cast": 1,
+          "alive": true,
+          "mana_pool": [
+            0,
+            0,
+            0
+          ],
+          "ready_source_ids": [
+            453
+          ],
+          "mana_capacity_upper_bound": 1
+        }
+      ],
+      "rankings": {
+        "0": 1,
+        "2": 2,
+        "3": 3,
+        "1": 4
+      }
+    },
+    {
+      "round": 3,
+      "players": [
+        {
+          "round": 3,
+          "life": 40,
+          "lands": 2,
+          "sources": 2,
+          "creatures": 0,
+          "power": 0,
+          "engines": 0,
+          "combo": 0,
+          "clocks": 0,
+          "hand": 7,
+          "public_threat": 6.3,
+          "objective_proximity": 8.8,
+          "cards_cast": 1,
+          "alive": true,
+          "mana_pool": [
+            0,
+            0,
+            0
+          ],
+          "ready_source_ids": [
+            447,
+            459
+          ],
+          "mana_capacity_upper_bound": 2
+        },
+        {
+          "round": 3,
+          "life": 40,
+          "lands": 3,
+          "sources": 3,
+          "creatures": 0,
+          "power": 0,
+          "engines": 0,
+          "combo": 0,
+          "clocks": 0,
+          "hand": 5,
+          "public_threat": 6.4,
+          "objective_proximity": 8.9,
+          "cards_cast": 2,
+          "alive": true,
+          "mana_pool": [
+            0,
+            0,
+            0
+          ],
+          "ready_source_ids": [],
+          "mana_capacity_upper_bound": 0
+        },
+        {
+          "round": 3,
+          "life": 40,
+          "lands": 3,
+          "sources": 3,
+          "creatures": 1,
+          "power": 1,
+          "engines": 0,
+          "combo": 0,
+          "clocks": 0,
+          "hand": 6,
+          "public_threat": 8.0,
+          "objective_proximity": 8.0,
+          "cards_cast": 1,
+          "alive": true,
+          "mana_pool": [
+            0,
+            0,
+            0
+          ],
+          "ready_source_ids": [
+            449
+          ],
+          "mana_capacity_upper_bound": 1,
+          "tokens": 0,
+          "named_hand": [
+            "Twincast",
+            "Flusterstorm",
+            "Pongify",
+            "Exotic Orchard",
+            "Capsize",
+            "Underworld Breach"
+          ],
+          "commander_zone": true,
+          "commander_casts": 0,
+          "unsupported_in_hand": 3
+        },
+        {
+          "round": 3,
+          "life": 34,
+          "lands": 3,
+          "sources": 6,
+          "creatures": 1,
+          "power": 2,
+          "engines": 0,
+          "combo": 0,
+          "clocks": 0,
+          "hand": 3,
+          "public_threat": 9.5,
+          "objective_proximity": 9.53,
+          "cards_cast": 4,
+          "alive": true,
+          "mana_pool": [
+            0,
+            0,
+            0
+          ],
+          "ready_source_ids": [],
+          "mana_capacity_upper_bound": 0
+        }
+      ],
+      "rankings": {
+        "3": 1,
+        "2": 2,
+        "1": 3,
+        "0": 4
+      }
+    },
+    {
+      "round": 4,
+      "players": [
+        {
+          "round": 4,
+          "life": 40,
+          "lands": 2,
+          "sources": 2,
+          "creatures": 0,
+          "power": 0,
+          "engines": 0,
+          "combo": 0,
+          "clocks": 0,
+          "hand": 6,
+          "public_threat": 6.0,
+          "objective_proximity": 6.0,
+          "cards_cast": 3,
+          "alive": true,
+          "mana_pool": [
+            0,
+            0,
+            0
+          ],
+          "ready_source_ids": [],
+          "mana_capacity_upper_bound": 0
+        },
+        {
+          "round": 4,
+          "life": 40,
+          "lands": 4,
+          "sources": 5,
+          "creatures": 0,
+          "power": 0,
+          "engines": 0,
+          "combo": 0,
+          "clocks": 0,
+          "hand": 3,
+          "public_threat": 7.2,
+          "objective_proximity": 9.7,
+          "cards_cast": 4,
+          "alive": true,
+          "mana_pool": [
+            0,
+            0,
+            0
+          ],
+          "ready_source_ids": [],
+          "mana_capacity_upper_bound": 0
+        },
+        {
+          "round": 4,
+          "life": 40,
+          "lands": 4,
+          "sources": 3,
+          "creatures": 3,
+          "power": 3,
+          "engines": 0,
+          "combo": 0,
+          "clocks": 0,
+          "hand": 4,
+          "public_threat": 10.0,
+          "objective_proximity": 10.0,
+          "cards_cast": 3,
+          "alive": true,
+          "mana_pool": [
+            0,
+            0,
+            0
+          ],
+          "ready_source_ids": [
+            461
+          ],
+          "mana_capacity_upper_bound": 1,
+          "tokens": 2,
+          "named_hand": [
+            "Twincast",
+            "Capsize",
+            "Underworld Breach",
+            "Riptide Laboratory"
+          ],
+          "commander_zone": true,
+          "commander_casts": 0,
+          "unsupported_in_hand": 3
+        },
+        {
+          "round": 4,
+          "life": 34,
+          "lands": 3,
+          "sources": 6,
+          "creatures": 0,
+          "power": 0,
+          "engines": 0,
+          "combo": 0,
+          "clocks": 0,
+          "hand": 4,
+          "public_threat": 7.8,
+          "objective_proximity": 10.28,
+          "cards_cast": 6,
+          "alive": true,
+          "mana_pool": [
+            0,
+            0,
+            0
+          ],
+          "ready_source_ids": [
+            493
+          ],
+          "mana_capacity_upper_bound": 1
+        }
+      ],
+      "rankings": {
+        "2": 1,
+        "3": 2,
+        "1": 3,
+        "0": 4
+      }
+    },
+    {
+      "round": 5,
+      "players": [
+        {
+          "round": 5,
+          "life": 40,
+          "lands": 2,
+          "sources": 2,
+          "creatures": 0,
+          "power": 0,
+          "engines": 0,
+          "combo": 0,
+          "clocks": 0,
+          "hand": 7,
+          "public_threat": 6.3,
+          "objective_proximity": 6.3,
+          "cards_cast": 3,
+          "alive": true,
+          "mana_pool": [
+            0,
+            0,
+            0
+          ],
+          "ready_source_ids": [
+            447,
+            459
+          ],
+          "mana_capacity_upper_bound": 2
+        },
+        {
+          "round": 5,
+          "life": 39,
+          "lands": 4,
+          "sources": 6,
+          "creatures": 2,
+          "power": 4,
+          "engines": 0,
+          "combo": 0,
+          "clocks": 0,
+          "hand": 2,
+          "public_threat": 11.6,
+          "objective_proximity": 14.13,
+          "cards_cast": 6,
+          "alive": true,
+          "mana_pool": [
+            0,
+            0,
+            0
+          ],
+          "ready_source_ids": [],
+          "mana_capacity_upper_bound": 0
+        },
+        {
+          "round": 5,
+          "life": 40,
+          "lands": 5,
+          "sources": 4,
+          "creatures": 2,
+          "power": 2,
+          "engines": 0,
+          "combo": 0,
+          "clocks": 0,
+          "hand": 4,
+          "public_threat": 9.4,
+          "objective_proximity": 9.4,
+          "cards_cast": 3,
+          "alive": true,
+          "mana_pool": [
+            0,
+            0,
+            0
+          ],
+          "ready_source_ids": [
+            441,
+            449,
+            461,
+            509
+          ],
+          "mana_capacity_upper_bound": 4,
+          "tokens": 1,
+          "named_hand": [
+            "Twincast",
+            "Capsize",
+            "Underworld Breach",
+            "Heralds of Tzeentch"
+          ],
+          "commander_zone": true,
+          "commander_casts": 0,
+          "unsupported_in_hand": 4
+        },
+        {
+          "round": 5,
+          "life": 33,
+          "lands": 4,
+          "sources": 7,
+          "creatures": 1,
+          "power": 1,
+          "engines": 0,
+          "combo": 0,
+          "clocks": 0,
+          "hand": 2,
+          "public_threat": 9.1,
+          "objective_proximity": 11.61,
+          "cards_cast": 8,
+          "alive": true,
+          "mana_pool": [
+            0,
+            0,
+            0
+          ],
+          "ready_source_ids": [
+            493,
+            511
+          ],
+          "mana_capacity_upper_bound": 2
+        }
+      ],
+      "rankings": {
+        "1": 1,
+        "2": 2,
+        "3": 3,
+        "0": 4
+      }
+    },
+    {
+      "round": 6,
+      "players": [
+        {
+          "round": 6,
+          "life": 37,
+          "lands": 2,
+          "sources": 2,
+          "creatures": 0,
+          "power": 0,
+          "engines": 0,
+          "combo": 0,
+          "clocks": 0,
+          "hand": 7,
+          "public_threat": 6.1,
+          "objective_proximity": 6.09,
+          "cards_cast": 3,
+          "alive": true,
+          "mana_pool": [
+            0,
+            0,
+            0
+          ],
+          "ready_source_ids": [
+            447,
+            459
+          ],
+          "mana_capacity_upper_bound": 2
+        },
+        {
+          "round": 6,
+          "life": 39,
+          "lands": 4,
+          "sources": 6,
+          "creatures": 3,
+          "power": 4,
+          "engines": 0,
+          "combo": 1,
+          "clocks": 0,
+          "hand": 1,
+          "public_threat": 13.9,
+          "objective_proximity": 19.88,
+          "cards_cast": 8,
+          "alive": true,
+          "mana_pool": [
+            0,
+            0,
+            0
+          ],
+          "ready_source_ids": [
+            518
+          ],
+          "mana_capacity_upper_bound": 1
+        },
+        {
+          "round": 6,
+          "life": 40,
+          "lands": 6,
+          "sources": 5,
+          "creatures": 3,
+          "power": 6,
+          "engines": 0,
+          "combo": 0,
+          "clocks": 0,
+          "hand": 4,
+          "public_threat": 13.7,
+          "objective_proximity": 13.65,
+          "cards_cast": 4,
+          "alive": true,
+          "mana_pool": [
+            0,
+            0,
+            0
+          ],
+          "ready_source_ids": [],
+          "mana_capacity_upper_bound": 0,
+          "tokens": 1,
+          "named_hand": [
+            "Twincast",
+            "Capsize",
+            "Underworld Breach",
+            "Heralds of Tzeentch"
+          ],
+          "commander_zone": false,
+          "commander_casts": 1,
+          "unsupported_in_hand": 4
+        },
+        {
+          "round": 6,
+          "life": 33,
+          "lands": 4,
+          "sources": 7,
+          "creatures": 2,
+          "power": 4,
+          "engines": 0,
+          "combo": 0,
+          "clocks": 0,
+          "hand": 2,
+          "public_threat": 11.9,
+          "objective_proximity": 14.41,
+          "cards_cast": 9,
+          "alive": true,
+          "mana_pool": [
+            0,
+            0,
+            0
+          ],
+          "ready_source_ids": [
+            465,
+            467,
+            493,
+            511
+          ],
+          "mana_capacity_upper_bound": 4
+        }
+      ],
+      "rankings": {
+        "1": 1,
+        "2": 2,
+        "3": 3,
+        "0": 4
+      }
+    },
+    {
+      "round": 7,
+      "players": [
+        {
+          "round": 7,
+          "life": 34,
+          "lands": 3,
+          "sources": 4,
+          "creatures": 0,
+          "power": 0,
+          "engines": 0,
+          "combo": 0,
+          "clocks": 0,
+          "hand": 6,
+          "public_threat": 7.0,
+          "objective_proximity": 6.98,
+          "cards_cast": 4,
+          "alive": true,
+          "mana_pool": [
+            0,
+            0,
+            0
+          ],
+          "ready_source_ids": [
+            552
+          ],
+          "mana_capacity_upper_bound": 1
+        },
+        {
+          "round": 7,
+          "life": 39,
+          "lands": 4,
+          "sources": 6,
+          "creatures": 4,
+          "power": 6,
+          "engines": 1,
+          "combo": 1,
+          "clocks": 0,
+          "hand": 1,
+          "public_threat": 18.7,
+          "objective_proximity": 24.73,
+          "cards_cast": 9,
+          "alive": true,
+          "mana_pool": [
+            0,
+            0,
+            0
+          ],
+          "ready_source_ids": [
+            499,
+            501,
+            518
+          ],
+          "mana_capacity_upper_bound": 3
+        },
+        {
+          "round": 7,
+          "life": 38,
+          "lands": 6,
+          "sources": 5,
+          "creatures": 5,
+          "power": 11,
+          "engines": 0,
+          "combo": 0,
+          "clocks": 0,
+          "hand": 4,
+          "public_threat": 18.4,
+          "objective_proximity": 18.36,
+          "cards_cast": 5,
+          "alive": true,
+          "mana_pool": [
+            0,
+            0,
+            0
+          ],
+          "ready_source_ids": [
+            509
+          ],
+          "mana_capacity_upper_bound": 1,
+          "tokens": 2,
+          "named_hand": [
+            "Twincast",
+            "Capsize",
+            "Underworld Breach",
+            "Heralds of Tzeentch"
+          ],
+          "commander_zone": false,
+          "commander_casts": 1,
+          "unsupported_in_hand": 4
+        },
+        {
+          "round": 7,
+          "life": 26,
+          "lands": 5,
+          "sources": 8,
+          "creatures": 2,
+          "power": 4,
+          "engines": 0,
+          "combo": 0,
+          "clocks": 0,
+          "hand": 2,
+          "public_threat": 12.1,
+          "objective_proximity": 14.62,
+          "cards_cast": 9,
+          "alive": true,
+          "mana_pool": [
+            0,
+            0,
+            0
+          ],
+          "ready_source_ids": [
+            443,
+            451,
+            453,
+            465,
+            467,
+            493,
+            511,
+            545
+          ],
+          "mana_capacity_upper_bound": 8
+        }
+      ],
+      "rankings": {
+        "1": 1,
+        "2": 2,
+        "3": 3,
+        "0": 4
+      }
+    },
+    {
+      "round": 8,
+      "players": [
+        {
+          "round": 8,
+          "life": 28,
+          "lands": 3,
+          "sources": 4,
+          "creatures": 0,
+          "power": 0,
+          "engines": 1,
+          "combo": 0,
+          "clocks": 0,
+          "hand": 6,
+          "public_threat": 9.4,
+          "objective_proximity": 9.36,
+          "cards_cast": 5,
+          "alive": true,
+          "mana_pool": [
+            0,
+            0,
+            0
+          ],
+          "ready_source_ids": [],
+          "mana_capacity_upper_bound": 0
+        },
+        {
+          "round": 8,
+          "life": 38,
+          "lands": 4,
+          "sources": 6,
+          "creatures": 4,
+          "power": 6,
+          "engines": 1,
+          "combo": 1,
+          "clocks": 0,
+          "hand": 1,
+          "public_threat": 18.7,
+          "objective_proximity": 22.16,
+          "cards_cast": 10,
+          "alive": true,
+          "mana_pool": [
+            0,
+            0,
+            0
+          ],
+          "ready_source_ids": [
+            445,
+            455,
+            473,
+            499,
+            501,
+            518
+          ],
+          "mana_capacity_upper_bound": 6
+        },
+        {
+          "round": 8,
+          "life": 34,
+          "lands": 7,
+          "sources": 6,
+          "creatures": 5,
+          "power": 11,
+          "engines": 0,
+          "combo": 0,
+          "clocks": 0,
+          "hand": 4,
+          "public_threat": 18.8,
+          "objective_proximity": 18.78,
+          "cards_cast": 5,
+          "alive": true,
+          "mana_pool": [
+            0,
+            0,
+            0
+          ],
+          "ready_source_ids": [
+            441,
+            449,
+            461,
+            509,
+            525,
+            554
+          ],
+          "mana_capacity_upper_bound": 6,
+          "tokens": 2,
+          "named_hand": [
+            "Twincast",
+            "Capsize",
+            "Underworld Breach",
+            "Heralds of Tzeentch"
+          ],
+          "commander_zone": false,
+          "commander_casts": 1,
+          "unsupported_in_hand": 4
+        },
+        {
+          "round": 8,
+          "life": 23,
+          "lands": 5,
+          "sources": 8,
+          "creatures": 5,
+          "power": 10,
+          "engines": 0,
+          "combo": 0,
+          "clocks": 0,
+          "hand": 1,
+          "public_threat": 17.8,
+          "objective_proximity": 17.76,
+          "cards_cast": 11,
+          "alive": true,
+          "mana_pool": [
+            0,
+            0,
+            0
+          ],
+          "ready_source_ids": [
+            493,
+            511,
+            545
+          ],
+          "mana_capacity_upper_bound": 3
+        }
+      ],
+      "rankings": {
+        "2": 1,
+        "1": 2,
+        "3": 3,
+        "0": 4
+      }
+    },
+    {
+      "round": 9,
+      "players": [
+        {
+          "round": 9,
+          "life": 23,
+          "lands": 4,
+          "sources": 5,
+          "creatures": 1,
+          "power": 2,
+          "engines": 2,
+          "combo": 0,
+          "clocks": 0,
+          "hand": 6,
+          "public_threat": 14.6,
+          "objective_proximity": 14.56,
+          "cards_cast": 6,
+          "alive": true,
+          "mana_pool": [
+            0,
+            0,
+            0
+          ],
+          "ready_source_ids": [
+            585
+          ],
+          "mana_capacity_upper_bound": 1
+        },
+        {
+          "round": 9,
+          "life": 34,
+          "lands": 5,
+          "sources": 7,
+          "creatures": 5,
+          "power": 7,
+          "engines": 2,
+          "combo": 0,
+          "clocks": 0,
+          "hand": 1,
+          "public_threat": 21.2,
+          "objective_proximity": 21.18,
+          "cards_cast": 11,
+          "alive": true,
+          "mana_pool": [
+            0,
+            0,
+            0
+          ],
+          "ready_source_ids": [
+            499,
+            501,
+            518,
+            580
+          ],
+          "mana_capacity_upper_bound": 4
+        },
+        {
+          "round": 9,
+          "life": 24,
+          "lands": 7,
+          "sources": 6,
+          "creatures": 7,
+          "power": 16,
+          "engines": 0,
+          "combo": 0,
+          "clocks": 0,
+          "hand": 4,
+          "public_threat": 22.9,
+          "objective_proximity": 22.93,
+          "cards_cast": 6,
+          "alive": true,
+          "mana_pool": [
+            0,
+            0,
+            0
+          ],
+          "ready_source_ids": [
+            509,
+            554
+          ],
+          "mana_capacity_upper_bound": 2,
+          "tokens": 3,
+          "named_hand": [
+            "Twincast",
+            "Capsize",
+            "Underworld Breach",
+            "Heralds of Tzeentch"
+          ],
+          "commander_zone": false,
+          "commander_casts": 1,
+          "unsupported_in_hand": 4
+        },
+        {
+          "round": 9,
+          "life": 23,
+          "lands": 5,
+          "sources": 8,
+          "creatures": 5,
+          "power": 10,
+          "engines": 0,
+          "combo": 0,
+          "clocks": 0,
+          "hand": 1,
+          "public_threat": 17.8,
+          "objective_proximity": 17.76,
+          "cards_cast": 12,
+          "alive": true,
+          "mana_pool": [
+            0,
+            0,
+            0
+          ],
+          "ready_source_ids": [
+            465,
+            467,
+            493,
+            511,
+            545
+          ],
+          "mana_capacity_upper_bound": 5
+        }
+      ],
+      "rankings": {
+        "2": 1,
+        "1": 2,
+        "3": 3,
+        "0": 4
+      }
+    },
+    {
+      "round": 10,
+      "players": [
+        {
+          "round": 10,
+          "life": 20,
+          "lands": 5,
+          "sources": 6,
+          "creatures": 1,
+          "power": 2,
+          "engines": 3,
+          "combo": 0,
+          "clocks": 0,
+          "hand": 5,
+          "public_threat": 17.5,
+          "objective_proximity": 17.55,
+          "cards_cast": 7,
+          "alive": true,
+          "mana_pool": [
+            0,
+            0,
+            0
+          ],
+          "ready_source_ids": [
+            585,
+            600
+          ],
+          "mana_capacity_upper_bound": 2
+        },
+        {
+          "round": 10,
+          "life": 29,
+          "lands": 6,
+          "sources": 8,
+          "creatures": 2,
+          "power": 3,
+          "engines": 1,
+          "combo": 0,
+          "clocks": 0,
+          "hand": 1,
+          "public_threat": 14.1,
+          "objective_proximity": 14.08,
+          "cards_cast": 12,
+          "alive": true,
+          "mana_pool": [
+            0,
+            0,
+            0
+          ],
+          "ready_source_ids": [
+            473,
+            499,
+            501,
+            518,
+            580,
+            596
+          ],
+          "mana_capacity_upper_bound": 6
+        },
+        {
+          "round": 10,
+          "life": 19,
+          "lands": 7,
+          "sources": 6,
+          "creatures": 6,
+          "power": 13,
+          "engines": 0,
+          "combo": 0,
+          "clocks": 0,
+          "hand": 5,
+          "public_threat": 20.1,
+          "objective_proximity": 20.08,
+          "cards_cast": 6,
+          "alive": true,
+          "mana_pool": [
+            0,
+            0,
+            0
+          ],
+          "ready_source_ids": [
+            441,
+            449,
+            461,
+            509,
+            525,
+            554
+          ],
+          "mana_capacity_upper_bound": 6,
+          "tokens": 2,
+          "named_hand": [
+            "Twincast",
+            "Capsize",
+            "Underworld Breach",
+            "Heralds of Tzeentch",
+            "Jeska's Will"
+          ],
+          "commander_zone": false,
+          "commander_casts": 1,
+          "unsupported_in_hand": 5
+        },
+        {
+          "round": 10,
+          "life": 19,
+          "lands": 6,
+          "sources": 9,
+          "creatures": 4,
+          "power": 16,
+          "engines": 0,
+          "combo": 0,
+          "clocks": 0,
+          "hand": 0,
+          "public_threat": 21.8,
+          "objective_proximity": 21.83,
+          "cards_cast": 13,
+          "alive": true,
+          "mana_pool": [
+            0,
+            0,
+            0
+          ],
+          "ready_source_ids": [
+            545,
+            590
+          ],
+          "mana_capacity_upper_bound": 2
+        }
+      ],
+      "rankings": {
+        "3": 1,
+        "2": 2,
+        "0": 3,
+        "1": 4
+      }
+    }
+  ],
+  "events": [
+    "\n========== ROUND 1 ==========",
+    "  P2 plays Island (1 lands).",
+    "  P3 plays midrange:land:3 (1 lands).",
+    "  P1 plays spellslinger:land:30 (1 lands).",
+    "  P0 plays control:land:27 (1 lands).",
+    "  End round: P0 control life=40 board=0 sources=1, P1 spellslinger life=40 board=0 sources=1, P2 magnus life=40 board=0 sources=1, P3 midrange life=40 board=0 sources=1",
+    "\n========== ROUND 2 ==========",
+    "  P2 plays Island (2 lands).",
+    "  P3 plays midrange:land:36 (2 lands).",
+    "    MANA P3: midrange:land:3 #443 -> (1, 0, 0)",
+    "    MANA P3: midrange:land:36 #451 -> (1, 0, 0)",
+    "  P3 (midrange) casts midrange:ramp:3 [artifact] for 2; mana=0.",
+    "    STACK +1 [spell] P3: midrange:ramp:3.",
+    "  P1 plays spellslinger:land:1 (2 lands).",
+    "    MANA P1: spellslinger:land:30 #445 -> (1, 0, 0)",
+    "    MANA P1: spellslinger:land:1 #455 -> (1, 0, 0)",
+    "  P1 (spellslinger) casts spellslinger:burn:1 [instant] for 2; mana=0.",
+    "    STACK +2 [spell] P1: spellslinger:burn:1.",
+    "  P0 plays control:land:16 (2 lands).",
+    "  End round: P0 control life=40 board=0 sources=2, P1 spellslinger life=40 board=0 sources=2, P2 magnus life=40 board=0 sources=2, P3 midrange life=34 board=0 sources=3",
+    "\n========== ROUND 3 ==========",
+    "  P2 plays Mountain (3 lands).",
+    "    MANA P2: Island #441 -> (0, 1, 0)",
+    "    MANA P2: Mountain #461 -> (0, 0, 1)",
+    "  P2 (magnus) casts Third Path Iconoclast [creature] for 2; mana=1.",
+    "    STACK +3 [spell] P2: Third Path Iconoclast.",
+    "    Third Path Iconoclast enters battlefield (1/1).",
+    "  P3 plays midrange:land:5 (3 lands).",
+    "    MANA P3: midrange:land:3 #443 -> (1, 0, 0)",
+    "    MANA P3: midrange:land:36 #451 -> (1, 0, 0)",
+    "  P3 (midrange) casts midrange:ramp:7 [artifact] for 2; mana=2.",
+    "    STACK +4 [spell] P3: midrange:ramp:7.",
+    "    MANA P3: midrange:ramp:3 #453 -> (1, 0, 0)",
+    "    MANA P3: midrange:land:5 #465 -> (1, 0, 0)",
+    "    MANA P3: midrange:ramp:7 #467 -> (1, 0, 0)",
+    "  P3 (midrange) casts midrange:ramp:9 [artifact] for 3; mana=0.",
+    "    STACK +5 [spell] P3: midrange:ramp:9.",
+    "    MANA P3: midrange:ramp:9 #469 -> (1, 0, 0)",
+    "  P3 (midrange) casts midrange:small:3 [creature] for 1; mana=0.",
+    "    STACK +6 [spell] P3: midrange:small:3.",
+    "  P1 plays spellslinger:land:8 (3 lands).",
+    "    MANA P1: spellslinger:land:30 #445 -> (1, 0, 0)",
+    "    MANA P1: spellslinger:land:1 #455 -> (1, 0, 0)",
+    "    MANA P1: spellslinger:land:8 #473 -> (1, 0, 0)",
+    "  P1 (spellslinger) casts spellslinger:ramp:6 [artifact] for 3; mana=0.",
+    "    STACK +7 [spell] P1: spellslinger:ramp:6.",
+    "    MANA P0: control:land:27 #447 -> (1, 0, 0)",
+    "    MANA P0: control:land:16 #459 -> (1, 0, 0)",
+    "  P0 (control) casts control:counter:1 [instant] for 2; mana=0.",
+    "    STACK +8 [spell] P0: control:counter:1.",
+    "    STACK -7: spellslinger:ramp:6 countered.",
+    "  End round: P0 control life=40 board=0 sources=2, P1 spellslinger life=40 board=0 sources=3, P2 magnus life=40 board=1 sources=3, P3 midrange life=34 board=2 sources=6",
+    "\n========== ROUND 4 ==========",
+    "  P2 plays Exotic Orchard (4 lands).",
+    "    MANA P2: Island #441 -> (0, 1, 0)",
+    "  P2 (magnus) casts Pongify [instant] for 1; mana=2.",
+    "    STACK +9 [spell] P2: Pongify.",
+    "    STACK +10 [triggered] P2: Third Path Iconoclast: create_token.",
+    "    MANA P0: control:land:27 #447 -> (1, 0, 0)",
+    "    MANA P0: control:land:16 #459 -> (1, 0, 0)",
+    "  P0 (control) casts control:counter:0 [instant] for 2; mana=0.",
+    "    STACK +11 [spell] P0: control:counter:0.",
+    "    MANA P2: Island #449 -> (0, 1, 0)",
+    "  P2 (magnus) casts Flusterstorm [instant] for 1; mana=1.",
+    "    STACK +12 [spell] P2: Flusterstorm.",
+    "    STACK +13 [triggered] P2: Third Path Iconoclast: create_token.",
+    "    STACK -11: control:counter:0 countered.",
+    "    Pongify destroys midrange:small:3; P3 gets a 3/3 Ape.",
+    "    MANA P3: midrange:land:3 #443 -> (1, 0, 0)",
+    "    MANA P3: midrange:land:36 #451 -> (1, 0, 0)",
+    "    MANA P3: midrange:ramp:3 #453 -> (1, 0, 0)",
+    "  P3 (midrange) casts midrange:ramp:1 [artifact] for 3; mana=3.",
+    "    STACK +14 [spell] P3: midrange:ramp:1.",
+    "    MANA P3: midrange:land:5 #465 -> (1, 0, 0)",
+    "    MANA P3: midrange:ramp:7 #467 -> (1, 0, 0)",
+    "  P3 (midrange) casts midrange:draw:1 [sorcery] for 2; mana=2.",
+    "    STACK +15 [spell] P3: midrange:draw:1.",
+    "  P1 plays spellslinger:land:24 (4 lands).",
+    "    MANA P1: spellslinger:land:30 #445 -> (1, 0, 0)",
+    "    MANA P1: spellslinger:land:1 #455 -> (1, 0, 0)",
+    "    MANA P1: spellslinger:land:8 #473 -> (1, 0, 0)",
+    "  P1 (spellslinger) casts spellslinger:ramp:1 [artifact] for 3; mana=1.",
+    "    STACK +16 [spell] P1: spellslinger:ramp:1.",
+    "    MANA P1: spellslinger:land:24 #499 -> (1, 0, 0)",
+    "    MANA P1: spellslinger:ramp:1 #501 -> (1, 0, 0)",
+    "  P1 (spellslinger) casts spellslinger:removal:0 [instant] for 2; mana=0.",
+    "    STACK +17 [spell] P1: spellslinger:removal:0.",
+    "    MANA P0: control:land:27 #447 -> (1, 0, 0)",
+    "    MANA P0: control:land:16 #459 -> (1, 0, 0)",
+    "  P0 (control) casts control:removal:4 [instant] for 2; mana=0.",
+    "    STACK +18 [spell] P0: control:removal:4.",
+    "  End round: P0 control life=40 board=0 sources=2, P1 spellslinger life=40 board=0 sources=5, P2 magnus life=40 board=3 sources=3, P3 midrange life=34 board=0 sources=6",
+    "\n========== ROUND 5 ==========",
+    "  P2 plays Riptide Laboratory (5 lands).",
+    "    COMBAT P2 Soldier hits P3 for 1.",
+    "    COMBAT P2 Soldier hits P1 for 1.",
+    "  P3 plays midrange:land:26 (4 lands).",
+    "    MANA P3: midrange:land:3 #443 -> (1, 0, 0)",
+    "    MANA P3: midrange:land:36 #451 -> (1, 0, 0)",
+    "  P3 (midrange) casts midrange:small:0 [creature] for 2; mana=5.",
+    "    STACK +19 [spell] P3: midrange:small:0.",
+    "    MANA P3: midrange:ramp:3 #453 -> (1, 0, 0)",
+    "    MANA P3: midrange:land:5 #465 -> (1, 0, 0)",
+    "    MANA P3: midrange:ramp:7 #467 -> (1, 0, 0)",
+    "  P3 (midrange) casts midrange:removal:6 [instant] for 3; mana=2.",
+    "    STACK +20 [spell] P3: midrange:removal:6.",
+    "    MANA P1: spellslinger:land:30 #445 -> (1, 0, 0)",
+    "    MANA P1: spellslinger:land:1 #455 -> (1, 0, 0)",
+    "    MANA P1: spellslinger:land:8 #473 -> (1, 0, 0)",
+    "  P1 (spellslinger) casts spellslinger:ramp:2 [artifact] for 3; mana=2.",
+    "    STACK +21 [spell] P1: spellslinger:ramp:2.",
+    "    MANA P1: spellslinger:land:24 #499 -> (1, 0, 0)",
+    "    MANA P1: spellslinger:ramp:1 #501 -> (1, 0, 0)",
+    "    MANA P1: spellslinger:ramp:2 #518 -> (1, 0, 0)",
+    "  P1 (spellslinger) casts spellslinger:tokens:2 [sorcery] for 3; mana=0.",
+    "    STACK +22 [spell] P1: spellslinger:tokens:2.",
+    "  End round: P0 control life=40 board=0 sources=2, P1 spellslinger life=39 board=4 sources=6, P2 magnus life=40 board=2 sources=4, P3 midrange life=33 board=1 sources=7",
+    "\n========== ROUND 6 ==========",
+    "  P2 plays Mountain (6 lands).",
+    "    MANA P2: Island #441 -> (0, 1, 0)",
+    "    MANA P2: Island #449 -> (0, 1, 0)",
+    "    MANA P2: Mountain #461 -> (0, 0, 1)",
+    "    MANA P2: Mountain #525 -> (0, 0, 1)",
+    "    MANA P2: Riptide Laboratory #509 -> (1, 0, 0)",
+    "  P2 (magnus) casts Magnus the Red [creature] for 5; mana=0.",
+    "    STACK +23 [spell] P2: Magnus the Red.",
+    "    Magnus the Red enters battlefield (4/5).",
+    "    COMBAT P2 Soldier hits P0 for 1.",
+    "    MANA P3: midrange:land:3 #443 -> (1, 0, 0)",
+    "    MANA P3: midrange:land:36 #451 -> (1, 0, 0)",
+    "    MANA P3: midrange:ramp:3 #453 -> (1, 0, 0)",
+    "  P3 (midrange) casts midrange:medium:3 [creature] for 3; mana=4.",
+    "    STACK +24 [spell] P3: midrange:medium:3.",
+    "    MANA P1: spellslinger:land:30 #445 -> (1, 0, 0)",
+    "    MANA P1: spellslinger:land:1 #455 -> (1, 0, 0)",
+    "  P1 (spellslinger) casts spellslinger:combo_piece:0 [artifact] for 2; mana=4.",
+    "    STACK +25 [spell] P1: spellslinger:combo_piece:0.",
+    "    MANA P1: spellslinger:land:8 #473 -> (1, 0, 0)",
+    "    MANA P1: spellslinger:land:24 #499 -> (1, 0, 0)",
+    "    MANA P1: spellslinger:ramp:1 #501 -> (1, 0, 0)",
+    "  P1 (spellslinger) casts spellslinger:tokens:4 [sorcery] for 3; mana=1.",
+    "    STACK +26 [spell] P1: spellslinger:tokens:4.",
+    "    COMBAT P1 Token 2/2 into P3 midrange:medium:3 3/3.",
+    "    COMBAT P1 Token hits P0 for 2.",
+    "  End round: P0 control life=37 board=0 sources=2, P1 spellslinger life=39 board=4 sources=6, P2 magnus life=40 board=6 sources=5, P3 midrange life=33 board=4 sources=7",
+    "\n========== ROUND 7 ==========",
+    "    MANA P2: Island #441 -> (0, 1, 0)",
+    "    MANA P2: Island #449 -> (0, 1, 0)",
+    "    MANA P2: Mountain #461 -> (0, 0, 1)",
+    "    MANA P2: Mountain #525 -> (0, 0, 1)",
+    "  P2 (magnus) casts Archmage Emeritus [creature] for 4; mana=1.",
+    "    STACK +27 [spell] P2: Archmage Emeritus.",
+    "    Archmage Emeritus enters battlefield (2/2).",
+    "    COMBAT P2 Magnus the Red hits P3 for 4.",
+    "    STACK +28 [triggered] P2: Magnus the Red: create_token.",
+    "  P3 plays midrange:land:34 (5 lands).",
+    "    COMBAT P3 midrange:small:0 hits P2 for 1.",
+    "    COMBAT P3 midrange:medium:3 hits P0 for 3.",
+    "    MANA P1: spellslinger:land:30 #445 -> (1, 0, 0)",
+    "    MANA P1: spellslinger:land:1 #455 -> (1, 0, 0)",
+    "    MANA P1: spellslinger:land:8 #473 -> (1, 0, 0)",
+    "  P1 (spellslinger) casts spellslinger:engine:6 [enchantment] for 3; mana=3.",
+    "    STACK +29 [spell] P1: spellslinger:engine:6.",
+    "    COMBAT P1 Token hits P3 for 2.",
+    "    COMBAT P1 Token hits P2 for 1.",
+    "    COMBAT P1 Token hits P3 for 1.",
+    "  P0 plays control:land:14 (3 lands).",
+    "    MANA P0: control:land:27 #447 -> (1, 0, 0)",
+    "    MANA P0: control:land:16 #459 -> (1, 0, 0)",
+    "    MANA P0: control:land:14 #550 -> (1, 0, 0)",
+    "  P0 (control) casts control:ramp:6 [artifact] for 3; mana=0.",
+    "    STACK +30 [spell] P0: control:ramp:6.",
+    "  End round: P0 control life=34 board=0 sources=4, P1 spellslinger life=39 board=6 sources=6, P2 magnus life=38 board=11 sources=5, P3 midrange life=26 board=4 sources=8",
+    "\n========== ROUND 8 ==========",
+    "  P2 pays 2 life for Steam Vents.",
+    "  P2 plays Steam Vents (7 lands).",
+    "    COMBAT P2 Spawn hits P3 for 3.",
+    "    MANA P3: midrange:land:3 #443 -> (1, 0, 0)",
+    "    MANA P3: midrange:land:36 #451 -> (1, 0, 0)",
+    "    MANA P3: midrange:ramp:3 #453 -> (1, 0, 0)",
+    "  P3 (midrange) casts midrange:tokens:1 [sorcery] for 3; mana=5.",
+    "    STACK +31 [spell] P3: midrange:tokens:1.",
+    "    MANA P1: spellslinger:land:24 #499 -> (1, 0, 0)",
+    "    MANA P1: spellslinger:ramp:1 #501 -> (1, 0, 0)",
+    "  P1 (spellslinger) casts spellslinger:counter:3 [instant] for 2; mana=1.",
+    "    STACK +32 [spell] P1: spellslinger:counter:3.",
+    "    MANA P3: midrange:land:5 #465 -> (1, 0, 0)",
+    "    MANA P3: midrange:ramp:7 #467 -> (1, 0, 0)",
+    "  P3 (midrange) casts midrange:counter:0 [instant] for 2; mana=3.",
+    "    STACK +33 [spell] P3: midrange:counter:0.",
+    "    STACK -32: spellslinger:counter:3 countered.",
+    "    COMBAT P3 midrange:small:0 hits P1 for 1.",
+    "    COMBAT P3 midrange:medium:3 hits P0 for 3.",
+    "    COMBAT P1 Token hits P2 for 2.",
+    "    COMBAT P1 Token hits P0 for 1.",
+    "    COMBAT P1 spellslinger:engine:6 hits P0 for 2.",
+    "    MANA P0: control:land:27 #447 -> (1, 0, 0)",
+    "    MANA P0: control:land:16 #459 -> (1, 0, 0)",
+    "    MANA P0: control:land:14 #550 -> (1, 0, 0)",
+    "    MANA P0: control:ramp:6 #552 -> (1, 0, 0)",
+    "  P0 (control) casts control:engine:3 [enchantment] for 4; mana=0.",
+    "    STACK +34 [spell] P0: control:engine:3.",
+    "  End round: P0 control life=28 board=0 sources=4, P1 spellslinger life=38 board=6 sources=6, P2 magnus life=34 board=11 sources=6, P3 midrange life=23 board=10 sources=8",
+    "\n========== ROUND 9 ==========",
+    "    MANA P2: Island #441 -> (0, 1, 0)",
+    "    MANA P2: Island #449 -> (0, 1, 0)",
+    "    MANA P2: Mountain #461 -> (0, 0, 1)",
+    "    MANA P2: Mountain #525 -> (0, 0, 1)",
+    "  P2 (magnus) casts Storm-Kiln Artist [creature] for 4; mana=2.",
+    "    STACK +35 [spell] P2: Storm-Kiln Artist.",
+    "    Storm-Kiln Artist enters battlefield (2/2).",
+    "    COMBAT P2 Magnus the Red hits P1 for 4.",
+    "    STACK +36 [triggered] P2: Magnus the Red: create_token.",
+    "    COMBAT P2 Spawn hits P0 for 3.",
+    "    MANA P3: midrange:land:3 #443 -> (1, 0, 0)",
+    "    MANA P3: midrange:land:36 #451 -> (1, 0, 0)",
+    "    MANA P3: midrange:ramp:3 #453 -> (1, 0, 0)",
+    "  P3 (midrange) casts midrange:removal:0 [instant] for 3; mana=5.",
+    "    STACK +37 [spell] P3: midrange:removal:0.",
+    "    COMBAT P3 midrange:small:0 hits P2 for 1.",
+    "    COMBAT P3 midrange:medium:3 hits P2 for 3.",
+    "    COMBAT P3 Token hits P2 for 2.",
+    "    COMBAT P3 Token hits P2 for 2.",
+    "    COMBAT P3 Token hits P2 for 2.",
+    "  P1 plays spellslinger:land:14 (5 lands).",
+    "    MANA P1: spellslinger:land:30 #445 -> (1, 0, 0)",
+    "    MANA P1: spellslinger:land:1 #455 -> (1, 0, 0)",
+    "    MANA P1: spellslinger:land:8 #473 -> (1, 0, 0)",
+    "  P1 (spellslinger) casts spellslinger:engine:7 [enchantment] for 3; mana=4.",
+    "    STACK +38 [spell] P1: spellslinger:engine:7.",
+    "    COMBAT P1 Token hits P0 for 2.",
+    "  P0 plays control:land:13 (4 lands).",
+    "    MANA P0: control:land:27 #447 -> (1, 0, 0)",
+    "    MANA P0: control:land:16 #459 -> (1, 0, 0)",
+    "    MANA P0: control:land:14 #550 -> (1, 0, 0)",
+    "    MANA P0: control:ramp:6 #552 -> (1, 0, 0)",
+    "  P0 (control) casts control:engine:2 [enchantment] for 4; mana=1.",
+    "    STACK +39 [spell] P0: control:engine:2.",
+    "  End round: P0 control life=23 board=2 sources=5, P1 spellslinger life=34 board=7 sources=7, P2 magnus life=24 board=16 sources=6, P3 midrange life=23 board=10 sources=8",
+    "\n========== ROUND 10 ==========",
+    "    COMBAT P2 Soldier hits P3 for 1.",
+    "    COMBAT P2 Spawn hits P3 for 3.",
+    "    COMBAT P2 Spawn hits P0 for 3.",
+    "  P3 plays midrange:land:8 (6 lands).",
+    "    MANA P3: midrange:land:3 #443 -> (1, 0, 0)",
+    "    MANA P3: midrange:land:36 #451 -> (1, 0, 0)",
+    "    MANA P3: midrange:ramp:3 #453 -> (1, 0, 0)",
+    "    MANA P3: midrange:land:5 #465 -> (1, 0, 0)",
+    "    MANA P3: midrange:ramp:7 #467 -> (1, 0, 0)",
+    "    MANA P3: midrange:ramp:1 #493 -> (1, 0, 0)",
+    "    MANA P3: midrange:land:26 #511 -> (1, 0, 0)",
+    "  P3 (midrange) casts midrange:finisher:0 [sorcery] for 7; mana=2.",
+    "    STACK +40 [spell] P3: midrange:finisher:0.",
+    "    COMBAT P3 midrange:medium:3 hits P1 for 5.",
+    "    COMBAT P3 Token 4/2 into P1 spellslinger:engine:6 2/3.",
+    "    COMBAT P3 Token hits P2 for 4.",
+    "  P1 plays spellslinger:land:23 (6 lands).",
+    "    MANA P1: spellslinger:land:30 #445 -> (1, 0, 0)",
+    "    MANA P1: spellslinger:land:1 #455 -> (1, 0, 0)",
+    "  P1 (spellslinger) casts spellslinger:removal:3 [instant] for 2; mana=6.",
+    "    STACK +41 [spell] P1: spellslinger:removal:3.",
+    "    COMBAT P1 Token hits P2 for 1.",
+    "    COMBAT P1 Token 1/1 into P3 midrange:small:0 3/3.",
+    "    COMBAT P1 engine token 1/1 into P3 Token 4/2.",
+    "  P0 plays control:land:24 (5 lands).",
+    "    MANA P0: control:land:27 #447 -> (1, 0, 0)",
+    "    MANA P0: control:land:16 #459 -> (1, 0, 0)",
+    "    MANA P0: control:land:14 #550 -> (1, 0, 0)",
+    "    MANA P0: control:ramp:6 #552 -> (1, 0, 0)",
+    "  P0 (control) casts control:engine:4 [enchantment] for 4; mana=2.",
+    "    STACK +42 [spell] P0: control:engine:4.",
+    "  End round: P0 control life=20 board=2 sources=6, P1 spellslinger life=29 board=3 sources=8, P2 magnus life=19 board=13 sources=6, P3 midrange life=19 board=16 sources=9"
+  ],
+  "priority_history": [
+    [
+      "pass",
+      2,
+      []
+    ],
+    [
+      "pass",
+      3,
+      []
+    ],
+    [
+      "pass",
+      1,
+      []
+    ],
+    [
+      "pass",
+      0,
+      []
+    ],
+    [
+      "pass",
+      3,
+      []
+    ],
+    [
+      "pass",
+      1,
+      []
+    ],
+    [
+      "pass",
+      0,
+      []
+    ],
+    [
+      "pass",
+      2,
+      []
+    ],
+    [
+      "pass",
+      1,
+      []
+    ],
+    [
+      "pass",
+      0,
+      []
+    ],
+    [
+      "pass",
+      2,
+      []
+    ],
+    [
+      "pass",
+      3,
+      []
+    ],
+    [
+      "pass",
+      0,
+      []
+    ],
+    [
+      "pass",
+      2,
+      []
+    ],
+    [
+      "pass",
+      3,
+      []
+    ],
+    [
+      "pass",
+      1,
+      []
+    ],
+    [
+      "pass",
+      2,
+      []
+    ],
+    [
+      "pass",
+      3,
+      []
+    ],
+    [
+      "pass",
+      1,
+      []
+    ],
+    [
+      "pass",
+      0,
+      []
+    ],
+    [
+      "action",
+      3,
+      "spell"
+    ],
+    [
+      "push",
+      1,
+      "spell",
+      3,
+      "midrange:ramp:3"
+    ],
+    [
+      "pass",
+      3,
+      [
+        1
+      ]
+    ],
+    [
+      "pass",
+      1,
+      [
+        1
+      ]
+    ],
+    [
+      "pass",
+      0,
+      [
+        1
+      ]
+    ],
+    [
+      "pass",
+      2,
+      [
+        1
+      ]
+    ],
+    [
+      "resolve",
+      1,
+      "spell",
+      3
+    ],
+    [
+      "pass",
+      3,
+      []
+    ],
+    [
+      "pass",
+      1,
+      []
+    ],
+    [
+      "pass",
+      0,
+      []
+    ],
+    [
+      "pass",
+      2,
+      []
+    ],
+    [
+      "action",
+      1,
+      "spell"
+    ],
+    [
+      "push",
+      2,
+      "spell",
+      1,
+      "spellslinger:burn:1"
+    ],
+    [
+      "pass",
+      1,
+      [
+        2
+      ]
+    ],
+    [
+      "pass",
+      0,
+      [
+        2
+      ]
+    ],
+    [
+      "pass",
+      2,
+      [
+        2
+      ]
+    ],
+    [
+      "pass",
+      3,
+      [
+        2
+      ]
+    ],
+    [
+      "resolve",
+      2,
+      "spell",
+      1
+    ],
+    [
+      "pass",
+      1,
+      []
+    ],
+    [
+      "pass",
+      0,
+      []
+    ],
+    [
+      "pass",
+      2,
+      []
+    ],
+    [
+      "pass",
+      3,
+      []
+    ],
+    [
+      "pass",
+      0,
+      []
+    ],
+    [
+      "pass",
+      2,
+      []
+    ],
+    [
+      "pass",
+      3,
+      []
+    ],
+    [
+      "pass",
+      1,
+      []
+    ],
+    [
+      "action",
+      2,
+      "spell"
+    ],
+    [
+      "push",
+      3,
+      "spell",
+      2,
+      "Third Path Iconoclast"
+    ],
+    [
+      "pass",
+      2,
+      [
+        3
+      ]
+    ],
+    [
+      "pass",
+      3,
+      [
+        3
+      ]
+    ],
+    [
+      "pass",
+      1,
+      [
+        3
+      ]
+    ],
+    [
+      "pass",
+      0,
+      [
+        3
+      ]
+    ],
+    [
+      "resolve",
+      3,
+      "spell",
+      2
+    ],
+    [
+      "pass",
+      2,
+      []
+    ],
+    [
+      "pass",
+      3,
+      []
+    ],
+    [
+      "pass",
+      1,
+      []
+    ],
+    [
+      "pass",
+      0,
+      []
+    ],
+    [
+      "action",
+      3,
+      "spell"
+    ],
+    [
+      "push",
+      4,
+      "spell",
+      3,
+      "midrange:ramp:7"
+    ],
+    [
+      "pass",
+      3,
+      [
+        4
+      ]
+    ],
+    [
+      "pass",
+      1,
+      [
+        4
+      ]
+    ],
+    [
+      "pass",
+      0,
+      [
+        4
+      ]
+    ],
+    [
+      "pass",
+      2,
+      [
+        4
+      ]
+    ],
+    [
+      "resolve",
+      4,
+      "spell",
+      3
+    ],
+    [
+      "action",
+      3,
+      "spell"
+    ],
+    [
+      "push",
+      5,
+      "spell",
+      3,
+      "midrange:ramp:9"
+    ],
+    [
+      "pass",
+      3,
+      [
+        5
+      ]
+    ],
+    [
+      "pass",
+      1,
+      [
+        5
+      ]
+    ],
+    [
+      "pass",
+      0,
+      [
+        5
+      ]
+    ],
+    [
+      "pass",
+      2,
+      [
+        5
+      ]
+    ],
+    [
+      "resolve",
+      5,
+      "spell",
+      3
+    ],
+    [
+      "action",
+      3,
+      "spell"
+    ],
+    [
+      "push",
+      6,
+      "spell",
+      3,
+      "midrange:small:3"
+    ],
+    [
+      "pass",
+      3,
+      [
+        6
+      ]
+    ],
+    [
+      "pass",
+      1,
+      [
+        6
+      ]
+    ],
+    [
+      "pass",
+      0,
+      [
+        6
+      ]
+    ],
+    [
+      "pass",
+      2,
+      [
+        6
+      ]
+    ],
+    [
+      "resolve",
+      6,
+      "spell",
+      3
+    ],
+    [
+      "pass",
+      3,
+      []
+    ],
+    [
+      "pass",
+      1,
+      []
+    ],
+    [
+      "pass",
+      0,
+      []
+    ],
+    [
+      "pass",
+      2,
+      []
+    ],
+    [
+      "action",
+      1,
+      "spell"
+    ],
+    [
+      "push",
+      7,
+      "spell",
+      1,
+      "spellslinger:ramp:6"
+    ],
+    [
+      "pass",
+      1,
+      [
+        7
+      ]
+    ],
+    [
+      "action",
+      0,
+      "spell"
+    ],
+    [
+      "push",
+      8,
+      "spell",
+      0,
+      "control:counter:1"
+    ],
+    [
+      "pass",
+      0,
+      [
+        7,
+        8
+      ]
+    ],
+    [
+      "pass",
+      2,
+      [
+        7,
+        8
+      ]
+    ],
+    [
+      "pass",
+      3,
+      [
+        7,
+        8
+      ]
+    ],
+    [
+      "pass",
+      1,
+      [
+        7,
+        8
+      ]
+    ],
+    [
+      "counter",
+      7,
+      "spell"
+    ],
+    [
+      "resolve",
+      8,
+      "spell",
+      0
+    ],
+    [
+      "pass",
+      1,
+      []
+    ],
+    [
+      "pass",
+      0,
+      []
+    ],
+    [
+      "pass",
+      2,
+      []
+    ],
+    [
+      "pass",
+      3,
+      []
+    ],
+    [
+      "pass",
+      0,
+      []
+    ],
+    [
+      "pass",
+      2,
+      []
+    ],
+    [
+      "pass",
+      3,
+      []
+    ],
+    [
+      "pass",
+      1,
+      []
+    ],
+    [
+      "action",
+      2,
+      "spell"
+    ],
+    [
+      "push",
+      9,
+      "spell",
+      2,
+      "Pongify"
+    ],
+    [
+      "push",
+      10,
+      "triggered",
+      2,
+      "Third Path Iconoclast: create_token"
+    ],
+    [
+      "pass",
+      2,
+      [
+        9,
+        10
+      ]
+    ],
+    [
+      "pass",
+      3,
+      [
+        9,
+        10
+      ]
+    ],
+    [
+      "pass",
+      1,
+      [
+        9,
+        10
+      ]
+    ],
+    [
+      "action",
+      0,
+      "spell"
+    ],
+    [
+      "push",
+      11,
+      "spell",
+      0,
+      "control:counter:0"
+    ],
+    [
+      "pass",
+      0,
+      [
+        9,
+        10,
+        11
+      ]
+    ],
+    [
+      "action",
+      2,
+      "spell"
+    ],
+    [
+      "push",
+      12,
+      "spell",
+      2,
+      "Flusterstorm"
+    ],
+    [
+      "push",
+      13,
+      "triggered",
+      2,
+      "Third Path Iconoclast: create_token"
+    ],
+    [
+      "pass",
+      2,
+      [
+        9,
+        10,
+        11,
+        12,
+        13
+      ]
+    ],
+    [
+      "pass",
+      3,
+      [
+        9,
+        10,
+        11,
+        12,
+        13
+      ]
+    ],
+    [
+      "pass",
+      1,
+      [
+        9,
+        10,
+        11,
+        12,
+        13
+      ]
+    ],
+    [
+      "pass",
+      0,
+      [
+        9,
+        10,
+        11,
+        12,
+        13
+      ]
+    ],
+    [
+      "resolve",
+      13,
+      "triggered",
+      2
+    ],
+    [
+      "pass",
+      2,
+      [
+        9,
+        10,
+        11,
+        12
+      ]
+    ],
+    [
+      "pass",
+      3,
+      [
+        9,
+        10,
+        11,
+        12
+      ]
+    ],
+    [
+      "pass",
+      1,
+      [
+        9,
+        10,
+        11,
+        12
+      ]
+    ],
+    [
+      "pass",
+      0,
+      [
+        9,
+        10,
+        11,
+        12
+      ]
+    ],
+    [
+      "counter",
+      11,
+      "spell"
+    ],
+    [
+      "resolve",
+      12,
+      "spell",
+      2
+    ],
+    [
+      "pass",
+      2,
+      [
+        9,
+        10
+      ]
+    ],
+    [
+      "pass",
+      3,
+      [
+        9,
+        10
+      ]
+    ],
+    [
+      "pass",
+      1,
+      [
+        9,
+        10
+      ]
+    ],
+    [
+      "pass",
+      0,
+      [
+        9,
+        10
+      ]
+    ],
+    [
+      "resolve",
+      10,
+      "triggered",
+      2
+    ],
+    [
+      "pass",
+      2,
+      [
+        9
+      ]
+    ],
+    [
+      "pass",
+      3,
+      [
+        9
+      ]
+    ],
+    [
+      "pass",
+      1,
+      [
+        9
+      ]
+    ],
+    [
+      "pass",
+      0,
+      [
+        9
+      ]
+    ],
+    [
+      "resolve",
+      9,
+      "spell",
+      2
+    ],
+    [
+      "pass",
+      2,
+      []
+    ],
+    [
+      "pass",
+      3,
+      []
+    ],
+    [
+      "pass",
+      1,
+      []
+    ],
+    [
+      "pass",
+      0,
+      []
+    ],
+    [
+      "action",
+      3,
+      "spell"
+    ],
+    [
+      "push",
+      14,
+      "spell",
+      3,
+      "midrange:ramp:1"
+    ],
+    [
+      "pass",
+      3,
+      [
+        14
+      ]
+    ],
+    [
+      "pass",
+      1,
+      [
+        14
+      ]
+    ],
+    [
+      "pass",
+      0,
+      [
+        14
+      ]
+    ],
+    [
+      "pass",
+      2,
+      [
+        14
+      ]
+    ],
+    [
+      "resolve",
+      14,
+      "spell",
+      3
+    ],
+    [
+      "action",
+      3,
+      "spell"
+    ],
+    [
+      "push",
+      15,
+      "spell",
+      3,
+      "midrange:draw:1"
+    ],
+    [
+      "pass",
+      3,
+      [
+        15
+      ]
+    ],
+    [
+      "pass",
+      1,
+      [
+        15
+      ]
+    ],
+    [
+      "pass",
+      0,
+      [
+        15
+      ]
+    ],
+    [
+      "pass",
+      2,
+      [
+        15
+      ]
+    ],
+    [
+      "resolve",
+      15,
+      "spell",
+      3
+    ],
+    [
+      "pass",
+      3,
+      []
+    ],
+    [
+      "pass",
+      1,
+      []
+    ],
+    [
+      "pass",
+      0,
+      []
+    ],
+    [
+      "pass",
+      2,
+      []
+    ],
+    [
+      "action",
+      1,
+      "spell"
+    ],
+    [
+      "push",
+      16,
+      "spell",
+      1,
+      "spellslinger:ramp:1"
+    ],
+    [
+      "pass",
+      1,
+      [
+        16
+      ]
+    ],
+    [
+      "pass",
+      0,
+      [
+        16
+      ]
+    ],
+    [
+      "pass",
+      2,
+      [
+        16
+      ]
+    ],
+    [
+      "pass",
+      3,
+      [
+        16
+      ]
+    ],
+    [
+      "resolve",
+      16,
+      "spell",
+      1
+    ],
+    [
+      "action",
+      1,
+      "spell"
+    ],
+    [
+      "push",
+      17,
+      "spell",
+      1,
+      "spellslinger:removal:0"
+    ],
+    [
+      "pass",
+      1,
+      [
+        17
+      ]
+    ],
+    [
+      "pass",
+      0,
+      [
+        17
+      ]
+    ],
+    [
+      "pass",
+      2,
+      [
+        17
+      ]
+    ],
+    [
+      "pass",
+      3,
+      [
+        17
+      ]
+    ],
+    [
+      "resolve",
+      17,
+      "spell",
+      1
+    ],
+    [
+      "pass",
+      1,
+      []
+    ],
+    [
+      "pass",
+      0,
+      []
+    ],
+    [
+      "pass",
+      2,
+      []
+    ],
+    [
+      "pass",
+      3,
+      []
+    ],
+    [
+      "action",
+      0,
+      "spell"
+    ],
+    [
+      "push",
+      18,
+      "spell",
+      0,
+      "control:removal:4"
+    ],
+    [
+      "pass",
+      0,
+      [
+        18
+      ]
+    ],
+    [
+      "pass",
+      2,
+      [
+        18
+      ]
+    ],
+    [
+      "pass",
+      3,
+      [
+        18
+      ]
+    ],
+    [
+      "pass",
+      1,
+      [
+        18
+      ]
+    ],
+    [
+      "resolve",
+      18,
+      "spell",
+      0
+    ],
+    [
+      "pass",
+      0,
+      []
+    ],
+    [
+      "pass",
+      2,
+      []
+    ],
+    [
+      "pass",
+      3,
+      []
+    ],
+    [
+      "pass",
+      1,
+      []
+    ],
+    [
+      "pass",
+      2,
+      []
+    ],
+    [
+      "pass",
+      3,
+      []
+    ],
+    [
+      "pass",
+      1,
+      []
+    ],
+    [
+      "pass",
+      0,
+      []
+    ],
+    [
+      "pass",
+      2,
+      []
+    ],
+    [
+      "pass",
+      3,
+      []
+    ],
+    [
+      "pass",
+      1,
+      []
+    ],
+    [
+      "pass",
+      0,
+      []
+    ],
+    [
+      "pass",
+      2,
+      []
+    ],
+    [
+      "pass",
+      3,
+      []
+    ],
+    [
+      "pass",
+      1,
+      []
+    ],
+    [
+      "pass",
+      0,
+      []
+    ],
+    [
+      "action",
+      3,
+      "spell"
+    ],
+    [
+      "push",
+      19,
+      "spell",
+      3,
+      "midrange:small:0"
+    ],
+    [
+      "pass",
+      3,
+      [
+        19
+      ]
+    ],
+    [
+      "pass",
+      1,
+      [
+        19
+      ]
+    ],
+    [
+      "pass",
+      0,
+      [
+        19
+      ]
+    ],
+    [
+      "pass",
+      2,
+      [
+        19
+      ]
+    ],
+    [
+      "resolve",
+      19,
+      "spell",
+      3
+    ],
+    [
+      "action",
+      3,
+      "spell"
+    ],
+    [
+      "push",
+      20,
+      "spell",
+      3,
+      "midrange:removal:6"
+    ],
+    [
+      "pass",
+      3,
+      [
+        20
+      ]
+    ],
+    [
+      "pass",
+      1,
+      [
+        20
+      ]
+    ],
+    [
+      "pass",
+      0,
+      [
+        20
+      ]
+    ],
+    [
+      "pass",
+      2,
+      [
+        20
+      ]
+    ],
+    [
+      "resolve",
+      20,
+      "spell",
+      3
+    ],
+    [
+      "pass",
+      3,
+      []
+    ],
+    [
+      "pass",
+      1,
+      []
+    ],
+    [
+      "pass",
+      0,
+      []
+    ],
+    [
+      "pass",
+      2,
+      []
+    ],
+    [
+      "action",
+      1,
+      "spell"
+    ],
+    [
+      "push",
+      21,
+      "spell",
+      1,
+      "spellslinger:ramp:2"
+    ],
+    [
+      "pass",
+      1,
+      [
+        21
+      ]
+    ],
+    [
+      "pass",
+      0,
+      [
+        21
+      ]
+    ],
+    [
+      "pass",
+      2,
+      [
+        21
+      ]
+    ],
+    [
+      "pass",
+      3,
+      [
+        21
+      ]
+    ],
+    [
+      "resolve",
+      21,
+      "spell",
+      1
+    ],
+    [
+      "action",
+      1,
+      "spell"
+    ],
+    [
+      "push",
+      22,
+      "spell",
+      1,
+      "spellslinger:tokens:2"
+    ],
+    [
+      "pass",
+      1,
+      [
+        22
+      ]
+    ],
+    [
+      "pass",
+      0,
+      [
+        22
+      ]
+    ],
+    [
+      "pass",
+      2,
+      [
+        22
+      ]
+    ],
+    [
+      "pass",
+      3,
+      [
+        22
+      ]
+    ],
+    [
+      "resolve",
+      22,
+      "spell",
+      1
+    ],
+    [
+      "pass",
+      1,
+      []
+    ],
+    [
+      "pass",
+      0,
+      []
+    ],
+    [
+      "pass",
+      2,
+      []
+    ],
+    [
+      "pass",
+      3,
+      []
+    ],
+    [
+      "pass",
+      0,
+      []
+    ],
+    [
+      "pass",
+      2,
+      []
+    ],
+    [
+      "pass",
+      3,
+      []
+    ],
+    [
+      "pass",
+      1,
+      []
+    ],
+    [
+      "action",
+      2,
+      "spell"
+    ],
+    [
+      "push",
+      23,
+      "spell",
+      2,
+      "Magnus the Red"
+    ],
+    [
+      "pass",
+      2,
+      [
+        23
+      ]
+    ],
+    [
+      "pass",
+      3,
+      [
+        23
+      ]
+    ],
+    [
+      "pass",
+      1,
+      [
+        23
+      ]
+    ],
+    [
+      "pass",
+      0,
+      [
+        23
+      ]
+    ],
+    [
+      "resolve",
+      23,
+      "spell",
+      2
+    ],
+    [
+      "pass",
+      2,
+      []
+    ],
+    [
+      "pass",
+      3,
+      []
+    ],
+    [
+      "pass",
+      1,
+      []
+    ],
+    [
+      "pass",
+      0,
+      []
+    ],
+    [
+      "pass",
+      2,
+      []
+    ],
+    [
+      "pass",
+      3,
+      []
+    ],
+    [
+      "pass",
+      1,
+      []
+    ],
+    [
+      "pass",
+      0,
+      []
+    ],
+    [
+      "action",
+      3,
+      "spell"
+    ],
+    [
+      "push",
+      24,
+      "spell",
+      3,
+      "midrange:medium:3"
+    ],
+    [
+      "pass",
+      3,
+      [
+        24
+      ]
+    ],
+    [
+      "pass",
+      1,
+      [
+        24
+      ]
+    ],
+    [
+      "pass",
+      0,
+      [
+        24
+      ]
+    ],
+    [
+      "pass",
+      2,
+      [
+        24
+      ]
+    ],
+    [
+      "resolve",
+      24,
+      "spell",
+      3
+    ],
+    [
+      "pass",
+      3,
+      []
+    ],
+    [
+      "pass",
+      1,
+      []
+    ],
+    [
+      "pass",
+      0,
+      []
+    ],
+    [
+      "pass",
+      2,
+      []
+    ],
+    [
+      "action",
+      1,
+      "spell"
+    ],
+    [
+      "push",
+      25,
+      "spell",
+      1,
+      "spellslinger:combo_piece:0"
+    ],
+    [
+      "pass",
+      1,
+      [
+        25
+      ]
+    ],
+    [
+      "pass",
+      0,
+      [
+        25
+      ]
+    ],
+    [
+      "pass",
+      2,
+      [
+        25
+      ]
+    ],
+    [
+      "pass",
+      3,
+      [
+        25
+      ]
+    ],
+    [
+      "resolve",
+      25,
+      "spell",
+      1
+    ],
+    [
+      "action",
+      1,
+      "spell"
+    ],
+    [
+      "push",
+      26,
+      "spell",
+      1,
+      "spellslinger:tokens:4"
+    ],
+    [
+      "pass",
+      1,
+      [
+        26
+      ]
+    ],
+    [
+      "pass",
+      0,
+      [
+        26
+      ]
+    ],
+    [
+      "pass",
+      2,
+      [
+        26
+      ]
+    ],
+    [
+      "pass",
+      3,
+      [
+        26
+      ]
+    ],
+    [
+      "resolve",
+      26,
+      "spell",
+      1
+    ],
+    [
+      "pass",
+      1,
+      []
+    ],
+    [
+      "pass",
+      0,
+      []
+    ],
+    [
+      "pass",
+      2,
+      []
+    ],
+    [
+      "pass",
+      3,
+      []
+    ],
+    [
+      "pass",
+      3,
+      []
+    ],
+    [
+      "pass",
+      1,
+      []
+    ],
+    [
+      "pass",
+      0,
+      []
+    ],
+    [
+      "pass",
+      2,
+      []
+    ],
+    [
+      "pass",
+      1,
+      []
+    ],
+    [
+      "pass",
+      0,
+      []
+    ],
+    [
+      "pass",
+      2,
+      []
+    ],
+    [
+      "pass",
+      3,
+      []
+    ],
+    [
+      "pass",
+      0,
+      []
+    ],
+    [
+      "pass",
+      2,
+      []
+    ],
+    [
+      "pass",
+      3,
+      []
+    ],
+    [
+      "pass",
+      1,
+      []
+    ],
+    [
+      "action",
+      2,
+      "spell"
+    ],
+    [
+      "push",
+      27,
+      "spell",
+      2,
+      "Archmage Emeritus"
+    ],
+    [
+      "pass",
+      2,
+      [
+        27
+      ]
+    ],
+    [
+      "pass",
+      3,
+      [
+        27
+      ]
+    ],
+    [
+      "pass",
+      1,
+      [
+        27
+      ]
+    ],
+    [
+      "pass",
+      0,
+      [
+        27
+      ]
+    ],
+    [
+      "resolve",
+      27,
+      "spell",
+      2
+    ],
+    [
+      "pass",
+      2,
+      []
+    ],
+    [
+      "pass",
+      3,
+      []
+    ],
+    [
+      "pass",
+      1,
+      []
+    ],
+    [
+      "pass",
+      0,
+      []
+    ],
+    [
+      "push",
+      28,
+      "triggered",
+      2,
+      "Magnus the Red: create_token"
+    ],
+    [
+      "pass",
+      2,
+      [
+        28
+      ]
+    ],
+    [
+      "pass",
+      3,
+      [
+        28
+      ]
+    ],
+    [
+      "pass",
+      1,
+      [
+        28
+      ]
+    ],
+    [
+      "pass",
+      0,
+      [
+        28
+      ]
+    ],
+    [
+      "resolve",
+      28,
+      "triggered",
+      2
+    ],
+    [
+      "pass",
+      2,
+      []
+    ],
+    [
+      "pass",
+      3,
+      []
+    ],
+    [
+      "pass",
+      1,
+      []
+    ],
+    [
+      "pass",
+      0,
+      []
+    ],
+    [
+      "pass",
+      3,
+      []
+    ],
+    [
+      "pass",
+      1,
+      []
+    ],
+    [
+      "pass",
+      0,
+      []
+    ],
+    [
+      "pass",
+      2,
+      []
+    ],
+    [
+      "pass",
+      3,
+      []
+    ],
+    [
+      "pass",
+      1,
+      []
+    ],
+    [
+      "pass",
+      0,
+      []
+    ],
+    [
+      "pass",
+      2,
+      []
+    ],
+    [
+      "pass",
+      3,
+      []
+    ],
+    [
+      "pass",
+      1,
+      []
+    ],
+    [
+      "pass",
+      0,
+      []
+    ],
+    [
+      "pass",
+      2,
+      []
+    ],
+    [
+      "action",
+      1,
+      "spell"
+    ],
+    [
+      "push",
+      29,
+      "spell",
+      1,
+      "spellslinger:engine:6"
+    ],
+    [
+      "pass",
+      1,
+      [
+        29
+      ]
+    ],
+    [
+      "pass",
+      0,
+      [
+        29
+      ]
+    ],
+    [
+      "pass",
+      2,
+      [
+        29
+      ]
+    ],
+    [
+      "pass",
+      3,
+      [
+        29
+      ]
+    ],
+    [
+      "resolve",
+      29,
+      "spell",
+      1
+    ],
+    [
+      "pass",
+      1,
+      []
+    ],
+    [
+      "pass",
+      0,
+      []
+    ],
+    [
+      "pass",
+      2,
+      []
+    ],
+    [
+      "pass",
+      3,
+      []
+    ],
+    [
+      "pass",
+      1,
+      []
+    ],
+    [
+      "pass",
+      0,
+      []
+    ],
+    [
+      "pass",
+      2,
+      []
+    ],
+    [
+      "pass",
+      3,
+      []
+    ],
+    [
+      "pass",
+      1,
+      []
+    ],
+    [
+      "pass",
+      0,
+      []
+    ],
+    [
+      "pass",
+      2,
+      []
+    ],
+    [
+      "pass",
+      3,
+      []
+    ],
+    [
+      "pass",
+      1,
+      []
+    ],
+    [
+      "pass",
+      0,
+      []
+    ],
+    [
+      "pass",
+      2,
+      []
+    ],
+    [
+      "pass",
+      3,
+      []
+    ],
+    [
+      "action",
+      0,
+      "spell"
+    ],
+    [
+      "push",
+      30,
+      "spell",
+      0,
+      "control:ramp:6"
+    ],
+    [
+      "pass",
+      0,
+      [
+        30
+      ]
+    ],
+    [
+      "pass",
+      2,
+      [
+        30
+      ]
+    ],
+    [
+      "pass",
+      3,
+      [
+        30
+      ]
+    ],
+    [
+      "pass",
+      1,
+      [
+        30
+      ]
+    ],
+    [
+      "resolve",
+      30,
+      "spell",
+      0
+    ],
+    [
+      "pass",
+      0,
+      []
+    ],
+    [
+      "pass",
+      2,
+      []
+    ],
+    [
+      "pass",
+      3,
+      []
+    ],
+    [
+      "pass",
+      1,
+      []
+    ],
+    [
+      "pass",
+      2,
+      []
+    ],
+    [
+      "pass",
+      3,
+      []
+    ],
+    [
+      "pass",
+      1,
+      []
+    ],
+    [
+      "pass",
+      0,
+      []
+    ],
+    [
+      "pass",
+      2,
+      []
+    ],
+    [
+      "pass",
+      3,
+      []
+    ],
+    [
+      "pass",
+      1,
+      []
+    ],
+    [
+      "pass",
+      0,
+      []
+    ],
+    [
+      "action",
+      3,
+      "spell"
+    ],
+    [
+      "push",
+      31,
+      "spell",
+      3,
+      "midrange:tokens:1"
+    ],
+    [
+      "pass",
+      3,
+      [
+        31
+      ]
+    ],
+    [
+      "action",
+      1,
+      "spell"
+    ],
+    [
+      "push",
+      32,
+      "spell",
+      1,
+      "spellslinger:counter:3"
+    ],
+    [
+      "pass",
+      1,
+      [
+        31,
+        32
+      ]
+    ],
+    [
+      "pass",
+      0,
+      [
+        31,
+        32
+      ]
+    ],
+    [
+      "pass",
+      2,
+      [
+        31,
+        32
+      ]
+    ],
+    [
+      "action",
+      3,
+      "spell"
+    ],
+    [
+      "push",
+      33,
+      "spell",
+      3,
+      "midrange:counter:0"
+    ],
+    [
+      "pass",
+      3,
+      [
+        31,
+        32,
+        33
+      ]
+    ],
+    [
+      "pass",
+      1,
+      [
+        31,
+        32,
+        33
+      ]
+    ],
+    [
+      "pass",
+      0,
+      [
+        31,
+        32,
+        33
+      ]
+    ],
+    [
+      "pass",
+      2,
+      [
+        31,
+        32,
+        33
+      ]
+    ],
+    [
+      "counter",
+      32,
+      "spell"
+    ],
+    [
+      "resolve",
+      33,
+      "spell",
+      3
+    ],
+    [
+      "pass",
+      3,
+      [
+        31
+      ]
+    ],
+    [
+      "pass",
+      1,
+      [
+        31
+      ]
+    ],
+    [
+      "pass",
+      0,
+      [
+        31
+      ]
+    ],
+    [
+      "pass",
+      2,
+      [
+        31
+      ]
+    ],
+    [
+      "resolve",
+      31,
+      "spell",
+      3
+    ],
+    [
+      "pass",
+      3,
+      []
+    ],
+    [
+      "pass",
+      1,
+      []
+    ],
+    [
+      "pass",
+      0,
+      []
+    ],
+    [
+      "pass",
+      2,
+      []
+    ],
+    [
+      "pass",
+      3,
+      []
+    ],
+    [
+      "pass",
+      1,
+      []
+    ],
+    [
+      "pass",
+      0,
+      []
+    ],
+    [
+      "pass",
+      2,
+      []
+    ],
+    [
+      "pass",
+      3,
+      []
+    ],
+    [
+      "pass",
+      1,
+      []
+    ],
+    [
+      "pass",
+      0,
+      []
+    ],
+    [
+      "pass",
+      2,
+      []
+    ],
+    [
+      "pass",
+      1,
+      []
+    ],
+    [
+      "pass",
+      0,
+      []
+    ],
+    [
+      "pass",
+      2,
+      []
+    ],
+    [
+      "pass",
+      3,
+      []
+    ],
+    [
+      "pass",
+      1,
+      []
+    ],
+    [
+      "pass",
+      0,
+      []
+    ],
+    [
+      "pass",
+      2,
+      []
+    ],
+    [
+      "pass",
+      3,
+      []
+    ],
+    [
+      "pass",
+      1,
+      []
+    ],
+    [
+      "pass",
+      0,
+      []
+    ],
+    [
+      "pass",
+      2,
+      []
+    ],
+    [
+      "pass",
+      3,
+      []
+    ],
+    [
+      "pass",
+      1,
+      []
+    ],
+    [
+      "pass",
+      0,
+      []
+    ],
+    [
+      "pass",
+      2,
+      []
+    ],
+    [
+      "pass",
+      3,
+      []
+    ],
+    [
+      "action",
+      0,
+      "spell"
+    ],
+    [
+      "push",
+      34,
+      "spell",
+      0,
+      "control:engine:3"
+    ],
+    [
+      "pass",
+      0,
+      [
+        34
+      ]
+    ],
+    [
+      "pass",
+      2,
+      [
+        34
+      ]
+    ],
+    [
+      "pass",
+      3,
+      [
+        34
+      ]
+    ],
+    [
+      "pass",
+      1,
+      [
+        34
+      ]
+    ],
+    [
+      "resolve",
+      34,
+      "spell",
+      0
+    ],
+    [
+      "pass",
+      0,
+      []
+    ],
+    [
+      "pass",
+      2,
+      []
+    ],
+    [
+      "pass",
+      3,
+      []
+    ],
+    [
+      "pass",
+      1,
+      []
+    ],
+    [
+      "action",
+      2,
+      "spell"
+    ],
+    [
+      "push",
+      35,
+      "spell",
+      2,
+      "Storm-Kiln Artist"
+    ],
+    [
+      "pass",
+      2,
+      [
+        35
+      ]
+    ],
+    [
+      "pass",
+      3,
+      [
+        35
+      ]
+    ],
+    [
+      "pass",
+      1,
+      [
+        35
+      ]
+    ],
+    [
+      "pass",
+      0,
+      [
+        35
+      ]
+    ],
+    [
+      "resolve",
+      35,
+      "spell",
+      2
+    ],
+    [
+      "pass",
+      2,
+      []
+    ],
+    [
+      "pass",
+      3,
+      []
+    ],
+    [
+      "pass",
+      1,
+      []
+    ],
+    [
+      "pass",
+      0,
+      []
+    ],
+    [
+      "push",
+      36,
+      "triggered",
+      2,
+      "Magnus the Red: create_token"
+    ],
+    [
+      "pass",
+      2,
+      [
+        36
+      ]
+    ],
+    [
+      "pass",
+      3,
+      [
+        36
+      ]
+    ],
+    [
+      "pass",
+      1,
+      [
+        36
+      ]
+    ],
+    [
+      "pass",
+      0,
+      [
+        36
+      ]
+    ],
+    [
+      "resolve",
+      36,
+      "triggered",
+      2
+    ],
+    [
+      "pass",
+      2,
+      []
+    ],
+    [
+      "pass",
+      3,
+      []
+    ],
+    [
+      "pass",
+      1,
+      []
+    ],
+    [
+      "pass",
+      0,
+      []
+    ],
+    [
+      "pass",
+      2,
+      []
+    ],
+    [
+      "pass",
+      3,
+      []
+    ],
+    [
+      "pass",
+      1,
+      []
+    ],
+    [
+      "pass",
+      0,
+      []
+    ],
+    [
+      "action",
+      3,
+      "spell"
+    ],
+    [
+      "push",
+      37,
+      "spell",
+      3,
+      "midrange:removal:0"
+    ],
+    [
+      "pass",
+      3,
+      [
+        37
+      ]
+    ],
+    [
+      "pass",
+      1,
+      [
+        37
+      ]
+    ],
+    [
+      "pass",
+      0,
+      [
+        37
+      ]
+    ],
+    [
+      "pass",
+      2,
+      [
+        37
+      ]
+    ],
+    [
+      "resolve",
+      37,
+      "spell",
+      3
+    ],
+    [
+      "pass",
+      3,
+      []
+    ],
+    [
+      "pass",
+      1,
+      []
+    ],
+    [
+      "pass",
+      0,
+      []
+    ],
+    [
+      "pass",
+      2,
+      []
+    ],
+    [
+      "pass",
+      3,
+      []
+    ],
+    [
+      "pass",
+      1,
+      []
+    ],
+    [
+      "pass",
+      0,
+      []
+    ],
+    [
+      "pass",
+      2,
+      []
+    ],
+    [
+      "pass",
+      3,
+      []
+    ],
+    [
+      "pass",
+      1,
+      []
+    ],
+    [
+      "pass",
+      0,
+      []
+    ],
+    [
+      "pass",
+      2,
+      []
+    ],
+    [
+      "pass",
+      3,
+      []
+    ],
+    [
+      "pass",
+      1,
+      []
+    ],
+    [
+      "pass",
+      0,
+      []
+    ],
+    [
+      "pass",
+      2,
+      []
+    ],
+    [
+      "pass",
+      3,
+      []
+    ],
+    [
+      "pass",
+      1,
+      []
+    ],
+    [
+      "pass",
+      0,
+      []
+    ],
+    [
+      "pass",
+      2,
+      []
+    ],
+    [
+      "pass",
+      3,
+      []
+    ],
+    [
+      "pass",
+      1,
+      []
+    ],
+    [
+      "pass",
+      0,
+      []
+    ],
+    [
+      "pass",
+      2,
+      []
+    ],
+    [
+      "action",
+      1,
+      "spell"
+    ],
+    [
+      "push",
+      38,
+      "spell",
+      1,
+      "spellslinger:engine:7"
+    ],
+    [
+      "pass",
+      1,
+      [
+        38
+      ]
+    ],
+    [
+      "pass",
+      0,
+      [
+        38
+      ]
+    ],
+    [
+      "pass",
+      2,
+      [
+        38
+      ]
+    ],
+    [
+      "pass",
+      3,
+      [
+        38
+      ]
+    ],
+    [
+      "resolve",
+      38,
+      "spell",
+      1
+    ],
+    [
+      "pass",
+      1,
+      []
+    ],
+    [
+      "pass",
+      0,
+      []
+    ],
+    [
+      "pass",
+      2,
+      []
+    ],
+    [
+      "pass",
+      3,
+      []
+    ],
+    [
+      "pass",
+      1,
+      []
+    ],
+    [
+      "pass",
+      0,
+      []
+    ],
+    [
+      "pass",
+      2,
+      []
+    ],
+    [
+      "pass",
+      3,
+      []
+    ],
+    [
+      "action",
+      0,
+      "spell"
+    ],
+    [
+      "push",
+      39,
+      "spell",
+      0,
+      "control:engine:2"
+    ],
+    [
+      "pass",
+      0,
+      [
+        39
+      ]
+    ],
+    [
+      "pass",
+      2,
+      [
+        39
+      ]
+    ],
+    [
+      "pass",
+      3,
+      [
+        39
+      ]
+    ],
+    [
+      "pass",
+      1,
+      [
+        39
+      ]
+    ],
+    [
+      "resolve",
+      39,
+      "spell",
+      0
+    ],
+    [
+      "pass",
+      0,
+      []
+    ],
+    [
+      "pass",
+      2,
+      []
+    ],
+    [
+      "pass",
+      3,
+      []
+    ],
+    [
+      "pass",
+      1,
+      []
+    ],
+    [
+      "pass",
+      2,
+      []
+    ],
+    [
+      "pass",
+      3,
+      []
+    ],
+    [
+      "pass",
+      1,
+      []
+    ],
+    [
+      "pass",
+      0,
+      []
+    ],
+    [
+      "pass",
+      2,
+      []
+    ],
+    [
+      "pass",
+      3,
+      []
+    ],
+    [
+      "pass",
+      1,
+      []
+    ],
+    [
+      "pass",
+      0,
+      []
+    ],
+    [
+      "pass",
+      2,
+      []
+    ],
+    [
+      "pass",
+      3,
+      []
+    ],
+    [
+      "pass",
+      1,
+      []
+    ],
+    [
+      "pass",
+      0,
+      []
+    ],
+    [
+      "pass",
+      2,
+      []
+    ],
+    [
+      "pass",
+      3,
+      []
+    ],
+    [
+      "pass",
+      1,
+      []
+    ],
+    [
+      "pass",
+      0,
+      []
+    ],
+    [
+      "action",
+      3,
+      "spell"
+    ],
+    [
+      "push",
+      40,
+      "spell",
+      3,
+      "midrange:finisher:0"
+    ],
+    [
+      "pass",
+      3,
+      [
+        40
+      ]
+    ],
+    [
+      "pass",
+      1,
+      [
+        40
+      ]
+    ],
+    [
+      "pass",
+      0,
+      [
+        40
+      ]
+    ],
+    [
+      "pass",
+      2,
+      [
+        40
+      ]
+    ],
+    [
+      "resolve",
+      40,
+      "spell",
+      3
+    ],
+    [
+      "pass",
+      3,
+      []
+    ],
+    [
+      "pass",
+      1,
+      []
+    ],
+    [
+      "pass",
+      0,
+      []
+    ],
+    [
+      "pass",
+      2,
+      []
+    ],
+    [
+      "pass",
+      3,
+      []
+    ],
+    [
+      "pass",
+      1,
+      []
+    ],
+    [
+      "pass",
+      0,
+      []
+    ],
+    [
+      "pass",
+      2,
+      []
+    ],
+    [
+      "pass",
+      2,
+      []
+    ],
+    [
+      "pass",
+      3,
+      []
+    ],
+    [
+      "pass",
+      1,
+      []
+    ],
+    [
+      "pass",
+      0,
+      []
+    ],
+    [
+      "pass",
+      3,
+      []
+    ],
+    [
+      "pass",
+      1,
+      []
+    ],
+    [
+      "pass",
+      0,
+      []
+    ],
+    [
+      "pass",
+      2,
+      []
+    ],
+    [
+      "action",
+      1,
+      "spell"
+    ],
+    [
+      "push",
+      41,
+      "spell",
+      1,
+      "spellslinger:removal:3"
+    ],
+    [
+      "pass",
+      1,
+      [
+        41
+      ]
+    ],
+    [
+      "pass",
+      0,
+      [
+        41
+      ]
+    ],
+    [
+      "pass",
+      2,
+      [
+        41
+      ]
+    ],
+    [
+      "pass",
+      3,
+      [
+        41
+      ]
+    ],
+    [
+      "resolve",
+      41,
+      "spell",
+      1
+    ],
+    [
+      "pass",
+      1,
+      []
+    ],
+    [
+      "pass",
+      0,
+      []
+    ],
+    [
+      "pass",
+      2,
+      []
+    ],
+    [
+      "pass",
+      3,
+      []
+    ],
+    [
+      "pass",
+      1,
+      []
+    ],
+    [
+      "pass",
+      0,
+      []
+    ],
+    [
+      "pass",
+      2,
+      []
+    ],
+    [
+      "pass",
+      3,
+      []
+    ],
+    [
+      "pass",
+      3,
+      []
+    ],
+    [
+      "pass",
+      1,
+      []
+    ],
+    [
+      "pass",
+      0,
+      []
+    ],
+    [
+      "pass",
+      2,
+      []
+    ],
+    [
+      "pass",
+      2,
+      []
+    ],
+    [
+      "pass",
+      3,
+      []
+    ],
+    [
+      "pass",
+      1,
+      []
+    ],
+    [
+      "pass",
+      0,
+      []
+    ],
+    [
+      "action",
+      0,
+      "spell"
+    ],
+    [
+      "push",
+      42,
+      "spell",
+      0,
+      "control:engine:4"
+    ],
+    [
+      "pass",
+      0,
+      [
+        42
+      ]
+    ],
+    [
+      "pass",
+      2,
+      [
+        42
+      ]
+    ],
+    [
+      "pass",
+      3,
+      [
+        42
+      ]
+    ],
+    [
+      "pass",
+      1,
+      [
+        42
+      ]
+    ],
+    [
+      "resolve",
+      42,
+      "spell",
+      0
+    ],
+    [
+      "pass",
+      0,
+      []
+    ],
+    [
+      "pass",
+      2,
+      []
+    ],
+    [
+      "pass",
+      3,
+      []
+    ],
+    [
+      "pass",
+      1,
+      []
+    ]
+  ],
+  "diagnostics": {
+    "seed": 103,
+    "opening_forced": false,
+    "name": "Thousand Sons Conclave v1.6",
+    "library_total": 99,
+    "supported_definitions": 44,
+    "unsupported_definitions": [
+      "Tzaangor Shaman",
+      "Exalted Flamer of Tzeentch",
+      "Pink Horror",
+      "Heralds of Tzeentch",
+      "Lord of Change",
+      "Mutalith Vortex Beast",
+      "Docent of Perfection",
+      "Patron Wizard",
+      "Voidmage Prodigy",
+      "Spellseeker",
+      "Veyran, Voice of Duality",
+      "Dualcaster Mage",
+      "Jace, Vryn's Prodigy",
+      "Sigil Tracer",
+      "Resonating Lute",
+      "Maskwood Nexus",
+      "Arcane Adaptation",
+      "The Lost and the Damned",
+      "Underworld Breach",
+      "Sorcerer Class",
+      "Phyrexian Altar",
+      "Mystical Tutor",
+      "Muddle the Mixture",
+      "Step Through",
+      "Twincast",
+      "Reiterate",
+      "Abrade",
+      "Chaos Warp",
+      "Chaos Mutation",
+      "Cyclonic Rift",
+      "March of Swirling Mist",
+      "Jeska's Will",
+      "Mana Geyser",
+      "Mathemagics",
+      "Comet Storm",
+      "Capsize",
+      "Searing Touch",
+      "Mystic Speculation"
+    ],
+    "approx_definitions": [
+      "An Offer You Can't Refuse",
+      "Arcane Denial",
+      "Brainstorm",
+      "Flusterstorm",
+      "Frantic Search",
+      "Impulse",
+      "Ponder",
+      "Preordain",
+      "Telling Time"
+    ],
+    "coverage_casts": {
+      "supported": 5,
+      "approx": 1
+    },
+    "unsupported_held": {
+      "Twincast": 10,
+      "Capsize": 9,
+      "Underworld Breach": 8,
+      "Heralds of Tzeentch": 6,
+      "Jeska's Will": 1
+    },
+    "commander_casts": 1,
+    "commander_in_zone": false,
+    "mana_payments": [
+      {
+        "source": "Third Path Iconoclast",
+        "cost": 2,
+        "source_ids": [
+          441,
+          461
+        ],
+        "unused": [
+          0,
+          0,
+          0
+        ]
+      },
+      {
+        "source": "Pongify",
+        "cost": 1,
+        "source_ids": [
+          441
+        ],
+        "unused": [
+          0,
+          0,
+          0
+        ]
+      },
+      {
+        "source": "Flusterstorm",
+        "cost": 1,
+        "source_ids": [
+          449
+        ],
+        "unused": [
+          0,
+          0,
+          0
+        ]
+      },
+      {
+        "source": "Magnus the Red",
+        "cost": 5,
+        "source_ids": [
+          441,
+          449,
+          461,
+          525,
+          509
+        ],
+        "unused": [
+          0,
+          0,
+          0
+        ]
+      },
+      {
+        "source": "Archmage Emeritus",
+        "cost": 4,
+        "source_ids": [
+          441,
+          449,
+          461,
+          525
+        ],
+        "unused": [
+          0,
+          0,
+          0
+        ]
+      },
+      {
+        "source": "Storm-Kiln Artist",
+        "cost": 4,
+        "source_ids": [
+          441,
+          449,
+          461,
+          525
+        ],
+        "unused": [
+          0,
+          0,
+          0
+        ]
+      }
+    ],
+    "land_misses": 3,
+    "known_rules_gaps": [
+      "limited named-card subset; unsupported spells fail closed",
+      "selection, scry and some land abilities remain approximations",
+      "one detailed deck; synthetic opponents and finishers",
+      "no commander damage, multiblock, buyback, spell copies or verified Magnus loops",
+      "only U/R/colorless mana and U/R/generic costs; other mana text fails closed",
+      "coarse phase/serial combat driver; not every official step is exposed",
+      "only registered trigger/activation operations; creature tap abilities unsupported"
+    ],
+    "v7": {
+      "shared_trigger_instances": 4,
+      "shared_cost_queries": 47,
+      "safety_stop": null,
+      "modular_scope": "typed costs/triggers/block legality; live zones supplied by v9b"
+    },
+    "v8": {
+      "kernel_permanent_creatures": 46,
+      "kernel_view_consistent": true,
+      "creatures_entered": 20,
+      "permanents_entered": 13,
+      "zone_transitions": 11,
+      "combat_damage_batches": 4,
+      "shared_stack_max_depth": 5,
+      "shared_stack_resolved": 35,
+      "shared_stack_countered": 3,
+      "guard_stop": null,
+      "limits": [
+        "shared physical state and typed priority stack; partial card/step coverage"
+      ]
+    },
+    "v9": {
+      "providers": [
+        "control",
+        "spellslinger",
+        "magnus",
+        "midrange"
+      ],
+      "detailed_seat": 2,
+      "kernel_view_consistent": true,
+      "migration_status": "shared physical zones, source-ID mana and typed priority stack",
+      "multi_detailed_games_supported": false,
+      "authoritative_card_zones_in_live_game": true
+    },
+    "v9b": {
+      "authoritative_card_zones_in_live_game": true,
+      "zone_index_consistent": true,
+      "kernel_view_consistent": true,
+      "physical_objects": 403,
+      "zone_counts": {
+        "0": {
+          "battlefield": 9,
+          "command": 0,
+          "exile": 0,
+          "graveyard": 4,
+          "hand": 5,
+          "library": 81,
+          "stack": 0
+        },
+        "1": {
+          "battlefield": 11,
+          "command": 0,
+          "exile": 0,
+          "graveyard": 9,
+          "hand": 1,
+          "library": 80,
+          "stack": 0
+        },
+        "2": {
+          "battlefield": 13,
+          "command": 0,
+          "exile": 0,
+          "graveyard": 2,
+          "hand": 5,
+          "library": 82,
+          "stack": 0
+        },
+        "3": {
+          "battlefield": 13,
+          "command": 0,
+          "exile": 0,
+          "graveyard": 8,
+          "hand": 0,
+          "library": 80,
+          "stack": 0
+        }
+      },
+      "limits": [
+        "source-ID mana supplied by v9c; synthetic abilities remain approximate",
+        "typed priority supplied by v10; incomplete card/step coverage remains",
+        "one detailed deck; selection/land rules still approximate"
+      ]
+    },
+    "v9c": {
+      "source_backed_live_payment": true,
+      "pools": {
+        "0": [
+          0,
+          0,
+          0
+        ],
+        "1": [
+          0,
+          0,
+          0
+        ],
+        "2": [
+          0,
+          0,
+          0
+        ],
+        "3": [
+          0,
+          0,
+          0
+        ]
+      },
+      "payments": [
+        {
+          "seat": 3,
+          "cost": [
+            2,
+            0,
+            0
+          ],
+          "sources": [
+            443,
+            451
+          ],
+          "unused": [
+            0,
+            0,
+            0
+          ]
+        },
+        {
+          "seat": 1,
+          "cost": [
+            2,
+            0,
+            0
+          ],
+          "sources": [
+            445,
+            455
+          ],
+          "unused": [
+            0,
+            0,
+            0
+          ]
+        },
+        {
+          "seat": 2,
+          "cost": [
+            0,
+            1,
+            1
+          ],
+          "sources": [
+            441,
+            461
+          ],
+          "unused": [
+            0,
+            0,
+            0
+          ]
+        },
+        {
+          "seat": 3,
+          "cost": [
+            2,
+            0,
+            0
+          ],
+          "sources": [
+            443,
+            451
+          ],
+          "unused": [
+            0,
+            0,
+            0
+          ]
+        },
+        {
+          "seat": 3,
+          "cost": [
+            3,
+            0,
+            0
+          ],
+          "sources": [
+            453,
+            465,
+            467
+          ],
+          "unused": [
+            0,
+            0,
+            0
+          ]
+        },
+        {
+          "seat": 3,
+          "cost": [
+            1,
+            0,
+            0
+          ],
+          "sources": [
+            469
+          ],
+          "unused": [
+            0,
+            0,
+            0
+          ]
+        },
+        {
+          "seat": 1,
+          "cost": [
+            3,
+            0,
+            0
+          ],
+          "sources": [
+            445,
+            455,
+            473
+          ],
+          "unused": [
+            0,
+            0,
+            0
+          ]
+        },
+        {
+          "seat": 0,
+          "cost": [
+            2,
+            0,
+            0
+          ],
+          "sources": [
+            447,
+            459
+          ],
+          "unused": [
+            0,
+            0,
+            0
+          ]
+        },
+        {
+          "seat": 2,
+          "cost": [
+            0,
+            1,
+            0
+          ],
+          "sources": [
+            441
+          ],
+          "unused": [
+            0,
+            0,
+            0
+          ]
+        },
+        {
+          "seat": 0,
+          "cost": [
+            2,
+            0,
+            0
+          ],
+          "sources": [
+            447,
+            459
+          ],
+          "unused": [
+            0,
+            0,
+            0
+          ]
+        },
+        {
+          "seat": 2,
+          "cost": [
+            0,
+            1,
+            0
+          ],
+          "sources": [
+            449
+          ],
+          "unused": [
+            0,
+            0,
+            0
+          ]
+        },
+        {
+          "seat": 3,
+          "cost": [
+            3,
+            0,
+            0
+          ],
+          "sources": [
+            443,
+            451,
+            453
+          ],
+          "unused": [
+            0,
+            0,
+            0
+          ]
+        },
+        {
+          "seat": 3,
+          "cost": [
+            2,
+            0,
+            0
+          ],
+          "sources": [
+            465,
+            467
+          ],
+          "unused": [
+            0,
+            0,
+            0
+          ]
+        },
+        {
+          "seat": 1,
+          "cost": [
+            3,
+            0,
+            0
+          ],
+          "sources": [
+            445,
+            455,
+            473
+          ],
+          "unused": [
+            0,
+            0,
+            0
+          ]
+        },
+        {
+          "seat": 1,
+          "cost": [
+            2,
+            0,
+            0
+          ],
+          "sources": [
+            499,
+            501
+          ],
+          "unused": [
+            0,
+            0,
+            0
+          ]
+        },
+        {
+          "seat": 0,
+          "cost": [
+            2,
+            0,
+            0
+          ],
+          "sources": [
+            447,
+            459
+          ],
+          "unused": [
+            0,
+            0,
+            0
+          ]
+        },
+        {
+          "seat": 3,
+          "cost": [
+            2,
+            0,
+            0
+          ],
+          "sources": [
+            443,
+            451
+          ],
+          "unused": [
+            0,
+            0,
+            0
+          ]
+        },
+        {
+          "seat": 3,
+          "cost": [
+            3,
+            0,
+            0
+          ],
+          "sources": [
+            453,
+            465,
+            467
+          ],
+          "unused": [
+            0,
+            0,
+            0
+          ]
+        },
+        {
+          "seat": 1,
+          "cost": [
+            3,
+            0,
+            0
+          ],
+          "sources": [
+            445,
+            455,
+            473
+          ],
+          "unused": [
+            0,
+            0,
+            0
+          ]
+        },
+        {
+          "seat": 1,
+          "cost": [
+            3,
+            0,
+            0
+          ],
+          "sources": [
+            499,
+            501,
+            518
+          ],
+          "unused": [
+            0,
+            0,
+            0
+          ]
+        },
+        {
+          "seat": 2,
+          "cost": [
+            3,
+            1,
+            1
+          ],
+          "sources": [
+            441,
+            449,
+            461,
+            525,
+            509
+          ],
+          "unused": [
+            0,
+            0,
+            0
+          ]
+        },
+        {
+          "seat": 3,
+          "cost": [
+            3,
+            0,
+            0
+          ],
+          "sources": [
+            443,
+            451,
+            453
+          ],
+          "unused": [
+            0,
+            0,
+            0
+          ]
+        },
+        {
+          "seat": 1,
+          "cost": [
+            2,
+            0,
+            0
+          ],
+          "sources": [
+            445,
+            455
+          ],
+          "unused": [
+            0,
+            0,
+            0
+          ]
+        },
+        {
+          "seat": 1,
+          "cost": [
+            3,
+            0,
+            0
+          ],
+          "sources": [
+            473,
+            499,
+            501
+          ],
+          "unused": [
+            0,
+            0,
+            0
+          ]
+        },
+        {
+          "seat": 2,
+          "cost": [
+            2,
+            2,
+            0
+          ],
+          "sources": [
+            441,
+            449,
+            461,
+            525
+          ],
+          "unused": [
+            0,
+            0,
+            0
+          ]
+        },
+        {
+          "seat": 1,
+          "cost": [
+            3,
+            0,
+            0
+          ],
+          "sources": [
+            445,
+            455,
+            473
+          ],
+          "unused": [
+            0,
+            0,
+            0
+          ]
+        },
+        {
+          "seat": 0,
+          "cost": [
+            3,
+            0,
+            0
+          ],
+          "sources": [
+            447,
+            459,
+            550
+          ],
+          "unused": [
+            0,
+            0,
+            0
+          ]
+        },
+        {
+          "seat": 3,
+          "cost": [
+            3,
+            0,
+            0
+          ],
+          "sources": [
+            443,
+            451,
+            453
+          ],
+          "unused": [
+            0,
+            0,
+            0
+          ]
+        },
+        {
+          "seat": 1,
+          "cost": [
+            2,
+            0,
+            0
+          ],
+          "sources": [
+            499,
+            501
+          ],
+          "unused": [
+            0,
+            0,
+            0
+          ]
+        },
+        {
+          "seat": 3,
+          "cost": [
+            2,
+            0,
+            0
+          ],
+          "sources": [
+            465,
+            467
+          ],
+          "unused": [
+            0,
+            0,
+            0
+          ]
+        },
+        {
+          "seat": 0,
+          "cost": [
+            4,
+            0,
+            0
+          ],
+          "sources": [
+            447,
+            459,
+            550,
+            552
+          ],
+          "unused": [
+            0,
+            0,
+            0
+          ]
+        },
+        {
+          "seat": 2,
+          "cost": [
+            3,
+            0,
+            1
+          ],
+          "sources": [
+            441,
+            449,
+            461,
+            525
+          ],
+          "unused": [
+            0,
+            0,
+            0
+          ]
+        },
+        {
+          "seat": 3,
+          "cost": [
+            3,
+            0,
+            0
+          ],
+          "sources": [
+            443,
+            451,
+            453
+          ],
+          "unused": [
+            0,
+            0,
+            0
+          ]
+        },
+        {
+          "seat": 1,
+          "cost": [
+            3,
+            0,
+            0
+          ],
+          "sources": [
+            445,
+            455,
+            473
+          ],
+          "unused": [
+            0,
+            0,
+            0
+          ]
+        },
+        {
+          "seat": 0,
+          "cost": [
+            4,
+            0,
+            0
+          ],
+          "sources": [
+            447,
+            459,
+            550,
+            552
+          ],
+          "unused": [
+            0,
+            0,
+            0
+          ]
+        },
+        {
+          "seat": 3,
+          "cost": [
+            7,
+            0,
+            0
+          ],
+          "sources": [
+            443,
+            451,
+            453,
+            465,
+            467,
+            493,
+            511
+          ],
+          "unused": [
+            0,
+            0,
+            0
+          ]
+        },
+        {
+          "seat": 1,
+          "cost": [
+            2,
+            0,
+            0
+          ],
+          "sources": [
+            445,
+            455
+          ],
+          "unused": [
+            0,
+            0,
+            0
+          ]
+        },
+        {
+          "seat": 0,
+          "cost": [
+            4,
+            0,
+            0
+          ],
+          "sources": [
+            447,
+            459,
+            550,
+            552
+          ],
+          "unused": [
+            0,
+            0,
+            0
+          ]
+        }
+      ],
+      "activations": [
+        {
+          "seat": 3,
+          "source_id": 443,
+          "source": "midrange:land:3",
+          "output": [
+            1,
+            0,
+            0
+          ],
+          "activation_cost": [
+            0,
+            0,
+            0
+          ],
+          "life_paid": 0,
+          "damage": 0,
+          "sacrifice": false
+        },
+        {
+          "seat": 3,
+          "source_id": 451,
+          "source": "midrange:land:36",
+          "output": [
+            1,
+            0,
+            0
+          ],
+          "activation_cost": [
+            0,
+            0,
+            0
+          ],
+          "life_paid": 0,
+          "damage": 0,
+          "sacrifice": false
+        },
+        {
+          "seat": 1,
+          "source_id": 445,
+          "source": "spellslinger:land:30",
+          "output": [
+            1,
+            0,
+            0
+          ],
+          "activation_cost": [
+            0,
+            0,
+            0
+          ],
+          "life_paid": 0,
+          "damage": 0,
+          "sacrifice": false
+        },
+        {
+          "seat": 1,
+          "source_id": 455,
+          "source": "spellslinger:land:1",
+          "output": [
+            1,
+            0,
+            0
+          ],
+          "activation_cost": [
+            0,
+            0,
+            0
+          ],
+          "life_paid": 0,
+          "damage": 0,
+          "sacrifice": false
+        },
+        {
+          "seat": 2,
+          "source_id": 441,
+          "source": "Island",
+          "output": [
+            0,
+            1,
+            0
+          ],
+          "activation_cost": [
+            0,
+            0,
+            0
+          ],
+          "life_paid": 0,
+          "damage": 0,
+          "sacrifice": false
+        },
+        {
+          "seat": 2,
+          "source_id": 461,
+          "source": "Mountain",
+          "output": [
+            0,
+            0,
+            1
+          ],
+          "activation_cost": [
+            0,
+            0,
+            0
+          ],
+          "life_paid": 0,
+          "damage": 0,
+          "sacrifice": false
+        },
+        {
+          "seat": 3,
+          "source_id": 443,
+          "source": "midrange:land:3",
+          "output": [
+            1,
+            0,
+            0
+          ],
+          "activation_cost": [
+            0,
+            0,
+            0
+          ],
+          "life_paid": 0,
+          "damage": 0,
+          "sacrifice": false
+        },
+        {
+          "seat": 3,
+          "source_id": 451,
+          "source": "midrange:land:36",
+          "output": [
+            1,
+            0,
+            0
+          ],
+          "activation_cost": [
+            0,
+            0,
+            0
+          ],
+          "life_paid": 0,
+          "damage": 0,
+          "sacrifice": false
+        },
+        {
+          "seat": 3,
+          "source_id": 453,
+          "source": "midrange:ramp:3",
+          "output": [
+            1,
+            0,
+            0
+          ],
+          "activation_cost": [
+            0,
+            0,
+            0
+          ],
+          "life_paid": 0,
+          "damage": 0,
+          "sacrifice": false
+        },
+        {
+          "seat": 3,
+          "source_id": 465,
+          "source": "midrange:land:5",
+          "output": [
+            1,
+            0,
+            0
+          ],
+          "activation_cost": [
+            0,
+            0,
+            0
+          ],
+          "life_paid": 0,
+          "damage": 0,
+          "sacrifice": false
+        },
+        {
+          "seat": 3,
+          "source_id": 467,
+          "source": "midrange:ramp:7",
+          "output": [
+            1,
+            0,
+            0
+          ],
+          "activation_cost": [
+            0,
+            0,
+            0
+          ],
+          "life_paid": 0,
+          "damage": 0,
+          "sacrifice": false
+        },
+        {
+          "seat": 3,
+          "source_id": 469,
+          "source": "midrange:ramp:9",
+          "output": [
+            1,
+            0,
+            0
+          ],
+          "activation_cost": [
+            0,
+            0,
+            0
+          ],
+          "life_paid": 0,
+          "damage": 0,
+          "sacrifice": false
+        },
+        {
+          "seat": 1,
+          "source_id": 445,
+          "source": "spellslinger:land:30",
+          "output": [
+            1,
+            0,
+            0
+          ],
+          "activation_cost": [
+            0,
+            0,
+            0
+          ],
+          "life_paid": 0,
+          "damage": 0,
+          "sacrifice": false
+        },
+        {
+          "seat": 1,
+          "source_id": 455,
+          "source": "spellslinger:land:1",
+          "output": [
+            1,
+            0,
+            0
+          ],
+          "activation_cost": [
+            0,
+            0,
+            0
+          ],
+          "life_paid": 0,
+          "damage": 0,
+          "sacrifice": false
+        },
+        {
+          "seat": 1,
+          "source_id": 473,
+          "source": "spellslinger:land:8",
+          "output": [
+            1,
+            0,
+            0
+          ],
+          "activation_cost": [
+            0,
+            0,
+            0
+          ],
+          "life_paid": 0,
+          "damage": 0,
+          "sacrifice": false
+        },
+        {
+          "seat": 0,
+          "source_id": 447,
+          "source": "control:land:27",
+          "output": [
+            1,
+            0,
+            0
+          ],
+          "activation_cost": [
+            0,
+            0,
+            0
+          ],
+          "life_paid": 0,
+          "damage": 0,
+          "sacrifice": false
+        },
+        {
+          "seat": 0,
+          "source_id": 459,
+          "source": "control:land:16",
+          "output": [
+            1,
+            0,
+            0
+          ],
+          "activation_cost": [
+            0,
+            0,
+            0
+          ],
+          "life_paid": 0,
+          "damage": 0,
+          "sacrifice": false
+        },
+        {
+          "seat": 2,
+          "source_id": 441,
+          "source": "Island",
+          "output": [
+            0,
+            1,
+            0
+          ],
+          "activation_cost": [
+            0,
+            0,
+            0
+          ],
+          "life_paid": 0,
+          "damage": 0,
+          "sacrifice": false
+        },
+        {
+          "seat": 0,
+          "source_id": 447,
+          "source": "control:land:27",
+          "output": [
+            1,
+            0,
+            0
+          ],
+          "activation_cost": [
+            0,
+            0,
+            0
+          ],
+          "life_paid": 0,
+          "damage": 0,
+          "sacrifice": false
+        },
+        {
+          "seat": 0,
+          "source_id": 459,
+          "source": "control:land:16",
+          "output": [
+            1,
+            0,
+            0
+          ],
+          "activation_cost": [
+            0,
+            0,
+            0
+          ],
+          "life_paid": 0,
+          "damage": 0,
+          "sacrifice": false
+        },
+        {
+          "seat": 2,
+          "source_id": 449,
+          "source": "Island",
+          "output": [
+            0,
+            1,
+            0
+          ],
+          "activation_cost": [
+            0,
+            0,
+            0
+          ],
+          "life_paid": 0,
+          "damage": 0,
+          "sacrifice": false
+        },
+        {
+          "seat": 3,
+          "source_id": 443,
+          "source": "midrange:land:3",
+          "output": [
+            1,
+            0,
+            0
+          ],
+          "activation_cost": [
+            0,
+            0,
+            0
+          ],
+          "life_paid": 0,
+          "damage": 0,
+          "sacrifice": false
+        },
+        {
+          "seat": 3,
+          "source_id": 451,
+          "source": "midrange:land:36",
+          "output": [
+            1,
+            0,
+            0
+          ],
+          "activation_cost": [
+            0,
+            0,
+            0
+          ],
+          "life_paid": 0,
+          "damage": 0,
+          "sacrifice": false
+        },
+        {
+          "seat": 3,
+          "source_id": 453,
+          "source": "midrange:ramp:3",
+          "output": [
+            1,
+            0,
+            0
+          ],
+          "activation_cost": [
+            0,
+            0,
+            0
+          ],
+          "life_paid": 0,
+          "damage": 0,
+          "sacrifice": false
+        },
+        {
+          "seat": 3,
+          "source_id": 465,
+          "source": "midrange:land:5",
+          "output": [
+            1,
+            0,
+            0
+          ],
+          "activation_cost": [
+            0,
+            0,
+            0
+          ],
+          "life_paid": 0,
+          "damage": 0,
+          "sacrifice": false
+        },
+        {
+          "seat": 3,
+          "source_id": 467,
+          "source": "midrange:ramp:7",
+          "output": [
+            1,
+            0,
+            0
+          ],
+          "activation_cost": [
+            0,
+            0,
+            0
+          ],
+          "life_paid": 0,
+          "damage": 0,
+          "sacrifice": false
+        },
+        {
+          "seat": 1,
+          "source_id": 445,
+          "source": "spellslinger:land:30",
+          "output": [
+            1,
+            0,
+            0
+          ],
+          "activation_cost": [
+            0,
+            0,
+            0
+          ],
+          "life_paid": 0,
+          "damage": 0,
+          "sacrifice": false
+        },
+        {
+          "seat": 1,
+          "source_id": 455,
+          "source": "spellslinger:land:1",
+          "output": [
+            1,
+            0,
+            0
+          ],
+          "activation_cost": [
+            0,
+            0,
+            0
+          ],
+          "life_paid": 0,
+          "damage": 0,
+          "sacrifice": false
+        },
+        {
+          "seat": 1,
+          "source_id": 473,
+          "source": "spellslinger:land:8",
+          "output": [
+            1,
+            0,
+            0
+          ],
+          "activation_cost": [
+            0,
+            0,
+            0
+          ],
+          "life_paid": 0,
+          "damage": 0,
+          "sacrifice": false
+        },
+        {
+          "seat": 1,
+          "source_id": 499,
+          "source": "spellslinger:land:24",
+          "output": [
+            1,
+            0,
+            0
+          ],
+          "activation_cost": [
+            0,
+            0,
+            0
+          ],
+          "life_paid": 0,
+          "damage": 0,
+          "sacrifice": false
+        },
+        {
+          "seat": 1,
+          "source_id": 501,
+          "source": "spellslinger:ramp:1",
+          "output": [
+            1,
+            0,
+            0
+          ],
+          "activation_cost": [
+            0,
+            0,
+            0
+          ],
+          "life_paid": 0,
+          "damage": 0,
+          "sacrifice": false
+        },
+        {
+          "seat": 0,
+          "source_id": 447,
+          "source": "control:land:27",
+          "output": [
+            1,
+            0,
+            0
+          ],
+          "activation_cost": [
+            0,
+            0,
+            0
+          ],
+          "life_paid": 0,
+          "damage": 0,
+          "sacrifice": false
+        },
+        {
+          "seat": 0,
+          "source_id": 459,
+          "source": "control:land:16",
+          "output": [
+            1,
+            0,
+            0
+          ],
+          "activation_cost": [
+            0,
+            0,
+            0
+          ],
+          "life_paid": 0,
+          "damage": 0,
+          "sacrifice": false
+        },
+        {
+          "seat": 3,
+          "source_id": 443,
+          "source": "midrange:land:3",
+          "output": [
+            1,
+            0,
+            0
+          ],
+          "activation_cost": [
+            0,
+            0,
+            0
+          ],
+          "life_paid": 0,
+          "damage": 0,
+          "sacrifice": false
+        },
+        {
+          "seat": 3,
+          "source_id": 451,
+          "source": "midrange:land:36",
+          "output": [
+            1,
+            0,
+            0
+          ],
+          "activation_cost": [
+            0,
+            0,
+            0
+          ],
+          "life_paid": 0,
+          "damage": 0,
+          "sacrifice": false
+        },
+        {
+          "seat": 3,
+          "source_id": 453,
+          "source": "midrange:ramp:3",
+          "output": [
+            1,
+            0,
+            0
+          ],
+          "activation_cost": [
+            0,
+            0,
+            0
+          ],
+          "life_paid": 0,
+          "damage": 0,
+          "sacrifice": false
+        },
+        {
+          "seat": 3,
+          "source_id": 465,
+          "source": "midrange:land:5",
+          "output": [
+            1,
+            0,
+            0
+          ],
+          "activation_cost": [
+            0,
+            0,
+            0
+          ],
+          "life_paid": 0,
+          "damage": 0,
+          "sacrifice": false
+        },
+        {
+          "seat": 3,
+          "source_id": 467,
+          "source": "midrange:ramp:7",
+          "output": [
+            1,
+            0,
+            0
+          ],
+          "activation_cost": [
+            0,
+            0,
+            0
+          ],
+          "life_paid": 0,
+          "damage": 0,
+          "sacrifice": false
+        },
+        {
+          "seat": 1,
+          "source_id": 445,
+          "source": "spellslinger:land:30",
+          "output": [
+            1,
+            0,
+            0
+          ],
+          "activation_cost": [
+            0,
+            0,
+            0
+          ],
+          "life_paid": 0,
+          "damage": 0,
+          "sacrifice": false
+        },
+        {
+          "seat": 1,
+          "source_id": 455,
+          "source": "spellslinger:land:1",
+          "output": [
+            1,
+            0,
+            0
+          ],
+          "activation_cost": [
+            0,
+            0,
+            0
+          ],
+          "life_paid": 0,
+          "damage": 0,
+          "sacrifice": false
+        },
+        {
+          "seat": 1,
+          "source_id": 473,
+          "source": "spellslinger:land:8",
+          "output": [
+            1,
+            0,
+            0
+          ],
+          "activation_cost": [
+            0,
+            0,
+            0
+          ],
+          "life_paid": 0,
+          "damage": 0,
+          "sacrifice": false
+        },
+        {
+          "seat": 1,
+          "source_id": 499,
+          "source": "spellslinger:land:24",
+          "output": [
+            1,
+            0,
+            0
+          ],
+          "activation_cost": [
+            0,
+            0,
+            0
+          ],
+          "life_paid": 0,
+          "damage": 0,
+          "sacrifice": false
+        },
+        {
+          "seat": 1,
+          "source_id": 501,
+          "source": "spellslinger:ramp:1",
+          "output": [
+            1,
+            0,
+            0
+          ],
+          "activation_cost": [
+            0,
+            0,
+            0
+          ],
+          "life_paid": 0,
+          "damage": 0,
+          "sacrifice": false
+        },
+        {
+          "seat": 1,
+          "source_id": 518,
+          "source": "spellslinger:ramp:2",
+          "output": [
+            1,
+            0,
+            0
+          ],
+          "activation_cost": [
+            0,
+            0,
+            0
+          ],
+          "life_paid": 0,
+          "damage": 0,
+          "sacrifice": false
+        },
+        {
+          "seat": 2,
+          "source_id": 441,
+          "source": "Island",
+          "output": [
+            0,
+            1,
+            0
+          ],
+          "activation_cost": [
+            0,
+            0,
+            0
+          ],
+          "life_paid": 0,
+          "damage": 0,
+          "sacrifice": false
+        },
+        {
+          "seat": 2,
+          "source_id": 449,
+          "source": "Island",
+          "output": [
+            0,
+            1,
+            0
+          ],
+          "activation_cost": [
+            0,
+            0,
+            0
+          ],
+          "life_paid": 0,
+          "damage": 0,
+          "sacrifice": false
+        },
+        {
+          "seat": 2,
+          "source_id": 461,
+          "source": "Mountain",
+          "output": [
+            0,
+            0,
+            1
+          ],
+          "activation_cost": [
+            0,
+            0,
+            0
+          ],
+          "life_paid": 0,
+          "damage": 0,
+          "sacrifice": false
+        },
+        {
+          "seat": 2,
+          "source_id": 525,
+          "source": "Mountain",
+          "output": [
+            0,
+            0,
+            1
+          ],
+          "activation_cost": [
+            0,
+            0,
+            0
+          ],
+          "life_paid": 0,
+          "damage": 0,
+          "sacrifice": false
+        },
+        {
+          "seat": 2,
+          "source_id": 509,
+          "source": "Riptide Laboratory",
+          "output": [
+            1,
+            0,
+            0
+          ],
+          "activation_cost": [
+            0,
+            0,
+            0
+          ],
+          "life_paid": 0,
+          "damage": 0,
+          "sacrifice": false
+        },
+        {
+          "seat": 3,
+          "source_id": 443,
+          "source": "midrange:land:3",
+          "output": [
+            1,
+            0,
+            0
+          ],
+          "activation_cost": [
+            0,
+            0,
+            0
+          ],
+          "life_paid": 0,
+          "damage": 0,
+          "sacrifice": false
+        },
+        {
+          "seat": 3,
+          "source_id": 451,
+          "source": "midrange:land:36",
+          "output": [
+            1,
+            0,
+            0
+          ],
+          "activation_cost": [
+            0,
+            0,
+            0
+          ],
+          "life_paid": 0,
+          "damage": 0,
+          "sacrifice": false
+        },
+        {
+          "seat": 3,
+          "source_id": 453,
+          "source": "midrange:ramp:3",
+          "output": [
+            1,
+            0,
+            0
+          ],
+          "activation_cost": [
+            0,
+            0,
+            0
+          ],
+          "life_paid": 0,
+          "damage": 0,
+          "sacrifice": false
+        },
+        {
+          "seat": 1,
+          "source_id": 445,
+          "source": "spellslinger:land:30",
+          "output": [
+            1,
+            0,
+            0
+          ],
+          "activation_cost": [
+            0,
+            0,
+            0
+          ],
+          "life_paid": 0,
+          "damage": 0,
+          "sacrifice": false
+        },
+        {
+          "seat": 1,
+          "source_id": 455,
+          "source": "spellslinger:land:1",
+          "output": [
+            1,
+            0,
+            0
+          ],
+          "activation_cost": [
+            0,
+            0,
+            0
+          ],
+          "life_paid": 0,
+          "damage": 0,
+          "sacrifice": false
+        },
+        {
+          "seat": 1,
+          "source_id": 473,
+          "source": "spellslinger:land:8",
+          "output": [
+            1,
+            0,
+            0
+          ],
+          "activation_cost": [
+            0,
+            0,
+            0
+          ],
+          "life_paid": 0,
+          "damage": 0,
+          "sacrifice": false
+        },
+        {
+          "seat": 1,
+          "source_id": 499,
+          "source": "spellslinger:land:24",
+          "output": [
+            1,
+            0,
+            0
+          ],
+          "activation_cost": [
+            0,
+            0,
+            0
+          ],
+          "life_paid": 0,
+          "damage": 0,
+          "sacrifice": false
+        },
+        {
+          "seat": 1,
+          "source_id": 501,
+          "source": "spellslinger:ramp:1",
+          "output": [
+            1,
+            0,
+            0
+          ],
+          "activation_cost": [
+            0,
+            0,
+            0
+          ],
+          "life_paid": 0,
+          "damage": 0,
+          "sacrifice": false
+        },
+        {
+          "seat": 2,
+          "source_id": 441,
+          "source": "Island",
+          "output": [
+            0,
+            1,
+            0
+          ],
+          "activation_cost": [
+            0,
+            0,
+            0
+          ],
+          "life_paid": 0,
+          "damage": 0,
+          "sacrifice": false
+        },
+        {
+          "seat": 2,
+          "source_id": 449,
+          "source": "Island",
+          "output": [
+            0,
+            1,
+            0
+          ],
+          "activation_cost": [
+            0,
+            0,
+            0
+          ],
+          "life_paid": 0,
+          "damage": 0,
+          "sacrifice": false
+        },
+        {
+          "seat": 2,
+          "source_id": 461,
+          "source": "Mountain",
+          "output": [
+            0,
+            0,
+            1
+          ],
+          "activation_cost": [
+            0,
+            0,
+            0
+          ],
+          "life_paid": 0,
+          "damage": 0,
+          "sacrifice": false
+        },
+        {
+          "seat": 2,
+          "source_id": 525,
+          "source": "Mountain",
+          "output": [
+            0,
+            0,
+            1
+          ],
+          "activation_cost": [
+            0,
+            0,
+            0
+          ],
+          "life_paid": 0,
+          "damage": 0,
+          "sacrifice": false
+        },
+        {
+          "seat": 1,
+          "source_id": 445,
+          "source": "spellslinger:land:30",
+          "output": [
+            1,
+            0,
+            0
+          ],
+          "activation_cost": [
+            0,
+            0,
+            0
+          ],
+          "life_paid": 0,
+          "damage": 0,
+          "sacrifice": false
+        },
+        {
+          "seat": 1,
+          "source_id": 455,
+          "source": "spellslinger:land:1",
+          "output": [
+            1,
+            0,
+            0
+          ],
+          "activation_cost": [
+            0,
+            0,
+            0
+          ],
+          "life_paid": 0,
+          "damage": 0,
+          "sacrifice": false
+        },
+        {
+          "seat": 1,
+          "source_id": 473,
+          "source": "spellslinger:land:8",
+          "output": [
+            1,
+            0,
+            0
+          ],
+          "activation_cost": [
+            0,
+            0,
+            0
+          ],
+          "life_paid": 0,
+          "damage": 0,
+          "sacrifice": false
+        },
+        {
+          "seat": 0,
+          "source_id": 447,
+          "source": "control:land:27",
+          "output": [
+            1,
+            0,
+            0
+          ],
+          "activation_cost": [
+            0,
+            0,
+            0
+          ],
+          "life_paid": 0,
+          "damage": 0,
+          "sacrifice": false
+        },
+        {
+          "seat": 0,
+          "source_id": 459,
+          "source": "control:land:16",
+          "output": [
+            1,
+            0,
+            0
+          ],
+          "activation_cost": [
+            0,
+            0,
+            0
+          ],
+          "life_paid": 0,
+          "damage": 0,
+          "sacrifice": false
+        },
+        {
+          "seat": 0,
+          "source_id": 550,
+          "source": "control:land:14",
+          "output": [
+            1,
+            0,
+            0
+          ],
+          "activation_cost": [
+            0,
+            0,
+            0
+          ],
+          "life_paid": 0,
+          "damage": 0,
+          "sacrifice": false
+        },
+        {
+          "seat": 3,
+          "source_id": 443,
+          "source": "midrange:land:3",
+          "output": [
+            1,
+            0,
+            0
+          ],
+          "activation_cost": [
+            0,
+            0,
+            0
+          ],
+          "life_paid": 0,
+          "damage": 0,
+          "sacrifice": false
+        },
+        {
+          "seat": 3,
+          "source_id": 451,
+          "source": "midrange:land:36",
+          "output": [
+            1,
+            0,
+            0
+          ],
+          "activation_cost": [
+            0,
+            0,
+            0
+          ],
+          "life_paid": 0,
+          "damage": 0,
+          "sacrifice": false
+        },
+        {
+          "seat": 3,
+          "source_id": 453,
+          "source": "midrange:ramp:3",
+          "output": [
+            1,
+            0,
+            0
+          ],
+          "activation_cost": [
+            0,
+            0,
+            0
+          ],
+          "life_paid": 0,
+          "damage": 0,
+          "sacrifice": false
+        },
+        {
+          "seat": 1,
+          "source_id": 499,
+          "source": "spellslinger:land:24",
+          "output": [
+            1,
+            0,
+            0
+          ],
+          "activation_cost": [
+            0,
+            0,
+            0
+          ],
+          "life_paid": 0,
+          "damage": 0,
+          "sacrifice": false
+        },
+        {
+          "seat": 1,
+          "source_id": 501,
+          "source": "spellslinger:ramp:1",
+          "output": [
+            1,
+            0,
+            0
+          ],
+          "activation_cost": [
+            0,
+            0,
+            0
+          ],
+          "life_paid": 0,
+          "damage": 0,
+          "sacrifice": false
+        },
+        {
+          "seat": 3,
+          "source_id": 465,
+          "source": "midrange:land:5",
+          "output": [
+            1,
+            0,
+            0
+          ],
+          "activation_cost": [
+            0,
+            0,
+            0
+          ],
+          "life_paid": 0,
+          "damage": 0,
+          "sacrifice": false
+        },
+        {
+          "seat": 3,
+          "source_id": 467,
+          "source": "midrange:ramp:7",
+          "output": [
+            1,
+            0,
+            0
+          ],
+          "activation_cost": [
+            0,
+            0,
+            0
+          ],
+          "life_paid": 0,
+          "damage": 0,
+          "sacrifice": false
+        },
+        {
+          "seat": 0,
+          "source_id": 447,
+          "source": "control:land:27",
+          "output": [
+            1,
+            0,
+            0
+          ],
+          "activation_cost": [
+            0,
+            0,
+            0
+          ],
+          "life_paid": 0,
+          "damage": 0,
+          "sacrifice": false
+        },
+        {
+          "seat": 0,
+          "source_id": 459,
+          "source": "control:land:16",
+          "output": [
+            1,
+            0,
+            0
+          ],
+          "activation_cost": [
+            0,
+            0,
+            0
+          ],
+          "life_paid": 0,
+          "damage": 0,
+          "sacrifice": false
+        },
+        {
+          "seat": 0,
+          "source_id": 550,
+          "source": "control:land:14",
+          "output": [
+            1,
+            0,
+            0
+          ],
+          "activation_cost": [
+            0,
+            0,
+            0
+          ],
+          "life_paid": 0,
+          "damage": 0,
+          "sacrifice": false
+        },
+        {
+          "seat": 0,
+          "source_id": 552,
+          "source": "control:ramp:6",
+          "output": [
+            1,
+            0,
+            0
+          ],
+          "activation_cost": [
+            0,
+            0,
+            0
+          ],
+          "life_paid": 0,
+          "damage": 0,
+          "sacrifice": false
+        },
+        {
+          "seat": 2,
+          "source_id": 441,
+          "source": "Island",
+          "output": [
+            0,
+            1,
+            0
+          ],
+          "activation_cost": [
+            0,
+            0,
+            0
+          ],
+          "life_paid": 0,
+          "damage": 0,
+          "sacrifice": false
+        },
+        {
+          "seat": 2,
+          "source_id": 449,
+          "source": "Island",
+          "output": [
+            0,
+            1,
+            0
+          ],
+          "activation_cost": [
+            0,
+            0,
+            0
+          ],
+          "life_paid": 0,
+          "damage": 0,
+          "sacrifice": false
+        },
+        {
+          "seat": 2,
+          "source_id": 461,
+          "source": "Mountain",
+          "output": [
+            0,
+            0,
+            1
+          ],
+          "activation_cost": [
+            0,
+            0,
+            0
+          ],
+          "life_paid": 0,
+          "damage": 0,
+          "sacrifice": false
+        },
+        {
+          "seat": 2,
+          "source_id": 525,
+          "source": "Mountain",
+          "output": [
+            0,
+            0,
+            1
+          ],
+          "activation_cost": [
+            0,
+            0,
+            0
+          ],
+          "life_paid": 0,
+          "damage": 0,
+          "sacrifice": false
+        },
+        {
+          "seat": 3,
+          "source_id": 443,
+          "source": "midrange:land:3",
+          "output": [
+            1,
+            0,
+            0
+          ],
+          "activation_cost": [
+            0,
+            0,
+            0
+          ],
+          "life_paid": 0,
+          "damage": 0,
+          "sacrifice": false
+        },
+        {
+          "seat": 3,
+          "source_id": 451,
+          "source": "midrange:land:36",
+          "output": [
+            1,
+            0,
+            0
+          ],
+          "activation_cost": [
+            0,
+            0,
+            0
+          ],
+          "life_paid": 0,
+          "damage": 0,
+          "sacrifice": false
+        },
+        {
+          "seat": 3,
+          "source_id": 453,
+          "source": "midrange:ramp:3",
+          "output": [
+            1,
+            0,
+            0
+          ],
+          "activation_cost": [
+            0,
+            0,
+            0
+          ],
+          "life_paid": 0,
+          "damage": 0,
+          "sacrifice": false
+        },
+        {
+          "seat": 1,
+          "source_id": 445,
+          "source": "spellslinger:land:30",
+          "output": [
+            1,
+            0,
+            0
+          ],
+          "activation_cost": [
+            0,
+            0,
+            0
+          ],
+          "life_paid": 0,
+          "damage": 0,
+          "sacrifice": false
+        },
+        {
+          "seat": 1,
+          "source_id": 455,
+          "source": "spellslinger:land:1",
+          "output": [
+            1,
+            0,
+            0
+          ],
+          "activation_cost": [
+            0,
+            0,
+            0
+          ],
+          "life_paid": 0,
+          "damage": 0,
+          "sacrifice": false
+        },
+        {
+          "seat": 1,
+          "source_id": 473,
+          "source": "spellslinger:land:8",
+          "output": [
+            1,
+            0,
+            0
+          ],
+          "activation_cost": [
+            0,
+            0,
+            0
+          ],
+          "life_paid": 0,
+          "damage": 0,
+          "sacrifice": false
+        },
+        {
+          "seat": 0,
+          "source_id": 447,
+          "source": "control:land:27",
+          "output": [
+            1,
+            0,
+            0
+          ],
+          "activation_cost": [
+            0,
+            0,
+            0
+          ],
+          "life_paid": 0,
+          "damage": 0,
+          "sacrifice": false
+        },
+        {
+          "seat": 0,
+          "source_id": 459,
+          "source": "control:land:16",
+          "output": [
+            1,
+            0,
+            0
+          ],
+          "activation_cost": [
+            0,
+            0,
+            0
+          ],
+          "life_paid": 0,
+          "damage": 0,
+          "sacrifice": false
+        },
+        {
+          "seat": 0,
+          "source_id": 550,
+          "source": "control:land:14",
+          "output": [
+            1,
+            0,
+            0
+          ],
+          "activation_cost": [
+            0,
+            0,
+            0
+          ],
+          "life_paid": 0,
+          "damage": 0,
+          "sacrifice": false
+        },
+        {
+          "seat": 0,
+          "source_id": 552,
+          "source": "control:ramp:6",
+          "output": [
+            1,
+            0,
+            0
+          ],
+          "activation_cost": [
+            0,
+            0,
+            0
+          ],
+          "life_paid": 0,
+          "damage": 0,
+          "sacrifice": false
+        },
+        {
+          "seat": 3,
+          "source_id": 443,
+          "source": "midrange:land:3",
+          "output": [
+            1,
+            0,
+            0
+          ],
+          "activation_cost": [
+            0,
+            0,
+            0
+          ],
+          "life_paid": 0,
+          "damage": 0,
+          "sacrifice": false
+        },
+        {
+          "seat": 3,
+          "source_id": 451,
+          "source": "midrange:land:36",
+          "output": [
+            1,
+            0,
+            0
+          ],
+          "activation_cost": [
+            0,
+            0,
+            0
+          ],
+          "life_paid": 0,
+          "damage": 0,
+          "sacrifice": false
+        },
+        {
+          "seat": 3,
+          "source_id": 453,
+          "source": "midrange:ramp:3",
+          "output": [
+            1,
+            0,
+            0
+          ],
+          "activation_cost": [
+            0,
+            0,
+            0
+          ],
+          "life_paid": 0,
+          "damage": 0,
+          "sacrifice": false
+        },
+        {
+          "seat": 3,
+          "source_id": 465,
+          "source": "midrange:land:5",
+          "output": [
+            1,
+            0,
+            0
+          ],
+          "activation_cost": [
+            0,
+            0,
+            0
+          ],
+          "life_paid": 0,
+          "damage": 0,
+          "sacrifice": false
+        },
+        {
+          "seat": 3,
+          "source_id": 467,
+          "source": "midrange:ramp:7",
+          "output": [
+            1,
+            0,
+            0
+          ],
+          "activation_cost": [
+            0,
+            0,
+            0
+          ],
+          "life_paid": 0,
+          "damage": 0,
+          "sacrifice": false
+        },
+        {
+          "seat": 3,
+          "source_id": 493,
+          "source": "midrange:ramp:1",
+          "output": [
+            1,
+            0,
+            0
+          ],
+          "activation_cost": [
+            0,
+            0,
+            0
+          ],
+          "life_paid": 0,
+          "damage": 0,
+          "sacrifice": false
+        },
+        {
+          "seat": 3,
+          "source_id": 511,
+          "source": "midrange:land:26",
+          "output": [
+            1,
+            0,
+            0
+          ],
+          "activation_cost": [
+            0,
+            0,
+            0
+          ],
+          "life_paid": 0,
+          "damage": 0,
+          "sacrifice": false
+        },
+        {
+          "seat": 1,
+          "source_id": 445,
+          "source": "spellslinger:land:30",
+          "output": [
+            1,
+            0,
+            0
+          ],
+          "activation_cost": [
+            0,
+            0,
+            0
+          ],
+          "life_paid": 0,
+          "damage": 0,
+          "sacrifice": false
+        },
+        {
+          "seat": 1,
+          "source_id": 455,
+          "source": "spellslinger:land:1",
+          "output": [
+            1,
+            0,
+            0
+          ],
+          "activation_cost": [
+            0,
+            0,
+            0
+          ],
+          "life_paid": 0,
+          "damage": 0,
+          "sacrifice": false
+        },
+        {
+          "seat": 0,
+          "source_id": 447,
+          "source": "control:land:27",
+          "output": [
+            1,
+            0,
+            0
+          ],
+          "activation_cost": [
+            0,
+            0,
+            0
+          ],
+          "life_paid": 0,
+          "damage": 0,
+          "sacrifice": false
+        },
+        {
+          "seat": 0,
+          "source_id": 459,
+          "source": "control:land:16",
+          "output": [
+            1,
+            0,
+            0
+          ],
+          "activation_cost": [
+            0,
+            0,
+            0
+          ],
+          "life_paid": 0,
+          "damage": 0,
+          "sacrifice": false
+        },
+        {
+          "seat": 0,
+          "source_id": 550,
+          "source": "control:land:14",
+          "output": [
+            1,
+            0,
+            0
+          ],
+          "activation_cost": [
+            0,
+            0,
+            0
+          ],
+          "life_paid": 0,
+          "damage": 0,
+          "sacrifice": false
+        },
+        {
+          "seat": 0,
+          "source_id": 552,
+          "source": "control:ramp:6",
+          "output": [
+            1,
+            0,
+            0
+          ],
+          "activation_cost": [
+            0,
+            0,
+            0
+          ],
+          "life_paid": 0,
+          "damage": 0,
+          "sacrifice": false
+        }
+      ],
+      "planner_max_states": 33,
+      "planner_budget": 20000,
+      "cache_hits": 311,
+      "limits": [
+        "typed priority supplied by v10; incomplete card/step coverage remains",
+        "one detailed deck; U/R/colorless source subset; synthetic sources approximate"
+      ]
+    },
+    "v10": {
+      "typed_priority_live": true,
+      "passes": 461,
+      "triggers_queued": 4,
+      "triggers_resolved": 4,
+      "activations_resolved": 0,
+      "fizzled": 0,
+      "max_depth": 5,
+      "remaining_frames": 0,
+      "pending_triggers": 0,
+      "limits": [
+        "one detailed deck",
+        "coarse step/combat timing",
+        "Mind Stone draw plus explicitly registered nonmana activations; not all named abilities"
+      ]
+    }
+  }
+}

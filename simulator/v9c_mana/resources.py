@@ -44,6 +44,7 @@ class Plan:
     activations: tuple[Activation, ...]
     unused: tuple[int, int, int]
     states: int
+    excluded: tuple[int, ...] = ()
 
 
 def spend(pool, cost):
@@ -103,17 +104,19 @@ class Resources:
         p = self.table.players[seat]
         return (seat, p.life, p.eliminated_round, self.pool(seat), self.sources(seat), self.max_states)
 
-    def plan(self, seat, cost):
+    def plan(self, seat, cost, excluded=()):
         if not isinstance(cost, Cost): raise TypeError('Expected U/R/generic Cost')
+        excluded = tuple(sorted(set(excluded)))
         signature = self.signature(seat)
-        key = signature, cost
+        key = signature, cost, excluded
         if key in self._cache:
             self.cache_hits += 1
             return self._cache[key]
         p = self.table.players[seat]
         if p.eliminated_round is not None: return None
         groups = defaultdict(list)
-        for oid, abilities in self.sources(seat): groups[abilities].append(oid)
+        for oid, abilities in self.sources(seat):
+            if oid not in excluded: groups[abilities].append(oid)
         groups = tuple((abilities, tuple(sorted(ids))) for abilities, ids in groups.items())
         used = (0,) * len(groups)
         serial = count(); queue = [(0, 0, 0, next(serial), used, self.pool(seat), p.life, ())]
@@ -127,7 +130,7 @@ class Resources:
             if states > self.max_states: raise SafetyStop('mana_search_budget')
             paid = spend(pool, cost)
             if paid:
-                plan = Plan(seat, signature, cost, actions, paid[0], states)
+                plan = Plan(seat, signature, cost, actions, paid[0], states, excluded)
                 self.max_states_seen = max(self.max_states_seen, states)
                 if len(self._cache) > 512: self._cache.clear()
                 self._cache[key] = plan
@@ -183,11 +186,12 @@ class Resources:
                         + (' (sacrificed)' if ability.sacrifice else ''))
         if not defer_sba and p.life <= 0: self.table.eliminate(p, 'mana_ability_life')
 
-    def pay(self, seat, cost, plan=None):
-        plan = plan or self.plan(seat, cost)
+    def pay(self, seat, cost, plan=None, excluded=()):
+        excluded = tuple(sorted(set(excluded)))
+        plan = plan or self.plan(seat, cost, excluded)
         if plan is None: raise ValueError('Cannot pay mana cost')
         if (plan.seat != seat or plan.cost != cost or plan.signature != self.signature(seat)
-                or plan != self.plan(seat, cost)):
+                or plan.excluded != excluded or plan != self.plan(seat, cost, excluded)):
             raise ValueError('Stale mana plan')
         # The entire ordered sequence is validated by the immutable signature.
         # Planning failure/budget stops happen before any mutation.

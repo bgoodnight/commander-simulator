@@ -1,0 +1,21 @@
+{
+  "README.md": "212f03563e7d5c64a7caf211057b85fcfeb24f25d4f894778b0805cc3f75415d",
+  "run_all_tests.py": "077712ac6a09be4cd6173399b568c121a1d25a26e47617d21820f06e05c80ef6",
+  "simulator/v9c_mana/resources.py": "85bdf0b962bcf7bcc788b1e74c1e79fe26a6894ab25656165840082d46e57499",
+  "simulator/v10_priority/01_original_seat.json": "23f40df96dc771fe6f0431ed76c56826d549335fca5b90fcdc10e0b19a215be1",
+  "simulator/v10_priority/01_original_seat.md": "bd9a384b7c9a8debb416c31041eac647f2a56d03102bedce713ce69e1bd9b322",
+  "simulator/v10_priority/02_right_of_aggro.json": "82b383ed21e9fe161e9c758a41dd82cc185af56bf5174f1a84fdb50501fa5aec",
+  "simulator/v10_priority/02_right_of_aggro.md": "7833a7912e435002103ab8cbd29d3256ae696212f40df9763a142017408cf55a",
+  "simulator/v10_priority/03_third_seat.json": "d8f8635a31794c94d0d56062ff5d878ba8fa56db0da86ad4c2fdcc6ffca77b32",
+  "simulator/v10_priority/03_third_seat.md": "44f4c8363d8de6b58026baf2ad0b299dcaa90879e129d24a136e3bb9a4b15766",
+  "simulator/v10_priority/04_forced_seat_three.json": "29f7d3695c7ee1ae63a3b2368a23d04a0ecda1281f4f1ecaf3de931593b7caa1",
+  "simulator/v10_priority/04_forced_seat_three.md": "94a9a6d0cb5a6c320dec8322dbf89782f883f5f44ecd3af9e7280ffa257ea397",
+  "simulator/v10_priority/ASSESSMENT.md": "be83c5cd9de0d90c553421bd9d9244e6024f10d2b7748db80e1fcd6bff47791f",
+  "simulator/v10_priority/README.md": "8c8287a0f9e01bb7078655c61d8030bdfdb227ec69870cf9ed0a34e64725ee38",
+  "simulator/v10_priority/abilities.py": "9d7ac2634d447525dfee60b3a8e408feeeace7e3547042584fa0da33206f149d",
+  "simulator/v10_priority/gameplay.py": "b7004a1bb869d3e00a0360e8f55fac6e7e4f0bdf33369a9c0e61a4c3dd42708c",
+  "simulator/v10_priority/priority.py": "c5e3b452de99b33d731c5239a8bb074a08959b6c278963907aa84ecbba7315d3",
+  "simulator/v10_priority/tests.py": "47dd328a9fc6697bea778d1368cd5a1254534196cc4d1c6293476b912eacad32",
+  "simulator/v10_priority/validate.py": "acca28acfbb62523feccc4052321e26c14ddeab27f75c05bf293f66a498dd06e",
+  "simulator/v10_priority/validation_results.json": "92db4c69cba27eac84df439b4636ae749337a352635c37269add23595c021cf1"
+}

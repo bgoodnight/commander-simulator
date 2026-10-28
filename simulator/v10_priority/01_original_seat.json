@@ -1,0 +1,8945 @@
+{
+  "record": {
+    "case": "01_original_seat",
+    "seed": 102,
+    "providers": [
+      "magnus",
+      "aggro",
+      "control",
+      "combo"
+    ],
+    "forced_opening": false,
+    "reason": "turn_limit",
+    "safety_stop": null,
+    "consistent": true,
+    "magnus_life": 26,
+    "magnus_casts": 4
+  },
+  "rounds": [
+    {
+      "round": 1,
+      "players": [
+        {
+          "round": 1,
+          "life": 40,
+          "lands": 1,
+          "sources": 1,
+          "creatures": 0,
+          "power": 0,
+          "engines": 0,
+          "combo": 0,
+          "clocks": 0,
+          "hand": 7,
+          "public_threat": 5.6,
+          "objective_proximity": 5.6,
+          "cards_cast": 0,
+          "alive": true,
+          "mana_pool": [
+            0,
+            0,
+            0
+          ],
+          "ready_source_ids": [],
+          "mana_capacity_upper_bound": 0,
+          "tokens": 0,
+          "named_hand": [
+            "Pink Horror",
+            "Harmonic Prodigy",
+            "Underworld Breach",
+            "Counterspell",
+            "Arcane Signet",
+            "Muddle the Mixture",
+            "Voidmage Prodigy"
+          ],
+          "commander_zone": true,
+          "commander_casts": 0,
+          "unsupported_in_hand": 4
+        },
+        {
+          "round": 1,
+          "life": 40,
+          "lands": 1,
+          "sources": 1,
+          "creatures": 1,
+          "power": 1,
+          "engines": 0,
+          "combo": 0,
+          "clocks": 0,
+          "hand": 6,
+          "public_threat": 6.6,
+          "objective_proximity": 6.6,
+          "cards_cast": 1,
+          "alive": true,
+          "mana_pool": [
+            0,
+            0,
+            0
+          ],
+          "ready_source_ids": [],
+          "mana_capacity_upper_bound": 0
+        },
+        {
+          "round": 1,
+          "life": 40,
+          "lands": 1,
+          "sources": 1,
+          "creatures": 0,
+          "power": 0,
+          "engines": 0,
+          "combo": 0,
+          "clocks": 0,
+          "hand": 7,
+          "public_threat": 5.6,
+          "objective_proximity": 5.6,
+          "cards_cast": 0,
+          "alive": true,
+          "mana_pool": [
+            0,
+            0,
+            0
+          ],
+          "ready_source_ids": [
+            441
+          ],
+          "mana_capacity_upper_bound": 1
+        },
+        {
+          "round": 1,
+          "life": 40,
+          "lands": 1,
+          "sources": 1,
+          "creatures": 0,
+          "power": 0,
+          "engines": 0,
+          "combo": 0,
+          "clocks": 0,
+          "hand": 7,
+          "public_threat": 5.6,
+          "objective_proximity": 5.6,
+          "cards_cast": 0,
+          "alive": true,
+          "mana_pool": [
+            0,
+            0,
+            0
+          ],
+          "ready_source_ids": [
+            447
+          ],
+          "mana_capacity_upper_bound": 1
+        }
+      ],
+      "rankings": {
+        "1": 1,
+        "0": 2,
+        "2": 3,
+        "3": 4
+      }
+    },
+    {
+      "round": 2,
+      "players": [
+        {
+          "round": 2,
+          "life": 40,
+          "lands": 1,
+          "sources": 1,
+          "creatures": 0,
+          "power": 0,
+          "engines": 0,
+          "combo": 0,
+          "clocks": 0,
+          "hand": 7,
+          "public_threat": 5.6,
+          "objective_proximity": 5.6,
+          "cards_cast": 0,
+          "alive": true,
+          "mana_pool": [
+            0,
+            0,
+            0
+          ],
+          "ready_source_ids": [
+            449
+          ],
+          "mana_capacity_upper_bound": 1,
+          "tokens": 0,
+          "named_hand": [
+            "Pink Horror",
+            "Harmonic Prodigy",
+            "Underworld Breach",
+            "Counterspell",
+            "Arcane Signet",
+            "Muddle the Mixture",
+            "Voidmage Prodigy"
+          ],
+          "commander_zone": true,
+          "commander_casts": 0,
+          "unsupported_in_hand": 4
+        },
+        {
+          "round": 2,
+          "life": 40,
+          "lands": 2,
+          "sources": 2,
+          "creatures": 2,
+          "power": 3,
+          "engines": 0,
+          "combo": 0,
+          "clocks": 0,
+          "hand": 5,
+          "public_threat": 9.1,
+          "objective_proximity": 9.05,
+          "cards_cast": 2,
+          "alive": true,
+          "mana_pool": [
+            0,
+            0,
+            0
+          ],
+          "ready_source_ids": [],
+          "mana_capacity_upper_bound": 0
+        },
+        {
+          "round": 2,
+          "life": 39,
+          "lands": 2,
+          "sources": 2,
+          "creatures": 0,
+          "power": 0,
+          "engines": 1,
+          "combo": 0,
+          "clocks": 0,
+          "hand": 6,
+          "public_threat": 8.7,
+          "objective_proximity": 8.73,
+          "cards_cast": 1,
+          "alive": true,
+          "mana_pool": [
+            0,
+            0,
+            0
+          ],
+          "ready_source_ids": [],
+          "mana_capacity_upper_bound": 0
+        },
+        {
+          "round": 2,
+          "life": 40,
+          "lands": 2,
+          "sources": 3,
+          "creatures": 0,
+          "power": 0,
+          "engines": 0,
+          "combo": 0,
+          "clocks": 0,
+          "hand": 6,
+          "public_threat": 6.7,
+          "objective_proximity": 6.7,
+          "cards_cast": 1,
+          "alive": true,
+          "mana_pool": [
+            0,
+            0,
+            0
+          ],
+          "ready_source_ids": [
+            461
+          ],
+          "mana_capacity_upper_bound": 1
+        }
+      ],
+      "rankings": {
+        "1": 1,
+        "2": 2,
+        "3": 3,
+        "0": 4
+      }
+    },
+    {
+      "round": 3,
+      "players": [
+        {
+          "round": 3,
+          "life": 40,
+          "lands": 1,
+          "sources": 1,
+          "creatures": 0,
+          "power": 0,
+          "engines": 0,
+          "combo": 0,
+          "clocks": 0,
+          "hand": 7,
+          "public_threat": 5.6,
+          "objective_proximity": 5.6,
+          "cards_cast": 0,
+          "alive": true,
+          "mana_pool": [
+            0,
+            0,
+            0
+          ],
+          "ready_source_ids": [
+            449
+          ],
+          "mana_capacity_upper_bound": 1,
+          "tokens": 0,
+          "named_hand": [
+            "Pink Horror",
+            "Harmonic Prodigy",
+            "Underworld Breach",
+            "Counterspell",
+            "Arcane Signet",
+            "Muddle the Mixture",
+            "Voidmage Prodigy"
+          ],
+          "commander_zone": true,
+          "commander_casts": 0,
+          "unsupported_in_hand": 4
+        },
+        {
+          "round": 3,
+          "life": 40,
+          "lands": 3,
+          "sources": 3,
+          "creatures": 2,
+          "power": 7,
+          "engines": 0,
+          "combo": 0,
+          "clocks": 0,
+          "hand": 4,
+          "public_threat": 12.4,
+          "objective_proximity": 12.45,
+          "cards_cast": 3,
+          "alive": true,
+          "mana_pool": [
+            0,
+            0,
+            0
+          ],
+          "ready_source_ids": [
+            470
+          ],
+          "mana_capacity_upper_bound": 1
+        },
+        {
+          "round": 3,
+          "life": 32,
+          "lands": 3,
+          "sources": 3,
+          "creatures": 0,
+          "power": 0,
+          "engines": 2,
+          "combo": 0,
+          "clocks": 0,
+          "hand": 6,
+          "public_threat": 11.7,
+          "objective_proximity": 14.24,
+          "cards_cast": 2,
+          "alive": true,
+          "mana_pool": [
+            0,
+            0,
+            0
+          ],
+          "ready_source_ids": [],
+          "mana_capacity_upper_bound": 0
+        },
+        {
+          "round": 3,
+          "life": 40,
+          "lands": 3,
+          "sources": 4,
+          "creatures": 1,
+          "power": 2,
+          "engines": 1,
+          "combo": 0,
+          "clocks": 0,
+          "hand": 6,
+          "public_threat": 12.2,
+          "objective_proximity": 14.75,
+          "cards_cast": 3,
+          "alive": true,
+          "mana_pool": [
+            0,
+            0,
+            0
+          ],
+          "ready_source_ids": [],
+          "mana_capacity_upper_bound": 0
+        }
+      ],
+      "rankings": {
+        "1": 1,
+        "3": 2,
+        "2": 3,
+        "0": 4
+      }
+    },
+    {
+      "round": 4,
+      "players": [
+        {
+          "round": 4,
+          "life": 37,
+          "lands": 2,
+          "sources": 3,
+          "creatures": 0,
+          "power": 0,
+          "engines": 0,
+          "combo": 0,
+          "clocks": 0,
+          "hand": 6,
+          "public_threat": 6.5,
+          "objective_proximity": 6.49,
+          "cards_cast": 1,
+          "alive": true,
+          "mana_pool": [
+            0,
+            0,
+            0
+          ],
+          "ready_source_ids": [
+            513
+          ],
+          "mana_capacity_upper_bound": 1,
+          "tokens": 0,
+          "named_hand": [
+            "Pink Horror",
+            "Harmonic Prodigy",
+            "Underworld Breach",
+            "Counterspell",
+            "Muddle the Mixture",
+            "Voidmage Prodigy"
+          ],
+          "commander_zone": true,
+          "commander_casts": 0,
+          "unsupported_in_hand": 4
+        },
+        {
+          "round": 4,
+          "life": 40,
+          "lands": 4,
+          "sources": 4,
+          "creatures": 2,
+          "power": 6,
+          "engines": 0,
+          "combo": 0,
+          "clocks": 0,
+          "hand": 3,
+          "public_threat": 12.1,
+          "objective_proximity": 12.1,
+          "cards_cast": 4,
+          "alive": true,
+          "mana_pool": [
+            0,
+            0,
+            0
+          ],
+          "ready_source_ids": [],
+          "mana_capacity_upper_bound": 0
+        },
+        {
+          "round": 4,
+          "life": 32,
+          "lands": 4,
+          "sources": 4,
+          "creatures": 0,
+          "power": 0,
+          "engines": 2,
+          "combo": 0,
+          "clocks": 0,
+          "hand": 7,
+          "public_threat": 12.7,
+          "objective_proximity": 12.74,
+          "cards_cast": 4,
+          "alive": true,
+          "mana_pool": [
+            0,
+            0,
+            0
+          ],
+          "ready_source_ids": [],
+          "mana_capacity_upper_bound": 0
+        },
+        {
+          "round": 4,
+          "life": 40,
+          "lands": 4,
+          "sources": 6,
+          "creatures": 1,
+          "power": 2,
+          "engines": 2,
+          "combo": 0,
+          "clocks": 0,
+          "hand": 4,
+          "public_threat": 15.8,
+          "objective_proximity": 18.35,
+          "cards_cast": 5,
+          "alive": true,
+          "mana_pool": [
+            0,
+            0,
+            0
+          ],
+          "ready_source_ids": [],
+          "mana_capacity_upper_bound": 0
+        }
+      ],
+      "rankings": {
+        "3": 1,
+        "2": 2,
+        "1": 3,
+        "0": 4
+      }
+    },
+    {
+      "round": 5,
+      "players": [
+        {
+          "round": 5,
+          "life": 37,
+          "lands": 2,
+          "sources": 3,
+          "creatures": 0,
+          "power": 0,
+          "engines": 0,
+          "combo": 0,
+          "clocks": 0,
+          "hand": 6,
+          "public_threat": 6.5,
+          "objective_proximity": 6.49,
+          "cards_cast": 2,
+          "alive": true,
+          "mana_pool": [
+            0,
+            0,
+            0
+          ],
+          "ready_source_ids": [
+            511
+          ],
+          "mana_capacity_upper_bound": 1,
+          "tokens": 0,
+          "named_hand": [
+            "Pink Horror",
+            "Underworld Breach",
+            "Counterspell",
+            "Muddle the Mixture",
+            "Voidmage Prodigy",
+            "Heralds of Tzeentch"
+          ],
+          "commander_zone": true,
+          "commander_casts": 0,
+          "unsupported_in_hand": 5
+        },
+        {
+          "round": 5,
+          "life": 40,
+          "lands": 4,
+          "sources": 4,
+          "creatures": 3,
+          "power": 9,
+          "engines": 0,
+          "combo": 0,
+          "clocks": 0,
+          "hand": 3,
+          "public_threat": 14.9,
+          "objective_proximity": 14.9,
+          "cards_cast": 5,
+          "alive": true,
+          "mana_pool": [
+            0,
+            0,
+            0
+          ],
+          "ready_source_ids": [],
+          "mana_capacity_upper_bound": 0
+        },
+        {
+          "round": 5,
+          "life": 27,
+          "lands": 5,
+          "sources": 5,
+          "creatures": 1,
+          "power": 1,
+          "engines": 2,
+          "combo": 0,
+          "clocks": 0,
+          "hand": 7,
+          "public_threat": 14.4,
+          "objective_proximity": 16.89,
+          "cards_cast": 6,
+          "alive": true,
+          "mana_pool": [
+            0,
+            0,
+            0
+          ],
+          "ready_source_ids": [],
+          "mana_capacity_upper_bound": 0
+        },
+        {
+          "round": 5,
+          "life": 37,
+          "lands": 5,
+          "sources": 8,
+          "creatures": 1,
+          "power": 2,
+          "engines": 2,
+          "combo": 0,
+          "clocks": 0,
+          "hand": 4,
+          "public_threat": 17.0,
+          "objective_proximity": 17.04,
+          "cards_cast": 7,
+          "alive": true,
+          "mana_pool": [
+            0,
+            0,
+            0
+          ],
+          "ready_source_ids": [
+            507,
+            535,
+            537
+          ],
+          "mana_capacity_upper_bound": 3
+        }
+      ],
+      "rankings": {
+        "3": 1,
+        "1": 2,
+        "2": 3,
+        "0": 4
+      }
+    },
+    {
+      "round": 6,
+      "players": [
+        {
+          "round": 6,
+          "life": 37,
+          "lands": 2,
+          "sources": 3,
+          "creatures": 0,
+          "power": 0,
+          "engines": 0,
+          "combo": 0,
+          "clocks": 0,
+          "hand": 7,
+          "public_threat": 6.8,
+          "objective_proximity": 6.79,
+          "cards_cast": 2,
+          "alive": true,
+          "mana_pool": [
+            0,
+            0,
+            0
+          ],
+          "ready_source_ids": [
+            449,
+            511,
+            513
+          ],
+          "mana_capacity_upper_bound": 3,
+          "tokens": 0,
+          "named_hand": [
+            "Pink Horror",
+            "Underworld Breach",
+            "Counterspell",
+            "Muddle the Mixture",
+            "Voidmage Prodigy",
+            "Heralds of Tzeentch",
+            "Reiterate"
+          ],
+          "commander_zone": true,
+          "commander_casts": 0,
+          "unsupported_in_hand": 6
+        },
+        {
+          "round": 6,
+          "life": 40,
+          "lands": 4,
+          "sources": 4,
+          "creatures": 3,
+          "power": 11,
+          "engines": 0,
+          "combo": 0,
+          "clocks": 0,
+          "hand": 3,
+          "public_threat": 16.4,
+          "objective_proximity": 16.4,
+          "cards_cast": 6,
+          "alive": true,
+          "mana_pool": [
+            0,
+            0,
+            0
+          ],
+          "ready_source_ids": [],
+          "mana_capacity_upper_bound": 0
+        },
+        {
+          "round": 6,
+          "life": 21,
+          "lands": 6,
+          "sources": 6,
+          "creatures": 2,
+          "power": 3,
+          "engines": 4,
+          "combo": 0,
+          "clocks": 0,
+          "hand": 7,
+          "public_threat": 22.3,
+          "objective_proximity": 24.82,
+          "cards_cast": 8,
+          "alive": true,
+          "mana_pool": [
+            0,
+            0,
+            0
+          ],
+          "ready_source_ids": [],
+          "mana_capacity_upper_bound": 0
+        },
+        {
+          "round": 6,
+          "life": 37,
+          "lands": 6,
+          "sources": 10,
+          "creatures": 1,
+          "power": 6,
+          "engines": 1,
+          "combo": 0,
+          "clocks": 0,
+          "hand": 3,
+          "public_threat": 18.3,
+          "objective_proximity": 18.34,
+          "cards_cast": 9,
+          "alive": true,
+          "mana_pool": [
+            0,
+            0,
+            0
+          ],
+          "ready_source_ids": [
+            559
+          ],
+          "mana_capacity_upper_bound": 1
+        }
+      ],
+      "rankings": {
+        "2": 1,
+        "3": 2,
+        "1": 3,
+        "0": 4
+      }
+    },
+    {
+      "round": 7,
+      "players": [
+        {
+          "round": 7,
+          "life": 37,
+          "lands": 3,
+          "sources": 4,
+          "creatures": 0,
+          "power": 0,
+          "engines": 0,
+          "combo": 0,
+          "clocks": 0,
+          "hand": 6,
+          "public_threat": 7.2,
+          "objective_proximity": 7.19,
+          "cards_cast": 3,
+          "alive": true,
+          "mana_pool": [
+            0,
+            0,
+            0
+          ],
+          "ready_source_ids": [
+            449,
+            511,
+            513,
+            590
+          ],
+          "mana_capacity_upper_bound": 4,
+          "tokens": 0,
+          "named_hand": [
+            "Pink Horror",
+            "Underworld Breach",
+            "Muddle the Mixture",
+            "Voidmage Prodigy",
+            "Heralds of Tzeentch",
+            "Reiterate"
+          ],
+          "commander_zone": true,
+          "commander_casts": 0,
+          "unsupported_in_hand": 6
+        },
+        {
+          "round": 7,
+          "life": 40,
+          "lands": 4,
+          "sources": 4,
+          "creatures": 3,
+          "power": 5,
+          "engines": 0,
+          "combo": 0,
+          "clocks": 0,
+          "hand": 3,
+          "public_threat": 11.9,
+          "objective_proximity": 11.9,
+          "cards_cast": 7,
+          "alive": true,
+          "mana_pool": [
+            0,
+            0,
+            0
+          ],
+          "ready_source_ids": [],
+          "mana_capacity_upper_bound": 0
+        },
+        {
+          "round": 7,
+          "life": 15,
+          "lands": 7,
+          "sources": 7,
+          "creatures": 2,
+          "power": 2,
+          "engines": 3,
+          "combo": 0,
+          "clocks": 0,
+          "hand": 6,
+          "public_threat": 18.8,
+          "objective_proximity": 21.25,
+          "cards_cast": 10,
+          "alive": true,
+          "mana_pool": [
+            0,
+            0,
+            0
+          ],
+          "ready_source_ids": [
+            568
+          ],
+          "mana_capacity_upper_bound": 1
+        },
+        {
+          "round": 7,
+          "life": 37,
+          "lands": 7,
+          "sources": 11,
+          "creatures": 2,
+          "power": 7,
+          "engines": 2,
+          "combo": 0,
+          "clocks": 0,
+          "hand": 2,
+          "public_threat": 22.8,
+          "objective_proximity": 22.84,
+          "cards_cast": 10,
+          "alive": true,
+          "mana_pool": [
+            0,
+            0,
+            0
+          ],
+          "ready_source_ids": [
+            461,
+            474,
+            505,
+            507,
+            535,
+            537,
+            557,
+            559,
+            586
+          ],
+          "mana_capacity_upper_bound": 9
+        }
+      ],
+      "rankings": {
+        "3": 1,
+        "2": 2,
+        "1": 3,
+        "0": 4
+      }
+    },
+    {
+      "round": 8,
+      "players": [
+        {
+          "round": 8,
+          "life": 36,
+          "lands": 4,
+          "sources": 5,
+          "creatures": 1,
+          "power": 4,
+          "engines": 0,
+          "combo": 0,
+          "clocks": 0,
+          "hand": 6,
+          "public_threat": 11.4,
+          "objective_proximity": 11.37,
+          "cards_cast": 4,
+          "alive": true,
+          "mana_pool": [
+            0,
+            0,
+            0
+          ],
+          "ready_source_ids": [],
+          "mana_capacity_upper_bound": 0,
+          "tokens": 0,
+          "named_hand": [
+            "Pink Horror",
+            "Underworld Breach",
+            "Muddle the Mixture",
+            "Voidmage Prodigy",
+            "Heralds of Tzeentch",
+            "Reiterate"
+          ],
+          "commander_zone": false,
+          "commander_casts": 1,
+          "unsupported_in_hand": 6
+        },
+        {
+          "round": 8,
+          "life": 40,
+          "lands": 5,
+          "sources": 5,
+          "creatures": 2,
+          "power": 6,
+          "engines": 0,
+          "combo": 0,
+          "clocks": 0,
+          "hand": 3,
+          "public_threat": 12.8,
+          "objective_proximity": 12.8,
+          "cards_cast": 9,
+          "alive": true,
+          "mana_pool": [
+            0,
+            0,
+            0
+          ],
+          "ready_source_ids": [
+            598
+          ],
+          "mana_capacity_upper_bound": 1
+        },
+        {
+          "round": 8,
+          "life": 15,
+          "lands": 8,
+          "sources": 8,
+          "creatures": 4,
+          "power": 10,
+          "engines": 3,
+          "combo": 0,
+          "clocks": 0,
+          "hand": 4,
+          "public_threat": 25.9,
+          "objective_proximity": 28.45,
+          "cards_cast": 12,
+          "alive": true,
+          "mana_pool": [
+            0,
+            0,
+            0
+          ],
+          "ready_source_ids": [
+            568,
+            592
+          ],
+          "mana_capacity_upper_bound": 2
+        },
+        {
+          "round": 8,
+          "life": 34,
+          "lands": 8,
+          "sources": 13,
+          "creatures": 3,
+          "power": 8,
+          "engines": 3,
+          "combo": 0,
+          "clocks": 0,
+          "hand": 2,
+          "public_threat": 28.1,
+          "objective_proximity": 28.13,
+          "cards_cast": 12,
+          "alive": true,
+          "mana_pool": [
+            0,
+            0,
+            0
+          ],
+          "ready_source_ids": [
+            507,
+            535,
+            537,
+            557,
+            559,
+            586,
+            609,
+            611
+          ],
+          "mana_capacity_upper_bound": 8
+        }
+      ],
+      "rankings": {
+        "3": 1,
+        "2": 2,
+        "1": 3,
+        "0": 4
+      }
+    },
+    {
+      "round": 9,
+      "players": [
+        {
+          "round": 9,
+          "life": 30,
+          "lands": 5,
+          "sources": 6,
+          "creatures": 1,
+          "power": 4,
+          "engines": 0,
+          "combo": 0,
+          "clocks": 0,
+          "hand": 6,
+          "public_threat": 11.6,
+          "objective_proximity": 11.65,
+          "cards_cast": 4,
+          "alive": true,
+          "mana_pool": [
+            0,
+            0,
+            0
+          ],
+          "ready_source_ids": [
+            449,
+            511,
+            513,
+            590,
+            615,
+            653
+          ],
+          "mana_capacity_upper_bound": 6,
+          "tokens": 0,
+          "named_hand": [
+            "Pink Horror",
+            "Underworld Breach",
+            "Muddle the Mixture",
+            "Voidmage Prodigy",
+            "Heralds of Tzeentch",
+            "Reiterate"
+          ],
+          "commander_zone": false,
+          "commander_casts": 1,
+          "unsupported_in_hand": 6
+        },
+        {
+          "round": 9,
+          "life": 40,
+          "lands": 5,
+          "sources": 5,
+          "creatures": 3,
+          "power": 10,
+          "engines": 0,
+          "combo": 0,
+          "clocks": 0,
+          "hand": 2,
+          "public_threat": 16.1,
+          "objective_proximity": 16.05,
+          "cards_cast": 11,
+          "alive": true,
+          "mana_pool": [
+            0,
+            0,
+            0
+          ],
+          "ready_source_ids": [],
+          "mana_capacity_upper_bound": 0
+        },
+        {
+          "round": 9,
+          "life": 12,
+          "lands": 9,
+          "sources": 10,
+          "creatures": 5,
+          "power": 11,
+          "engines": 3,
+          "combo": 0,
+          "clocks": 0,
+          "hand": 6,
+          "public_threat": 29.0,
+          "objective_proximity": 31.54,
+          "cards_cast": 16,
+          "alive": true,
+          "mana_pool": [
+            0,
+            0,
+            0
+          ],
+          "ready_source_ids": [
+            633
+          ],
+          "mana_capacity_upper_bound": 1
+        },
+        {
+          "round": 9,
+          "life": 34,
+          "lands": 9,
+          "sources": 14,
+          "creatures": 6,
+          "power": 11,
+          "engines": 3,
+          "combo": 0,
+          "clocks": 0,
+          "hand": 1,
+          "public_threat": 32.4,
+          "objective_proximity": 32.43,
+          "cards_cast": 14,
+          "alive": true,
+          "mana_pool": [
+            0,
+            0,
+            0
+          ],
+          "ready_source_ids": [
+            507,
+            535,
+            537,
+            557,
+            559,
+            586,
+            609,
+            611,
+            643
+          ],
+          "mana_capacity_upper_bound": 9
+        }
+      ],
+      "rankings": {
+        "3": 1,
+        "2": 2,
+        "1": 3,
+        "0": 4
+      }
+    },
+    {
+      "round": 10,
+      "players": [
+        {
+          "round": 10,
+          "life": 26,
+          "lands": 5,
+          "sources": 6,
+          "creatures": 1,
+          "power": 4,
+          "engines": 0,
+          "combo": 0,
+          "clocks": 0,
+          "hand": 7,
+          "public_threat": 11.7,
+          "objective_proximity": 11.67,
+          "cards_cast": 4,
+          "alive": true,
+          "mana_pool": [
+            0,
+            0,
+            0
+          ],
+          "ready_source_ids": [
+            449,
+            511,
+            513,
+            590,
+            615,
+            653
+          ],
+          "mana_capacity_upper_bound": 6,
+          "tokens": 0,
+          "named_hand": [
+            "Pink Horror",
+            "Underworld Breach",
+            "Muddle the Mixture",
+            "Voidmage Prodigy",
+            "Heralds of Tzeentch",
+            "Reiterate",
+            "Chaos Warp"
+          ],
+          "commander_zone": false,
+          "commander_casts": 1,
+          "unsupported_in_hand": 7
+        },
+        {
+          "round": 10,
+          "life": 40,
+          "lands": 6,
+          "sources": 6,
+          "creatures": 2,
+          "power": 6,
+          "engines": 1,
+          "combo": 0,
+          "clocks": 0,
+          "hand": 0,
+          "public_threat": 15.4,
+          "objective_proximity": 15.4,
+          "cards_cast": 13,
+          "alive": true,
+          "mana_pool": [
+            0,
+            0,
+            0
+          ],
+          "ready_source_ids": [],
+          "mana_capacity_upper_bound": 0
+        },
+        {
+          "round": 10,
+          "life": 12,
+          "lands": 10,
+          "sources": 12,
+          "creatures": 5,
+          "power": 14,
+          "engines": 3,
+          "combo": 0,
+          "clocks": 0,
+          "hand": 5,
+          "public_threat": 32.4,
+          "objective_proximity": 32.39,
+          "cards_cast": 19,
+          "alive": true,
+          "mana_pool": [
+            0,
+            0,
+            0
+          ],
+          "ready_source_ids": [
+            623,
+            633,
+            657,
+            661
+          ],
+          "mana_capacity_upper_bound": 4
+        },
+        {
+          "round": 10,
+          "life": 31,
+          "lands": 10,
+          "sources": 16,
+          "creatures": 5,
+          "power": 10,
+          "engines": 3,
+          "combo": 0,
+          "clocks": 0,
+          "hand": 0,
+          "public_threat": 32.0,
+          "objective_proximity": 32.02,
+          "cards_cast": 15,
+          "alive": true,
+          "mana_pool": [
+            0,
+            0,
+            0
+          ],
+          "ready_source_ids": [
+            461,
+            474,
+            505,
+            507,
+            535,
+            537,
+            557,
+            559,
+            586,
+            609,
+            611,
+            643,
+            672,
+            674
+          ],
+          "mana_capacity_upper_bound": 14
+        }
+      ],
+      "rankings": {
+        "2": 1,
+        "3": 2,
+        "1": 3,
+        "0": 4
+      }
+    }
+  ],
+  "events": [
+    "\n========== ROUND 1 ==========",
+    "  P2 plays control:land:31 (1 lands).",
+    "  P1 plays aggro:land:16 (1 lands).",
+    "    MANA P1: aggro:land:16 #443 -> (1, 0, 0)",
+    "  P1 (aggro) casts aggro:small:8 [creature] for 1; mana=0.",
+    "    STACK +1 [spell] P1: aggro:small:8.",
+    "  P3 plays combo:land:26 (1 lands).",
+    "  P0 plays Sulfur Falls (1 lands) tapped.",
+    "  End round: P0 magnus life=40 board=0 sources=1, P1 aggro life=40 board=1 sources=1, P2 control life=40 board=0 sources=1, P3 combo life=40 board=0 sources=1",
+    "\n========== ROUND 2 ==========",
+    "  P2 plays control:land:7 (2 lands).",
+    "    MANA P2: control:land:31 #441 -> (1, 0, 0)",
+    "    MANA P2: control:land:7 #451 -> (1, 0, 0)",
+    "  P2 (control) casts control:engine:1 [enchantment] for 2; mana=0.",
+    "    STACK +2 [spell] P2: control:engine:1.",
+    "  P1 plays aggro:land:9 (2 lands).",
+    "    MANA P1: aggro:land:16 #443 -> (1, 0, 0)",
+    "    MANA P1: aggro:land:9 #455 -> (1, 0, 0)",
+    "  P1 (aggro) casts aggro:small:4 [creature] for 2; mana=0.",
+    "    STACK +3 [spell] P1: aggro:small:4.",
+    "    COMBAT P1 aggro:small:8 hits P2 for 1.",
+    "  P3 plays combo:land:22 (2 lands).",
+    "    MANA P3: combo:land:26 #447 -> (1, 0, 0)",
+    "    MANA P3: combo:land:22 #459 -> (1, 0, 0)",
+    "  P3 (combo) casts combo:ramp:4 [artifact] for 2; mana=0.",
+    "    STACK +4 [spell] P3: combo:ramp:4.",
+    "  End round: P0 magnus life=40 board=0 sources=1, P1 aggro life=40 board=3 sources=2, P2 control life=39 board=0 sources=2, P3 combo life=40 board=0 sources=3",
+    "\n========== ROUND 3 ==========",
+    "  P2 plays control:land:10 (3 lands).",
+    "    MANA P2: control:land:31 #441 -> (1, 0, 0)",
+    "    MANA P2: control:land:7 #451 -> (1, 0, 0)",
+    "    MANA P2: control:land:10 #466 -> (1, 0, 0)",
+    "  P2 (control) casts control:engine:3 [enchantment] for 3; mana=0.",
+    "    STACK +5 [spell] P2: control:engine:3.",
+    "  P1 plays aggro:land:4 (3 lands).",
+    "    MANA P1: aggro:land:16 #443 -> (1, 0, 0)",
+    "    MANA P1: aggro:land:9 #455 -> (1, 0, 0)",
+    "  P1 (aggro) casts aggro:buff:1 [sorcery] for 2; mana=1.",
+    "    STACK +6 [spell] P1: aggro:buff:1.",
+    "    COMBAT P1 aggro:small:8 hits P2 for 3.",
+    "    COMBAT P1 aggro:small:4 hits P2 for 4.",
+    "  P3 plays combo:land:5 (3 lands).",
+    "    MANA P3: combo:land:26 #447 -> (1, 0, 0)",
+    "    MANA P3: combo:land:22 #459 -> (1, 0, 0)",
+    "  P3 (combo) casts combo:engine:3 [enchantment] for 2; mana=2.",
+    "    STACK +7 [spell] P3: combo:engine:3.",
+    "    MANA P3: combo:ramp:4 #461 -> (1, 0, 0)",
+    "    MANA P3: combo:land:5 #474 -> (1, 0, 0)",
+    "  P3 (combo) casts combo:draw:2 [sorcery] for 2; mana=0.",
+    "    STACK +8 [spell] P3: combo:draw:2.",
+    "  End round: P0 magnus life=40 board=0 sources=1, P1 aggro life=40 board=7 sources=3, P2 control life=32 board=0 sources=3, P3 combo life=40 board=2 sources=4",
+    "\n========== ROUND 4 ==========",
+    "  P2 plays control:land:8 (4 lands).",
+    "    MANA P2: control:land:31 #441 -> (1, 0, 0)",
+    "    MANA P2: control:land:7 #451 -> (1, 0, 0)",
+    "  P2 (control) casts control:draw:2 [sorcery] for 2; mana=2.",
+    "    STACK +9 [spell] P2: control:draw:2.",
+    "    MANA P2: control:land:10 #466 -> (1, 0, 0)",
+    "    MANA P2: control:land:8 #487 -> (1, 0, 0)",
+    "  P2 (control) casts control:draw:6 [sorcery] for 2; mana=0.",
+    "    STACK +10 [spell] P2: control:draw:6.",
+    "  P1 plays aggro:land:14 (4 lands).",
+    "    MANA P1: aggro:land:16 #443 -> (1, 0, 0)",
+    "    MANA P1: aggro:land:9 #455 -> (1, 0, 0)",
+    "    MANA P1: aggro:land:4 #470 -> (1, 0, 0)",
+    "    MANA P1: aggro:land:14 #500 -> (1, 0, 0)",
+    "  P1 (aggro) casts aggro:medium:1 [creature] for 4; mana=0.",
+    "    STACK +11 [spell] P1: aggro:medium:1.",
+    "    COMBAT P1 aggro:small:8 hits P0 for 3.",
+    "    COMBAT P1 aggro:small:4 4/1 into P2 engine token 1/1.",
+    "  P3 plays combo:land:27 (4 lands).",
+    "    MANA P3: combo:land:26 #447 -> (1, 0, 0)",
+    "    MANA P3: combo:land:22 #459 -> (1, 0, 0)",
+    "  P3 (combo) casts combo:ramp:5 [artifact] for 2; mana=3.",
+    "    STACK +12 [spell] P3: combo:ramp:5.",
+    "    MANA P3: combo:ramp:4 #461 -> (1, 0, 0)",
+    "    MANA P3: combo:land:5 #474 -> (1, 0, 0)",
+    "    MANA P3: combo:land:27 #505 -> (1, 0, 0)",
+    "    MANA P3: combo:ramp:5 #507 -> (1, 0, 0)",
+    "  P3 (combo) casts combo:engine:2 [enchantment] for 4; mana=0.",
+    "    STACK +13 [spell] P3: combo:engine:2.",
+    "  P0 plays Shivan Reef (2 lands).",
+    "    MANA P0: Sulfur Falls #449 -> (0, 1, 0)",
+    "    MANA P0: Shivan Reef #511 -> (1, 0, 0)",
+    "  P0 (magnus) casts Arcane Signet [artifact] for 2; mana=0.",
+    "    STACK +14 [spell] P0: Arcane Signet.",
+    "    Arcane Signet enters untapped; its mana ability is immediately available.",
+    "  End round: P0 magnus life=37 board=0 sources=3, P1 aggro life=40 board=6 sources=4, P2 control life=32 board=0 sources=4, P3 combo life=40 board=2 sources=6",
+    "\n========== ROUND 5 ==========",
+    "  P2 plays control:land:33 (5 lands).",
+    "    MANA P2: control:land:31 #441 -> (1, 0, 0)",
+    "    MANA P2: control:land:7 #451 -> (1, 0, 0)",
+    "  P2 (control) casts control:draw:0 [sorcery] for 2; mana=3.",
+    "    STACK +15 [spell] P2: control:draw:0.",
+    "    MANA P2: control:land:10 #466 -> (1, 0, 0)",
+    "    MANA P2: control:land:8 #487 -> (1, 0, 0)",
+    "    MANA P2: control:land:33 #517 -> (1, 0, 0)",
+    "  P2 (control) casts control:draw:4 [sorcery] for 3; mana=0.",
+    "    STACK +16 [spell] P2: control:draw:4.",
+    "    MANA P1: aggro:land:16 #443 -> (1, 0, 0)",
+    "    MANA P1: aggro:land:9 #455 -> (1, 0, 0)",
+    "    MANA P1: aggro:land:4 #470 -> (1, 0, 0)",
+    "    MANA P1: aggro:land:14 #500 -> (1, 0, 0)",
+    "  P1 (aggro) casts aggro:medium:0 [creature] for 4; mana=0.",
+    "    STACK +17 [spell] P1: aggro:medium:0.",
+    "    COMBAT P1 aggro:small:8 hits P3 for 3.",
+    "    COMBAT P1 aggro:medium:1 hits P2 for 3.",
+    "  P3 plays combo:land:18 (5 lands).",
+    "    MANA P3: combo:land:26 #447 -> (1, 0, 0)",
+    "    MANA P3: combo:land:22 #459 -> (1, 0, 0)",
+    "    MANA P3: combo:ramp:4 #461 -> (1, 0, 0)",
+    "  P3 (combo) casts combo:ramp:0 [artifact] for 3; mana=4.",
+    "    STACK +18 [spell] P3: combo:ramp:0.",
+    "    COMBAT P3 combo:engine:3 hits P2 for 2.",
+    "    MANA P0: Sulfur Falls #449 -> (0, 1, 0)",
+    "    MANA P0: Arcane Signet #513 -> (0, 0, 1)",
+    "  P0 (magnus) casts Harmonic Prodigy [creature] for 2; mana=1.",
+    "    STACK +19 [spell] P0: Harmonic Prodigy.",
+    "    MANA P3: combo:land:5 #474 -> (1, 0, 0)",
+    "    MANA P3: combo:land:27 #505 -> (1, 0, 0)",
+    "  P3 (combo) casts combo:counter:4 [instant] for 2; mana=3.",
+    "    STACK +20 [spell] P3: combo:counter:4.",
+    "    STACK -19: Harmonic Prodigy countered.",
+    "  End round: P0 magnus life=37 board=0 sources=3, P1 aggro life=40 board=9 sources=4, P2 control life=27 board=1 sources=5, P3 combo life=37 board=2 sources=8",
+    "\n========== ROUND 6 ==========",
+    "  P2 plays control:land:18 (6 lands).",
+    "    MANA P2: control:land:31 #441 -> (1, 0, 0)",
+    "    MANA P2: control:land:7 #451 -> (1, 0, 0)",
+    "  P2 (control) casts control:engine:9 [enchantment] for 2; mana=4.",
+    "    STACK +21 [spell] P2: control:engine:9.",
+    "    MANA P2: control:land:10 #466 -> (1, 0, 0)",
+    "    MANA P2: control:land:8 #487 -> (1, 0, 0)",
+    "    MANA P2: control:land:33 #517 -> (1, 0, 0)",
+    "    MANA P2: control:land:18 #547 -> (1, 0, 0)",
+    "  P2 (control) casts control:engine:7 [enchantment] for 4; mana=0.",
+    "    STACK +22 [spell] P2: control:engine:7.",
+    "    COMBAT P2 engine token 1/1 into P1 aggro:medium:0 3/3.",
+    "    MANA P1: aggro:land:16 #443 -> (1, 0, 0)",
+    "    MANA P1: aggro:land:9 #455 -> (1, 0, 0)",
+    "    MANA P1: aggro:land:4 #470 -> (1, 0, 0)",
+    "    MANA P1: aggro:land:14 #500 -> (1, 0, 0)",
+    "  P1 (aggro) casts aggro:medium:3 [creature] for 4; mana=0.",
+    "    STACK +23 [spell] P1: aggro:medium:3.",
+    "    COMBAT P1 aggro:small:8 hits P2 for 3.",
+    "    COMBAT P1 aggro:medium:0 hits P2 for 3.",
+    "  P3 plays combo:land:21 (6 lands).",
+    "    MANA P3: combo:land:26 #447 -> (1, 0, 0)",
+    "    MANA P3: combo:land:22 #459 -> (1, 0, 0)",
+    "    MANA P3: combo:ramp:4 #461 -> (1, 0, 0)",
+    "  P3 (combo) casts combo:ramp:9 [artifact] for 3; mana=6.",
+    "    STACK +24 [spell] P3: combo:ramp:9.",
+    "    MANA P3: combo:land:5 #474 -> (1, 0, 0)",
+    "    MANA P3: combo:land:27 #505 -> (1, 0, 0)",
+    "    MANA P3: combo:ramp:5 #507 -> (1, 0, 0)",
+    "    MANA P3: combo:land:18 #535 -> (1, 0, 0)",
+    "    MANA P3: combo:ramp:0 #537 -> (1, 0, 0)",
+    "    MANA P3: combo:land:21 #557 -> (1, 0, 0)",
+    "  P3 (combo) casts combo:large:1 [creature] for 6; mana=1.",
+    "    STACK +25 [spell] P3: combo:large:1.",
+    "    COMBAT P3 combo:engine:3 2/3 into P1 aggro:medium:1 3/2.",
+    "  End round: P0 magnus life=37 board=0 sources=3, P1 aggro life=40 board=11 sources=4, P2 control life=21 board=3 sources=6, P3 combo life=37 board=6 sources=10",
+    "\n========== ROUND 7 ==========",
+    "  P2 plays control:land:26 (7 lands).",
+    "    MANA P2: control:land:31 #441 -> (1, 0, 0)",
+    "    MANA P2: control:land:7 #451 -> (1, 0, 0)",
+    "    MANA P2: control:land:10 #466 -> (1, 0, 0)",
+    "    MANA P2: control:land:8 #487 -> (1, 0, 0)",
+    "  P2 (control) casts control:medium:4 [creature] for 4; mana=3.",
+    "    STACK +26 [spell] P2: control:medium:4.",
+    "    MANA P0: Sulfur Falls #449 -> (0, 1, 0)",
+    "    MANA P0: Arcane Signet #513 -> (0, 1, 0)",
+    "  P0 (magnus) casts Counterspell [instant] for 2; mana=1.",
+    "    STACK +27 [spell] P0: Counterspell.",
+    "    MANA P2: control:land:33 #517 -> (1, 0, 0)",
+    "    MANA P2: control:land:18 #547 -> (1, 0, 0)",
+    "  P2 (control) casts control:counter:6 [instant] for 2; mana=1.",
+    "    STACK +28 [spell] P2: control:counter:6.",
+    "    STACK -27: Counterspell countered.",
+    "    MANA P1: aggro:land:16 #443 -> (1, 0, 0)",
+    "    MANA P1: aggro:land:9 #455 -> (1, 0, 0)",
+    "    MANA P1: aggro:land:4 #470 -> (1, 0, 0)",
+    "    MANA P1: aggro:land:14 #500 -> (1, 0, 0)",
+    "  P1 (aggro) casts aggro:tokens:0 [sorcery] for 4; mana=0.",
+    "    STACK +29 [spell] P1: aggro:tokens:0.",
+    "    COMBAT P1 aggro:small:8 3/3 into P2 control:medium:4 3/3.",
+    "    COMBAT P1 aggro:medium:3 5/2 into P2 control:engine:9 2/3.",
+    "  P3 plays combo:land:2 (7 lands).",
+    "    MANA P3: combo:land:26 #447 -> (1, 0, 0)",
+    "    MANA P3: combo:land:22 #459 -> (1, 0, 0)",
+    "  P3 (combo) casts combo:engine:10 [enchantment] for 2; mana=9.",
+    "    STACK +30 [spell] P3: combo:engine:10.",
+    "    COMBAT P3 combo:large:1 hits P2 for 6.",
+    "  P0 plays Mountain (3 lands).",
+    "  End round: P0 magnus life=37 board=0 sources=4, P1 aggro life=40 board=5 sources=4, P2 control life=15 board=2 sources=7, P3 combo life=37 board=7 sources=11",
+    "\n========== ROUND 8 ==========",
+    "  P2 plays control:land:36 (8 lands).",
+    "    MANA P2: control:land:31 #441 -> (1, 0, 0)",
+    "    MANA P2: control:land:7 #451 -> (1, 0, 0)",
+    "    MANA P2: control:land:10 #466 -> (1, 0, 0)",
+    "    MANA P2: control:land:8 #487 -> (1, 0, 0)",
+    "    MANA P2: control:land:33 #517 -> (1, 0, 0)",
+    "  P2 (control) casts control:large:0 [creature] for 5; mana=3.",
+    "    STACK +31 [spell] P2: control:large:0.",
+    "    MANA P2: control:land:18 #547 -> (1, 0, 0)",
+    "  P2 (control) casts control:small:2 [creature] for 1; mana=2.",
+    "    STACK +32 [spell] P2: control:small:2.",
+    "    COMBAT P2 engine token hits P0 for 1.",
+    "  P1 plays aggro:land:11 (5 lands).",
+    "    MANA P1: aggro:land:16 #443 -> (1, 0, 0)",
+    "    MANA P1: aggro:land:9 #455 -> (1, 0, 0)",
+    "  P1 (aggro) casts aggro:draw:2 [sorcery] for 2; mana=3.",
+    "    STACK +33 [spell] P1: aggro:draw:2.",
+    "    MANA P1: aggro:land:4 #470 -> (1, 0, 0)",
+    "    MANA P1: aggro:land:14 #500 -> (1, 0, 0)",
+    "  P1 (aggro) casts aggro:small:9 [creature] for 2; mana=1.",
+    "    STACK +34 [spell] P1: aggro:small:9.",
+    "    COMBAT P1 aggro:medium:0 hits P3 for 3.",
+    "    COMBAT P1 Token 1/1 into P2 control:small:2 2/2.",
+    "    COMBAT P1 Token 1/1 into P2 control:large:0 6/7.",
+    "  P3 plays combo:land:3 (8 lands).",
+    "    MANA P3: combo:land:26 #447 -> (1, 0, 0)",
+    "    MANA P3: combo:land:22 #459 -> (1, 0, 0)",
+    "  P3 (combo) casts combo:ramp:1 [artifact] for 2; mana=10.",
+    "    STACK +35 [spell] P3: combo:ramp:1.",
+    "    MANA P3: combo:ramp:4 #461 -> (1, 0, 0)",
+    "    MANA P3: combo:land:5 #474 -> (1, 0, 0)",
+    "    MANA P3: combo:land:27 #505 -> (1, 0, 0)",
+    "  P3 (combo) casts combo:engine:4 [enchantment] for 3; mana=8.",
+    "    STACK +36 [spell] P3: combo:engine:4.",
+    "  P0 plays Island (4 lands).",
+    "    MANA P0: Sulfur Falls #449 -> (0, 1, 0)",
+    "    MANA P0: Arcane Signet #513 -> (0, 1, 0)",
+    "    MANA P0: Shivan Reef #511 -> (1, 0, 0)",
+    "    MANA P0: Mountain #590 -> (0, 0, 1)",
+    "    MANA P0: Island #615 -> (0, 1, 0)",
+    "  P0 (magnus) casts Magnus the Red [creature] for 5; mana=0.",
+    "    STACK +37 [spell] P0: Magnus the Red.",
+    "    Magnus the Red enters battlefield (4/5).",
+    "  End round: P0 magnus life=36 board=4 sources=5, P1 aggro life=40 board=6 sources=5, P2 control life=15 board=10 sources=8, P3 combo life=34 board=8 sources=13",
+    "\n========== ROUND 9 ==========",
+    "  P2 plays control:land:17 (9 lands).",
+    "    MANA P2: control:land:31 #441 -> (1, 0, 0)",
+    "    MANA P2: control:land:7 #451 -> (1, 0, 0)",
+    "  P2 (control) casts control:draw:5 [sorcery] for 2; mana=7.",
+    "    STACK +38 [spell] P2: control:draw:5.",
+    "    MANA P2: control:land:10 #466 -> (1, 0, 0)",
+    "    MANA P2: control:land:8 #487 -> (1, 0, 0)",
+    "    MANA P2: control:land:33 #517 -> (1, 0, 0)",
+    "  P2 (control) casts control:removal:5 [instant] for 3; mana=4.",
+    "    STACK +39 [spell] P2: control:removal:5.",
+    "    MANA P2: control:land:18 #547 -> (1, 0, 0)",
+    "    MANA P2: control:land:26 #568 -> (1, 0, 0)",
+    "  P2 (control) casts control:ramp:7 [artifact] for 2; mana=2.",
+    "    STACK +40 [spell] P2: control:ramp:7.",
+    "    COMBAT P2 control:large:0 hits P0 for 6.",
+    "    MANA P1: aggro:land:16 #443 -> (1, 0, 0)",
+    "    MANA P1: aggro:land:9 #455 -> (1, 0, 0)",
+    "    MANA P1: aggro:land:4 #470 -> (1, 0, 0)",
+    "    MANA P1: aggro:land:14 #500 -> (1, 0, 0)",
+    "  P1 (aggro) casts aggro:medium:5 [creature] for 4; mana=1.",
+    "    STACK +41 [spell] P1: aggro:medium:5.",
+    "    MANA P1: aggro:land:11 #598 -> (1, 0, 0)",
+    "  P1 (aggro) casts aggro:small:3 [creature] for 1; mana=0.",
+    "    STACK +42 [spell] P1: aggro:small:3.",
+    "    COMBAT P1 aggro:medium:0 hits P2 for 3.",
+    "  P3 plays combo:land:0 (9 lands).",
+    "    MANA P3: combo:land:26 #447 -> (1, 0, 0)",
+    "    MANA P3: combo:land:22 #459 -> (1, 0, 0)",
+    "    MANA P3: combo:ramp:4 #461 -> (1, 0, 0)",
+    "  P3 (combo) casts combo:tokens:0 [sorcery] for 3; mana=11.",
+    "    STACK +43 [spell] P3: combo:tokens:0.",
+    "    MANA P2: control:land:36 #592 -> (1, 0, 0)",
+    "    MANA P2: control:land:17 #623 -> (1, 0, 0)",
+    "  P2 (control) casts control:counter:2 [instant] for 2; mana=1.",
+    "    STACK +44 [spell] P2: control:counter:2.",
+    "    MANA P3: combo:land:5 #474 -> (1, 0, 0)",
+    "    MANA P3: combo:land:27 #505 -> (1, 0, 0)",
+    "  P3 (combo) casts combo:counter:5 [instant] for 2; mana=9.",
+    "    STACK +45 [spell] P3: combo:counter:5.",
+    "    STACK -44: control:counter:2 countered.",
+    "    COMBAT P3 engine token 1/1 into P2 control:small:2 2/2.",
+    "  P0 plays Island (5 lands).",
+    "  End round: P0 magnus life=30 board=4 sources=6, P1 aggro life=40 board=10 sources=5, P2 control life=12 board=11 sources=10, P3 combo life=34 board=11 sources=14",
+    "\n========== ROUND 10 ==========",
+    "  P2 plays control:land:13 (10 lands).",
+    "    MANA P2: control:land:31 #441 -> (1, 0, 0)",
+    "    MANA P2: control:land:7 #451 -> (1, 0, 0)",
+    "    MANA P2: control:land:10 #466 -> (1, 0, 0)",
+    "    MANA P2: control:land:8 #487 -> (1, 0, 0)",
+    "  P2 (control) casts control:medium:0 [creature] for 4; mana=7.",
+    "    STACK +46 [spell] P2: control:medium:0.",
+    "    MANA P2: control:land:33 #517 -> (1, 0, 0)",
+    "    MANA P2: control:land:18 #547 -> (1, 0, 0)",
+    "  P2 (control) casts control:ramp:4 [artifact] for 2; mana=5.",
+    "    STACK +47 [spell] P2: control:ramp:4.",
+    "    COMBAT P2 engine token 1/1 into P3 combo:large:1 6/6.",
+    "    COMBAT P2 engine token hits P0 for 1.",
+    "  P1 plays aggro:land:7 (6 lands).",
+    "    MANA P1: aggro:land:16 #443 -> (1, 0, 0)",
+    "    MANA P1: aggro:land:9 #455 -> (1, 0, 0)",
+    "    MANA P1: aggro:land:4 #470 -> (1, 0, 0)",
+    "  P1 (aggro) casts aggro:engine:1 [enchantment] for 3; mana=3.",
+    "    STACK +48 [spell] P1: aggro:engine:1.",
+    "    MANA P1: aggro:land:14 #500 -> (1, 0, 0)",
+    "    MANA P1: aggro:land:11 #598 -> (1, 0, 0)",
+    "    MANA P1: aggro:land:7 #663 -> (1, 0, 0)",
+    "  P1 (aggro) casts aggro:burn:0 [instant] for 3; mana=0.",
+    "    STACK +49 [spell] P1: aggro:burn:0.",
+    "    MANA P2: control:land:26 #568 -> (1, 0, 0)",
+    "    MANA P2: control:land:36 #592 -> (1, 0, 0)",
+    "  P2 (control) casts control:counter:4 [instant] for 2; mana=4.",
+    "    STACK +50 [spell] P2: control:counter:4.",
+    "    STACK -49: aggro:burn:0 countered.",
+    "    COMBAT P1 aggro:medium:0 hits P3 for 3.",
+    "    COMBAT P1 aggro:medium:5 4/2 into P3 combo:large:1 6/6.",
+    "    COMBAT P1 aggro:small:3 hits P0 for 3.",
+    "  P3 plays combo:land:28 (10 lands).",
+    "    MANA P3: combo:land:26 #447 -> (1, 0, 0)",
+    "    MANA P3: combo:land:22 #459 -> (1, 0, 0)",
+    "  P3 (combo) casts combo:ramp:3 [artifact] for 2; mana=13.",
+    "    STACK +51 [spell] P3: combo:ramp:3.",
+    "    COMBAT P3 Token 1/1 into P2 control:small:2 2/2.",
+    "  End round: P0 magnus life=26 board=4 sources=6, P1 aggro life=40 board=6 sources=6, P2 control life=12 board=14 sources=12, P3 combo life=31 board=10 sources=16"
+  ],
+  "priority_history": [
+    [
+      "pass",
+      2,
+      []
+    ],
+    [
+      "pass",
+      1,
+      []
+    ],
+    [
+      "pass",
+      3,
+      []
+    ],
+    [
+      "pass",
+      0,
+      []
+    ],
+    [
+      "action",
+      1,
+      "spell"
+    ],
+    [
+      "push",
+      1,
+      "spell",
+      1,
+      "aggro:small:8"
+    ],
+    [
+      "pass",
+      1,
+      [
+        1
+      ]
+    ],
+    [
+      "pass",
+      3,
+      [
+        1
+      ]
+    ],
+    [
+      "pass",
+      0,
+      [
+        1
+      ]
+    ],
+    [
+      "pass",
+      2,
+      [
+        1
+      ]
+    ],
+    [
+      "resolve",
+      1,
+      "spell",
+      1
+    ],
+    [
+      "pass",
+      1,
+      []
+    ],
+    [
+      "pass",
+      3,
+      []
+    ],
+    [
+      "pass",
+      0,
+      []
+    ],
+    [
+      "pass",
+      2,
+      []
+    ],
+    [
+      "pass",
+      3,
+      []
+    ],
+    [
+      "pass",
+      0,
+      []
+    ],
+    [
+      "pass",
+      2,
+      []
+    ],
+    [
+      "pass",
+      1,
+      []
+    ],
+    [
+      "pass",
+      0,
+      []
+    ],
+    [
+      "pass",
+      2,
+      []
+    ],
+    [
+      "pass",
+      1,
+      []
+    ],
+    [
+      "pass",
+      3,
+      []
+    ],
+    [
+      "action",
+      2,
+      "spell"
+    ],
+    [
+      "push",
+      2,
+      "spell",
+      2,
+      "control:engine:1"
+    ],
+    [
+      "pass",
+      2,
+      [
+        2
+      ]
+    ],
+    [
+      "pass",
+      1,
+      [
+        2
+      ]
+    ],
+    [
+      "pass",
+      3,
+      [
+        2
+      ]
+    ],
+    [
+      "pass",
+      0,
+      [
+        2
+      ]
+    ],
+    [
+      "resolve",
+      2,
+      "spell",
+      2
+    ],
+    [
+      "pass",
+      2,
+      []
+    ],
+    [
+      "pass",
+      1,
+      []
+    ],
+    [
+      "pass",
+      3,
+      []
+    ],
+    [
+      "pass",
+      0,
+      []
+    ],
+    [
+      "action",
+      1,
+      "spell"
+    ],
+    [
+      "push",
+      3,
+      "spell",
+      1,
+      "aggro:small:4"
+    ],
+    [
+      "pass",
+      1,
+      [
+        3
+      ]
+    ],
+    [
+      "pass",
+      3,
+      [
+        3
+      ]
+    ],
+    [
+      "pass",
+      0,
+      [
+        3
+      ]
+    ],
+    [
+      "pass",
+      2,
+      [
+        3
+      ]
+    ],
+    [
+      "resolve",
+      3,
+      "spell",
+      1
+    ],
+    [
+      "pass",
+      1,
+      []
+    ],
+    [
+      "pass",
+      3,
+      []
+    ],
+    [
+      "pass",
+      0,
+      []
+    ],
+    [
+      "pass",
+      2,
+      []
+    ],
+    [
+      "pass",
+      1,
+      []
+    ],
+    [
+      "pass",
+      3,
+      []
+    ],
+    [
+      "pass",
+      0,
+      []
+    ],
+    [
+      "pass",
+      2,
+      []
+    ],
+    [
+      "action",
+      3,
+      "spell"
+    ],
+    [
+      "push",
+      4,
+      "spell",
+      3,
+      "combo:ramp:4"
+    ],
+    [
+      "pass",
+      3,
+      [
+        4
+      ]
+    ],
+    [
+      "pass",
+      0,
+      [
+        4
+      ]
+    ],
+    [
+      "pass",
+      2,
+      [
+        4
+      ]
+    ],
+    [
+      "pass",
+      1,
+      [
+        4
+      ]
+    ],
+    [
+      "resolve",
+      4,
+      "spell",
+      3
+    ],
+    [
+      "pass",
+      3,
+      []
+    ],
+    [
+      "pass",
+      0,
+      []
+    ],
+    [
+      "pass",
+      2,
+      []
+    ],
+    [
+      "pass",
+      1,
+      []
+    ],
+    [
+      "pass",
+      0,
+      []
+    ],
+    [
+      "pass",
+      2,
+      []
+    ],
+    [
+      "pass",
+      1,
+      []
+    ],
+    [
+      "pass",
+      3,
+      []
+    ],
+    [
+      "action",
+      2,
+      "spell"
+    ],
+    [
+      "push",
+      5,
+      "spell",
+      2,
+      "control:engine:3"
+    ],
+    [
+      "pass",
+      2,
+      [
+        5
+      ]
+    ],
+    [
+      "pass",
+      1,
+      [
+        5
+      ]
+    ],
+    [
+      "pass",
+      3,
+      [
+        5
+      ]
+    ],
+    [
+      "pass",
+      0,
+      [
+        5
+      ]
+    ],
+    [
+      "resolve",
+      5,
+      "spell",
+      2
+    ],
+    [
+      "pass",
+      2,
+      []
+    ],
+    [
+      "pass",
+      1,
+      []
+    ],
+    [
+      "pass",
+      3,
+      []
+    ],
+    [
+      "pass",
+      0,
+      []
+    ],
+    [
+      "action",
+      1,
+      "spell"
+    ],
+    [
+      "push",
+      6,
+      "spell",
+      1,
+      "aggro:buff:1"
+    ],
+    [
+      "pass",
+      1,
+      [
+        6
+      ]
+    ],
+    [
+      "pass",
+      3,
+      [
+        6
+      ]
+    ],
+    [
+      "pass",
+      0,
+      [
+        6
+      ]
+    ],
+    [
+      "pass",
+      2,
+      [
+        6
+      ]
+    ],
+    [
+      "resolve",
+      6,
+      "spell",
+      1
+    ],
+    [
+      "pass",
+      1,
+      []
+    ],
+    [
+      "pass",
+      3,
+      []
+    ],
+    [
+      "pass",
+      0,
+      []
+    ],
+    [
+      "pass",
+      2,
+      []
+    ],
+    [
+      "pass",
+      1,
+      []
+    ],
+    [
+      "pass",
+      3,
+      []
+    ],
+    [
+      "pass",
+      0,
+      []
+    ],
+    [
+      "pass",
+      2,
+      []
+    ],
+    [
+      "pass",
+      1,
+      []
+    ],
+    [
+      "pass",
+      3,
+      []
+    ],
+    [
+      "pass",
+      0,
+      []
+    ],
+    [
+      "pass",
+      2,
+      []
+    ],
+    [
+      "action",
+      3,
+      "spell"
+    ],
+    [
+      "push",
+      7,
+      "spell",
+      3,
+      "combo:engine:3"
+    ],
+    [
+      "pass",
+      3,
+      [
+        7
+      ]
+    ],
+    [
+      "pass",
+      0,
+      [
+        7
+      ]
+    ],
+    [
+      "pass",
+      2,
+      [
+        7
+      ]
+    ],
+    [
+      "pass",
+      1,
+      [
+        7
+      ]
+    ],
+    [
+      "resolve",
+      7,
+      "spell",
+      3
+    ],
+    [
+      "action",
+      3,
+      "spell"
+    ],
+    [
+      "push",
+      8,
+      "spell",
+      3,
+      "combo:draw:2"
+    ],
+    [
+      "pass",
+      3,
+      [
+        8
+      ]
+    ],
+    [
+      "pass",
+      0,
+      [
+        8
+      ]
+    ],
+    [
+      "pass",
+      2,
+      [
+        8
+      ]
+    ],
+    [
+      "pass",
+      1,
+      [
+        8
+      ]
+    ],
+    [
+      "resolve",
+      8,
+      "spell",
+      3
+    ],
+    [
+      "pass",
+      3,
+      []
+    ],
+    [
+      "pass",
+      0,
+      []
+    ],
+    [
+      "pass",
+      2,
+      []
+    ],
+    [
+      "pass",
+      1,
+      []
+    ],
+    [
+      "pass",
+      0,
+      []
+    ],
+    [
+      "pass",
+      2,
+      []
+    ],
+    [
+      "pass",
+      1,
+      []
+    ],
+    [
+      "pass",
+      3,
+      []
+    ],
+    [
+      "action",
+      2,
+      "spell"
+    ],
+    [
+      "push",
+      9,
+      "spell",
+      2,
+      "control:draw:2"
+    ],
+    [
+      "pass",
+      2,
+      [
+        9
+      ]
+    ],
+    [
+      "pass",
+      1,
+      [
+        9
+      ]
+    ],
+    [
+      "pass",
+      3,
+      [
+        9
+      ]
+    ],
+    [
+      "pass",
+      0,
+      [
+        9
+      ]
+    ],
+    [
+      "resolve",
+      9,
+      "spell",
+      2
+    ],
+    [
+      "action",
+      2,
+      "spell"
+    ],
+    [
+      "push",
+      10,
+      "spell",
+      2,
+      "control:draw:6"
+    ],
+    [
+      "pass",
+      2,
+      [
+        10
+      ]
+    ],
+    [
+      "pass",
+      1,
+      [
+        10
+      ]
+    ],
+    [
+      "pass",
+      3,
+      [
+        10
+      ]
+    ],
+    [
+      "pass",
+      0,
+      [
+        10
+      ]
+    ],
+    [
+      "resolve",
+      10,
+      "spell",
+      2
+    ],
+    [
+      "pass",
+      2,
+      []
+    ],
+    [
+      "pass",
+      1,
+      []
+    ],
+    [
+      "pass",
+      3,
+      []
+    ],
+    [
+      "pass",
+      0,
+      []
+    ],
+    [
+      "action",
+      1,
+      "spell"
+    ],
+    [
+      "push",
+      11,
+      "spell",
+      1,
+      "aggro:medium:1"
+    ],
+    [
+      "pass",
+      1,
+      [
+        11
+      ]
+    ],
+    [
+      "pass",
+      3,
+      [
+        11
+      ]
+    ],
+    [
+      "pass",
+      0,
+      [
+        11
+      ]
+    ],
+    [
+      "pass",
+      2,
+      [
+        11
+      ]
+    ],
+    [
+      "resolve",
+      11,
+      "spell",
+      1
+    ],
+    [
+      "pass",
+      1,
+      []
+    ],
+    [
+      "pass",
+      3,
+      []
+    ],
+    [
+      "pass",
+      0,
+      []
+    ],
+    [
+      "pass",
+      2,
+      []
+    ],
+    [
+      "pass",
+      1,
+      []
+    ],
+    [
+      "pass",
+      3,
+      []
+    ],
+    [
+      "pass",
+      0,
+      []
+    ],
+    [
+      "pass",
+      2,
+      []
+    ],
+    [
+      "pass",
+      2,
+      []
+    ],
+    [
+      "pass",
+      1,
+      []
+    ],
+    [
+      "pass",
+      3,
+      []
+    ],
+    [
+      "pass",
+      0,
+      []
+    ],
+    [
+      "action",
+      3,
+      "spell"
+    ],
+    [
+      "push",
+      12,
+      "spell",
+      3,
+      "combo:ramp:5"
+    ],
+    [
+      "pass",
+      3,
+      [
+        12
+      ]
+    ],
+    [
+      "pass",
+      0,
+      [
+        12
+      ]
+    ],
+    [
+      "pass",
+      2,
+      [
+        12
+      ]
+    ],
+    [
+      "pass",
+      1,
+      [
+        12
+      ]
+    ],
+    [
+      "resolve",
+      12,
+      "spell",
+      3
+    ],
+    [
+      "action",
+      3,
+      "spell"
+    ],
+    [
+      "push",
+      13,
+      "spell",
+      3,
+      "combo:engine:2"
+    ],
+    [
+      "pass",
+      3,
+      [
+        13
+      ]
+    ],
+    [
+      "pass",
+      0,
+      [
+        13
+      ]
+    ],
+    [
+      "pass",
+      2,
+      [
+        13
+      ]
+    ],
+    [
+      "pass",
+      1,
+      [
+        13
+      ]
+    ],
+    [
+      "resolve",
+      13,
+      "spell",
+      3
+    ],
+    [
+      "pass",
+      3,
+      []
+    ],
+    [
+      "pass",
+      0,
+      []
+    ],
+    [
+      "pass",
+      2,
+      []
+    ],
+    [
+      "pass",
+      1,
+      []
+    ],
+    [
+      "action",
+      0,
+      "spell"
+    ],
+    [
+      "push",
+      14,
+      "spell",
+      0,
+      "Arcane Signet"
+    ],
+    [
+      "pass",
+      0,
+      [
+        14
+      ]
+    ],
+    [
+      "pass",
+      2,
+      [
+        14
+      ]
+    ],
+    [
+      "pass",
+      1,
+      [
+        14
+      ]
+    ],
+    [
+      "pass",
+      3,
+      [
+        14
+      ]
+    ],
+    [
+      "resolve",
+      14,
+      "spell",
+      0
+    ],
+    [
+      "pass",
+      0,
+      []
+    ],
+    [
+      "pass",
+      2,
+      []
+    ],
+    [
+      "pass",
+      1,
+      []
+    ],
+    [
+      "pass",
+      3,
+      []
+    ],
+    [
+      "action",
+      2,
+      "spell"
+    ],
+    [
+      "push",
+      15,
+      "spell",
+      2,
+      "control:draw:0"
+    ],
+    [
+      "pass",
+      2,
+      [
+        15
+      ]
+    ],
+    [
+      "pass",
+      1,
+      [
+        15
+      ]
+    ],
+    [
+      "pass",
+      3,
+      [
+        15
+      ]
+    ],
+    [
+      "pass",
+      0,
+      [
+        15
+      ]
+    ],
+    [
+      "resolve",
+      15,
+      "spell",
+      2
+    ],
+    [
+      "action",
+      2,
+      "spell"
+    ],
+    [
+      "push",
+      16,
+      "spell",
+      2,
+      "control:draw:4"
+    ],
+    [
+      "pass",
+      2,
+      [
+        16
+      ]
+    ],
+    [
+      "pass",
+      1,
+      [
+        16
+      ]
+    ],
+    [
+      "pass",
+      3,
+      [
+        16
+      ]
+    ],
+    [
+      "pass",
+      0,
+      [
+        16
+      ]
+    ],
+    [
+      "resolve",
+      16,
+      "spell",
+      2
+    ],
+    [
+      "pass",
+      2,
+      []
+    ],
+    [
+      "pass",
+      1,
+      []
+    ],
+    [
+      "pass",
+      3,
+      []
+    ],
+    [
+      "pass",
+      0,
+      []
+    ],
+    [
+      "action",
+      1,
+      "spell"
+    ],
+    [
+      "push",
+      17,
+      "spell",
+      1,
+      "aggro:medium:0"
+    ],
+    [
+      "pass",
+      1,
+      [
+        17
+      ]
+    ],
+    [
+      "pass",
+      3,
+      [
+        17
+      ]
+    ],
+    [
+      "pass",
+      0,
+      [
+        17
+      ]
+    ],
+    [
+      "pass",
+      2,
+      [
+        17
+      ]
+    ],
+    [
+      "resolve",
+      17,
+      "spell",
+      1
+    ],
+    [
+      "pass",
+      1,
+      []
+    ],
+    [
+      "pass",
+      3,
+      []
+    ],
+    [
+      "pass",
+      0,
+      []
+    ],
+    [
+      "pass",
+      2,
+      []
+    ],
+    [
+      "pass",
+      1,
+      []
+    ],
+    [
+      "pass",
+      3,
+      []
+    ],
+    [
+      "pass",
+      0,
+      []
+    ],
+    [
+      "pass",
+      2,
+      []
+    ],
+    [
+      "pass",
+      1,
+      []
+    ],
+    [
+      "pass",
+      3,
+      []
+    ],
+    [
+      "pass",
+      0,
+      []
+    ],
+    [
+      "pass",
+      2,
+      []
+    ],
+    [
+      "action",
+      3,
+      "spell"
+    ],
+    [
+      "push",
+      18,
+      "spell",
+      3,
+      "combo:ramp:0"
+    ],
+    [
+      "pass",
+      3,
+      [
+        18
+      ]
+    ],
+    [
+      "pass",
+      0,
+      [
+        18
+      ]
+    ],
+    [
+      "pass",
+      2,
+      [
+        18
+      ]
+    ],
+    [
+      "pass",
+      1,
+      [
+        18
+      ]
+    ],
+    [
+      "resolve",
+      18,
+      "spell",
+      3
+    ],
+    [
+      "pass",
+      3,
+      []
+    ],
+    [
+      "pass",
+      0,
+      []
+    ],
+    [
+      "pass",
+      2,
+      []
+    ],
+    [
+      "pass",
+      1,
+      []
+    ],
+    [
+      "pass",
+      3,
+      []
+    ],
+    [
+      "pass",
+      0,
+      []
+    ],
+    [
+      "pass",
+      2,
+      []
+    ],
+    [
+      "pass",
+      1,
+      []
+    ],
+    [
+      "action",
+      0,
+      "spell"
+    ],
+    [
+      "push",
+      19,
+      "spell",
+      0,
+      "Harmonic Prodigy"
+    ],
+    [
+      "pass",
+      0,
+      [
+        19
+      ]
+    ],
+    [
+      "pass",
+      2,
+      [
+        19
+      ]
+    ],
+    [
+      "pass",
+      1,
+      [
+        19
+      ]
+    ],
+    [
+      "action",
+      3,
+      "spell"
+    ],
+    [
+      "push",
+      20,
+      "spell",
+      3,
+      "combo:counter:4"
+    ],
+    [
+      "pass",
+      3,
+      [
+        19,
+        20
+      ]
+    ],
+    [
+      "pass",
+      0,
+      [
+        19,
+        20
+      ]
+    ],
+    [
+      "pass",
+      2,
+      [
+        19,
+        20
+      ]
+    ],
+    [
+      "pass",
+      1,
+      [
+        19,
+        20
+      ]
+    ],
+    [
+      "counter",
+      19,
+      "spell"
+    ],
+    [
+      "resolve",
+      20,
+      "spell",
+      3
+    ],
+    [
+      "pass",
+      0,
+      []
+    ],
+    [
+      "pass",
+      2,
+      []
+    ],
+    [
+      "pass",
+      1,
+      []
+    ],
+    [
+      "pass",
+      3,
+      []
+    ],
+    [
+      "action",
+      2,
+      "spell"
+    ],
+    [
+      "push",
+      21,
+      "spell",
+      2,
+      "control:engine:9"
+    ],
+    [
+      "pass",
+      2,
+      [
+        21
+      ]
+    ],
+    [
+      "pass",
+      1,
+      [
+        21
+      ]
+    ],
+    [
+      "pass",
+      3,
+      [
+        21
+      ]
+    ],
+    [
+      "pass",
+      0,
+      [
+        21
+      ]
+    ],
+    [
+      "resolve",
+      21,
+      "spell",
+      2
+    ],
+    [
+      "action",
+      2,
+      "spell"
+    ],
+    [
+      "push",
+      22,
+      "spell",
+      2,
+      "control:engine:7"
+    ],
+    [
+      "pass",
+      2,
+      [
+        22
+      ]
+    ],
+    [
+      "pass",
+      1,
+      [
+        22
+      ]
+    ],
+    [
+      "pass",
+      3,
+      [
+        22
+      ]
+    ],
+    [
+      "pass",
+      0,
+      [
+        22
+      ]
+    ],
+    [
+      "resolve",
+      22,
+      "spell",
+      2
+    ],
+    [
+      "pass",
+      2,
+      []
+    ],
+    [
+      "pass",
+      1,
+      []
+    ],
+    [
+      "pass",
+      3,
+      []
+    ],
+    [
+      "pass",
+      0,
+      []
+    ],
+    [
+      "pass",
+      0,
+      []
+    ],
+    [
+      "pass",
+      2,
+      []
+    ],
+    [
+      "pass",
+      1,
+      []
+    ],
+    [
+      "pass",
+      3,
+      []
+    ],
+    [
+      "action",
+      1,
+      "spell"
+    ],
+    [
+      "push",
+      23,
+      "spell",
+      1,
+      "aggro:medium:3"
+    ],
+    [
+      "pass",
+      1,
+      [
+        23
+      ]
+    ],
+    [
+      "pass",
+      3,
+      [
+        23
+      ]
+    ],
+    [
+      "pass",
+      0,
+      [
+        23
+      ]
+    ],
+    [
+      "pass",
+      2,
+      [
+        23
+      ]
+    ],
+    [
+      "resolve",
+      23,
+      "spell",
+      1
+    ],
+    [
+      "pass",
+      1,
+      []
+    ],
+    [
+      "pass",
+      3,
+      []
+    ],
+    [
+      "pass",
+      0,
+      []
+    ],
+    [
+      "pass",
+      2,
+      []
+    ],
+    [
+      "pass",
+      1,
+      []
+    ],
+    [
+      "pass",
+      3,
+      []
+    ],
+    [
+      "pass",
+      0,
+      []
+    ],
+    [
+      "pass",
+      2,
+      []
+    ],
+    [
+      "pass",
+      1,
+      []
+    ],
+    [
+      "pass",
+      3,
+      []
+    ],
+    [
+      "pass",
+      0,
+      []
+    ],
+    [
+      "pass",
+      2,
+      []
+    ],
+    [
+      "action",
+      3,
+      "spell"
+    ],
+    [
+      "push",
+      24,
+      "spell",
+      3,
+      "combo:ramp:9"
+    ],
+    [
+      "pass",
+      3,
+      [
+        24
+      ]
+    ],
+    [
+      "pass",
+      0,
+      [
+        24
+      ]
+    ],
+    [
+      "pass",
+      2,
+      [
+        24
+      ]
+    ],
+    [
+      "pass",
+      1,
+      [
+        24
+      ]
+    ],
+    [
+      "resolve",
+      24,
+      "spell",
+      3
+    ],
+    [
+      "action",
+      3,
+      "spell"
+    ],
+    [
+      "push",
+      25,
+      "spell",
+      3,
+      "combo:large:1"
+    ],
+    [
+      "pass",
+      3,
+      [
+        25
+      ]
+    ],
+    [
+      "pass",
+      0,
+      [
+        25
+      ]
+    ],
+    [
+      "pass",
+      2,
+      [
+        25
+      ]
+    ],
+    [
+      "pass",
+      1,
+      [
+        25
+      ]
+    ],
+    [
+      "resolve",
+      25,
+      "spell",
+      3
+    ],
+    [
+      "pass",
+      3,
+      []
+    ],
+    [
+      "pass",
+      0,
+      []
+    ],
+    [
+      "pass",
+      2,
+      []
+    ],
+    [
+      "pass",
+      1,
+      []
+    ],
+    [
+      "pass",
+      1,
+      []
+    ],
+    [
+      "pass",
+      3,
+      []
+    ],
+    [
+      "pass",
+      0,
+      []
+    ],
+    [
+      "pass",
+      2,
+      []
+    ],
+    [
+      "pass",
+      0,
+      []
+    ],
+    [
+      "pass",
+      2,
+      []
+    ],
+    [
+      "pass",
+      1,
+      []
+    ],
+    [
+      "pass",
+      3,
+      []
+    ],
+    [
+      "action",
+      2,
+      "spell"
+    ],
+    [
+      "push",
+      26,
+      "spell",
+      2,
+      "control:medium:4"
+    ],
+    [
+      "pass",
+      2,
+      [
+        26
+      ]
+    ],
+    [
+      "pass",
+      1,
+      [
+        26
+      ]
+    ],
+    [
+      "pass",
+      3,
+      [
+        26
+      ]
+    ],
+    [
+      "action",
+      0,
+      "spell"
+    ],
+    [
+      "push",
+      27,
+      "spell",
+      0,
+      "Counterspell"
+    ],
+    [
+      "pass",
+      0,
+      [
+        26,
+        27
+      ]
+    ],
+    [
+      "action",
+      2,
+      "spell"
+    ],
+    [
+      "push",
+      28,
+      "spell",
+      2,
+      "control:counter:6"
+    ],
+    [
+      "pass",
+      2,
+      [
+        26,
+        27,
+        28
+      ]
+    ],
+    [
+      "pass",
+      1,
+      [
+        26,
+        27,
+        28
+      ]
+    ],
+    [
+      "pass",
+      3,
+      [
+        26,
+        27,
+        28
+      ]
+    ],
+    [
+      "pass",
+      0,
+      [
+        26,
+        27,
+        28
+      ]
+    ],
+    [
+      "counter",
+      27,
+      "spell"
+    ],
+    [
+      "resolve",
+      28,
+      "spell",
+      2
+    ],
+    [
+      "pass",
+      2,
+      [
+        26
+      ]
+    ],
+    [
+      "pass",
+      1,
+      [
+        26
+      ]
+    ],
+    [
+      "pass",
+      3,
+      [
+        26
+      ]
+    ],
+    [
+      "pass",
+      0,
+      [
+        26
+      ]
+    ],
+    [
+      "resolve",
+      26,
+      "spell",
+      2
+    ],
+    [
+      "pass",
+      2,
+      []
+    ],
+    [
+      "pass",
+      1,
+      []
+    ],
+    [
+      "pass",
+      3,
+      []
+    ],
+    [
+      "pass",
+      0,
+      []
+    ],
+    [
+      "action",
+      1,
+      "spell"
+    ],
+    [
+      "push",
+      29,
+      "spell",
+      1,
+      "aggro:tokens:0"
+    ],
+    [
+      "pass",
+      1,
+      [
+        29
+      ]
+    ],
+    [
+      "pass",
+      3,
+      [
+        29
+      ]
+    ],
+    [
+      "pass",
+      0,
+      [
+        29
+      ]
+    ],
+    [
+      "pass",
+      2,
+      [
+        29
+      ]
+    ],
+    [
+      "resolve",
+      29,
+      "spell",
+      1
+    ],
+    [
+      "pass",
+      1,
+      []
+    ],
+    [
+      "pass",
+      3,
+      []
+    ],
+    [
+      "pass",
+      0,
+      []
+    ],
+    [
+      "pass",
+      2,
+      []
+    ],
+    [
+      "pass",
+      2,
+      []
+    ],
+    [
+      "pass",
+      1,
+      []
+    ],
+    [
+      "pass",
+      3,
+      []
+    ],
+    [
+      "pass",
+      0,
+      []
+    ],
+    [
+      "pass",
+      0,
+      []
+    ],
+    [
+      "pass",
+      2,
+      []
+    ],
+    [
+      "pass",
+      1,
+      []
+    ],
+    [
+      "pass",
+      3,
+      []
+    ],
+    [
+      "action",
+      3,
+      "spell"
+    ],
+    [
+      "push",
+      30,
+      "spell",
+      3,
+      "combo:engine:10"
+    ],
+    [
+      "pass",
+      3,
+      [
+        30
+      ]
+    ],
+    [
+      "pass",
+      0,
+      [
+        30
+      ]
+    ],
+    [
+      "pass",
+      2,
+      [
+        30
+      ]
+    ],
+    [
+      "pass",
+      1,
+      [
+        30
+      ]
+    ],
+    [
+      "resolve",
+      30,
+      "spell",
+      3
+    ],
+    [
+      "pass",
+      3,
+      []
+    ],
+    [
+      "pass",
+      0,
+      []
+    ],
+    [
+      "pass",
+      2,
+      []
+    ],
+    [
+      "pass",
+      1,
+      []
+    ],
+    [
+      "pass",
+      3,
+      []
+    ],
+    [
+      "pass",
+      0,
+      []
+    ],
+    [
+      "pass",
+      2,
+      []
+    ],
+    [
+      "pass",
+      1,
+      []
+    ],
+    [
+      "pass",
+      0,
+      []
+    ],
+    [
+      "pass",
+      2,
+      []
+    ],
+    [
+      "pass",
+      1,
+      []
+    ],
+    [
+      "pass",
+      3,
+      []
+    ],
+    [
+      "action",
+      2,
+      "spell"
+    ],
+    [
+      "push",
+      31,
+      "spell",
+      2,
+      "control:large:0"
+    ],
+    [
+      "pass",
+      2,
+      [
+        31
+      ]
+    ],
+    [
+      "pass",
+      1,
+      [
+        31
+      ]
+    ],
+    [
+      "pass",
+      3,
+      [
+        31
+      ]
+    ],
+    [
+      "pass",
+      0,
+      [
+        31
+      ]
+    ],
+    [
+      "resolve",
+      31,
+      "spell",
+      2
+    ],
+    [
+      "action",
+      2,
+      "spell"
+    ],
+    [
+      "push",
+      32,
+      "spell",
+      2,
+      "control:small:2"
+    ],
+    [
+      "pass",
+      2,
+      [
+        32
+      ]
+    ],
+    [
+      "pass",
+      1,
+      [
+        32
+      ]
+    ],
+    [
+      "pass",
+      3,
+      [
+        32
+      ]
+    ],
+    [
+      "pass",
+      0,
+      [
+        32
+      ]
+    ],
+    [
+      "resolve",
+      32,
+      "spell",
+      2
+    ],
+    [
+      "pass",
+      2,
+      []
+    ],
+    [
+      "pass",
+      1,
+      []
+    ],
+    [
+      "pass",
+      3,
+      []
+    ],
+    [
+      "pass",
+      0,
+      []
+    ],
+    [
+      "pass",
+      2,
+      []
+    ],
+    [
+      "pass",
+      1,
+      []
+    ],
+    [
+      "pass",
+      3,
+      []
+    ],
+    [
+      "pass",
+      0,
+      []
+    ],
+    [
+      "action",
+      1,
+      "spell"
+    ],
+    [
+      "push",
+      33,
+      "spell",
+      1,
+      "aggro:draw:2"
+    ],
+    [
+      "pass",
+      1,
+      [
+        33
+      ]
+    ],
+    [
+      "pass",
+      3,
+      [
+        33
+      ]
+    ],
+    [
+      "pass",
+      0,
+      [
+        33
+      ]
+    ],
+    [
+      "pass",
+      2,
+      [
+        33
+      ]
+    ],
+    [
+      "resolve",
+      33,
+      "spell",
+      1
+    ],
+    [
+      "action",
+      1,
+      "spell"
+    ],
+    [
+      "push",
+      34,
+      "spell",
+      1,
+      "aggro:small:9"
+    ],
+    [
+      "pass",
+      1,
+      [
+        34
+      ]
+    ],
+    [
+      "pass",
+      3,
+      [
+        34
+      ]
+    ],
+    [
+      "pass",
+      0,
+      [
+        34
+      ]
+    ],
+    [
+      "pass",
+      2,
+      [
+        34
+      ]
+    ],
+    [
+      "resolve",
+      34,
+      "spell",
+      1
+    ],
+    [
+      "pass",
+      1,
+      []
+    ],
+    [
+      "pass",
+      3,
+      []
+    ],
+    [
+      "pass",
+      0,
+      []
+    ],
+    [
+      "pass",
+      2,
+      []
+    ],
+    [
+      "pass",
+      1,
+      []
+    ],
+    [
+      "pass",
+      3,
+      []
+    ],
+    [
+      "pass",
+      0,
+      []
+    ],
+    [
+      "pass",
+      2,
+      []
+    ],
+    [
+      "pass",
+      2,
+      []
+    ],
+    [
+      "pass",
+      1,
+      []
+    ],
+    [
+      "pass",
+      3,
+      []
+    ],
+    [
+      "pass",
+      0,
+      []
+    ],
+    [
+      "pass",
+      0,
+      []
+    ],
+    [
+      "pass",
+      2,
+      []
+    ],
+    [
+      "pass",
+      1,
+      []
+    ],
+    [
+      "pass",
+      3,
+      []
+    ],
+    [
+      "action",
+      3,
+      "spell"
+    ],
+    [
+      "push",
+      35,
+      "spell",
+      3,
+      "combo:ramp:1"
+    ],
+    [
+      "pass",
+      3,
+      [
+        35
+      ]
+    ],
+    [
+      "pass",
+      0,
+      [
+        35
+      ]
+    ],
+    [
+      "pass",
+      2,
+      [
+        35
+      ]
+    ],
+    [
+      "pass",
+      1,
+      [
+        35
+      ]
+    ],
+    [
+      "resolve",
+      35,
+      "spell",
+      3
+    ],
+    [
+      "action",
+      3,
+      "spell"
+    ],
+    [
+      "push",
+      36,
+      "spell",
+      3,
+      "combo:engine:4"
+    ],
+    [
+      "pass",
+      3,
+      [
+        36
+      ]
+    ],
+    [
+      "pass",
+      0,
+      [
+        36
+      ]
+    ],
+    [
+      "pass",
+      2,
+      [
+        36
+      ]
+    ],
+    [
+      "pass",
+      1,
+      [
+        36
+      ]
+    ],
+    [
+      "resolve",
+      36,
+      "spell",
+      3
+    ],
+    [
+      "pass",
+      3,
+      []
+    ],
+    [
+      "pass",
+      0,
+      []
+    ],
+    [
+      "pass",
+      2,
+      []
+    ],
+    [
+      "pass",
+      1,
+      []
+    ],
+    [
+      "action",
+      0,
+      "spell"
+    ],
+    [
+      "push",
+      37,
+      "spell",
+      0,
+      "Magnus the Red"
+    ],
+    [
+      "pass",
+      0,
+      [
+        37
+      ]
+    ],
+    [
+      "pass",
+      2,
+      [
+        37
+      ]
+    ],
+    [
+      "pass",
+      1,
+      [
+        37
+      ]
+    ],
+    [
+      "pass",
+      3,
+      [
+        37
+      ]
+    ],
+    [
+      "resolve",
+      37,
+      "spell",
+      0
+    ],
+    [
+      "pass",
+      0,
+      []
+    ],
+    [
+      "pass",
+      2,
+      []
+    ],
+    [
+      "pass",
+      1,
+      []
+    ],
+    [
+      "pass",
+      3,
+      []
+    ],
+    [
+      "action",
+      2,
+      "spell"
+    ],
+    [
+      "push",
+      38,
+      "spell",
+      2,
+      "control:draw:5"
+    ],
+    [
+      "pass",
+      2,
+      [
+        38
+      ]
+    ],
+    [
+      "pass",
+      1,
+      [
+        38
+      ]
+    ],
+    [
+      "pass",
+      3,
+      [
+        38
+      ]
+    ],
+    [
+      "pass",
+      0,
+      [
+        38
+      ]
+    ],
+    [
+      "resolve",
+      38,
+      "spell",
+      2
+    ],
+    [
+      "action",
+      2,
+      "spell"
+    ],
+    [
+      "push",
+      39,
+      "spell",
+      2,
+      "control:removal:5"
+    ],
+    [
+      "pass",
+      2,
+      [
+        39
+      ]
+    ],
+    [
+      "pass",
+      1,
+      [
+        39
+      ]
+    ],
+    [
+      "pass",
+      3,
+      [
+        39
+      ]
+    ],
+    [
+      "pass",
+      0,
+      [
+        39
+      ]
+    ],
+    [
+      "resolve",
+      39,
+      "spell",
+      2
+    ],
+    [
+      "action",
+      2,
+      "spell"
+    ],
+    [
+      "push",
+      40,
+      "spell",
+      2,
+      "control:ramp:7"
+    ],
+    [
+      "pass",
+      2,
+      [
+        40
+      ]
+    ],
+    [
+      "pass",
+      1,
+      [
+        40
+      ]
+    ],
+    [
+      "pass",
+      3,
+      [
+        40
+      ]
+    ],
+    [
+      "pass",
+      0,
+      [
+        40
+      ]
+    ],
+    [
+      "resolve",
+      40,
+      "spell",
+      2
+    ],
+    [
+      "pass",
+      2,
+      []
+    ],
+    [
+      "pass",
+      1,
+      []
+    ],
+    [
+      "pass",
+      3,
+      []
+    ],
+    [
+      "pass",
+      0,
+      []
+    ],
+    [
+      "pass",
+      2,
+      []
+    ],
+    [
+      "pass",
+      1,
+      []
+    ],
+    [
+      "pass",
+      3,
+      []
+    ],
+    [
+      "pass",
+      0,
+      []
+    ],
+    [
+      "action",
+      1,
+      "spell"
+    ],
+    [
+      "push",
+      41,
+      "spell",
+      1,
+      "aggro:medium:5"
+    ],
+    [
+      "pass",
+      1,
+      [
+        41
+      ]
+    ],
+    [
+      "pass",
+      3,
+      [
+        41
+      ]
+    ],
+    [
+      "pass",
+      0,
+      [
+        41
+      ]
+    ],
+    [
+      "pass",
+      2,
+      [
+        41
+      ]
+    ],
+    [
+      "resolve",
+      41,
+      "spell",
+      1
+    ],
+    [
+      "action",
+      1,
+      "spell"
+    ],
+    [
+      "push",
+      42,
+      "spell",
+      1,
+      "aggro:small:3"
+    ],
+    [
+      "pass",
+      1,
+      [
+        42
+      ]
+    ],
+    [
+      "pass",
+      3,
+      [
+        42
+      ]
+    ],
+    [
+      "pass",
+      0,
+      [
+        42
+      ]
+    ],
+    [
+      "pass",
+      2,
+      [
+        42
+      ]
+    ],
+    [
+      "resolve",
+      42,
+      "spell",
+      1
+    ],
+    [
+      "pass",
+      1,
+      []
+    ],
+    [
+      "pass",
+      3,
+      []
+    ],
+    [
+      "pass",
+      0,
+      []
+    ],
+    [
+      "pass",
+      2,
+      []
+    ],
+    [
+      "pass",
+      1,
+      []
+    ],
+    [
+      "pass",
+      3,
+      []
+    ],
+    [
+      "pass",
+      0,
+      []
+    ],
+    [
+      "pass",
+      2,
+      []
+    ],
+    [
+      "action",
+      3,
+      "spell"
+    ],
+    [
+      "push",
+      43,
+      "spell",
+      3,
+      "combo:tokens:0"
+    ],
+    [
+      "pass",
+      3,
+      [
+        43
+      ]
+    ],
+    [
+      "pass",
+      0,
+      [
+        43
+      ]
+    ],
+    [
+      "action",
+      2,
+      "spell"
+    ],
+    [
+      "push",
+      44,
+      "spell",
+      2,
+      "control:counter:2"
+    ],
+    [
+      "pass",
+      2,
+      [
+        43,
+        44
+      ]
+    ],
+    [
+      "pass",
+      1,
+      [
+        43,
+        44
+      ]
+    ],
+    [
+      "action",
+      3,
+      "spell"
+    ],
+    [
+      "push",
+      45,
+      "spell",
+      3,
+      "combo:counter:5"
+    ],
+    [
+      "pass",
+      3,
+      [
+        43,
+        44,
+        45
+      ]
+    ],
+    [
+      "pass",
+      0,
+      [
+        43,
+        44,
+        45
+      ]
+    ],
+    [
+      "pass",
+      2,
+      [
+        43,
+        44,
+        45
+      ]
+    ],
+    [
+      "pass",
+      1,
+      [
+        43,
+        44,
+        45
+      ]
+    ],
+    [
+      "counter",
+      44,
+      "spell"
+    ],
+    [
+      "resolve",
+      45,
+      "spell",
+      3
+    ],
+    [
+      "pass",
+      3,
+      [
+        43
+      ]
+    ],
+    [
+      "pass",
+      0,
+      [
+        43
+      ]
+    ],
+    [
+      "pass",
+      2,
+      [
+        43
+      ]
+    ],
+    [
+      "pass",
+      1,
+      [
+        43
+      ]
+    ],
+    [
+      "resolve",
+      43,
+      "spell",
+      3
+    ],
+    [
+      "pass",
+      3,
+      []
+    ],
+    [
+      "pass",
+      0,
+      []
+    ],
+    [
+      "pass",
+      2,
+      []
+    ],
+    [
+      "pass",
+      1,
+      []
+    ],
+    [
+      "pass",
+      1,
+      []
+    ],
+    [
+      "pass",
+      3,
+      []
+    ],
+    [
+      "pass",
+      0,
+      []
+    ],
+    [
+      "pass",
+      2,
+      []
+    ],
+    [
+      "pass",
+      0,
+      []
+    ],
+    [
+      "pass",
+      2,
+      []
+    ],
+    [
+      "pass",
+      1,
+      []
+    ],
+    [
+      "pass",
+      3,
+      []
+    ],
+    [
+      "action",
+      2,
+      "spell"
+    ],
+    [
+      "push",
+      46,
+      "spell",
+      2,
+      "control:medium:0"
+    ],
+    [
+      "pass",
+      2,
+      [
+        46
+      ]
+    ],
+    [
+      "pass",
+      1,
+      [
+        46
+      ]
+    ],
+    [
+      "pass",
+      3,
+      [
+        46
+      ]
+    ],
+    [
+      "pass",
+      0,
+      [
+        46
+      ]
+    ],
+    [
+      "resolve",
+      46,
+      "spell",
+      2
+    ],
+    [
+      "action",
+      2,
+      "spell"
+    ],
+    [
+      "push",
+      47,
+      "spell",
+      2,
+      "control:ramp:4"
+    ],
+    [
+      "pass",
+      2,
+      [
+        47
+      ]
+    ],
+    [
+      "pass",
+      1,
+      [
+        47
+      ]
+    ],
+    [
+      "pass",
+      3,
+      [
+        47
+      ]
+    ],
+    [
+      "pass",
+      0,
+      [
+        47
+      ]
+    ],
+    [
+      "resolve",
+      47,
+      "spell",
+      2
+    ],
+    [
+      "pass",
+      2,
+      []
+    ],
+    [
+      "pass",
+      1,
+      []
+    ],
+    [
+      "pass",
+      3,
+      []
+    ],
+    [
+      "pass",
+      0,
+      []
+    ],
+    [
+      "pass",
+      0,
+      []
+    ],
+    [
+      "pass",
+      2,
+      []
+    ],
+    [
+      "pass",
+      1,
+      []
+    ],
+    [
+      "pass",
+      3,
+      []
+    ],
+    [
+      "pass",
+      2,
+      []
+    ],
+    [
+      "pass",
+      1,
+      []
+    ],
+    [
+      "pass",
+      3,
+      []
+    ],
+    [
+      "pass",
+      0,
+      []
+    ],
+    [
+      "action",
+      1,
+      "spell"
+    ],
+    [
+      "push",
+      48,
+      "spell",
+      1,
+      "aggro:engine:1"
+    ],
+    [
+      "pass",
+      1,
+      [
+        48
+      ]
+    ],
+    [
+      "pass",
+      3,
+      [
+        48
+      ]
+    ],
+    [
+      "pass",
+      0,
+      [
+        48
+      ]
+    ],
+    [
+      "pass",
+      2,
+      [
+        48
+      ]
+    ],
+    [
+      "resolve",
+      48,
+      "spell",
+      1
+    ],
+    [
+      "action",
+      1,
+      "spell"
+    ],
+    [
+      "push",
+      49,
+      "spell",
+      1,
+      "aggro:burn:0"
+    ],
+    [
+      "pass",
+      1,
+      [
+        49
+      ]
+    ],
+    [
+      "pass",
+      3,
+      [
+        49
+      ]
+    ],
+    [
+      "pass",
+      0,
+      [
+        49
+      ]
+    ],
+    [
+      "action",
+      2,
+      "spell"
+    ],
+    [
+      "push",
+      50,
+      "spell",
+      2,
+      "control:counter:4"
+    ],
+    [
+      "pass",
+      2,
+      [
+        49,
+        50
+      ]
+    ],
+    [
+      "pass",
+      1,
+      [
+        49,
+        50
+      ]
+    ],
+    [
+      "pass",
+      3,
+      [
+        49,
+        50
+      ]
+    ],
+    [
+      "pass",
+      0,
+      [
+        49,
+        50
+      ]
+    ],
+    [
+      "counter",
+      49,
+      "spell"
+    ],
+    [
+      "resolve",
+      50,
+      "spell",
+      2
+    ],
+    [
+      "pass",
+      1,
+      []
+    ],
+    [
+      "pass",
+      3,
+      []
+    ],
+    [
+      "pass",
+      0,
+      []
+    ],
+    [
+      "pass",
+      2,
+      []
+    ],
+    [
+      "pass",
+      1,
+      []
+    ],
+    [
+      "pass",
+      3,
+      []
+    ],
+    [
+      "pass",
+      0,
+      []
+    ],
+    [
+      "pass",
+      2,
+      []
+    ],
+    [
+      "pass",
+      2,
+      []
+    ],
+    [
+      "pass",
+      1,
+      []
+    ],
+    [
+      "pass",
+      3,
+      []
+    ],
+    [
+      "pass",
+      0,
+      []
+    ],
+    [
+      "pass",
+      1,
+      []
+    ],
+    [
+      "pass",
+      3,
+      []
+    ],
+    [
+      "pass",
+      0,
+      []
+    ],
+    [
+      "pass",
+      2,
+      []
+    ],
+    [
+      "action",
+      3,
+      "spell"
+    ],
+    [
+      "push",
+      51,
+      "spell",
+      3,
+      "combo:ramp:3"
+    ],
+    [
+      "pass",
+      3,
+      [
+        51
+      ]
+    ],
+    [
+      "pass",
+      0,
+      [
+        51
+      ]
+    ],
+    [
+      "pass",
+      2,
+      [
+        51
+      ]
+    ],
+    [
+      "pass",
+      1,
+      [
+        51
+      ]
+    ],
+    [
+      "resolve",
+      51,
+      "spell",
+      3
+    ],
+    [
+      "pass",
+      3,
+      []
+    ],
+    [
+      "pass",
+      0,
+      []
+    ],
+    [
+      "pass",
+      2,
+      []
+    ],
+    [
+      "pass",
+      1,
+      []
+    ],
+    [
+      "pass",
+      1,
+      []
+    ],
+    [
+      "pass",
+      3,
+      []
+    ],
+    [
+      "pass",
+      0,
+      []
+    ],
+    [
+      "pass",
+      2,
+      []
+    ],
+    [
+      "pass",
+      0,
+      []
+    ],
+    [
+      "pass",
+      2,
+      []
+    ],
+    [
+      "pass",
+      1,
+      []
+    ],
+    [
+      "pass",
+      3,
+      []
+    ]
+  ],
+  "diagnostics": {
+    "seed": 102,
+    "opening_forced": false,
+    "name": "Thousand Sons Conclave v1.6",
+    "library_total": 99,
+    "supported_definitions": 44,
+    "unsupported_definitions": [
+      "Tzaangor Shaman",
+      "Exalted Flamer of Tzeentch",
+      "Pink Horror",
+      "Heralds of Tzeentch",
+      "Lord of Change",
+      "Mutalith Vortex Beast",
+      "Docent of Perfection",
+      "Patron Wizard",
+      "Voidmage Prodigy",
+      "Spellseeker",
+      "Veyran, Voice of Duality",
+      "Dualcaster Mage",
+      "Jace, Vryn's Prodigy",
+      "Sigil Tracer",
+      "Resonating Lute",
+      "Maskwood Nexus",
+      "Arcane Adaptation",
+      "The Lost and the Damned",
+      "Underworld Breach",
+      "Sorcerer Class",
+      "Phyrexian Altar",
+      "Mystical Tutor",
+      "Muddle the Mixture",
+      "Step Through",
+      "Twincast",
+      "Reiterate",
+      "Abrade",
+      "Chaos Warp",
+      "Chaos Mutation",
+      "Cyclonic Rift",
+      "March of Swirling Mist",
+      "Jeska's Will",
+      "Mana Geyser",
+      "Mathemagics",
+      "Comet Storm",
+      "Capsize",
+      "Searing Touch",
+      "Mystic Speculation"
+    ],
+    "approx_definitions": [
+      "An Offer You Can't Refuse",
+      "Arcane Denial",
+      "Brainstorm",
+      "Flusterstorm",
+      "Frantic Search",
+      "Impulse",
+      "Ponder",
+      "Preordain",
+      "Telling Time"
+    ],
+    "coverage_casts": {
+      "supported": 4
+    },
+    "unsupported_held": {
+      "Pink Horror": 10,
+      "Underworld Breach": 10,
+      "Muddle the Mixture": 10,
+      "Voidmage Prodigy": 10,
+      "Docent of Perfection": 1,
+      "Mystic Speculation": 1,
+      "Heralds of Tzeentch": 6,
+      "Reiterate": 5,
+      "Chaos Warp": 1
+    },
+    "commander_casts": 1,
+    "commander_in_zone": false,
+    "mana_payments": [
+      {
+        "source": "Arcane Signet",
+        "cost": 2,
+        "source_ids": [
+          449,
+          511
+        ],
+        "unused": [
+          0,
+          0,
+          0
+        ]
+      },
+      {
+        "source": "Harmonic Prodigy",
+        "cost": 2,
+        "source_ids": [
+          449,
+          513
+        ],
+        "unused": [
+          0,
+          0,
+          0
+        ]
+      },
+      {
+        "source": "Counterspell",
+        "cost": 2,
+        "source_ids": [
+          449,
+          513
+        ],
+        "unused": [
+          0,
+          0,
+          0
+        ]
+      },
+      {
+        "source": "Magnus the Red",
+        "cost": 5,
+        "source_ids": [
+          449,
+          513,
+          511,
+          590,
+          615
+        ],
+        "unused": [
+          0,
+          0,
+          0
+        ]
+      }
+    ],
+    "land_misses": 5,
+    "known_rules_gaps": [
+      "limited named-card subset; unsupported spells fail closed",
+      "selection, scry and some land abilities remain approximations",
+      "one detailed deck; synthetic opponents and finishers",
+      "no commander damage, multiblock, buyback, spell copies or verified Magnus loops",
+      "only U/R/colorless mana and U/R/generic costs; other mana text fails closed",
+      "coarse phase/serial combat driver; not every official step is exposed",
+      "only registered trigger/activation operations; creature tap abilities unsupported"
+    ],
+    "v7": {
+      "shared_trigger_instances": 0,
+      "shared_cost_queries": 65,
+      "safety_stop": null,
+      "modular_scope": "typed costs/triggers/block legality; live zones supplied by v9b"
+    },
+    "v8": {
+      "kernel_permanent_creatures": 60,
+      "kernel_view_consistent": true,
+      "creatures_entered": 27,
+      "permanents_entered": 18,
+      "zone_transitions": 16,
+      "combat_damage_batches": 11,
+      "shared_stack_max_depth": 3,
+      "shared_stack_resolved": 47,
+      "shared_stack_countered": 4,
+      "guard_stop": null,
+      "limits": [
+        "shared physical state and typed priority stack; partial card/step coverage"
+      ]
+    },
+    "v9": {
+      "providers": [
+        "magnus",
+        "aggro",
+        "control",
+        "combo"
+      ],
+      "detailed_seat": 0,
+      "kernel_view_consistent": true,
+      "migration_status": "shared physical zones, source-ID mana and typed priority stack",
+      "multi_detailed_games_supported": false,
+      "authoritative_card_zones_in_live_game": true
+    },
+    "v9b": {
+      "authoritative_card_zones_in_live_game": true,
+      "zone_index_consistent": true,
+      "kernel_view_consistent": true,
+      "physical_objects": 403,
+      "zone_counts": {
+        "0": {
+          "battlefield": 7,
+          "command": 0,
+          "exile": 0,
+          "graveyard": 4,
+          "hand": 7,
+          "library": 82,
+          "stack": 0
+        },
+        "1": {
+          "battlefield": 9,
+          "command": 0,
+          "exile": 0,
+          "graveyard": 10,
+          "hand": 0,
+          "library": 80,
+          "stack": 0
+        },
+        "2": {
+          "battlefield": 20,
+          "command": 0,
+          "exile": 0,
+          "graveyard": 17,
+          "hand": 5,
+          "library": 59,
+          "stack": 0
+        },
+        "3": {
+          "battlefield": 24,
+          "command": 0,
+          "exile": 0,
+          "graveyard": 5,
+          "hand": 0,
+          "library": 74,
+          "stack": 0
+        }
+      },
+      "limits": [
+        "source-ID mana supplied by v9c; synthetic abilities remain approximate",
+        "typed priority supplied by v10; incomplete card/step coverage remains",
+        "one detailed deck; selection/land rules still approximate"
+      ]
+    },
+    "v9c": {
+      "source_backed_live_payment": true,
+      "pools": {
+        "0": [
+          0,
+          0,
+          0
+        ],
+        "1": [
+          0,
+          0,
+          0
+        ],
+        "2": [
+          0,
+          0,
+          0
+        ],
+        "3": [
+          0,
+          0,
+          0
+        ]
+      },
+      "payments": [
+        {
+          "seat": 1,
+          "cost": [
+            1,
+            0,
+            0
+          ],
+          "sources": [
+            443
+          ],
+          "unused": [
+            0,
+            0,
+            0
+          ]
+        },
+        {
+          "seat": 2,
+          "cost": [
+            2,
+            0,
+            0
+          ],
+          "sources": [
+            441,
+            451
+          ],
+          "unused": [
+            0,
+            0,
+            0
+          ]
+        },
+        {
+          "seat": 1,
+          "cost": [
+            2,
+            0,
+            0
+          ],
+          "sources": [
+            443,
+            455
+          ],
+          "unused": [
+            0,
+            0,
+            0
+          ]
+        },
+        {
+          "seat": 3,
+          "cost": [
+            2,
+            0,
+            0
+          ],
+          "sources": [
+            447,
+            459
+          ],
+          "unused": [
+            0,
+            0,
+            0
+          ]
+        },
+        {
+          "seat": 2,
+          "cost": [
+            3,
+            0,
+            0
+          ],
+          "sources": [
+            441,
+            451,
+            466
+          ],
+          "unused": [
+            0,
+            0,
+            0
+          ]
+        },
+        {
+          "seat": 1,
+          "cost": [
+            2,
+            0,
+            0
+          ],
+          "sources": [
+            443,
+            455
+          ],
+          "unused": [
+            0,
+            0,
+            0
+          ]
+        },
+        {
+          "seat": 3,
+          "cost": [
+            2,
+            0,
+            0
+          ],
+          "sources": [
+            447,
+            459
+          ],
+          "unused": [
+            0,
+            0,
+            0
+          ]
+        },
+        {
+          "seat": 3,
+          "cost": [
+            2,
+            0,
+            0
+          ],
+          "sources": [
+            461,
+            474
+          ],
+          "unused": [
+            0,
+            0,
+            0
+          ]
+        },
+        {
+          "seat": 2,
+          "cost": [
+            2,
+            0,
+            0
+          ],
+          "sources": [
+            441,
+            451
+          ],
+          "unused": [
+            0,
+            0,
+            0
+          ]
+        },
+        {
+          "seat": 2,
+          "cost": [
+            2,
+            0,
+            0
+          ],
+          "sources": [
+            466,
+            487
+          ],
+          "unused": [
+            0,
+            0,
+            0
+          ]
+        },
+        {
+          "seat": 1,
+          "cost": [
+            4,
+            0,
+            0
+          ],
+          "sources": [
+            443,
+            455,
+            470,
+            500
+          ],
+          "unused": [
+            0,
+            0,
+            0
+          ]
+        },
+        {
+          "seat": 3,
+          "cost": [
+            2,
+            0,
+            0
+          ],
+          "sources": [
+            447,
+            459
+          ],
+          "unused": [
+            0,
+            0,
+            0
+          ]
+        },
+        {
+          "seat": 3,
+          "cost": [
+            4,
+            0,
+            0
+          ],
+          "sources": [
+            461,
+            474,
+            505,
+            507
+          ],
+          "unused": [
+            0,
+            0,
+            0
+          ]
+        },
+        {
+          "seat": 0,
+          "cost": [
+            2,
+            0,
+            0
+          ],
+          "sources": [
+            449,
+            511
+          ],
+          "unused": [
+            0,
+            0,
+            0
+          ]
+        },
+        {
+          "seat": 2,
+          "cost": [
+            2,
+            0,
+            0
+          ],
+          "sources": [
+            441,
+            451
+          ],
+          "unused": [
+            0,
+            0,
+            0
+          ]
+        },
+        {
+          "seat": 2,
+          "cost": [
+            3,
+            0,
+            0
+          ],
+          "sources": [
+            466,
+            487,
+            517
+          ],
+          "unused": [
+            0,
+            0,
+            0
+          ]
+        },
+        {
+          "seat": 1,
+          "cost": [
+            4,
+            0,
+            0
+          ],
+          "sources": [
+            443,
+            455,
+            470,
+            500
+          ],
+          "unused": [
+            0,
+            0,
+            0
+          ]
+        },
+        {
+          "seat": 3,
+          "cost": [
+            3,
+            0,
+            0
+          ],
+          "sources": [
+            447,
+            459,
+            461
+          ],
+          "unused": [
+            0,
+            0,
+            0
+          ]
+        },
+        {
+          "seat": 0,
+          "cost": [
+            1,
+            0,
+            1
+          ],
+          "sources": [
+            449,
+            513
+          ],
+          "unused": [
+            0,
+            0,
+            0
+          ]
+        },
+        {
+          "seat": 3,
+          "cost": [
+            2,
+            0,
+            0
+          ],
+          "sources": [
+            474,
+            505
+          ],
+          "unused": [
+            0,
+            0,
+            0
+          ]
+        },
+        {
+          "seat": 2,
+          "cost": [
+            2,
+            0,
+            0
+          ],
+          "sources": [
+            441,
+            451
+          ],
+          "unused": [
+            0,
+            0,
+            0
+          ]
+        },
+        {
+          "seat": 2,
+          "cost": [
+            4,
+            0,
+            0
+          ],
+          "sources": [
+            466,
+            487,
+            517,
+            547
+          ],
+          "unused": [
+            0,
+            0,
+            0
+          ]
+        },
+        {
+          "seat": 1,
+          "cost": [
+            4,
+            0,
+            0
+          ],
+          "sources": [
+            443,
+            455,
+            470,
+            500
+          ],
+          "unused": [
+            0,
+            0,
+            0
+          ]
+        },
+        {
+          "seat": 3,
+          "cost": [
+            3,
+            0,
+            0
+          ],
+          "sources": [
+            447,
+            459,
+            461
+          ],
+          "unused": [
+            0,
+            0,
+            0
+          ]
+        },
+        {
+          "seat": 3,
+          "cost": [
+            6,
+            0,
+            0
+          ],
+          "sources": [
+            474,
+            505,
+            507,
+            535,
+            537,
+            557
+          ],
+          "unused": [
+            0,
+            0,
+            0
+          ]
+        },
+        {
+          "seat": 2,
+          "cost": [
+            4,
+            0,
+            0
+          ],
+          "sources": [
+            441,
+            451,
+            466,
+            487
+          ],
+          "unused": [
+            0,
+            0,
+            0
+          ]
+        },
+        {
+          "seat": 0,
+          "cost": [
+            0,
+            2,
+            0
+          ],
+          "sources": [
+            449,
+            513
+          ],
+          "unused": [
+            0,
+            0,
+            0
+          ]
+        },
+        {
+          "seat": 2,
+          "cost": [
+            2,
+            0,
+            0
+          ],
+          "sources": [
+            517,
+            547
+          ],
+          "unused": [
+            0,
+            0,
+            0
+          ]
+        },
+        {
+          "seat": 1,
+          "cost": [
+            4,
+            0,
+            0
+          ],
+          "sources": [
+            443,
+            455,
+            470,
+            500
+          ],
+          "unused": [
+            0,
+            0,
+            0
+          ]
+        },
+        {
+          "seat": 3,
+          "cost": [
+            2,
+            0,
+            0
+          ],
+          "sources": [
+            447,
+            459
+          ],
+          "unused": [
+            0,
+            0,
+            0
+          ]
+        },
+        {
+          "seat": 2,
+          "cost": [
+            5,
+            0,
+            0
+          ],
+          "sources": [
+            441,
+            451,
+            466,
+            487,
+            517
+          ],
+          "unused": [
+            0,
+            0,
+            0
+          ]
+        },
+        {
+          "seat": 2,
+          "cost": [
+            1,
+            0,
+            0
+          ],
+          "sources": [
+            547
+          ],
+          "unused": [
+            0,
+            0,
+            0
+          ]
+        },
+        {
+          "seat": 1,
+          "cost": [
+            2,
+            0,
+            0
+          ],
+          "sources": [
+            443,
+            455
+          ],
+          "unused": [
+            0,
+            0,
+            0
+          ]
+        },
+        {
+          "seat": 1,
+          "cost": [
+            2,
+            0,
+            0
+          ],
+          "sources": [
+            470,
+            500
+          ],
+          "unused": [
+            0,
+            0,
+            0
+          ]
+        },
+        {
+          "seat": 3,
+          "cost": [
+            2,
+            0,
+            0
+          ],
+          "sources": [
+            447,
+            459
+          ],
+          "unused": [
+            0,
+            0,
+            0
+          ]
+        },
+        {
+          "seat": 3,
+          "cost": [
+            3,
+            0,
+            0
+          ],
+          "sources": [
+            461,
+            474,
+            505
+          ],
+          "unused": [
+            0,
+            0,
+            0
+          ]
+        },
+        {
+          "seat": 0,
+          "cost": [
+            3,
+            1,
+            1
+          ],
+          "sources": [
+            449,
+            513,
+            511,
+            590,
+            615
+          ],
+          "unused": [
+            0,
+            0,
+            0
+          ]
+        },
+        {
+          "seat": 2,
+          "cost": [
+            2,
+            0,
+            0
+          ],
+          "sources": [
+            441,
+            451
+          ],
+          "unused": [
+            0,
+            0,
+            0
+          ]
+        },
+        {
+          "seat": 2,
+          "cost": [
+            3,
+            0,
+            0
+          ],
+          "sources": [
+            466,
+            487,
+            517
+          ],
+          "unused": [
+            0,
+            0,
+            0
+          ]
+        },
+        {
+          "seat": 2,
+          "cost": [
+            2,
+            0,
+            0
+          ],
+          "sources": [
+            547,
+            568
+          ],
+          "unused": [
+            0,
+            0,
+            0
+          ]
+        },
+        {
+          "seat": 1,
+          "cost": [
+            4,
+            0,
+            0
+          ],
+          "sources": [
+            443,
+            455,
+            470,
+            500
+          ],
+          "unused": [
+            0,
+            0,
+            0
+          ]
+        },
+        {
+          "seat": 1,
+          "cost": [
+            1,
+            0,
+            0
+          ],
+          "sources": [
+            598
+          ],
+          "unused": [
+            0,
+            0,
+            0
+          ]
+        },
+        {
+          "seat": 3,
+          "cost": [
+            3,
+            0,
+            0
+          ],
+          "sources": [
+            447,
+            459,
+            461
+          ],
+          "unused": [
+            0,
+            0,
+            0
+          ]
+        },
+        {
+          "seat": 2,
+          "cost": [
+            2,
+            0,
+            0
+          ],
+          "sources": [
+            592,
+            623
+          ],
+          "unused": [
+            0,
+            0,
+            0
+          ]
+        },
+        {
+          "seat": 3,
+          "cost": [
+            2,
+            0,
+            0
+          ],
+          "sources": [
+            474,
+            505
+          ],
+          "unused": [
+            0,
+            0,
+            0
+          ]
+        },
+        {
+          "seat": 2,
+          "cost": [
+            4,
+            0,
+            0
+          ],
+          "sources": [
+            441,
+            451,
+            466,
+            487
+          ],
+          "unused": [
+            0,
+            0,
+            0
+          ]
+        },
+        {
+          "seat": 2,
+          "cost": [
+            2,
+            0,
+            0
+          ],
+          "sources": [
+            517,
+            547
+          ],
+          "unused": [
+            0,
+            0,
+            0
+          ]
+        },
+        {
+          "seat": 1,
+          "cost": [
+            3,
+            0,
+            0
+          ],
+          "sources": [
+            443,
+            455,
+            470
+          ],
+          "unused": [
+            0,
+            0,
+            0
+          ]
+        },
+        {
+          "seat": 1,
+          "cost": [
+            3,
+            0,
+            0
+          ],
+          "sources": [
+            500,
+            598,
+            663
+          ],
+          "unused": [
+            0,
+            0,
+            0
+          ]
+        },
+        {
+          "seat": 2,
+          "cost": [
+            2,
+            0,
+            0
+          ],
+          "sources": [
+            568,
+            592
+          ],
+          "unused": [
+            0,
+            0,
+            0
+          ]
+        },
+        {
+          "seat": 3,
+          "cost": [
+            2,
+            0,
+            0
+          ],
+          "sources": [
+            447,
+            459
+          ],
+          "unused": [
+            0,
+            0,
+            0
+          ]
+        }
+      ],
+      "activations": [
+        {
+          "seat": 1,
+          "source_id": 443,
+          "source": "aggro:land:16",
+          "output": [
+            1,
+            0,
+            0
+          ],
+          "activation_cost": [
+            0,
+            0,
+            0
+          ],
+          "life_paid": 0,
+          "damage": 0,
+          "sacrifice": false
+        },
+        {
+          "seat": 2,
+          "source_id": 441,
+          "source": "control:land:31",
+          "output": [
+            1,
+            0,
+            0
+          ],
+          "activation_cost": [
+            0,
+            0,
+            0
+          ],
+          "life_paid": 0,
+          "damage": 0,
+          "sacrifice": false
+        },
+        {
+          "seat": 2,
+          "source_id": 451,
+          "source": "control:land:7",
+          "output": [
+            1,
+            0,
+            0
+          ],
+          "activation_cost": [
+            0,
+            0,
+            0
+          ],
+          "life_paid": 0,
+          "damage": 0,
+          "sacrifice": false
+        },
+        {
+          "seat": 1,
+          "source_id": 443,
+          "source": "aggro:land:16",
+          "output": [
+            1,
+            0,
+            0
+          ],
+          "activation_cost": [
+            0,
+            0,
+            0
+          ],
+          "life_paid": 0,
+          "damage": 0,
+          "sacrifice": false
+        },
+        {
+          "seat": 1,
+          "source_id": 455,
+          "source": "aggro:land:9",
+          "output": [
+            1,
+            0,
+            0
+          ],
+          "activation_cost": [
+            0,
+            0,
+            0
+          ],
+          "life_paid": 0,
+          "damage": 0,
+          "sacrifice": false
+        },
+        {
+          "seat": 3,
+          "source_id": 447,
+          "source": "combo:land:26",
+          "output": [
+            1,
+            0,
+            0
+          ],
+          "activation_cost": [
+            0,
+            0,
+            0
+          ],
+          "life_paid": 0,
+          "damage": 0,
+          "sacrifice": false
+        },
+        {
+          "seat": 3,
+          "source_id": 459,
+          "source": "combo:land:22",
+          "output": [
+            1,
+            0,
+            0
+          ],
+          "activation_cost": [
+            0,
+            0,
+            0
+          ],
+          "life_paid": 0,
+          "damage": 0,
+          "sacrifice": false
+        },
+        {
+          "seat": 2,
+          "source_id": 441,
+          "source": "control:land:31",
+          "output": [
+            1,
+            0,
+            0
+          ],
+          "activation_cost": [
+            0,
+            0,
+            0
+          ],
+          "life_paid": 0,
+          "damage": 0,
+          "sacrifice": false
+        },
+        {
+          "seat": 2,
+          "source_id": 451,
+          "source": "control:land:7",
+          "output": [
+            1,
+            0,
+            0
+          ],
+          "activation_cost": [
+            0,
+            0,
+            0
+          ],
+          "life_paid": 0,
+          "damage": 0,
+          "sacrifice": false
+        },
+        {
+          "seat": 2,
+          "source_id": 466,
+          "source": "control:land:10",
+          "output": [
+            1,
+            0,
+            0
+          ],
+          "activation_cost": [
+            0,
+            0,
+            0
+          ],
+          "life_paid": 0,
+          "damage": 0,
+          "sacrifice": false
+        },
+        {
+          "seat": 1,
+          "source_id": 443,
+          "source": "aggro:land:16",
+          "output": [
+            1,
+            0,
+            0
+          ],
+          "activation_cost": [
+            0,
+            0,
+            0
+          ],
+          "life_paid": 0,
+          "damage": 0,
+          "sacrifice": false
+        },
+        {
+          "seat": 1,
+          "source_id": 455,
+          "source": "aggro:land:9",
+          "output": [
+            1,
+            0,
+            0
+          ],
+          "activation_cost": [
+            0,
+            0,
+            0
+          ],
+          "life_paid": 0,
+          "damage": 0,
+          "sacrifice": false
+        },
+        {
+          "seat": 3,
+          "source_id": 447,
+          "source": "combo:land:26",
+          "output": [
+            1,
+            0,
+            0
+          ],
+          "activation_cost": [
+            0,
+            0,
+            0
+          ],
+          "life_paid": 0,
+          "damage": 0,
+          "sacrifice": false
+        },
+        {
+          "seat": 3,
+          "source_id": 459,
+          "source": "combo:land:22",
+          "output": [
+            1,
+            0,
+            0
+          ],
+          "activation_cost": [
+            0,
+            0,
+            0
+          ],
+          "life_paid": 0,
+          "damage": 0,
+          "sacrifice": false
+        },
+        {
+          "seat": 3,
+          "source_id": 461,
+          "source": "combo:ramp:4",
+          "output": [
+            1,
+            0,
+            0
+          ],
+          "activation_cost": [
+            0,
+            0,
+            0
+          ],
+          "life_paid": 0,
+          "damage": 0,
+          "sacrifice": false
+        },
+        {
+          "seat": 3,
+          "source_id": 474,
+          "source": "combo:land:5",
+          "output": [
+            1,
+            0,
+            0
+          ],
+          "activation_cost": [
+            0,
+            0,
+            0
+          ],
+          "life_paid": 0,
+          "damage": 0,
+          "sacrifice": false
+        },
+        {
+          "seat": 2,
+          "source_id": 441,
+          "source": "control:land:31",
+          "output": [
+            1,
+            0,
+            0
+          ],
+          "activation_cost": [
+            0,
+            0,
+            0
+          ],
+          "life_paid": 0,
+          "damage": 0,
+          "sacrifice": false
+        },
+        {
+          "seat": 2,
+          "source_id": 451,
+          "source": "control:land:7",
+          "output": [
+            1,
+            0,
+            0
+          ],
+          "activation_cost": [
+            0,
+            0,
+            0
+          ],
+          "life_paid": 0,
+          "damage": 0,
+          "sacrifice": false
+        },
+        {
+          "seat": 2,
+          "source_id": 466,
+          "source": "control:land:10",
+          "output": [
+            1,
+            0,
+            0
+          ],
+          "activation_cost": [
+            0,
+            0,
+            0
+          ],
+          "life_paid": 0,
+          "damage": 0,
+          "sacrifice": false
+        },
+        {
+          "seat": 2,
+          "source_id": 487,
+          "source": "control:land:8",
+          "output": [
+            1,
+            0,
+            0
+          ],
+          "activation_cost": [
+            0,
+            0,
+            0
+          ],
+          "life_paid": 0,
+          "damage": 0,
+          "sacrifice": false
+        },
+        {
+          "seat": 1,
+          "source_id": 443,
+          "source": "aggro:land:16",
+          "output": [
+            1,
+            0,
+            0
+          ],
+          "activation_cost": [
+            0,
+            0,
+            0
+          ],
+          "life_paid": 0,
+          "damage": 0,
+          "sacrifice": false
+        },
+        {
+          "seat": 1,
+          "source_id": 455,
+          "source": "aggro:land:9",
+          "output": [
+            1,
+            0,
+            0
+          ],
+          "activation_cost": [
+            0,
+            0,
+            0
+          ],
+          "life_paid": 0,
+          "damage": 0,
+          "sacrifice": false
+        },
+        {
+          "seat": 1,
+          "source_id": 470,
+          "source": "aggro:land:4",
+          "output": [
+            1,
+            0,
+            0
+          ],
+          "activation_cost": [
+            0,
+            0,
+            0
+          ],
+          "life_paid": 0,
+          "damage": 0,
+          "sacrifice": false
+        },
+        {
+          "seat": 1,
+          "source_id": 500,
+          "source": "aggro:land:14",
+          "output": [
+            1,
+            0,
+            0
+          ],
+          "activation_cost": [
+            0,
+            0,
+            0
+          ],
+          "life_paid": 0,
+          "damage": 0,
+          "sacrifice": false
+        },
+        {
+          "seat": 3,
+          "source_id": 447,
+          "source": "combo:land:26",
+          "output": [
+            1,
+            0,
+            0
+          ],
+          "activation_cost": [
+            0,
+            0,
+            0
+          ],
+          "life_paid": 0,
+          "damage": 0,
+          "sacrifice": false
+        },
+        {
+          "seat": 3,
+          "source_id": 459,
+          "source": "combo:land:22",
+          "output": [
+            1,
+            0,
+            0
+          ],
+          "activation_cost": [
+            0,
+            0,
+            0
+          ],
+          "life_paid": 0,
+          "damage": 0,
+          "sacrifice": false
+        },
+        {
+          "seat": 3,
+          "source_id": 461,
+          "source": "combo:ramp:4",
+          "output": [
+            1,
+            0,
+            0
+          ],
+          "activation_cost": [
+            0,
+            0,
+            0
+          ],
+          "life_paid": 0,
+          "damage": 0,
+          "sacrifice": false
+        },
+        {
+          "seat": 3,
+          "source_id": 474,
+          "source": "combo:land:5",
+          "output": [
+            1,
+            0,
+            0
+          ],
+          "activation_cost": [
+            0,
+            0,
+            0
+          ],
+          "life_paid": 0,
+          "damage": 0,
+          "sacrifice": false
+        },
+        {
+          "seat": 3,
+          "source_id": 505,
+          "source": "combo:land:27",
+          "output": [
+            1,
+            0,
+            0
+          ],
+          "activation_cost": [
+            0,
+            0,
+            0
+          ],
+          "life_paid": 0,
+          "damage": 0,
+          "sacrifice": false
+        },
+        {
+          "seat": 3,
+          "source_id": 507,
+          "source": "combo:ramp:5",
+          "output": [
+            1,
+            0,
+            0
+          ],
+          "activation_cost": [
+            0,
+            0,
+            0
+          ],
+          "life_paid": 0,
+          "damage": 0,
+          "sacrifice": false
+        },
+        {
+          "seat": 0,
+          "source_id": 449,
+          "source": "Sulfur Falls",
+          "output": [
+            0,
+            1,
+            0
+          ],
+          "activation_cost": [
+            0,
+            0,
+            0
+          ],
+          "life_paid": 0,
+          "damage": 0,
+          "sacrifice": false
+        },
+        {
+          "seat": 0,
+          "source_id": 511,
+          "source": "Shivan Reef",
+          "output": [
+            1,
+            0,
+            0
+          ],
+          "activation_cost": [
+            0,
+            0,
+            0
+          ],
+          "life_paid": 0,
+          "damage": 0,
+          "sacrifice": false
+        },
+        {
+          "seat": 2,
+          "source_id": 441,
+          "source": "control:land:31",
+          "output": [
+            1,
+            0,
+            0
+          ],
+          "activation_cost": [
+            0,
+            0,
+            0
+          ],
+          "life_paid": 0,
+          "damage": 0,
+          "sacrifice": false
+        },
+        {
+          "seat": 2,
+          "source_id": 451,
+          "source": "control:land:7",
+          "output": [
+            1,
+            0,
+            0
+          ],
+          "activation_cost": [
+            0,
+            0,
+            0
+          ],
+          "life_paid": 0,
+          "damage": 0,
+          "sacrifice": false
+        },
+        {
+          "seat": 2,
+          "source_id": 466,
+          "source": "control:land:10",
+          "output": [
+            1,
+            0,
+            0
+          ],
+          "activation_cost": [
+            0,
+            0,
+            0
+          ],
+          "life_paid": 0,
+          "damage": 0,
+          "sacrifice": false
+        },
+        {
+          "seat": 2,
+          "source_id": 487,
+          "source": "control:land:8",
+          "output": [
+            1,
+            0,
+            0
+          ],
+          "activation_cost": [
+            0,
+            0,
+            0
+          ],
+          "life_paid": 0,
+          "damage": 0,
+          "sacrifice": false
+        },
+        {
+          "seat": 2,
+          "source_id": 517,
+          "source": "control:land:33",
+          "output": [
+            1,
+            0,
+            0
+          ],
+          "activation_cost": [
+            0,
+            0,
+            0
+          ],
+          "life_paid": 0,
+          "damage": 0,
+          "sacrifice": false
+        },
+        {
+          "seat": 1,
+          "source_id": 443,
+          "source": "aggro:land:16",
+          "output": [
+            1,
+            0,
+            0
+          ],
+          "activation_cost": [
+            0,
+            0,
+            0
+          ],
+          "life_paid": 0,
+          "damage": 0,
+          "sacrifice": false
+        },
+        {
+          "seat": 1,
+          "source_id": 455,
+          "source": "aggro:land:9",
+          "output": [
+            1,
+            0,
+            0
+          ],
+          "activation_cost": [
+            0,
+            0,
+            0
+          ],
+          "life_paid": 0,
+          "damage": 0,
+          "sacrifice": false
+        },
+        {
+          "seat": 1,
+          "source_id": 470,
+          "source": "aggro:land:4",
+          "output": [
+            1,
+            0,
+            0
+          ],
+          "activation_cost": [
+            0,
+            0,
+            0
+          ],
+          "life_paid": 0,
+          "damage": 0,
+          "sacrifice": false
+        },
+        {
+          "seat": 1,
+          "source_id": 500,
+          "source": "aggro:land:14",
+          "output": [
+            1,
+            0,
+            0
+          ],
+          "activation_cost": [
+            0,
+            0,
+            0
+          ],
+          "life_paid": 0,
+          "damage": 0,
+          "sacrifice": false
+        },
+        {
+          "seat": 3,
+          "source_id": 447,
+          "source": "combo:land:26",
+          "output": [
+            1,
+            0,
+            0
+          ],
+          "activation_cost": [
+            0,
+            0,
+            0
+          ],
+          "life_paid": 0,
+          "damage": 0,
+          "sacrifice": false
+        },
+        {
+          "seat": 3,
+          "source_id": 459,
+          "source": "combo:land:22",
+          "output": [
+            1,
+            0,
+            0
+          ],
+          "activation_cost": [
+            0,
+            0,
+            0
+          ],
+          "life_paid": 0,
+          "damage": 0,
+          "sacrifice": false
+        },
+        {
+          "seat": 3,
+          "source_id": 461,
+          "source": "combo:ramp:4",
+          "output": [
+            1,
+            0,
+            0
+          ],
+          "activation_cost": [
+            0,
+            0,
+            0
+          ],
+          "life_paid": 0,
+          "damage": 0,
+          "sacrifice": false
+        },
+        {
+          "seat": 0,
+          "source_id": 449,
+          "source": "Sulfur Falls",
+          "output": [
+            0,
+            1,
+            0
+          ],
+          "activation_cost": [
+            0,
+            0,
+            0
+          ],
+          "life_paid": 0,
+          "damage": 0,
+          "sacrifice": false
+        },
+        {
+          "seat": 0,
+          "source_id": 513,
+          "source": "Arcane Signet",
+          "output": [
+            0,
+            0,
+            1
+          ],
+          "activation_cost": [
+            0,
+            0,
+            0
+          ],
+          "life_paid": 0,
+          "damage": 0,
+          "sacrifice": false
+        },
+        {
+          "seat": 3,
+          "source_id": 474,
+          "source": "combo:land:5",
+          "output": [
+            1,
+            0,
+            0
+          ],
+          "activation_cost": [
+            0,
+            0,
+            0
+          ],
+          "life_paid": 0,
+          "damage": 0,
+          "sacrifice": false
+        },
+        {
+          "seat": 3,
+          "source_id": 505,
+          "source": "combo:land:27",
+          "output": [
+            1,
+            0,
+            0
+          ],
+          "activation_cost": [
+            0,
+            0,
+            0
+          ],
+          "life_paid": 0,
+          "damage": 0,
+          "sacrifice": false
+        },
+        {
+          "seat": 2,
+          "source_id": 441,
+          "source": "control:land:31",
+          "output": [
+            1,
+            0,
+            0
+          ],
+          "activation_cost": [
+            0,
+            0,
+            0
+          ],
+          "life_paid": 0,
+          "damage": 0,
+          "sacrifice": false
+        },
+        {
+          "seat": 2,
+          "source_id": 451,
+          "source": "control:land:7",
+          "output": [
+            1,
+            0,
+            0
+          ],
+          "activation_cost": [
+            0,
+            0,
+            0
+          ],
+          "life_paid": 0,
+          "damage": 0,
+          "sacrifice": false
+        },
+        {
+          "seat": 2,
+          "source_id": 466,
+          "source": "control:land:10",
+          "output": [
+            1,
+            0,
+            0
+          ],
+          "activation_cost": [
+            0,
+            0,
+            0
+          ],
+          "life_paid": 0,
+          "damage": 0,
+          "sacrifice": false
+        },
+        {
+          "seat": 2,
+          "source_id": 487,
+          "source": "control:land:8",
+          "output": [
+            1,
+            0,
+            0
+          ],
+          "activation_cost": [
+            0,
+            0,
+            0
+          ],
+          "life_paid": 0,
+          "damage": 0,
+          "sacrifice": false
+        },
+        {
+          "seat": 2,
+          "source_id": 517,
+          "source": "control:land:33",
+          "output": [
+            1,
+            0,
+            0
+          ],
+          "activation_cost": [
+            0,
+            0,
+            0
+          ],
+          "life_paid": 0,
+          "damage": 0,
+          "sacrifice": false
+        },
+        {
+          "seat": 2,
+          "source_id": 547,
+          "source": "control:land:18",
+          "output": [
+            1,
+            0,
+            0
+          ],
+          "activation_cost": [
+            0,
+            0,
+            0
+          ],
+          "life_paid": 0,
+          "damage": 0,
+          "sacrifice": false
+        },
+        {
+          "seat": 1,
+          "source_id": 443,
+          "source": "aggro:land:16",
+          "output": [
+            1,
+            0,
+            0
+          ],
+          "activation_cost": [
+            0,
+            0,
+            0
+          ],
+          "life_paid": 0,
+          "damage": 0,
+          "sacrifice": false
+        },
+        {
+          "seat": 1,
+          "source_id": 455,
+          "source": "aggro:land:9",
+          "output": [
+            1,
+            0,
+            0
+          ],
+          "activation_cost": [
+            0,
+            0,
+            0
+          ],
+          "life_paid": 0,
+          "damage": 0,
+          "sacrifice": false
+        },
+        {
+          "seat": 1,
+          "source_id": 470,
+          "source": "aggro:land:4",
+          "output": [
+            1,
+            0,
+            0
+          ],
+          "activation_cost": [
+            0,
+            0,
+            0
+          ],
+          "life_paid": 0,
+          "damage": 0,
+          "sacrifice": false
+        },
+        {
+          "seat": 1,
+          "source_id": 500,
+          "source": "aggro:land:14",
+          "output": [
+            1,
+            0,
+            0
+          ],
+          "activation_cost": [
+            0,
+            0,
+            0
+          ],
+          "life_paid": 0,
+          "damage": 0,
+          "sacrifice": false
+        },
+        {
+          "seat": 3,
+          "source_id": 447,
+          "source": "combo:land:26",
+          "output": [
+            1,
+            0,
+            0
+          ],
+          "activation_cost": [
+            0,
+            0,
+            0
+          ],
+          "life_paid": 0,
+          "damage": 0,
+          "sacrifice": false
+        },
+        {
+          "seat": 3,
+          "source_id": 459,
+          "source": "combo:land:22",
+          "output": [
+            1,
+            0,
+            0
+          ],
+          "activation_cost": [
+            0,
+            0,
+            0
+          ],
+          "life_paid": 0,
+          "damage": 0,
+          "sacrifice": false
+        },
+        {
+          "seat": 3,
+          "source_id": 461,
+          "source": "combo:ramp:4",
+          "output": [
+            1,
+            0,
+            0
+          ],
+          "activation_cost": [
+            0,
+            0,
+            0
+          ],
+          "life_paid": 0,
+          "damage": 0,
+          "sacrifice": false
+        },
+        {
+          "seat": 3,
+          "source_id": 474,
+          "source": "combo:land:5",
+          "output": [
+            1,
+            0,
+            0
+          ],
+          "activation_cost": [
+            0,
+            0,
+            0
+          ],
+          "life_paid": 0,
+          "damage": 0,
+          "sacrifice": false
+        },
+        {
+          "seat": 3,
+          "source_id": 505,
+          "source": "combo:land:27",
+          "output": [
+            1,
+            0,
+            0
+          ],
+          "activation_cost": [
+            0,
+            0,
+            0
+          ],
+          "life_paid": 0,
+          "damage": 0,
+          "sacrifice": false
+        },
+        {
+          "seat": 3,
+          "source_id": 507,
+          "source": "combo:ramp:5",
+          "output": [
+            1,
+            0,
+            0
+          ],
+          "activation_cost": [
+            0,
+            0,
+            0
+          ],
+          "life_paid": 0,
+          "damage": 0,
+          "sacrifice": false
+        },
+        {
+          "seat": 3,
+          "source_id": 535,
+          "source": "combo:land:18",
+          "output": [
+            1,
+            0,
+            0
+          ],
+          "activation_cost": [
+            0,
+            0,
+            0
+          ],
+          "life_paid": 0,
+          "damage": 0,
+          "sacrifice": false
+        },
+        {
+          "seat": 3,
+          "source_id": 537,
+          "source": "combo:ramp:0",
+          "output": [
+            1,
+            0,
+            0
+          ],
+          "activation_cost": [
+            0,
+            0,
+            0
+          ],
+          "life_paid": 0,
+          "damage": 0,
+          "sacrifice": false
+        },
+        {
+          "seat": 3,
+          "source_id": 557,
+          "source": "combo:land:21",
+          "output": [
+            1,
+            0,
+            0
+          ],
+          "activation_cost": [
+            0,
+            0,
+            0
+          ],
+          "life_paid": 0,
+          "damage": 0,
+          "sacrifice": false
+        },
+        {
+          "seat": 2,
+          "source_id": 441,
+          "source": "control:land:31",
+          "output": [
+            1,
+            0,
+            0
+          ],
+          "activation_cost": [
+            0,
+            0,
+            0
+          ],
+          "life_paid": 0,
+          "damage": 0,
+          "sacrifice": false
+        },
+        {
+          "seat": 2,
+          "source_id": 451,
+          "source": "control:land:7",
+          "output": [
+            1,
+            0,
+            0
+          ],
+          "activation_cost": [
+            0,
+            0,
+            0
+          ],
+          "life_paid": 0,
+          "damage": 0,
+          "sacrifice": false
+        },
+        {
+          "seat": 2,
+          "source_id": 466,
+          "source": "control:land:10",
+          "output": [
+            1,
+            0,
+            0
+          ],
+          "activation_cost": [
+            0,
+            0,
+            0
+          ],
+          "life_paid": 0,
+          "damage": 0,
+          "sacrifice": false
+        },
+        {
+          "seat": 2,
+          "source_id": 487,
+          "source": "control:land:8",
+          "output": [
+            1,
+            0,
+            0
+          ],
+          "activation_cost": [
+            0,
+            0,
+            0
+          ],
+          "life_paid": 0,
+          "damage": 0,
+          "sacrifice": false
+        },
+        {
+          "seat": 0,
+          "source_id": 449,
+          "source": "Sulfur Falls",
+          "output": [
+            0,
+            1,
+            0
+          ],
+          "activation_cost": [
+            0,
+            0,
+            0
+          ],
+          "life_paid": 0,
+          "damage": 0,
+          "sacrifice": false
+        },
+        {
+          "seat": 0,
+          "source_id": 513,
+          "source": "Arcane Signet",
+          "output": [
+            0,
+            1,
+            0
+          ],
+          "activation_cost": [
+            0,
+            0,
+            0
+          ],
+          "life_paid": 0,
+          "damage": 0,
+          "sacrifice": false
+        },
+        {
+          "seat": 2,
+          "source_id": 517,
+          "source": "control:land:33",
+          "output": [
+            1,
+            0,
+            0
+          ],
+          "activation_cost": [
+            0,
+            0,
+            0
+          ],
+          "life_paid": 0,
+          "damage": 0,
+          "sacrifice": false
+        },
+        {
+          "seat": 2,
+          "source_id": 547,
+          "source": "control:land:18",
+          "output": [
+            1,
+            0,
+            0
+          ],
+          "activation_cost": [
+            0,
+            0,
+            0
+          ],
+          "life_paid": 0,
+          "damage": 0,
+          "sacrifice": false
+        },
+        {
+          "seat": 1,
+          "source_id": 443,
+          "source": "aggro:land:16",
+          "output": [
+            1,
+            0,
+            0
+          ],
+          "activation_cost": [
+            0,
+            0,
+            0
+          ],
+          "life_paid": 0,
+          "damage": 0,
+          "sacrifice": false
+        },
+        {
+          "seat": 1,
+          "source_id": 455,
+          "source": "aggro:land:9",
+          "output": [
+            1,
+            0,
+            0
+          ],
+          "activation_cost": [
+            0,
+            0,
+            0
+          ],
+          "life_paid": 0,
+          "damage": 0,
+          "sacrifice": false
+        },
+        {
+          "seat": 1,
+          "source_id": 470,
+          "source": "aggro:land:4",
+          "output": [
+            1,
+            0,
+            0
+          ],
+          "activation_cost": [
+            0,
+            0,
+            0
+          ],
+          "life_paid": 0,
+          "damage": 0,
+          "sacrifice": false
+        },
+        {
+          "seat": 1,
+          "source_id": 500,
+          "source": "aggro:land:14",
+          "output": [
+            1,
+            0,
+            0
+          ],
+          "activation_cost": [
+            0,
+            0,
+            0
+          ],
+          "life_paid": 0,
+          "damage": 0,
+          "sacrifice": false
+        },
+        {
+          "seat": 3,
+          "source_id": 447,
+          "source": "combo:land:26",
+          "output": [
+            1,
+            0,
+            0
+          ],
+          "activation_cost": [
+            0,
+            0,
+            0
+          ],
+          "life_paid": 0,
+          "damage": 0,
+          "sacrifice": false
+        },
+        {
+          "seat": 3,
+          "source_id": 459,
+          "source": "combo:land:22",
+          "output": [
+            1,
+            0,
+            0
+          ],
+          "activation_cost": [
+            0,
+            0,
+            0
+          ],
+          "life_paid": 0,
+          "damage": 0,
+          "sacrifice": false
+        },
+        {
+          "seat": 2,
+          "source_id": 441,
+          "source": "control:land:31",
+          "output": [
+            1,
+            0,
+            0
+          ],
+          "activation_cost": [
+            0,
+            0,
+            0
+          ],
+          "life_paid": 0,
+          "damage": 0,
+          "sacrifice": false
+        },
+        {
+          "seat": 2,
+          "source_id": 451,
+          "source": "control:land:7",
+          "output": [
+            1,
+            0,
+            0
+          ],
+          "activation_cost": [
+            0,
+            0,
+            0
+          ],
+          "life_paid": 0,
+          "damage": 0,
+          "sacrifice": false
+        },
+        {
+          "seat": 2,
+          "source_id": 466,
+          "source": "control:land:10",
+          "output": [
+            1,
+            0,
+            0
+          ],
+          "activation_cost": [
+            0,
+            0,
+            0
+          ],
+          "life_paid": 0,
+          "damage": 0,
+          "sacrifice": false
+        },
+        {
+          "seat": 2,
+          "source_id": 487,
+          "source": "control:land:8",
+          "output": [
+            1,
+            0,
+            0
+          ],
+          "activation_cost": [
+            0,
+            0,
+            0
+          ],
+          "life_paid": 0,
+          "damage": 0,
+          "sacrifice": false
+        },
+        {
+          "seat": 2,
+          "source_id": 517,
+          "source": "control:land:33",
+          "output": [
+            1,
+            0,
+            0
+          ],
+          "activation_cost": [
+            0,
+            0,
+            0
+          ],
+          "life_paid": 0,
+          "damage": 0,
+          "sacrifice": false
+        },
+        {
+          "seat": 2,
+          "source_id": 547,
+          "source": "control:land:18",
+          "output": [
+            1,
+            0,
+            0
+          ],
+          "activation_cost": [
+            0,
+            0,
+            0
+          ],
+          "life_paid": 0,
+          "damage": 0,
+          "sacrifice": false
+        },
+        {
+          "seat": 1,
+          "source_id": 443,
+          "source": "aggro:land:16",
+          "output": [
+            1,
+            0,
+            0
+          ],
+          "activation_cost": [
+            0,
+            0,
+            0
+          ],
+          "life_paid": 0,
+          "damage": 0,
+          "sacrifice": false
+        },
+        {
+          "seat": 1,
+          "source_id": 455,
+          "source": "aggro:land:9",
+          "output": [
+            1,
+            0,
+            0
+          ],
+          "activation_cost": [
+            0,
+            0,
+            0
+          ],
+          "life_paid": 0,
+          "damage": 0,
+          "sacrifice": false
+        },
+        {
+          "seat": 1,
+          "source_id": 470,
+          "source": "aggro:land:4",
+          "output": [
+            1,
+            0,
+            0
+          ],
+          "activation_cost": [
+            0,
+            0,
+            0
+          ],
+          "life_paid": 0,
+          "damage": 0,
+          "sacrifice": false
+        },
+        {
+          "seat": 1,
+          "source_id": 500,
+          "source": "aggro:land:14",
+          "output": [
+            1,
+            0,
+            0
+          ],
+          "activation_cost": [
+            0,
+            0,
+            0
+          ],
+          "life_paid": 0,
+          "damage": 0,
+          "sacrifice": false
+        },
+        {
+          "seat": 3,
+          "source_id": 447,
+          "source": "combo:land:26",
+          "output": [
+            1,
+            0,
+            0
+          ],
+          "activation_cost": [
+            0,
+            0,
+            0
+          ],
+          "life_paid": 0,
+          "damage": 0,
+          "sacrifice": false
+        },
+        {
+          "seat": 3,
+          "source_id": 459,
+          "source": "combo:land:22",
+          "output": [
+            1,
+            0,
+            0
+          ],
+          "activation_cost": [
+            0,
+            0,
+            0
+          ],
+          "life_paid": 0,
+          "damage": 0,
+          "sacrifice": false
+        },
+        {
+          "seat": 3,
+          "source_id": 461,
+          "source": "combo:ramp:4",
+          "output": [
+            1,
+            0,
+            0
+          ],
+          "activation_cost": [
+            0,
+            0,
+            0
+          ],
+          "life_paid": 0,
+          "damage": 0,
+          "sacrifice": false
+        },
+        {
+          "seat": 3,
+          "source_id": 474,
+          "source": "combo:land:5",
+          "output": [
+            1,
+            0,
+            0
+          ],
+          "activation_cost": [
+            0,
+            0,
+            0
+          ],
+          "life_paid": 0,
+          "damage": 0,
+          "sacrifice": false
+        },
+        {
+          "seat": 3,
+          "source_id": 505,
+          "source": "combo:land:27",
+          "output": [
+            1,
+            0,
+            0
+          ],
+          "activation_cost": [
+            0,
+            0,
+            0
+          ],
+          "life_paid": 0,
+          "damage": 0,
+          "sacrifice": false
+        },
+        {
+          "seat": 0,
+          "source_id": 449,
+          "source": "Sulfur Falls",
+          "output": [
+            0,
+            1,
+            0
+          ],
+          "activation_cost": [
+            0,
+            0,
+            0
+          ],
+          "life_paid": 0,
+          "damage": 0,
+          "sacrifice": false
+        },
+        {
+          "seat": 0,
+          "source_id": 513,
+          "source": "Arcane Signet",
+          "output": [
+            0,
+            1,
+            0
+          ],
+          "activation_cost": [
+            0,
+            0,
+            0
+          ],
+          "life_paid": 0,
+          "damage": 0,
+          "sacrifice": false
+        },
+        {
+          "seat": 0,
+          "source_id": 511,
+          "source": "Shivan Reef",
+          "output": [
+            1,
+            0,
+            0
+          ],
+          "activation_cost": [
+            0,
+            0,
+            0
+          ],
+          "life_paid": 0,
+          "damage": 0,
+          "sacrifice": false
+        },
+        {
+          "seat": 0,
+          "source_id": 590,
+          "source": "Mountain",
+          "output": [
+            0,
+            0,
+            1
+          ],
+          "activation_cost": [
+            0,
+            0,
+            0
+          ],
+          "life_paid": 0,
+          "damage": 0,
+          "sacrifice": false
+        },
+        {
+          "seat": 0,
+          "source_id": 615,
+          "source": "Island",
+          "output": [
+            0,
+            1,
+            0
+          ],
+          "activation_cost": [
+            0,
+            0,
+            0
+          ],
+          "life_paid": 0,
+          "damage": 0,
+          "sacrifice": false
+        },
+        {
+          "seat": 2,
+          "source_id": 441,
+          "source": "control:land:31",
+          "output": [
+            1,
+            0,
+            0
+          ],
+          "activation_cost": [
+            0,
+            0,
+            0
+          ],
+          "life_paid": 0,
+          "damage": 0,
+          "sacrifice": false
+        },
+        {
+          "seat": 2,
+          "source_id": 451,
+          "source": "control:land:7",
+          "output": [
+            1,
+            0,
+            0
+          ],
+          "activation_cost": [
+            0,
+            0,
+            0
+          ],
+          "life_paid": 0,
+          "damage": 0,
+          "sacrifice": false
+        },
+        {
+          "seat": 2,
+          "source_id": 466,
+          "source": "control:land:10",
+          "output": [
+            1,
+            0,
+            0
+          ],
+          "activation_cost": [
+            0,
+            0,
+            0
+          ],
+          "life_paid": 0,
+          "damage": 0,
+          "sacrifice": false
+        },
+        {
+          "seat": 2,
+          "source_id": 487,
+          "source": "control:land:8",
+          "output": [
+            1,
+            0,
+            0
+          ],
+          "activation_cost": [
+            0,
+            0,
+            0
+          ],
+          "life_paid": 0,
+          "damage": 0,
+          "sacrifice": false
+        },
+        {
+          "seat": 2,
+          "source_id": 517,
+          "source": "control:land:33",
+          "output": [
+            1,
+            0,
+            0
+          ],
+          "activation_cost": [
+            0,
+            0,
+            0
+          ],
+          "life_paid": 0,
+          "damage": 0,
+          "sacrifice": false
+        },
+        {
+          "seat": 2,
+          "source_id": 547,
+          "source": "control:land:18",
+          "output": [
+            1,
+            0,
+            0
+          ],
+          "activation_cost": [
+            0,
+            0,
+            0
+          ],
+          "life_paid": 0,
+          "damage": 0,
+          "sacrifice": false
+        },
+        {
+          "seat": 2,
+          "source_id": 568,
+          "source": "control:land:26",
+          "output": [
+            1,
+            0,
+            0
+          ],
+          "activation_cost": [
+            0,
+            0,
+            0
+          ],
+          "life_paid": 0,
+          "damage": 0,
+          "sacrifice": false
+        },
+        {
+          "seat": 1,
+          "source_id": 443,
+          "source": "aggro:land:16",
+          "output": [
+            1,
+            0,
+            0
+          ],
+          "activation_cost": [
+            0,
+            0,
+            0
+          ],
+          "life_paid": 0,
+          "damage": 0,
+          "sacrifice": false
+        },
+        {
+          "seat": 1,
+          "source_id": 455,
+          "source": "aggro:land:9",
+          "output": [
+            1,
+            0,
+            0
+          ],
+          "activation_cost": [
+            0,
+            0,
+            0
+          ],
+          "life_paid": 0,
+          "damage": 0,
+          "sacrifice": false
+        },
+        {
+          "seat": 1,
+          "source_id": 470,
+          "source": "aggro:land:4",
+          "output": [
+            1,
+            0,
+            0
+          ],
+          "activation_cost": [
+            0,
+            0,
+            0
+          ],
+          "life_paid": 0,
+          "damage": 0,
+          "sacrifice": false
+        },
+        {
+          "seat": 1,
+          "source_id": 500,
+          "source": "aggro:land:14",
+          "output": [
+            1,
+            0,
+            0
+          ],
+          "activation_cost": [
+            0,
+            0,
+            0
+          ],
+          "life_paid": 0,
+          "damage": 0,
+          "sacrifice": false
+        },
+        {
+          "seat": 1,
+          "source_id": 598,
+          "source": "aggro:land:11",
+          "output": [
+            1,
+            0,
+            0
+          ],
+          "activation_cost": [
+            0,
+            0,
+            0
+          ],
+          "life_paid": 0,
+          "damage": 0,
+          "sacrifice": false
+        },
+        {
+          "seat": 3,
+          "source_id": 447,
+          "source": "combo:land:26",
+          "output": [
+            1,
+            0,
+            0
+          ],
+          "activation_cost": [
+            0,
+            0,
+            0
+          ],
+          "life_paid": 0,
+          "damage": 0,
+          "sacrifice": false
+        },
+        {
+          "seat": 3,
+          "source_id": 459,
+          "source": "combo:land:22",
+          "output": [
+            1,
+            0,
+            0
+          ],
+          "activation_cost": [
+            0,
+            0,
+            0
+          ],
+          "life_paid": 0,
+          "damage": 0,
+          "sacrifice": false
+        },
+        {
+          "seat": 3,
+          "source_id": 461,
+          "source": "combo:ramp:4",
+          "output": [
+            1,
+            0,
+            0
+          ],
+          "activation_cost": [
+            0,
+            0,
+            0
+          ],
+          "life_paid": 0,
+          "damage": 0,
+          "sacrifice": false
+        },
+        {
+          "seat": 2,
+          "source_id": 592,
+          "source": "control:land:36",
+          "output": [
+            1,
+            0,
+            0
+          ],
+          "activation_cost": [
+            0,
+            0,
+            0
+          ],
+          "life_paid": 0,
+          "damage": 0,
+          "sacrifice": false
+        },
+        {
+          "seat": 2,
+          "source_id": 623,
+          "source": "control:land:17",
+          "output": [
+            1,
+            0,
+            0
+          ],
+          "activation_cost": [
+            0,
+            0,
+            0
+          ],
+          "life_paid": 0,
+          "damage": 0,
+          "sacrifice": false
+        },
+        {
+          "seat": 3,
+          "source_id": 474,
+          "source": "combo:land:5",
+          "output": [
+            1,
+            0,
+            0
+          ],
+          "activation_cost": [
+            0,
+            0,
+            0
+          ],
+          "life_paid": 0,
+          "damage": 0,
+          "sacrifice": false
+        },
+        {
+          "seat": 3,
+          "source_id": 505,
+          "source": "combo:land:27",
+          "output": [
+            1,
+            0,
+            0
+          ],
+          "activation_cost": [
+            0,
+            0,
+            0
+          ],
+          "life_paid": 0,
+          "damage": 0,
+          "sacrifice": false
+        },
+        {
+          "seat": 2,
+          "source_id": 441,
+          "source": "control:land:31",
+          "output": [
+            1,
+            0,
+            0
+          ],
+          "activation_cost": [
+            0,
+            0,
+            0
+          ],
+          "life_paid": 0,
+          "damage": 0,
+          "sacrifice": false
+        },
+        {
+          "seat": 2,
+          "source_id": 451,
+          "source": "control:land:7",
+          "output": [
+            1,
+            0,
+            0
+          ],
+          "activation_cost": [
+            0,
+            0,
+            0
+          ],
+          "life_paid": 0,
+          "damage": 0,
+          "sacrifice": false
+        },
+        {
+          "seat": 2,
+          "source_id": 466,
+          "source": "control:land:10",
+          "output": [
+            1,
+            0,
+            0
+          ],
+          "activation_cost": [
+            0,
+            0,
+            0
+          ],
+          "life_paid": 0,
+          "damage": 0,
+          "sacrifice": false
+        },
+        {
+          "seat": 2,
+          "source_id": 487,
+          "source": "control:land:8",
+          "output": [
+            1,
+            0,
+            0
+          ],
+          "activation_cost": [
+            0,
+            0,
+            0
+          ],
+          "life_paid": 0,
+          "damage": 0,
+          "sacrifice": false
+        },
+        {
+          "seat": 2,
+          "source_id": 517,
+          "source": "control:land:33",
+          "output": [
+            1,
+            0,
+            0
+          ],
+          "activation_cost": [
+            0,
+            0,
+            0
+          ],
+          "life_paid": 0,
+          "damage": 0,
+          "sacrifice": false
+        },
+        {
+          "seat": 2,
+          "source_id": 547,
+          "source": "control:land:18",
+          "output": [
+            1,
+            0,
+            0
+          ],
+          "activation_cost": [
+            0,
+            0,
+            0
+          ],
+          "life_paid": 0,
+          "damage": 0,
+          "sacrifice": false
+        },
+        {
+          "seat": 1,
+          "source_id": 443,
+          "source": "aggro:land:16",
+          "output": [
+            1,
+            0,
+            0
+          ],
+          "activation_cost": [
+            0,
+            0,
+            0
+          ],
+          "life_paid": 0,
+          "damage": 0,
+          "sacrifice": false
+        },
+        {
+          "seat": 1,
+          "source_id": 455,
+          "source": "aggro:land:9",
+          "output": [
+            1,
+            0,
+            0
+          ],
+          "activation_cost": [
+            0,
+            0,
+            0
+          ],
+          "life_paid": 0,
+          "damage": 0,
+          "sacrifice": false
+        },
+        {
+          "seat": 1,
+          "source_id": 470,
+          "source": "aggro:land:4",
+          "output": [
+            1,
+            0,
+            0
+          ],
+          "activation_cost": [
+            0,
+            0,
+            0
+          ],
+          "life_paid": 0,
+          "damage": 0,
+          "sacrifice": false
+        },
+        {
+          "seat": 1,
+          "source_id": 500,
+          "source": "aggro:land:14",
+          "output": [
+            1,
+            0,
+            0
+          ],
+          "activation_cost": [
+            0,
+            0,
+            0
+          ],
+          "life_paid": 0,
+          "damage": 0,
+          "sacrifice": false
+        },
+        {
+          "seat": 1,
+          "source_id": 598,
+          "source": "aggro:land:11",
+          "output": [
+            1,
+            0,
+            0
+          ],
+          "activation_cost": [
+            0,
+            0,
+            0
+          ],
+          "life_paid": 0,
+          "damage": 0,
+          "sacrifice": false
+        },
+        {
+          "seat": 1,
+          "source_id": 663,
+          "source": "aggro:land:7",
+          "output": [
+            1,
+            0,
+            0
+          ],
+          "activation_cost": [
+            0,
+            0,
+            0
+          ],
+          "life_paid": 0,
+          "damage": 0,
+          "sacrifice": false
+        },
+        {
+          "seat": 2,
+          "source_id": 568,
+          "source": "control:land:26",
+          "output": [
+            1,
+            0,
+            0
+          ],
+          "activation_cost": [
+            0,
+            0,
+            0
+          ],
+          "life_paid": 0,
+          "damage": 0,
+          "sacrifice": false
+        },
+        {
+          "seat": 2,
+          "source_id": 592,
+          "source": "control:land:36",
+          "output": [
+            1,
+            0,
+            0
+          ],
+          "activation_cost": [
+            0,
+            0,
+            0
+          ],
+          "life_paid": 0,
+          "damage": 0,
+          "sacrifice": false
+        },
+        {
+          "seat": 3,
+          "source_id": 447,
+          "source": "combo:land:26",
+          "output": [
+            1,
+            0,
+            0
+          ],
+          "activation_cost": [
+            0,
+            0,
+            0
+          ],
+          "life_paid": 0,
+          "damage": 0,
+          "sacrifice": false
+        },
+        {
+          "seat": 3,
+          "source_id": 459,
+          "source": "combo:land:22",
+          "output": [
+            1,
+            0,
+            0
+          ],
+          "activation_cost": [
+            0,
+            0,
+            0
+          ],
+          "life_paid": 0,
+          "damage": 0,
+          "sacrifice": false
+        }
+      ],
+      "planner_max_states": 78,
+      "planner_budget": 20000,
+      "cache_hits": 370,
+      "limits": [
+        "typed priority supplied by v10; incomplete card/step coverage remains",
+        "one detailed deck; U/R/colorless source subset; synthetic sources approximate"
+      ]
+    },
+    "v10": {
+      "typed_priority_live": true,
+      "passes": 474,
+      "triggers_queued": 0,
+      "triggers_resolved": 0,
+      "activations_resolved": 0,
+      "fizzled": 0,
+      "max_depth": 3,
+      "remaining_frames": 0,
+      "pending_triggers": 0,
+      "limits": [
+        "one detailed deck",
+        "coarse step/combat timing",
+        "Mind Stone draw plus explicitly registered nonmana activations; not all named abilities"
+      ]
+    }
+  }
+}
