@@ -1,0 +1,20 @@
+{
+  "README.md": "b6dfe1708427a15c5a219313997901d6c5591abdf4ac54ec840975cf49dad92f",
+  "run_all_tests.py": "d6fbd9cea5da294ec30cf0292aa54ebe739703bcd7a9cb86d61eb8699a67549d",
+  "simulator/v8_central/stack.py": "4734ae50acba0b14b9f54f3bf5d30ebc376baaa9a919ceb7c40cca904e13fb25",
+  "simulator/v9b_live/01_original_seat.json": "d7a3337f8b2ec131231ca285561e6ab3409e9d839c7200574211e81c9b6f315d",
+  "simulator/v9b_live/01_original_seat.md": "1214512cc7fcf372a8ed81538859ef0f03e0b8cafc7e01c9e1738f83d1864952",
+  "simulator/v9b_live/02_right_of_aggro.json": "fda520f8ce64081001897ace4de32e1308c01a2ba09c7911b50264d671efa07d",
+  "simulator/v9b_live/02_right_of_aggro.md": "0a5b5f007a82324c4e657b91a4bf03cbfee417c2bf95c779277e262aa53aa087",
+  "simulator/v9b_live/03_third_seat.json": "13471bbb884d73d545bb23d0037272835b70b6903e57048ec3b192b50ebae11d",
+  "simulator/v9b_live/03_third_seat.md": "8285545aab6da3d877a25a69cb9dcc39341afc2eb8f58b4af159fa2fe3a2f9ce",
+  "simulator/v9b_live/04_forced_seat_three.json": "0a403ce117125b1763d7397ddcb2233d92eadeb84f18e2402877233b0e32abd3",
+  "simulator/v9b_live/04_forced_seat_three.md": "23e71053b555767ee5c5494ded7e6e8cb3331a949e28a1c01952e3cf6d5e16bd",
+  "simulator/v9b_live/ASSESSMENT.md": "6cbbfac9a4df8bbdd7ddb875e601b31ab65dbcfe424ee36e6c3ada67067d0f48",
+  "simulator/v9b_live/README.md": "686e0464a24aea5204ac2283c5c89ba41ad1314a01e766cf9eff3b661207b0dd",
+  "simulator/v9b_live/live.py": "2969f50e1731867db4653ad8d6f4c733af074b3aecf48bfe5e5e6c141c15d140",
+  "simulator/v9b_live/state.py": "c5a6a0f29b74437dcf828617652e5b2620cf0f4059138fb2ef7fea614537f48e",
+  "simulator/v9b_live/tests.py": "f9daa416cea2ea4db8a9e374ca75230e2fcf348eeb2305a7c31d8454a77a63cd",
+  "simulator/v9b_live/validate.py": "1ea0364534815844a3ddae5cb7c407729503dfd3c9d9fe60300129faa345280d",
+  "simulator/v9b_live/validation_results.json": "f64673d0c2492a94f485502ce7a2f2e052918fa8ef119206ca4201dfdc42d6c6"
+}

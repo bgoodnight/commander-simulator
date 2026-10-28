@@ -59,6 +59,7 @@ class SharedStack:
         # Try one counter per new stack top; the counter can itself be countered.
         while t.interactive:
             t.safe_runner.check(stack_depth=len(self.frames))
+            if hasattr(t,'stack_action_active') and not t.stack_action_active(self.frames[-1].action):break
             opts=self._candidates(self.frames[-1])
             if not opts:break
             policy=getattr(t,'response_policy',None)
@@ -83,6 +84,7 @@ class SharedStack:
         # Resolve LIFO. Each uncountered counterspell counters its immediate target.
         for i in range(len(self.frames)-1,-1,-1):
             f=self.frames[i]
+            if hasattr(t,'stack_action_active') and not t.stack_action_active(f.action):continue
             if f.countered:
                 self.spells_countered+=1
                 if f.action.effect!='counter':t.counts['spells_countered']+=1
@@ -104,3 +106,4 @@ class SharedStack:
         result=not self.frames[0].countered
         self.frames=[]
         return result
+

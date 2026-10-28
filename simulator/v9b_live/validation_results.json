@@ -1,0 +1,80 @@
+{
+  "smoke_games": 400,
+  "rounds_per_game": 12,
+  "conservation_and_consistency_passed": true,
+  "safety_stops": [],
+  "sweep_seconds": 18.899,
+  "narratives": [
+    {
+      "case": "01_original_seat",
+      "seed": 102,
+      "providers": [
+        "magnus",
+        "aggro",
+        "control",
+        "combo"
+      ],
+      "forced_opening": false,
+      "reason": "turn_limit",
+      "safety_stop": null,
+      "consistent": true,
+      "magnus_life": 22,
+      "magnus_casts": 4
+    },
+    {
+      "case": "02_right_of_aggro",
+      "seed": 104,
+      "providers": [
+        "aggro",
+        "magnus",
+        "tokens",
+        "ramp_stompy"
+      ],
+      "forced_opening": false,
+      "reason": "combat",
+      "safety_stop": null,
+      "consistent": true,
+      "magnus_life": -1,
+      "magnus_casts": 4
+    },
+    {
+      "case": "03_third_seat",
+      "seed": 103,
+      "providers": [
+        "control",
+        "spellslinger",
+        "magnus",
+        "midrange"
+      ],
+      "forced_opening": false,
+      "reason": "turn_limit",
+      "safety_stop": null,
+      "consistent": true,
+      "magnus_life": 26,
+      "magnus_casts": 7
+    },
+    {
+      "case": "04_forced_seat_three",
+      "seed": 404,
+      "providers": [
+        "control",
+        "combo",
+        "tokens",
+        "magnus"
+      ],
+      "forced_opening": true,
+      "reason": "turn_limit",
+      "safety_stop": null,
+      "consistent": true,
+      "magnus_life": 39,
+      "magnus_casts": 9
+    }
+  ],
+  "benchmark_games": 40,
+  "benchmark_rounds": 10,
+  "median_ms": {
+    "V9Table": 8.716,
+    "LiveTable": 39.905
+  },
+  "caveat": "Local infrastructure diagnostics; no deck-strength inference"
+}

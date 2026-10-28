@@ -3,7 +3,7 @@ import subprocess,sys
 from pathlib import Path
 ROOT=Path(__file__).resolve().parent
 VERSIONS=[('v3_magnus_modular',20),('v4_abstract_opponents',15),('v5_four_player',21),
-          ('v6_real_deck',21),('v7_rules',50),('v8_central',32),('v9_kernel',29)]
+          ('v6_real_deck',21),('v7_rules',50),('v8_central',32),('v9_kernel',29),('v9b_live',34)]
 for folder,expected in VERSIONS:
     path=ROOT/'simulator'/folder
     result=subprocess.run([sys.executable,'tests.py','-q'],cwd=path,text=True,capture_output=True)
@@ -11,4 +11,5 @@ for folder,expected in VERSIONS:
     if result.returncode:
         print(result.stdout+result.stderr)
         raise SystemExit(result.returncode)
-print('All seven versioned suites completed successfully (188 tests expected).')
+print('All eight versioned suites completed successfully (222 tests expected).')
+
