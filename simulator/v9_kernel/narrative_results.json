@@ -1,0 +1,146 @@
+[
+  {
+    "case": "01_original_seat",
+    "seed": 102,
+    "providers": [
+      "magnus",
+      "aggro",
+      "control",
+      "combo"
+    ],
+    "forced_opening": false,
+    "rounds": 10,
+    "winner": null,
+    "win_reason": "turn_limit",
+    "detailed_seat": 0,
+    "magnus_life": 9,
+    "magnus_spells": 9,
+    "v8_same_seed_baseline": {
+      "magnus_life": 9,
+      "magnus_spells": 9,
+      "reason": "turn_limit"
+    },
+    "consistent": true,
+    "safety_stop": null,
+    "coverage": {
+      "supported": 6,
+      "approx": 3
+    },
+    "unsupported_seen": {
+      "Chaos Warp": 9,
+      "Mathemagics": 10,
+      "Resonating Lute": 10,
+      "Phyrexian Altar": 2,
+      "Sigil Tracer": 2
+    }
+  },
+  {
+    "case": "02_right_of_aggro",
+    "seed": 104,
+    "providers": [
+      "aggro",
+      "magnus",
+      "tokens",
+      "ramp_stompy"
+    ],
+    "forced_opening": false,
+    "rounds": 10,
+    "winner": 3,
+    "win_reason": "combat",
+    "detailed_seat": 1,
+    "magnus_life": -1,
+    "magnus_spells": 4,
+    "v8_same_seed_baseline": {
+      "magnus_life": 0,
+      "magnus_spells": 4,
+      "reason": "combat"
+    },
+    "consistent": true,
+    "safety_stop": null,
+    "coverage": {
+      "approx": 1,
+      "supported": 3
+    },
+    "unsupported_seen": {
+      "Cyclonic Rift": 8,
+      "Chaos Mutation": 9,
+      "Dualcaster Mage": 9,
+      "Maskwood Nexus": 6,
+      "The Lost and the Damned": 5,
+      "Abrade": 4,
+      "Phyrexian Altar": 3,
+      "Heralds of Tzeentch": 1
+    }
+  },
+  {
+    "case": "03_third_seat",
+    "seed": 103,
+    "providers": [
+      "control",
+      "spellslinger",
+      "magnus",
+      "midrange"
+    ],
+    "forced_opening": false,
+    "rounds": 10,
+    "winner": null,
+    "win_reason": "turn_limit",
+    "detailed_seat": 2,
+    "magnus_life": 20,
+    "magnus_spells": 7,
+    "v8_same_seed_baseline": {
+      "magnus_life": 20,
+      "magnus_spells": 7,
+      "reason": "turn_limit"
+    },
+    "consistent": true,
+    "safety_stop": null,
+    "coverage": {
+      "supported": 6,
+      "approx": 1
+    },
+    "unsupported_seen": {
+      "Twincast": 10,
+      "Capsize": 9,
+      "Underworld Breach": 8,
+      "Heralds of Tzeentch": 6,
+      "Jeska's Will": 1
+    }
+  },
+  {
+    "case": "04_forced_seat_three",
+    "seed": 404,
+    "providers": [
+      "control",
+      "combo",
+      "tokens",
+      "magnus"
+    ],
+    "forced_opening": true,
+    "rounds": 10,
+    "winner": null,
+    "win_reason": "turn_limit",
+    "detailed_seat": 3,
+    "magnus_life": 35,
+    "magnus_spells": 8,
+    "v8_same_seed_baseline": {
+      "magnus_life": 28,
+      "magnus_spells": 8,
+      "reason": "turn_limit"
+    },
+    "consistent": true,
+    "safety_stop": null,
+    "coverage": {
+      "supported": 6,
+      "approx": 2
+    },
+    "unsupported_seen": {
+      "Heralds of Tzeentch": 10,
+      "Jace, Vryn's Prodigy": 10,
+      "Mathemagics": 9,
+      "Mana Geyser": 7,
+      "Reiterate": 5,
+      "Underworld Breach": 2
+    }
+  }
+]
