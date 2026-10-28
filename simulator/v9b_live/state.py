@@ -179,7 +179,7 @@ class LiveBattlefield(Battlefield):
                            if oid in self.views and oid not in self.kernel.objects]
         result = super()._after_movement(ids, prior_names)
         for player, name in removed_sources:
-            if player is self.table.details and name in player.ready_sources:
+            if not getattr(self.table,'source_backed_mana',False) and player is self.table.details and name in player.ready_sources:
                 player.ready_sources.remove(name)
                 player.mana = min(player.mana, sum(max(map(sum, v6.ColoredPayment.modes(n)))
                                   for n in player.ready_sources) + sum(player.floating))

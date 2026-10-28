@@ -1,0 +1,23 @@
+{
+  "README.md": "5725d4dfb10180bac8d55eea848823a1030a161ba86f6592c9f595ef429ea0ac",
+  "run_all_tests.py": "931a32d5dd4fc6c7cfbafafe471c5c973648a6b256c84d1237037f55b9676acd",
+  "simulator/v8_central/kernel.py": "6a8b9ff92f669b444ae0110fa87fa60e307ee3f75ec45a3efb734730cb18fafa",
+  "simulator/v9b_live/live.py": "b8b7df1b7a07826297519ffc967f9b5cc1a98dadbf72cdbf005d3ed06af78ab4",
+  "simulator/v9b_live/state.py": "5a4b374380f6a86310a1fafa75584556e50f4cbcf6739627bdba980baeaa6ba7",
+  "simulator/v9c_mana/01_original_seat.json": "f789c8701f6e0722eee67c808711f63bba6a276ab913d0017f6d5ddb6d5ce572",
+  "simulator/v9c_mana/01_original_seat.md": "f1a288beb5b745db6f620b8979bdd83338ef3c3ee405e55c945ae93fa6ce47f9",
+  "simulator/v9c_mana/02_right_of_aggro.json": "2c399d98b688acf349f3093013cc43721d670bf35cf9cd69c003f915c9943460",
+  "simulator/v9c_mana/02_right_of_aggro.md": "2e2523673edc73143d8eb12fb8351f9a5fe41f2e7d46c0f19e62b6951ce6baf5",
+  "simulator/v9c_mana/03_third_seat.json": "4204152b3f9ff46bff7ffb47af7332ef7aa8a5234863d71de27be5f57305de18",
+  "simulator/v9c_mana/03_third_seat.md": "426a47e0cf7bd5a52a3dac0faf869c4b9a2c6fc1647c43fc51ac634c2f4ca098",
+  "simulator/v9c_mana/04_forced_seat_three.json": "80a55c74e824c7e21c14abb6dfd5a53cc75d1f49c08d3e577bad39eddb7af860",
+  "simulator/v9c_mana/04_forced_seat_three.md": "96db1f323f0620d2b17dfa547e710c0ee1c450e980801f9bd318b1e116034cd4",
+  "simulator/v9c_mana/ASSESSMENT.md": "9f505d3ae4177c28ed4c0235c07fe52d40b0eb896fd0785381f9d382487a38b9",
+  "simulator/v9c_mana/README.md": "83aa262c2934d2e4c4c15b9d1b1f96f9adf6619d71075b5b4044a278b3679436",
+  "simulator/v9c_mana/game.py": "e5a69e783ad614f2f00466315449b51294a8736adb86d09f70fbd948cf13f09f",
+  "simulator/v9c_mana/provider.py": "71e178c42cf73415e70316b7b601c0d81039acf7e1728c4f41649f338a8ea4ee",
+  "simulator/v9c_mana/resources.py": "3fa13c3cbe768da180ee6c6e8a8f5ece9f3f7c9d375076b362e53bfc11529a43",
+  "simulator/v9c_mana/tests.py": "684f154609fef119501090bd8844d43d4a772e97bcb3599f4de28bd0eec49c8b",
+  "simulator/v9c_mana/validate.py": "91b83e8684d259aa9f1cd1b4e3b802385d177557a437a6bebeca36c583863573",
+  "simulator/v9c_mana/validation_results.json": "7d00ed1612443b070a2a356605c8a3e1fcf76f87b24de4a5068a9da59c9ab825"
+}

@@ -129,7 +129,7 @@ class Battlefield:
                     self.table.emit('creature_died',None,controller=p.seat,creature_id=oid,source=c.name)
             if perm:
                 p.permanents.remove(perm)
-                if p is getattr(self.table,'details',None) and perm.name in p.rock_names:
+                if not getattr(self.table,'source_backed_mana',False) and p is getattr(self.table,'details',None) and perm.name in p.rock_names:
                     p.rock_names.remove(perm.name)
                     if perm.name in p.ready_sources:p.ready_sources.remove(perm.name)
                     p.mana=min(p.mana,sum(max(map(sum,__import__('integrated').ColoredPayment.modes(n))) for n in p.ready_sources)+sum(p.floating))
@@ -203,3 +203,4 @@ class Battlefield:
                 continue
             if not any(x.id in views and x is entry.view for x in entry.player.creatures+entry.player.permanents):return False
         return views=={o.object_id for o in self.kernel.on_battlefield()}
+

@@ -16,6 +16,10 @@ import integrated as v6
 
 
 class LiveTable(V9Table):
+    player_class = ZonePlayer
+    detailed_player_class = ZoneDetailedPlayer
+    battlefield_class = LiveBattlefield
+
     def __init__(self, providers=None, seed=1, trace=False, opening=None):
         providers = tuple(p if isinstance(p, DeckProvider) else DeckProvider(p)
                           for p in (providers if providers is not None else ('magnus', 'aggro', 'control', 'combo')))
@@ -29,17 +33,17 @@ class LiveTable(V9Table):
         players = []; opponent = 0
         for seat, provider in enumerate(providers):
             if provider.kind == 'magnus':
-                player = ZoneDetailedPlayer(seat, seed * 109 + 3, self.zones)
+                player = self.detailed_player_class(seat, seed * 109 + 3, self.zones)
             else:
                 opponent += 1
-                player = ZonePlayer(seat, provider.kind, seed * 109 + opponent * 431 + 3,
+                player = self.player_class(seat, provider.kind, seed * 109 + opponent * 431 + 3,
                                     self.zones, base.synthetic_library(provider.kind, seed * 67 + opponent * 17 + 23))
             players.append(player)
         base.Table.__init__(self, [p.kind for p in providers], seed, True, trace, players)
         self.providers = providers; self.detailed_seat = detailed[0]
         self.details = players[self.detailed_seat]; self._upkeep_actor = None
         self.coverage_log = []; self.seeded_opening = bool(opening)
-        self.world = LiveBattlefield(self, kernel); self.rules = kernel
+        self.world = self.battlefield_class(self, kernel); self.rules = kernel
         self.safe_runner = kernel.guard; self.combo_planner = LoopResolver(self.safe_runner)
         self.shared_triggers = 0; self.shared_cost_queries = 0
         self.safety_stop = None; self.pending_triggers = []; self._world_actions = 0
@@ -84,14 +88,7 @@ class LiveTable(V9Table):
             raise ValueError('Spell not available')
         if card.effect == 'unsupported' or card.card_type == 'land':
             raise ValueError('Unsupported or uncastable card')
-        policy = p.payment_policy
-        if policy:
-            previous = p.treasures
-            policy.pay(p, action)
-            if previous > p.treasures:
-                self.world.consume_treasures(p, previous - p.treasures)
-        else:
-            p.mana -= action.cost
+        self.pay_resources(p, action)
         ticket = self.zones.cast(p.seat, card.object_id)
         self._spells[id(action)] = ticket
         if zone == 'command':
@@ -101,6 +98,21 @@ class LiveTable(V9Table):
             p.coverage['approx' if spec.name in v6.APPROX else 'supported'] += 1
         self.note(f'  P{p.seat} ({p.archetype}) casts {ticket.card_name} [{action.card_type}] for {action.cost}; mana={p.mana}.')
         return True
+
+    def pay_resources(self, p, action):
+        policy = p.payment_policy
+        if policy:
+            previous = p.treasures
+            policy.pay(p, action)
+            if previous > p.treasures:
+                self.world.consume_treasures(p, previous - p.treasures)
+        else:
+            p.mana -= action.cost
+
+    def expected_action(self, p, card):
+        return (self.action_for(p, card) if p.payment_policy else
+                base.Action(p.seat, card.name, card.card_type, card.effect,
+                            card.mana_value, parameters=dict(card.parameters)))
 
     def cast(self, action):
         p = self.players[action.actor]
@@ -113,9 +125,7 @@ class LiveTable(V9Table):
         if card is None or not self.can_pay(p, action):
             return False
         # Reject stale/fabricated costs and effects before any payment or move.
-        expected = (self.action_for(p, card) if p.payment_policy else
-                    base.Action(p.seat, card.name, card.card_type, card.effect,
-                                card.mana_value, parameters=dict(card.parameters)))
+        expected = self.expected_action(p, card)
         if (action.card_type, action.effect, action.cost, action.parameters) != (
                 expected.card_type, expected.effect, expected.cost, expected.parameters):
             raise ValueError('Action differs from current card/cost')
@@ -265,19 +275,22 @@ class LiveTable(V9Table):
             p.land_misses += 1
         if not p.alive:
             self.eliminate(p, 'shock_land'); return
+        self.refresh_resources(p, tapped)
+        self.assert_consistent()
+
+    def refresh_resources(self, p, tapped):
         if p is self.details:
             p.ready_sources = [n for n in p.land_names if n != 'Fabled Passage'] + p.rock_names + ['Treasure'] * p.treasures
             p.floating = (0, 0, 0)
             if tapped:
                 p.ready_sources.remove(tapped)
             p.mana = sum(max(sum(mode) for mode in v6.ColoredPayment.modes(n)) for n in p.ready_sources)
-            self.coverage_log.append({'round': turn, 'hand_unsupported': [c.name for c in p.hand if c.effect == 'unsupported']})
+            self.coverage_log.append({'round': self.round_num, 'hand_unsupported': [c.name for c in p.hand if c.effect == 'unsupported']})
             for c in p.hand:
                 if c.effect == 'unsupported':
                     p.unsupported_seen[c.name] += 1
         else:
             p.mana = p.available_sources()
-        self.assert_consistent()
 
     def main(self, p):
         for _ in range(12):
@@ -308,14 +321,18 @@ class LiveTable(V9Table):
             if ticket.seat == p.seat:
                 del self._spells[key]
         p.eliminated_round = self.round_num
-        p.creatures.clear(); p.permanents.clear(); p.mana = 0
-        if p is self.details:
-            p.ready_sources.clear()
-            p.floating = (0, 0, 0); p.treasures = 0
+        p.creatures.clear(); p.permanents.clear()
+        self.clear_resources(p)
         self.eliminations.append({'round': self.round_num, 'seat': p.seat, 'archetype': p.archetype, 'cause': cause})
         self.emit('elimination', seat=p.seat, cause=cause)
         self.counts['eliminated'] += 1
         self.note(f'    ELIMINATED P{p.seat} ({p.archetype}): {cause}.')
+
+    def clear_resources(self, p):
+        p.mana = 0
+        if p is self.details:
+            p.ready_sources.clear()
+            p.floating = (0, 0, 0); p.treasures = 0
 
     def assert_consistent(self):
         self.zones.assert_consistent()
