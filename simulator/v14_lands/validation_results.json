@@ -1,0 +1,70 @@
+{
+  "games": 200,
+  "rounds": 12,
+  "consistent": true,
+  "safety_stops": [],
+  "steps": 100682,
+  "payments": 11013,
+  "land_entries": 6899,
+  "fetch_resolutions": 48,
+  "simulation_seconds": 134.781,
+  "elapsed_with_reference_seconds": 142.757,
+  "reference_cases": 200,
+  "new_caching": false,
+  "benchmark_games": 12,
+  "benchmark_rounds": 8,
+  "median_ms": {
+    "EngineTable": 430.368,
+    "LandTable": 549.671
+  },
+  "audit_counts": {
+    "partial": 10,
+    "unsupported": 35,
+    "supported subset": 38
+  },
+  "targeted_scenarios": [
+    {
+      "file": "01_shock_and_types",
+      "title": "Life payment and typed lands produce different legal mana",
+      "result": "Branch 1 declined Steam Vents payment, leaving it tapped at 40 life. Its Island/Mountain types still let Sulfur Falls enter untapped and pay for Ponder. Branch 2 paid 2 life for Steam Vents, then used it for Ponder; life was 38 and damage taken stayed zero.",
+      "passed": true
+    },
+    {
+      "file": "02_entry_boundaries",
+      "title": "Entry checks use current other lands, types and opponents",
+      "result": "Coast entered tapped with one other land and untapped with two. Canal entered tapped with three other lands. Sanctuary entered untapped with two basic Islands plus Steam Vents (an Island); its graveyard trigger remains deferred. Training Center entered tapped after the table dropped to one opponent.",
+      "passed": true
+    },
+    {
+      "file": "03_early_fetch",
+      "title": "Passage costs are paid before responses; early basic stays tapped",
+      "result": "Playing Passage did not fetch. Activating it tapped/sacrificed it before anyone received priority; the ability then resolved without its source. The first fetched Island entered tapped and provided no immediate mana. After the next declared own-turn untap it paid for Ponder.",
+      "passed": true
+    },
+    {
+      "file": "04_fourth_land",
+      "title": "Fourth fetched land enters tapped, then untaps and pays for a spell",
+      "result": "Three actual sources paid for Adaptation and were tapped. Passage was played and sacrificed. Its fetched Island entered tapped, then untapped because the resulting battlefield had four lands. That exact new source paid for Ponder immediately; Passage itself was not counted.",
+      "passed": true
+    },
+    {
+      "file": "05_fetch_response",
+      "title": "A response changes the resolution-time untap threshold",
+      "result": "Passage began as the fourth land and was sacrificed as a cost. With its ability waiting, source-paid Capsize bounced another Island. The fetched basic still arrived, but the resulting three-land battlefield failed the untap condition, so it stayed tapped.",
+      "passed": true
+    },
+    {
+      "file": "06_fail_to_find",
+      "title": "Failing to find still shuffles and does not refund the sacrifice",
+      "result": "The explicit search policy chose no basic, which is legal for the hidden-zone search. Passage remained in the graveyard, no land entered, and the library was shuffled. The activation was not a spell or a draw.",
+      "passed": true
+    },
+    {
+      "file": "07_cast_interaction",
+      "title": "Land play and fetch do not trigger cast engines",
+      "result": "Preordain made one Pyromancer Elemental. Playing and activating Passage made none. The fourth fetched Island untapped and paid for Ponder, which made exactly one additional Elemental through the ordinary cast trigger.",
+      "passed": true
+    }
+  ],
+  "caveat": "Infrastructure diagnostics with one detailed deck and synthetic opponents; no win-rate inference."
+}

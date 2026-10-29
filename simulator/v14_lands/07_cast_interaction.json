@@ -1,0 +1,578 @@
+{
+  "title": "Land play and fetch do not trigger cast engines",
+  "result": "Preordain made one Pyromancer Elemental. Playing and activating Passage made none. The fourth fetched Island untapped and paid for Ponder, which made exactly one additional Elemental through the ordinary cast trigger.",
+  "forced": true,
+  "consistent": true,
+  "branches": [
+    {
+      "events": [
+        "FORCED DIAGNOSTIC: conserved actual cards, declared battlefield/hand setup; not a natural opening.",
+        "    LAND ENTERS P0: Island #483; tapped=False; life_paid=0; cause=declared_fixture.",
+        "    LAND ENTERS P0: Island #485; tapped=False; life_paid=0; cause=declared_fixture.",
+        "    LAND ENTERS P0: Mountain #487; tapped=False; life_paid=0; cause=declared_fixture.",
+        "    MANA P0: Island #483 -> (0, 1, 0)",
+        "    MANA P0: Mountain #487 -> (0, 0, 1)",
+        "  P0 (magnus) casts Young Pyromancer [creature] for 2; mana=1.",
+        "    STACK +1 [spell] P0: Young Pyromancer.",
+        "    Young Pyromancer enters battlefield (2/1).",
+        "    MANA P0: Island #485 -> (0, 1, 0)",
+        "  P0 (magnus) casts Preordain [sorcery] for 1; mana=0.",
+        "    STACK +2 [spell] P0: Preordain.",
+        "    STACK +3 [triggered] P0: Young Pyromancer: create_token.",
+        "    CHOICE scry P0: ['Sorcerer Class', \"An Offer You Can't Refuse\"]; {'top': [459], 'bottom': [460]}.",
+        "    LAND ENTERS P0: Fabled Passage #497; tapped=False; life_paid=0; cause=land_play.",
+        "    STACK +4 [activated] P0: Fabled Passage: fabled_passage_fetch.",
+        "    LAND ENTERS P0: Island #499; tapped=True; life_paid=0; cause=basic_fetch.",
+        "    BASIC FETCH P0: source #497; fetched #499; lands=4; untapped=True; shuffled.",
+        "    MANA P0: Island #499 -> (0, 1, 0)",
+        "  P0 (magnus) casts Ponder [sorcery] for 1; mana=0.",
+        "    STACK +5 [spell] P0: Ponder.",
+        "    STACK +6 [triggered] P0: Young Pyromancer: create_token.",
+        "    CHOICE ponder_order P0: ['Impulse', 'Mountain', 'Mountain']; {}.",
+        "    CHOICE ponder_shuffle P0: []; {'shuffle': False}."
+      ],
+      "lands": [
+        {
+          "kind": "entry",
+          "controller": 0,
+          "name": "Island",
+          "object_id": 483,
+          "tapped": false,
+          "life_paid": 0,
+          "cause": "declared_fixture",
+          "face": null
+        },
+        {
+          "kind": "entry",
+          "controller": 0,
+          "name": "Island",
+          "object_id": 485,
+          "tapped": false,
+          "life_paid": 0,
+          "cause": "declared_fixture",
+          "face": null
+        },
+        {
+          "kind": "entry",
+          "controller": 0,
+          "name": "Mountain",
+          "object_id": 487,
+          "tapped": false,
+          "life_paid": 0,
+          "cause": "declared_fixture",
+          "face": null
+        },
+        {
+          "kind": "entry",
+          "controller": 0,
+          "name": "Fabled Passage",
+          "object_id": 497,
+          "tapped": false,
+          "life_paid": 0,
+          "cause": "land_play",
+          "face": null
+        },
+        {
+          "kind": "entry",
+          "controller": 0,
+          "name": "Island",
+          "object_id": 499,
+          "tapped": true,
+          "life_paid": 0,
+          "cause": "basic_fetch",
+          "face": null
+        },
+        {
+          "kind": "fetch_resolved",
+          "controller": 0,
+          "source_id": 497,
+          "fetched_id": 499,
+          "lands_at_resolution": 4,
+          "untapped": true
+        }
+      ],
+      "payments": [
+        {
+          "seat": 0,
+          "cost": [
+            1,
+            0,
+            1
+          ],
+          "sources": [
+            483,
+            487
+          ],
+          "unused": [
+            0,
+            0,
+            0
+          ]
+        },
+        {
+          "seat": 0,
+          "cost": [
+            0,
+            1,
+            0
+          ],
+          "sources": [
+            485
+          ],
+          "unused": [
+            0,
+            0,
+            0
+          ]
+        },
+        {
+          "seat": 0,
+          "cost": [
+            0,
+            0,
+            0
+          ],
+          "sources": [],
+          "unused": [
+            0,
+            0,
+            0
+          ]
+        },
+        {
+          "seat": 0,
+          "cost": [
+            0,
+            1,
+            0
+          ],
+          "sources": [
+            499
+          ],
+          "unused": [
+            0,
+            0,
+            0
+          ]
+        }
+      ],
+      "activations": [
+        {
+          "seat": 0,
+          "source_id": 483,
+          "source": "Island",
+          "output": [
+            0,
+            1,
+            0
+          ],
+          "activation_cost": [
+            0,
+            0,
+            0
+          ],
+          "life_paid": 0,
+          "damage": 0,
+          "sacrifice": false
+        },
+        {
+          "seat": 0,
+          "source_id": 487,
+          "source": "Mountain",
+          "output": [
+            0,
+            0,
+            1
+          ],
+          "activation_cost": [
+            0,
+            0,
+            0
+          ],
+          "life_paid": 0,
+          "damage": 0,
+          "sacrifice": false
+        },
+        {
+          "seat": 0,
+          "source_id": 485,
+          "source": "Island",
+          "output": [
+            0,
+            1,
+            0
+          ],
+          "activation_cost": [
+            0,
+            0,
+            0
+          ],
+          "life_paid": 0,
+          "damage": 0,
+          "sacrifice": false
+        },
+        {
+          "seat": 0,
+          "source_id": 499,
+          "source": "Island",
+          "output": [
+            0,
+            1,
+            0
+          ],
+          "activation_cost": [
+            0,
+            0,
+            0
+          ],
+          "life_paid": 0,
+          "damage": 0,
+          "sacrifice": false
+        }
+      ],
+      "priority": [
+        [
+          "push",
+          1,
+          "spell",
+          0,
+          "Young Pyromancer"
+        ],
+        [
+          "pass",
+          0,
+          [
+            1
+          ]
+        ],
+        [
+          "pass",
+          1,
+          [
+            1
+          ]
+        ],
+        [
+          "pass",
+          2,
+          [
+            1
+          ]
+        ],
+        [
+          "pass",
+          3,
+          [
+            1
+          ]
+        ],
+        [
+          "resolve",
+          1,
+          "spell",
+          0
+        ],
+        [
+          "pass",
+          0,
+          []
+        ],
+        [
+          "pass",
+          1,
+          []
+        ],
+        [
+          "pass",
+          2,
+          []
+        ],
+        [
+          "pass",
+          3,
+          []
+        ],
+        [
+          "push",
+          2,
+          "spell",
+          0,
+          "Preordain"
+        ],
+        [
+          "push",
+          3,
+          "triggered",
+          0,
+          "Young Pyromancer: create_token"
+        ],
+        [
+          "pass",
+          0,
+          [
+            2,
+            3
+          ]
+        ],
+        [
+          "pass",
+          1,
+          [
+            2,
+            3
+          ]
+        ],
+        [
+          "pass",
+          2,
+          [
+            2,
+            3
+          ]
+        ],
+        [
+          "pass",
+          3,
+          [
+            2,
+            3
+          ]
+        ],
+        [
+          "resolve",
+          3,
+          "triggered",
+          0
+        ],
+        [
+          "pass",
+          0,
+          [
+            2
+          ]
+        ],
+        [
+          "pass",
+          1,
+          [
+            2
+          ]
+        ],
+        [
+          "pass",
+          2,
+          [
+            2
+          ]
+        ],
+        [
+          "pass",
+          3,
+          [
+            2
+          ]
+        ],
+        [
+          "resolve",
+          2,
+          "spell",
+          0
+        ],
+        [
+          "pass",
+          0,
+          []
+        ],
+        [
+          "pass",
+          1,
+          []
+        ],
+        [
+          "pass",
+          2,
+          []
+        ],
+        [
+          "pass",
+          3,
+          []
+        ],
+        [
+          "push",
+          4,
+          "activated",
+          0,
+          "Fabled Passage: fabled_passage_fetch"
+        ],
+        [
+          "pass",
+          0,
+          [
+            4
+          ]
+        ],
+        [
+          "pass",
+          1,
+          [
+            4
+          ]
+        ],
+        [
+          "pass",
+          2,
+          [
+            4
+          ]
+        ],
+        [
+          "pass",
+          3,
+          [
+            4
+          ]
+        ],
+        [
+          "resolve",
+          4,
+          "activated",
+          0
+        ],
+        [
+          "pass",
+          0,
+          []
+        ],
+        [
+          "pass",
+          1,
+          []
+        ],
+        [
+          "pass",
+          2,
+          []
+        ],
+        [
+          "pass",
+          3,
+          []
+        ],
+        [
+          "push",
+          5,
+          "spell",
+          0,
+          "Ponder"
+        ],
+        [
+          "push",
+          6,
+          "triggered",
+          0,
+          "Young Pyromancer: create_token"
+        ],
+        [
+          "pass",
+          0,
+          [
+            5,
+            6
+          ]
+        ],
+        [
+          "pass",
+          1,
+          [
+            5,
+            6
+          ]
+        ],
+        [
+          "pass",
+          2,
+          [
+            5,
+            6
+          ]
+        ],
+        [
+          "pass",
+          3,
+          [
+            5,
+            6
+          ]
+        ],
+        [
+          "resolve",
+          6,
+          "triggered",
+          0
+        ],
+        [
+          "pass",
+          0,
+          [
+            5
+          ]
+        ],
+        [
+          "pass",
+          1,
+          [
+            5
+          ]
+        ],
+        [
+          "pass",
+          2,
+          [
+            5
+          ]
+        ],
+        [
+          "pass",
+          3,
+          [
+            5
+          ]
+        ],
+        [
+          "resolve",
+          5,
+          "spell",
+          0
+        ],
+        [
+          "pass",
+          0,
+          []
+        ],
+        [
+          "pass",
+          1,
+          []
+        ],
+        [
+          "pass",
+          2,
+          []
+        ],
+        [
+          "pass",
+          3,
+          []
+        ]
+      ],
+      "final_life": [
+        40,
+        40,
+        40,
+        40
+      ],
+      "fingerprint": "09f7a11c2930b626857e9fbf9c7b1cfdba968bbc4732c323df20f122ea991fd5"
+    }
+  ]
+}

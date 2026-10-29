@@ -1,0 +1,281 @@
+{
+  "title": "Life payment and typed lands produce different legal mana",
+  "result": "Branch 1 declined Steam Vents payment, leaving it tapped at 40 life. Its Island/Mountain types still let Sulfur Falls enter untapped and pay for Ponder. Branch 2 paid 2 life for Steam Vents, then used it for Ponder; life was 38 and damage taken stayed zero.",
+  "forced": true,
+  "consistent": true,
+  "branches": [
+    {
+      "events": [
+        "FORCED DIAGNOSTIC: conserved actual cards, declared battlefield/hand setup; not a natural opening.",
+        "    LAND ENTERS P0: Steam Vents #469; tapped=True; life_paid=0; cause=declared_fixture.",
+        "    LAND ENTERS P0: Sulfur Falls #471; tapped=False; life_paid=0; cause=land_play.",
+        "    MANA P0: Sulfur Falls #471 -> (0, 1, 0)",
+        "  P0 (magnus) casts Ponder [sorcery] for 1; mana=0.",
+        "    STACK +1 [spell] P0: Ponder.",
+        "    CHOICE ponder_order P0: ['Mountain', 'Stormcarved Coast', 'Heralds of Tzeentch']; {}.",
+        "    CHOICE ponder_shuffle P0: []; {'shuffle': False}."
+      ],
+      "lands": [
+        {
+          "kind": "entry",
+          "controller": 0,
+          "name": "Steam Vents",
+          "object_id": 469,
+          "tapped": true,
+          "life_paid": 0,
+          "cause": "declared_fixture",
+          "face": null
+        },
+        {
+          "kind": "entry",
+          "controller": 0,
+          "name": "Sulfur Falls",
+          "object_id": 471,
+          "tapped": false,
+          "life_paid": 0,
+          "cause": "land_play",
+          "face": null
+        }
+      ],
+      "payments": [
+        {
+          "seat": 0,
+          "cost": [
+            0,
+            1,
+            0
+          ],
+          "sources": [
+            471
+          ],
+          "unused": [
+            0,
+            0,
+            0
+          ]
+        }
+      ],
+      "activations": [
+        {
+          "seat": 0,
+          "source_id": 471,
+          "source": "Sulfur Falls",
+          "output": [
+            0,
+            1,
+            0
+          ],
+          "activation_cost": [
+            0,
+            0,
+            0
+          ],
+          "life_paid": 0,
+          "damage": 0,
+          "sacrifice": false
+        }
+      ],
+      "priority": [
+        [
+          "push",
+          1,
+          "spell",
+          0,
+          "Ponder"
+        ],
+        [
+          "pass",
+          0,
+          [
+            1
+          ]
+        ],
+        [
+          "pass",
+          1,
+          [
+            1
+          ]
+        ],
+        [
+          "pass",
+          2,
+          [
+            1
+          ]
+        ],
+        [
+          "pass",
+          3,
+          [
+            1
+          ]
+        ],
+        [
+          "resolve",
+          1,
+          "spell",
+          0
+        ],
+        [
+          "pass",
+          0,
+          []
+        ],
+        [
+          "pass",
+          1,
+          []
+        ],
+        [
+          "pass",
+          2,
+          []
+        ],
+        [
+          "pass",
+          3,
+          []
+        ]
+      ],
+      "final_life": [
+        40,
+        40,
+        40,
+        40
+      ],
+      "fingerprint": "1b24b51e37b5a5c737d114601155acf26083b9ed7b605516193e1633bb5f5260"
+    },
+    {
+      "events": [
+        "FORCED DIAGNOSTIC: conserved actual cards, declared battlefield/hand setup; not a natural opening.",
+        "    LAND ENTERS P0: Steam Vents #469; tapped=False; life_paid=2; cause=land_play.",
+        "    MANA P0: Steam Vents #469 -> (0, 1, 0)",
+        "  P0 (magnus) casts Ponder [sorcery] for 1; mana=0.",
+        "    STACK +1 [spell] P0: Ponder.",
+        "    CHOICE ponder_order P0: ['Mountain', 'Baral, Chief of Compliance', 'Searing Touch']; {}.",
+        "    CHOICE ponder_shuffle P0: []; {'shuffle': False}."
+      ],
+      "lands": [
+        {
+          "kind": "entry",
+          "controller": 0,
+          "name": "Steam Vents",
+          "object_id": 469,
+          "tapped": false,
+          "life_paid": 2,
+          "cause": "land_play",
+          "face": null
+        }
+      ],
+      "payments": [
+        {
+          "seat": 0,
+          "cost": [
+            0,
+            1,
+            0
+          ],
+          "sources": [
+            469
+          ],
+          "unused": [
+            0,
+            0,
+            0
+          ]
+        }
+      ],
+      "activations": [
+        {
+          "seat": 0,
+          "source_id": 469,
+          "source": "Steam Vents",
+          "output": [
+            0,
+            1,
+            0
+          ],
+          "activation_cost": [
+            0,
+            0,
+            0
+          ],
+          "life_paid": 0,
+          "damage": 0,
+          "sacrifice": false
+        }
+      ],
+      "priority": [
+        [
+          "push",
+          1,
+          "spell",
+          0,
+          "Ponder"
+        ],
+        [
+          "pass",
+          0,
+          [
+            1
+          ]
+        ],
+        [
+          "pass",
+          1,
+          [
+            1
+          ]
+        ],
+        [
+          "pass",
+          2,
+          [
+            1
+          ]
+        ],
+        [
+          "pass",
+          3,
+          [
+            1
+          ]
+        ],
+        [
+          "resolve",
+          1,
+          "spell",
+          0
+        ],
+        [
+          "pass",
+          0,
+          []
+        ],
+        [
+          "pass",
+          1,
+          []
+        ],
+        [
+          "pass",
+          2,
+          []
+        ],
+        [
+          "pass",
+          3,
+          []
+        ]
+      ],
+      "final_life": [
+        38,
+        40,
+        40,
+        40
+      ],
+      "fingerprint": "7cbe1d724e7069c927f1d875df4e4018033d202cca878b4a9cc3bdf714f7dc30"
+    }
+  ]
+}

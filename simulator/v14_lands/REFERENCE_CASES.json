@@ -1,0 +1,3807 @@
+{
+  "format": 1,
+  "engine": "v14 LandTable before additional caching",
+  "meaning": "Deterministic rules/zone/object/RNG/decision/payment fingerprints. Existing historical caches remain; no new caching added.",
+  "cases": [
+    {
+      "providers": [
+        "magnus",
+        "aggro",
+        "control",
+        "combo"
+      ],
+      "seed": 0,
+      "rounds": 12,
+      "sha256": "8292e8a62f33421a2517582ce1dbf57b7b07065a2ad844de45c9417ca941fd69",
+      "reason": "turn_limit",
+      "life": [
+        18,
+        23,
+        26,
+        0
+      ],
+      "safety": null
+    },
+    {
+      "providers": [
+        "magnus",
+        "aggro",
+        "tokens",
+        "ramp_stompy"
+      ],
+      "seed": 1,
+      "rounds": 12,
+      "sha256": "7d5e97b694f096f69acce290cf154f241b5fee24b13c4d8ec37afa77a2617dcc",
+      "reason": "state_based",
+      "life": [
+        -10,
+        -1,
+        -12,
+        20
+      ],
+      "safety": null
+    },
+    {
+      "providers": [
+        "magnus",
+        "control",
+        "spellslinger",
+        "midrange"
+      ],
+      "seed": 2,
+      "rounds": 12,
+      "sha256": "e324ea09c26e3c6c4b8a7ec091c09866bff57ab3a9a62a5c9cf78076bda2157d",
+      "reason": "turn_limit",
+      "life": [
+        12,
+        23,
+        14,
+        20
+      ],
+      "safety": null
+    },
+    {
+      "providers": [
+        "magnus",
+        "aggro",
+        "control",
+        "combo"
+      ],
+      "seed": 3,
+      "rounds": 12,
+      "sha256": "aa3bc25cd4a94928241ba93b7c8c7445b4e664ce8a38dd7695eef02dddb0a31e",
+      "reason": "turn_limit",
+      "life": [
+        17,
+        26,
+        -5,
+        -5
+      ],
+      "safety": null
+    },
+    {
+      "providers": [
+        "magnus",
+        "aggro",
+        "tokens",
+        "ramp_stompy"
+      ],
+      "seed": 4,
+      "rounds": 12,
+      "sha256": "423e42175e635bba4661b383d6cb75480047dbfdc7af25fde1ebc00d32f70a93",
+      "reason": "turn_limit",
+      "life": [
+        -11,
+        -8,
+        13,
+        12
+      ],
+      "safety": null
+    },
+    {
+      "providers": [
+        "magnus",
+        "control",
+        "spellslinger",
+        "midrange"
+      ],
+      "seed": 5,
+      "rounds": 12,
+      "sha256": "3e9762f63f2c40aea62f2ec759bfc1ca2cf25a6e506bb838e59a2af4ccdc7d55",
+      "reason": "turn_limit",
+      "life": [
+        25,
+        22,
+        37,
+        40
+      ],
+      "safety": null
+    },
+    {
+      "providers": [
+        "magnus",
+        "aggro",
+        "control",
+        "combo"
+      ],
+      "seed": 6,
+      "rounds": 12,
+      "sha256": "3d487e7a323f2070d5398a938abedcb65405eac3aef8aac08e97b8f051f1bfb9",
+      "reason": "turn_limit",
+      "life": [
+        28,
+        39,
+        29,
+        30
+      ],
+      "safety": null
+    },
+    {
+      "providers": [
+        "magnus",
+        "aggro",
+        "tokens",
+        "ramp_stompy"
+      ],
+      "seed": 7,
+      "rounds": 12,
+      "sha256": "89487ccf0da08d618f998ac56af68f3a1fccd87ae1b444fdb6bce9cbead4159a",
+      "reason": "turn_limit",
+      "life": [
+        0,
+        25,
+        21,
+        7
+      ],
+      "safety": null
+    },
+    {
+      "providers": [
+        "magnus",
+        "control",
+        "spellslinger",
+        "midrange"
+      ],
+      "seed": 8,
+      "rounds": 12,
+      "sha256": "bf0fe5ba2c2c9b3c3c7ba77f48b4f15ce2025bf8a85994b6ed2a77b814122fcc",
+      "reason": "turn_limit",
+      "life": [
+        35,
+        29,
+        24,
+        37
+      ],
+      "safety": null
+    },
+    {
+      "providers": [
+        "magnus",
+        "aggro",
+        "control",
+        "combo"
+      ],
+      "seed": 9,
+      "rounds": 12,
+      "sha256": "eb51181bbd47d6bd36fea54ac2a4fda46efe419316c73c573e56e75a15eb6dab",
+      "reason": "turn_limit",
+      "life": [
+        34,
+        38,
+        30,
+        15
+      ],
+      "safety": null
+    },
+    {
+      "providers": [
+        "magnus",
+        "aggro",
+        "tokens",
+        "ramp_stompy"
+      ],
+      "seed": 10,
+      "rounds": 12,
+      "sha256": "075e08e97bfe0e8bb76f5585b5940152082256ae9c351baf58fd0fcd2502551a",
+      "reason": "state_based",
+      "life": [
+        -1,
+        -17,
+        6,
+        -4
+      ],
+      "safety": null
+    },
+    {
+      "providers": [
+        "magnus",
+        "control",
+        "spellslinger",
+        "midrange"
+      ],
+      "seed": 11,
+      "rounds": 12,
+      "sha256": "2b81015acdd55a711bbf6b27b93d5660eee65dc32fca8d632180a07fcc93af37",
+      "reason": "turn_limit",
+      "life": [
+        40,
+        25,
+        16,
+        19
+      ],
+      "safety": null
+    },
+    {
+      "providers": [
+        "magnus",
+        "aggro",
+        "control",
+        "combo"
+      ],
+      "seed": 12,
+      "rounds": 12,
+      "sha256": "464d230703e6c68ec4ff8fecc919e66387523b00bdf8557f73c9775c907da650",
+      "reason": "state_based",
+      "life": [
+        -11,
+        37,
+        -8,
+        -4
+      ],
+      "safety": null
+    },
+    {
+      "providers": [
+        "magnus",
+        "aggro",
+        "tokens",
+        "ramp_stompy"
+      ],
+      "seed": 13,
+      "rounds": 12,
+      "sha256": "d265c5071e3c8cfae37805f7dfc28d2b254db3ad3d7b8add83f27b44935ea627",
+      "reason": "turn_limit",
+      "life": [
+        -2,
+        19,
+        27,
+        19
+      ],
+      "safety": null
+    },
+    {
+      "providers": [
+        "magnus",
+        "control",
+        "spellslinger",
+        "midrange"
+      ],
+      "seed": 14,
+      "rounds": 12,
+      "sha256": "1aa43fd0723cb5059b3baa115588ed9bdb049bb6d4fdeaf932f73639d06e9f8b",
+      "reason": "turn_limit",
+      "life": [
+        14,
+        21,
+        23,
+        25
+      ],
+      "safety": null
+    },
+    {
+      "providers": [
+        "magnus",
+        "aggro",
+        "control",
+        "combo"
+      ],
+      "seed": 15,
+      "rounds": 12,
+      "sha256": "031c59b86e64a91c66363162dcd5f8a31f529cbfadb9713927cb31851e9c2508",
+      "reason": "turn_limit",
+      "life": [
+        17,
+        37,
+        25,
+        35
+      ],
+      "safety": null
+    },
+    {
+      "providers": [
+        "magnus",
+        "aggro",
+        "tokens",
+        "ramp_stompy"
+      ],
+      "seed": 16,
+      "rounds": 12,
+      "sha256": "75819f119c9b8999fb075a54843c87c86ebbeb6dd07d6c81e0482ececf139632",
+      "reason": "state_based",
+      "life": [
+        -3,
+        -8,
+        -11,
+        20
+      ],
+      "safety": null
+    },
+    {
+      "providers": [
+        "magnus",
+        "control",
+        "spellslinger",
+        "midrange"
+      ],
+      "seed": 17,
+      "rounds": 12,
+      "sha256": "1845ea892ba0ebc89115b6a28dd2381165c7e8d4856c2d783a26efd8eeaa6e56",
+      "reason": "turn_limit",
+      "life": [
+        25,
+        15,
+        13,
+        32
+      ],
+      "safety": null
+    },
+    {
+      "providers": [
+        "magnus",
+        "aggro",
+        "control",
+        "combo"
+      ],
+      "seed": 18,
+      "rounds": 12,
+      "sha256": "e500363c259806c6b9f333c623f25b48003ac3da346a777fad1df4309e84f973",
+      "reason": "turn_limit",
+      "life": [
+        6,
+        8,
+        24,
+        0
+      ],
+      "safety": null
+    },
+    {
+      "providers": [
+        "magnus",
+        "aggro",
+        "tokens",
+        "ramp_stompy"
+      ],
+      "seed": 19,
+      "rounds": 12,
+      "sha256": "1f37d957473b25a8fd56fde9fa267e21bd2eaf55c54ffa8824dfe256c00fb0ce",
+      "reason": "turn_limit",
+      "life": [
+        17,
+        -6,
+        30,
+        14
+      ],
+      "safety": null
+    },
+    {
+      "providers": [
+        "magnus",
+        "control",
+        "spellslinger",
+        "midrange"
+      ],
+      "seed": 20,
+      "rounds": 12,
+      "sha256": "e69cf36ec8426f275cd28a90776ad69f99aabbb0b7f83ef129882302ad6fa393",
+      "reason": "turn_limit",
+      "life": [
+        27,
+        31,
+        31,
+        39
+      ],
+      "safety": null
+    },
+    {
+      "providers": [
+        "magnus",
+        "aggro",
+        "control",
+        "combo"
+      ],
+      "seed": 21,
+      "rounds": 12,
+      "sha256": "c249cc7436df7698fbdf50735ae7bb3e7606fb0ac1c9d0cf3056ee5219cdce3b",
+      "reason": "turn_limit",
+      "life": [
+        24,
+        30,
+        18,
+        27
+      ],
+      "safety": null
+    },
+    {
+      "providers": [
+        "magnus",
+        "aggro",
+        "tokens",
+        "ramp_stompy"
+      ],
+      "seed": 22,
+      "rounds": 12,
+      "sha256": "4b0964ef9849b5287cab0cdaecd105fb5c12317a2b64b65d0cc5808f248a82c0",
+      "reason": "state_based",
+      "life": [
+        -10,
+        -11,
+        -4,
+        9
+      ],
+      "safety": null
+    },
+    {
+      "providers": [
+        "magnus",
+        "control",
+        "spellslinger",
+        "midrange"
+      ],
+      "seed": 23,
+      "rounds": 12,
+      "sha256": "199baac1a66039b27f8063dc71f3d231550fa4decb6cafb7018ffbe522df4eaa",
+      "reason": "turn_limit",
+      "life": [
+        2,
+        14,
+        36,
+        11
+      ],
+      "safety": null
+    },
+    {
+      "providers": [
+        "magnus",
+        "aggro",
+        "control",
+        "combo"
+      ],
+      "seed": 24,
+      "rounds": 12,
+      "sha256": "c464b77333d7579fd97fc25e31436d662d2650880653e7b5d8817810b608b2e3",
+      "reason": "turn_limit",
+      "life": [
+        -7,
+        23,
+        36,
+        25
+      ],
+      "safety": null
+    },
+    {
+      "providers": [
+        "magnus",
+        "aggro",
+        "tokens",
+        "ramp_stompy"
+      ],
+      "seed": 25,
+      "rounds": 12,
+      "sha256": "ffdb204bc23908d812d7d915c3de911c9ed4ce394922583c6a22f2f4c00b3dea",
+      "reason": "turn_limit",
+      "life": [
+        -1,
+        15,
+        -6,
+        19
+      ],
+      "safety": null
+    },
+    {
+      "providers": [
+        "magnus",
+        "control",
+        "spellslinger",
+        "midrange"
+      ],
+      "seed": 26,
+      "rounds": 12,
+      "sha256": "fbf97c333efab5cf1e1d6f9f98de9b3a183896b7acff500b948cde3465be7289",
+      "reason": "turn_limit",
+      "life": [
+        25,
+        10,
+        25,
+        39
+      ],
+      "safety": null
+    },
+    {
+      "providers": [
+        "magnus",
+        "aggro",
+        "control",
+        "combo"
+      ],
+      "seed": 27,
+      "rounds": 12,
+      "sha256": "224d226e406fab452074cdf03aaa6898ac594117415dc165224204e2946a3000",
+      "reason": "turn_limit",
+      "life": [
+        21,
+        38,
+        25,
+        15
+      ],
+      "safety": null
+    },
+    {
+      "providers": [
+        "magnus",
+        "aggro",
+        "tokens",
+        "ramp_stompy"
+      ],
+      "seed": 28,
+      "rounds": 12,
+      "sha256": "9c74eab84a29eb4a8c10580b4efa2d43b59d6a2359331b4cf35c874db71afbe7",
+      "reason": "state_based",
+      "life": [
+        -3,
+        11,
+        -14,
+        -3
+      ],
+      "safety": null
+    },
+    {
+      "providers": [
+        "magnus",
+        "control",
+        "spellslinger",
+        "midrange"
+      ],
+      "seed": 29,
+      "rounds": 12,
+      "sha256": "71004db943753d9d6aadc06ddda0d441636f6667fed833df2be0f754ffc1bcad",
+      "reason": "turn_limit",
+      "life": [
+        27,
+        8,
+        0,
+        34
+      ],
+      "safety": null
+    },
+    {
+      "providers": [
+        "magnus",
+        "aggro",
+        "control",
+        "combo"
+      ],
+      "seed": 30,
+      "rounds": 12,
+      "sha256": "5090681f02cd722fb2b333f86da590eeea9ca1c06ede139ab79928b8ae265a55",
+      "reason": "turn_limit",
+      "life": [
+        38,
+        40,
+        29,
+        35
+      ],
+      "safety": null
+    },
+    {
+      "providers": [
+        "magnus",
+        "aggro",
+        "tokens",
+        "ramp_stompy"
+      ],
+      "seed": 31,
+      "rounds": 12,
+      "sha256": "6d71d785536b03e7a27689462336f3516be2832c5344ac85f86988d6beb0ddf3",
+      "reason": "state_based",
+      "life": [
+        -9,
+        -23,
+        -6,
+        22
+      ],
+      "safety": null
+    },
+    {
+      "providers": [
+        "magnus",
+        "control",
+        "spellslinger",
+        "midrange"
+      ],
+      "seed": 32,
+      "rounds": 12,
+      "sha256": "e5ac77d76b88ff8cc64a8c47a2b976ba8892828096fa9c78b34ffd02ee409a57",
+      "reason": "turn_limit",
+      "life": [
+        26,
+        25,
+        40,
+        27
+      ],
+      "safety": null
+    },
+    {
+      "providers": [
+        "magnus",
+        "aggro",
+        "control",
+        "combo"
+      ],
+      "seed": 33,
+      "rounds": 12,
+      "sha256": "98fad99f6dea0319d934427b603d76bcfa8a5ba8a49df3fe77d40fec463afaae",
+      "reason": "resolved_combo",
+      "life": [
+        0,
+        0,
+        0,
+        18
+      ],
+      "safety": null
+    },
+    {
+      "providers": [
+        "magnus",
+        "aggro",
+        "tokens",
+        "ramp_stompy"
+      ],
+      "seed": 34,
+      "rounds": 12,
+      "sha256": "271ade00fbf6d1bba495cad9764dba5774e8990dcfbb2db967c7206f60520adf",
+      "reason": "turn_limit",
+      "life": [
+        -6,
+        13,
+        25,
+        1
+      ],
+      "safety": null
+    },
+    {
+      "providers": [
+        "magnus",
+        "control",
+        "spellslinger",
+        "midrange"
+      ],
+      "seed": 35,
+      "rounds": 12,
+      "sha256": "90bddd84d55cdd49a4246be2e87903cc3661871a7529c6afdcc16567461a93a6",
+      "reason": "turn_limit",
+      "life": [
+        25,
+        19,
+        26,
+        34
+      ],
+      "safety": null
+    },
+    {
+      "providers": [
+        "magnus",
+        "aggro",
+        "control",
+        "combo"
+      ],
+      "seed": 36,
+      "rounds": 12,
+      "sha256": "4ddbe93f95e115eb905a5520112e39933b5b1903d9871cc149ee1af4a5ac41ff",
+      "reason": "turn_limit",
+      "life": [
+        5,
+        33,
+        12,
+        15
+      ],
+      "safety": null
+    },
+    {
+      "providers": [
+        "magnus",
+        "aggro",
+        "tokens",
+        "ramp_stompy"
+      ],
+      "seed": 37,
+      "rounds": 12,
+      "sha256": "886a196914bc9e53c9297a5862a2afda50ba62c3ae58f15fe027e2eaf7e0ff24",
+      "reason": "turn_limit",
+      "life": [
+        0,
+        4,
+        7,
+        32
+      ],
+      "safety": null
+    },
+    {
+      "providers": [
+        "magnus",
+        "control",
+        "spellslinger",
+        "midrange"
+      ],
+      "seed": 38,
+      "rounds": 12,
+      "sha256": "ecd85ad75250fe7d3ec1d215914f48d1862eac850f92043575a60acb7da90588",
+      "reason": "turn_limit",
+      "life": [
+        19,
+        13,
+        20,
+        14
+      ],
+      "safety": null
+    },
+    {
+      "providers": [
+        "magnus",
+        "aggro",
+        "control",
+        "combo"
+      ],
+      "seed": 39,
+      "rounds": 12,
+      "sha256": "7dc5b498ee092ceed84b15ddcef27f20acabacc1af27fb2305d8fb2f467090e3",
+      "reason": "turn_limit",
+      "life": [
+        31,
+        32,
+        27,
+        31
+      ],
+      "safety": null
+    },
+    {
+      "providers": [
+        "magnus",
+        "aggro",
+        "tokens",
+        "ramp_stompy"
+      ],
+      "seed": 40,
+      "rounds": 12,
+      "sha256": "6f4e62697661360dab038b5387120d40a1c3de614859e5e2fc8ea48e701d98bd",
+      "reason": "turn_limit",
+      "life": [
+        -1,
+        31,
+        30,
+        17
+      ],
+      "safety": null
+    },
+    {
+      "providers": [
+        "magnus",
+        "control",
+        "spellslinger",
+        "midrange"
+      ],
+      "seed": 41,
+      "rounds": 12,
+      "sha256": "6c975dc9b0ca893052ddcc5b4ff9002350167c605fe4e9f4f0338c8b55ea3917",
+      "reason": "turn_limit",
+      "life": [
+        5,
+        36,
+        16,
+        30
+      ],
+      "safety": null
+    },
+    {
+      "providers": [
+        "magnus",
+        "aggro",
+        "control",
+        "combo"
+      ],
+      "seed": 42,
+      "rounds": 12,
+      "sha256": "92250e98e966469b6ceef6f39cb146a751e0eebdf44273be0c04b8336a006faa",
+      "reason": "turn_limit",
+      "life": [
+        29,
+        37,
+        34,
+        22
+      ],
+      "safety": null
+    },
+    {
+      "providers": [
+        "magnus",
+        "aggro",
+        "tokens",
+        "ramp_stompy"
+      ],
+      "seed": 43,
+      "rounds": 12,
+      "sha256": "20d5a36ee91aa5292a25827a3e239f93069af234f5910ba56e48bcc9815179e3",
+      "reason": "turn_limit",
+      "life": [
+        25,
+        22,
+        36,
+        26
+      ],
+      "safety": null
+    },
+    {
+      "providers": [
+        "magnus",
+        "control",
+        "spellslinger",
+        "midrange"
+      ],
+      "seed": 44,
+      "rounds": 12,
+      "sha256": "ab161d7dce79c4f992c4bc7a48eb25848a64e1a70ce20ae41d6f711383361f26",
+      "reason": "turn_limit",
+      "life": [
+        0,
+        18,
+        15,
+        20
+      ],
+      "safety": null
+    },
+    {
+      "providers": [
+        "magnus",
+        "aggro",
+        "control",
+        "combo"
+      ],
+      "seed": 45,
+      "rounds": 12,
+      "sha256": "b906973fb064712a70186e5326bbed3d8ef677038d5435fc794dd57836d5b1f9",
+      "reason": "turn_limit",
+      "life": [
+        36,
+        33,
+        30,
+        20
+      ],
+      "safety": null
+    },
+    {
+      "providers": [
+        "magnus",
+        "aggro",
+        "tokens",
+        "ramp_stompy"
+      ],
+      "seed": 46,
+      "rounds": 12,
+      "sha256": "5f4590f12156ca6212d4604cc9dc219fadb003925d3b8104ea6672fd332a2ead",
+      "reason": "turn_limit",
+      "life": [
+        -5,
+        40,
+        29,
+        7
+      ],
+      "safety": null
+    },
+    {
+      "providers": [
+        "magnus",
+        "control",
+        "spellslinger",
+        "midrange"
+      ],
+      "seed": 47,
+      "rounds": 12,
+      "sha256": "5c4ddfaf410aecad471a313496b4e2c6c4dc785e3e76f33cb9331bc89df84aad",
+      "reason": "turn_limit",
+      "life": [
+        25,
+        25,
+        24,
+        11
+      ],
+      "safety": null
+    },
+    {
+      "providers": [
+        "magnus",
+        "aggro",
+        "control",
+        "combo"
+      ],
+      "seed": 48,
+      "rounds": 12,
+      "sha256": "d7eb1cba1cb8480b2cb27bbe8615de50065a9941c9eb96ea504ba48012f0bf34",
+      "reason": "turn_limit",
+      "life": [
+        26,
+        40,
+        21,
+        28
+      ],
+      "safety": null
+    },
+    {
+      "providers": [
+        "magnus",
+        "aggro",
+        "tokens",
+        "ramp_stompy"
+      ],
+      "seed": 49,
+      "rounds": 12,
+      "sha256": "e279c4a570a332a4ff2cc643e7cbec7ca2390053d289a0aada1369c49726b915",
+      "reason": "turn_limit",
+      "life": [
+        -10,
+        33,
+        -4,
+        1
+      ],
+      "safety": null
+    },
+    {
+      "providers": [
+        "aggro",
+        "magnus",
+        "control",
+        "combo"
+      ],
+      "seed": 0,
+      "rounds": 12,
+      "sha256": "5cc264d4df0ceec97352db8d1a46dbcc3f617756cca7780d0f3c66cee7c0fc1e",
+      "reason": "turn_limit",
+      "life": [
+        22,
+        11,
+        21,
+        4
+      ],
+      "safety": null
+    },
+    {
+      "providers": [
+        "aggro",
+        "magnus",
+        "tokens",
+        "ramp_stompy"
+      ],
+      "seed": 1,
+      "rounds": 12,
+      "sha256": "21a1ee3c54dc8b6939e76c5adb1068d23c2e2e7d9c40ef328ac92bc09a97e0ff",
+      "reason": "turn_limit",
+      "life": [
+        0,
+        -4,
+        14,
+        27
+      ],
+      "safety": null
+    },
+    {
+      "providers": [
+        "control",
+        "magnus",
+        "spellslinger",
+        "midrange"
+      ],
+      "seed": 2,
+      "rounds": 12,
+      "sha256": "bc1bbbe53aa06af8510c92fecec77e117a000dce902afa9c2606edc454c6fb05",
+      "reason": "turn_limit",
+      "life": [
+        9,
+        17,
+        5,
+        14
+      ],
+      "safety": null
+    },
+    {
+      "providers": [
+        "aggro",
+        "magnus",
+        "control",
+        "combo"
+      ],
+      "seed": 3,
+      "rounds": 12,
+      "sha256": "a4219a740ebdd9e999e4ba6defd5dc426148c5b7a49b84675fed58f01c3ad3e6",
+      "reason": "turn_limit",
+      "life": [
+        31,
+        28,
+        26,
+        22
+      ],
+      "safety": null
+    },
+    {
+      "providers": [
+        "aggro",
+        "magnus",
+        "tokens",
+        "ramp_stompy"
+      ],
+      "seed": 4,
+      "rounds": 12,
+      "sha256": "c580ba656f99dd296ec401fb38a224046d858a279b31d05e6cea57da059e22aa",
+      "reason": "turn_limit",
+      "life": [
+        18,
+        -1,
+        2,
+        22
+      ],
+      "safety": null
+    },
+    {
+      "providers": [
+        "control",
+        "magnus",
+        "spellslinger",
+        "midrange"
+      ],
+      "seed": 5,
+      "rounds": 12,
+      "sha256": "8f9f06c3bb6dc5ee7a186d47c3ecd83c64f781bd06cc1f0cf2fc32b233b6e2d4",
+      "reason": "turn_limit",
+      "life": [
+        35,
+        38,
+        37,
+        39
+      ],
+      "safety": null
+    },
+    {
+      "providers": [
+        "aggro",
+        "magnus",
+        "control",
+        "combo"
+      ],
+      "seed": 6,
+      "rounds": 12,
+      "sha256": "2fe213eea1a9a97a7b12a77bfb86acc3d6459c4b4d96d9121349c1025df5430d",
+      "reason": "turn_limit",
+      "life": [
+        39,
+        28,
+        28,
+        33
+      ],
+      "safety": null
+    },
+    {
+      "providers": [
+        "aggro",
+        "magnus",
+        "tokens",
+        "ramp_stompy"
+      ],
+      "seed": 7,
+      "rounds": 12,
+      "sha256": "d41e18b418bc549570182852f7870c797665f3cea68f281949fd3b253c37baa8",
+      "reason": "turn_limit",
+      "life": [
+        22,
+        -7,
+        29,
+        7
+      ],
+      "safety": null
+    },
+    {
+      "providers": [
+        "control",
+        "magnus",
+        "spellslinger",
+        "midrange"
+      ],
+      "seed": 8,
+      "rounds": 12,
+      "sha256": "5618ac0463d4e721db207239c900c5ca95aa1d5b6b14ac7d4ffa41bb8acbe8ce",
+      "reason": "turn_limit",
+      "life": [
+        38,
+        28,
+        38,
+        40
+      ],
+      "safety": null
+    },
+    {
+      "providers": [
+        "aggro",
+        "magnus",
+        "control",
+        "combo"
+      ],
+      "seed": 9,
+      "rounds": 12,
+      "sha256": "10aa76bf413a568159946ab2917a46166b8b4108a29382ccf3eae4ad449e77bf",
+      "reason": "turn_limit",
+      "life": [
+        28,
+        38,
+        15,
+        16
+      ],
+      "safety": null
+    },
+    {
+      "providers": [
+        "aggro",
+        "magnus",
+        "tokens",
+        "ramp_stompy"
+      ],
+      "seed": 10,
+      "rounds": 12,
+      "sha256": "9ae946ed5c5e4bdfe55a7a5ff01fad12da943c687b88922923fa91c08d6280cb",
+      "reason": "turn_limit",
+      "life": [
+        -1,
+        -6,
+        1,
+        11
+      ],
+      "safety": null
+    },
+    {
+      "providers": [
+        "control",
+        "magnus",
+        "spellslinger",
+        "midrange"
+      ],
+      "seed": 11,
+      "rounds": 12,
+      "sha256": "031630a5ad32b2cdc2c507032dbd82bf8893b378db4a2a9d0ae158f225f409f2",
+      "reason": "turn_limit",
+      "life": [
+        20,
+        -14,
+        28,
+        30
+      ],
+      "safety": null
+    },
+    {
+      "providers": [
+        "aggro",
+        "magnus",
+        "control",
+        "combo"
+      ],
+      "seed": 12,
+      "rounds": 12,
+      "sha256": "e14f19a78409a2743bf8990cab2d87c44e2172d7e7ffc02ac79d142ebaf40e6d",
+      "reason": "turn_limit",
+      "life": [
+        15,
+        2,
+        10,
+        -5
+      ],
+      "safety": null
+    },
+    {
+      "providers": [
+        "aggro",
+        "magnus",
+        "tokens",
+        "ramp_stompy"
+      ],
+      "seed": 13,
+      "rounds": 12,
+      "sha256": "e841524633c1312586a0d245e6e606ef225d18770be4453e109f55e69ad1eb33",
+      "reason": "turn_limit",
+      "life": [
+        31,
+        -1,
+        20,
+        29
+      ],
+      "safety": null
+    },
+    {
+      "providers": [
+        "control",
+        "magnus",
+        "spellslinger",
+        "midrange"
+      ],
+      "seed": 14,
+      "rounds": 12,
+      "sha256": "7afebceb38e614404ad77cd9cbe90109054351c0216889baeae4b4de65aa3b86",
+      "reason": "turn_limit",
+      "life": [
+        36,
+        15,
+        24,
+        35
+      ],
+      "safety": null
+    },
+    {
+      "providers": [
+        "aggro",
+        "magnus",
+        "control",
+        "combo"
+      ],
+      "seed": 15,
+      "rounds": 12,
+      "sha256": "ac6a1d8b9dc80b82f4eaf516f18834ca79c5185836c6ca0a9f0147dfe77efb7b",
+      "reason": "turn_limit",
+      "life": [
+        20,
+        21,
+        25,
+        27
+      ],
+      "safety": null
+    },
+    {
+      "providers": [
+        "aggro",
+        "magnus",
+        "tokens",
+        "ramp_stompy"
+      ],
+      "seed": 16,
+      "rounds": 12,
+      "sha256": "be481f5e033ce729fde25bbd048a151eae1f5d1920cb6ed3b0c8152e74476f81",
+      "reason": "state_based",
+      "life": [
+        -1,
+        -20,
+        -2,
+        36
+      ],
+      "safety": null
+    },
+    {
+      "providers": [
+        "control",
+        "magnus",
+        "spellslinger",
+        "midrange"
+      ],
+      "seed": 17,
+      "rounds": 12,
+      "sha256": "621d70dd5485b480e0b5893fcda92065201d0585348379db7a5c6506b96e8ed5",
+      "reason": "turn_limit",
+      "life": [
+        15,
+        31,
+        17,
+        17
+      ],
+      "safety": null
+    },
+    {
+      "providers": [
+        "aggro",
+        "magnus",
+        "control",
+        "combo"
+      ],
+      "seed": 18,
+      "rounds": 12,
+      "sha256": "17a16ee138dad5b3979ae088445080af9c5269e6ed9620e8b74d7a1b4083342c",
+      "reason": "turn_limit",
+      "life": [
+        37,
+        31,
+        18,
+        11
+      ],
+      "safety": null
+    },
+    {
+      "providers": [
+        "aggro",
+        "magnus",
+        "tokens",
+        "ramp_stompy"
+      ],
+      "seed": 19,
+      "rounds": 12,
+      "sha256": "e0c12164407370235d56f4670b033e400ec368a176ed464e2973a5fdbb0d6001",
+      "reason": "turn_limit",
+      "life": [
+        24,
+        0,
+        6,
+        33
+      ],
+      "safety": null
+    },
+    {
+      "providers": [
+        "control",
+        "magnus",
+        "spellslinger",
+        "midrange"
+      ],
+      "seed": 20,
+      "rounds": 12,
+      "sha256": "d7755e980acb0f79c1d381c54e0b3d60a5c36d1c00160a8397a0d5408b19eea0",
+      "reason": "turn_limit",
+      "life": [
+        37,
+        25,
+        40,
+        34
+      ],
+      "safety": null
+    },
+    {
+      "providers": [
+        "aggro",
+        "magnus",
+        "control",
+        "combo"
+      ],
+      "seed": 21,
+      "rounds": 12,
+      "sha256": "8430f30cc5237d5363df398cf2e500677f5502f8f81a1df6ca553891498b8267",
+      "reason": "turn_limit",
+      "life": [
+        31,
+        26,
+        36,
+        -3
+      ],
+      "safety": null
+    },
+    {
+      "providers": [
+        "aggro",
+        "magnus",
+        "tokens",
+        "ramp_stompy"
+      ],
+      "seed": 22,
+      "rounds": 12,
+      "sha256": "0be9b746dc99ad79b6bef7b7102d5570fe5226d24399f197717f3e59dbf3e4a9",
+      "reason": "state_based",
+      "life": [
+        -7,
+        -2,
+        -4,
+        11
+      ],
+      "safety": null
+    },
+    {
+      "providers": [
+        "control",
+        "magnus",
+        "spellslinger",
+        "midrange"
+      ],
+      "seed": 23,
+      "rounds": 12,
+      "sha256": "ce8c85cea6f4603445af3585822209c3e36ac8f9db2762e68bd2a1776bf84f75",
+      "reason": "turn_limit",
+      "life": [
+        14,
+        9,
+        23,
+        1
+      ],
+      "safety": null
+    },
+    {
+      "providers": [
+        "aggro",
+        "magnus",
+        "control",
+        "combo"
+      ],
+      "seed": 24,
+      "rounds": 12,
+      "sha256": "ac3ca338fb86b0d26983e18ee93895dd595f1a5bf515335e753aba1183937660",
+      "reason": "turn_limit",
+      "life": [
+        35,
+        24,
+        38,
+        25
+      ],
+      "safety": null
+    },
+    {
+      "providers": [
+        "aggro",
+        "magnus",
+        "tokens",
+        "ramp_stompy"
+      ],
+      "seed": 25,
+      "rounds": 12,
+      "sha256": "f400c5740df8519542c9926fa02081b457fe02070e542937406b900b8b6553ac",
+      "reason": "state_based",
+      "life": [
+        -1,
+        -2,
+        2,
+        -3
+      ],
+      "safety": null
+    },
+    {
+      "providers": [
+        "control",
+        "magnus",
+        "spellslinger",
+        "midrange"
+      ],
+      "seed": 26,
+      "rounds": 12,
+      "sha256": "fe5e374a97e67a1476531c6b1d2f06554cbdd68116036e4b24897477d567eed7",
+      "reason": "turn_limit",
+      "life": [
+        15,
+        29,
+        24,
+        31
+      ],
+      "safety": null
+    },
+    {
+      "providers": [
+        "aggro",
+        "magnus",
+        "control",
+        "combo"
+      ],
+      "seed": 27,
+      "rounds": 12,
+      "sha256": "40f9509270ef3b9c71d202dc01e407e231c8c3c6170478243d8234ad67b600db",
+      "reason": "turn_limit",
+      "life": [
+        38,
+        21,
+        26,
+        21
+      ],
+      "safety": null
+    },
+    {
+      "providers": [
+        "aggro",
+        "magnus",
+        "tokens",
+        "ramp_stompy"
+      ],
+      "seed": 28,
+      "rounds": 12,
+      "sha256": "db49c2fbe9722b84329972d4b1251398c78d6ec81e47a04bddd468a90e526381",
+      "reason": "turn_limit",
+      "life": [
+        22,
+        -2,
+        24,
+        17
+      ],
+      "safety": null
+    },
+    {
+      "providers": [
+        "control",
+        "magnus",
+        "spellslinger",
+        "midrange"
+      ],
+      "seed": 29,
+      "rounds": 12,
+      "sha256": "6be23270608201d3809c000c95b9d0906453e91ea0321d925e894bdcef864b4c",
+      "reason": "turn_limit",
+      "life": [
+        11,
+        25,
+        28,
+        34
+      ],
+      "safety": null
+    },
+    {
+      "providers": [
+        "aggro",
+        "magnus",
+        "control",
+        "combo"
+      ],
+      "seed": 30,
+      "rounds": 12,
+      "sha256": "1163b877fbad68bb2ef5fd5546e7bd7c183fd51dd21d8fcdaf7565d950aa168d",
+      "reason": "turn_limit",
+      "life": [
+        40,
+        33,
+        40,
+        33
+      ],
+      "safety": null
+    },
+    {
+      "providers": [
+        "aggro",
+        "magnus",
+        "tokens",
+        "ramp_stompy"
+      ],
+      "seed": 31,
+      "rounds": 12,
+      "sha256": "05ac702e06a092ca9d5b7f6abe0bdcd44744b6ad68661e8dbc9c65b4d4166221",
+      "reason": "state_based",
+      "life": [
+        -8,
+        -6,
+        -8,
+        9
+      ],
+      "safety": null
+    },
+    {
+      "providers": [
+        "control",
+        "magnus",
+        "spellslinger",
+        "midrange"
+      ],
+      "seed": 32,
+      "rounds": 12,
+      "sha256": "c11c9d06798f44a1a1057967d607aeb8d930379bd590964b9125ffd005e89507",
+      "reason": "turn_limit",
+      "life": [
+        31,
+        27,
+        25,
+        12
+      ],
+      "safety": null
+    },
+    {
+      "providers": [
+        "aggro",
+        "magnus",
+        "control",
+        "combo"
+      ],
+      "seed": 33,
+      "rounds": 12,
+      "sha256": "b56b7064eaeff32000b222c3008afa93b88fa73bcdb4a6c32aa2513456c2428d",
+      "reason": "turn_limit",
+      "life": [
+        36,
+        25,
+        34,
+        31
+      ],
+      "safety": null
+    },
+    {
+      "providers": [
+        "aggro",
+        "magnus",
+        "tokens",
+        "ramp_stompy"
+      ],
+      "seed": 34,
+      "rounds": 12,
+      "sha256": "e79d4a49e5ad5b518c289be5a9c2983aedc6bd58ebc6df705a732e0e83f34023",
+      "reason": "turn_limit",
+      "life": [
+        33,
+        9,
+        18,
+        6
+      ],
+      "safety": null
+    },
+    {
+      "providers": [
+        "control",
+        "magnus",
+        "spellslinger",
+        "midrange"
+      ],
+      "seed": 35,
+      "rounds": 12,
+      "sha256": "57780d0dcbd801c3b02560751cb7ad9f369f638892531bc011090b3bacbca0bc",
+      "reason": "turn_limit",
+      "life": [
+        18,
+        35,
+        30,
+        40
+      ],
+      "safety": null
+    },
+    {
+      "providers": [
+        "aggro",
+        "magnus",
+        "control",
+        "combo"
+      ],
+      "seed": 36,
+      "rounds": 12,
+      "sha256": "ac9ffdb0c3b3fb9d36e186ebb4960fd7f1e990314da443d151d26eb341e77850",
+      "reason": "turn_limit",
+      "life": [
+        40,
+        20,
+        28,
+        30
+      ],
+      "safety": null
+    },
+    {
+      "providers": [
+        "aggro",
+        "magnus",
+        "tokens",
+        "ramp_stompy"
+      ],
+      "seed": 37,
+      "rounds": 12,
+      "sha256": "a3010f875f03bc17fb5db302645cff53bd6e3598626b299f7607ed5568a96afb",
+      "reason": "turn_limit",
+      "life": [
+        -4,
+        -5,
+        20,
+        14
+      ],
+      "safety": null
+    },
+    {
+      "providers": [
+        "control",
+        "magnus",
+        "spellslinger",
+        "midrange"
+      ],
+      "seed": 38,
+      "rounds": 12,
+      "sha256": "1f6ce3f8a73ed5235e24cf9c1ad8b78354c63e318187501524ee30a91ff47a73",
+      "reason": "turn_limit",
+      "life": [
+        17,
+        -10,
+        33,
+        29
+      ],
+      "safety": null
+    },
+    {
+      "providers": [
+        "aggro",
+        "magnus",
+        "control",
+        "combo"
+      ],
+      "seed": 39,
+      "rounds": 12,
+      "sha256": "6df2eeb1040d489a64ef4dcbcf23afc1bfdffd26b2778261b34cebb92d40fdb9",
+      "reason": "turn_limit",
+      "life": [
+        36,
+        27,
+        27,
+        40
+      ],
+      "safety": null
+    },
+    {
+      "providers": [
+        "aggro",
+        "magnus",
+        "tokens",
+        "ramp_stompy"
+      ],
+      "seed": 40,
+      "rounds": 12,
+      "sha256": "a7740a9570a4e6b931bb3ea883f69bbfa3d22109500baf94a3111048edc1ab18",
+      "reason": "turn_limit",
+      "life": [
+        36,
+        5,
+        27,
+        20
+      ],
+      "safety": null
+    },
+    {
+      "providers": [
+        "control",
+        "magnus",
+        "spellslinger",
+        "midrange"
+      ],
+      "seed": 41,
+      "rounds": 12,
+      "sha256": "3578aa8aa3e842ebd541fa0c4bf6342e6282299e9de20fc26b17ad3c9f69365f",
+      "reason": "turn_limit",
+      "life": [
+        21,
+        -3,
+        22,
+        24
+      ],
+      "safety": null
+    },
+    {
+      "providers": [
+        "aggro",
+        "magnus",
+        "control",
+        "combo"
+      ],
+      "seed": 42,
+      "rounds": 12,
+      "sha256": "1c6fac57988b385094942c280933dc4ca15575b5b6b6e7dfb4e9c170543aca31",
+      "reason": "turn_limit",
+      "life": [
+        36,
+        32,
+        30,
+        28
+      ],
+      "safety": null
+    },
+    {
+      "providers": [
+        "aggro",
+        "magnus",
+        "tokens",
+        "ramp_stompy"
+      ],
+      "seed": 43,
+      "rounds": 12,
+      "sha256": "489146c59d274eb8b92b81924517021a7876469909cfe032f737c04024e404cc",
+      "reason": "turn_limit",
+      "life": [
+        31,
+        24,
+        30,
+        36
+      ],
+      "safety": null
+    },
+    {
+      "providers": [
+        "control",
+        "magnus",
+        "spellslinger",
+        "midrange"
+      ],
+      "seed": 44,
+      "rounds": 12,
+      "sha256": "59bfb1f8b0f4c89bd3bdac8ea534eff6332fad86dfbed2270872f5cd56782720",
+      "reason": "turn_limit",
+      "life": [
+        33,
+        7,
+        19,
+        8
+      ],
+      "safety": null
+    },
+    {
+      "providers": [
+        "aggro",
+        "magnus",
+        "control",
+        "combo"
+      ],
+      "seed": 45,
+      "rounds": 12,
+      "sha256": "fc2d2becb88153ad70d6fdd3a9f5c1ca0c2e1974f59cef13b4f55a8390111770",
+      "reason": "turn_limit",
+      "life": [
+        27,
+        21,
+        38,
+        18
+      ],
+      "safety": null
+    },
+    {
+      "providers": [
+        "aggro",
+        "magnus",
+        "tokens",
+        "ramp_stompy"
+      ],
+      "seed": 46,
+      "rounds": 12,
+      "sha256": "f3f5006a803396a2565970d3eef25cf90c4375b2deddf6673e5fe857423c564d",
+      "reason": "turn_limit",
+      "life": [
+        12,
+        32,
+        21,
+        20
+      ],
+      "safety": null
+    },
+    {
+      "providers": [
+        "control",
+        "magnus",
+        "spellslinger",
+        "midrange"
+      ],
+      "seed": 47,
+      "rounds": 12,
+      "sha256": "f3d9eb090ee3fc4f5034d202609115b805a6a71494cd5ecd31ba967cdd08509a",
+      "reason": "turn_limit",
+      "life": [
+        20,
+        18,
+        -2,
+        27
+      ],
+      "safety": null
+    },
+    {
+      "providers": [
+        "aggro",
+        "magnus",
+        "control",
+        "combo"
+      ],
+      "seed": 48,
+      "rounds": 12,
+      "sha256": "02f9ae8b3d75565cc979d07b9ae26be5ab1033bd47c38a1236224309a56d5f25",
+      "reason": "turn_limit",
+      "life": [
+        35,
+        29,
+        35,
+        36
+      ],
+      "safety": null
+    },
+    {
+      "providers": [
+        "aggro",
+        "magnus",
+        "tokens",
+        "ramp_stompy"
+      ],
+      "seed": 49,
+      "rounds": 12,
+      "sha256": "52d06eca8833887b3ccc49841cf3dd560572db428ae9a79ba9cca837e0e15085",
+      "reason": "turn_limit",
+      "life": [
+        21,
+        30,
+        11,
+        4
+      ],
+      "safety": null
+    },
+    {
+      "providers": [
+        "aggro",
+        "control",
+        "magnus",
+        "combo"
+      ],
+      "seed": 0,
+      "rounds": 12,
+      "sha256": "a052c19541f1a2ba07890e4331c917189143e019b0416e1dffdcf26069d85aa4",
+      "reason": "turn_limit",
+      "life": [
+        24,
+        14,
+        16,
+        -2
+      ],
+      "safety": null
+    },
+    {
+      "providers": [
+        "aggro",
+        "tokens",
+        "magnus",
+        "ramp_stompy"
+      ],
+      "seed": 1,
+      "rounds": 12,
+      "sha256": "8d230d7ca1785dd0ea2217723dc52a3cd3604ecf15c4b91568fdd88ce066f02e",
+      "reason": "state_based",
+      "life": [
+        0,
+        7,
+        0,
+        -7
+      ],
+      "safety": null
+    },
+    {
+      "providers": [
+        "control",
+        "spellslinger",
+        "magnus",
+        "midrange"
+      ],
+      "seed": 2,
+      "rounds": 12,
+      "sha256": "7bdd8970b5aa2ccd7e1a8b736b8fe8c6a09c8bb88322e80d7c4bc2e26c08db6a",
+      "reason": "turn_limit",
+      "life": [
+        12,
+        23,
+        27,
+        28
+      ],
+      "safety": null
+    },
+    {
+      "providers": [
+        "aggro",
+        "control",
+        "magnus",
+        "combo"
+      ],
+      "seed": 3,
+      "rounds": 12,
+      "sha256": "c02fb49a6f209ae42d379f360628a3d8b8abff29aee172e7971c3658a1fda01c",
+      "reason": "turn_limit",
+      "life": [
+        31,
+        13,
+        -3,
+        -1
+      ],
+      "safety": null
+    },
+    {
+      "providers": [
+        "aggro",
+        "tokens",
+        "magnus",
+        "ramp_stompy"
+      ],
+      "seed": 4,
+      "rounds": 12,
+      "sha256": "3f93235bc5df99c17b2db332e265d16153f7ce8479bacf7d520c47a775078034",
+      "reason": "state_based",
+      "life": [
+        0,
+        -2,
+        0,
+        12
+      ],
+      "safety": null
+    },
+    {
+      "providers": [
+        "control",
+        "spellslinger",
+        "magnus",
+        "midrange"
+      ],
+      "seed": 5,
+      "rounds": 12,
+      "sha256": "2c3cdf63c8e1d1883b946fe0c92029381c89e84ba7d960bdc5334a9c6048fa8d",
+      "reason": "turn_limit",
+      "life": [
+        28,
+        35,
+        40,
+        38
+      ],
+      "safety": null
+    },
+    {
+      "providers": [
+        "aggro",
+        "control",
+        "magnus",
+        "combo"
+      ],
+      "seed": 6,
+      "rounds": 12,
+      "sha256": "1d41f6aa30de346e1c3126b27d1cc04737d9380e2aeee4b47790ef64c2b713ee",
+      "reason": "turn_limit",
+      "life": [
+        33,
+        28,
+        29,
+        28
+      ],
+      "safety": null
+    },
+    {
+      "providers": [
+        "aggro",
+        "tokens",
+        "magnus",
+        "ramp_stompy"
+      ],
+      "seed": 7,
+      "rounds": 12,
+      "sha256": "152e943ed3acd970c31553cf2bc1c5e98db02a403e0081901730a46e8750761e",
+      "reason": "turn_limit",
+      "life": [
+        18,
+        2,
+        24,
+        23
+      ],
+      "safety": null
+    },
+    {
+      "providers": [
+        "control",
+        "spellslinger",
+        "magnus",
+        "midrange"
+      ],
+      "seed": 8,
+      "rounds": 12,
+      "sha256": "c355d0ab69e559688bde09d778999bfbea3e459f809baca1db4806e70f3bb38b",
+      "reason": "turn_limit",
+      "life": [
+        18,
+        27,
+        32,
+        25
+      ],
+      "safety": null
+    },
+    {
+      "providers": [
+        "aggro",
+        "control",
+        "magnus",
+        "combo"
+      ],
+      "seed": 9,
+      "rounds": 12,
+      "sha256": "e2a74c160de2e0dc8439bb35ac0ec9145f25b48d5896d59868f5596c6b15395e",
+      "reason": "turn_limit",
+      "life": [
+        36,
+        18,
+        16,
+        15
+      ],
+      "safety": null
+    },
+    {
+      "providers": [
+        "aggro",
+        "tokens",
+        "magnus",
+        "ramp_stompy"
+      ],
+      "seed": 10,
+      "rounds": 12,
+      "sha256": "c8f5684ba97fbce64418cc9511bfd06dbe112574151aced553c2f333d904aa03",
+      "reason": "state_based",
+      "life": [
+        8,
+        -1,
+        -4,
+        -2
+      ],
+      "safety": null
+    },
+    {
+      "providers": [
+        "control",
+        "spellslinger",
+        "magnus",
+        "midrange"
+      ],
+      "seed": 11,
+      "rounds": 12,
+      "sha256": "f217f8f732a16a41e54fee83b3924fe3fc42250a8f3ce48c665da55ff4b8b6c2",
+      "reason": "turn_limit",
+      "life": [
+        6,
+        15,
+        24,
+        34
+      ],
+      "safety": null
+    },
+    {
+      "providers": [
+        "aggro",
+        "control",
+        "magnus",
+        "combo"
+      ],
+      "seed": 12,
+      "rounds": 12,
+      "sha256": "71ae39effbb8243a717fe67b0036ec9493b1e825adead03c4fb8ff620d95653f",
+      "reason": "turn_limit",
+      "life": [
+        23,
+        27,
+        7,
+        -3
+      ],
+      "safety": null
+    },
+    {
+      "providers": [
+        "aggro",
+        "tokens",
+        "magnus",
+        "ramp_stompy"
+      ],
+      "seed": 13,
+      "rounds": 12,
+      "sha256": "9a6055c9080d4b79e08d753dd0494ae4257d51851ab646b4ade3eef605f4998d",
+      "reason": "turn_limit",
+      "life": [
+        28,
+        34,
+        -2,
+        19
+      ],
+      "safety": null
+    },
+    {
+      "providers": [
+        "control",
+        "spellslinger",
+        "magnus",
+        "midrange"
+      ],
+      "seed": 14,
+      "rounds": 12,
+      "sha256": "7b03747e02213d43dad6dacfaa15226b3e5beb66db4a90d3638106f7eb0d7b77",
+      "reason": "turn_limit",
+      "life": [
+        39,
+        27,
+        15,
+        37
+      ],
+      "safety": null
+    },
+    {
+      "providers": [
+        "aggro",
+        "control",
+        "magnus",
+        "combo"
+      ],
+      "seed": 15,
+      "rounds": 12,
+      "sha256": "6ad4fd4d4ea53bbc8d207a7ccdde4ed734e35ef9a2ed450687daeabd3ec98f57",
+      "reason": "turn_limit",
+      "life": [
+        29,
+        24,
+        39,
+        16
+      ],
+      "safety": null
+    },
+    {
+      "providers": [
+        "aggro",
+        "tokens",
+        "magnus",
+        "ramp_stompy"
+      ],
+      "seed": 16,
+      "rounds": 12,
+      "sha256": "ef1990db3fac2a3384d3b1e1473f07b357403f993f76957ff5a72f1713a51efa",
+      "reason": "state_based",
+      "life": [
+        23,
+        -3,
+        -6,
+        -1
+      ],
+      "safety": null
+    },
+    {
+      "providers": [
+        "control",
+        "spellslinger",
+        "magnus",
+        "midrange"
+      ],
+      "seed": 17,
+      "rounds": 12,
+      "sha256": "4abf4a431354082e2b3fbf066682bcc972d84d913d9e94ca24c1a1932eff88ff",
+      "reason": "turn_limit",
+      "life": [
+        21,
+        6,
+        27,
+        20
+      ],
+      "safety": null
+    },
+    {
+      "providers": [
+        "aggro",
+        "control",
+        "magnus",
+        "combo"
+      ],
+      "seed": 18,
+      "rounds": 12,
+      "sha256": "cd4305850e80523b2462240c5cedf1ab96dce48bba79ea791396f2ff5e4cb6e8",
+      "reason": "turn_limit",
+      "life": [
+        34,
+        35,
+        18,
+        -1
+      ],
+      "safety": null
+    },
+    {
+      "providers": [
+        "aggro",
+        "tokens",
+        "magnus",
+        "ramp_stompy"
+      ],
+      "seed": 19,
+      "rounds": 12,
+      "sha256": "81a2e58eb41ebd70d1f6cecf5fd8866f53a1c0aaded5f6db39fec371effc6008",
+      "reason": "turn_limit",
+      "life": [
+        33,
+        15,
+        15,
+        22
+      ],
+      "safety": null
+    },
+    {
+      "providers": [
+        "control",
+        "spellslinger",
+        "magnus",
+        "midrange"
+      ],
+      "seed": 20,
+      "rounds": 12,
+      "sha256": "48114adfacf5651f436864ad0629ca758c63799e975e1468e1d7730cb9e9c21c",
+      "reason": "turn_limit",
+      "life": [
+        36,
+        40,
+        32,
+        26
+      ],
+      "safety": null
+    },
+    {
+      "providers": [
+        "aggro",
+        "control",
+        "magnus",
+        "combo"
+      ],
+      "seed": 21,
+      "rounds": 12,
+      "sha256": "316cf9a43f56787edc98ef4f6db8036c87e5d123bd42e52cd7fe142242b81617",
+      "reason": "turn_limit",
+      "life": [
+        33,
+        36,
+        29,
+        3
+      ],
+      "safety": null
+    },
+    {
+      "providers": [
+        "aggro",
+        "tokens",
+        "magnus",
+        "ramp_stompy"
+      ],
+      "seed": 22,
+      "rounds": 12,
+      "sha256": "cb2839cda4d28c915e825dbab3a181886462306d7ffebd5b476df46085254014",
+      "reason": "state_based",
+      "life": [
+        -17,
+        -26,
+        -1,
+        23
+      ],
+      "safety": null
+    },
+    {
+      "providers": [
+        "control",
+        "spellslinger",
+        "magnus",
+        "midrange"
+      ],
+      "seed": 23,
+      "rounds": 12,
+      "sha256": "81dd7e4a24a396aeb5c43d163f5c4754a300ed72817e70acd514be8766d5214e",
+      "reason": "turn_limit",
+      "life": [
+        5,
+        22,
+        11,
+        14
+      ],
+      "safety": null
+    },
+    {
+      "providers": [
+        "aggro",
+        "control",
+        "magnus",
+        "combo"
+      ],
+      "seed": 24,
+      "rounds": 12,
+      "sha256": "62916cac527649014c46dc604aacfc4f6dea46bf0005a4aad8c2f418c7b8eb2f",
+      "reason": "turn_limit",
+      "life": [
+        1,
+        30,
+        31,
+        8
+      ],
+      "safety": null
+    },
+    {
+      "providers": [
+        "aggro",
+        "tokens",
+        "magnus",
+        "ramp_stompy"
+      ],
+      "seed": 25,
+      "rounds": 12,
+      "sha256": "cd77d62561f11772d9a55f6150118aac40111692ecd92fcc29f781c5046af879",
+      "reason": "state_based",
+      "life": [
+        -4,
+        -17,
+        -6,
+        14
+      ],
+      "safety": null
+    },
+    {
+      "providers": [
+        "control",
+        "spellslinger",
+        "magnus",
+        "midrange"
+      ],
+      "seed": 26,
+      "rounds": 12,
+      "sha256": "31f1d2e5fc49ead4114036ca57fb5d60eb66ec48807f4f5f904c1d228ad001ad",
+      "reason": "turn_limit",
+      "life": [
+        8,
+        22,
+        -1,
+        38
+      ],
+      "safety": null
+    },
+    {
+      "providers": [
+        "aggro",
+        "control",
+        "magnus",
+        "combo"
+      ],
+      "seed": 27,
+      "rounds": 12,
+      "sha256": "fbbfcb00f84df5913ee2d94b273251c2ed34d05b56ac21442d3f05c7133f1162",
+      "reason": "turn_limit",
+      "life": [
+        39,
+        23,
+        34,
+        23
+      ],
+      "safety": null
+    },
+    {
+      "providers": [
+        "aggro",
+        "tokens",
+        "magnus",
+        "ramp_stompy"
+      ],
+      "seed": 28,
+      "rounds": 12,
+      "sha256": "cd51eeacecb80bb2fa5c872a31622fc21f59493b70b0c453ef68069c35fa9fd0",
+      "reason": "state_based",
+      "life": [
+        18,
+        -8,
+        -1,
+        -2
+      ],
+      "safety": null
+    },
+    {
+      "providers": [
+        "control",
+        "spellslinger",
+        "magnus",
+        "midrange"
+      ],
+      "seed": 29,
+      "rounds": 12,
+      "sha256": "ec02c630960b76bd6fd19774e074d50ecaaeccaf0d998a6267fd5c58ad51b010",
+      "reason": "turn_limit",
+      "life": [
+        13,
+        6,
+        19,
+        40
+      ],
+      "safety": null
+    },
+    {
+      "providers": [
+        "aggro",
+        "control",
+        "magnus",
+        "combo"
+      ],
+      "seed": 30,
+      "rounds": 12,
+      "sha256": "41a3b06856fb048f3a98569e8d4c223f872e47d5c7433896623a6b70dc049231",
+      "reason": "turn_limit",
+      "life": [
+        40,
+        36,
+        35,
+        26
+      ],
+      "safety": null
+    },
+    {
+      "providers": [
+        "aggro",
+        "tokens",
+        "magnus",
+        "ramp_stompy"
+      ],
+      "seed": 31,
+      "rounds": 12,
+      "sha256": "c996ee699066474a53eb142da7e0df903e0af654aae144bb1ff4c96330bd5e5e",
+      "reason": "turn_limit",
+      "life": [
+        13,
+        -6,
+        -5,
+        24
+      ],
+      "safety": null
+    },
+    {
+      "providers": [
+        "control",
+        "spellslinger",
+        "magnus",
+        "midrange"
+      ],
+      "seed": 32,
+      "rounds": 12,
+      "sha256": "b2db7602c0ddd6b45880e6049e133c2ec1c524d0f5988df46f00f10bd07ecba8",
+      "reason": "turn_limit",
+      "life": [
+        22,
+        30,
+        21,
+        3
+      ],
+      "safety": null
+    },
+    {
+      "providers": [
+        "aggro",
+        "control",
+        "magnus",
+        "combo"
+      ],
+      "seed": 33,
+      "rounds": 12,
+      "sha256": "38032c41798a893ab2afdd5c274c9a66bc14ab56936457e6ee83c95206dd762f",
+      "reason": "resolved_combo",
+      "life": [
+        0,
+        0,
+        0,
+        19
+      ],
+      "safety": null
+    },
+    {
+      "providers": [
+        "aggro",
+        "tokens",
+        "magnus",
+        "ramp_stompy"
+      ],
+      "seed": 34,
+      "rounds": 12,
+      "sha256": "9cde09aec8b86283b2e860500d77ccc19a7b80bccf546df178cc8adf9005e9f6",
+      "reason": "turn_limit",
+      "life": [
+        36,
+        35,
+        2,
+        4
+      ],
+      "safety": null
+    },
+    {
+      "providers": [
+        "control",
+        "spellslinger",
+        "magnus",
+        "midrange"
+      ],
+      "seed": 35,
+      "rounds": 12,
+      "sha256": "6cbcb9377a37f66616f49a06e9b89e19d5617c0e79bf1c426db8e5b94270b31c",
+      "reason": "turn_limit",
+      "life": [
+        17,
+        28,
+        16,
+        30
+      ],
+      "safety": null
+    },
+    {
+      "providers": [
+        "aggro",
+        "control",
+        "magnus",
+        "combo"
+      ],
+      "seed": 36,
+      "rounds": 12,
+      "sha256": "ba21f6de7de4f754d356eb072a4330e07ff2ef0ea85d1f65398d7e5277b3e370",
+      "reason": "turn_limit",
+      "life": [
+        38,
+        25,
+        33,
+        16
+      ],
+      "safety": null
+    },
+    {
+      "providers": [
+        "aggro",
+        "tokens",
+        "magnus",
+        "ramp_stompy"
+      ],
+      "seed": 37,
+      "rounds": 12,
+      "sha256": "85f45a05d06cc3dc1d2735a032cc43b9dce1f9fd04435608e6d763bb8d152791",
+      "reason": "turn_limit",
+      "life": [
+        6,
+        -21,
+        -4,
+        18
+      ],
+      "safety": null
+    },
+    {
+      "providers": [
+        "control",
+        "spellslinger",
+        "magnus",
+        "midrange"
+      ],
+      "seed": 38,
+      "rounds": 12,
+      "sha256": "ccfec536a5b7c51301509fdc22ff039fa81d862d4cd8900b4d9434c25369bbb9",
+      "reason": "turn_limit",
+      "life": [
+        23,
+        22,
+        6,
+        23
+      ],
+      "safety": null
+    },
+    {
+      "providers": [
+        "aggro",
+        "control",
+        "magnus",
+        "combo"
+      ],
+      "seed": 39,
+      "rounds": 12,
+      "sha256": "aa2df890009b4e1d827b46433a58f728b955e7a8284251a6588505e479f28ee4",
+      "reason": "turn_limit",
+      "life": [
+        36,
+        23,
+        32,
+        8
+      ],
+      "safety": null
+    },
+    {
+      "providers": [
+        "aggro",
+        "tokens",
+        "magnus",
+        "ramp_stompy"
+      ],
+      "seed": 40,
+      "rounds": 12,
+      "sha256": "26f4b46f0435dc4c974b50cbd2456fa3524db85987af2937d813ed1b383186da",
+      "reason": "turn_limit",
+      "life": [
+        35,
+        28,
+        -11,
+        13
+      ],
+      "safety": null
+    },
+    {
+      "providers": [
+        "control",
+        "spellslinger",
+        "magnus",
+        "midrange"
+      ],
+      "seed": 41,
+      "rounds": 12,
+      "sha256": "5507345570c69db2e9e848e84776dc7bdba6b6f18377e8d59ea96292fbeb6f6d",
+      "reason": "turn_limit",
+      "life": [
+        27,
+        19,
+        -1,
+        18
+      ],
+      "safety": null
+    },
+    {
+      "providers": [
+        "aggro",
+        "control",
+        "magnus",
+        "combo"
+      ],
+      "seed": 42,
+      "rounds": 12,
+      "sha256": "8b29ba79bb9b77d0a0f2cbbeafcf1aacbe5f5a5f27cb0b5b10f6d39293c9b834",
+      "reason": "turn_limit",
+      "life": [
+        35,
+        33,
+        30,
+        15
+      ],
+      "safety": null
+    },
+    {
+      "providers": [
+        "aggro",
+        "tokens",
+        "magnus",
+        "ramp_stompy"
+      ],
+      "seed": 43,
+      "rounds": 12,
+      "sha256": "71d35aff2c6d6a5030e44cea4fb74113f0ee171e69970d6793a005ab29c70eb2",
+      "reason": "turn_limit",
+      "life": [
+        -11,
+        29,
+        29,
+        -1
+      ],
+      "safety": null
+    },
+    {
+      "providers": [
+        "control",
+        "spellslinger",
+        "magnus",
+        "midrange"
+      ],
+      "seed": 44,
+      "rounds": 12,
+      "sha256": "3f7c9cd8fb856d5857b7747c71695e95b9cd52ee5d0ed435bac9e0b4b6dff9d5",
+      "reason": "turn_limit",
+      "life": [
+        5,
+        10,
+        -1,
+        25
+      ],
+      "safety": null
+    },
+    {
+      "providers": [
+        "aggro",
+        "control",
+        "magnus",
+        "combo"
+      ],
+      "seed": 45,
+      "rounds": 12,
+      "sha256": "a05c11207c15df7ad9ec51f2204aa5b5d89e316f748865cc4a7c6b0924b4c088",
+      "reason": "turn_limit",
+      "life": [
+        40,
+        23,
+        18,
+        34
+      ],
+      "safety": null
+    },
+    {
+      "providers": [
+        "aggro",
+        "tokens",
+        "magnus",
+        "ramp_stompy"
+      ],
+      "seed": 46,
+      "rounds": 12,
+      "sha256": "0eef7aaa03cf57d540e4bfebf2f06e81e0aa84e57dec400d79b36e82a54135fd",
+      "reason": "turn_limit",
+      "life": [
+        19,
+        32,
+        5,
+        25
+      ],
+      "safety": null
+    },
+    {
+      "providers": [
+        "control",
+        "spellslinger",
+        "magnus",
+        "midrange"
+      ],
+      "seed": 47,
+      "rounds": 12,
+      "sha256": "49200b0357b012acaf5d393fb3c166b20b138fecc816a2ccf5164ae7283c4650",
+      "reason": "turn_limit",
+      "life": [
+        11,
+        12,
+        10,
+        28
+      ],
+      "safety": null
+    },
+    {
+      "providers": [
+        "aggro",
+        "control",
+        "magnus",
+        "combo"
+      ],
+      "seed": 48,
+      "rounds": 12,
+      "sha256": "d2eecfec995613a7d86dfbc26200fc89fb3d9e193cdc5c8ad47327e4d17f95a4",
+      "reason": "turn_limit",
+      "life": [
+        36,
+        24,
+        33,
+        30
+      ],
+      "safety": null
+    },
+    {
+      "providers": [
+        "aggro",
+        "tokens",
+        "magnus",
+        "ramp_stompy"
+      ],
+      "seed": 49,
+      "rounds": 12,
+      "sha256": "958a3ff571b6a743828855bfc3d971ed2a0508a82c0020c440f95d003571b524",
+      "reason": "turn_limit",
+      "life": [
+        18,
+        31,
+        0,
+        -2
+      ],
+      "safety": null
+    },
+    {
+      "providers": [
+        "aggro",
+        "control",
+        "combo",
+        "magnus"
+      ],
+      "seed": 0,
+      "rounds": 12,
+      "sha256": "6749bd650e10fe50ab212f046bee365b79b62e1c4a22c1212abe9aadf1231277",
+      "reason": "turn_limit",
+      "life": [
+        26,
+        21,
+        -5,
+        -3
+      ],
+      "safety": null
+    },
+    {
+      "providers": [
+        "aggro",
+        "tokens",
+        "ramp_stompy",
+        "magnus"
+      ],
+      "seed": 1,
+      "rounds": 12,
+      "sha256": "85f14a8c919b6df2701621e01445cac0182f233acb3ef9b4f40a04289258f1f7",
+      "reason": "state_based",
+      "life": [
+        -2,
+        7,
+        -10,
+        -9
+      ],
+      "safety": null
+    },
+    {
+      "providers": [
+        "control",
+        "spellslinger",
+        "midrange",
+        "magnus"
+      ],
+      "seed": 2,
+      "rounds": 12,
+      "sha256": "5997126ae0ad0afd078fbfa4e420262b82f8b4e804b619e66942f7648ac332c7",
+      "reason": "turn_limit",
+      "life": [
+        26,
+        17,
+        38,
+        12
+      ],
+      "safety": null
+    },
+    {
+      "providers": [
+        "aggro",
+        "control",
+        "combo",
+        "magnus"
+      ],
+      "seed": 3,
+      "rounds": 12,
+      "sha256": "a477801b757bdd35638e7423ad0b4e5c521bb4aae08341bfd6d8cc3c4a3f3a8b",
+      "reason": "turn_limit",
+      "life": [
+        24,
+        -10,
+        0,
+        16
+      ],
+      "safety": null
+    },
+    {
+      "providers": [
+        "aggro",
+        "tokens",
+        "ramp_stompy",
+        "magnus"
+      ],
+      "seed": 4,
+      "rounds": 12,
+      "sha256": "c5094fd0ca48718f21f5012660317c74a3f50ba0e30b62326e1e774c2ee8236c",
+      "reason": "state_based",
+      "life": [
+        -5,
+        -15,
+        34,
+        0
+      ],
+      "safety": null
+    },
+    {
+      "providers": [
+        "control",
+        "spellslinger",
+        "midrange",
+        "magnus"
+      ],
+      "seed": 5,
+      "rounds": 12,
+      "sha256": "e43846c3dd7db0eb4a9d6651e5a036495c03a0b152c7293d9b5d1bb455a6721e",
+      "reason": "turn_limit",
+      "life": [
+        36,
+        40,
+        35,
+        40
+      ],
+      "safety": null
+    },
+    {
+      "providers": [
+        "aggro",
+        "control",
+        "combo",
+        "magnus"
+      ],
+      "seed": 6,
+      "rounds": 12,
+      "sha256": "9c9746b7c93cd9dc66c79e4fffbb39765c7e16bae6a65821f7876abdc78a3275",
+      "reason": "turn_limit",
+      "life": [
+        35,
+        37,
+        16,
+        32
+      ],
+      "safety": null
+    },
+    {
+      "providers": [
+        "aggro",
+        "tokens",
+        "ramp_stompy",
+        "magnus"
+      ],
+      "seed": 7,
+      "rounds": 12,
+      "sha256": "d87a3efd40ae9ed305e904dda707a8065523166f4e94ef944ae199a5ae163026",
+      "reason": "turn_limit",
+      "life": [
+        15,
+        -11,
+        -6,
+        21
+      ],
+      "safety": null
+    },
+    {
+      "providers": [
+        "control",
+        "spellslinger",
+        "midrange",
+        "magnus"
+      ],
+      "seed": 8,
+      "rounds": 12,
+      "sha256": "d16378884a35b56fd158eaad0d4532f9683e1672a638a5f4e1c10917cb248a39",
+      "reason": "turn_limit",
+      "life": [
+        22,
+        24,
+        33,
+        31
+      ],
+      "safety": null
+    },
+    {
+      "providers": [
+        "aggro",
+        "control",
+        "combo",
+        "magnus"
+      ],
+      "seed": 9,
+      "rounds": 12,
+      "sha256": "6b7ad638440f3049397902fb26ae200caa11a293ed62162eccee21cd009c924c",
+      "reason": "turn_limit",
+      "life": [
+        28,
+        30,
+        25,
+        9
+      ],
+      "safety": null
+    },
+    {
+      "providers": [
+        "aggro",
+        "tokens",
+        "ramp_stompy",
+        "magnus"
+      ],
+      "seed": 10,
+      "rounds": 12,
+      "sha256": "8712ec09a8a1bbf78c8c3e0f9ee19b1e9644d7a3da65bef069d36a530d0331e8",
+      "reason": "state_based",
+      "life": [
+        -4,
+        2,
+        -5,
+        -11
+      ],
+      "safety": null
+    },
+    {
+      "providers": [
+        "control",
+        "spellslinger",
+        "midrange",
+        "magnus"
+      ],
+      "seed": 11,
+      "rounds": 12,
+      "sha256": "038fdff371018c1eb2f074ba5c7fe0415b42ca9d7253504592e37d26f35ffb7e",
+      "reason": "turn_limit",
+      "life": [
+        9,
+        31,
+        39,
+        22
+      ],
+      "safety": null
+    },
+    {
+      "providers": [
+        "aggro",
+        "control",
+        "combo",
+        "magnus"
+      ],
+      "seed": 12,
+      "rounds": 12,
+      "sha256": "e6ec3b620cb9a2762eb757b42dc6c568e284de8ae88bca124e4666f60f4332f3",
+      "reason": "turn_limit",
+      "life": [
+        40,
+        8,
+        10,
+        19
+      ],
+      "safety": null
+    },
+    {
+      "providers": [
+        "aggro",
+        "tokens",
+        "ramp_stompy",
+        "magnus"
+      ],
+      "seed": 13,
+      "rounds": 12,
+      "sha256": "6415fd302a61bf04fa300e48da1eac49d2212b393d54a4ec8d24354223dfdd6e",
+      "reason": "turn_limit",
+      "life": [
+        18,
+        21,
+        30,
+        0
+      ],
+      "safety": null
+    },
+    {
+      "providers": [
+        "control",
+        "spellslinger",
+        "midrange",
+        "magnus"
+      ],
+      "seed": 14,
+      "rounds": 12,
+      "sha256": "f87834d6bb564af48185ed725a98be2161e094f083b131047e2b29819bbdbafb",
+      "reason": "turn_limit",
+      "life": [
+        40,
+        27,
+        20,
+        22
+      ],
+      "safety": null
+    },
+    {
+      "providers": [
+        "aggro",
+        "control",
+        "combo",
+        "magnus"
+      ],
+      "seed": 15,
+      "rounds": 12,
+      "sha256": "e3cfa4355315216590b6a8380bf68c5272d544f208ce95b9f4cb091a9e7d4aba",
+      "reason": "turn_limit",
+      "life": [
+        30,
+        -6,
+        32,
+        -7
+      ],
+      "safety": null
+    },
+    {
+      "providers": [
+        "aggro",
+        "tokens",
+        "ramp_stompy",
+        "magnus"
+      ],
+      "seed": 16,
+      "rounds": 12,
+      "sha256": "5914855b8c7ce0554c81464d8b411a9e08be406cf46174559b1ea28c61fd5eed",
+      "reason": "state_based",
+      "life": [
+        -28,
+        -7,
+        1,
+        -20
+      ],
+      "safety": null
+    },
+    {
+      "providers": [
+        "control",
+        "spellslinger",
+        "midrange",
+        "magnus"
+      ],
+      "seed": 17,
+      "rounds": 12,
+      "sha256": "acc6a379e1d51073084c86b5c1177e19972eb1e8f103fb378a0d28dbc3acb65b",
+      "reason": "turn_limit",
+      "life": [
+        10,
+        28,
+        19,
+        16
+      ],
+      "safety": null
+    },
+    {
+      "providers": [
+        "aggro",
+        "control",
+        "combo",
+        "magnus"
+      ],
+      "seed": 18,
+      "rounds": 12,
+      "sha256": "d36b653c0b6080111c13d4d95a1d3efdf1b29e1037f07a2888c442396c0913fc",
+      "reason": "turn_limit",
+      "life": [
+        36,
+        32,
+        22,
+        15
+      ],
+      "safety": null
+    },
+    {
+      "providers": [
+        "aggro",
+        "tokens",
+        "ramp_stompy",
+        "magnus"
+      ],
+      "seed": 19,
+      "rounds": 12,
+      "sha256": "1160d5b5a6de43a2332d63504b2d02741115de96d1b02cba5c24a3e96bd5d36b",
+      "reason": "turn_limit",
+      "life": [
+        31,
+        13,
+        14,
+        28
+      ],
+      "safety": null
+    },
+    {
+      "providers": [
+        "control",
+        "spellslinger",
+        "midrange",
+        "magnus"
+      ],
+      "seed": 20,
+      "rounds": 12,
+      "sha256": "fa160bb7c650f1c3aad1807b758cb95a81fc171948d409478bc7e1dd465238cc",
+      "reason": "turn_limit",
+      "life": [
+        34,
+        29,
+        31,
+        24
+      ],
+      "safety": null
+    },
+    {
+      "providers": [
+        "aggro",
+        "control",
+        "combo",
+        "magnus"
+      ],
+      "seed": 21,
+      "rounds": 12,
+      "sha256": "676b95d075f28d84b7bcac18cc23d6739810f0f837fcfe044e3e92d8ae20beea",
+      "reason": "turn_limit",
+      "life": [
+        39,
+        31,
+        1,
+        35
+      ],
+      "safety": null
+    },
+    {
+      "providers": [
+        "aggro",
+        "tokens",
+        "ramp_stompy",
+        "magnus"
+      ],
+      "seed": 22,
+      "rounds": 12,
+      "sha256": "401e7ed4435d7cb5b95aa4881fad70552c51d429f0e00d726e1a7df6d10f65a3",
+      "reason": "turn_limit",
+      "life": [
+        30,
+        -1,
+        5,
+        1
+      ],
+      "safety": null
+    },
+    {
+      "providers": [
+        "control",
+        "spellslinger",
+        "midrange",
+        "magnus"
+      ],
+      "seed": 23,
+      "rounds": 12,
+      "sha256": "8319b04177e7b29555745d072188e559ab2c917e15278e123377d214b711dc3f",
+      "reason": "turn_limit",
+      "life": [
+        11,
+        17,
+        5,
+        9
+      ],
+      "safety": null
+    },
+    {
+      "providers": [
+        "aggro",
+        "control",
+        "combo",
+        "magnus"
+      ],
+      "seed": 24,
+      "rounds": 12,
+      "sha256": "9f258fccc5dcff5da0206f7f1670128d8c7e34f033d9ac0fc8de907a106a75e0",
+      "reason": "turn_limit",
+      "life": [
+        28,
+        35,
+        15,
+        37
+      ],
+      "safety": null
+    },
+    {
+      "providers": [
+        "aggro",
+        "tokens",
+        "ramp_stompy",
+        "magnus"
+      ],
+      "seed": 25,
+      "rounds": 12,
+      "sha256": "ad70c42a0d618e0e7bc3ae95348c856d963d9ef346233410c21c5a7f6853927e",
+      "reason": "turn_limit",
+      "life": [
+        6,
+        -12,
+        8,
+        0
+      ],
+      "safety": null
+    },
+    {
+      "providers": [
+        "control",
+        "spellslinger",
+        "midrange",
+        "magnus"
+      ],
+      "seed": 26,
+      "rounds": 12,
+      "sha256": "ac2b49d9a052e261510bf55b81e690cabb8119ab38a99fbb2c8402ff13fbf093",
+      "reason": "turn_limit",
+      "life": [
+        14,
+        19,
+        35,
+        -1
+      ],
+      "safety": null
+    },
+    {
+      "providers": [
+        "aggro",
+        "control",
+        "combo",
+        "magnus"
+      ],
+      "seed": 27,
+      "rounds": 12,
+      "sha256": "2703edf94beef6ecd4c67559254846e5f5a6d699b45835a1825ba43202a63bf2",
+      "reason": "turn_limit",
+      "life": [
+        29,
+        21,
+        22,
+        12
+      ],
+      "safety": null
+    },
+    {
+      "providers": [
+        "aggro",
+        "tokens",
+        "ramp_stompy",
+        "magnus"
+      ],
+      "seed": 28,
+      "rounds": 12,
+      "sha256": "af303d0719e3fc512503ba67e7fc92bc220f2e67783ece1a0fa321b0f65c8f7a",
+      "reason": "state_based",
+      "life": [
+        25,
+        -2,
+        0,
+        -3
+      ],
+      "safety": null
+    },
+    {
+      "providers": [
+        "control",
+        "spellslinger",
+        "midrange",
+        "magnus"
+      ],
+      "seed": 29,
+      "rounds": 12,
+      "sha256": "f9c810327c43879d0fe27e9e33db04113461c34a4b12c8ef92b0517467ea5c2e",
+      "reason": "turn_limit",
+      "life": [
+        3,
+        28,
+        33,
+        8
+      ],
+      "safety": null
+    },
+    {
+      "providers": [
+        "aggro",
+        "control",
+        "combo",
+        "magnus"
+      ],
+      "seed": 30,
+      "rounds": 12,
+      "sha256": "47197198ababba83f40baa2b22a55f4b5e04a6c3cc6a34723685c98c5b87ef78",
+      "reason": "turn_limit",
+      "life": [
+        40,
+        20,
+        19,
+        38
+      ],
+      "safety": null
+    },
+    {
+      "providers": [
+        "aggro",
+        "tokens",
+        "ramp_stompy",
+        "magnus"
+      ],
+      "seed": 31,
+      "rounds": 12,
+      "sha256": "8e02bff30bbd2b872fbe72eeef757ced201cd3fd39bb588ac4d7c3f368fded3c",
+      "reason": "turn_limit",
+      "life": [
+        -20,
+        -24,
+        18,
+        3
+      ],
+      "safety": null
+    },
+    {
+      "providers": [
+        "control",
+        "spellslinger",
+        "midrange",
+        "magnus"
+      ],
+      "seed": 32,
+      "rounds": 12,
+      "sha256": "f816bd39c889dcef8990305a33da2011728b0bb73b59950890c2a508702caf7d",
+      "reason": "turn_limit",
+      "life": [
+        32,
+        18,
+        28,
+        7
+      ],
+      "safety": null
+    },
+    {
+      "providers": [
+        "aggro",
+        "control",
+        "combo",
+        "magnus"
+      ],
+      "seed": 33,
+      "rounds": 12,
+      "sha256": "6f3a8b91a27af8ab28e244ea32b794209a2f6053b5ce57bdec13f40b0d06f3c0",
+      "reason": "turn_limit",
+      "life": [
+        33,
+        35,
+        22,
+        20
+      ],
+      "safety": null
+    },
+    {
+      "providers": [
+        "aggro",
+        "tokens",
+        "ramp_stompy",
+        "magnus"
+      ],
+      "seed": 34,
+      "rounds": 12,
+      "sha256": "7e4667ca61e40d18e2a51aa0867f1308fe12c99c0ec9d8e378f51917fb78f496",
+      "reason": "turn_limit",
+      "life": [
+        18,
+        36,
+        4,
+        6
+      ],
+      "safety": null
+    },
+    {
+      "providers": [
+        "control",
+        "spellslinger",
+        "midrange",
+        "magnus"
+      ],
+      "seed": 35,
+      "rounds": 12,
+      "sha256": "bf544f28220b6a270c4a21ed3a8869b265c57c811accd307eb62f128bab84862",
+      "reason": "turn_limit",
+      "life": [
+        11,
+        20,
+        40,
+        23
+      ],
+      "safety": null
+    },
+    {
+      "providers": [
+        "aggro",
+        "control",
+        "combo",
+        "magnus"
+      ],
+      "seed": 36,
+      "rounds": 12,
+      "sha256": "3c96ac6d27a19bc6b52af316392675adb0f705b48f6980bb632aa5dc78492f22",
+      "reason": "turn_limit",
+      "life": [
+        38,
+        30,
+        25,
+        21
+      ],
+      "safety": null
+    },
+    {
+      "providers": [
+        "aggro",
+        "tokens",
+        "ramp_stompy",
+        "magnus"
+      ],
+      "seed": 37,
+      "rounds": 12,
+      "sha256": "6b7ef3a2c244a1b37a1180345850e02c81fcd9232669c0197c03feae6313aa50",
+      "reason": "turn_limit",
+      "life": [
+        16,
+        2,
+        29,
+        -2
+      ],
+      "safety": null
+    },
+    {
+      "providers": [
+        "control",
+        "spellslinger",
+        "midrange",
+        "magnus"
+      ],
+      "seed": 38,
+      "rounds": 12,
+      "sha256": "4bf93d1cb3f12606c4037bb503fcbd6f3269ffdc59ad3806111f107c0f85ada1",
+      "reason": "turn_limit",
+      "life": [
+        22,
+        3,
+        24,
+        17
+      ],
+      "safety": null
+    },
+    {
+      "providers": [
+        "aggro",
+        "control",
+        "combo",
+        "magnus"
+      ],
+      "seed": 39,
+      "rounds": 12,
+      "sha256": "c8e8729eb7c12452f15a9c739bfd6520f7e493caee6a04ddb5bf87e76cca9a04",
+      "reason": "turn_limit",
+      "life": [
+        36,
+        34,
+        37,
+        30
+      ],
+      "safety": null
+    },
+    {
+      "providers": [
+        "aggro",
+        "tokens",
+        "ramp_stompy",
+        "magnus"
+      ],
+      "seed": 40,
+      "rounds": 12,
+      "sha256": "ab752d9dc2be660b7104a2ff8549026b2e2a199a540a1c3fd9c9646078422ebc",
+      "reason": "turn_limit",
+      "life": [
+        27,
+        19,
+        15,
+        18
+      ],
+      "safety": null
+    },
+    {
+      "providers": [
+        "control",
+        "spellslinger",
+        "midrange",
+        "magnus"
+      ],
+      "seed": 41,
+      "rounds": 12,
+      "sha256": "159c1dda209d3e9b9b38e10bfc64ef2aadec27c8a3edaab267ef4063fc26806d",
+      "reason": "turn_limit",
+      "life": [
+        1,
+        20,
+        17,
+        10
+      ],
+      "safety": null
+    },
+    {
+      "providers": [
+        "aggro",
+        "control",
+        "combo",
+        "magnus"
+      ],
+      "seed": 42,
+      "rounds": 12,
+      "sha256": "587ca8f90be88625e606ab7d2086280efcc360b589d5c45cb02d1a53cecef1d8",
+      "reason": "turn_limit",
+      "life": [
+        39,
+        26,
+        27,
+        34
+      ],
+      "safety": null
+    },
+    {
+      "providers": [
+        "aggro",
+        "tokens",
+        "ramp_stompy",
+        "magnus"
+      ],
+      "seed": 43,
+      "rounds": 12,
+      "sha256": "edc0af8f89202fb5ee120bbb7c445d78822e1524f1f9088d475a912734092307",
+      "reason": "turn_limit",
+      "life": [
+        17,
+        19,
+        17,
+        -1
+      ],
+      "safety": null
+    },
+    {
+      "providers": [
+        "control",
+        "spellslinger",
+        "midrange",
+        "magnus"
+      ],
+      "seed": 44,
+      "rounds": 12,
+      "sha256": "f3ed345867b9950cefa3087cd7e36dc64f22aa1849a4530b353cab8ea709d016",
+      "reason": "turn_limit",
+      "life": [
+        20,
+        14,
+        18,
+        23
+      ],
+      "safety": null
+    },
+    {
+      "providers": [
+        "aggro",
+        "control",
+        "combo",
+        "magnus"
+      ],
+      "seed": 45,
+      "rounds": 12,
+      "sha256": "cb07437f71295908a6ef379f0ca4ef4e3a84585bfafae1edfb7d294803a32155",
+      "reason": "turn_limit",
+      "life": [
+        40,
+        32,
+        7,
+        17
+      ],
+      "safety": null
+    },
+    {
+      "providers": [
+        "aggro",
+        "tokens",
+        "ramp_stompy",
+        "magnus"
+      ],
+      "seed": 46,
+      "rounds": 12,
+      "sha256": "43d4d4e96ebbef47796ebb8849dd1cc8109916239b9e145f2a1c64826f3a7c06",
+      "reason": "turn_limit",
+      "life": [
+        26,
+        -7,
+        15,
+        18
+      ],
+      "safety": null
+    },
+    {
+      "providers": [
+        "control",
+        "spellslinger",
+        "midrange",
+        "magnus"
+      ],
+      "seed": 47,
+      "rounds": 12,
+      "sha256": "fffe63dcd0e661016554ba65350104649cf41c19477c54d98163184006c4c8e3",
+      "reason": "turn_limit",
+      "life": [
+        -2,
+        20,
+        34,
+        12
+      ],
+      "safety": null
+    },
+    {
+      "providers": [
+        "aggro",
+        "control",
+        "combo",
+        "magnus"
+      ],
+      "seed": 48,
+      "rounds": 12,
+      "sha256": "6338b409a0cdd41620b00d9431f2445b9eeb730f217a874e223846c95bba3fde",
+      "reason": "turn_limit",
+      "life": [
+        37,
+        26,
+        31,
+        34
+      ],
+      "safety": null
+    },
+    {
+      "providers": [
+        "aggro",
+        "tokens",
+        "ramp_stompy",
+        "magnus"
+      ],
+      "seed": 49,
+      "rounds": 12,
+      "sha256": "6c204572656d1693401196a3d38ffecab49e485a97b203baa4a61c7d37c158a1",
+      "reason": "turn_limit",
+      "life": [
+        15,
+        35,
+        25,
+        0
+      ],
+      "safety": null
+    }
+  ]
+}

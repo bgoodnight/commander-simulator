@@ -1,0 +1,296 @@
+{
+  "title": "A response changes the resolution-time untap threshold",
+  "result": "Passage began as the fourth land and was sacrificed as a cost. With its ability waiting, source-paid Capsize bounced another Island. The fetched basic still arrived, but the resulting three-land battlefield failed the untap condition, so it stayed tapped.",
+  "forced": true,
+  "consistent": true,
+  "branches": [
+    {
+      "events": [
+        "FORCED DIAGNOSTIC: conserved actual cards, declared battlefield/hand setup; not a natural opening.",
+        "    LAND ENTERS P0: Island #455; tapped=False; life_paid=0; cause=declared_fixture.",
+        "    LAND ENTERS P0: Island #457; tapped=False; life_paid=0; cause=declared_fixture.",
+        "    LAND ENTERS P0: Island #459; tapped=False; life_paid=0; cause=declared_fixture.",
+        "    LAND ENTERS P0: Fabled Passage #461; tapped=False; life_paid=0; cause=land_play.",
+        "    STACK +1 [activated] P0: Fabled Passage: fabled_passage_fetch.",
+        "    MANA P0: Island #455 -> (0, 1, 0)",
+        "    MANA P0: Island #457 -> (0, 1, 0)",
+        "    MANA P0: Island #459 -> (0, 1, 0)",
+        "  P0 (magnus) casts Capsize [instant] for 3; mana=0.",
+        "    STACK +2 [spell] P0: Capsize.",
+        "    Capsize returns Island to its owner's hand.",
+        "    LAND ENTERS P0: Island #467; tapped=True; life_paid=0; cause=basic_fetch.",
+        "    BASIC FETCH P0: source #461; fetched #467; lands=3; untapped=False; shuffled."
+      ],
+      "lands": [
+        {
+          "kind": "entry",
+          "controller": 0,
+          "name": "Island",
+          "object_id": 455,
+          "tapped": false,
+          "life_paid": 0,
+          "cause": "declared_fixture",
+          "face": null
+        },
+        {
+          "kind": "entry",
+          "controller": 0,
+          "name": "Island",
+          "object_id": 457,
+          "tapped": false,
+          "life_paid": 0,
+          "cause": "declared_fixture",
+          "face": null
+        },
+        {
+          "kind": "entry",
+          "controller": 0,
+          "name": "Island",
+          "object_id": 459,
+          "tapped": false,
+          "life_paid": 0,
+          "cause": "declared_fixture",
+          "face": null
+        },
+        {
+          "kind": "entry",
+          "controller": 0,
+          "name": "Fabled Passage",
+          "object_id": 461,
+          "tapped": false,
+          "life_paid": 0,
+          "cause": "land_play",
+          "face": null
+        },
+        {
+          "kind": "entry",
+          "controller": 0,
+          "name": "Island",
+          "object_id": 467,
+          "tapped": true,
+          "life_paid": 0,
+          "cause": "basic_fetch",
+          "face": null
+        },
+        {
+          "kind": "fetch_resolved",
+          "controller": 0,
+          "source_id": 461,
+          "fetched_id": 467,
+          "lands_at_resolution": 3,
+          "untapped": false
+        }
+      ],
+      "payments": [
+        {
+          "seat": 0,
+          "cost": [
+            0,
+            0,
+            0
+          ],
+          "sources": [],
+          "unused": [
+            0,
+            0,
+            0
+          ]
+        },
+        {
+          "seat": 0,
+          "cost": [
+            1,
+            2,
+            0
+          ],
+          "sources": [
+            455,
+            457,
+            459
+          ],
+          "unused": [
+            0,
+            0,
+            0
+          ]
+        }
+      ],
+      "activations": [
+        {
+          "seat": 0,
+          "source_id": 455,
+          "source": "Island",
+          "output": [
+            0,
+            1,
+            0
+          ],
+          "activation_cost": [
+            0,
+            0,
+            0
+          ],
+          "life_paid": 0,
+          "damage": 0,
+          "sacrifice": false
+        },
+        {
+          "seat": 0,
+          "source_id": 457,
+          "source": "Island",
+          "output": [
+            0,
+            1,
+            0
+          ],
+          "activation_cost": [
+            0,
+            0,
+            0
+          ],
+          "life_paid": 0,
+          "damage": 0,
+          "sacrifice": false
+        },
+        {
+          "seat": 0,
+          "source_id": 459,
+          "source": "Island",
+          "output": [
+            0,
+            1,
+            0
+          ],
+          "activation_cost": [
+            0,
+            0,
+            0
+          ],
+          "life_paid": 0,
+          "damage": 0,
+          "sacrifice": false
+        }
+      ],
+      "priority": [
+        [
+          "push",
+          1,
+          "activated",
+          0,
+          "Fabled Passage: fabled_passage_fetch"
+        ],
+        [
+          "action",
+          0,
+          "spell"
+        ],
+        [
+          "push",
+          2,
+          "spell",
+          0,
+          "Capsize"
+        ],
+        [
+          "pass",
+          0,
+          [
+            1,
+            2
+          ]
+        ],
+        [
+          "pass",
+          1,
+          [
+            1,
+            2
+          ]
+        ],
+        [
+          "pass",
+          2,
+          [
+            1,
+            2
+          ]
+        ],
+        [
+          "pass",
+          3,
+          [
+            1,
+            2
+          ]
+        ],
+        [
+          "resolve",
+          2,
+          "spell",
+          0
+        ],
+        [
+          "pass",
+          0,
+          [
+            1
+          ]
+        ],
+        [
+          "pass",
+          1,
+          [
+            1
+          ]
+        ],
+        [
+          "pass",
+          2,
+          [
+            1
+          ]
+        ],
+        [
+          "pass",
+          3,
+          [
+            1
+          ]
+        ],
+        [
+          "resolve",
+          1,
+          "activated",
+          0
+        ],
+        [
+          "pass",
+          0,
+          []
+        ],
+        [
+          "pass",
+          1,
+          []
+        ],
+        [
+          "pass",
+          2,
+          []
+        ],
+        [
+          "pass",
+          3,
+          []
+        ]
+      ],
+      "final_life": [
+        40,
+        40,
+        40,
+        40
+      ],
+      "fingerprint": "5fed7f648e47af21c3c4110bbe9cef5afb958937a5e7050be6c48da83d866f4d"
+    }
+  ]
+}

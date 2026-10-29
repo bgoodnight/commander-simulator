@@ -1,0 +1,407 @@
+{
+  "title": "Fourth fetched land enters tapped, then untaps and pays for a spell",
+  "result": "Three actual sources paid for Adaptation and were tapped. Passage was played and sacrificed. Its fetched Island entered tapped, then untapped because the resulting battlefield had four lands. That exact new source paid for Ponder immediately; Passage itself was not counted.",
+  "forced": true,
+  "consistent": true,
+  "branches": [
+    {
+      "events": [
+        "FORCED DIAGNOSTIC: conserved actual cards, declared battlefield/hand setup; not a natural opening.",
+        "    LAND ENTERS P0: Island #469; tapped=False; life_paid=0; cause=declared_fixture.",
+        "    LAND ENTERS P0: Island #471; tapped=False; life_paid=0; cause=declared_fixture.",
+        "    LAND ENTERS P0: Mountain #473; tapped=False; life_paid=0; cause=declared_fixture.",
+        "    MANA P0: Island #469 -> (0, 1, 0)",
+        "    MANA P0: Island #471 -> (0, 1, 0)",
+        "    MANA P0: Mountain #473 -> (0, 0, 1)",
+        "  P0 (magnus) casts Arcane Adaptation [enchantment] for 3; mana=0.",
+        "    STACK +1 [spell] P0: Arcane Adaptation.",
+        "    Arcane Adaptation enters: Wizard chosen; additive types apply in all declared zones.",
+        "    LAND ENTERS P0: Fabled Passage #478; tapped=False; life_paid=0; cause=land_play.",
+        "    STACK +2 [activated] P0: Fabled Passage: fabled_passage_fetch.",
+        "    LAND ENTERS P0: Island #480; tapped=True; life_paid=0; cause=basic_fetch.",
+        "    BASIC FETCH P0: source #478; fetched #480; lands=4; untapped=True; shuffled.",
+        "    MANA P0: Island #480 -> (0, 1, 0)",
+        "  P0 (magnus) casts Ponder [sorcery] for 1; mana=0.",
+        "    STACK +3 [spell] P0: Ponder.",
+        "    CHOICE ponder_order P0: ['Sulfur Falls', 'Searing Touch', 'Mutalith Vortex Beast']; {}.",
+        "    CHOICE ponder_shuffle P0: []; {'shuffle': True}."
+      ],
+      "lands": [
+        {
+          "kind": "entry",
+          "controller": 0,
+          "name": "Island",
+          "object_id": 469,
+          "tapped": false,
+          "life_paid": 0,
+          "cause": "declared_fixture",
+          "face": null
+        },
+        {
+          "kind": "entry",
+          "controller": 0,
+          "name": "Island",
+          "object_id": 471,
+          "tapped": false,
+          "life_paid": 0,
+          "cause": "declared_fixture",
+          "face": null
+        },
+        {
+          "kind": "entry",
+          "controller": 0,
+          "name": "Mountain",
+          "object_id": 473,
+          "tapped": false,
+          "life_paid": 0,
+          "cause": "declared_fixture",
+          "face": null
+        },
+        {
+          "kind": "entry",
+          "controller": 0,
+          "name": "Fabled Passage",
+          "object_id": 478,
+          "tapped": false,
+          "life_paid": 0,
+          "cause": "land_play",
+          "face": null
+        },
+        {
+          "kind": "entry",
+          "controller": 0,
+          "name": "Island",
+          "object_id": 480,
+          "tapped": true,
+          "life_paid": 0,
+          "cause": "basic_fetch",
+          "face": null
+        },
+        {
+          "kind": "fetch_resolved",
+          "controller": 0,
+          "source_id": 478,
+          "fetched_id": 480,
+          "lands_at_resolution": 4,
+          "untapped": true
+        }
+      ],
+      "payments": [
+        {
+          "seat": 0,
+          "cost": [
+            2,
+            1,
+            0
+          ],
+          "sources": [
+            469,
+            471,
+            473
+          ],
+          "unused": [
+            0,
+            0,
+            0
+          ]
+        },
+        {
+          "seat": 0,
+          "cost": [
+            0,
+            0,
+            0
+          ],
+          "sources": [],
+          "unused": [
+            0,
+            0,
+            0
+          ]
+        },
+        {
+          "seat": 0,
+          "cost": [
+            0,
+            1,
+            0
+          ],
+          "sources": [
+            480
+          ],
+          "unused": [
+            0,
+            0,
+            0
+          ]
+        }
+      ],
+      "activations": [
+        {
+          "seat": 0,
+          "source_id": 469,
+          "source": "Island",
+          "output": [
+            0,
+            1,
+            0
+          ],
+          "activation_cost": [
+            0,
+            0,
+            0
+          ],
+          "life_paid": 0,
+          "damage": 0,
+          "sacrifice": false
+        },
+        {
+          "seat": 0,
+          "source_id": 471,
+          "source": "Island",
+          "output": [
+            0,
+            1,
+            0
+          ],
+          "activation_cost": [
+            0,
+            0,
+            0
+          ],
+          "life_paid": 0,
+          "damage": 0,
+          "sacrifice": false
+        },
+        {
+          "seat": 0,
+          "source_id": 473,
+          "source": "Mountain",
+          "output": [
+            0,
+            0,
+            1
+          ],
+          "activation_cost": [
+            0,
+            0,
+            0
+          ],
+          "life_paid": 0,
+          "damage": 0,
+          "sacrifice": false
+        },
+        {
+          "seat": 0,
+          "source_id": 480,
+          "source": "Island",
+          "output": [
+            0,
+            1,
+            0
+          ],
+          "activation_cost": [
+            0,
+            0,
+            0
+          ],
+          "life_paid": 0,
+          "damage": 0,
+          "sacrifice": false
+        }
+      ],
+      "priority": [
+        [
+          "push",
+          1,
+          "spell",
+          0,
+          "Arcane Adaptation"
+        ],
+        [
+          "pass",
+          0,
+          [
+            1
+          ]
+        ],
+        [
+          "pass",
+          1,
+          [
+            1
+          ]
+        ],
+        [
+          "pass",
+          2,
+          [
+            1
+          ]
+        ],
+        [
+          "pass",
+          3,
+          [
+            1
+          ]
+        ],
+        [
+          "resolve",
+          1,
+          "spell",
+          0
+        ],
+        [
+          "pass",
+          0,
+          []
+        ],
+        [
+          "pass",
+          1,
+          []
+        ],
+        [
+          "pass",
+          2,
+          []
+        ],
+        [
+          "pass",
+          3,
+          []
+        ],
+        [
+          "push",
+          2,
+          "activated",
+          0,
+          "Fabled Passage: fabled_passage_fetch"
+        ],
+        [
+          "pass",
+          0,
+          [
+            2
+          ]
+        ],
+        [
+          "pass",
+          1,
+          [
+            2
+          ]
+        ],
+        [
+          "pass",
+          2,
+          [
+            2
+          ]
+        ],
+        [
+          "pass",
+          3,
+          [
+            2
+          ]
+        ],
+        [
+          "resolve",
+          2,
+          "activated",
+          0
+        ],
+        [
+          "pass",
+          0,
+          []
+        ],
+        [
+          "pass",
+          1,
+          []
+        ],
+        [
+          "pass",
+          2,
+          []
+        ],
+        [
+          "pass",
+          3,
+          []
+        ],
+        [
+          "push",
+          3,
+          "spell",
+          0,
+          "Ponder"
+        ],
+        [
+          "pass",
+          0,
+          [
+            3
+          ]
+        ],
+        [
+          "pass",
+          1,
+          [
+            3
+          ]
+        ],
+        [
+          "pass",
+          2,
+          [
+            3
+          ]
+        ],
+        [
+          "pass",
+          3,
+          [
+            3
+          ]
+        ],
+        [
+          "resolve",
+          3,
+          "spell",
+          0
+        ],
+        [
+          "pass",
+          0,
+          []
+        ],
+        [
+          "pass",
+          1,
+          []
+        ],
+        [
+          "pass",
+          2,
+          []
+        ],
+        [
+          "pass",
+          3,
+          []
+        ]
+      ],
+      "final_life": [
+        40,
+        40,
+        40,
+        40
+      ],
+      "fingerprint": "050630a09f59527fbd5dba8a616e20d2e2278974dc77a9bc99ac32274d453237"
+    }
+  ]
+}

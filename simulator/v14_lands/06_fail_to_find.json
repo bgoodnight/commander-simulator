@@ -1,0 +1,123 @@
+{
+  "title": "Failing to find still shuffles and does not refund the sacrifice",
+  "result": "The explicit search policy chose no basic, which is legal for the hidden-zone search. Passage remained in the graveyard, no land entered, and the library was shuffled. The activation was not a spell or a draw.",
+  "forced": true,
+  "consistent": true,
+  "branches": [
+    {
+      "events": [
+        "FORCED DIAGNOSTIC: conserved actual cards, declared battlefield/hand setup; not a natural opening.",
+        "    LAND ENTERS P0: Fabled Passage #469; tapped=False; life_paid=0; cause=land_play.",
+        "    STACK +1 [activated] P0: Fabled Passage: fabled_passage_fetch.",
+        "    BASIC FETCH P0: source #469; fetched #None; lands=0; untapped=False; shuffled."
+      ],
+      "lands": [
+        {
+          "kind": "entry",
+          "controller": 0,
+          "name": "Fabled Passage",
+          "object_id": 469,
+          "tapped": false,
+          "life_paid": 0,
+          "cause": "land_play",
+          "face": null
+        },
+        {
+          "kind": "fetch_resolved",
+          "controller": 0,
+          "source_id": 469,
+          "fetched_id": null,
+          "lands_at_resolution": 0,
+          "untapped": false
+        }
+      ],
+      "payments": [
+        {
+          "seat": 0,
+          "cost": [
+            0,
+            0,
+            0
+          ],
+          "sources": [],
+          "unused": [
+            0,
+            0,
+            0
+          ]
+        }
+      ],
+      "activations": [],
+      "priority": [
+        [
+          "push",
+          1,
+          "activated",
+          0,
+          "Fabled Passage: fabled_passage_fetch"
+        ],
+        [
+          "pass",
+          0,
+          [
+            1
+          ]
+        ],
+        [
+          "pass",
+          1,
+          [
+            1
+          ]
+        ],
+        [
+          "pass",
+          2,
+          [
+            1
+          ]
+        ],
+        [
+          "pass",
+          3,
+          [
+            1
+          ]
+        ],
+        [
+          "resolve",
+          1,
+          "activated",
+          0
+        ],
+        [
+          "pass",
+          0,
+          []
+        ],
+        [
+          "pass",
+          1,
+          []
+        ],
+        [
+          "pass",
+          2,
+          []
+        ],
+        [
+          "pass",
+          3,
+          []
+        ]
+      ],
+      "final_life": [
+        40,
+        40,
+        40,
+        40
+      ],
+      "fingerprint": "f84205b55561a87c415679b482337890fb7df49011bba99c4357069f370e85a4"
+    }
+  ]
+}
