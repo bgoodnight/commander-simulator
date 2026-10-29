@@ -1,0 +1,60 @@
+{
+  "games": 200,
+  "rounds": 12,
+  "consistent": true,
+  "safety_stops": [],
+  "steps": 100710,
+  "payments": 11021,
+  "utility_events": 23,
+  "elapsed_seconds": 121.0,
+  "benchmark_games": 12,
+  "benchmark_rounds": 8,
+  "median_ms": {
+    "LandTable": 394.733,
+    "UtilityTable": 415.247
+  },
+  "new_caching": false,
+  "audit_counts": {
+    "partial": 7,
+    "unsupported": 35,
+    "supported subset": 41
+  },
+  "narratives": [
+    {
+      "file": "01_sanctuary_reuse",
+      "title": "Sanctuary returns Ponder for a second cast",
+      "result": "Three other Islands let Sanctuary enter untapped. Its triggered ability targeted the previously cast Ponder in the graveyard and put it on top. The diagnostic draw and a second source-paid cast produced another Pyromancer Elemental: two in total.",
+      "passed": true
+    },
+    {
+      "file": "02_target_lost",
+      "title": "Sanctuary target leaving the graveyard causes the trigger to fail",
+      "result": "The trigger chose Ponder when placed on the stack. A declared synthetic response moved that exact graveyard object to exile; on resolution the trigger had no legal target and did not return it. No printed graveyard-exile card was added by this scenario.",
+      "passed": true
+    },
+    {
+      "file": "03_islet_modes",
+      "title": "Fiery Islet pays life for mana, then later sacrifices to draw",
+      "result": "An actual Fiery Islet mana activation produced U and paid one life without damage. After a declared next-turn untap, a different land paid the one-mana draw-ability cost; Islet was tapped and sacrificed before the card was drawn.",
+      "passed": true
+    },
+    {
+      "file": "04_islet_response",
+      "title": "A spell resolves before the waiting Islet draw",
+      "result": "The Islet draw ability paid its source and mana costs. Brainstorm was cast in response, completing its draw and put-back choices before the Islet ability resolved and drew its card.",
+      "passed": true
+    },
+    {
+      "file": "05_riptide_response",
+      "title": "Riptide, Adaptation, Harmonic and a response",
+      "result": "Adaptation made Iconoclast a Wizard, enabling Riptide. In response, Capsize bounced that same creature; the Riptide ability then failed its target check. Capsize had already triggered the adapted Iconoclast twice through Harmonic, creating two Soldiers.",
+      "passed": true
+    },
+    {
+      "file": "06_type_removed",
+      "title": "Removing Adaptation makes the Riptide target illegal",
+      "result": "Capsize returned Adaptation while the Riptide ability waited. Iconoclast remained on the battlefield but lost the Wizard subtype; Riptide rechecked its target and failed without returning it.",
+      "passed": true
+    }
+  ]
+}

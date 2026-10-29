@@ -118,13 +118,15 @@ class PriorityStack:
                 if (len(ordered) != len(owned) or {f.frame_id for f in ordered} != {f.frame_id for f in owned}
                         or any(not any(f is original for original in owned) for f in ordered)):
                     raise ValueError('Trigger ordering must be a permutation of controlled triggers')
+                prepare = getattr(t, 'prepare_trigger', None)
+                if prepare:
+                    ordered = tuple(prepared for frame in ordered if (prepared := prepare(frame)) is not None)
                 placements.extend(ordered)
             # Validate every controller's order before consuming any pending
             # triggers, so a rejected policy cannot silently delete abilities.
             for frame in batch:
-                if not self.alive(frame.controller): self.pending.remove(frame)
-            for frame in placements:
                 self.pending.remove(frame)
+            for frame in placements:
                 self.push(frame)
             if not self.pending: break
         else:

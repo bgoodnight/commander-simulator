@@ -1,11 +1,16 @@
 # Commander Simulator
 
-A reproducible, modular four-player **Magic: The Gathering Commander** simulation project. Current milestone: **v14** (October 28, 2026): land entry conditions/basic types, Steam Vents life choice, explicit stack-based Fabled Passage fetch, runtime tracking and deterministic reference fingerprints before additional caching. V13 selection/engines, v12 combat, live zones and source-ID mana remain active. **This is not a complete Magic rules engine, and the results are not validated deck win rates.**
+A reproducible, modular four-player **Magic: The Gathering Commander** simulation project. Current milestone: **v15** (October 29, 2026): Mystic Sanctuary's targeted graveyard-return trigger, Fiery Islet's draw activation, and Riptide Laboratory's 1U Wizard-return activation. V14 land rules and reference fingerprints, v13 selection/engines, v12 combat, live zones and source-ID mana remain active. **This is not a complete Magic rules engine, and the results are not validated deck win rates.**
 
 ## Current architecture and scope
 
+- [V15 utility-land README](simulator/v15_utility/README.md) — Sanctuary target timing, Islet costs and Riptide target rechecks.
+- [Current Magnus coverage](simulator/v15_utility/CARD_COVERAGE.md) — 41 supported subsets, 7 partial, 35 unsupported names.
+- [V15 interaction report](simulator/v15_utility/INTERACTION_REPORT.md) — six narratives, live sweep and runtime.
+- [V15 assessment](simulator/v15_utility/ASSESSMENT.md) — validation and remaining limits.
+
 - [V14 land README](simulator/v14_lands/README.md) — individual entry checks, basic types, life/face choices and Passage costs/resolution.
-- [Current Magnus coverage](simulator/v14_lands/CARD_COVERAGE.md) — 38 supported subsets, 10 partial and 35 unsupported names.
+- [Historical v14 Magnus coverage](simulator/v14_lands/CARD_COVERAGE.md) — 38 supported subsets, 10 partial and 35 unsupported names.
 - [V14 interaction report](simulator/v14_lands/INTERACTION_REPORT.md) — seven source-paid stories, live sweep and timing.
 - [V14 assessment](simulator/v14_lands/ASSESSMENT.md) — results, remaining scope and pre-optimization reference.
 - [Reference cases](simulator/v14_lands/REFERENCE_CASES.json) and [performance history](simulator/v14_lands/PERFORMANCE_HISTORY.json) — deterministic outputs for later caching comparisons; no new caching yet.
@@ -37,7 +42,7 @@ A reproducible, modular four-player **Magic: The Gathering Commander** simulatio
 - [Real Magnus deck integration](simulator/v6_real_deck/README.md) — original partial real 99-card adapter.
 - [Magnus v1.6 decklist](decklists/magnus_thousand_sons_v1_6.txt), [v3 card catalog](simulator/v3_magnus_modular/cards.json), and [candidate combo lines](simulator/v3_magnus_modular/combos.json).
 
-**Live v14 limits:** one detailed Magnus deck plus synthetic opponents. Individual land entry checks and Passage's activated fetch are live alongside ordered selection, engine triggers and expanded combat. Mystic Sanctuary's graveyard trigger, land utility/channel abilities, full double-faced/layer/replacement behavior, spell-copy producers, full legend/Commander rules, attachments and verified loops remain absent or partial as audited. No additional caching is introduced; deterministic reference outputs are preserved before optimization. No deck win-rate conclusions are supported.
+**Live v15 limits:** one detailed Magnus deck plus synthetic opponents. Sanctuary, Fiery Islet and Riptide Laboratory join the prior individual land-entry rules and Fabled Passage. Channel, full double-faced/layer/replacement behavior, spell-copy producers, full legend/Commander rules, attachments and verified loops remain absent or partial as audited. No additional caching is introduced; v14 reference outputs are preserved for later optimization. No deck win-rate conclusions are supported.
 
 ## Run all tests
 
@@ -47,22 +52,22 @@ Requires Python 3.10+ and only the standard library:
 python run_all_tests.py
 ```
 
-**547 tests across fourteen suites** (v3:20, v4:15, v5:21, v6:21, v7:50, v8:32, v9a:29, v9b:34, v9c:49, v10:51, v11:50, v12:50, v13:69, v14:56). The GitHub Actions workflow tests on Python 3.11, 3.12, and 3.13.
+**585 tests across fifteen suites** (v3:20, v4:15, v5:21, v6:21, v7:50, v8:32, v9a:29, v9b:34, v9c:49, v10:51, v11:50, v12:50, v13:69, v14:56, v15:38). The GitHub Actions workflow tests on Python 3.11, 3.12, and 3.13.
 
-Run live v14 and reproduce validation:
+Run live v15 and reproduce validation:
 
 ```bash
-python simulator/v14_lands/tests.py
-python simulator/v14_lands/land_coverage.py
-python simulator/v14_lands/validate_lands.py
+python simulator/v15_utility/tests.py
+python simulator/v15_utility/coverage.py
+python simulator/v15_utility/validate.py
 ```
 
-The v14 validator writes seven targeted interaction stories with independently conserved branches, JSON diagnostics, an interaction report, reference fingerprints, performance history and validation_results.json. By default it checks 200 twelve-round games across all Magnus seats and compares 12 eight-round timing samples per engine. Reference serialization is outside benchmark timing. These are infrastructure diagnostics.
+The v15 validator writes six targeted interaction stories, JSON diagnostics, an interaction report and validation_results.json. By default it checks 200 twelve-round games across all Magnus seats and compares 12 eight-round timing samples per engine. V14 reference fingerprints remain preserved. These are infrastructure diagnostics.
 
 ## Preservation and methodology
 
-Milestones are versioned under `simulator/`. The pre-v14 rollback point is `a1d4e4263eb79a9dad255b1907606a8477926c31`. V14 adds its own land provider/table/validation directory plus README/test-runner changes; historical rule and cache implementations remain untouched. Historical suites pass; dated manifests remain checkpoint records. Earlier engines remain standalone; old synthetic calibration reports are **not empirical Commander metagame data**. The user prioritizes rule correctness, consistent shared state, narrated diagnostics, card coverage accounting, bounded computation, and normal rollback-safe commits. The [Google Drive recovery folder](https://drive.google.com/drive/folders/1Jy4spPc58pOKSvDOAwQXaBVlj_4pVU5Y) retains dated checkpoints.
+Milestones are versioned under `simulator/`. The pre-v15 rollback point is `b0b0237ee915532b4d2f4ca3b089999671294b27`. V15 adds a utility-land provider/table and backward-compatible trigger target-preparation seam; existing cache implementations remain untouched. Historical suites pass; dated manifests remain checkpoint records. Earlier engines remain standalone; old synthetic calibration reports are **not empirical Commander metagame data**. The user prioritizes rule correctness, consistent shared state, narrated diagnostics, card coverage accounting, bounded computation, and normal rollback-safe commits. The [Google Drive recovery folder](https://drive.google.com/drive/folders/1Jy4spPc58pOKSvDOAwQXaBVlj_4pVU5Y) retains dated checkpoints.
 
 ## Next milestone
 
-Finish Mystic Sanctuary's targeted ETB trigger, then Fiery Islet/Riptide Laboratory and channel abilities. Spell copies, relevant creature activations/tutors, graveyard casting and combo validation follow. Track runtime while building functionality; defer additional caching and compare later optimized outputs against versioned deterministic reference cases. Keep source-paid narratives and independent state/payment/priority checks.
+Implement Otawara and Sokenzan channel next, then spell copies, relevant creature activations/tutors, graveyard casting and combo validation. Track runtime while building functionality; defer additional caching and compare later optimized outputs against the versioned v14 deterministic reference cases. Keep source-paid narratives and independent state/payment/priority checks.

@@ -1,0 +1,820 @@
+{
+  "title": "Riptide, Adaptation, Harmonic and a response",
+  "result": "Adaptation made Iconoclast a Wizard, enabling Riptide. In response, Capsize bounced that same creature; the Riptide ability then failed its target check. Capsize had already triggered the adapted Iconoclast twice through Harmonic, creating two Soldiers.",
+  "forced": true,
+  "events": [
+    "FORCED DIAGNOSTIC: declared actual card/source layout; not a natural opening.",
+    "    LAND ENTERS P0: Island #469; tapped=False; life_paid=0; cause=declared_fixture.",
+    "    LAND ENTERS P0: Island #471; tapped=False; life_paid=0; cause=declared_fixture.",
+    "    LAND ENTERS P0: Island #473; tapped=False; life_paid=0; cause=declared_fixture.",
+    "    LAND ENTERS P0: Island #475; tapped=False; life_paid=0; cause=declared_fixture.",
+    "    LAND ENTERS P0: Island #477; tapped=False; life_paid=0; cause=declared_fixture.",
+    "    LAND ENTERS P0: Island #479; tapped=False; life_paid=0; cause=declared_fixture.",
+    "    LAND ENTERS P0: Island #481; tapped=False; life_paid=0; cause=declared_fixture.",
+    "    LAND ENTERS P0: Island #483; tapped=False; life_paid=0; cause=declared_fixture.",
+    "    LAND ENTERS P0: Mountain #485; tapped=False; life_paid=0; cause=declared_fixture.",
+    "    LAND ENTERS P0: Mountain #487; tapped=False; life_paid=0; cause=declared_fixture.",
+    "    LAND ENTERS P0: Mountain #489; tapped=False; life_paid=0; cause=declared_fixture.",
+    "    LAND ENTERS P0: Mountain #491; tapped=False; life_paid=0; cause=declared_fixture.",
+    "    MANA P0: Island #469 -> (0, 1, 0)",
+    "    MANA P0: Island #471 -> (0, 1, 0)",
+    "    MANA P0: Island #473 -> (0, 1, 0)",
+    "  P0 (magnus) casts Arcane Adaptation [enchantment] for 3; mana=9.",
+    "    STACK +1 [spell] P0: Arcane Adaptation.",
+    "    Arcane Adaptation enters: Wizard chosen; additive types apply in all declared zones.",
+    "    MANA P0: Island #475 -> (0, 1, 0)",
+    "    MANA P0: Mountain #485 -> (0, 0, 1)",
+    "  P0 (magnus) casts Harmonic Prodigy [creature] for 2; mana=7.",
+    "    STACK +2 [spell] P0: Harmonic Prodigy.",
+    "    Harmonic Prodigy enters battlefield (1/3).",
+    "    MANA P0: Island #477 -> (0, 1, 0)",
+    "    MANA P0: Mountain #487 -> (0, 0, 1)",
+    "  P0 (magnus) casts Third Path Iconoclast [creature] for 2; mana=5.",
+    "    STACK +3 [spell] P0: Third Path Iconoclast.",
+    "    Third Path Iconoclast enters battlefield (1/1).",
+    "    LAND ENTERS P0: Riptide Laboratory #502; tapped=False; life_paid=0; cause=declared_fixture.",
+    "DIAGNOSTIC NEXT OWN TURN: actual land sources untapped.",
+    "    MANA P0: Island #469 -> (0, 1, 0)",
+    "    MANA P0: Island #471 -> (0, 1, 0)",
+    "    STACK +4 [activated] P0: Riptide Laboratory: riptide_wizard_bounce.",
+    "    MANA P0: Island #473 -> (0, 1, 0)",
+    "    MANA P0: Island #475 -> (0, 1, 0)",
+    "    MANA P0: Island #477 -> (0, 1, 0)",
+    "  P0 (magnus) casts Capsize [instant] for 3; mana=7.",
+    "    STACK +5 [spell] P0: Capsize.",
+    "    STACK +6 [triggered] P0: Harmonic Prodigy: pump_self.",
+    "    STACK +7 [triggered] P0: Third Path Iconoclast: create_token.",
+    "    STACK +8 [triggered] P0: Third Path Iconoclast: create_token.",
+    "    PROWESS #497: now 2/4 until cleanup.",
+    "    Capsize returns Third Path Iconoclast to its owner's hand."
+  ],
+  "utility_events": [
+    [
+      "riptide_fizzle",
+      502,
+      500
+    ]
+  ],
+  "priority": [
+    [
+      "push",
+      1,
+      "spell",
+      0,
+      "Arcane Adaptation"
+    ],
+    [
+      "pass",
+      0,
+      [
+        1
+      ]
+    ],
+    [
+      "pass",
+      1,
+      [
+        1
+      ]
+    ],
+    [
+      "pass",
+      2,
+      [
+        1
+      ]
+    ],
+    [
+      "pass",
+      3,
+      [
+        1
+      ]
+    ],
+    [
+      "resolve",
+      1,
+      "spell",
+      0
+    ],
+    [
+      "pass",
+      0,
+      []
+    ],
+    [
+      "pass",
+      1,
+      []
+    ],
+    [
+      "pass",
+      2,
+      []
+    ],
+    [
+      "pass",
+      3,
+      []
+    ],
+    [
+      "push",
+      2,
+      "spell",
+      0,
+      "Harmonic Prodigy"
+    ],
+    [
+      "pass",
+      0,
+      [
+        2
+      ]
+    ],
+    [
+      "pass",
+      1,
+      [
+        2
+      ]
+    ],
+    [
+      "pass",
+      2,
+      [
+        2
+      ]
+    ],
+    [
+      "pass",
+      3,
+      [
+        2
+      ]
+    ],
+    [
+      "resolve",
+      2,
+      "spell",
+      0
+    ],
+    [
+      "pass",
+      0,
+      []
+    ],
+    [
+      "pass",
+      1,
+      []
+    ],
+    [
+      "pass",
+      2,
+      []
+    ],
+    [
+      "pass",
+      3,
+      []
+    ],
+    [
+      "push",
+      3,
+      "spell",
+      0,
+      "Third Path Iconoclast"
+    ],
+    [
+      "pass",
+      0,
+      [
+        3
+      ]
+    ],
+    [
+      "pass",
+      1,
+      [
+        3
+      ]
+    ],
+    [
+      "pass",
+      2,
+      [
+        3
+      ]
+    ],
+    [
+      "pass",
+      3,
+      [
+        3
+      ]
+    ],
+    [
+      "resolve",
+      3,
+      "spell",
+      0
+    ],
+    [
+      "pass",
+      0,
+      []
+    ],
+    [
+      "pass",
+      1,
+      []
+    ],
+    [
+      "pass",
+      2,
+      []
+    ],
+    [
+      "pass",
+      3,
+      []
+    ],
+    [
+      "push",
+      4,
+      "activated",
+      0,
+      "Riptide Laboratory: riptide_wizard_bounce"
+    ],
+    [
+      "action",
+      0,
+      "spell"
+    ],
+    [
+      "push",
+      5,
+      "spell",
+      0,
+      "Capsize"
+    ],
+    [
+      "push",
+      6,
+      "triggered",
+      0,
+      "Harmonic Prodigy: pump_self"
+    ],
+    [
+      "push",
+      7,
+      "triggered",
+      0,
+      "Third Path Iconoclast: create_token"
+    ],
+    [
+      "push",
+      8,
+      "triggered",
+      0,
+      "Third Path Iconoclast: create_token"
+    ],
+    [
+      "pass",
+      0,
+      [
+        4,
+        5,
+        6,
+        7,
+        8
+      ]
+    ],
+    [
+      "pass",
+      1,
+      [
+        4,
+        5,
+        6,
+        7,
+        8
+      ]
+    ],
+    [
+      "pass",
+      2,
+      [
+        4,
+        5,
+        6,
+        7,
+        8
+      ]
+    ],
+    [
+      "pass",
+      3,
+      [
+        4,
+        5,
+        6,
+        7,
+        8
+      ]
+    ],
+    [
+      "resolve",
+      8,
+      "triggered",
+      0
+    ],
+    [
+      "pass",
+      0,
+      [
+        4,
+        5,
+        6,
+        7
+      ]
+    ],
+    [
+      "pass",
+      1,
+      [
+        4,
+        5,
+        6,
+        7
+      ]
+    ],
+    [
+      "pass",
+      2,
+      [
+        4,
+        5,
+        6,
+        7
+      ]
+    ],
+    [
+      "pass",
+      3,
+      [
+        4,
+        5,
+        6,
+        7
+      ]
+    ],
+    [
+      "resolve",
+      7,
+      "triggered",
+      0
+    ],
+    [
+      "pass",
+      0,
+      [
+        4,
+        5,
+        6
+      ]
+    ],
+    [
+      "pass",
+      1,
+      [
+        4,
+        5,
+        6
+      ]
+    ],
+    [
+      "pass",
+      2,
+      [
+        4,
+        5,
+        6
+      ]
+    ],
+    [
+      "pass",
+      3,
+      [
+        4,
+        5,
+        6
+      ]
+    ],
+    [
+      "resolve",
+      6,
+      "triggered",
+      0
+    ],
+    [
+      "pass",
+      0,
+      [
+        4,
+        5
+      ]
+    ],
+    [
+      "pass",
+      1,
+      [
+        4,
+        5
+      ]
+    ],
+    [
+      "pass",
+      2,
+      [
+        4,
+        5
+      ]
+    ],
+    [
+      "pass",
+      3,
+      [
+        4,
+        5
+      ]
+    ],
+    [
+      "resolve",
+      5,
+      "spell",
+      0
+    ],
+    [
+      "pass",
+      0,
+      [
+        4
+      ]
+    ],
+    [
+      "pass",
+      1,
+      [
+        4
+      ]
+    ],
+    [
+      "pass",
+      2,
+      [
+        4
+      ]
+    ],
+    [
+      "pass",
+      3,
+      [
+        4
+      ]
+    ],
+    [
+      "fizzle",
+      4,
+      "activated",
+      0
+    ],
+    [
+      "pass",
+      0,
+      []
+    ],
+    [
+      "pass",
+      1,
+      []
+    ],
+    [
+      "pass",
+      2,
+      []
+    ],
+    [
+      "pass",
+      3,
+      []
+    ]
+  ],
+  "payments": [
+    {
+      "seat": 0,
+      "cost": [
+        2,
+        1,
+        0
+      ],
+      "sources": [
+        469,
+        471,
+        473
+      ],
+      "unused": [
+        0,
+        0,
+        0
+      ]
+    },
+    {
+      "seat": 0,
+      "cost": [
+        1,
+        0,
+        1
+      ],
+      "sources": [
+        475,
+        485
+      ],
+      "unused": [
+        0,
+        0,
+        0
+      ]
+    },
+    {
+      "seat": 0,
+      "cost": [
+        0,
+        1,
+        1
+      ],
+      "sources": [
+        477,
+        487
+      ],
+      "unused": [
+        0,
+        0,
+        0
+      ]
+    },
+    {
+      "seat": 0,
+      "cost": [
+        1,
+        1,
+        0
+      ],
+      "sources": [
+        469,
+        471
+      ],
+      "unused": [
+        0,
+        0,
+        0
+      ]
+    },
+    {
+      "seat": 0,
+      "cost": [
+        1,
+        2,
+        0
+      ],
+      "sources": [
+        473,
+        475,
+        477
+      ],
+      "unused": [
+        0,
+        0,
+        0
+      ]
+    }
+  ],
+  "activations": [
+    {
+      "seat": 0,
+      "source_id": 469,
+      "source": "Island",
+      "output": [
+        0,
+        1,
+        0
+      ],
+      "activation_cost": [
+        0,
+        0,
+        0
+      ],
+      "life_paid": 0,
+      "damage": 0,
+      "sacrifice": false
+    },
+    {
+      "seat": 0,
+      "source_id": 471,
+      "source": "Island",
+      "output": [
+        0,
+        1,
+        0
+      ],
+      "activation_cost": [
+        0,
+        0,
+        0
+      ],
+      "life_paid": 0,
+      "damage": 0,
+      "sacrifice": false
+    },
+    {
+      "seat": 0,
+      "source_id": 473,
+      "source": "Island",
+      "output": [
+        0,
+        1,
+        0
+      ],
+      "activation_cost": [
+        0,
+        0,
+        0
+      ],
+      "life_paid": 0,
+      "damage": 0,
+      "sacrifice": false
+    },
+    {
+      "seat": 0,
+      "source_id": 475,
+      "source": "Island",
+      "output": [
+        0,
+        1,
+        0
+      ],
+      "activation_cost": [
+        0,
+        0,
+        0
+      ],
+      "life_paid": 0,
+      "damage": 0,
+      "sacrifice": false
+    },
+    {
+      "seat": 0,
+      "source_id": 485,
+      "source": "Mountain",
+      "output": [
+        0,
+        0,
+        1
+      ],
+      "activation_cost": [
+        0,
+        0,
+        0
+      ],
+      "life_paid": 0,
+      "damage": 0,
+      "sacrifice": false
+    },
+    {
+      "seat": 0,
+      "source_id": 477,
+      "source": "Island",
+      "output": [
+        0,
+        1,
+        0
+      ],
+      "activation_cost": [
+        0,
+        0,
+        0
+      ],
+      "life_paid": 0,
+      "damage": 0,
+      "sacrifice": false
+    },
+    {
+      "seat": 0,
+      "source_id": 487,
+      "source": "Mountain",
+      "output": [
+        0,
+        0,
+        1
+      ],
+      "activation_cost": [
+        0,
+        0,
+        0
+      ],
+      "life_paid": 0,
+      "damage": 0,
+      "sacrifice": false
+    },
+    {
+      "seat": 0,
+      "source_id": 469,
+      "source": "Island",
+      "output": [
+        0,
+        1,
+        0
+      ],
+      "activation_cost": [
+        0,
+        0,
+        0
+      ],
+      "life_paid": 0,
+      "damage": 0,
+      "sacrifice": false
+    },
+    {
+      "seat": 0,
+      "source_id": 471,
+      "source": "Island",
+      "output": [
+        0,
+        1,
+        0
+      ],
+      "activation_cost": [
+        0,
+        0,
+        0
+      ],
+      "life_paid": 0,
+      "damage": 0,
+      "sacrifice": false
+    },
+    {
+      "seat": 0,
+      "source_id": 473,
+      "source": "Island",
+      "output": [
+        0,
+        1,
+        0
+      ],
+      "activation_cost": [
+        0,
+        0,
+        0
+      ],
+      "life_paid": 0,
+      "damage": 0,
+      "sacrifice": false
+    },
+    {
+      "seat": 0,
+      "source_id": 475,
+      "source": "Island",
+      "output": [
+        0,
+        1,
+        0
+      ],
+      "activation_cost": [
+        0,
+        0,
+        0
+      ],
+      "life_paid": 0,
+      "damage": 0,
+      "sacrifice": false
+    },
+    {
+      "seat": 0,
+      "source_id": 477,
+      "source": "Island",
+      "output": [
+        0,
+        1,
+        0
+      ],
+      "activation_cost": [
+        0,
+        0,
+        0
+      ],
+      "life_paid": 0,
+      "damage": 0,
+      "sacrifice": false
+    }
+  ]
+}
