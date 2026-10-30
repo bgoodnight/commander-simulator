@@ -1,0 +1,7 @@
+# V27 Fabricate and wizardcycling
+
+`WizardTutorTable` implements Fabricate (2U; search for an artifact card, reveal and put it into hand, then shuffle) and the wizardcycling ability of Step Through (2 generic mana and discard; search for a Wizard card, reveal and put it into hand, then shuffle). Both permit failing to find. Wizardcycling is an activated ability usable at priority, not a spell cast; mana and discard costs are paid before the ability is placed on the stack and it can be countered as an ability.
+
+Canonical deck card subtypes are initialized from the v20 Oracle type lines; the existing kernel may apply supported additional type effects when searching. Search choices use `tutor_policy` and the existing heuristic default. The main sorcery mode of Step Through is still unsupported, as are general cycling-trigger interactions, reveal visibility, full continuous layers, and the effects of Spellseeker and Phyrexian Altar. No new caching is introduced.
+
+Tests cover selection, cost, priority, discard, countering, derived Wizard type, and interaction with Young Pyromancer and Sapphire Medallion. The source-paid narrative follows Fabricate for Phyrexian Altar and wizardcycling for Spellseeker. References: [Modern Horizons 2 release notes](https://magic.wizards.com/en/news/feature/modern-horizons-2-release-notes-2021-06-04) and [Fabricate](https://scryfall.com/search?q=%21%22Fabricate%22).
