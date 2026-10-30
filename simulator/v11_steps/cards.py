@@ -61,5 +61,7 @@ def base_action(table, player, card, tags, choices):
     generic, blue, red = v6.CAT[card.name]['cost']
     if card.name == 'Capsize' and tags: generic += 3
     cost = table.rules.modified_cost(player.seat, frozenset({card.card_type}), Cost(generic, blue, red))
-    return base.Action(player.seat, card.name, card.card_type, card.effect, cost.total,
-                       parameters={**card.parameters, 'U': blue, 'R': red, **choices}, tags=tags)
+    result = base.Action(player.seat, card.name, card.card_type, card.effect, cost.total,
+                         parameters={**card.parameters, 'U': blue, 'R': red, **choices}, tags=tags)
+    adjust = getattr(table, 'adjust_named_action_cost', None)
+    return adjust(result) if adjust else result

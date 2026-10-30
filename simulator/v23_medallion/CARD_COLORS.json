@@ -1,0 +1,215 @@
+{
+  "source": "https://data.scryfall.io/oracle-cards/oracle-cards-20261030090203.jsonl.gz",
+  "sha256": "ee1d8e6781cd60863bf5ff8959d1f3770e05a21a9fe5b2159a587833a23fdffb",
+  "colors": {
+    "Arcane Signet": [],
+    "Archmage Emeritus": [
+      "U"
+    ],
+    "Artistic Refusal": [
+      "U"
+    ],
+    "Baral, Chief of Compliance": [
+      "U"
+    ],
+    "Brainstorm": [
+      "U"
+    ],
+    "Capsize": [
+      "U"
+    ],
+    "Cascade Bluffs": [],
+    "Chaos Mutation": [
+      "R",
+      "U"
+    ],
+    "Chaos Warp": [
+      "R"
+    ],
+    "Command Tower": [],
+    "Consider": [
+      "U"
+    ],
+    "Counterspell": [
+      "U"
+    ],
+    "Crackle with Power": [
+      "R"
+    ],
+    "Dualcaster Mage": [
+      "R"
+    ],
+    "Exalted Flamer of Tzeentch": [
+      "R",
+      "U"
+    ],
+    "Exotic Orchard": [],
+    "Fabled Passage": [],
+    "Fabricate": [
+      "U"
+    ],
+    "Faithless Looting": [
+      "R"
+    ],
+    "Fanning the Flames": [
+      "R"
+    ],
+    "Fiery Islet": [],
+    "Frantic Search": [
+      "U"
+    ],
+    "Frostboil Snarl": [],
+    "Gamble": [
+      "R"
+    ],
+    "Gitaxian Probe": [
+      "U"
+    ],
+    "Goblin Electromancer": [
+      "R",
+      "U"
+    ],
+    "Hard Evidence": [
+      "U"
+    ],
+    "Harmonic Prodigy": [
+      "R"
+    ],
+    "Heralds of Tzeentch": [
+      "U"
+    ],
+    "Imperial Recruiter": [
+      "R"
+    ],
+    "Improbable Alliance": [
+      "R",
+      "U"
+    ],
+    "Increasing Vengeance": [
+      "R"
+    ],
+    "Island": [],
+    "Izzet Signet": [],
+    "Lord of Change": [
+      "U"
+    ],
+    "Magnus the Red": [
+      "R",
+      "U"
+    ],
+    "Mathemagics": [
+      "U"
+    ],
+    "Meeting of Minds": [
+      "U"
+    ],
+    "Merchant Scroll": [
+      "U"
+    ],
+    "Mountain": [],
+    "Muddle the Mixture": [
+      "U"
+    ],
+    "Mutalith Vortex Beast": [
+      "R",
+      "U"
+    ],
+    "Mystic Sanctuary": [],
+    "Mystical Tutor": [
+      "U"
+    ],
+    "Of One Mind": [
+      "U"
+    ],
+    "Personal Tutor": [
+      "U"
+    ],
+    "Phyrexian Altar": [],
+    "Pink Horror": [
+      "R",
+      "U"
+    ],
+    "Ponder": [
+      "U"
+    ],
+    "Preordain": [
+      "U"
+    ],
+    "Ral's Reinforcements": [
+      "R"
+    ],
+    "Riptide Laboratory": [],
+    "Riverglide Pathway": [],
+    "Saheeli, Sublime Artificer": [
+      "R",
+      "U"
+    ],
+    "Sapphire Medallion": [],
+    "Searing Touch": [
+      "R"
+    ],
+    "Shivan Reef": [],
+    "Skullclamp": [],
+    "Snap": [
+      "U"
+    ],
+    "Sokenzan, Crucible of Defiance": [],
+    "Sol Ring": [],
+    "Solve the Equation": [
+      "U"
+    ],
+    "Sorcerer Class": [
+      "R",
+      "U"
+    ],
+    "Spell Burst": [
+      "U"
+    ],
+    "Spellseeker": [
+      "U"
+    ],
+    "Spirebluff Canal": [],
+    "Springleaf Drum": [],
+    "Steam Vents": [],
+    "Step Through": [
+      "U"
+    ],
+    "Storm-Kiln Artist": [
+      "R"
+    ],
+    "Stormcarved Coast": [],
+    "Stormcatch Mentor": [
+      "R",
+      "U"
+    ],
+    "Strike It Rich": [
+      "R"
+    ],
+    "Sulfur Falls": [],
+    "Talisman of Creativity": [],
+    "Talrand, Sky Summoner": [
+      "U"
+    ],
+    "The Lost and the Damned": [
+      "R",
+      "U"
+    ],
+    "Tzaangor Shaman": [
+      "R",
+      "U"
+    ],
+    "Underworld Breach": [
+      "R"
+    ],
+    "Veyran, Voice of Duality": [
+      "R",
+      "U"
+    ],
+    "Whispers of the Muse": [
+      "U"
+    ],
+    "Young Pyromancer": [
+      "R"
+    ]
+  }
+}
