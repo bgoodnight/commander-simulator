@@ -1,0 +1,12 @@
+{
+  "games": 200,
+  "rounds": 12,
+  "safety_stops": [],
+  "tutor_searches": 39,
+  "elapsed_seconds": 159.785,
+  "median_ms_8_rounds_12_samples": {
+    "ChannelTable": 505.315,
+    "TutorTable": 485.288
+  },
+  "deck": "historical Magnus v1.6 fixture"
+}
