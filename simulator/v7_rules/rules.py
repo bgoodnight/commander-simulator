@@ -53,6 +53,7 @@ class CardDefinition:
     keywords:frozenset[str]=frozenset()
     abilities:tuple[Ability,...]=()
     coverage:str='verified_subset'
+    colors:frozenset[str]|None=None  # None means unknown; empty means colorless
     def __post_init__(self):
         if not self.card_id or not self.types:raise ValueError('Card needs ID and types')
         if self.coverage not in {'verified_subset','approx','unimplemented'}:raise ValueError('Unknown coverage')

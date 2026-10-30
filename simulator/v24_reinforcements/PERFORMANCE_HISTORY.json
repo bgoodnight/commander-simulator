@@ -1,0 +1,112 @@
+{
+  "new_caching": false,
+  "entries": [
+    {
+      "version": "v12",
+      "engine": "CombatTable",
+      "games": 12,
+      "rounds": 8,
+      "median_ms": 314.807,
+      "measurement": "historical; host load/time differs"
+    },
+    {
+      "version": "v13",
+      "engine": "EngineTable",
+      "games": 12,
+      "rounds": 8,
+      "median_ms": 448.467,
+      "measurement": "historical; host load/time differs"
+    },
+    {
+      "version": "v14",
+      "engine": "LandTable",
+      "games": 12,
+      "rounds": 8,
+      "median_ms": 549.671,
+      "comparator_median_ms": 430.368,
+      "measurement": "same invocation; changed rules alter trajectories"
+    },
+    {
+      "version": "v15",
+      "engine": "UtilityTable",
+      "games": 12,
+      "rounds": 8,
+      "median_ms": 415.247,
+      "comparator_median_ms": 394.733,
+      "measurement": "same invocation; changed rules alter trajectories"
+    },
+    {
+      "version": "v16",
+      "engine": "ChannelTable",
+      "games": 12,
+      "rounds": 8,
+      "median_ms": 559.035,
+      "comparator_median_ms": 572.472,
+      "measurement": "same invocation; changed rules and host load alter trajectories"
+    },
+    {
+      "version": "v17",
+      "engine": "TutorTable",
+      "deck": "historical Magnus v1.6 fixture",
+      "games": 12,
+      "rounds": 8,
+      "median_ms": 485.288,
+      "comparator_median_ms": 505.315,
+      "measurement": "same invocation; differing rules and host conditions alter trajectories"
+    },
+    {
+      "version": "v18",
+      "engine": "BudgetTable",
+      "deck": "magnus_thousand_sons_v1_13_budget.txt",
+      "games": 12,
+      "rounds": 8,
+      "median_ms": 457.988,
+      "measurement": "new deck and rules change trajectories; not directly comparable to historical v1.6"
+    },
+    {
+      "version": "v20",
+      "deck": "magnus_thousand_sons_v1_13_budget.txt",
+      "engine": "VerifiedTable",
+      "games": 12,
+      "rounds": 8,
+      "median_ms": 308.163,
+      "measurement": "exploratory; host and trajectories differ"
+    },
+    {
+      "version": "v21",
+      "deck": "magnus_thousand_sons_v1_13_budget.txt",
+      "engine": "EarlyManaTable",
+      "games": 12,
+      "rounds": 8,
+      "median_ms": 324.504,
+      "measurement": "exploratory; host load and trajectories vary"
+    },
+    {
+      "version": "v22",
+      "deck": "magnus_thousand_sons_v1_13_budget.txt",
+      "engine": "ConsiderTable",
+      "games": 12,
+      "rounds": 8,
+      "median_ms": 675.022,
+      "measurement": "exploratory; host load and trajectories vary"
+    },
+    {
+      "version": "v23",
+      "deck": "magnus_thousand_sons_v1_13_budget.txt",
+      "engine": "MedallionTable",
+      "games": 12,
+      "rounds": 8,
+      "median_ms": 574.176,
+      "measurement": "exploratory; host load and trajectories vary"
+    },
+    {
+      "version": "v24",
+      "deck": "magnus_thousand_sons_v1_13_budget.txt",
+      "engine": "ReinforcementTable",
+      "games": 12,
+      "rounds": 8,
+      "median_ms": 306.427,
+      "measurement": "third full sweep; earlier full sweeps hit wall-clock limits under different run conditions"
+    }
+  ]
+}

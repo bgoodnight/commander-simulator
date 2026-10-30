@@ -84,9 +84,11 @@ class Battlefield:
             self.kernel.move(oid,'graveyard','sacrifice')
             self.views.pop(oid)
             self.transitions+=1
-    def create_creature(self,p,power,toughness,name,token=False,engine=False,keywords=()):
+    def create_creature(self,p,power,toughness,name,token=False,engine=False,keywords=(),definition=None):
         from simulation import Creature
-        d=self._definition(name,max(0,power),max(1,toughness),keywords)
+        d=definition if definition is not None else self._definition(name,max(0,power),max(1,toughness),keywords)
+        if definition is not None and (not token or d.name!=name or d.base_power!=power or d.base_toughness!=toughness):
+            raise ValueError('Explicit creature definition must match token characteristics')
         obj=self.kernel.add(d,p.seat,token=token)
         c=Creature(obj.object_id,p.seat,max(0,power),max(1,toughness),self.table.round_num,name,False,token,engine,tuple(keywords))
         p.creatures.append(c)

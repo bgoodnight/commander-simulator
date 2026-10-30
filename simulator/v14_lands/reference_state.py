@@ -5,7 +5,10 @@ import hashlib,json
 
 
 def canonical(value):
-    if is_dataclass(value):return {f.name:canonical(getattr(value,f.name)) for f in fields(value)}
+    if is_dataclass(value):
+        # Preserve v14 reference format for the later optional unknown-color field.
+        return {f.name:canonical(getattr(value,f.name)) for f in fields(value)
+                if not (f.name=='colors' and type(value).__name__=='CardDefinition' and getattr(value,f.name) is None)}
     if isinstance(value,Mapping):return {str(k):canonical(v) for k,v in value.items()}
     if isinstance(value,(set,frozenset)):return sorted(canonical(x) for x in value)
     if isinstance(value,(tuple,list)):return [canonical(x) for x in value]

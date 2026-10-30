@@ -1,0 +1,117 @@
+{
+  "deck": "magnus_thousand_sons_v1_13_budget.txt",
+  "games": 200,
+  "rounds": 12,
+  "safety_stops": [
+    [
+      0,
+      22,
+      "wall_clock_budget"
+    ],
+    [
+      0,
+      23,
+      "wall_clock_budget"
+    ],
+    [
+      0,
+      26,
+      "wall_clock_budget"
+    ],
+    [
+      0,
+      28,
+      "wall_clock_budget"
+    ],
+    [
+      0,
+      31,
+      "wall_clock_budget"
+    ],
+    [
+      0,
+      32,
+      "wall_clock_budget"
+    ],
+    [
+      2,
+      2,
+      "wall_clock_budget"
+    ],
+    [
+      2,
+      3,
+      "wall_clock_budget"
+    ],
+    [
+      2,
+      6,
+      "wall_clock_budget"
+    ],
+    [
+      2,
+      7,
+      "wall_clock_budget"
+    ],
+    [
+      2,
+      10,
+      "wall_clock_budget"
+    ],
+    [
+      2,
+      11,
+      "wall_clock_budget"
+    ],
+    [
+      2,
+      12,
+      "wall_clock_budget"
+    ],
+    [
+      2,
+      16,
+      "wall_clock_budget"
+    ],
+    [
+      2,
+      18,
+      "wall_clock_budget"
+    ],
+    [
+      2,
+      22,
+      "wall_clock_budget"
+    ],
+    [
+      2,
+      24,
+      "wall_clock_budget"
+    ],
+    [
+      2,
+      28,
+      "wall_clock_budget"
+    ],
+    [
+      2,
+      31,
+      "wall_clock_budget"
+    ],
+    [
+      2,
+      32,
+      "wall_clock_budget"
+    ],
+    [
+      2,
+      33,
+      "wall_clock_budget"
+    ]
+  ],
+  "elapsed_seconds": 295.172,
+  "benchmark_games": 12,
+  "benchmark_rounds": 8,
+  "median_ms": 526.114,
+  "limitations": "Ral tokens record printed colors; general color-changing effects, simultaneous entry interactions and many card effects remain unsupported."
+}

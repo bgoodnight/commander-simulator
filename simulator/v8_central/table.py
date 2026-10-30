@@ -39,11 +39,11 @@ class CentralTable(v7.ModularTable):
                 if c.id in self.rules.objects:
                     ex[c.id]=(p,c);internal[(p.seat,c.id)]=c.id
         return self.rules,ex,internal
-    def add_creature(self,p,power,toughness,name,token=False,engine=False,keywords=()):
+    def add_creature(self,p,power,toughness,name,token=False,engine=False,keywords=(),definition=None):
         # Same synthetic keyword assignment as v6, but it is encoded as data.
         if p is not self.details and not keywords and not token:
             if p.rng.random()<(0.17 if power>=4 else 0.06 if power>=2 else 0.0):keywords=('flying',)
-        return self.world.create_creature(p,power,toughness,name,token,engine,keywords)
+        return self.world.create_creature(p,power,toughness,name,token,engine,keywords,definition=definition)
     def add_permanent(self,p,kind,value,name,is_creature=False):
         return self.world.create_permanent(p,kind,value,name,is_creature)
     def kill_creature(self,p,c):
@@ -272,3 +272,4 @@ class CentralTable(v7.ModularTable):
             'limits':['shared battlefield/keyword/combat/damage/spell stack','some land/mana, hand/library, and legacy synthetic finishers remain adapters',
                      'counter-only response priority; triggered abilities resolve before responses']}
         return d
+
