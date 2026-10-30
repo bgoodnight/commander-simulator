@@ -1,6 +1,10 @@
 # Commander Simulator
 
-A reproducible, modular four-player **Magic: The Gathering Commander** simulation project. Current milestone: **v15** (October 29, 2026): Mystic Sanctuary's targeted graveyard-return trigger, Fiery Islet's draw activation, and Riptide Laboratory's 1U Wizard-return activation. V14 land rules and reference fingerprints, v13 selection/engines, v12 combat, live zones and source-ID mana remain active. **This is not a complete Magic rules engine, and the results are not validated deck win rates.**
+A reproducible, modular four-player **Magic: The Gathering Commander** simulation project. Current milestone: **v16**: Otawara and Sokenzan channel abilities, building on v15 Mystic Sanctuary's targeted graveyard-return trigger, Fiery Islet's draw activation, and Riptide Laboratory's 1U Wizard-return activation. V14 land rules and reference fingerprints, v13 selection/engines, v12 combat, live zones and source-ID mana remain active. **This is not a complete Magic rules engine, and the results are not validated deck win rates.**
+
+## V16 channel
+
+[Channel implementation](simulator/v16_channel/README.md) adds Otawara and Sokenzan as a bounded subset, with known token-color and metadata limits. See its [interaction report](simulator/v16_channel/INTERACTION_REPORT.md) and [coverage audit](simulator/v16_channel/CARD_COVERAGE.md) for validation and remaining gaps.
 
 ## Current architecture and scope
 
@@ -52,7 +56,7 @@ Requires Python 3.10+ and only the standard library:
 python run_all_tests.py
 ```
 
-**585 tests across fifteen suites** (v3:20, v4:15, v5:21, v6:21, v7:50, v8:32, v9a:29, v9b:34, v9c:49, v10:51, v11:50, v12:50, v13:69, v14:56, v15:38). The GitHub Actions workflow tests on Python 3.11, 3.12, and 3.13.
+**599 tests across sixteen suites** (v3:20, v4:15, v5:21, v6:21, v7:50, v8:32, v9a:29, v9b:34, v9c:49, v10:51, v11:50, v12:50, v13:69, v14:56, v15:38, v16:14). The GitHub Actions workflow tests on Python 3.11, 3.12, and 3.13.
 
 Run live v15 and reproduce validation:
 
@@ -70,4 +74,4 @@ Milestones are versioned under `simulator/`. The pre-v15 rollback point is `b0b0
 
 ## Next milestone
 
-Implement Otawara and Sokenzan channel next, then spell copies, relevant creature activations/tutors, graveyard casting and combo validation. Track runtime while building functionality; defer additional caching and compare later optimized outputs against the versioned v14 deterministic reference cases. Keep source-paid narratives and independent state/payment/priority checks.
+Implement spell copies and relevant creature activations/tutors next, then graveyard casting and combo validation. Track runtime while building functionality; defer additional caching and compare later optimized outputs against the versioned v14 deterministic reference cases. Keep source-paid narratives and independent state/payment/priority checks.

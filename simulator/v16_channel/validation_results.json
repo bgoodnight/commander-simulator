@@ -1,0 +1,11 @@
+{
+  "games": 200,
+  "rounds": 12,
+  "safety_stops": [],
+  "channel_activations": 6,
+  "elapsed_seconds": 181.661,
+  "median_ms_8_rounds_12_samples": {
+    "UtilityTable": 572.472,
+    "ChannelTable": 559.035
+  }
+}
