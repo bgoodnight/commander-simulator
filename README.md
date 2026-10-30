@@ -1,6 +1,14 @@
 # Commander Simulator
 
-A reproducible, modular four-player **Magic: The Gathering Commander** simulation project. Current milestone: **v16**: Otawara and Sokenzan channel abilities, building on v15 Mystic Sanctuary's targeted graveyard-return trigger, Fiery Islet's draw activation, and Riptide Laboratory's 1U Wizard-return activation. V14 land rules and reference fingerprints, v13 selection/engines, v12 combat, live zones and source-ID mana remain active. **This is not a complete Magic rules engine, and the results are not validated deck win rates.**
+A reproducible, modular four-player **Magic: The Gathering Commander** simulation project. Current milestone: **v18**: canonical v1.13 budget deck adapter, plus v17 Mystical Tutor search and v16 Otawara and Sokenzan channel abilities, building on v15 Mystic Sanctuary's targeted graveyard-return trigger, Fiery Islet's draw activation, and Riptide Laboratory's 1U Wizard-return activation. V14 land rules and reference fingerprints, v13 selection/engines, v12 combat, live zones and source-ID mana remain active. **This is not a complete Magic rules engine, and the results are not validated deck win rates.**
+
+## V18 canonical budget deck
+
+The authoritative [v1.13 budget list](decklists/magnus_thousand_sons_v1_13_budget.txt) is loaded by [BudgetTable](simulator/v18_budget_deck/README.md). Identity and color verification remain incomplete; 29 names are unverified and inert. See the [v1.13 audit](simulator/v18_budget_deck/CARD_COVERAGE.md) and [assessment](simulator/v18_budget_deck/ASSESSMENT.md). Prior tables retain historical decks for regression.
+
+## V17 tutor
+
+[Mystical Tutor](simulator/v17_tutor/README.md) adds instant-speed search with resolution-time choice and shuffle; see [current coverage](simulator/v17_tutor/CARD_COVERAGE.md), [interaction narrative](simulator/v17_tutor/INTERACTION_REPORT.md), and [validation](simulator/v17_tutor/validation_results.json).
 
 ## V16 channel
 
@@ -9,7 +17,7 @@ A reproducible, modular four-player **Magic: The Gathering Commander** simulatio
 ## Current architecture and scope
 
 - [V15 utility-land README](simulator/v15_utility/README.md) — Sanctuary target timing, Islet costs and Riptide target rechecks.
-- [Current Magnus coverage](simulator/v15_utility/CARD_COVERAGE.md) — 41 supported subsets, 7 partial, 35 unsupported names.
+- [Historical v15 Magnus coverage](simulator/v15_utility/CARD_COVERAGE.md) — 41 supported subsets, 7 partial, 35 unsupported names.
 - [V15 interaction report](simulator/v15_utility/INTERACTION_REPORT.md) — six narratives, live sweep and runtime.
 - [V15 assessment](simulator/v15_utility/ASSESSMENT.md) — validation and remaining limits.
 
@@ -46,7 +54,7 @@ A reproducible, modular four-player **Magic: The Gathering Commander** simulatio
 - [Real Magnus deck integration](simulator/v6_real_deck/README.md) — original partial real 99-card adapter.
 - [Magnus v1.6 decklist](decklists/magnus_thousand_sons_v1_6.txt), [v3 card catalog](simulator/v3_magnus_modular/cards.json), and [candidate combo lines](simulator/v3_magnus_modular/combos.json).
 
-**Live v15 limits:** one detailed Magnus deck plus synthetic opponents. Sanctuary, Fiery Islet and Riptide Laboratory join the prior individual land-entry rules and Fabled Passage. Channel, full double-faced/layer/replacement behavior, spell-copy producers, full legend/Commander rules, attachments and verified loops remain absent or partial as audited. No additional caching is introduced; v14 reference outputs are preserved for later optimization. No deck win-rate conclusions are supported.
+**Historical v15 limits:** one detailed Magnus deck plus synthetic opponents. Sanctuary, Fiery Islet and Riptide Laboratory join the prior individual land-entry rules and Fabled Passage. Channel, full double-faced/layer/replacement behavior, spell-copy producers, full legend/Commander rules, attachments and verified loops remain absent or partial as audited. No additional caching is introduced; v14 reference outputs are preserved for later optimization. No deck win-rate conclusions are supported.
 
 ## Run all tests
 
@@ -56,9 +64,9 @@ Requires Python 3.10+ and only the standard library:
 python run_all_tests.py
 ```
 
-**599 tests across sixteen suites** (v3:20, v4:15, v5:21, v6:21, v7:50, v8:32, v9a:29, v9b:34, v9c:49, v10:51, v11:50, v12:50, v13:69, v14:56, v15:38, v16:14). The GitHub Actions workflow tests on Python 3.11, 3.12, and 3.13.
+**610 tests across eighteen suites** (v3:20, v4:15, v5:21, v6:21, v7:50, v8:32, v9a:29, v9b:34, v9c:49, v10:51, v11:50, v12:50, v13:69, v14:56, v15:38, v16:14, v17:6, v18:5). The GitHub Actions workflow tests on Python 3.11, 3.12, and 3.13.
 
-Run live v15 and reproduce validation:
+Run historical v15 and reproduce validation:
 
 ```bash
 python simulator/v15_utility/tests.py
@@ -74,4 +82,4 @@ Milestones are versioned under `simulator/`. The pre-v15 rollback point is `b0b0
 
 ## Next milestone
 
-Implement spell copies and relevant creature activations/tutors next, then graveyard casting and combo validation. Track runtime while building functionality; defer additional caching and compare later optimized outputs against the versioned v14 deterministic reference cases. Keep source-paid narratives and independent state/payment/priority checks.
+First verify v1.13 card identity and color identity, then prioritize Magnus cost reduction, buyback, convoke, token generation, tutors, Wizard/Shaman triggers and Underworld Breach. Add spell-copy mechanics and validate combo lines as their prerequisites are implemented. Track runtime while building functionality; defer additional caching and compare later optimized outputs against the versioned v14 deterministic reference cases. Keep source-paid narratives and independent state/payment/priority checks.
