@@ -315,6 +315,7 @@ class GameKernel:
         if a.condition=='controller_cast_instant_sorcery':return event.controller==o.controller and bool(event.spell_types & SPELL_TYPES)
         if a.condition=='controller_cast_noncreature':return event.controller==o.controller and 'creature' not in event.spell_types
         if a.condition=='controller_cast_or_copy_instant_sorcery':return event.controller==o.controller and bool(event.spell_types & SPELL_TYPES)
+        if a.condition=='self_enters':return event.source_id==o.object_id
         if a.condition=='self_combat_damage_player':return event.source_id==o.object_id and event.amount>0
         if a.condition=='controller_countered_spell':return event.controller==o.controller
         if a.condition=='always':return True

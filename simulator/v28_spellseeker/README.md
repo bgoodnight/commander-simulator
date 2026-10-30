@@ -1,0 +1,7 @@
+# V28 Spellseeker
+
+`SpellseekerTable` adds Spellseeker as a 2U 1/1 Human Wizard. Its enter-the-battlefield trigger is queued on the shared stack and optionally searches for an instant or sorcery card with mana value two or less, reveals it, puts it into hand, then shuffles. If the optional search is declined, no shuffle occurs; searching can also fail to find and still shuffles. A `spellseeker_search_policy` may decline, and `tutor_policy` selects among legal cards.
+
+For known v1.13 cards, mana value is calculated from verified Oracle mana costs (X is zero in the library); unknown or unsupported symbols fail closed. This covers the present deck rather than general Magic mana-value rules. Harmonic Prodigy doubles the Wizard's enter trigger; the trigger survives Spellseeker leaving the battlefield. General layers, reveal visibility, arbitrary control changes, cycling triggers and Step Through's sorcery mode remain incomplete. The shared rule kernel adds a self-enter trigger predicate; earlier engines remain compatible. No new caching is added.
+
+Tests cover the search limit, optional decline and fail-to-find, Harmonic, source removal in response, Sapphire Medallion, and the wizardcycling-to-Spellseeker-to-Consider chain. A source-paid narrative exercises that chain. Reference: [Commander Masters release notes](https://magic.wizards.com/en/news/feature/commander-masters-release-notes).

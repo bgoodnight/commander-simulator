@@ -1,0 +1,593 @@
+{
+  "deck": "magnus_thousand_sons_v1_13_budget.txt",
+  "source_commit": "d42c28e013f7d451ab548610a555c7d5e1be43ec",
+  "physical_count": 100,
+  "counts": {
+    "partial": 5,
+    "supported subset": 39,
+    "unsupported": 38
+  },
+  "physical_counts": {
+    "supported subset": 57,
+    "partial": 5,
+    "unsupported": 38
+  },
+  "identity_and_color_validation": "Verified with Scryfall Oracle snapshot 2026-10-30; simulator characteristics other than card types are not fully reconciled.",
+  "cards": [
+    {
+      "section": "Commander",
+      "name": "Magnus the Red",
+      "quantity": 1,
+      "status": "partial",
+      "detail": "Flying, token discount and combat-hit token trigger live; commander damage and full Commander rules remain absent."
+    },
+    {
+      "section": "Library",
+      "name": "Arcane Signet",
+      "quantity": 1,
+      "status": "supported subset",
+      "detail": "Declared U/R/colorless mana ability; source-ID payment, tap and applicable costs."
+    },
+    {
+      "section": "Library",
+      "name": "Archmage Emeritus",
+      "quantity": 1,
+      "status": "supported subset",
+      "detail": "Body plus cast/copy magecraft draw descriptors, including Harmonic doubling; live spell-copy production remains absent."
+    },
+    {
+      "section": "Library",
+      "name": "Artistic Refusal",
+      "quantity": 1,
+      "status": "unsupported",
+      "detail": "Identity and card type verified; printed behavior and runtime metadata remain unsupported."
+    },
+    {
+      "section": "Library",
+      "name": "Baral, Chief of Compliance",
+      "quantity": 1,
+      "status": "supported subset",
+      "detail": "Generic discount and optional draw/discard trigger after a controlled spell/ability actually counters a spell."
+    },
+    {
+      "section": "Library",
+      "name": "Brainstorm",
+      "quantity": 1,
+      "status": "supported subset",
+      "detail": "Draw three, then choose/order two cards from the entire hand onto the library; one resolution."
+    },
+    {
+      "section": "Library",
+      "name": "Capsize",
+      "quantity": 1,
+      "status": "supported subset",
+      "detail": "Permanent bounce, optional buyback three, additional-cost reduction, counter/fizzle destinations."
+    },
+    {
+      "section": "Library",
+      "name": "Cascade Bluffs",
+      "quantity": 1,
+      "status": "supported subset",
+      "detail": "Declared land mana source; ordinary land-play timing."
+    },
+    {
+      "section": "Library",
+      "name": "Chaos Mutation",
+      "quantity": 1,
+      "status": "unsupported",
+      "detail": "No live registered printed effect; drawn/reported but excluded from legal casts."
+    },
+    {
+      "section": "Library",
+      "name": "Chaos Warp",
+      "quantity": 1,
+      "status": "unsupported",
+      "detail": "No live registered printed effect; drawn/reported but excluded from legal casts."
+    },
+    {
+      "section": "Library",
+      "name": "Command Tower",
+      "quantity": 1,
+      "status": "supported subset",
+      "detail": "Declared land mana source; ordinary land-play timing."
+    },
+    {
+      "section": "Library",
+      "name": "Consider",
+      "quantity": 1,
+      "status": "supported subset",
+      "detail": "U instant: surveil one by keeping or moving the top card to graveyard, then draw; explicit choice policy."
+    },
+    {
+      "section": "Library",
+      "name": "Counterspell",
+      "quantity": 1,
+      "status": "supported subset",
+      "detail": "Target spell frame and counter destination."
+    },
+    {
+      "section": "Library",
+      "name": "Crackle with Power",
+      "quantity": 1,
+      "status": "unsupported",
+      "detail": "Identity and card type verified; printed behavior and runtime metadata remain unsupported."
+    },
+    {
+      "section": "Library",
+      "name": "Dualcaster Mage",
+      "quantity": 1,
+      "status": "unsupported",
+      "detail": "No live registered printed effect; drawn/reported but excluded from legal casts."
+    },
+    {
+      "section": "Library",
+      "name": "Exalted Flamer of Tzeentch",
+      "quantity": 1,
+      "status": "unsupported",
+      "detail": "No live registered printed effect; drawn/reported but excluded from legal casts."
+    },
+    {
+      "section": "Library",
+      "name": "Exotic Orchard",
+      "quantity": 1,
+      "status": "supported subset",
+      "detail": "Declared land mana source; ordinary land-play timing."
+    },
+    {
+      "section": "Library",
+      "name": "Fabled Passage",
+      "quantity": 1,
+      "status": "supported subset",
+      "detail": "Explicit tap/sacrifice stack ability; choose a basic land or fail to find, enter tapped, shuffle, then check four lands to untap."
+    },
+    {
+      "section": "Library",
+      "name": "Fabricate",
+      "quantity": 1,
+      "status": "supported subset",
+      "detail": "2U sorcery: search artifact, reveal and put into hand, shuffle; optional fail-to-find."
+    },
+    {
+      "section": "Library",
+      "name": "Faithless Looting",
+      "quantity": 1,
+      "status": "unsupported",
+      "detail": "Identity and card type verified; printed behavior and runtime metadata remain unsupported."
+    },
+    {
+      "section": "Library",
+      "name": "Fanning the Flames",
+      "quantity": 1,
+      "status": "unsupported",
+      "detail": "Identity and card type verified; printed behavior and runtime metadata remain unsupported."
+    },
+    {
+      "section": "Library",
+      "name": "Fiery Islet",
+      "quantity": 1,
+      "status": "supported subset",
+      "detail": "U/R mana with life payment; 1, tap, sacrifice to draw with priority and source reservation."
+    },
+    {
+      "section": "Library",
+      "name": "Frantic Search",
+      "quantity": 1,
+      "status": "supported subset",
+      "detail": "Draw two, choose/discard two, untap up to three distinct lands; one resolution."
+    },
+    {
+      "section": "Library",
+      "name": "Frostboil Snarl",
+      "quantity": 1,
+      "status": "supported subset",
+      "detail": "Optional reveal an Island or Mountain card in hand on entry, otherwise tapped; tap for U or R."
+    },
+    {
+      "section": "Library",
+      "name": "Gamble",
+      "quantity": 1,
+      "status": "unsupported",
+      "detail": "Identity and card type verified; printed behavior and runtime metadata remain unsupported."
+    },
+    {
+      "section": "Library",
+      "name": "Gitaxian Probe",
+      "quantity": 1,
+      "status": "unsupported",
+      "detail": "Identity and card type verified; printed behavior and runtime metadata remain unsupported."
+    },
+    {
+      "section": "Library",
+      "name": "Goblin Electromancer",
+      "quantity": 1,
+      "status": "supported subset",
+      "detail": "Body and generic instant/sorcery discount with colored-cost floor."
+    },
+    {
+      "section": "Library",
+      "name": "Hard Evidence",
+      "quantity": 1,
+      "status": "unsupported",
+      "detail": "Identity and card type verified; printed behavior and runtime metadata remain unsupported."
+    },
+    {
+      "section": "Library",
+      "name": "Harmonic Prodigy",
+      "quantity": 1,
+      "status": "supported subset",
+      "detail": "Prowess until cleanup; doubling of other Wizards or Shamans, with correct self-Wizard exclusion."
+    },
+    {
+      "section": "Library",
+      "name": "Heralds of Tzeentch",
+      "quantity": 1,
+      "status": "unsupported",
+      "detail": "No live registered printed effect; drawn/reported but excluded from legal casts."
+    },
+    {
+      "section": "Library",
+      "name": "Imperial Recruiter",
+      "quantity": 1,
+      "status": "unsupported",
+      "detail": "Identity and card type verified; printed behavior and runtime metadata remain unsupported."
+    },
+    {
+      "section": "Library",
+      "name": "Improbable Alliance",
+      "quantity": 1,
+      "status": "unsupported",
+      "detail": "Identity and card type verified; printed behavior and runtime metadata remain unsupported."
+    },
+    {
+      "section": "Library",
+      "name": "Increasing Vengeance",
+      "quantity": 1,
+      "status": "unsupported",
+      "detail": "Identity and card type verified; printed behavior and runtime metadata remain unsupported."
+    },
+    {
+      "section": "Library",
+      "name": "Island",
+      "quantity": 14,
+      "status": "supported subset",
+      "detail": "Basic supertype and matching land subtype, source mana and land timing live."
+    },
+    {
+      "section": "Library",
+      "name": "Izzet Signet",
+      "quantity": 1,
+      "status": "supported subset",
+      "detail": "Declared U/R/colorless mana ability; source-ID payment, tap and applicable costs."
+    },
+    {
+      "section": "Library",
+      "name": "Lord of Change",
+      "quantity": 1,
+      "status": "unsupported",
+      "detail": "No live registered printed effect; drawn/reported but excluded from legal casts."
+    },
+    {
+      "section": "Library",
+      "name": "Mathemagics",
+      "quantity": 1,
+      "status": "unsupported",
+      "detail": "No live registered printed effect; drawn/reported but excluded from legal casts."
+    },
+    {
+      "section": "Library",
+      "name": "Meeting of Minds",
+      "quantity": 1,
+      "status": "unsupported",
+      "detail": "Identity and card type verified; printed behavior and runtime metadata remain unsupported."
+    },
+    {
+      "section": "Library",
+      "name": "Merchant Scroll",
+      "quantity": 1,
+      "status": "supported subset",
+      "detail": "1U sorcery: search for blue instant, reveal and put into hand, then shuffle; optional fail-to-find; printed colors only."
+    },
+    {
+      "section": "Library",
+      "name": "Mountain",
+      "quantity": 6,
+      "status": "supported subset",
+      "detail": "Basic supertype and matching land subtype, source mana and land timing live."
+    },
+    {
+      "section": "Library",
+      "name": "Muddle the Mixture",
+      "quantity": 1,
+      "status": "unsupported",
+      "detail": "No live registered printed effect; drawn/reported but excluded from legal casts."
+    },
+    {
+      "section": "Library",
+      "name": "Mutalith Vortex Beast",
+      "quantity": 1,
+      "status": "unsupported",
+      "detail": "No live registered printed effect; drawn/reported but excluded from legal casts."
+    },
+    {
+      "section": "Library",
+      "name": "Mystic Sanctuary",
+      "quantity": 1,
+      "status": "supported subset",
+      "detail": "Island subtype and untapped entry condition; choose a target instant/sorcery in your graveyard when its trigger is placed, optionally return it to library top on resolution."
+    },
+    {
+      "section": "Library",
+      "name": "Mystical Tutor",
+      "quantity": 1,
+      "status": "supported subset",
+      "detail": "Live v20 search uses verified card types; reveal, shuffle and put chosen instant or sorcery on top."
+    },
+    {
+      "section": "Library",
+      "name": "Of One Mind",
+      "quantity": 1,
+      "status": "unsupported",
+      "detail": "Identity and card type verified; printed behavior and runtime metadata remain unsupported."
+    },
+    {
+      "section": "Library",
+      "name": "Personal Tutor",
+      "quantity": 1,
+      "status": "supported subset",
+      "detail": "U sorcery: search for a sorcery, optionally fail to find, reveal, shuffle, then put selected card on top."
+    },
+    {
+      "section": "Library",
+      "name": "Phyrexian Altar",
+      "quantity": 1,
+      "status": "unsupported",
+      "detail": "No live registered printed effect; drawn/reported but excluded from legal casts."
+    },
+    {
+      "section": "Library",
+      "name": "Pink Horror",
+      "quantity": 1,
+      "status": "unsupported",
+      "detail": "No live registered printed effect; drawn/reported but excluded from legal casts."
+    },
+    {
+      "section": "Library",
+      "name": "Ponder",
+      "quantity": 1,
+      "status": "supported subset",
+      "detail": "Look at up to three, order, optionally shuffle, then draw; explicit resolution choices."
+    },
+    {
+      "section": "Library",
+      "name": "Preordain",
+      "quantity": 1,
+      "status": "supported subset",
+      "detail": "Scry two with ordered top/bottom partition, then draw."
+    },
+    {
+      "section": "Library",
+      "name": "Ral's Reinforcements",
+      "quantity": 1,
+      "status": "partial",
+      "detail": "1R sorcery creates two blue/red 1/1 Elementals; general simultaneous token-entry effects remain unsupported."
+    },
+    {
+      "section": "Library",
+      "name": "Riptide Laboratory",
+      "quantity": 1,
+      "status": "supported subset",
+      "detail": "Colorless mana; 1U and tap to return target Wizard permanent you control, including derived Wizard types and target rechecks."
+    },
+    {
+      "section": "Library",
+      "name": "Riverglide Pathway",
+      "quantity": 1,
+      "status": "partial",
+      "detail": "Explicit U/R mana-face choice on entry; full modal double-faced characteristics remain partial."
+    },
+    {
+      "section": "Library",
+      "name": "Saheeli, Sublime Artificer",
+      "quantity": 1,
+      "status": "unsupported",
+      "detail": "Identity and card type verified; printed behavior and runtime metadata remain unsupported."
+    },
+    {
+      "section": "Library",
+      "name": "Sapphire Medallion",
+      "quantity": 1,
+      "status": "supported subset",
+      "detail": "Artifact costs 2; reduces generic cost of printed blue v1.13 spells by 1, with colored cost floor; no color-changing effects."
+    },
+    {
+      "section": "Library",
+      "name": "Searing Touch",
+      "quantity": 1,
+      "status": "unsupported",
+      "detail": "No live registered printed effect; drawn/reported but excluded from legal casts."
+    },
+    {
+      "section": "Library",
+      "name": "Shivan Reef",
+      "quantity": 1,
+      "status": "supported subset",
+      "detail": "Declared land mana source; ordinary land-play timing."
+    },
+    {
+      "section": "Library",
+      "name": "Skullclamp",
+      "quantity": 1,
+      "status": "unsupported",
+      "detail": "Identity and card type verified; printed behavior and runtime metadata remain unsupported."
+    },
+    {
+      "section": "Library",
+      "name": "Snap",
+      "quantity": 1,
+      "status": "unsupported",
+      "detail": "Identity and card type verified; printed behavior and runtime metadata remain unsupported."
+    },
+    {
+      "section": "Library",
+      "name": "Sokenzan, Crucible of Defiance",
+      "quantity": 1,
+      "status": "partial",
+      "detail": "Mana and channel create two 1/1 Spirit tokens with haste; token color is not modeled."
+    },
+    {
+      "section": "Library",
+      "name": "Sol Ring",
+      "quantity": 1,
+      "status": "supported subset",
+      "detail": "Declared U/R/colorless mana ability; source-ID payment, tap and applicable costs."
+    },
+    {
+      "section": "Library",
+      "name": "Solve the Equation",
+      "quantity": 1,
+      "status": "supported subset",
+      "detail": "2U sorcery: search for instant or sorcery, reveal and put into hand, then shuffle; optional fail-to-find."
+    },
+    {
+      "section": "Library",
+      "name": "Sorcerer Class",
+      "quantity": 1,
+      "status": "unsupported",
+      "detail": "No live registered printed effect; drawn/reported but excluded from legal casts."
+    },
+    {
+      "section": "Library",
+      "name": "Spell Burst",
+      "quantity": 1,
+      "status": "unsupported",
+      "detail": "Identity and card type verified; printed behavior and runtime metadata remain unsupported."
+    },
+    {
+      "section": "Library",
+      "name": "Spellseeker",
+      "quantity": 1,
+      "status": "supported subset",
+      "detail": "2U 1/1 Human Wizard; optional ETB search for instant/sorcery mana value <=2; reveal, hand, shuffle; Harmonic doubling."
+    },
+    {
+      "section": "Library",
+      "name": "Spirebluff Canal",
+      "quantity": 1,
+      "status": "supported subset",
+      "detail": "Enters untapped with at most two other lands; U/R source."
+    },
+    {
+      "section": "Library",
+      "name": "Springleaf Drum",
+      "quantity": 1,
+      "status": "unsupported",
+      "detail": "Identity and card type verified; printed behavior and runtime metadata remain unsupported."
+    },
+    {
+      "section": "Library",
+      "name": "Steam Vents",
+      "quantity": 1,
+      "status": "supported subset",
+      "detail": "Island/Mountain subtypes; optional affordable two-life entry payment (not damage); otherwise tapped; U/R source."
+    },
+    {
+      "section": "Library",
+      "name": "Step Through",
+      "quantity": 1,
+      "status": "partial",
+      "detail": "Wizardcycling 2, discard: search Wizard card, reveal into hand, shuffle; sorcery mode unsupported."
+    },
+    {
+      "section": "Library",
+      "name": "Storm-Kiln Artist",
+      "quantity": 1,
+      "status": "supported subset",
+      "detail": "Live artifact-count power and cast/copy magecraft descriptors; spell-copy production remains absent."
+    },
+    {
+      "section": "Library",
+      "name": "Stormcarved Coast",
+      "quantity": 1,
+      "status": "supported subset",
+      "detail": "Enters untapped with at least two other lands; U/R source."
+    },
+    {
+      "section": "Library",
+      "name": "Stormcatch Mentor",
+      "quantity": 1,
+      "status": "unsupported",
+      "detail": "Identity and card type verified; printed behavior and runtime metadata remain unsupported."
+    },
+    {
+      "section": "Library",
+      "name": "Strike It Rich",
+      "quantity": 1,
+      "status": "unsupported",
+      "detail": "Identity and card type verified; printed behavior and runtime metadata remain unsupported."
+    },
+    {
+      "section": "Library",
+      "name": "Sulfur Falls",
+      "quantity": 1,
+      "status": "supported subset",
+      "detail": "Enters untapped when an already controlled land has Island or Mountain subtype; U/R source."
+    },
+    {
+      "section": "Library",
+      "name": "Talisman of Creativity",
+      "quantity": 1,
+      "status": "supported subset",
+      "detail": "Declared U/R/colorless mana ability; source-ID payment, tap and applicable costs."
+    },
+    {
+      "section": "Library",
+      "name": "Talrand, Sky Summoner",
+      "quantity": 1,
+      "status": "unsupported",
+      "detail": "Identity and card type verified; printed behavior and runtime metadata remain unsupported."
+    },
+    {
+      "section": "Library",
+      "name": "The Lost and the Damned",
+      "quantity": 1,
+      "status": "unsupported",
+      "detail": "No live registered printed effect; drawn/reported but excluded from legal casts."
+    },
+    {
+      "section": "Library",
+      "name": "Tzaangor Shaman",
+      "quantity": 1,
+      "status": "unsupported",
+      "detail": "No live registered printed effect; drawn/reported but excluded from legal casts."
+    },
+    {
+      "section": "Library",
+      "name": "Underworld Breach",
+      "quantity": 1,
+      "status": "unsupported",
+      "detail": "No live registered printed effect; drawn/reported but excluded from legal casts."
+    },
+    {
+      "section": "Library",
+      "name": "Veyran, Voice of Duality",
+      "quantity": 1,
+      "status": "unsupported",
+      "detail": "No live registered printed effect; drawn/reported but excluded from legal casts."
+    },
+    {
+      "section": "Library",
+      "name": "Whispers of the Muse",
+      "quantity": 1,
+      "status": "unsupported",
+      "detail": "Identity and card type verified; printed behavior and runtime metadata remain unsupported."
+    },
+    {
+      "section": "Library",
+      "name": "Young Pyromancer",
+      "quantity": 1,
+      "status": "supported subset",
+      "detail": "Body and instant/sorcery cast token trigger."
+    }
+  ],
+  "milestone": "v28"
+}
