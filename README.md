@@ -1,6 +1,10 @@
 # Commander Simulator
 
-A reproducible, modular four-player **Magic: The Gathering Commander** simulation project. Current milestone: **v18**: canonical v1.13 budget deck adapter, plus v17 Mystical Tutor search and v16 Otawara and Sokenzan channel abilities, building on v15 Mystic Sanctuary's targeted graveyard-return trigger, Fiery Islet's draw activation, and Riptide Laboratory's 1U Wizard-return activation. V14 land rules and reference fingerprints, v13 selection/engines, v12 combat, live zones and source-ID mana remain active. **This is not a complete Magic rules engine, and the results are not validated deck win rates.**
+A reproducible, modular four-player **Magic: The Gathering Commander** simulation project. Current milestone: **v19**: a fail-closed card-data verifier, plus the v18 canonical v1.13 budget deck adapter, plus v17 Mystical Tutor search and v16 Otawara and Sokenzan channel abilities, building on v15 Mystic Sanctuary's targeted graveyard-return trigger, Fiery Islet's draw activation, and Riptide Laboratory's 1U Wizard-return activation. V14 land rules and reference fingerprints, v13 selection/engines, v12 combat, live zones and source-ID mana remain active. **This is not a complete Magic rules engine, and the results are not validated deck win rates.**
+
+## V19 card-data verifier
+
+The [Oracle snapshot verifier](simulator/v19_card_data/README.md) checks identities, types, color identities and Commander legality when supplied an authoritative snapshot. No such snapshot has yet been processed, and v1.13 remains unverified.
 
 ## V18 canonical budget deck
 
@@ -64,7 +68,7 @@ Requires Python 3.10+ and only the standard library:
 python run_all_tests.py
 ```
 
-**610 tests across eighteen suites** (v3:20, v4:15, v5:21, v6:21, v7:50, v8:32, v9a:29, v9b:34, v9c:49, v10:51, v11:50, v12:50, v13:69, v14:56, v15:38, v16:14, v17:6, v18:5). The GitHub Actions workflow tests on Python 3.11, 3.12, and 3.13.
+**614 tests across nineteen suites** (v3:20, v4:15, v5:21, v6:21, v7:50, v8:32, v9a:29, v9b:34, v9c:49, v10:51, v11:50, v12:50, v13:69, v14:56, v15:38, v16:14, v17:6, v18:5, v19:4). The GitHub Actions workflow tests on Python 3.11, 3.12, and 3.13.
 
 Run historical v15 and reproduce validation:
 
