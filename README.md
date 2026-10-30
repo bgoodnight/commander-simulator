@@ -1,14 +1,18 @@
 # Commander Simulator
 
-A reproducible, modular four-player **Magic: The Gathering Commander** simulation project. Current milestone: **v19**: a fail-closed card-data verifier, plus the v18 canonical v1.13 budget deck adapter, plus v17 Mystical Tutor search and v16 Otawara and Sokenzan channel abilities, building on v15 Mystic Sanctuary's targeted graveyard-return trigger, Fiery Islet's draw activation, and Riptide Laboratory's 1U Wizard-return activation. V14 land rules and reference fingerprints, v13 selection/engines, v12 combat, live zones and source-ID mana remain active. **This is not a complete Magic rules engine, and the results are not validated deck win rates.**
+A reproducible, modular four-player **Magic: The Gathering Commander** simulation project. Current milestone: **v20**: verified v1.13 card identities and search types, building on the v19 card-data verifier and v18 budget deck adapter, plus v17 Mystical Tutor search and v16 Otawara and Sokenzan channel abilities, building on v15 Mystic Sanctuary's targeted graveyard-return trigger, Fiery Islet's draw activation, and Riptide Laboratory's 1U Wizard-return activation. V14 land rules and reference fingerprints, v13 selection/engines, v12 combat, live zones and source-ID mana remain active. **This is not a complete Magic rules engine, and the results are not validated deck win rates.**
+
+## V20 verified identities
+
+[VerifiedTable](simulator/v20_verified_types/README.md) checks v1.13 against an Oracle snapshot and supplies verified types for library searches. Other runtime characteristics and unsupported card effects remain incomplete; see [coverage](simulator/v20_verified_types/CARD_COVERAGE.md).
 
 ## V19 card-data verifier
 
-The [Oracle snapshot verifier](simulator/v19_card_data/README.md) checks identities, types, color identities and Commander legality when supplied an authoritative snapshot. No such snapshot has yet been processed, and v1.13 remains unverified.
+The [Oracle snapshot verifier](simulator/v19_card_data/README.md) checks identities, types, color identities and Commander legality when supplied an authoritative snapshot. See v20 for the processed snapshot and remaining implementation gaps.
 
 ## V18 canonical budget deck
 
-The authoritative [v1.13 budget list](decklists/magnus_thousand_sons_v1_13_budget.txt) is loaded by [BudgetTable](simulator/v18_budget_deck/README.md). Identity and color verification remain incomplete; 29 names are unverified and inert. See the [v1.13 audit](simulator/v18_budget_deck/CARD_COVERAGE.md) and [assessment](simulator/v18_budget_deck/ASSESSMENT.md). Prior tables retain historical decks for regression.
+The authoritative [v1.13 budget list](decklists/magnus_thousand_sons_v1_13_budget.txt) is loaded by [BudgetTable](simulator/v18_budget_deck/README.md). This historical v18 adapter retains 29 inert unverified placeholders; v20 adds verified card types. See the [v1.13 audit](simulator/v18_budget_deck/CARD_COVERAGE.md) and [assessment](simulator/v18_budget_deck/ASSESSMENT.md). Prior tables retain historical decks for regression.
 
 ## V17 tutor
 
@@ -68,7 +72,7 @@ Requires Python 3.10+ and only the standard library:
 python run_all_tests.py
 ```
 
-**614 tests across nineteen suites** (v3:20, v4:15, v5:21, v6:21, v7:50, v8:32, v9a:29, v9b:34, v9c:49, v10:51, v11:50, v12:50, v13:69, v14:56, v15:38, v16:14, v17:6, v18:5, v19:4). The GitHub Actions workflow tests on Python 3.11, 3.12, and 3.13.
+**619 tests across twenty suites** (v3:20, v4:15, v5:21, v6:21, v7:50, v8:32, v9a:29, v9b:34, v9c:49, v10:51, v11:50, v12:50, v13:69, v14:56, v15:38, v16:14, v17:6, v18:5, v19:5, v20:4). The GitHub Actions workflow tests on Python 3.11, 3.12, and 3.13.
 
 Run historical v15 and reproduce validation:
 
@@ -86,4 +90,4 @@ Milestones are versioned under `simulator/`. The pre-v15 rollback point is `b0b0
 
 ## Development roadmap
 
-See the [v1.13 development roadmap](ROADMAP.md) for ordered milestones, card priorities, validation gates and deferred historical-card work. Start with authoritative card identity, type and color-identity validation; 29 names in the current adapter are still unverified. Preserve previous engines and reference cases while using the committed v1.13 list for future deck-specific testing and performance measurements.
+See the [v1.13 development roadmap](ROADMAP.md) for ordered milestones, card priorities, validation gates and deferred historical-card work. Identity and color verification is complete in v20; reconcile runtime metadata and implement missing effects next. Preserve previous engines and reference cases while using the committed v1.13 list for future deck-specific testing and performance measurements.

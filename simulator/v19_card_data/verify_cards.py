@@ -10,12 +10,16 @@ from budget_table import load_deck
 
 ALLOWED=frozenset('UR')
 def verify(deck, records):
-    needed={name for (_,name) in deck}; found={name:[] for name in needed}
+    needed={name for (_,name) in deck}; found={name:[] for name in needed}; faces={name:[] for name in needed}
     for card in records:
-        if card.get('name') in found:found[card['name']].append(card)
+        exact=card.get('name')
+        if exact in found: found[exact].append(card)
+        # Exact Oracle names win over incidental matches to another card's face.
+        face_names={face.get('name') for face in card.get('card_faces', []) if isinstance(face, dict)}
+        for name in (face_names & needed)-{exact}: faces[name].append(card)
     rows=[]
     for name in sorted(needed):
-        matches=found[name]
+        matches=found[name] or faces[name]
         if len(matches)!=1:
             rows.append({'name':name,'status':'missing' if not matches else 'ambiguous','count':len(matches)});continue
         card=matches[0]; identity=card.get('color_identity'); typ=card.get('type_line'); oid=card.get('oracle_id')
@@ -26,7 +30,7 @@ def verify(deck, records):
         rows.append({'name':name,'status':status,'oracle_id':oid,'type_line':typ,
                      'color_identity':identity,'mana_cost':card.get('mana_cost'),
                      'layout':card.get('layout'),'commander_legality':card.get('legalities',{}).get('commander'),
-                     'scryfall_uri':card.get('scryfall_uri')})
+                     'oracle_name':card.get('name'),'scryfall_uri':card.get('scryfall_uri')})
     return {'deck_card_count':sum(deck.values()),'distinct_names':len(needed),
             'all_metadata_verified':all(r['status']=='valid' for r in rows),
             'commander_legality_verified':all(r.get('commander_legality')=='legal' for r in rows),

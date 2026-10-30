@@ -24,4 +24,13 @@ class VerificationTests(unittest.TestCase):
         del self.cards[0]['oracle_id']
         self.assertFalse(verify(self.deck,self.cards)['all_metadata_verified'])
 
+    def test_double_faced_name_and_ambiguous_alias(self):
+        self.cards[1]['name']='Island // Other Face'
+        self.cards[1]['card_faces']=[{'name':'Island'},{'name':'Other Face'}]
+        self.assertTrue(verify(self.deck,self.cards)['all_metadata_verified'])
+        self.cards.append({'name':'Different // Island','oracle_id':'c','type_line':'Land',
+                           'color_identity':[],'legalities':{'commander':'legal'},
+                           'card_faces':[{'name':'Island'}]})
+        self.assertFalse(verify(self.deck,self.cards)['all_metadata_verified'])
+
 if __name__=='__main__':unittest.main()

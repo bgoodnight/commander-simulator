@@ -1,0 +1,7 @@
+# V20 verified card identities and search types
+
+The deck's 82 distinct names were matched against the Scryfall Oracle cards snapshot updated 2026-10-30 09:02 UTC. The exact downloaded file URL, SHA-256, Oracle IDs, type lines, mana costs, color identities and Commander legalities are recorded in `CARD_IDENTITIES.json`. The 100-card deck passed the existing singleton/count check, all color identities are subsets of U/R and every card has Commander legality `legal` in the snapshot. Riverglide Pathway matches the front face of its double-faced Oracle record. Physical proxy status is not modeled as a rules distinction.
+
+`VerifiedTable` extends the historic `BudgetTable`, corrects authoritative kernel object card types for all deck names, and enables Mystical Tutor to consider verified instant and sorcery types even when their effects remain unsupported. Card type metadata and effect implementations are separate: selecting a card does not make it playable. In particular, Frostboil Snarl's type is verified but it is not yet playable because its land-entry and mana behavior are not implemented.
+
+Other runtime characteristics, costs, pilot-facing card projections, subtypes, colors, replacement effects and full double-faced characteristics are not fully reconciled. V18 and earlier remain unchanged for regression. Verify or implement those before making deck-performance or card-coverage claims. `python simulator/v20_verified_types/tests.py` and `python simulator/v20_verified_types/validate.py` test the new table; no additional caching is added.

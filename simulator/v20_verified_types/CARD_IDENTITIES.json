@@ -1,0 +1,1166 @@
+{
+  "deck_card_count": 100,
+  "distinct_names": 82,
+  "all_metadata_verified": true,
+  "commander_legality_verified": true,
+  "cards": [
+    {
+      "name": "Arcane Signet",
+      "status": "valid",
+      "oracle_id": "0bc7f093-bef0-4f1a-852c-4b75ebf54838",
+      "type_line": "Artifact",
+      "color_identity": [],
+      "mana_cost": "{2}",
+      "layout": "normal",
+      "commander_legality": "legal",
+      "oracle_name": "Arcane Signet",
+      "scryfall_uri": "https://scryfall.com/card/trc/485/arcane-signet?utm_source=api"
+    },
+    {
+      "name": "Archmage Emeritus",
+      "status": "valid",
+      "oracle_id": "8305d576-21d8-4ce7-8eda-a7cd9793aca5",
+      "type_line": "Creature \u2014 Human Wizard",
+      "color_identity": [
+        "U"
+      ],
+      "mana_cost": "{2}{U}{U}",
+      "layout": "normal",
+      "commander_legality": "legal",
+      "oracle_name": "Archmage Emeritus",
+      "scryfall_uri": "https://scryfall.com/card/soc/188/archmage-emeritus?utm_source=api"
+    },
+    {
+      "name": "Artistic Refusal",
+      "status": "valid",
+      "oracle_id": "ff192482-3808-4291-a31e-3dfaeb49cda2",
+      "type_line": "Instant",
+      "color_identity": [
+        "U"
+      ],
+      "mana_cost": "{4}{U}{U}",
+      "layout": "normal",
+      "commander_legality": "legal",
+      "oracle_name": "Artistic Refusal",
+      "scryfall_uri": "https://scryfall.com/card/mom/46/artistic-refusal?utm_source=api"
+    },
+    {
+      "name": "Baral, Chief of Compliance",
+      "status": "valid",
+      "oracle_id": "baf80db7-2ca8-4bfc-b5b6-25ed51878dd7",
+      "type_line": "Legendary Creature \u2014 Human Wizard",
+      "color_identity": [
+        "U"
+      ],
+      "mana_cost": "{1}{U}",
+      "layout": "normal",
+      "commander_legality": "legal",
+      "oracle_name": "Baral, Chief of Compliance",
+      "scryfall_uri": "https://scryfall.com/card/aer/28/baral-chief-of-compliance?utm_source=api"
+    },
+    {
+      "name": "Brainstorm",
+      "status": "valid",
+      "oracle_id": "36cd2364-d113-47d1-b2c4-b088d9eb88dd",
+      "type_line": "Instant",
+      "color_identity": [
+        "U"
+      ],
+      "mana_cost": "{U}",
+      "layout": "normal",
+      "commander_legality": "legal",
+      "oracle_name": "Brainstorm",
+      "scryfall_uri": "https://scryfall.com/card/trc/434/brainstorm?utm_source=api"
+    },
+    {
+      "name": "Capsize",
+      "status": "valid",
+      "oracle_id": "77637eff-2963-4402-88f3-ca346f762fc8",
+      "type_line": "Instant",
+      "color_identity": [
+        "U"
+      ],
+      "mana_cost": "{1}{U}{U}",
+      "layout": "normal",
+      "commander_legality": "legal",
+      "oracle_name": "Capsize",
+      "scryfall_uri": "https://scryfall.com/card/tpr/42/capsize?utm_source=api"
+    },
+    {
+      "name": "Cascade Bluffs",
+      "status": "valid",
+      "oracle_id": "f1603384-4361-49c9-98aa-7785fc3504c4",
+      "type_line": "Land",
+      "color_identity": [
+        "R",
+        "U"
+      ],
+      "mana_cost": "",
+      "layout": "normal",
+      "commander_legality": "legal",
+      "oracle_name": "Cascade Bluffs",
+      "scryfall_uri": "https://scryfall.com/card/soc/364/cascade-bluffs?utm_source=api"
+    },
+    {
+      "name": "Chaos Mutation",
+      "status": "valid",
+      "oracle_id": "1a240953-26e0-429f-9663-dcfe5bc2c1c7",
+      "type_line": "Instant",
+      "color_identity": [
+        "R",
+        "U"
+      ],
+      "mana_cost": "{3}{U}{R}",
+      "layout": "normal",
+      "commander_legality": "legal",
+      "oracle_name": "Chaos Mutation",
+      "scryfall_uri": "https://scryfall.com/card/40k/111/chaos-mutation?utm_source=api"
+    },
+    {
+      "name": "Chaos Warp",
+      "status": "valid",
+      "oracle_id": "07a0cba9-8768-4fd9-a3d5-b0f83b4bf8e8",
+      "type_line": "Instant",
+      "color_identity": [
+        "R"
+      ],
+      "mana_cost": "{2}{R}",
+      "layout": "normal",
+      "commander_legality": "legal",
+      "oracle_name": "Chaos Warp",
+      "scryfall_uri": "https://scryfall.com/card/mbc/72/chaos-warp?utm_source=api"
+    },
+    {
+      "name": "Command Tower",
+      "status": "valid",
+      "oracle_id": "0895c9b7-ae7d-4bb3-af17-3b75deb50a25",
+      "type_line": "Land",
+      "color_identity": [],
+      "mana_cost": "",
+      "layout": "normal",
+      "commander_legality": "legal",
+      "oracle_name": "Command Tower",
+      "scryfall_uri": "https://scryfall.com/card/trc/521/command-tower?utm_source=api"
+    },
+    {
+      "name": "Consider",
+      "status": "valid",
+      "oracle_id": "4c9bcba6-87b5-4fb3-97ee-6fe5b739337d",
+      "type_line": "Instant",
+      "color_identity": [
+        "U"
+      ],
+      "mana_cost": "{U}",
+      "layout": "normal",
+      "commander_legality": "legal",
+      "oracle_name": "Consider",
+      "scryfall_uri": "https://scryfall.com/card/tle/157/consider?utm_source=api"
+    },
+    {
+      "name": "Counterspell",
+      "status": "valid",
+      "oracle_id": "cc187110-1148-4090-bbb8-e205694a39f5",
+      "type_line": "Instant",
+      "color_identity": [
+        "U"
+      ],
+      "mana_cost": "{U}{U}",
+      "layout": "normal",
+      "commander_legality": "legal",
+      "oracle_name": "Counterspell",
+      "scryfall_uri": "https://scryfall.com/card/dsc/114/counterspell?utm_source=api"
+    },
+    {
+      "name": "Crackle with Power",
+      "status": "valid",
+      "oracle_id": "273f5483-b67e-4dd6-bba8-c0a047fa34d7",
+      "type_line": "Sorcery",
+      "color_identity": [
+        "R"
+      ],
+      "mana_cost": "{X}{X}{X}{R}{R}",
+      "layout": "normal",
+      "commander_legality": "legal",
+      "oracle_name": "Crackle with Power",
+      "scryfall_uri": "https://scryfall.com/card/stx/95/crackle-with-power?utm_source=api"
+    },
+    {
+      "name": "Dualcaster Mage",
+      "status": "valid",
+      "oracle_id": "8eb7c0a5-6190-40de-b473-2d1daa3bbe28",
+      "type_line": "Creature \u2014 Human Wizard",
+      "color_identity": [
+        "R"
+      ],
+      "mana_cost": "{1}{R}{R}",
+      "layout": "normal",
+      "commander_legality": "legal",
+      "oracle_name": "Dualcaster Mage",
+      "scryfall_uri": "https://scryfall.com/card/c21/165/dualcaster-mage?utm_source=api"
+    },
+    {
+      "name": "Exalted Flamer of Tzeentch",
+      "status": "valid",
+      "oracle_id": "6591a589-deb4-462f-a4f1-f6261f3433c3",
+      "type_line": "Creature \u2014 Demon",
+      "color_identity": [
+        "R",
+        "U"
+      ],
+      "mana_cost": "{2}{U}{R}",
+      "layout": "normal",
+      "commander_legality": "legal",
+      "oracle_name": "Exalted Flamer of Tzeentch",
+      "scryfall_uri": "https://scryfall.com/card/40k/119/exalted-flamer-of-tzeentch?utm_source=api"
+    },
+    {
+      "name": "Exotic Orchard",
+      "status": "valid",
+      "oracle_id": "27b047e3-0d41-45e2-98e9-9391d7923a1e",
+      "type_line": "Land",
+      "color_identity": [],
+      "mana_cost": "",
+      "layout": "normal",
+      "commander_legality": "legal",
+      "oracle_name": "Exotic Orchard",
+      "scryfall_uri": "https://scryfall.com/card/trc/378/exotic-orchard?utm_source=api"
+    },
+    {
+      "name": "Fabled Passage",
+      "status": "valid",
+      "oracle_id": "0c85b8f7-0bd0-4680-9ec5-d4b110460a54",
+      "type_line": "Land",
+      "color_identity": [],
+      "mana_cost": "",
+      "layout": "normal",
+      "commander_legality": "legal",
+      "oracle_name": "Fabled Passage",
+      "scryfall_uri": "https://scryfall.com/card/trc/379/fabled-passage?utm_source=api"
+    },
+    {
+      "name": "Fabricate",
+      "status": "valid",
+      "oracle_id": "422e1869-134f-463d-9fa1-86b66a998b3e",
+      "type_line": "Sorcery",
+      "color_identity": [
+        "U"
+      ],
+      "mana_cost": "{2}{U}",
+      "layout": "normal",
+      "commander_legality": "legal",
+      "oracle_name": "Fabricate",
+      "scryfall_uri": "https://scryfall.com/card/hop/9/fabricate?utm_source=api"
+    },
+    {
+      "name": "Faithless Looting",
+      "status": "valid",
+      "oracle_id": "3d6fa57a-aa53-4b5c-b8af-a7612c823117",
+      "type_line": "Sorcery",
+      "color_identity": [
+        "R"
+      ],
+      "mana_cost": "{R}",
+      "layout": "normal",
+      "commander_legality": "legal",
+      "oracle_name": "Faithless Looting",
+      "scryfall_uri": "https://scryfall.com/card/soc/244/faithless-looting?utm_source=api"
+    },
+    {
+      "name": "Fanning the Flames",
+      "status": "valid",
+      "oracle_id": "1d5f0a1c-88e0-4603-97af-8ed47766812e",
+      "type_line": "Sorcery",
+      "color_identity": [
+        "R"
+      ],
+      "mana_cost": "{X}{R}{R}",
+      "layout": "normal",
+      "commander_legality": "legal",
+      "oracle_name": "Fanning the Flames",
+      "scryfall_uri": "https://scryfall.com/card/tpr/130/fanning-the-flames?utm_source=api"
+    },
+    {
+      "name": "Fiery Islet",
+      "status": "valid",
+      "oracle_id": "026f4a4b-eedd-44e1-9d37-ca4fb8d6db98",
+      "type_line": "Land",
+      "color_identity": [
+        "R",
+        "U"
+      ],
+      "mana_cost": "",
+      "layout": "normal",
+      "commander_legality": "legal",
+      "oracle_name": "Fiery Islet",
+      "scryfall_uri": "https://scryfall.com/card/mh1/238/fiery-islet?utm_source=api"
+    },
+    {
+      "name": "Frantic Search",
+      "status": "valid",
+      "oracle_id": "16e015b2-f8a3-4b1a-80be-58a8f5fb5e8c",
+      "type_line": "Instant",
+      "color_identity": [
+        "U"
+      ],
+      "mana_cost": "{2}{U}",
+      "layout": "normal",
+      "commander_legality": "legal",
+      "oracle_name": "Frantic Search",
+      "scryfall_uri": "https://scryfall.com/card/trc/438/frantic-search?utm_source=api"
+    },
+    {
+      "name": "Frostboil Snarl",
+      "status": "valid",
+      "oracle_id": "7137aae6-260d-41de-8b4e-42a8cf752697",
+      "type_line": "Land",
+      "color_identity": [
+        "R",
+        "U"
+      ],
+      "mana_cost": "",
+      "layout": "normal",
+      "commander_legality": "legal",
+      "oracle_name": "Frostboil Snarl",
+      "scryfall_uri": "https://scryfall.com/card/trc/383/frostboil-snarl?utm_source=api"
+    },
+    {
+      "name": "Gamble",
+      "status": "valid",
+      "oracle_id": "a54f0869-94c8-42af-9080-166efb9486a4",
+      "type_line": "Sorcery",
+      "color_identity": [
+        "R"
+      ],
+      "mana_cost": "{R}",
+      "layout": "normal",
+      "commander_legality": "legal",
+      "oracle_name": "Gamble",
+      "scryfall_uri": "https://scryfall.com/card/dmr/121/gamble?utm_source=api"
+    },
+    {
+      "name": "Gitaxian Probe",
+      "status": "valid",
+      "oracle_id": "1d67f5ff-1fce-45e5-b6a1-416c569351e2",
+      "type_line": "Sorcery",
+      "color_identity": [
+        "U"
+      ],
+      "mana_cost": "{U/P}",
+      "layout": "normal",
+      "commander_legality": "legal",
+      "oracle_name": "Gitaxian Probe",
+      "scryfall_uri": "https://scryfall.com/card/nph/35/gitaxian-probe?utm_source=api"
+    },
+    {
+      "name": "Goblin Electromancer",
+      "status": "valid",
+      "oracle_id": "81f06f84-1580-43c0-89d5-08d34541a519",
+      "type_line": "Creature \u2014 Goblin Wizard",
+      "color_identity": [
+        "R",
+        "U"
+      ],
+      "mana_cost": "{U}{R}",
+      "layout": "normal",
+      "commander_legality": "legal",
+      "oracle_name": "Goblin Electromancer",
+      "scryfall_uri": "https://scryfall.com/card/tdc/99/goblin-electromancer?utm_source=api"
+    },
+    {
+      "name": "Hard Evidence",
+      "status": "valid",
+      "oracle_id": "0728b195-2dfe-4d73-91ae-e658a97b0b9a",
+      "type_line": "Sorcery",
+      "color_identity": [
+        "U"
+      ],
+      "mana_cost": "{U}",
+      "layout": "normal",
+      "commander_legality": "legal",
+      "oracle_name": "Hard Evidence",
+      "scryfall_uri": "https://scryfall.com/card/mh2/46/hard-evidence?utm_source=api"
+    },
+    {
+      "name": "Harmonic Prodigy",
+      "status": "valid",
+      "oracle_id": "2e2ace5b-4018-43af-8e72-ebafec1a7739",
+      "type_line": "Creature \u2014 Human Wizard",
+      "color_identity": [
+        "R"
+      ],
+      "mana_cost": "{1}{R}",
+      "layout": "normal",
+      "commander_legality": "legal",
+      "oracle_name": "Harmonic Prodigy",
+      "scryfall_uri": "https://scryfall.com/card/soc/123/harmonic-prodigy?utm_source=api"
+    },
+    {
+      "name": "Heralds of Tzeentch",
+      "status": "valid",
+      "oracle_id": "c4ecfc13-a335-42bb-92db-133998b2af5d",
+      "type_line": "Creature \u2014 Demon",
+      "color_identity": [
+        "U"
+      ],
+      "mana_cost": "{4}{U}",
+      "layout": "normal",
+      "commander_legality": "legal",
+      "oracle_name": "Heralds of Tzeentch",
+      "scryfall_uri": "https://scryfall.com/card/40k/23/heralds-of-tzeentch?utm_source=api"
+    },
+    {
+      "name": "Imperial Recruiter",
+      "status": "valid",
+      "oracle_id": "4d6a1391-817a-4ddc-840d-886b138eeb3f",
+      "type_line": "Creature \u2014 Human Advisor",
+      "color_identity": [
+        "R"
+      ],
+      "mana_cost": "{2}{R}",
+      "layout": "normal",
+      "commander_legality": "legal",
+      "oracle_name": "Imperial Recruiter",
+      "scryfall_uri": "https://scryfall.com/card/mh2/281/imperial-recruiter?utm_source=api"
+    },
+    {
+      "name": "Improbable Alliance",
+      "status": "valid",
+      "oracle_id": "b4ca6a20-b1ba-4dee-ae8a-83f8edf360c4",
+      "type_line": "Enchantment",
+      "color_identity": [
+        "R",
+        "U"
+      ],
+      "mana_cost": "{U}{R}",
+      "layout": "normal",
+      "commander_legality": "legal",
+      "oracle_name": "Improbable Alliance",
+      "scryfall_uri": "https://scryfall.com/card/moc/329/improbable-alliance?utm_source=api"
+    },
+    {
+      "name": "Increasing Vengeance",
+      "status": "valid",
+      "oracle_id": "a5ca7bd9-0964-405f-adb9-7c27153595e6",
+      "type_line": "Instant",
+      "color_identity": [
+        "R"
+      ],
+      "mana_cost": "{R}{R}",
+      "layout": "normal",
+      "commander_legality": "legal",
+      "oracle_name": "Increasing Vengeance",
+      "scryfall_uri": "https://scryfall.com/card/c19/147/increasing-vengeance?utm_source=api"
+    },
+    {
+      "name": "Island",
+      "status": "valid",
+      "oracle_id": "b2c6aa39-2d2a-459c-a555-fb48ba993373",
+      "type_line": "Basic Land \u2014 Island",
+      "color_identity": [
+        "U"
+      ],
+      "mana_cost": "",
+      "layout": "normal",
+      "commander_legality": "legal",
+      "oracle_name": "Island",
+      "scryfall_uri": "https://scryfall.com/card/mdd/294/island?utm_source=api"
+    },
+    {
+      "name": "Izzet Signet",
+      "status": "valid",
+      "oracle_id": "2fda4fe7-8b0c-489c-a000-6d358e614e34",
+      "type_line": "Artifact",
+      "color_identity": [
+        "R",
+        "U"
+      ],
+      "mana_cost": "{2}",
+      "layout": "normal",
+      "commander_legality": "legal",
+      "oracle_name": "Izzet Signet",
+      "scryfall_uri": "https://scryfall.com/card/frc/58/izzet-signet?utm_source=api"
+    },
+    {
+      "name": "Lord of Change",
+      "status": "valid",
+      "oracle_id": "b575fb16-c3c3-4cad-857f-122257a4b32f",
+      "type_line": "Creature \u2014 Demon",
+      "color_identity": [
+        "U"
+      ],
+      "mana_cost": "{6}{U}",
+      "layout": "normal",
+      "commander_legality": "legal",
+      "oracle_name": "Lord of Change",
+      "scryfall_uri": "https://scryfall.com/card/40k/24/lord-of-change?utm_source=api"
+    },
+    {
+      "name": "Magnus the Red",
+      "status": "valid",
+      "oracle_id": "86c9b01e-18a2-4616-8e04-5343f97d2efe",
+      "type_line": "Legendary Creature \u2014 Demon Primarch",
+      "color_identity": [
+        "R",
+        "U"
+      ],
+      "mana_cost": "{3}{U}{R}",
+      "layout": "normal",
+      "commander_legality": "legal",
+      "oracle_name": "Magnus the Red",
+      "scryfall_uri": "https://scryfall.com/card/40k/131/magnus-the-red?utm_source=api"
+    },
+    {
+      "name": "Mathemagics",
+      "status": "valid",
+      "oracle_id": "5f56a303-b3da-41df-a959-7823a87ee60c",
+      "type_line": "Sorcery",
+      "color_identity": [
+        "U"
+      ],
+      "mana_cost": "{X}{X}{U}{U}",
+      "layout": "normal",
+      "commander_legality": "legal",
+      "oracle_name": "Mathemagics",
+      "scryfall_uri": "https://scryfall.com/card/sos/58/mathemagics?utm_source=api"
+    },
+    {
+      "name": "Meeting of Minds",
+      "status": "valid",
+      "oracle_id": "3b91dc3e-46ef-4a68-829f-ef7d79598cf7",
+      "type_line": "Instant",
+      "color_identity": [
+        "U"
+      ],
+      "mana_cost": "{3}{U}",
+      "layout": "normal",
+      "commander_legality": "legal",
+      "oracle_name": "Meeting of Minds",
+      "scryfall_uri": "https://scryfall.com/card/mom/66/meeting-of-minds?utm_source=api"
+    },
+    {
+      "name": "Merchant Scroll",
+      "status": "valid",
+      "oracle_id": "86cebe2a-95e7-4f22-99cc-e805aeaf347e",
+      "type_line": "Sorcery",
+      "color_identity": [
+        "U"
+      ],
+      "mana_cost": "{1}{U}",
+      "layout": "normal",
+      "commander_legality": "legal",
+      "oracle_name": "Merchant Scroll",
+      "scryfall_uri": "https://scryfall.com/card/8ed/91/merchant-scroll?utm_source=api"
+    },
+    {
+      "name": "Mountain",
+      "status": "valid",
+      "oracle_id": "a3fb7228-e76b-4e96-a40e-20b5fed75685",
+      "type_line": "Basic Land \u2014 Mountain",
+      "color_identity": [
+        "R"
+      ],
+      "mana_cost": "",
+      "layout": "normal",
+      "commander_legality": "legal",
+      "oracle_name": "Mountain",
+      "scryfall_uri": "https://scryfall.com/card/mdd/298/mountain?utm_source=api"
+    },
+    {
+      "name": "Muddle the Mixture",
+      "status": "valid",
+      "oracle_id": "0826cf7d-7ccc-459b-a92f-29dc169628f8",
+      "type_line": "Instant",
+      "color_identity": [
+        "U"
+      ],
+      "mana_cost": "{U}{U}",
+      "layout": "normal",
+      "commander_legality": "legal",
+      "oracle_name": "Muddle the Mixture",
+      "scryfall_uri": "https://scryfall.com/card/rvr/50/muddle-the-mixture?utm_source=api"
+    },
+    {
+      "name": "Mutalith Vortex Beast",
+      "status": "valid",
+      "oracle_id": "7e6ca948-a66d-46a9-9174-ac7b75d7b348",
+      "type_line": "Creature \u2014 Mutant Beast",
+      "color_identity": [
+        "R",
+        "U"
+      ],
+      "mana_cost": "{4}{U}{R}",
+      "layout": "normal",
+      "commander_legality": "legal",
+      "oracle_name": "Mutalith Vortex Beast",
+      "scryfall_uri": "https://scryfall.com/card/40k/134/mutalith-vortex-beast?utm_source=api"
+    },
+    {
+      "name": "Mystic Sanctuary",
+      "status": "valid",
+      "oracle_id": "17b60106-a4c7-410a-8ac3-ec8e74e29a7c",
+      "type_line": "Land \u2014 Island",
+      "color_identity": [
+        "U"
+      ],
+      "mana_cost": "",
+      "layout": "normal",
+      "commander_legality": "legal",
+      "oracle_name": "Mystic Sanctuary",
+      "scryfall_uri": "https://scryfall.com/card/soc/388/mystic-sanctuary?utm_source=api"
+    },
+    {
+      "name": "Mystical Tutor",
+      "status": "valid",
+      "oracle_id": "fb81f95c-70f8-4eb7-8d15-15d0ae23ec03",
+      "type_line": "Instant",
+      "color_identity": [
+        "U"
+      ],
+      "mana_cost": "{U}",
+      "layout": "normal",
+      "commander_legality": "legal",
+      "oracle_name": "Mystical Tutor",
+      "scryfall_uri": "https://scryfall.com/card/dmr/60/mystical-tutor?utm_source=api"
+    },
+    {
+      "name": "Of One Mind",
+      "status": "valid",
+      "oracle_id": "5a23c734-cbfb-419a-9bf1-126cb07fe427",
+      "type_line": "Sorcery",
+      "color_identity": [
+        "U"
+      ],
+      "mana_cost": "{2}{U}",
+      "layout": "normal",
+      "commander_legality": "legal",
+      "oracle_name": "Of One Mind",
+      "scryfall_uri": "https://scryfall.com/card/iko/60/of-one-mind?utm_source=api"
+    },
+    {
+      "name": "Personal Tutor",
+      "status": "valid",
+      "oracle_id": "90f54959-2c9b-4b8a-84c9-d6893eb43553",
+      "type_line": "Sorcery",
+      "color_identity": [
+        "U"
+      ],
+      "mana_cost": "{U}",
+      "layout": "normal",
+      "commander_legality": "legal",
+      "oracle_name": "Personal Tutor",
+      "scryfall_uri": "https://scryfall.com/card/cmm/110/personal-tutor?utm_source=api"
+    },
+    {
+      "name": "Phyrexian Altar",
+      "status": "valid",
+      "oracle_id": "8d02b297-97c4-4379-9862-0a462400f66f",
+      "type_line": "Artifact",
+      "color_identity": [],
+      "mana_cost": "{3}",
+      "layout": "normal",
+      "commander_legality": "legal",
+      "oracle_name": "Phyrexian Altar",
+      "scryfall_uri": "https://scryfall.com/card/2x2/311/phyrexian-altar?utm_source=api"
+    },
+    {
+      "name": "Pink Horror",
+      "status": "valid",
+      "oracle_id": "3aa4c374-b146-4890-a8e1-717f214d9741",
+      "type_line": "Creature \u2014 Demon Horror",
+      "color_identity": [
+        "R",
+        "U"
+      ],
+      "mana_cost": "{3}{U}{R}",
+      "layout": "normal",
+      "commander_legality": "legal",
+      "oracle_name": "Pink Horror",
+      "scryfall_uri": "https://scryfall.com/card/40k/136/pink-horror?utm_source=api"
+    },
+    {
+      "name": "Ponder",
+      "status": "valid",
+      "oracle_id": "02090581-61aa-4348-ad57-451be8ee91c2",
+      "type_line": "Sorcery",
+      "color_identity": [
+        "U"
+      ],
+      "mana_cost": "{U}",
+      "layout": "normal",
+      "commander_legality": "legal",
+      "oracle_name": "Ponder",
+      "scryfall_uri": "https://scryfall.com/card/trc/440/ponder?utm_source=api"
+    },
+    {
+      "name": "Preordain",
+      "status": "valid",
+      "oracle_id": "ac641490-ca14-48d7-8cc4-b69ce984befa",
+      "type_line": "Sorcery",
+      "color_identity": [
+        "U"
+      ],
+      "mana_cost": "{U}",
+      "layout": "normal",
+      "commander_legality": "legal",
+      "oracle_name": "Preordain",
+      "scryfall_uri": "https://scryfall.com/card/tdc/161/preordain?utm_source=api"
+    },
+    {
+      "name": "Ral's Reinforcements",
+      "status": "valid",
+      "oracle_id": "e7fa2fc2-8542-4069-b75f-5520dd30f74d",
+      "type_line": "Sorcery",
+      "color_identity": [
+        "R"
+      ],
+      "mana_cost": "{1}{R}",
+      "layout": "normal",
+      "commander_legality": "legal",
+      "oracle_name": "Ral's Reinforcements",
+      "scryfall_uri": "https://scryfall.com/card/mom/158/rals-reinforcements?utm_source=api"
+    },
+    {
+      "name": "Riptide Laboratory",
+      "status": "valid",
+      "oracle_id": "444d50dd-a44a-42db-bbf6-d0978e3bd6a3",
+      "type_line": "Land",
+      "color_identity": [
+        "U"
+      ],
+      "mana_cost": "",
+      "layout": "normal",
+      "commander_legality": "legal",
+      "oracle_name": "Riptide Laboratory",
+      "scryfall_uri": "https://scryfall.com/card/mh2/303/riptide-laboratory?utm_source=api"
+    },
+    {
+      "name": "Riverglide Pathway",
+      "status": "valid",
+      "oracle_id": "4924b3a4-a218-4783-8a4d-82361fdecc78",
+      "type_line": "Land // Land",
+      "color_identity": [
+        "R",
+        "U"
+      ],
+      "mana_cost": null,
+      "layout": "modal_dfc",
+      "commander_legality": "legal",
+      "oracle_name": "Riverglide Pathway // Lavaglide Pathway",
+      "scryfall_uri": "https://scryfall.com/card/znr/264/riverglide-pathway-lavaglide-pathway?utm_source=api"
+    },
+    {
+      "name": "Saheeli, Sublime Artificer",
+      "status": "valid",
+      "oracle_id": "ab655810-f67e-4576-9174-35b16f5e3235",
+      "type_line": "Legendary Planeswalker \u2014 Saheeli",
+      "color_identity": [
+        "R",
+        "U"
+      ],
+      "mana_cost": "{1}{U/R}{U/R}",
+      "layout": "normal",
+      "commander_legality": "legal",
+      "oracle_name": "Saheeli, Sublime Artificer",
+      "scryfall_uri": "https://scryfall.com/card/cmm/935/saheeli-sublime-artificer?utm_source=api"
+    },
+    {
+      "name": "Sapphire Medallion",
+      "status": "valid",
+      "oracle_id": "f1ef5698-14bd-42bf-aae5-2870699e4186",
+      "type_line": "Artifact",
+      "color_identity": [],
+      "mana_cost": "{2}",
+      "layout": "normal",
+      "commander_legality": "legal",
+      "oracle_name": "Sapphire Medallion",
+      "scryfall_uri": "https://scryfall.com/card/mh3/296/sapphire-medallion?utm_source=api"
+    },
+    {
+      "name": "Searing Touch",
+      "status": "valid",
+      "oracle_id": "1cd9a3ba-a115-4e59-983d-605e4435f3a8",
+      "type_line": "Instant",
+      "color_identity": [
+        "R"
+      ],
+      "mana_cost": "{R}",
+      "layout": "normal",
+      "commander_legality": "legal",
+      "oracle_name": "Searing Touch",
+      "scryfall_uri": "https://scryfall.com/card/tpr/155/searing-touch?utm_source=api"
+    },
+    {
+      "name": "Shivan Reef",
+      "status": "valid",
+      "oracle_id": "0fe16212-66c3-4e45-a641-7391e9b2e304",
+      "type_line": "Land",
+      "color_identity": [
+        "R",
+        "U"
+      ],
+      "mana_cost": "",
+      "layout": "normal",
+      "commander_legality": "legal",
+      "oracle_name": "Shivan Reef",
+      "scryfall_uri": "https://scryfall.com/card/frc/83/shivan-reef?utm_source=api"
+    },
+    {
+      "name": "Skullclamp",
+      "status": "valid",
+      "oracle_id": "65986c1b-8e51-4604-b685-d82fa7d1263a",
+      "type_line": "Artifact \u2014 Equipment",
+      "color_identity": [],
+      "mana_cost": "{1}",
+      "layout": "normal",
+      "commander_legality": "legal",
+      "oracle_name": "Skullclamp",
+      "scryfall_uri": "https://scryfall.com/card/trc/354/skullclamp?utm_source=api"
+    },
+    {
+      "name": "Snap",
+      "status": "valid",
+      "oracle_id": "ac914d98-221e-426c-8a50-342896b15f9e",
+      "type_line": "Instant",
+      "color_identity": [
+        "U"
+      ],
+      "mana_cost": "{1}{U}",
+      "layout": "normal",
+      "commander_legality": "legal",
+      "oracle_name": "Snap",
+      "scryfall_uri": "https://scryfall.com/card/dmr/66/snap?utm_source=api"
+    },
+    {
+      "name": "Sokenzan, Crucible of Defiance",
+      "status": "valid",
+      "oracle_id": "c5ee72d5-3a9e-4fe5-8802-3286ee612055",
+      "type_line": "Legendary Land",
+      "color_identity": [
+        "R"
+      ],
+      "mana_cost": "",
+      "layout": "normal",
+      "commander_legality": "legal",
+      "oracle_name": "Sokenzan, Crucible of Defiance",
+      "scryfall_uri": "https://scryfall.com/card/neo/276/sokenzan-crucible-of-defiance?utm_source=api"
+    },
+    {
+      "name": "Sol Ring",
+      "status": "valid",
+      "oracle_id": "6ad8011d-3471-4369-9d68-b264cc027487",
+      "type_line": "Artifact",
+      "color_identity": [],
+      "mana_cost": "{1}",
+      "layout": "normal",
+      "commander_legality": "legal",
+      "oracle_name": "Sol Ring",
+      "scryfall_uri": "https://scryfall.com/card/trc/499/sol-ring?utm_source=api"
+    },
+    {
+      "name": "Solve the Equation",
+      "status": "valid",
+      "oracle_id": "f02682f0-26c0-4032-9df3-273b6a45d0a8",
+      "type_line": "Sorcery",
+      "color_identity": [
+        "U"
+      ],
+      "mana_cost": "{2}{U}",
+      "layout": "normal",
+      "commander_legality": "legal",
+      "oracle_name": "Solve the Equation",
+      "scryfall_uri": "https://scryfall.com/card/stx/54/solve-the-equation?utm_source=api"
+    },
+    {
+      "name": "Sorcerer Class",
+      "status": "valid",
+      "oracle_id": "19ba0f2d-4de3-49a0-be7d-da0aa220cd8a",
+      "type_line": "Enchantment \u2014 Class",
+      "color_identity": [
+        "R",
+        "U"
+      ],
+      "mana_cost": "{U}{R}",
+      "layout": "class",
+      "commander_legality": "legal",
+      "oracle_name": "Sorcerer Class",
+      "scryfall_uri": "https://scryfall.com/card/afr/233/sorcerer-class?utm_source=api"
+    },
+    {
+      "name": "Spell Burst",
+      "status": "valid",
+      "oracle_id": "141d9b88-5326-4e3d-8f16-5293246fab88",
+      "type_line": "Instant",
+      "color_identity": [
+        "U"
+      ],
+      "mana_cost": "{X}{U}",
+      "layout": "normal",
+      "commander_legality": "legal",
+      "oracle_name": "Spell Burst",
+      "scryfall_uri": "https://scryfall.com/card/tsr/88/spell-burst?utm_source=api"
+    },
+    {
+      "name": "Spellseeker",
+      "status": "valid",
+      "oracle_id": "47a785ed-8095-4685-8daa-02c4e2b0ffcd",
+      "type_line": "Creature \u2014 Human Wizard",
+      "color_identity": [
+        "U"
+      ],
+      "mana_cost": "{2}{U}",
+      "layout": "normal",
+      "commander_legality": "legal",
+      "oracle_name": "Spellseeker",
+      "scryfall_uri": "https://scryfall.com/card/cmm/120/spellseeker?utm_source=api"
+    },
+    {
+      "name": "Spirebluff Canal",
+      "status": "valid",
+      "oracle_id": "eb0d8093-5f93-4b25-9384-08f9731bfb28",
+      "type_line": "Land",
+      "color_identity": [
+        "R",
+        "U"
+      ],
+      "mana_cost": "",
+      "layout": "normal",
+      "commander_legality": "legal",
+      "oracle_name": "Spirebluff Canal",
+      "scryfall_uri": "https://scryfall.com/card/otj/270/spirebluff-canal?utm_source=api"
+    },
+    {
+      "name": "Springleaf Drum",
+      "status": "valid",
+      "oracle_id": "bdeb440d-a714-40e8-9038-f651e6ae45fb",
+      "type_line": "Artifact",
+      "color_identity": [],
+      "mana_cost": "{1}",
+      "layout": "normal",
+      "commander_legality": "legal",
+      "oracle_name": "Springleaf Drum",
+      "scryfall_uri": "https://scryfall.com/card/ecl/260/springleaf-drum?utm_source=api"
+    },
+    {
+      "name": "Steam Vents",
+      "status": "valid",
+      "oracle_id": "17039058-822d-409f-938c-b727a366ba63",
+      "type_line": "Land \u2014 Island Mountain",
+      "color_identity": [
+        "R",
+        "U"
+      ],
+      "mana_cost": "",
+      "layout": "normal",
+      "commander_legality": "legal",
+      "oracle_name": "Steam Vents",
+      "scryfall_uri": "https://scryfall.com/card/trk/298/steam-vents?utm_source=api"
+    },
+    {
+      "name": "Step Through",
+      "status": "valid",
+      "oracle_id": "c4fa89c7-f00d-42ef-bd67-407a288cd054",
+      "type_line": "Sorcery",
+      "color_identity": [
+        "U"
+      ],
+      "mana_cost": "{3}{U}{U}",
+      "layout": "normal",
+      "commander_legality": "legal",
+      "oracle_name": "Step Through",
+      "scryfall_uri": "https://scryfall.com/card/mh2/66/step-through?utm_source=api"
+    },
+    {
+      "name": "Storm-Kiln Artist",
+      "status": "valid",
+      "oracle_id": "a145ff8c-5812-4bcb-bd16-9839dc25121d",
+      "type_line": "Creature \u2014 Dwarf Shaman",
+      "color_identity": [
+        "R"
+      ],
+      "mana_cost": "{3}{R}",
+      "layout": "normal",
+      "commander_legality": "legal",
+      "oracle_name": "Storm-Kiln Artist",
+      "scryfall_uri": "https://scryfall.com/card/soc/255/storm-kiln-artist?utm_source=api"
+    },
+    {
+      "name": "Stormcarved Coast",
+      "status": "valid",
+      "oracle_id": "4722105b-0085-4bb8-bca1-9de0d3eb5600",
+      "type_line": "Land",
+      "color_identity": [
+        "R",
+        "U"
+      ],
+      "mana_cost": "",
+      "layout": "normal",
+      "commander_legality": "legal",
+      "oracle_name": "Stormcarved Coast",
+      "scryfall_uri": "https://scryfall.com/card/sos/263/stormcarved-coast?utm_source=api"
+    },
+    {
+      "name": "Stormcatch Mentor",
+      "status": "valid",
+      "oracle_id": "b2252471-01ca-4d58-aa99-4ab0aa5eae12",
+      "type_line": "Creature \u2014 Otter Wizard",
+      "color_identity": [
+        "R",
+        "U"
+      ],
+      "mana_cost": "{U}{R}",
+      "layout": "normal",
+      "commander_legality": "legal",
+      "oracle_name": "Stormcatch Mentor",
+      "scryfall_uri": "https://scryfall.com/card/soc/331/stormcatch-mentor?utm_source=api"
+    },
+    {
+      "name": "Strike It Rich",
+      "status": "valid",
+      "oracle_id": "c34c17c7-3827-49a2-be25-67f44fdfe150",
+      "type_line": "Sorcery",
+      "color_identity": [
+        "R"
+      ],
+      "mana_cost": "{R}",
+      "layout": "normal",
+      "commander_legality": "legal",
+      "oracle_name": "Strike It Rich",
+      "scryfall_uri": "https://scryfall.com/card/mh2/143/strike-it-rich?utm_source=api"
+    },
+    {
+      "name": "Sulfur Falls",
+      "status": "valid",
+      "oracle_id": "6a6c5e17-6465-4a1f-9d63-8a3ce2edc522",
+      "type_line": "Land",
+      "color_identity": [
+        "R",
+        "U"
+      ],
+      "mana_cost": "",
+      "layout": "normal",
+      "commander_legality": "legal",
+      "oracle_name": "Sulfur Falls",
+      "scryfall_uri": "https://scryfall.com/card/trc/406/sulfur-falls?utm_source=api"
+    },
+    {
+      "name": "Talisman of Creativity",
+      "status": "valid",
+      "oracle_id": "14d2979d-5728-42d7-a027-0eb1f754655d",
+      "type_line": "Artifact",
+      "color_identity": [
+        "R",
+        "U"
+      ],
+      "mana_cost": "{2}",
+      "layout": "normal",
+      "commander_legality": "legal",
+      "oracle_name": "Talisman of Creativity",
+      "scryfall_uri": "https://scryfall.com/card/trc/504/talisman-of-creativity?utm_source=api"
+    },
+    {
+      "name": "Talrand, Sky Summoner",
+      "status": "valid",
+      "oracle_id": "ea1eb902-a23c-44ff-9169-19baf71de238",
+      "type_line": "Legendary Creature \u2014 Merfolk Wizard",
+      "color_identity": [
+        "U"
+      ],
+      "mana_cost": "{2}{U}{U}",
+      "layout": "normal",
+      "commander_legality": "legal",
+      "oracle_name": "Talrand, Sky Summoner",
+      "scryfall_uri": "https://scryfall.com/card/otc/116/talrand-sky-summoner?utm_source=api"
+    },
+    {
+      "name": "The Lost and the Damned",
+      "status": "valid",
+      "oracle_id": "22e70ad0-1a9c-4d9e-8cc1-ebea485282ca",
+      "type_line": "Enchantment",
+      "color_identity": [
+        "R",
+        "U"
+      ],
+      "mana_cost": "{1}{U}{R}",
+      "layout": "normal",
+      "commander_legality": "legal",
+      "oracle_name": "The Lost and the Damned",
+      "scryfall_uri": "https://scryfall.com/card/40k/129/the-lost-and-the-damned?utm_source=api"
+    },
+    {
+      "name": "Tzaangor Shaman",
+      "status": "valid",
+      "oracle_id": "1d55a1c5-fd0b-44d2-9e7c-550052fef262",
+      "type_line": "Creature \u2014 Mutant Shaman",
+      "color_identity": [
+        "R",
+        "U"
+      ],
+      "mana_cost": "{2}{U}{R}",
+      "layout": "normal",
+      "commander_legality": "legal",
+      "oracle_name": "Tzaangor Shaman",
+      "scryfall_uri": "https://scryfall.com/card/40k/146/tzaangor-shaman?utm_source=api"
+    },
+    {
+      "name": "Underworld Breach",
+      "status": "valid",
+      "oracle_id": "27e0948b-9916-473b-8d8c-a51bdfbc7457",
+      "type_line": "Enchantment",
+      "color_identity": [
+        "R"
+      ],
+      "mana_cost": "{1}{R}",
+      "layout": "normal",
+      "commander_legality": "legal",
+      "oracle_name": "Underworld Breach",
+      "scryfall_uri": "https://scryfall.com/card/thb/161/underworld-breach?utm_source=api"
+    },
+    {
+      "name": "Veyran, Voice of Duality",
+      "status": "valid",
+      "oracle_id": "d57a6b19-bd06-4b07-8ee1-0b45612ba9e4",
+      "type_line": "Legendary Creature \u2014 Efreet Wizard",
+      "color_identity": [
+        "R",
+        "U"
+      ],
+      "mana_cost": "{1}{U}{R}",
+      "layout": "normal",
+      "commander_legality": "legal",
+      "oracle_name": "Veyran, Voice of Duality",
+      "scryfall_uri": "https://scryfall.com/card/soc/337/veyran-voice-of-duality?utm_source=api"
+    },
+    {
+      "name": "Whispers of the Muse",
+      "status": "valid",
+      "oracle_id": "a4a8af4e-8686-45ba-94fd-ccf6cc8adaae",
+      "type_line": "Instant",
+      "color_identity": [
+        "U"
+      ],
+      "mana_cost": "{U}",
+      "layout": "normal",
+      "commander_legality": "legal",
+      "oracle_name": "Whispers of the Muse",
+      "scryfall_uri": "https://scryfall.com/card/tpr/79/whispers-of-the-muse?utm_source=api"
+    },
+    {
+      "name": "Young Pyromancer",
+      "status": "valid",
+      "oracle_id": "5fac139a-07d3-4e6c-98e3-d98b199f7a6f",
+      "type_line": "Creature \u2014 Human Shaman",
+      "color_identity": [
+        "R"
+      ],
+      "mana_cost": "{1}{R}",
+      "layout": "normal",
+      "commander_legality": "legal",
+      "oracle_name": "Young Pyromancer",
+      "scryfall_uri": "https://scryfall.com/card/tdc/95/young-pyromancer?utm_source=api"
+    }
+  ],
+  "source_snapshot": "commander_oracle_20261030.jsonl.gz",
+  "source": "https://data.scryfall.io/oracle-cards/oracle-cards-20261030090203.jsonl.gz",
+  "updated_at": "2026-10-30T09:02:03.583+00:00",
+  "sha256": "ee1d8e6781cd60863bf5ff8959d1f3770e05a21a9fe5b2159a587833a23fdffb"
+}

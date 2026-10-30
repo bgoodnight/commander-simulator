@@ -6,6 +6,6 @@
 python simulator/v19_card_data/verify_cards.py oracle-cards.json --output validation-report.json
 ```
 
-Exact-name matching will flag entries where a decklist uses one face of a double-faced card instead of the full Oracle name; those require explicit verified aliases before they can pass.
+Exact Oracle names are preferred; if no exact match exists, the verifier accepts a unique named face of a double-faced card and fails on ambiguous face matches.
 
-The source snapshot is not present in this repository and no actual deck card identities or color identities have been verified by this milestone. The v18 unknown-card restrictions remain in effect; verified type metadata has not yet been integrated into `BudgetTable`. This utility is a preparatory step, not complete card coverage. Tests use synthetic examples only. See [Scryfall API documentation](https://scryfall.com/docs/api/bulk-data) for data format and provenance.
+The source snapshot is not bundled in this repository; see v20 for a recorded verification run and snapshot provenance. The v18 unknown-card restrictions remain in effect; verified type metadata has not yet been integrated into `BudgetTable`. This utility is a preparatory step, not complete card coverage. Tests use synthetic examples only. See [Scryfall API documentation](https://scryfall.com/docs/api/bulk-data) for data format and provenance.
