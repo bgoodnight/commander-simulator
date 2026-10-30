@@ -1,6 +1,10 @@
 # Commander Simulator
 
-A reproducible, modular four-player **Magic: The Gathering Commander** simulation project. Current milestone: **v29**: Step Through spell mode and battlefield cycling-trigger events, plus v28 Spellseeker ETB search, plus v27 Fabricate and Step Through wizardcycling, plus v26 Merchant Scroll and Solve the Equation, plus v25 Personal Tutor sorcery search, plus v24 Ral's Reinforcements and colored token metadata, plus v23 Sapphire Medallion and printed spell colors, plus v22 Consider surveil and draw, plus v21 Frostboil Snarl entry and mana with targeted Magnus cost tests, plus v20 verified v1.13 card identities and search types, building on the v19 card-data verifier and v18 budget deck adapter, plus v17 Mystical Tutor search and v16 Otawara and Sokenzan channel abilities, building on v15 Mystic Sanctuary's targeted graveyard-return trigger, Fiery Islet's draw activation, and Riptide Laboratory's 1U Wizard-return activation. V14 land rules and reference fingerprints, v13 selection/engines, v12 combat, live zones and source-ID mana remain active. **This is not a complete Magic rules engine, and the results are not validated deck win rates.**
+A reproducible, modular four-player **Magic: The Gathering Commander** simulation project. Current milestone: **v30**: Phyrexian Altar’s bounded sacrifice-mana ability, plus v29 Step Through spell mode and battlefield cycling-trigger events, plus v28 Spellseeker ETB search, plus v27 Fabricate and Step Through wizardcycling, plus v26 Merchant Scroll and Solve the Equation, plus v25 Personal Tutor sorcery search, plus v24 Ral's Reinforcements and colored token metadata, plus v23 Sapphire Medallion and printed spell colors, plus v22 Consider surveil and draw, plus v21 Frostboil Snarl entry and mana with targeted Magnus cost tests, plus v20 verified v1.13 card identities and search types, building on the v19 card-data verifier and v18 budget deck adapter, plus v17 Mystical Tutor search and v16 Otawara and Sokenzan channel abilities, building on v15 Mystic Sanctuary's targeted graveyard-return trigger, Fiery Islet's draw activation, and Riptide Laboratory's 1U Wizard-return activation. V14 land rules and reference fingerprints, v13 selection/engines, v12 combat, live zones and source-ID mana remain active. **This is not a complete Magic rules engine, and the results are not validated deck win rates.**
+
+## V30 Phyrexian Altar
+
+[Phyrexian Altar](simulator/v30_phyrexian_altar/README.md) casts and converts creature sacrifices to blue or red mana without tapping. The printed five-color ability is partial because the current mana pool is U/R/colorless only. See [coverage](simulator/v30_phyrexian_altar/CARD_COVERAGE.md) and the [interaction report](simulator/v30_phyrexian_altar/INTERACTION_REPORT.md).
 
 ## V29 Step Through and cycling
 
@@ -108,7 +112,7 @@ Requires Python 3.10+ and only the standard library:
 python run_all_tests.py
 ```
 
-**712 tests across twenty-nine suites** (v3:20, v4:15, v5:21, v6:21, v7:50, v8:32, v9a:29, v9b:34, v9c:49, v10:51, v11:50, v12:50, v13:69, v14:56, v15:38, v16:14, v17:6, v18:5, v19:5, v20:4, v21:10, v22:8, v23:13, v24:9, v25:7, v26:12, v27:14, v28:11, v29:9). The GitHub Actions workflow tests on Python 3.11, 3.12, and 3.13.
+**722 tests across thirty suites** (v3:20, v4:15, v5:21, v6:21, v7:50, v8:32, v9a:29, v9b:34, v9c:49, v10:51, v11:50, v12:50, v13:69, v14:56, v15:38, v16:14, v17:6, v18:5, v19:5, v20:4, v21:10, v22:8, v23:13, v24:9, v25:7, v26:12, v27:14, v28:11, v29:9, v30:10). The GitHub Actions workflow tests on Python 3.11, 3.12, and 3.13.
 
 Run historical v15 and reproduce validation:
 

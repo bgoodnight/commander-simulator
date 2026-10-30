@@ -1,0 +1,11 @@
+{
+  "deck": "magnus_thousand_sons_v1_13_budget.txt",
+  "games": 200,
+  "rounds": 12,
+  "safety_stops": [],
+  "elapsed_seconds": 122.565,
+  "benchmark_games": 12,
+  "benchmark_rounds": 8,
+  "median_ms": 452.362,
+  "limitations": "Altar produces only U/R, automatic mana planning does not tap then sacrifice the same creature, ordinary cycling and many effects remain unsupported."
+}
