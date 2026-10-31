@@ -54,7 +54,7 @@ class StaticPagesTests(unittest.TestCase):
         self.assertIn("commander-rail",page)
         self.assertIn("drop-ring",page)
         self.assertIn("audio-toggle",page)
-        self.assertIn("Cached Results",page)
+        self.assertIn("Simulation Results",page)
         self.assertIn("prefers-reduced-motion",(self.destination/"style.css").read_text())
         self.assertIn("observations.json",script)
         self.assertIn("localStorage",script)
