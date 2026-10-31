@@ -10,6 +10,8 @@ Updated October 31, 2026. **Priority is an early usable multi-deck simulator**, 
 - The ability slots **must not be inferred automatically from Scryfall text or role tags**. A reviewed definition/ability catalog is still missing.
 - Package-test expected-count contract lives in `run_all_tests.py`. **When adding tests, update the package_tests expected count and final total**, then verify the CI run; do not mistake count mismatch for a rules regression.
 
+**Current completed milestones:** M0 metadata cache, **M1 six-deck import** (official one-time Scryfall import run, all six 100-card decks pinned and validated, commit `b204f36`), and initial **U0 read-only Deck Lab** (local static browser UI and Python standard-library server, verified offline deck details and observation endpoints). See [DECK_LAB_U0.md](DECK_LAB_U0.md). **The next highest user-value slice is U1 versioned deck editing**, independently of M2 source-paid black gameplay. M2/M3 can progress as a separate engine track, but do not claim an observation is a played game. Do not redo completed M0/M1/U0 work.
+
 ## Bounded next Work sessions — execute in priority order
 
 **Do not begin with the old Slice A per-card directory.** The pure `commander_sim.abilities.AbilityCatalog` already exists and is adequate as the starter ability-selection seam. Defer broad named-card definitions while we deliver actual basic gameplay for two different commanders. Complete one coherent slice per Work session; stop at a passing commit with coverage and the next handoff.
@@ -26,7 +28,7 @@ Updated October 31, 2026. **Priority is an early usable multi-deck simulator**, 
 
 **Exit achieved for implementation/tests:** the API is used only on explicit import/refresh, repeated and overlapping imports reuse local verified records, and simulations read only offline data. A populated catalog covering all real deck variants is M1 work.
 
-### Slice 1 — Every deck is importable; observations are honest (M1)
+### Slice 1 — DONE: all six decks are imported with honest observations (M1)
 
 1. Make validated snapshots/catalog manifests for **Magnus premium/budget, Wretched Ranks, Mortarion current and ideal, Necron Dynasties**. Separate receipt-only Mortarion snapshots aren't valid for different deck SHA values. Reconcile ambiguous card faces/legality; no invented properties.
 2. Generalize the deck provider's validated commander/color identity without selecting a Magnus-specific engine; preserve one composition interface and exact 100-card/legality/identity checks.
@@ -53,7 +55,7 @@ Updated October 31, 2026. **Priority is an early usable multi-deck simulator**, 
 
 **Exit:** two authentic different commander lists generate meaningful reproducible turns under the same actual rules engine.
 
-### UI Slice U0 — Minimal Deck Lab viewer (START after M1; observations first)
+### UI Slice U0 — DONE: launchable offline read-only Deck Lab (U0)
 
 Implement a thin local browser UI **as soon as M1 validates the deck catalog and observations**, not after M3: deck variant chooser, commander/legality/cache/ability-support summary, seed/horizon and **only currently supported modes**, observation timeline and export. When M3 actual actions exist, upgrade this **same viewer** with actual-versus-observation traces. No new game logic in UI, no Scryfall calls on navigation or run, no invented full-game outcomes. Compare a CLI run and UI result for exactly the same seed/deck/mode. Commit and stop. UI planning: [USER_INTERFACE_ROADMAP.md](USER_INTERFACE_ROADMAP.md).
 
@@ -92,7 +94,7 @@ Do not begin head-to-head by default. If it is reprioritized **after U0–U4 are
 
 ## A copyable starting prompt for the next Work session
 
-> Read AGENTS.md, ROADMAP.md, docs/CARD_METADATA_CACHE.md, docs/MULTI_DECK_MVP.md and this handoff. Check the latest main commit and CI. **Perform Slice 1 (M1) ONLY:** seed the existing shared Oracle-ID catalog from the checked-in, hash-matched Flameslinger/Gisa/Mortarion receipt-only snapshots with **zero API calls**, then create **distinct pinned manifests** for Magnus Premium/Budget, Mortarion Current/Ideal and Necrons, fetching only missing identities during explicit import. Generalize validated deck loading/observation across commanders, produce one correct six-turn labeled observation per variant and record unresolved metadata. Do **not** redo `commander_sim.card_cache`, attempt head-to-head, implement full card effects or start M2/U0. Run targeted and full tests, update the suite count, make one passing commit and stop.
+> Read AGENTS.md, ROADMAP.md, docs/USER_INTERFACE_ROADMAP.md, docs/DECK_LAB_U0.md and this handoff. Check latest main and CI. **Perform UI Slice U1 ONLY**: keep existing `tools/deck_lab.py` browser UI and read-only deck/observation endpoints, then add a **separate editable deck workspace** (never modify canonical Magnus/Mortarion/precon files). Support cloning a selected saved deck, adding/removing cards already verified in `shared_scryfall_catalog.json`, Commander 100-card/singleton/color-identity validation, clear before/after diff, undo/revert, and **Save As** a new local version with a pinned Oracle-ID revision manifest. No Scryfall API calls, no head-to-head, no actual spell simulation, no broad card-specific rule work. Test invalid saves and rollback, preserve all historical regressions, update the 37-suite expected test count, commit one coherent milestone with SHA and limitations, then stop.
 
 ## Stop conditions / avoiding wasted credits
 
