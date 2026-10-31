@@ -8,12 +8,14 @@ Both saved presets and compatible local deck files now use the same active engin
 
 The active product order is **shared offline Scryfall cache → validated imports for Magnus/Mortarion/Gisa/Necrons → early read-only Deck Lab viewer → deck editing and explicit card imports**, while the core advances toward **source-paid basic turns for each deck**. Then deliver visual deck comparisons and **single-deck event-backed replay**. Full two-detailed-deck head-to-head is **optional and deferred** until the interface is useful; it is not required for a usable simulator. A read-only preview must label observations accurately, and only source-paid actions in the shared engine qualify as actual simulated turns. Exhaustive named-card implementations also remain later work.
 
+**Launch the local Deck Lab:** from the repository root, run `python tools/deck_lab.py`, then open **http://127.0.0.1:8765/** on that computer. Requires Python 3.11+ and no third-party packages. [U0 usage and limitations](docs/DECK_LAB_U0.md).
+
 - [Product-first roadmap](ROADMAP.md) and [Multi-deck MVP gates](docs/MULTI_DECK_MVP.md)
 - [Deck Lab UI milestones](docs/USER_INTERFACE_ROADMAP.md): **U0 viewer**, **U1 versioned deck editing**, **U2 explicit local-first Scryfall lookup/import**, then **U3/U4 richer visuals and replay**
 - [Bounded Work-session handoff](docs/LOW_CREDIT_IMPLEMENTATION_HANDOFF.md) and [coding-agent instructions](AGENTS.md)
 - [Progressive per-ability architecture](docs/ABILITY_COMPOSITION_ARCHITECTURE.md)
 
-**Status:** the M0 cache-first Scryfall importer, immutable shared Oracle-ID revision store and pinned deck manifests are implemented and tested; the shared catalog for all deck variants has **not yet been populated**. [How to bootstrap existing snapshots offline](docs/CARD_METADATA_CACHE.md). No GUI is implemented. The `commander_sim.abilities` catalog selects exact/simplified handlers as pure metadata but does **not** execute them. The historical v35 engine is still Magnus-oriented; black and mixed real-deck gameplay are not yet live. Card API requests remain confined to explicit metadata import/refresh, not simulation.
+**Status:** M0 offline caching and **M1 six-deck pinned imports are complete** ([import report](simulator/card_data/m1_import_report.json)). The initial **U0 local read-only Deck Lab** is implemented, offering deck selection, verified card inventories and deterministic first-turn observations; **it does not cast spells or run actual Magic games**. The pure `commander_sim.abilities` selector still does not execute effects. Historical v35 gameplay remains Magnus-oriented; source-paid black and mixed real-deck play are future M2/M3 work. Metadata API requests occur only on explicit import/refresh—not browser page loads or simulations.
 
 ## V35 copied spell targets
 
@@ -163,7 +165,7 @@ Requires Python 3.10+ and only the standard library:
 python run_all_tests.py
 ```
 
-**851 tests across thirty-seven suites** (v3:20, v4:15, v5:21, v6:21, v7:50, v8:32, v9a:29, v9b:34, v9c:49, v10:51, v11:50, v12:50, v13:69, v14:56, v15:38, v16:14, v17:6, v18:5, v19:5, v20:4, v21:10, v22:8, v23:13, v24:9, v25:7, v26:12, v27:14, v28:11, v29:9, v30:11, v31:15, v32:11, v33:12, v34:14, v35:6, P0 baseline:11, package contracts:59). The GitHub Actions workflow tests on Python 3.11, 3.12, and 3.13.
+**863 tests across thirty-seven suites** (v3:20, v4:15, v5:21, v6:21, v7:50, v8:32, v9a:29, v9b:34, v9c:49, v10:51, v11:50, v12:50, v13:69, v14:56, v15:38, v16:14, v17:6, v18:5, v19:5, v20:4, v21:10, v22:8, v23:13, v24:9, v25:7, v26:12, v27:14, v28:11, v29:9, v30:11, v31:15, v32:11, v33:12, v34:14, v35:6, P0 baseline:11, package contracts:71). The GitHub Actions workflow tests on Python 3.11, 3.12, and 3.13.
 
 Run historical v15 and reproduce validation:
 
