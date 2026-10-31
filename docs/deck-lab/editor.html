@@ -8,6 +8,7 @@
   <title>Commander Deck Lab — The Arcane Table</title>
   <link rel="stylesheet" href="./style.css">
   <script src="https://cdn.jsdelivr.net/npm/d3@7/dist/d3.min.js" defer></script>
+  <script src="./results_insights.js" defer></script>
   <script src="./app.js" defer></script>
 </head>
 <body>
@@ -100,57 +101,80 @@
       </section>
     </div>
     <div class="tab-pane" id="pane-records" hidden>
-      <div class="two-col">
-        <section class="panel">
-          <h2 class="panel-title">The Observation Archive</h2>
-          <p class="small">Choose an already-generated seed. The page does not run new Python simulations.</p>
-          <div class="control-row">
-            <div class="control"><label for="seed-select">Stored random seed</label><select id="seed-select"></select></div>
-            <div class="control"><label for="turn-select">Display through turn</label>
-              <select id="turn-select"><option value="3">Turn 3</option><option value="4">Turn 4</option>
-                <option value="5">Turn 5</option><option value="6" selected>Turn 6</option></select></div>
+      <section class="results-head panel" aria-labelledby="results-overview-heading">
+        <div class="results-heading-row">
+          <div>
+            <span class="eyebrow">What the archived runs show</span>
+            <h2 id="results-overview-heading" class="results-big-heading">Opening-turn performance at a glance</h2>
+            <p id="results-provenance" class="small">Calculating findings from the fixed cached runs.</p>
           </div>
-          <button type="button" class="gold-button" id="show-record">Open archived record</button>
-          <button type="button" class="stone-button" id="export-record">Export JSON</button>
-          <div class="arcane-line"></div>
-          <div id="record-info"></div>
-          <div class="warning" style="margin-top:14px">Candidate cards pass only a total-mana screen; costs, colors, targets,
-            timing, triggers and effects are not checked. No spells are played.</div>
-        </section>
-        <section class="panel">
-          <h2 class="panel-title">A Chronicle of Six Turns</h2>
-          <div id="turn-timeline" class="timeline"><p>Select a saved seed.</p></div>
-        </section>
-      </div>
+          <span id="results-sample" class="sample-label"></span>
+        </div>
+        <div class="results-kpis" id="results-kpis"></div>
+        <div id="results-takeaway" class="results-takeaway" aria-live="polite"></div>
+      </section>
     </div>
     <div class="tab-pane" id="pane-insights" hidden>
       <section class="scroll-story" aria-labelledby="story-head">
         <div class="story-heading">
-          <span class="eyebrow">Reading the arcane record</span>
-          <h2 id="story-head">A deck's opening turns, revealed</h2>
-          <p>Scroll to reveal three perspectives on the selected cached observation. These are descriptive measurements, not rules-engine decisions.</p>
+          <span class="eyebrow">Three discoveries from your cached runs</span>
+          <h2 id="story-head">Read the pattern, then investigate the evidence</h2>
+          <p>Scroll through each finding. Select a bar to see its exact observed count, the supporting seeds, and what that result can—and cannot—tell you.</p>
         </div>
-        <article class="story-step reveal" data-chart="sources">
-          <div class="story-copy"><div class="story-num">I · Resource growth</div>
-            <h3>How the land base unfolds</h3>
-            <p>Modeled mana sources by turn. Land abilities and colored spell payment are not executed in this observation.</p>
+        <article class="story-step reveal" data-chart="opening">
+          <div class="story-copy"><div class="story-num">I · Opening hands</div>
+            <h3 id="story-title-opening">Opening land mix</h3>
+            <p id="story-summary-opening"></p><p id="story-meaning-opening" class="finding-meaning"></p>
+            <p id="story-caveat-opening" class="micro"></p>
           </div>
-          <div class="story-graphic panel"><h3>Modeled sources by turn</h3><div id="scroll-sources"></div></div>
+          <div class="story-graphic panel">
+            <h3>Modeled lands among the first seven cards</h3>
+            <div id="scroll-sources"></div>
+            <div class="chart-detail" id="detail-opening" role="status">Select a bar to inspect the recorded hands.</div>
+          </div>
         </article>
-        <article class="story-step reveal" data-chart="hand">
-          <div class="story-copy"><div class="story-num">II · Cards in hand</div>
-            <h3>The choices that accumulate</h3>
-            <p>Hand size is an observed quantity, not a guarantee those cards could be cast under Magic's rules.</p>
+        <article class="story-step reveal" data-chart="resources">
+          <div class="story-copy"><div class="story-num">II · Turn-three resources</div>
+            <h3 id="story-title-resources"></h3>
+            <p id="story-summary-resources"></p><p id="story-meaning-resources" class="finding-meaning"></p>
+            <p id="story-caveat-resources" class="micro"></p>
           </div>
-          <div class="story-graphic panel"><h3>Hand size over six turns</h3><div id="scroll-hand"></div></div>
+          <div class="story-graphic panel">
+            <h3>Modeled sources on turn three</h3>
+            <div id="scroll-hand"></div>
+            <div class="chart-detail" id="detail-resources" role="status">Select a bar to inspect the source counts.</div>
+          </div>
         </article>
         <article class="story-step reveal" data-chart="candidates">
-          <div class="story-copy"><div class="story-num">III · Mana-value candidates</div>
-            <h3>Possible avenues, not played spells</h3>
-            <p>These counts describe a simple mana-value screen. Costs, timing, targets and abilities have not been resolved.</p>
+          <div class="story-copy"><div class="story-num">III · Early card options</div>
+            <h3 id="story-title-candidates"></h3>
+            <p id="story-summary-candidates"></p><p id="story-meaning-candidates" class="finding-meaning"></p>
+            <p id="story-caveat-candidates" class="micro"></p>
           </div>
-          <div class="story-graphic panel"><h3>Candidate counts by turn</h3><div id="scroll-candidates"></div></div>
+          <div class="story-graphic panel">
+            <h3>Runs with any mana-value candidate by turn</h3>
+            <div id="scroll-candidates"></div>
+            <div class="chart-detail" id="detail-candidates" role="status">Select a turn to inspect the cached candidate list.</div>
+          </div>
         </article>
+      </section>
+      <section class="panel archived-details" aria-labelledby="archived-details-heading">
+        <h2 id="archived-details-heading" class="panel-title">Inspect a specific cached run</h2>
+        <p class="small">The results above summarize every stored seed. Explore an individual run below only when you want to investigate a particular observation.</p>
+        <div class="control-row">
+          <div class="control"><label for="seed-select">Archived seed</label><select id="seed-select"></select></div>
+          <div class="control"><label for="turn-select">Show through turn</label>
+            <select id="turn-select"><option value="3">Turn 3</option><option value="4">Turn 4</option>
+              <option value="5">Turn 5</option><option value="6" selected>Turn 6</option></select></div>
+          <button type="button" class="gold-button" id="show-record">View run</button>
+          <button type="button" class="stone-button" id="export-record">Export JSON</button>
+        </div>
+        <div id="record-info"></div>
+        <details class="run-transcript">
+          <summary>Expand turn-by-turn trace</summary>
+          <div id="turn-timeline" class="timeline"></div>
+        </details>
+        <div class="warning">These are **fixed-seed observations**, not simulated games or win-rate estimates. Land modeling covers basics and Command Tower only. Mana-value candidates are not necessarily legal or castable spells.</div>
       </section>
     </div>
     <div class="tab-pane" id="pane-workshop" hidden>
