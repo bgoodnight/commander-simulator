@@ -1,6 +1,6 @@
-# Low-credit implementation handoff — P0.6 / P0.65 / P0.7
+# Low-credit implementation handoff — cache-first multi-deck MVP
 
-Updated October 31, 2026. This is a **work-session handoff**, not a statement that the full architecture is implemented. Use [AGENTS.md](../AGENTS.md), [ROADMAP.md](../ROADMAP.md), and [ABILITY_COMPOSITION_ARCHITECTURE.md](ABILITY_COMPOSITION_ARCHITECTURE.md) as authoritative design constraints.
+Updated October 31, 2026. **Priority is an early usable multi-deck simulator**, not exhaustive card effects. This is a work-session handoff; follow [MULTI_DECK_MVP.md](MULTI_DECK_MVP.md) for acceptance gates, [ROADMAP.md](../ROADMAP.md) for current progress, and [AGENTS.md](../AGENTS.md) / [ABILITY_COMPOSITION_ARCHITECTURE.md](ABILITY_COMPOSITION_ARCHITECTURE.md) for architectural rules.
 
 ## Verified work already in the repository
 
@@ -10,51 +10,58 @@ Updated October 31, 2026. This is a **work-session handoff**, not a statement th
 - The ability slots **must not be inferred automatically from Scryfall text or role tags**. A reviewed definition/ability catalog is still missing.
 - Package-test expected-count contract lives in `run_all_tests.py`. **When adding tests, update the package_tests expected count and final total**, then verify the CI run; do not mistake count mismatch for a rules regression.
 
-## Bounded next Work sessions — execute in order
+## Bounded next Work sessions — execute in priority order
 
-### Slice A: Finish the pure registry and characteristic contract
+**Do not begin with the old Slice A per-card directory.** The pure `commander_sim.abilities.AbilityCatalog` already exists and is adequate as the starter ability-selection seam. Defer broad named-card definitions while we deliver actual basic gameplay for two different commanders. Complete one coherent slice per Work session; stop at a passing commit with coverage and the next handoff.
 
-Scope: `commander_sim/abilities.py`, `identities.py`, `queries.py` and focused tests; avoid editing the historical v35 table.
+### Slice 0 — FIRST: shared offline card catalog (M0)
 
-1. Fetch and review the **latest main** SHA, read relevant files once, and run targeted tests. Review already present `AbilityCatalog` semantics before reimplementing it.
-2. Define a **reviewed ability-directory schema** that maps stable Oracle ID / face / ability slot to typed descriptors and canonical effect-template names, with source revision and capability prerequisites. Prefer a small versioned definition file per **exceptional named card**, plus a shared template catalog; never duplicate common combat/card-characteristic definitions per card. Model per-card declared keywords and multiple independent triggered/activated/static slots.
-3. Add safe immutable storage or freezing of registered records, explicit duplicate/alias detection, missing-capability reporting, and a **per-slot coverage manifest**. Implement exact-over-simplified exclusivity and distinct-slot persistence tests before runtime changes.
-4. Add minimal synthetic fixtures: two creatures sharing double strike; one independent ETB ability that promotes from simplified to exact; one simplified creature tutor whose exact version changes its search predicate/destination. Each must resolve to at most one handler for each slot. **Do not claim actual game-event behavior** until integrated.
-5. Preserve strict replay fingerprints and clear diagnostics. Commit one reviewed, passing milestone.
+**Goal:** every card identity is retrieved at most when missing, reused across all imported decks; per-deck reproducibility is preserved.
 
-Acceptance: stable slot identity and provenance, no duplicate declarations, exact-first selection, no API calls, reusable definition registration; pure tests. No actual card casting is required in Slice A.
+1. Inspect existing `tools/fetch_deck_identities.py`, `commander_sim/snapshots.py`, `commander_sim/identities.py` and checked-in snapshots. The present per-deck snapshots hash the exact deck; do not destroy that invariant or fetch again when a card appears elsewhere.
+2. Implement a **shared, immutable, versioned offline Scryfall record store keyed by Oracle ID**, with a name/face-alias index. Import code checks this store **before** any optional network request. Fetch unresolved names in batches only on explicit import/refresh, normalize and validate the exact identity; save a pinned **deck file SHA-256 → Oracle ID + record revision** manifest. An absent cached Oracle ID is allowed only in offline mode with an explicit diagnostic, not a silent guess.
+3. Preserve old snapshot fixture validation and strict replay. Keep metadata cache read-only during a run; separate explicit refresh from normal load. Do **not** implement runtime action/target memoization.
+4. Write mocked-network tests for: first missing fetch; second identical import **zero requests**; another overlapping deck fetches **only new identities**; unchanged hashes and immutability; ambiguities/revisions fail closed; zero network in a six-turn observation and game-start/replay path.
+5. Run targeted tests and the 37-suite regression runner, update expected test count, commit and stop. A runtime card effect implementation is **out of scope**.
 
-### Slice B: Universal derived card characteristics and cross-card interactions
+**Exit:** the API is used only for explicit import/refresh; repeated/deck-overlapping imports and simulations reuse local verified records without Scryfall calls.
 
-Scope: one runtime object-view/query path; no new card/deck inheritance subclasses.
+### Slice 1 — Every deck is importable; observations are honest (M1)
 
-1. Bridge every safely representable verified card body into the **same** authoritative zone object system, not a separate observation engine; preserve actual characteristics and source-incarnation IDs.
-2. Make current tutor/removal/other-seat predicate logic use the shared characteristics and tri-state restrictions. Test unfamiliar creature/artifact-creature in library/battlefield/graveyard; type/subtype, mana value and P/T; hexproof/shroud/ward unknown legality; modal face semantics only when verified.
-3. Maintain token, copy, control, face/zone change identity with explicit known limits and conservative fail-closed fallback.
-4. Ensure existing strict premium/budget semantics remain fixed. Commit after focused suite and CI.
+1. Make validated snapshots/catalog manifests for **Magnus premium/budget, Wretched Ranks, Mortarion current and ideal, Necron Dynasties**. Separate receipt-only Mortarion snapshots aren't valid for different deck SHA values. Reconcile ambiguous card faces/legality; no invented properties.
+2. Generalize the deck provider's validated commander/color identity without selecting a Magnus-specific engine; preserve one composition interface and exact 100-card/legality/identity checks.
+3. Provide seed-replayable six-turn deck/hand/source **observation** from each deck, including imported but unsupported cards, with first unmodeled action and counts. Do not label metadata-only candidates legal or resolved.
+4. Add a simple CLI/listing command to enumerate all fixtures and their capabilities/metadata gaps; targeted and CI tests, commit and stop.
 
-Acceptance: an unfamiliar verified target is found by an **already implemented** tutor and recognized as legal or explicitly UNKNOWN for opposing removal, while its own unusual trigger remains unsupported.
+**Exit:** arbitrary reviewed decklists can be loaded and inspected offline; this **is not** actual multi-deck gameplay.
 
-### Slice C: Single-engine hybrid vertical slice
+### Slice 2 — Shared mana, legal ordinary casting and interactable bodies (M2)
 
-Scope: opt-in `strict|observation|hybrid` on the shared kernel and existing P0.65 catalog.
+1. Parameterize the existing v35 authoritative engine for different commanders/decks; generalize mana source/payment for W/U/B/R/G/C including Swamps, **true colorless** and generic costs (do not confuse them). Reuse existing action/priority/stack/zone objects; no parallel simulation engine.
+2. Load verified safe creatures/permanents with actual types/subtypes, colors, mana cost/value, P/T and recognized keywords. Keep an unfamiliar card's unique effects independently unsupported. Allow body-only hybrid casting only if known mandatory ETB/static/replacement/cost restrictions do not make the approximation illegal or unsafe.
+3. Integrate shared type/subtype/color/mana/P/T queries for tutors/removal, including **opponent** interactions with unfamiliar objects. UNKNOWN target restrictions or missing mandatory rules must fail closed; supported flying/menace/double strike/etc. uses common rules once implemented, never card-name branches.
+4. Validate Magnus strict replay parity and a **real Swamp-paid ordinary creature cast** from Wretched Ranks, with an ordinary attack/target/death; prove card/zone conservation and deterministic replay. Commit and stop.
 
-1. Implement an execution adapter mapping the **selected** `AbilityHandler.operation_id` to an existing typed, supported common effect composition. Handler selection alone is **not execution**.
-2. Gate behavior on legal costs, source-specific mana, timing, priority, stack, target restrictions, zone transitions, and known mandatory static/replacement/ETB semantics. If prerequisites are absent, block or label observation, never fabricate.
-3. Permit reviewed body-only creatures/permanents; ensure ordinary targeted removal, keyword combat, and relevant generic triggers interact with them. Unknown personal effect is separately reported.
-4. Add one executed **simplified tutor** and promote to its **exact tutor** in paired tests. Assert exactly one search/move/shuffle, no duplicated triggers and preserved independent keyword mechanics. Record action provenance, first simplification and dependent metrics.
-5. Run a six-turn scripted narrative, then 100 seeds with honest coverage logs; defer win rates and larger sweeps. Commit one tested milestone.
+**Exit:** source-paid simple early turns for both Magnus and a mono-black deck are possible under the same kernel.
 
-Acceptance: one current engine, one handler per slot, no duplicate events, zero network calls per game, no strict replay regression.
+### Slice 3 — MVP 1: practical first-six-turn multi-deck tests (M3)
 
-### Slice D: Cross-deck data and mana
+1. Build one generic early-turn runner/pilot using shared legal-action enumeration. Keep existing abstract opponents if needed, explicitly labeled. It must not grant unimplemented effect text; unknown effects can be omitted with fidelity provenance or block actions when required.
+2. Use current pure `AbilityCatalog` as the **single** per-slot selection mechanism; wire **only a few reviewed common templates** (draw, mana source, ordinary creature token/removal) needed for early utility and tests. Exact first; simplified fallback only for reviewed safe slots; no double-execution.
+3. Produce a six-turn **actual game** narrative for Magnus and Wretched Ranks, then Mortarion current and Necrons as capabilities permit. Report draws, mana, legal source-paid casts, ordinary combat, supported effects, omissions, first materially changed choice and uncertain targets.
+4. Run a focused 10–100-seed repeatability check after one source-paid narrative passes. No early win-rate or relative power claims. Commit and stop.
 
-1. Cache Scryfall metadata **by Oracle ID** in one immutable versioned offline catalog, **deduplicated across decklists**, with individual deck-hash manifests. Reuse unchanged records offline; an explicit refresh may query only missing/changed names. Never fetch during simulation.
-2. Build/check offline snapshots for **Mortarion ideal**, **Mortarion current ordered-plus-owned**, and **Necron Dynasties**; existing Gisa and earlier Mortarion candidate snapshots are **not** substitutes for differently hashed deck files. Report unresolved identities/face layouts.
-3. Extend W/U/B/R/G/C mana sources and cost/payment, with source-specific legality and generic-versus-colorless distinction. Use basic Swamps and black nonbasics as first fixtures.
-4. Run mixed-deck acceptance (Magnus, Mortarion current/ideal, Gisa, Necrons) only after core prerequisites pass. Make targeting artifact creatures and Zombies, sacrifice, recursion and multi-seat opponents the reusable-mechanism gates.
+**Exit:** two authentic different commander lists generate meaningful reproducible turns under the same actual rules engine.
 
-Acceptance: metadata refresh is explicit, common cards do not need repeated network fetches, and no black-mana game is claimed until actual source-paid turns execute.
+### Slice 4 — MVP 2: real cross-deck play (M4)
+
+- Give two **detailed** seats independently configured authentic decks with shared turn/priority, targets, attack/block, stack and zone state. Verify legal Magnus ↔ Gisa or Mortarion interactions, rather than a detailed deck playing against abstract placeholders. Commit one repeatable mixed-deck scenario.
+- Do not demand every exact named ability before calling the rules interactions functional; emit unsupported/approximation logs and stop games when a missing mandatory rule invalidates continuation.
+
+### Slice 5 — Deepen individual effects and performance (M5/M6)
+
+- Extend the card directory only for **observed high-impact missing behavior**, and compose shared effect templates. Test common keyword persistence across exact/simplified promotion and exclusive one-tutor-one-search events; add at least two independently named cards per reusable mechanic.
+- Tune and compare with paired seeds and explicit fidelity/coverage reports before making deck-strength or optimization claims. Defer speculative mutable game-state caching to an invalidation/replay-tested phase.
 
 ## Efficient model allocation (heuristic, not a guaranteed credit price)
 
@@ -67,7 +74,7 @@ Acceptance: metadata refresh is explicit, common cards do not need repeated netw
 
 ## A copyable starting prompt for the next Work session
 
-> Read AGENTS.md, ROADMAP.md P0.6–P0.7, docs/ABILITY_COMPOSITION_ARCHITECTURE.md, and docs/LOW_CREDIT_IMPLEMENTATION_HANDOFF.md. Check the latest main commit and CI. Do not redo the existing deck parser, Scryfall snapshots, CardRegistry, observation runner, or pure commander_sim.abilities catalog. Perform **Slice A only**: add a reviewed per-ability definition schema and per-slot coverage reporting with tests; preserve the exact-first one-handler invariant and unrelated keyword/ability slots. Make one rollback-safe commit. Run targeted tests and the required full regressions; update test-count contract. Report SHA, tests, supported behavior and limitations. Do not begin Slice B or run an indefinite project-wide implementation loop.
+> Read AGENTS.md, ROADMAP.md's priority table, docs/MULTI_DECK_MVP.md and docs/LOW_CREDIT_IMPLEMENTATION_HANDOFF.md. Check latest main SHA and CI; preserve strict v35 baseline. **Perform Slice 0 (M0) ONLY:** upgrade the existing Scryfall import to a shared deduplicated offline Oracle-ID catalog plus per-deck pinned SHA manifests. Check the cache before requesting card names; allow API calls only in explicit import/refresh; make identical and overlapping imports issue zero/unnecessary requests; offline game runs must make zero requests. Do not redo AbilityCatalog, implement unique cards, add runtime memoization, or start later slices. Add mocked-network and regression tests, update run_all_tests.py expected counts, commit one coherent milestone, and report SHA/tests/limitations before stopping.
 
 ## Stop conditions / avoiding wasted credits
 
