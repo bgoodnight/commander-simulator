@@ -8,6 +8,7 @@ from commander_sim.deck_fixtures import FIXTURES, LEGACY_SEEDS, ROOT
 from tools.import_deck_fixtures import prepare
 from commander_sim.snapshots import validate_snapshot
 from commander_sim.observation import observe
+from commander_sim.fixture_inventory import inventory, fixture_observation
 
 
 class DeckFixtureTests(unittest.TestCase):
@@ -58,6 +59,38 @@ class DeckFixtureTests(unittest.TestCase):
                             commander=fixture.commander, seed=0)
             self.assertEqual(len(trace["trace"]), 6)
             self.assertTrue(all(not t["playable_now"] for t in trace["trace"]))
+
+    def test_offline_fixture_inventory_discloses_missing_deck_metadata(self):
+        with tempfile.TemporaryDirectory() as temp:
+            listing = inventory(catalog_path=Path(temp) / "missing.json",
+                                output_dir=temp)
+            self.assertEqual(listing["mode"], "offline_inventory")
+            self.assertEqual(len(listing["decks"]), 6)
+            self.assertTrue(all(d["status"] == "missing_metadata"
+                                and not d["actual_gameplay_available"]
+                                and not d["observation_available"]
+                                for d in listing["decks"]))
+
+    def test_offline_fixture_inventory_and_observation_are_replayable(self):
+        with tempfile.TemporaryDirectory() as temp:
+            catalog = Path(temp) / "catalog.json"
+            ready = prepare(selected=["wretched_ranks"], catalog_path=catalog,
+                            output_dir=temp)
+            self.assertEqual(ready["validated"], 1)
+            listing = inventory(catalog_path=catalog, output_dir=temp)
+            gisa = next(d for d in listing["decks"] if d["key"] == "wretched_ranks")
+            self.assertTrue(gisa["observation_available"])
+            self.assertFalse(gisa["actual_gameplay_available"])
+            self.assertEqual(gisa["physical_card_count"], 100)
+            a = fixture_observation("wretched_ranks", catalog_path=catalog,
+                                    output_dir=temp, seed=3)
+            b = fixture_observation("wretched_ranks", catalog_path=catalog,
+                                    output_dir=temp, seed=3)
+            self.assertEqual(a, b)
+            self.assertEqual(a["mode"], "observation")
+            with self.assertRaisesRegex(ValueError, "Unknown deck fixture"):
+                fixture_observation("fake_deck", catalog_path=catalog,
+                                    output_dir=temp)
 
     def test_unknown_fixture_name_rejected(self):
         with tempfile.TemporaryDirectory() as temp:
