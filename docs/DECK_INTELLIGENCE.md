@@ -30,3 +30,26 @@ A curated combo can report piece count on the battlefield and available in hand 
 ## Boundaries and next steps
 
 The new module is a reporting contract, not a production M3 adapter, persistent profile store, profile UI, or complete statistics pipeline. First integrate the actual multi-deck turn driver; then emit ID-backed snapshots and verified search/cost events, run milestone aggregations, and add Deck Lab U3 charts. Printed keywords may propose descriptive groups for user review, but never auto-classify card text as game mechanics or combos.
+
+## Implemented backend bridge (M3 reporting groundwork)
+
+- `commander_sim.kernel_reporting.project_kernel_turn(zones, seat, turn, catalog, ...)` reads the existing IndexedKernel/LiveZones physical object IDs. Battlefield is scoped to *controller*, private hand and graveyard to *owner*. All recognized names require pinned metadata; unknown tokens are reported separately, not assigned invented keywords. The caller must invoke this at a real rules-engine turn boundary.
+- `commander_sim.board_features.analyze_authoritative_run(catalog, profile, states)` produces one JSON-friendly object with `automatic` (verified printed keywords/types/subtypes in play each turn) and `strategy` (curated key/group/combo states). It rejects observation-only inputs.
+- `commander_sim.milestone_stats.summarize_strategy_runs(runs, checkpoints=(3,5,7,10))` accepts independent seeded, single-deck, authoritative strategy analysis objects. It reports per-checkpoint sample sizes, censored runs, average on-board group counts, milestone rates, and Wilson 95% seed-sampling intervals. A run missing a checkpoint is **censored**, not silently scored as failing or losing.
+
+Expected processing sequence after the M3 turn driver exists:
+
+```python
+# The game driver owns the kernel, turn, legal actions, and verified events.
+state = project_kernel_turn(zones, seat, turn, pinned_catalog)
+report = analyze_authoritative_run(pinned_catalog, curated_profile, [state])
+# Batch independently seeded reports, then summarize the strategy branch.
+batch = summarize_strategy_runs([
+    {'seed': seed, 'deck_sha256': deck_sha, 'report': game_report['strategy']}
+    for seed, deck_sha, game_report in completed_or_censored_runs
+])
+```
+
+Do **not** populate `verified_tutor_access` until the actual rules layer has verified search eligibility, targets, costs, timing, and zone destination. Do **not** populate `engine_verified_combos` from a metadata match or a suggested synergy.
+
+**Still pending:** production M3 six-turn driver and independent deck loader, live decision/event verification, real tutor reachability, mechanic-specific ability coverage, cross-game opponent calibration, and UI integration. The tools above analyze **supplied game states**, but do not themselves generate games or validate win rates. Coordinate UI changes on its separate Work branch; these backend modules are independent of HTML/JS.
