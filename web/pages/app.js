@@ -18,6 +18,14 @@ const MODE_NOTE = "Precomputed observation only · no spells, abilities, combat 
 let data=null, archives=null, allNames=[], selected=null, activeTab="overview";
 let cachedByName = new Map(),extraCards={},activeCounts=null,history=[],localVersions=[];
 let selectedSeed="0",soundEnabled=false,audio=null,lastRecord=null,autoTimer=null;
+const pageName=location.pathname.endsWith("/summary.html")?"summary":
+  location.pathname.endsWith("/editor.html")?"editor":"results";
+const PAGE_INFO={
+  results:["The Archive of Outcomes","Study cached opening turns, then descend through a visual chronicle of the selected seed."],
+  summary:["The Commander's Ledger","Inspect commander art, card-type composition and the mana curve of this verified deck."],
+  editor:["The Decksmith's Forge","Search the card list, make validated browser-local changes and export a new decklist."]
+};
+let scrollObserver=null;
 const storageKey="commander-deck-lab-pages-v1";
 const el=(tag,text,className)=>{
   const node=document.createElement(tag);
@@ -197,19 +205,37 @@ function summon(key){
   void $("app-content").offsetWidth;$("app-content").style.animation="";
   originalSound("summon");
   selectedSeed=String(data.seeds[0]);
-  renderOverview();renderLibrary();renderRecords();initializeDraft();openTab("overview",false);
-  try{history.replaceState(null,"","?deck="+encodeURIComponent(key))}
+  renderOverview();renderLibrary();renderRecords();initializeDraft();
+  showPage();
+  const params=new URLSearchParams(location.search);
+  params.set("deck",key);
+  try{window.history.replaceState(null,"",location.pathname+"?"+params.toString())}
   catch(e){/* query string is optional */}
-}
-function openTab(tab,withSound=true){
-  activeTab=tab;
-  for(const button of document.querySelectorAll(".navtab")){
-    const enabled=button.dataset.tab===tab;button.classList.toggle("selected",enabled);
-    button.setAttribute("aria-current",enabled?"page":"false");
+  for(const link of document.querySelectorAll(".site-link")){
+    const target=new URL(link.href,location.href);
+    target.searchParams.set("deck",key);
+    link.href=target.href;
   }
+}
+function showPage(){
+  const enabled={
+    results:["records","insights"],
+    summary:["overview"],
+    editor:["library","workshop"]
+  }[pageName];
   for(const pane of document.querySelectorAll(".tab-pane"))
-    pane.hidden=pane.id!=="pane-"+tab;
-  if(withSound)originalSound("page");
+    pane.hidden=!enabled.includes(pane.id.replace("pane-",""));
+  for(const link of document.querySelectorAll(".site-link")){
+    const active=link.dataset.page===pageName;
+    link.classList.toggle("active",active);
+    if(active)link.setAttribute("aria-current","page");
+    else link.removeAttribute("aria-current");
+  }
+  const intro=$("page-introduction");clear(intro);
+  const [title,desc]=PAGE_INFO[pageName];
+  intro.append(el("h1",title),el("p",desc));
+  document.title=title+" | Commander Deck Lab";
+  if(pageName==="results")installScrollStory();
 }
 function renderOverview(){
   const deck=selectedDeck(),c=commanderCard(deck);
@@ -320,6 +346,80 @@ function displayRecord(){
       "No mana-value candidates identified","small"));
     node.appendChild(body);timeline.appendChild(node);
   }
+  if(pageName==="results")renderScrollStory();
+}
+/* Scroll-linked chart story. D3 transitions are progressive enhancement; native
+ * SVG always renders when the D3 CDN is unavailable or motion is reduced.
+ * Every value comes from the selected fixed-seed Python observation.
+ */
+function scrollValue(t,kind){
+  if(kind==="sources")return Array.isArray(t.modeled_sources)?t.modeled_sources.length:
+    Number(t.battlefield_count)||0;
+  if(kind==="hand")return Number(t.hand_count)||0;
+  return Array.isArray(t.candidate_if_supported)?t.candidate_if_supported.length:0;
+}
+function renderScrollChart(id,kind,trace){
+  const root=$(id);if(!root)return;
+  clear(root);
+  const points=trace.map(t=>[String(t.turn),scrollValue(t,kind)]);
+  const chart=makeBars(points,{color:kind==="sources"?"#73bdb1":
+    kind==="hand"?"#dbb973":"#ae9ad6"});
+  chart.classList.add("reveal-chart");
+  root.appendChild(chart);
+  const bars=chart.querySelectorAll("rect.bar");
+  const item=chart.closest(".story-step");
+  const reduced=window.matchMedia?.("(prefers-reduced-motion: reduce)").matches;
+  if(!reduced&&item&&!item.classList.contains("visible")){
+    for(const bar of bars){
+      const y=Number(bar.getAttribute("y")),h=Number(bar.getAttribute("height"));
+      bar.dataset.targetY=String(y);
+      bar.dataset.targetHeight=String(h);
+      bar.setAttribute("y",String(y+h));
+      bar.setAttribute("height","0");
+    }
+  }
+}
+function unveilChart(section){
+  section.classList.add("visible");
+  const bars=section.querySelectorAll("rect.bar[data-target-y]");
+  if(!bars.length)return;
+  const reduced=window.matchMedia?.("(prefers-reduced-motion: reduce)").matches;
+  if(!reduced&&window.d3){
+    const d3=window.d3;
+    d3.select(section).selectAll("rect.bar[data-target-y]")
+      .transition().duration(760).ease(d3.easeCubicOut)
+      .attr("y",function(){return this.dataset.targetY})
+      .attr("height",function(){return this.dataset.targetHeight});
+  }else{
+    for(const bar of bars){
+      bar.setAttribute("y",bar.dataset.targetY);
+      bar.setAttribute("height",bar.dataset.targetHeight);
+    }
+  }
+  for(const bar of bars){delete bar.dataset.targetY;delete bar.dataset.targetHeight}
+}
+function installScrollStory(){
+  if(scrollObserver){scrollObserver.disconnect();scrollObserver=null}
+  const sections=[...document.querySelectorAll(".story-step")];
+  if(!("IntersectionObserver" in window)){
+    sections.forEach(unveilChart);return;
+  }
+  scrollObserver=new IntersectionObserver(entries=>{
+    for(const e of entries)if(e.isIntersecting){
+      unveilChart(e.target);scrollObserver.unobserve(e.target);
+    }
+  },{threshold:.18,rootMargin:"0px 0px -8% 0px"});
+  for(const section of sections)scrollObserver.observe(section);
+}
+function renderScrollStory(){
+  if(!lastRecord)return;
+  for(const section of document.querySelectorAll(".story-step"))
+    section.classList.remove("visible");
+  const trace=lastRecord.trace.slice(0,Number($("turn-select").value)||6);
+  renderScrollChart("scroll-sources","sources",trace);
+  renderScrollChart("scroll-hand","hand",trace);
+  renderScrollChart("scroll-candidates","candidates",trace);
+  installScrollStory();
 }
 function exportFile(filename,content,type="text/plain"){
   const object=new Blob([content],{type});
@@ -542,8 +642,7 @@ async function fetchCard(){
 }
 function registerEvents(){
   $("audio-toggle").onclick=enableSound;
-  for(const tab of document.querySelectorAll(".navtab"))
-    tab.onclick=()=>openTab(tab.dataset.tab);
+  // Navigation links lead to independent static pages (no client router).
   $("library-search").oninput=renderLibrary;
   $("library-category").onchange=renderLibrary;
   $("show-record").onclick=()=>{displayRecord();originalSound("page")};
@@ -576,8 +675,9 @@ async function boot(){
     for(const card of Object.values(data.cards))addAliases(card);
     loadLocal();buildDeckRail();
     const key=new URLSearchParams(location.search).get("deck");
-    if(data.decks.some(d=>d.key===key))summon(key);
-    else note("Choose a commander. The archive holds "+data.decks.length+" validated decks.");
+    const start=data.decks.find(d=>d.key===key)?.key||
+      data.decks.find(d=>d.key==="magnus_premium")?.key||data.decks[0].key;
+    summon(start);
   }catch(err){
     const rail=$("commander-rail");clear(rail);
     rail.appendChild(el("p","Unable to open the archive: "+err.message));
