@@ -503,6 +503,12 @@ function displayRecord(){
     body.appendChild(el("div",candidates.length?
       "Mana-value candidates (not castability): "+candidates.map(x=>x.card).join(", "):
       "No candidate passed the mana-value screen","small"));
+    const affordable=t.source_paid_mana_preview||[];
+    body.appendChild(el("div",affordable.length?
+      "Modeled sources can pay printed symbols for: "+affordable.map(x=>x.card).join(", "):
+      "No fixed printed costs payable with modeled sources on this turn",
+      "small"));
+    body.appendChild(el("div","Payment feasibility only; no legal casts, effects, optional costs, or priority modeled.","micro"));
     node.appendChild(body);timeline.appendChild(node);
   }
 }
