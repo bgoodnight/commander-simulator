@@ -104,7 +104,7 @@ function persist(){
 function imageNode(card,art=true,className=""){
   if(!card||!(art?card.art:card.image)){
     const fallback=el("div","✧  "+safeText(card?.name||"Unknown Legend"),"no-image");
-    fallback.classList.add(className||"");return fallback;
+    if(className)fallback.classList.add(className);return fallback;
   }
   const img=el("img",null,className);
   img.src=art?card.art:card.image;
