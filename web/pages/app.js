@@ -18,6 +18,7 @@ const MODE_NOTE = "Precomputed observation only · no spells, abilities, combat 
 let data=null, archives=null, allNames=[], selected=null, activeTab="overview";
 let cachedByName = new Map(),extraCards={},activeCounts=null,history=[],localVersions=[];
 let selectedSeed="0",soundEnabled=false,audio=null,lastRecord=null,autoTimer=null;
+let selectedVersionId=null,preferredByCommander={},lastCommanderId=null;
 const pageName=location.pathname.endsWith("/summary.html")?"summary":
   location.pathname.endsWith("/editor.html")?"editor":"results";
 const PAGE_INFO={
@@ -92,6 +93,9 @@ function loadLocal(){
       const arr=Array.isArray(stored.versions)?stored.versions:[];
       localVersions=arr.filter(v=>v&&typeof v.id==="string"&&
         typeof v.baseKey==="string"&&v.counts&&typeof v.counts==="object").slice(0,60);
+      preferredByCommander=stored.preferredByCommander&&typeof stored.preferredByCommander==="object"?
+        stored.preferredByCommander:{};
+      lastCommanderId=typeof stored.lastCommanderId==="string"?stored.lastCommanderId:null;
       if(stored.extraCards&&typeof stored.extraCards==="object"){
         for(const item of Object.values(stored.extraCards)){
           if(item&&typeof item.name==="string"&&typeof item.oracle_id==="string"&&
@@ -105,7 +109,7 @@ function loadLocal(){
 }
 function persist(){
   try{localStorage.setItem(storageKey,JSON.stringify({
-    versions:localVersions.slice(0,60),extraCards
+    versions:localVersions.slice(0,60),preferredByCommander,lastCommanderId,extraCards
   }));return true}
   catch(e){note("Browser storage unavailable. Export the decklist to keep it.",true);return false}
 }
@@ -155,67 +159,130 @@ function makeBars(items,{color="#bfa066",maxHeight=130}={}){
   });
   return chart;
 }
+function sameCommanderDecks(commanderId){
+  return data.decks.filter(deck=>deck.commander_id===commanderId);
+}
+function deckVersionsForCommander(commanderId){
+  const keys=new Set(sameCommanderDecks(commanderId).map(d=>d.key));
+  return localVersions.filter(v=>keys.has(v.baseKey))
+    .sort((a,b)=>String(b.updated||b.created||"").localeCompare(String(a.updated||a.created||"")));
+}
+function latestSelectionForCommander(commanderId){
+  const saved=deckVersionsForCommander(commanderId)[0];
+  if(saved)return {key:saved.baseKey,version:saved.id};
+  const preferred=preferredByCommander[commanderId];
+  if(preferred?.key&&sameCommanderDecks(commanderId).some(d=>d.key===preferred.key)){
+    const version=localVersions.some(v=>v.id===preferred.version&&v.baseKey===preferred.key)?
+      preferred.version:null;
+    return {key:preferred.key,version};
+  }
+  return {key:sameCommanderDecks(commanderId)[0]?.key,version:null};
+}
+function versionById(id){
+  return localVersions.find(v=>v.id===id&&v.baseKey===selected)||null;
+}
+function activeVersion(){return selectedVersionId?versionById(selectedVersionId):null;}
+function isUnsimulatedVersion(){return !!activeVersion();}
+function visibleCounts(){
+  if(activeCounts&&typeof activeCounts==="object")return activeCounts;
+  return initialCounts();
+}
+function displayDeckCards(){
+  const deck=selectedDeck();
+  if(!deck)return [];
+  const commander=deck.cards.find(c=>c.zone==="Commander");
+  const result=commander?[commander]:[];
+  for(const [name,qty] of Object.entries(visibleCounts())){
+    if(!qty)continue;
+    const card=cardInfo(name);
+    result.push({name,qty,zone:"Library",oracle_id:card?.oracle_id||null});
+  }
+  return result;
+}
+function activeDeckTitle(){
+  return activeVersion()?.title||LABELS[selected]||selectedDeck()?.commander||"";
+}
+function updateSelectionBadge(){
+  if(!selected)return;
+  const deck=selectedDeck(),card=commanderCard(deck),portrait=$("medallion-portrait");
+  clear(portrait);portrait.appendChild(imageNode(card,true,"medallion-art"));
+  $("commander-medallion").setAttribute("aria-label","Change commander from "+deck.commander);
+  $("active-commander").textContent=deck.commander;
+  $("active-deck-name").textContent=activeDeckTitle();
+  $("active-deck-state").textContent=isUnsimulatedVersion()?
+    "Browser deck · no cached results":"Cached results available";
+  const link=$("change-deck-link"),url=new URL("./editor.html",location.href);
+  url.searchParams.set("deck",selected);
+  if(selectedVersionId)url.searchParams.set("version",selectedVersionId);
+  link.href=url.href;
+}
 function buildDeckRail(){
   const rail=$("commander-rail");clear(rail);
+  const seen=new Set();
   for(const deck of data.decks){
-    const c=commanderCard(deck),btn=el("button",null,"commander-tile");
-    btn.type="button";btn.draggable=true;btn.dataset.key=deck.key;
-    btn.setAttribute("aria-label","Summon "+(LABELS[deck.key]||deck.commander));
-    const art=imageNode(c,true);btn.appendChild(art);
-    const desc=el("span",LABELS[deck.key]||deck.commander);
-    desc.appendChild(el("em",deck.label.replace(/_/g," ")));
-    btn.appendChild(desc);
-    btn.addEventListener("click",()=>summon(deck.key));
-    btn.addEventListener("dragstart",e=>{
-      e.dataTransfer.setData("text/plain",deck.key);
-      e.dataTransfer.effectAllowed="copy";originalSound("click");
+    if(seen.has(deck.commander_id))continue;
+    seen.add(deck.commander_id);
+    const card=commanderCard(deck),button=el("button",null,"commander-choice");
+    button.type="button";button.dataset.commander=deck.commander_id;
+    button.appendChild(imageNode(card,true,"choice-art"));
+    const details=el("span");details.appendChild(el("strong",deck.commander));
+    details.appendChild(el("small",sameCommanderDecks(deck.commander_id).length+
+      " built-in deck(s) · "+deckVersionsForCommander(deck.commander_id).length+" saved"));
+    button.appendChild(details);
+    button.addEventListener("click",()=>{
+      const choice=latestSelectionForCommander(deck.commander_id);
+      summon(choice.key,{versionId:choice.version});
+      closeCommanderPicker();originalSound("summon");
     });
-    rail.appendChild(btn);
+    rail.appendChild(button);
   }
-  const drop=$("drop-ring");
-  drop.addEventListener("dragover",e=>{e.preventDefault();drop.classList.add("dragover")});
-  drop.addEventListener("dragleave",()=>drop.classList.remove("dragover"));
-  drop.addEventListener("drop",e=>{
-    e.preventDefault();drop.classList.remove("dragover");
-    const key=e.dataTransfer.getData("text/plain");
-    if(data.decks.some(d=>d.key===key))summon(key);
-  });
-  drop.addEventListener("click",()=>{
-    if(!selected)note("Tap a commander portrait below, or drag it into this rune.");
-    else{originalSound("page");openTab("overview")}
-  });
 }
-function summon(key){
-  if(!data.decks.some(d=>d.key===key))return;
-  selected=key;activeCounts=null;history=[];
-  const deck=selectedDeck(),c=commanderCard(deck);
-  const ring=$("drop-ring");clear(ring);
-  ring.appendChild(imageNode(c,true,"selected-portrait"));
-  ring.appendChild(el("span",LABELS[key]||deck.commander,"selected-label"));
-  ring.classList.remove("summoned");
-  void ring.offsetWidth;
-  ring.classList.add("summoned");
-  $("drop-ring").setAttribute("aria-label","Selected "+deck.commander);
-  for(const btn of $("commander-rail").children){
-    btn.classList.toggle("active",btn.dataset.key===key);
-    btn.setAttribute("aria-pressed",String(btn.dataset.key===key));
+function closeCommanderPicker(){
+  $("commander-picker").hidden=true;
+  $("commander-medallion").setAttribute("aria-expanded","false");
+}
+function toggleCommanderPicker(){
+  const open=$("commander-picker").hidden;
+  $("commander-picker").hidden=!open;
+  $("commander-medallion").setAttribute("aria-expanded",String(open));
+  if(open)buildDeckRail();
+  originalSound("click");
+}
+function syncPageNavigation(){
+  const params=new URLSearchParams(location.search);
+  params.set("deck",selected);
+  if(selectedVersionId)params.set("version",selectedVersionId);
+  else params.delete("version");
+  try{window.history.replaceState(null,"",location.pathname+"?"+params.toString())}
+  catch(e){/* history may be unavailable in local previews */}
+  for(const link of document.querySelectorAll(".site-link")){
+    const target=new URL(link.href,location.href);
+    target.searchParams.set("deck",selected);
+    if(selectedVersionId)target.searchParams.set("version",selectedVersionId);
+    else target.searchParams.delete("version");
+    link.href=target.href;
+  }
+  updateSelectionBadge();
+}
+function summon(key,{versionId=null,remember=true}={}){
+  const deck=data.decks.find(d=>d.key===key);
+  if(!deck)return;
+  selected=key;
+  selectedVersionId=versionId&&localVersions.some(v=>v.id===versionId&&v.baseKey===key)?
+    versionId:null;
+  activeCounts=selectedVersionId?{...versionById(selectedVersionId).counts}:null;
+  history=[];
+  if(remember){
+    lastCommanderId=deck.commander_id;
+    preferredByCommander[deck.commander_id]={key,version:selectedVersionId};
+    persist();
   }
   $("app-content").hidden=false;
   $("app-content").style.animation="none";
   void $("app-content").offsetWidth;$("app-content").style.animation="";
-  originalSound("summon");
   selectedSeed=String(data.seeds[0]);
   renderOverview();renderLibrary();renderRecords();initializeDraft();
-  showPage();
-  const params=new URLSearchParams(location.search);
-  params.set("deck",key);
-  try{window.history.replaceState(null,"",location.pathname+"?"+params.toString())}
-  catch(e){/* query string is optional */}
-  for(const link of document.querySelectorAll(".site-link")){
-    const target=new URL(link.href,location.href);
-    target.searchParams.set("deck",key);
-    link.href=target.href;
-  }
+  showPage();syncPageNavigation();
 }
 function showPage(){
   const enabled={
