@@ -100,6 +100,20 @@ class StaticPagesTests(unittest.TestCase):
         self.assertIn(".compact-selection",css)
         self.assertIn(".commander-picker",css)
 
+    def test_independent_add_remove_controls_require_valid_full_deck_on_save(self):
+        self.run_build()
+        html=(self.destination/"editor.html").read_text(encoding="utf-8")
+        js=(self.destination/"app.js").read_text(encoding="utf-8")
+        self.assertIn('id="remove-one-button"',html)
+        self.assertIn('id="add-one-button"',html)
+        self.assertIn('id="save-local"',html)
+        self.assertIn('function changeDraftQuantity(action)',js)
+        self.assertIn('validateCounts(candidate,{allowIncomplete:true})',js)
+        self.assertIn('validateCounts(activeCounts)',js)
+        self.assertIn('$("save-local").disabled=total!==100',js)
+        self.assertIn('$("export-deck").disabled=total!==100',js)
+        self.assertIn('function hasUnsavedChanges()',js)
+
     def test_all_canonical_commander_art_paths_are_optional_official_cdn(self):
         self.run_build()
         data=json.loads((self.destination/"decks.json").read_text())
