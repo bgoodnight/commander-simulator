@@ -64,25 +64,26 @@ jobs:
               echo "Branch-compatible static site already matches export." >> "$GITHUB_STEP_SUMMARY"
             fi
           fi
-      - name: Check and best-effort enable Pages
+      - name: Check Pages publishing mode (avoid competing deployments)
         id: pages-check
         env:
           GH_TOKEN: ${{ github.token }}
         run: |
-          if ! gh api "repos/${{ github.repository }}/pages" >/dev/null 2>&1; then
-            # This is an explicit user-requested Pages setup. The token may
-            # lack Administration:write or the owner's plan may not support
-            # Pages on a private repo. Never change repo visibility.
-            gh api --method POST "repos/${{ github.repository }}/pages" \
-              -f build_type=workflow >/dev/null 2>&1 || true
-          fi
-          if gh api "repos/${{ github.repository }}/pages" >/dev/null 2>&1; then
+          # Branch-based Pages already publishes the generated docs/deck-lab
+          # directory from main. Only upload/deploy the custom Actions Pages
+          # artifact if Settings > Pages explicitly selected GitHub Actions.
+          # Never attempt to change the user's Pages settings or visibility.
+          BUILD_TYPE="$(gh api "repos/${{ github.repository }}/pages" --jq '.build_type' 2>/dev/null || true)"
+          if [ "$BUILD_TYPE" = "workflow" ]; then
             echo "enabled=true" >> "$GITHUB_OUTPUT"
-            echo "Pages is enabled; continuing to static deployment." >> "$GITHUB_STEP_SUMMARY"
+            echo "Pages uses GitHub Actions; deploying the verified static artifact." >> "$GITHUB_STEP_SUMMARY"
           else
             echo "enabled=false" >> "$GITHUB_OUTPUT"
-            echo "Static Deck Lab built, tested and uploaded as deck-lab-static-preview, but Pages is not enabled or the account plan/token cannot enable private repository Pages." >> "$GITHUB_STEP_SUMMARY"
-            echo "To publish, enable Settings > Pages > Build and deployment: GitHub Actions, then re-run this workflow." >> "$GITHUB_STEP_SUMMARY"
+            if [ -n "$BUILD_TYPE" ]; then
+              echo "Pages uses branch publishing ($BUILD_TYPE). The validated static site was committed to docs/deck-lab and the normal branch Pages build will publish it. Skipping a competing custom deployment." >> "$GITHUB_STEP_SUMMARY"
+            else
+              echo "Pages unavailable. The validated static site remains available as a downloadable preview artifact." >> "$GITHUB_STEP_SUMMARY"
+            fi
           fi
       - name: Configure Pages
         if: steps.pages-check.outputs.enabled == 'true'
