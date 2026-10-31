@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>Commander Deck Lab · Read-only MVP</title>
+  <title>Commander Deck Lab · Versioned Deck Editor</title>
   <style>
     :root { color-scheme: dark; font-family: system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;
       --bg:#0d1420; --panel:#172131; --panel2:#202d3e; --edge:#334256;
@@ -74,7 +74,7 @@
       <h1>Deck Lab</h1>
       <p>Select a verified deck, inspect its cards, and explore the first six turns.</p>
     </div>
-    <div class="flag">U0 preview · read-only</div>
+    <div class="flag">U1 · versioned deck editing</div>
   </header>
   <div class="notice"><strong>Observation mode only.</strong> This preview models draws, basic land plays and
     printed mana-value candidates. It does <strong>not</strong> cast spells, execute card abilities, resolve combat,
@@ -125,8 +125,34 @@
       <div id="run-status" class="status" role="status" aria-live="polite"></div>
       <div id="result"><div class="empty">Choose a deck and run an observation to view the turn timeline.</div></div>
     </section>
+    <section class="panel wide" aria-labelledby="editor-title">
+      <h2 id="editor-title">3 · Theorycraft a new version</h2>
+      <p class="small">Swap one card for another from the verified offline catalog. Your original deck remains untouched. No Scryfall requests occur while editing.</p>
+      <div class="formrow" style="margin-top:15px">
+        <div><label for="remove-card">Remove from the selected deck</label>
+          <select id="remove-card" disabled><option>Select a deck first</option></select></div>
+        <div><label for="add-card">Add card (type an exact cached name)</label>
+          <input id="add-card" list="card-options" autocomplete="off" placeholder="e.g. Midnight Banshee"></div>
+      </div>
+      <div class="buttonrow">
+        <button id="swap" disabled>Try swap</button>
+        <button id="undo" class="secondary" disabled>Undo last</button>
+        <button id="revert" class="secondary" disabled>Revert all</button>
+      </div>
+      <div id="draft-status" class="status" role="status" aria-live="polite">
+        Select a deck to start an editable copy.
+      </div>
+      <div id="draft-diff" class="chips"></div>
+      <div class="formrow" style="margin-top:17px">
+        <div><label for="version-title">Save As new version</label>
+          <input id="version-title" maxlength="70" placeholder="Mortarion · Token experiment 1"></div>
+        <div style="align-self:end"><button id="save" disabled>Save validated copy</button></div>
+      </div>
+      <h3 style="margin-top:20px">Saved local versions</h3>
+      <div id="versions" class="small muted">No versions loaded.</div>
+    </section>
     <section class="panel wide" aria-labelledby="cards-title">
-      <h2 id="cards-title">3 · Deck contents</h2>
+      <h2 id="cards-title">4 · Deck contents</h2>
       <p class="small" style="margin:-5px 0 14px">These are printed card characteristics, not promises that their abilities are simulated.</p>
       <div class="tablebox">
         <table aria-label="Cards in selected deck">
@@ -142,6 +168,106 @@
 const $ = id => document.getElementById(id);
 let currentDeck = null;
 let lastResult = null;
+let draftSwaps = [];
+let latestDraft = null;
+let draftBusy = false;
+async function writeJson(path,body) {
+  const response=await fetch(path,{
+    method:"POST",headers:{"Content-Type":"application/json"},
+    body:JSON.stringify(body)
+  });
+  const result=await response.json();
+  if(!response.ok)throw Error(result.error||("HTTP "+response.status));
+  return result;
+}
+async function refreshVersions() {
+  try {
+    const data=await read("/api/versions");
+    const root=$("versions");clear(root);
+    if(!data.versions.length) {
+      root.textContent="No saved custom versions yet.";return;
+    }
+    for(const version of data.versions) {
+      const line=el("p",version.title+" · "+version.commander
+        +" · "+version.deck_sha256.slice(0,10),"small");
+      root.appendChild(line);
+    }
+  } catch(error) { $("versions").textContent="Version list unavailable: "+error.message; }
+}
+function populateRemovalOptions() {
+  const control=$("remove-card");clear(control);
+  if(!currentDeck)return;
+  const counts=new Map(currentDeck.cards.filter(c=>c.zone!=="Commander")
+    .map(c=>[c.name,c.quantity]));
+  for(const swap of draftSwaps) {
+    counts.set(swap.remove,(counts.get(swap.remove)||0)-1);
+    counts.set(swap.add,(counts.get(swap.add)||0)+1);
+  }
+  for(const [name,count] of [...counts.entries()].filter(x=>x[1]>0)
+      .sort((a,b)=>a[0].localeCompare(b[0]))) {
+    const option=el("option",count+" × "+name);option.value=name;
+    control.appendChild(option);
+  }
+  control.disabled=false;
+}
+async function previewDraft() {
+  if(!currentDeck)return;
+  draftBusy=true;
+  $("swap").disabled=true;$("save").disabled=true;
+  try {
+    const result=await writeJson("/api/draft/preview",{
+      base_key:currentDeck.key,changes:draftSwaps
+    });
+    latestDraft=result;
+    $("draft-status").textContent=result.swaps
+      +" swaps · "+result.physical_cards+" valid Commander cards · metadata only.";
+    const diff=$("draft-diff");clear(diff);
+    for(const change of result.diff) {
+      diff.appendChild(el("span",
+        (change.delta>0?"+":"")+change.delta+" "+change.name,"chip"));
+    }
+    populateRemovalOptions();
+  } catch(error) {
+    latestDraft=null;
+    $("draft-status").textContent="Draft not valid: "+error.message;
+  } finally {
+    draftBusy=false;
+    $("swap").disabled=!currentDeck;
+    $("save").disabled=!latestDraft||draftSwaps.length===0;
+    $("undo").disabled=draftSwaps.length===0;
+    $("revert").disabled=draftSwaps.length===0;
+  }
+}
+async function trySwap() {
+  if(!currentDeck||draftBusy)return;
+  const old=$("remove-card").value;
+  const name=$("add-card").value.trim();
+  if(!name) {
+    $("draft-status").textContent="Choose an exact card name from the local catalog.";
+    return;
+  }
+  draftSwaps.push({remove:old,add:name});
+  await previewDraft();
+  if(!latestDraft)draftSwaps.pop();
+  populateRemovalOptions();
+}
+async function saveDraft() {
+  if(!latestDraft||draftBusy)return;
+  const title=$("version-title").value.trim();
+  if(!title) { $("draft-status").textContent="Enter a version name before saving.";return; }
+  $("save").disabled=true;
+  try {
+    const saved=await writeJson("/api/draft/save",{
+      base_key:currentDeck.key,changes:draftSwaps,title
+    });
+    $("draft-status").textContent="Saved immutable deck copy: "+saved.title
+      +" · "+saved.deck_sha256.slice(0,12);
+    await refreshVersions();
+  } catch(error) {
+    $("draft-status").textContent="Unable to save: "+error.message;
+  } finally { $("save").disabled=!latestDraft; }
+}
+
 const nameLabels = {
   magnus_premium:"Magnus · Premium", magnus_budget:"Magnus · Budget",
   mortarion_current:"Mortarion · Current", mortarion_ideal:"Mortarion · Ideal",
@@ -210,6 +336,15 @@ async function init() {
     select.addEventListener("change",loadDeck);
     $("run").addEventListener("click",runObservation);
     $("copy").addEventListener("click",copyJSON);
+    $("swap").addEventListener("click",trySwap);
+    $("undo").addEventListener("click",async()=>{
+      if(draftSwaps.length){draftSwaps.pop();await previewDraft();}
+    });
+    $("revert").addEventListener("click",async()=>{
+      draftSwaps=[];await previewDraft();
+    });
+    $("save").addEventListener("click",saveDraft);
+    await refreshVersions();
     $("deck-status").textContent=data.decks.filter(d=>d.observation_available).length
       +" of "+data.decks.length+" decks have validated offline metadata.";
     await loadDeck();
@@ -225,6 +360,11 @@ async function loadDeck() {
   try {
     const data=await read("/api/deck?key="+encodeURIComponent(key));
     currentDeck=data;
+    draftSwaps=[];
+    $("add-card").value="";
+    $("version-title").value="";
+    populateRemovalOptions();
+    await previewDraft();
     $("commander").textContent=data.commander;
     $("ownership").textContent=inventoryLabels[data.label]||data.label;
     $("count").textContent=data.physical_cards;
