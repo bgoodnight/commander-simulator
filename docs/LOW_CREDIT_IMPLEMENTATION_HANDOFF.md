@@ -14,9 +14,9 @@ Updated October 31, 2026. **Priority is an early usable multi-deck simulator**, 
 
 **Do not begin with the old Slice A per-card directory.** The pure `commander_sim.abilities.AbilityCatalog` already exists and is adequate as the starter ability-selection seam. Defer broad named-card definitions while we deliver actual basic gameplay for two different commanders. Complete one coherent slice per Work session; stop at a passing commit with coverage and the next handoff.
 
-### Slice 0 — FIRST: shared offline card catalog (M0)
+### Slice 0 — DONE: shared offline card catalog implementation (M0)
 
-**Goal:** every card identity is retrieved at most when missing, reused across all imported decks; per-deck reproducibility is preserved.
+**Goal achieved at code/test level (851 total suite tests):** `commander_sim.card_cache` + cache-first importer and revision-pinned manifests are committed; overlapping deck/replay/no-network regressions pass. **Do not redo the cache architecture.** M1 still must **populate** a real shared local catalog by seeding already checked-in snapshots, then import missing names only via explicit commands. [Usage guide](CARD_METADATA_CACHE.md). The steps below remain historical acceptance details.
 
 1. Inspect existing `tools/fetch_deck_identities.py`, `commander_sim/snapshots.py`, `commander_sim/identities.py` and checked-in snapshots. The present per-deck snapshots hash the exact deck; do not destroy that invariant or fetch again when a card appears elsewhere.
 2. Implement a **shared, immutable, versioned offline Scryfall record store keyed by Oracle ID**, with a name/face-alias index. Import code checks this store **before** any optional network request. Fetch unresolved names in batches only on explicit import/refresh, normalize and validate the exact identity; save a pinned **deck file SHA-256 → Oracle ID + record revision** manifest. An absent cached Oracle ID is allowed only in offline mode with an explicit diagnostic, not a silent guess.
@@ -24,7 +24,7 @@ Updated October 31, 2026. **Priority is an early usable multi-deck simulator**, 
 4. Write mocked-network tests for: first missing fetch; second identical import **zero requests**; another overlapping deck fetches **only new identities**; unchanged hashes and immutability; ambiguities/revisions fail closed; zero network in a six-turn observation and game-start/replay path.
 5. Run targeted tests and the 37-suite regression runner, update expected test count, commit and stop. A runtime card effect implementation is **out of scope**.
 
-**Exit:** the API is used only for explicit import/refresh; repeated/deck-overlapping imports and simulations reuse local verified records without Scryfall calls.
+**Exit achieved for implementation/tests:** the API is used only on explicit import/refresh, repeated and overlapping imports reuse local verified records, and simulations read only offline data. A populated catalog covering all real deck variants is M1 work.
 
 ### Slice 1 — Every deck is importable; observations are honest (M1)
 
@@ -92,7 +92,7 @@ Do not begin head-to-head by default. If it is reprioritized **after U0–U4 are
 
 ## A copyable starting prompt for the next Work session
 
-> Read AGENTS.md, ROADMAP.md's priority table, docs/MULTI_DECK_MVP.md and docs/LOW_CREDIT_IMPLEMENTATION_HANDOFF.md. Check latest main SHA and CI; preserve strict v35 baseline. **Perform Slice 0 (M0) ONLY:** upgrade the existing Scryfall import to a shared deduplicated offline Oracle-ID catalog plus per-deck pinned SHA manifests. Check the cache before requesting card names; allow API calls only in explicit import/refresh; make identical and overlapping imports issue zero/unnecessary requests; offline game runs must make zero requests. Do not redo AbilityCatalog, implement unique cards, add runtime memoization, or start later slices. Add mocked-network and regression tests, update run_all_tests.py expected counts, commit one coherent milestone, and report SHA/tests/limitations before stopping.
+> Read AGENTS.md, ROADMAP.md, docs/CARD_METADATA_CACHE.md, docs/MULTI_DECK_MVP.md and this handoff. Check the latest main commit and CI. **Perform Slice 1 (M1) ONLY:** seed the existing shared Oracle-ID catalog from the checked-in, hash-matched Flameslinger/Gisa/Mortarion receipt-only snapshots with **zero API calls**, then create **distinct pinned manifests** for Magnus Premium/Budget, Mortarion Current/Ideal and Necrons, fetching only missing identities during explicit import. Generalize validated deck loading/observation across commanders, produce one correct six-turn labeled observation per variant and record unresolved metadata. Do **not** redo `commander_sim.card_cache`, attempt head-to-head, implement full card effects or start M2/U0. Run targeted and full tests, update the suite count, make one passing commit and stop.
 
 ## Stop conditions / avoiding wasted credits
 
