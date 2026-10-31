@@ -1,1 +1,3 @@
 2026-10-31 one-time user-requested refresh: fetch Scryfall's full canonical English Magic card-name index once, store verified names for entirely local Deck Lab autocomplete. Only this marker change or a manual workflow dispatch invokes the network request; routine typing and simulation never do.
+
+Second explicitly requested one-shot attempt after isolating cache-only regression tests from the new full-name dataset (2026-10-31).
