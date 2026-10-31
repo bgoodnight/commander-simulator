@@ -258,7 +258,10 @@ class PriorityTable(ManaTable):
         super().assert_consistent()
         s = getattr(self, 'spell_stack', None)
         if isinstance(s, PriorityStack) and not self.safety_stop:
-            framed = {f.source_id for f in s.frames if f.kind == 'spell'}
+            framed = {f.source_id for f in s.frames if f.kind == 'spell' and f.source_id is not None}
+            virtual = (f for f in s.frames if f.kind == 'spell' and f.source_id is None)
+            if any(not getattr(self, 'is_virtual_spell', lambda action: False)(f.action) for f in virtual):
+                raise AssertionError('Unregistered nonphysical spell')
             # During a resolution its physical ticket remains until completion.
             if not s.resolving and framed != set(self.zones._pending):
                 raise AssertionError('Physical spells and priority frames diverged')
