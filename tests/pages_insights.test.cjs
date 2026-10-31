@@ -26,7 +26,7 @@ test("aggregates the archive, not only the selected seed",()=>{
   assert.equal(value.metrics.earlyLand.count,11);
   assert.equal(value.metrics.t3Sources.pct,100);
   assert.equal(value.metrics.t4Candidate.pct,100);
-  assert.deepEqual(value.openingGroups.find(x=>x.label==="2").seeds,
+  assert.deepEqual(value.openingGroups.find(x=>x.label==="4").seeds,
     Array.from({length:11},(_,i)=>String(i)));
   assert.equal(value.candidateGroups[3].numerator,11);
 });
