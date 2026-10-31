@@ -43,7 +43,7 @@ class StaticPagesTests(unittest.TestCase):
 
     def test_only_allowlisted_site_data_and_no_workspace_are_exported(self):
         self.run_build()
-        permitted={"index.html","summary.html","editor.html",
+        permitted={"index.html","summary.html","results.html","editor.html",
                    "app.js","results_insights.js","style.css","decks.json",
                    "observations.json","names.json","build-manifest.json",".nojekyll"}
         self.assertEqual({p.name for p in self.destination.iterdir()},permitted)
@@ -63,7 +63,7 @@ class StaticPagesTests(unittest.TestCase):
 
     def test_default_results_and_separate_shareable_summary_editor_pages(self):
         manifest=self.run_build()
-        for name in ("index.html", "summary.html", "editor.html"):
+        for name in ("index.html", "summary.html", "results.html", "editor.html"):
             with self.subTest(page=name):
                 page=(self.destination/name).read_text(encoding="utf-8")
                 self.assertIn('data-page="results"',page)
@@ -80,6 +80,20 @@ class StaticPagesTests(unittest.TestCase):
         self.assertIn("IntersectionObserver",js)
         self.assertIn("window.d3",js)
         self.assertIn("window.history.replaceState",js)
+
+    def test_summary_is_default_and_results_has_dedicated_url(self):
+        self.run_build()
+        page=(self.destination/"index.html").read_text()
+        app=(self.destination/"app.js").read_text()
+        self.assertIn('data-page="results" href="./results.html"',page)
+        self.assertIn('data-page="summary" href="./index.html"',page)
+        self.assertIn('location.pathname.endsWith("/results.html")?"results"',app)
+        self.assertIn('location.pathname.endsWith("/editor.html")?"editor":"summary"',app)
+        self.assertTrue((self.destination/"results.html").is_file())
+        self.assertEqual(
+            (self.destination/"index.html").read_bytes(),
+            (self.destination/"summary.html").read_bytes()
+        )
 
     def test_compact_commander_picker_and_named_version_workflow(self):
         self.run_build()
