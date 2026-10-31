@@ -96,7 +96,7 @@ class StaticPagesTests(unittest.TestCase):
                        "lastCommanderId", "isUnsimulatedVersion",
                        "selectedVersionId", "versionById", "saveVersion"):
             self.assertIn(needle,script)
-        self.assertIn("No cached observations for this saved deck",script)
+        self.assertIn("No cached simulations for",script)
         self.assertIn(".compact-selection",css)
         self.assertIn(".commander-picker",css)
 
