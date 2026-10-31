@@ -1,6 +1,6 @@
 # Hybrid simulation and reusable behavior — implementation work plan
 
-Status: **approved planning direction; not yet implemented**. Read with [ROADMAP.md](../ROADMAP.md), [DEVELOPMENT_GUIDE.md](DEVELOPMENT_GUIDE.md), and the [P0.5 engine review](P05_ENGINE_REVIEW.md). This document prioritizes value from an unfamiliar validated deck **before** full per-card rules coverage. Existing strict rules, validated metadata, and historical results remain the correctness baseline.
+Status: **partially implemented identity/query/observation foundations; no executable hybrid dispatch yet**. Read with [ROADMAP.md](../ROADMAP.md), [DEVELOPMENT_GUIDE.md](DEVELOPMENT_GUIDE.md), the binding [Progressive Ability-Composition Architecture](ABILITY_COMPOSITION_ARCHITECTURE.md), and [P0.5 engine review](P05_ENGINE_REVIEW.md). This document prioritizes value from an unfamiliar validated deck **before** full per-card rules coverage. Existing strict rules, validated metadata, and historical results remain the correctness baseline.
 
 ## Goal and non-goals
 
@@ -58,16 +58,29 @@ For each ability/component record `exact_subset | simplified | unsupported` (wit
 
 **Gate:** v0.7 produces one reproducible narrative with correctly labeled gaps, conservation of physical cards, and a measured single-run baseline; **an unfamiliar verified creature can be found with an implemented tutor and inspected as a valid removal target without its own effect implementation**; the same input is replayable.
 
-### H2 — Minimal hybrid effects on shared primitives (work with P1/P2; do not create another table inheritance layer)
+### H1.5 — Per-ability composition, exact-first promotion and persistent shared keywords (P0.65; required before H2)
 
-1. Add opt-in ability descriptors and dispatch *at ability level* with exact-first selection: an exact handler overrides/blocks a simplified handler for that ability, while other unsupported abilities on the card remain independently reported.
+Use the **binding [ability composition contract](ABILITY_COMPOSITION_ARCHITECTURE.md)**. This is the immediate architectural milestone once P0.6's identity/queries are available; build the pure registry/dispatcher independently from the old runtime, then wire it into the single authoritative state.
+
+1. Extend `CardIdentity` / face metadata with **verified source text, printed keywords, layout and characteristics** without treating Oracle prose as executable. Recognize that multi-face mana values, variable P/T and keyword declarations may still be unknown; flag rather than invent. Keep the Scryfall network fetch at an explicit **import/refresh time only**. Cached offline hash-checked snapshots are the only runtime data source.
+2. Define reviewed typed `AbilitySlot` declarations keyed by **Oracle ID + face + ability slot**, independently from spell/creature bodies and global keyword rules. Include ability kind, timing, target/query predicate, costs, trigger/event hook, effect composition, source revision, needed engine capabilities and omitted text. Generic role labels are *not* permissions or effects.
+3. Implement a deterministic **one-handler-per-slot resolver**: strict selects validated exact only; hybrid selects exact else an explicitly registered reviewed simplified implementation else unsupported; observation resolves no unsupported/simplified ability. A later exact handler **replaces only its matching simplified slot**. Separate abilities and shared double strike/flying/deathtouch/etc. remain active. Split partially exact behavior into disjoint typed suboperations only if proven non-overlapping; otherwise abstain. No double triggers/searches/damage/zone moves.
+4. Keep standard Magic core and supported keyword mechanics globally shared: a creature with printed double strike uses the common two-damage-step engine when implemented, regardless of whether its unique ETB trigger is exact or simplified. Reusable effect compositions (draw, token creation, counter, search, sacrifice, damage/life, recursion) use common legality, payment, target, zones and events; individual named cards only parameterize or replace their **own** ability slots.
+5. Maintain per-ability provenance and fidelity logs: source snapshot, slot/handler revision, exact/simplified/unsupported, assumptions, objects/events touched, downstream-dependent choices and per-metric uncertainty. Report available behaviors at card **and ability** granularity, not just “this card implemented.”
+6. Write the **promotion regression** before modifying legacy gameplay: (a) a simplified creature tutor upgraded to its exact conditional destination without two searches/reveals/shuffles; (b) a creature with independent double strike + unique triggered ability retains double strike and every unrelated slot after exact trigger promotion; (c) two imported cards use one generic keyword/effect implementation without new card-specific engine code; (d) an unfamiliar creature remains targetable by implemented opponent removal/tutors even if its personal triggered ability is unsupported; (e) UNKNOWN restrictions never become legal.
+
+**Gate:** pure ability-registry tests and at least one current-engine vertical slice prove exclusive slot-level override, persistent independent keywords and common objects, explicit unknown behavior, and unchanged strict seeded baselines. H2 cannot be called complete until this gate passes.
+
+### H2 — Minimal hybrid effects on shared primitives (depends on H1.5/P0.65; work with P1/P2, no new table inheritance layer)
+
+1. Wire H1.5's reviewed per-ability descriptors and **one selected handler per slot** into the live authoritative engine: an exact implementation supersedes only its own simplified implementation, with unrelated supported keywords, static rules, activated and triggered abilities intact. No whole-card replacement or duplicate event emission.
 2. Support verified-body-only casting of ordinary creatures/permanents through the same legal action, mana, timing, zone and combat lifecycle in hybrid mode; never collapse them into effectless placeholders or silently drop mandatory restrictions. Track unsupported abilities that might alter resolution or choices, and allow interaction from opponents/other cards using the same predicates and game objects.
 3. Build the first handful of **typed, parameterized** templates: ordinary colored land / conditional tapped land, mana rock, simple draw/filter, token creation, cast-triggered direct damage, conditional counterspell, and bounce/removal. Start only when real cost/timing and required effect primitives exist. Give all instances explicit restrictions and target validation; do not allow a counter to hit an illegal spell type or mana value.
 4. Require shared zone transitions, source-specific mana, target validation and reaction windows. For primitives not yet supported, report a blocked simplified action rather than directly altering state in an ad-hoc shortcut.
-5. For temporary cards, supply a small reviewed mapping from verified printed features to template parameters; no runtime Oracle parsing. One template must serve at least two distinct cards, without a name branch or new table subclass.
+5. For temporary cards, supply a small reviewed mapping from verified printed features **and individual ability declarations** to template parameters; no runtime Oracle parsing and no automatic effects granted by an archetype label. One template must serve at least two distinct cards, without a name branch or new table subclass. For tutors, encode known restrictions explicitly; never silently grant a broader search than the real rules permit.
 6. Run `strict` and `hybrid` from identical starting seeds/snapshots. Ensure strict traces and stored fingerprints remain unchanged.
 
-**Gate:** one v0.7 run makes more meaningful choices than observation alone while visibly labeling every approximate action; an unfamiliar creature/permanent can be *interacted with* by supported removal, a tutor and an opponent without its own card-specific handler; exact gameplay remains identical, and at least two cards reuse each new template.
+**Gate:** one v0.7 run makes more meaningful choices than observation alone while visibly labeling every approximate action; an unfamiliar creature/permanent can be *interacted with* by supported removal, a tutor and an opponent without its own card-specific handler; **a simplified tutor is replaced by exact text while independent keywords and other abilities remain active**; strict gameplay remains identical, and at least two cards reuse each new template.
 
 ### H3 — Generalized colors, reusable keywords, and archetype composition (promote ahead of additional premium-specific effects)
 
@@ -90,6 +103,14 @@ For each ability/component record `exact_subset | simplified | unsupported` (wit
 
 **Gate:** narrative playback explains every notable action and assumption, new code reports honest confidence limits, and differences between strict and hybrid are attributable to logged simplified effects.
 
+## Current implementation inventory (checked 2026-10-31)
+
+**Present:** offline Scryfall snapshots for Flameslinger, Wretched Ranks and an earlier receipt-only Mortarion candidate; `CardRegistry` immutable identities for supported layouts; `Query` conservative YES/NO/UNKNOWN predicates; basic-land six-turn observation; a narrow live-library ordinary U/R verified-creature bridge (strict casting remains unimplemented). P0.5 shares the current historical Magnus-v35 engine for validated compatible deck composition. Latest observed CI at `d0de7d9` passed.
+
+**Not yet present:** universal verified body casting, full face-sensitive characteristic/keyword handling, full B-mana source/payment in live engine, multiple real decks, complete cross-card targets, reusable ability-slot declarations and exact/simplified override resolver, or executable hybrid mode. Old documents describing H0/H1 as entirely future are therefore dated; their **full exit gates** remain open. Do not treat an observation projection as a played game.
+
+**Missing snapshot fixtures:** obtain reviewed hash-checked identities for *Mortarion current ordered-plus-owned*, *Mortarion ideal*, and *Necron Dynasties* (different decks from the receipt-only Mortarion snapshot). All Scryfall calls happen outside game simulation.
+
 ## Implementation safeguards
 
 - **No silent upgrade**: metadata-known + effect-unknown does not mean "creature = vanilla creature" or "instant = draw a card". A safe known creature body may exist independently of its ability; disclose the missing text.
@@ -97,16 +118,18 @@ For each ability/component record `exact_subset | simplified | unsupported` (wit
 - **No strategic leakage**: pilots see only current public/allowed private information; never reveal hidden cards to make a simplified card more useful.
 - **No blanket pseudo-rules**: do not skip cost payment, timing, target legality, stack, priority, SBA, Commander identity restrictions, or conservation checks in the hybrid engine.
 - **No separate shadow game state**: every executable approximation uses the shared authority; observation-only can make projections, visibly labeled.
+- **No whole-card overwrite**: exact implementation replaces only the same ability slot's simplified handler, not printed identity, shared keywords or unrelated abilities. Never execute both exact and simplified handlers for the same slot or double-subscribe to events.
+- **No role-to-rule shortcuts**: Oracle text and archetype labels guide reviewed registration, never automatically create unrestricted tutor, mana, attack, removal or trigger effects.
 - **No unsupported infinite loops**: bounded execution and resource accounting remain mandatory.
 - **Coverage is not win-rate validity**: arbitrary cards, unresolved opponent policies, and omitted triggered abilities can bias outcomes; performance results remain exploratory.
 
 ## Code structure and suggested interfaces (design targets, not currently shipped APIs)
 
 - `CardIdentity` / `FaceIdentity`: verified immutable printed characteristics/provenance.
-- `AbilityDefinition`: typed capabilities and restrictions, independent of strategy.
+- `AbilitySlot` / `AbilityDefinition`: stable Oracle ID+face+slot identifiers, reviewed typed capabilities and restrictions, independent of strategy; one exact-first implementation selected per slot, preserving other slots.
 - `EffectTemplate` / `KeywordTemplate`: bounded parameterized compositions of canonical operations.
 - `RoleProfile`: reviewed strategic tags, separate from rules text and legality.
-- `FidelityRecord`: per-ability execution level, assumptions, omitted sub-effects and provenance.
+- `FidelityRecord`: per-ability execution level, selected handler/version, assumptions, omitted sub-effects, downstream dependencies and provenance.
 - `SimulationConfig(mode, deck, seed, threat_schedule, pilot)` and a single result/report pipeline.
 - `ApproximationEvent`: ability, action/decision, created state IDs, affected metrics, and dependent later actions.
 
@@ -130,12 +153,12 @@ These names are illustrative; prefer the package's established domain convention
 1. **v0.7 temporary Magnus** loads from the authoritative file; missing-snapshot identities are supplied offline; strict mode reports gaps, observation mode narrates six turns, hybrid makes at least one meaningful ordinary action with an explicit simplified handler.
 2. **v1.14 premium** retains strict seed/reference parity, and the same current engine/registry accepts the deck without a premium-only class.
 3. **Mono-black fixture** uses genuine Swamp/B payments once the common mana gate passes; demonstrate a draw creature, a simple sac outlet and a death/life-change template with recorded fidelity. Later import the user's actual mono-black list only from a verified decklist; do not infer its contents.
-4. **Template reuse test**: two independently registered cards share a template with different parameters, each exposes correct timing, targets and costs and no new engine subclass is introduced.
+4. **Template/override reuse test**: two independently registered cards share a template with different parameters, each exposes correct timing, targets and costs and no new engine subclass is introduced. An exact version replaces a simplified tutor **only on its own ability slot**; a separate triggered ability and common combat keyword remain unchanged; event/zone operations occur exactly once.
 5. **Audit/review report**: strict versus hybrid per-metric differences, censored outcomes, benchmark times and limitations for every demonstration.
 
 ## Terra implementation cadence
 
-- Deliver H0/H1 (including universal object/query/target acceptance) first for immediate user value, then H2 slice while P1/P2 are extracted; prioritize H3 shared effects/keywords before another broad named-card batch.
+- Continue the partially built H0/H1 identity, observation and universal object/query layer; **complete H1.5/P0.65 declarative ability composition and promotion tests before calling H2 executable hybrid complete**. Then implement a small H2 slice on real rules services while P1/P2 are extracted; prioritize H3 shared effects/keywords before any broad named-card batch.
 - Commit each working gate independently with tests, an example narrative, updated coverage and a short performance record. Do not require an entire phase to finish before shipping a usable observation path.
 - Escalate decisions that change priority, payments, identity, event batching, or reproducibility to architectural review. Keep historical implementations regression-accessible.
 - Revisit individual-card queue only when a reusable template is missing or a high-impact card supplies a second independent validation of a mechanism.
