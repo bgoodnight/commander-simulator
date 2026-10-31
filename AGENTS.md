@@ -19,10 +19,17 @@ Applies to implementation on this repository's active branch. Read, in this orde
 ## Current development order
 
 1. Finish P0.6: stable unified per-face characteristics and universal target/query integration from existing `commander_sim.identities`, `queries`, `snapshots` and narrow live-library bridge. The observation runner is a projection, not a valid gameplay implementation.
-2. **P0.65 mandatory**: build pure per-slot ability declaration/dispatch registry, strict/hybrid/observation selection, provenance/fidelity and *promotion/no-duplication tests*. Do this **before** large named-card batches or claims of playable hybrid.
+2. **P0.65 mandatory, partly implemented**: `commander_sim.abilities` now has a **pure, non-executing** `AbilityCatalog`, exact/simplified per-slot selection and tests. **Extend rather than replace it** with a reviewed typed card-ability directory, per-slot coverage/provenance, and an integration adapter to canonical events/effects; the existing tests prove selection only, **not** actual double-trigger safety. Finish live promotion/no-duplication tests before large named-card batches or any claim of playable hybrid.
 3. P0.7: wire opt-in hybrid into the **same** legal-action, cost, payment, stack, zone and event engine; implement verified-body-only casting for safe ordinary permanents and several reviewed shared templates, each demonstrated on at least two different cards.
 4. Expand canonical W/U/B/R/G/C mana and event/keyword/effect primitives; compare Flameslinger, Mortarion current and ideal, Wretched Ranks, Necron Dynasties with an authentic offline snapshot for **each deck file**. Ensure the current/ideal Mortarion and Necron decks get their own snapshots; earlier receipt-only Mortarion snapshot does not validate them.
 5. Then resume targeted named-card implementations as **reviews of reusable mechanics** rather than proliferating one-off handlers.
+
+## Usage-efficient working procedure
+
+- Start with [LOW_CREDIT_IMPLEMENTATION_HANDOFF.md](docs/LOW_CREDIT_IMPLEMENTATION_HANDOFF.md) and the latest commit/CI. Scope a single Slice A/B/C/D; do not re-audit the entire historical engine or redo already committed foundations.
+- Run **targeted** tests during edits, then the complete 37-suite `python run_all_tests.py` once at a coherent commit. When adding package tests, update both `('package_tests', N)` and the final reported total in `run_all_tests.py` without removing the count gate. Inspect failing CI job logs rather than blindly retrying full tasks.
+- Prefer a smaller coding model on low/medium reasoning for self-contained mechanical changes, and reserve more expensive reasoning for cross-engine priority/event correctness, architectural review and difficult failures. No unbounded "continue until complete" instructions.
+- Fetch card metadata once on explicit import, then reuse a locally verified, shared Oracle-ID catalog when it exists; do not re-fetch card identities on each run or per deck when already cached.
 
 ## Milestone completion checklist
 
