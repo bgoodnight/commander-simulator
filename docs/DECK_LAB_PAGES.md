@@ -31,6 +31,23 @@ python -m http.server 8765 --directory ./_pages_dist
 
 Then open `http://127.0.0.1:8765/` in Work's cloud browser to visually inspect desktop/mobile, animation, card artwork, charts and interactions. This does **not** require Pages activation.
 
+## Three-page navigation and results-first landing
+
+The static build now has **three real HTML entrypoints** (shared source/assets), each supporting an optional `?deck=magnus_premium` query parameter:
+
+- **Simulation Results** — `index.html`, the **default home page**. Select a cached seed, inspect six-turn observations, then scroll through **three D3-animated visualizations** of modeled sources, observed hand size and mana-value candidate counts. The charts derive exclusively from the fixed-seed Python observations and are clearly labeled as **not real played spells**. D3 is progressive enhancement: local SVG bars remain visible without the CDN, and reduced-motion settings disable the animation.
+- **Deck Summary** — `summary.html`. Commander portrait/art, card composition, printed mana curve, pinned metadata and limitations.
+- **Card List & Editor** — `editor.html`. Search the verified cardlist, open card art/details, use offline full-name autocomplete, try a one-for-one swap, undo/revert, save browser-local versions and download a decklist. A user-triggered fetch can retrieve missing printed card details from Scryfall.
+
+The top brass-and-stone navigation is shared by all pages; selected commander travels between pages via query string. The original drag-to-summon rune remains available on each page.
+
+**GitHub Pages publishing works with either setting:**
+
+- **Branch-based Pages (main / root):** root `index.html` redirects to the generated `docs/deck-lab/index.html`. The static export workflow also publishes its limited generated site into `docs/deck-lab/`, where `summary.html` and `editor.html` live beside the data. Jekyll has no Python requirement.
+- **GitHub Actions Pages:** the release workflow publishes the **same** generated files directly as the Pages artifact, with `index.html` at the deployment root. The source branch and repo visibility need not change to use the built companion.
+
+In either mode, ensure the latest Pages build actually completed before assuming a public URL works. Do not use the repository's `web/pages/index.html` directly as a hosted page—it is **source HTML** without adjacent generated `decks.json`, `observations.json` and `names.json`. The static build is the deployable website.
+
 ## What the static version already supports
 
 - **Commander summoning chamber:** six deck variants displayed as art-backed draggable cards; drag a portrait onto the central rune or tap/click it (keyboard focusable) on touch devices. The chosen deck fades in.
