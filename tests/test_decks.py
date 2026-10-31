@@ -50,6 +50,17 @@ class DeckProviderTests(unittest.TestCase):
             with self.subTest(line=line), self.assertRaises(ValueError):
                 self.provider.parse('Commander\n1 Magnus the Red\nLibrary\n' + line)
 
+    def test_standalone_comments_are_allowed_but_not_card_entries(self):
+        text = ('# Verified source and deck description\\n'
+                'Commander\\n1 Magnus the Red\\n'
+                '# 100 physical cards including commander\\n'
+                'Library\\n# Lands (99)\\n99 Island\\n')
+        deck = self.provider.parse(text)
+        self.assertEqual(deck.count, 100)
+        self.assertIn(('Library', 'Island', 99), deck.cards)
+        with self.assertRaisesRegex(ValueError, 'Invalid deck entry'):
+            self.provider.parse(text + 'not a valid card entry\\n')
+
     def test_descriptive_sections_and_adventure_oracle_name(self):
         text = ('Commander\n1 Magnus the Red\nCreatures (0)\n'
                 'Lands (99)\n1 Lindblum, Industrial Regency // Mage Siege\n98 Island\n')
