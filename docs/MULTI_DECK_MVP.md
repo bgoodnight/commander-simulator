@@ -1,0 +1,65 @@
+# Product-first delivery plan: usable multi-deck Commander MVP
+
+**Decision (October 31, 2026):** Optimize development order for the **earliest useful comparison of multiple authentic decklists**, not for maximizing exact named-card rules coverage. This is the prioritized delivery sequence. [ROADMAP.md](../ROADMAP.md) retains P0–P7 as an architectural/dependency inventory; this plan determines which small slices should ship next. Follow [AGENTS.md](../AGENTS.md) and [ABILITY_COMPOSITION_ARCHITECTURE.md](ABILITY_COMPOSITION_ARCHITECTURE.md) for fidelity, safety and replay contracts.
+
+## Definition of usable
+
+**MVP 1: multiple authentic decks tested separately** is useful when one shared engine accepts at least **Magnus premium** and **one verified mono-black deck** (prefer the factory Wretched Ranks as the first simple B-mana fixture; then Mortarion current and Necrons), supports a real non-starting seven-card hand/draw/mulligan choice, land/source accounting, **source-paid** basic casting, legal ordinary creature/permanent objects, relevant shared combat and a few safe generic actions, and produces deterministic first-six-turn summaries. It may use the existing abstract opponents for the first milestone, but the **same** game engine, deck/provider, legality and zone objects must drive every tested deck. Every card is imported and represented; **not every card is executable**. A first MVP can complete early-game narratives without reaching a reliable game outcome.
+
+**MVP 2: two actual imported decks at the same table** follows when two independently loaded detailed deck seats can cast, attack, respond, target and affect each other under the same rules. Other seats may remain abstract with explicit labels. This is different from separately testing two decks; don't conflate milestones.
+
+Both MVPs produce **mechanics/coverage and sequencing diagnostics**, not validated power rankings or Commander win rates while significant abilities are missing or simplified. Publish omission counts and first materially affected choice.
+
+## Non-negotiable mechanics versus deferrable detail
+
+**Required for MVP 1:** exact 100-card/commander/color-identity validation, all deck metadata and card instances; basic W/U/B/R/G/C source-payment contract as needed by test decks; land drops and common mana rocks when declared and verified; safe ordinary casting into the authoritative zones; tapping, attacks/blocking/damage/state-based deaths, basic relevant keywords (e.g. flying, menace, double strike only once their global implementation is complete); legal type/subtype/color/mana-value/P/T queries that can find and target unfamiliar cards; draw/turn sequence; deterministic seed/replay, action omissions and fidelity instrumentation. An imported card's personal effect **may be unsupported**, but must not erase its printed characteristics or make it invisible to others. Unknown mandatory static/replacement/ETB, targeting restrictions, complex costs or legality must block or be reported as uncertain, never silently treated as absent.
+
+**Useful generic behavior as soon as primitives exist:** draw, create creature token, destroy/bounce/counter, life change, sacrifice, ordinary type-constrained search, graveyard move/return, common death/cast triggers; reviewed parameters and per-ability handler slots only. Add **a narrow tested vertical slice** rather than implementing every type of spell before any deck is loadable.
+
+**Defer until after MVP 1/2:** all unique Mortarion/Gisa/Necron/Magnus triggers; recursive loops and unusual replacement effects; exhaustive multiface/transform coverage; broad individual-card queue, sophisticated tutoring heuristics, unvalidated win-rate calibration, speculative performance memoization and massive Monte Carlo sweeps. Advanced cards may remain explicitly unsupported or reviewed approximations; don't fake game outcomes.
+
+## Priority-ordered delivery gates
+
+| Gate | Product outcome | Minimum independently testable acceptance |
+|---|---|---|
+| **M0 — Offline shared card catalog (FIRST)** | Scryfall identities fetched **once per missing identity** on explicit import/refresh; no card API calls in a game | Deduplicated by Oracle ID and aliases; content/version hash and exact deck-file SHA manifest; cached reuse across Magnus/Mortarion/Gisa/Necrons; zero network on cache hit, cold local load, game or replay; explicit refresh and diagnostics for uncertain faces/identities |
+| **M1 — Multi-deck import + observation** | Load and inspect every saved deck without commander-name-specific loaders | All deck files validated against appropriate immutable records (Magnus premium/budget; Wretched Ranks; Mortarion current/ideal; Necrons); 100-card checks and provenance; deterministic six-turn **observation** with hand, source/candidate/limitation fields; no false legal casting claim |
+| **M2 — Shared source-paid core + interactable bodies** | Actual early turns for at least Magnus and Wretched Ranks, using the same engine | Parameterized commander/deck and W/U/B/R/G/C mana incl. black Swamps and true {C}; safe verified permanent casting, zone changes, damage/combat, relevant supported keywords, targeting/tutor and opponent removal of unfamiliar creatures; enforce unknown-restriction fail-closed; keep premium/budget strict replay intact |
+| **M3 — Multi-deck early-game MVP 1 (ship usable tool)** | First-six-turn actual-action traces for 2+ authentically different decks | One shared runner and generic pilot, with existing abstract opposing seats if necessary, supports land/mana, affordable legal casting and a small reviewed library of generic effects; per-action exact/simplified/unsupported records and caveats. Repeat 10–100 deterministic seeds **only after** a single event-accurate trace passes; don't claim win-rate strength |
+| **M4 — Multi-deck versus MVP 2** | Two detailed real-deck seats interact at the same table | Import Magnus + Wretched Ranks or Mortarion; source-paid turns, legal cross-player targeting/combat/priority/responses, deterministic replays and clear omissions; no named-card-specific engine subclass |
+| **M5 — Fidelity growth and card depth** | Progressive exact-card support without losing generic behaviors | Use existing `AbilityCatalog` (pure selection already present): add reviewed typed ability files, adapter and shared keyword/effect templates; promote simplified tutor/ETB to exact in **the same slot**, prove no double effects and preserve independent keyword/ability slots; prioritize cards by relevance to measured unsupported choices |
+| **M6 — Quality, calibration, scaling** | Honest results and efficient experiments | Ground observed metrics in supported mechanics, compare paired seeds as fidelity increases, performance benchmarks, targeted optimizations only after proven invariants; defer blanket win-rate claims |
+
+**Dependency nuance:** the **pure P0.65 `AbilityCatalog` exists now**, and its exact-first per-slot invariant is foundational. Do **not** require a broad named-card directory or the complete P0.65 event adapter before M0/M1 and the basic M2 mana/deck/zone work. A small reviewed handler adapter is required before any **executable** approximations in M3. P0.65's promotion tests must pass before describing the eventual full hybrid system as complete; basic real gameplay can be shipped with exact generic rules while complicated effects remain unsupported.
+
+## The metadata API / cache workflow (explicit order)
+
+1. **Parse first, without network:** take a deck file; validate syntax/counts and identify distinct names/faces. Resolve names/aliases to cached Oracle IDs and verified immutable records in a **shared on-disk catalog**. Maintain exact deck-file SHA-256 independently of metadata.
+2. **Reuse before fetch:** for all identities already present and of an accepted pinned snapshot revision, reuse local records, including shared Sol Ring, Swamp and Arcane Signet. Fetch only unresolved identities (batch; rate-limit) on **explicit import/refresh**; never send cached hits again just because another deck contains them. For a missing name with no known Oracle ID, resolve that name once and then index/store it by the returned Oracle ID. Name-to-ID alias index is not itself the identity authority.
+3. **Verify and commit:** ensure exact card/name-or-face matching, canonical identity, legality, complete required fields and version/provenance; report missing/ambiguous/changed identity without inventing data. Persist one deduplicated, immutable catalog and a **per-deck manifest** binding deck SHA to selected Oracle IDs and catalog revision/content hashes. Make writes atomic and avoid replacing a pinned record used in an existing replay.
+4. **Run with zero API calls:** load the pinned manifest/catalog locally; no Scryfall calls on launch, card cast, turn, simulation batch or normal test run. An intentional separate refresh may retrieve updated Oracle data, produce a new immutable revision and require revalidation.
+5. **Tests:** initial missing IDs cause a bounded fetch; a second identical import causes zero calls; importing a different deck with overlapping cards fetches **only newly missing identities**; offline rerun has identical validated characteristics; stale hash/ambiguous alias fails closed; multi-deck local game uses no network.
+
+This is **offline metadata caching**, separate from caching mutable runtime game decisions, legal actions and derived targets. Do **not** add runtime-state memoization early.
+
+## Cross-deck acceptance fixture order
+
+1. **Magnus premium/budget:** establish historical strict regression fingerprints; show existing U/R functionality is preserved.
+2. **Wretched Ranks (unmodified factory precon):** first new *detailed* deck, to prove ordinary B costs, Swamps, Zombies/creatures and generic interaction without premium card-specific logic.
+3. **Mortarion current purchased/owned:** second mono-black strategy with sacrifice, Pestilence and life-loss interactions; its actual assembled list remains provisional.
+4. **Necron Dynasties:** prove artifact plus creature dual typing, artifact sources, recursion zones, and generic targeting.
+5. **Mortarion ideal:** fidelity/strategy comparison to current, not physical-card ownership. Flameslinger v0.7 stays a useful U/R observation/keyword fixture.
+
+Each fixture must have a correct matching deck hash/catalog manifest. The older purchase-only Mortarion snapshot cannot be reused as a manifest for the current or ideal list.
+
+## Explicit honest reporting
+
+- **Imported** != **castable** != **able to use every printed ability**. Show all three.
+- `observation` candidate = possible by printed characteristic screen, **not** a legal action; `strict` = only supported exact rules; `hybrid` = exact first, explicitly reviewed simplified fallback by individual ability slot, unsupported otherwise.
+- An unknown mandatory restriction is not ignored to make an MVP run. Unsupported gameplay is surfaced/censored; if this prevents game completion, report the first blocker rather than synthetic wins.
+- Allow multiple decks in one codebase before requiring multiple *detailed* seats; mark true head-to-head support separately.
+- Maintain a compact end-of-run summary: deck/commander, seed, snapshot/rules/ability revision, first-six-turn draws/lands/payment/casts, resource/action counts, supported versus omitted abilities, first approximation affecting subsequent play, errors/safety stops and timings.
+
+## Sequencing note for low-credit Work sessions
+
+Start with **M0 only**, commit after targeted and full tests, then **M1**, then **M2** split into *deck configuration / mana* and *generic verified object actions*. Don't reimplement or replace current `AbilityCatalog`. Minimize repo-wide scans and work on a small set of files each slice; request actual commit SHA/CI pass and limitations. Use focused Sol/high-reasoning review only at mana/priority/state/fidelity boundaries, not every import or unit test.
