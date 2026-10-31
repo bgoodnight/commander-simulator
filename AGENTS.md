@@ -2,7 +2,7 @@
 
 Applies to implementation on this repository's active branch. Read, in this order:
 1. [ROADMAP.md](ROADMAP.md) and [docs/MULTI_DECK_MVP.md](docs/MULTI_DECK_MVP.md) — **active product order M0–M6**, multi-deck acceptance.
-2. [docs/LOW_CREDIT_IMPLEMENTATION_HANDOFF.md](docs/LOW_CREDIT_IMPLEMENTATION_HANDOFF.md) — bounded next Work session, starting with M0 cache.
+2. [docs/LOW_CREDIT_IMPLEMENTATION_HANDOFF.md](docs/LOW_CREDIT_IMPLEMENTATION_HANDOFF.md) — bounded next Work session, now starting with M1 cached multi-deck import.
 3. [docs/USER_INTERFACE_ROADMAP.md](docs/USER_INTERFACE_ROADMAP.md) — **U0–U4 UI milestones after usable MVP, before exhaustive named-card work**.
 4. [docs/ABILITY_COMPOSITION_ARCHITECTURE.md](docs/ABILITY_COMPOSITION_ARCHITECTURE.md) — binding progressive card architecture.
 5. [docs/DEVELOPMENT_GUIDE.md](docs/DEVELOPMENT_GUIDE.md) and [docs/HYBRID_SIMULATION_WORKPLAN.md](docs/HYBRID_SIMULATION_WORKPLAN.md) — correctness and fidelity contracts.
@@ -21,7 +21,7 @@ Applies to implementation on this repository's active branch. Read, in this orde
 
 **Target:** usable multi-deck early-game experiments and a practical Deck Lab **before** mapping every individual card. Historical P0–P7 phase numbers document prerequisites; follow the active **M0–M6 and U0–U4** delivery order instead.
 
-1. **M0 FIRST — shared offline Scryfall catalog:** check a deduplicated immutable Oracle-ID/alias store **before** requesting missing card names on explicit import/refresh, write version-pinned per-deck SHA manifests, and prove zero API calls on repeated/overlapping cache-hit imports or game runs. Do not implement mutable game-state memoization.
+1. **M0 cache foundation IMPLEMENTED:** `commander_sim/card_cache.py`, cache-first `tools/fetch_deck_identities.py` and `tests/test_card_cache.py` preserve immutable Oracle-ID revisions and per-deck manifests. **Do not rewrite** these. The next M1 step is to bootstrap the shared catalog from existing hash-checked snapshots and import/validate additional decks. No simulation-time API calls or mutable-state caching.
 2. **M1 — validated multi-deck import/observation:** load Magnus premium/budget, Wretched Ranks, Mortarion Current/Ideal and Necrons with exact manifests; support general commander identity without deck-specific table subclasses. Reproducible six-turn observation may omit unsupported actions but may not claim they resolved.
 3. **M2 — minimum shared gameplay:** source-paid W/U/B/R/G/C mana incl. Swamp/B and true colorless, canonical safe ordinary creature/permanent casting, universal object typing, basic combat and cross-card legal target/query predicates in the same authoritative v35-derived kernel. Unknown legality must fail closed.
 4. **M3 — usable early-turn MVP:** one shared generic runner executes real legal actions with Magnus and one mono-black deck for six turns, with per-action fidelity/omission and replay. The **pure, non-executing** `commander_sim.abilities.AbilityCatalog` is already present; extend it for a **small reviewed** hybrid template set without replacing the selector or requiring a broad named-card directory. P0.65's full promotion/integration gates are still required before calling hybrid complete.
@@ -32,7 +32,7 @@ Applies to implementation on this repository's active branch. Read, in this orde
 
 ## Usage-efficient working procedure
 
-- Start with [LOW_CREDIT_IMPLEMENTATION_HANDOFF.md](docs/LOW_CREDIT_IMPLEMENTATION_HANDOFF.md) and the latest commit/CI. Scope a single current **Slice 0/1/2/3 or UI U0/U1/U2/U3/U4**; do not re-audit the entire historical engine, redo already committed foundations, or prioritize the former Slice A card directory over M0 caching.
+- Start with [LOW_CREDIT_IMPLEMENTATION_HANDOFF.md](docs/LOW_CREDIT_IMPLEMENTATION_HANDOFF.md) and the latest commit/CI. Scope a single current **Slice 1/2/3 or UI U0/U1/U2/U3/U4**; do not re-audit the entire historical engine, redo already committed foundations, or prioritize the former Slice A card directory over M0 caching.
 - Run **targeted** tests during edits, then the complete 37-suite `python run_all_tests.py` once at a coherent commit. When adding package tests, update both `('package_tests', N)` and the final reported total in `run_all_tests.py` without removing the count gate. Inspect failing CI job logs rather than blindly retrying full tasks.
 - Prefer a smaller coding model on low/medium reasoning for self-contained mechanical changes, and reserve more expensive reasoning for cross-engine priority/event correctness, architectural review and difficult failures. No unbounded "continue until complete" instructions.
 - Fetch card metadata only on explicit **import/refresh** after consulting the shared immutable Oracle-ID cache; never re-fetch cached identities because another deck uses them. UI U2 may expose an explicit user-initiated fetch control; browser navigation, typing, deck selection and simulation are **not** import requests.
