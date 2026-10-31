@@ -1,0 +1,258 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Commander Deck Lab · Read-only MVP</title>
+  <style>
+    :root { color-scheme: dark; font-family: system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;
+      --bg:#0d1420; --panel:#172131; --panel2:#202d3e; --edge:#334256;
+      --text:#f0f5fb; --muted:#9faec0; --mint:#7be0cb; --orange:#ffd18c; }
+    * { box-sizing: border-box; }
+    body { margin:0; min-height:100vh; color:var(--text); background:var(--bg);
+      background-image:radial-gradient(circle at 90% 5%,rgba(88,150,180,.14),transparent 25rem); }
+    main { max-width:1120px; margin:0 auto; padding:24px 18px 90px; }
+    header { display:flex; align-items:flex-start; gap:16px; justify-content:space-between; flex-wrap:wrap; margin-bottom:24px; }
+    h1 { font-size:clamp(25px,4vw,37px); margin:2px 0 6px; letter-spacing:-.035em; font-weight:750; }
+    h2 { font-size:17px; margin:0 0 14px; letter-spacing:-.015em; }
+    h3 { font-size:14px; margin:0 0 10px; color:var(--text); }
+    p { color:var(--muted); line-height:1.5; margin:5px 0 0; }
+    .eyebrow { text-transform:uppercase; letter-spacing:.16em; color:var(--mint); font-size:11px; font-weight:750; }
+    .flag { border:1px solid #546476; border-radius:99px; padding:8px 13px; font-size:12px; color:var(--muted); }
+    .grid { display:grid; grid-template-columns:minmax(270px,.9fr) minmax(0,1.6fr); gap:16px; }
+    .panel { background:rgba(23,33,49,.95); border:1px solid var(--edge); border-radius:14px; padding:19px; min-width:0; }
+    .wide { grid-column:1 / -1; }
+    label { display:block; color:var(--muted); font-size:12px; font-weight:650; margin-bottom:7px; }
+    select,input,button { font:inherit; }
+    select,input { width:100%; border:1px solid #485a70; border-radius:9px; background:#101c2a;
+      padding:10px 12px; color:var(--text); min-width:0; }
+    select:focus-visible,input:focus-visible,button:focus-visible { outline:2px solid var(--mint); outline-offset:2px; }
+    .formrow { display:grid; grid-template-columns:minmax(0,1fr) minmax(110px,.5fr); gap:12px; }
+    .buttonrow { display:flex; gap:10px; flex-wrap:wrap; margin-top:15px; }
+    button { cursor:pointer; background:var(--mint); color:#10212d; border:0; border-radius:9px;
+      font-size:13px; font-weight:750; padding:11px 14px; }
+    button.secondary { border:1px solid #587287; background:#233247; color:var(--text); }
+    button:disabled { cursor:not-allowed; opacity:.4; }
+    .detail { padding:12px 0; border-bottom:1px solid var(--edge); }
+    .detail:last-of-type { border-bottom:0; }
+    .value { display:block; font-size:17px; font-weight:700; margin-top:5px; }
+    .muted { color:var(--muted); }
+    .small { font-size:12px; }
+    .warn { color:var(--orange); }
+    .good { color:var(--mint); }
+    .chips { display:flex; flex-wrap:wrap; gap:7px; margin-top:14px; }
+    .chip { border:1px solid #4a6076; border-radius:100px; color:#c2d2e3; padding:5px 9px; font-size:11px; }
+    .tablebox { overflow:auto; border:1px solid var(--edge); border-radius:9px; max-height:470px; }
+    table { width:100%; border-collapse:collapse; font-size:13px; }
+    th { position:sticky; top:0; z-index:1; background:var(--panel2); text-align:left; font-size:11px;
+      letter-spacing:.04em; text-transform:uppercase; color:var(--muted); }
+    td,th { padding:11px 10px; border-bottom:1px solid #2b3a4f; vertical-align:top; }
+    tbody tr:last-child td { border-bottom:0; }
+    td:first-child,th:first-child { white-space:nowrap; }
+    .num { text-align:right; font-variant-numeric:tabular-nums; }
+    .minor { font-size:11px; color:var(--muted); }
+    .status { font-size:12px; margin:10px 0; color:var(--muted); min-height:1.3em; }
+    .empty { border:1px dashed #53667e; border-radius:9px; color:var(--muted); padding:26px;
+      font-size:13px; text-align:center; }
+    .notice { border-left:3px solid var(--orange); background:#2a2b31;
+      padding:12px 14px; border-radius:5px; margin:15px 0; font-size:12px; line-height:1.5; }
+    .summary { display:grid; grid-template-columns:repeat(3,minmax(0,1fr)); gap:8px; margin:12px 0; }
+    .metric { background:#202d3e; padding:10px; border-radius:8px; }
+    .metric b { display:block; font-size:19px; margin-top:4px; }
+    .metric span { font-size:11px; color:var(--muted); }
+    .nowrap { white-space:nowrap; }
+    @media(max-width:780px) { .grid { grid-template-columns:1fr; } .panel { padding:15px; }
+      main { padding:19px 12px 60px; } .summary { grid-template-columns:repeat(3,minmax(0,1fr)); }
+      td,th { padding:10px 7px; } }
+  </style>
+</head>
+<body>
+<main>
+  <header>
+    <div>
+      <div class="eyebrow">Offline Commander simulator</div>
+      <h1>Deck Lab</h1>
+      <p>Select a verified deck, inspect its cards, and explore the first six turns.</p>
+    </div>
+    <div class="flag">U0 preview · read-only</div>
+  </header>
+  <div class="notice"><strong>Observation mode only.</strong> This preview models draws, basic land plays and
+    printed mana-value candidates. It does <strong>not</strong> cast spells, execute card abilities, resolve combat,
+    or estimate wins. The real multi-deck rules engine is a later milestone.</div>
+  <div class="grid">
+    <section class="panel" aria-labelledby="deck-title">
+      <h2 id="deck-title">1 · Choose a deck</h2>
+      <label for="deck">Verified decklists</label>
+      <select id="deck" disabled><option>Loading decks…</option></select>
+      <div id="deck-status" class="status" aria-live="polite"></div>
+      <div class="detail">
+        <span class="minor">Commander</span><strong class="value" id="commander">—</strong>
+      </div>
+      <div class="detail">
+        <span class="minor">Inventory label</span><strong class="value" id="ownership">—</strong>
+      </div>
+      <div class="summary">
+        <div class="metric"><span>Cards</span><b id="count">—</b></div>
+        <div class="metric"><span>Distinct</span><b id="distinct">—</b></div>
+        <div class="metric"><span>Metadata</span><b id="verified">—</b></div>
+      </div>
+      <div id="type-chips" class="chips"></div>
+      <p class="small">Inventory labels reflect the saved build's intended role, not a verified physical collection.</p>
+    </section>
+    <section class="panel" aria-labelledby="run-title">
+      <h2 id="run-title">2 · Explore opening turns</h2>
+      <div class="formrow">
+        <div><label for="seed">Random seed (reproducible)</label>
+          <input id="seed" type="number" step="1" value="0"></div>
+        <div><label for="turns">Number of turns</label>
+          <select id="turns"><option>3</option><option selected>6</option><option>10</option><option>15</option><option>20</option></select></div>
+      </div>
+      <div class="buttonrow">
+        <button id="run" disabled>Run observation</button>
+        <button id="copy" class="secondary" disabled>Copy JSON</button>
+      </div>
+      <div id="run-status" class="status" role="status" aria-live="polite"></div>
+      <div id="result"><div class="empty">Choose a deck and run an observation to view the turn timeline.</div></div>
+    </section>
+    <section class="panel wide" aria-labelledby="cards-title">
+      <h2 id="cards-title">3 · Deck contents</h2>
+      <p class="small" style="margin:-5px 0 14px">These are printed card characteristics, not promises that their abilities are simulated.</p>
+      <div class="tablebox">
+        <table aria-label="Cards in selected deck">
+          <thead><tr><th>Qty</th><th>Card</th><th>Printed type</th><th class="num">Mana value</th></tr></thead>
+          <tbody id="card-rows"><tr><td colspan="4">Select a deck to show its cards.</td></tr></tbody>
+        </table>
+      </div>
+    </section>
+  </div>
+</main>
+<script>
+"use strict";
+const $ = id => document.getElementById(id);
+let currentDeck = null;
+let lastResult = null;
+const nameLabels = {
+  magnus_premium:"Magnus · Premium", magnus_budget:"Magnus · Budget",
+  mortarion_current:"Mortarion · Current", mortarion_ideal:"Mortarion · Ideal",
+  wretched_ranks:"Wretched Ranks · Gisa", necron_dynasties:"Necron Dynasties"
+};
+const inventoryLabels = {
+  ideal:"Ideal / aspirational", budget:"Budget variant",
+  owned_precon:"Factory precon (reported owned)",
+  ordered_plus_owned:"Cards ordered + reported owned"
+};
+function el(tag,text,className="") {
+  const node=document.createElement(tag);
+  if(text!==undefined)node.textContent=String(text);
+  if(className)node.className=className;
+  return node;
+}
+function clear(node) { while(node.firstChild)node.removeChild(node.firstChild); }
+async function read(url) {
+  const response=await fetch(url,{cache:"no-store"});
+  const body=await response.json();
+  if(!response.ok)throw Error(body.error || ("HTTP "+response.status));
+  return body;
+}
+async function init() {
+  $("deck-status").textContent="Checking offline deck metadata…";
+  try {
+    const data=await read("/api/decks");
+    const select=$("deck");clear(select);
+    for(const d of data.decks) {
+      const item=el("option",nameLabels[d.key] || d.key);
+      item.value=d.key;item.disabled=!d.observation_available;
+      select.appendChild(item);
+    }
+    const preferred=data.decks.find(d=>d.key==="mortarion_current" && d.observation_available)
+      || data.decks.find(d=>d.observation_available);
+    if(!preferred)throw Error("No fully validated deck snapshots are available.");
+    select.value=preferred.key;
+    select.disabled=false;
+    select.addEventListener("change",loadDeck);
+    $("run").addEventListener("click",runObservation);
+    $("copy").addEventListener("click",copyJSON);
+    $("deck-status").textContent=data.decks.filter(d=>d.observation_available).length
+      +" of "+data.decks.length+" decks have validated offline metadata.";
+    await loadDeck();
+  } catch(error) {
+    $("deck-status").textContent=error.message;
+    $("run-status").textContent="Run an explicit metadata import to populate the Deck Lab.";
+  }
+}
+async function loadDeck() {
+  $("run").disabled=true;$("copy").disabled=true;lastResult=null;
+  const key=$("deck").value;
+  $("result").replaceChildren(el("div","Run a new observation to see the turn timeline.","empty"));
+  try {
+    const data=await read("/api/deck?key="+encodeURIComponent(key));
+    currentDeck=data;
+    $("commander").textContent=data.commander;
+    $("ownership").textContent=inventoryLabels[data.label]||data.label;
+    $("count").textContent=data.physical_cards;
+    $("distinct").textContent=data.distinct_names;
+    $("verified").textContent="Yes";
+    const chips=$("type-chips");clear(chips);
+    for(const [kind,count] of Object.entries(data.by_type))chips.appendChild(el("span",kind+" "+count,"chip"));
+    const tbody=$("card-rows");clear(tbody);
+    for(const card of data.cards) {
+      const row=el("tr");
+      row.append(el("td",card.quantity),el("td",card.name),
+                 el("td",card.type_line,"muted"),
+                 el("td",card.mana_value===null?"—":card.mana_value,"num"));
+      tbody.appendChild(row);
+    }
+    $("run-status").textContent="Observation data available. No gameplay effects supported by this view.";
+    $("run").disabled=false;
+  } catch(error) {
+    currentDeck=null;$("run-status").textContent=error.message;
+  }
+}
+async function runObservation() {
+  if(!currentDeck)return;
+  $("run").disabled=true;$("copy").disabled=true;
+  $("run-status").textContent="Calculating offline observation…";
+  const key=currentDeck.key,seed=$("seed").value,turns=$("turns").value;
+  try {
+    const data=await read("/api/observation?key="+encodeURIComponent(key)
+      +"&seed="+encodeURIComponent(seed)+"&turns="+encodeURIComponent(turns));
+    lastResult=data;
+    const root=$("result");clear(root);
+    const intro=el("p","Opening hand: "+data.opening_hand.join(" · "),"small");
+    intro.style.marginBottom="12px";root.appendChild(intro);
+    const box=el("div",undefined,"tablebox"), table=el("table");
+    const head=el("thead"), headings=el("tr");
+    for(const name of ["Turn","Drawn","Basic land played","Basic sources","Mana-value candidates"])
+      headings.appendChild(el("th",name));
+    head.appendChild(headings);table.appendChild(head);
+    const body=el("tbody");
+    for(const t of data.trace) {
+      const row=el("tr");
+      const cand=t.candidate_if_supported.map(x=>x.card);
+      const basics=Object.values(t.modeled_basic_sources).reduce((a,b)=>a+b,0);
+      row.append(el("td",t.turn),el("td",t.drawn||"—"),
+        el("td",t.land_played||"—"),el("td",basics,"num"),
+        el("td",cand.length?cand.join(", "):"None"));
+      body.appendChild(row);
+    }
+    table.appendChild(body);box.appendChild(table);root.appendChild(box);
+    $("run-status").textContent="Observation complete · seed "+data.seed
+      +" · no spells cast or card effects executed.";
+    $("copy").disabled=false;
+  } catch(error) {
+    $("run-status").textContent="Observation unavailable: "+error.message;
+  } finally { $("run").disabled=!currentDeck; }
+}
+async function copyJSON() {
+  if(!lastResult)return;
+  try {
+    await navigator.clipboard.writeText(JSON.stringify(lastResult,null,2));
+    $("run-status").textContent="Observation JSON copied to clipboard.";
+  } catch(error) {
+    $("run-status").textContent="Clipboard unavailable in this browser. Inspect /api/observation directly.";
+  }
+}
+document.addEventListener("DOMContentLoaded",init);
+</script>
+</body>
+</html>
