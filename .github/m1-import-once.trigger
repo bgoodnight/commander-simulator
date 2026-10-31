@@ -1,2 +1,2 @@
-M1 metadata import authorization: one-time push-path workflow invocation for the six canonical deck files.
-Triggered by this file's creation on 2026-10-31. The workflow itself is opt-in: it runs on this marker change or manual dispatch, never normal repository pushes or simulations.
+M1 explicit metadata import attempt 2 on 2026-10-31.
+Previous one-time run surfaced missing front-face alias handling for Riverglide Pathway. Commit 5c2115... and subsequent verified fixes correct the loader while preserving Adventure normalization. This trigger applies only to the explicit import workflow, not to general push or any simulation. No import workflow runs automatically for unrelated edits.
