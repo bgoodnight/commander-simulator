@@ -188,8 +188,13 @@ async function refreshVersions() {
       root.textContent="No saved custom versions yet.";return;
     }
     for(const version of data.versions) {
-      const line=el("p",version.title+" · "+version.commander
-        +" · "+version.deck_sha256.slice(0,10),"small");
+      const line=el("div",undefined,"detail");
+      line.appendChild(el("span",version.title+" · "+version.commander
+        +" · "+version.deck_sha256.slice(0,10),"small"));
+      const button=el("button","Observe version","secondary");
+      button.style.marginLeft="10px";
+      button.addEventListener("click",()=>runSavedVersion(version.id));
+      line.appendChild(button);
       root.appendChild(line);
     }
   } catch(error) { $("versions").textContent="Version list unavailable: "+error.message; }
@@ -386,37 +391,51 @@ async function loadDeck() {
     currentDeck=null;$("run-status").textContent=error.message;
   }
 }
+function displayObservation(data) {
+  lastResult=data;
+  const root=$("result");clear(root);
+  const intro=el("p","Opening hand: "+data.opening_hand.join(" · "),"small");
+  intro.style.marginBottom="12px";root.appendChild(intro);
+  const box=el("div",undefined,"tablebox"), table=el("table");
+  const head=el("thead"), headings=el("tr");
+  for(const name of ["Turn","Drawn","Basic land played","Basic sources","Mana-value candidates"])
+    headings.appendChild(el("th",name));
+  head.appendChild(headings);table.appendChild(head);
+  const body=el("tbody");
+  for(const t of data.trace) {
+    const row=el("tr");
+    const cand=t.candidate_if_supported.map(x=>x.card);
+    const basics=Object.values(t.modeled_basic_sources).reduce((a,b)=>a+b,0);
+    row.append(el("td",t.turn),el("td",t.drawn||"—"),
+      el("td",t.land_played||"—"),el("td",basics,"num"),
+      el("td",cand.length?cand.join(", "):"None"));
+    body.appendChild(row);
+  }
+  table.appendChild(body);box.appendChild(table);root.appendChild(box);
+  $("run-status").textContent="Observation complete · seed "+data.seed
+    +" · no spells cast or card effects executed.";
+  $("copy").disabled=false;
+}
+async function runSavedVersion(id) {
+  $("run-status").textContent="Observing saved deck copy…";
+  try {
+    const data=await read("/api/version/observation?id="+encodeURIComponent(id)
+      +"&seed="+encodeURIComponent($("seed").value)
+      +"&turns="+encodeURIComponent($("turns").value));
+    displayObservation(data);
+  } catch(error) {
+    $("run-status").textContent="Saved version unavailable: "+error.message;
+  }
+}
 async function runObservation() {
   if(!currentDeck)return;
   $("run").disabled=true;$("copy").disabled=true;
   $("run-status").textContent="Calculating offline observation…";
-  const key=currentDeck.key,seed=$("seed").value,turns=$("turns").value;
   try {
-    const data=await read("/api/observation?key="+encodeURIComponent(key)
-      +"&seed="+encodeURIComponent(seed)+"&turns="+encodeURIComponent(turns));
-    lastResult=data;
-    const root=$("result");clear(root);
-    const intro=el("p","Opening hand: "+data.opening_hand.join(" · "),"small");
-    intro.style.marginBottom="12px";root.appendChild(intro);
-    const box=el("div",undefined,"tablebox"), table=el("table");
-    const head=el("thead"), headings=el("tr");
-    for(const name of ["Turn","Drawn","Basic land played","Basic sources","Mana-value candidates"])
-      headings.appendChild(el("th",name));
-    head.appendChild(headings);table.appendChild(head);
-    const body=el("tbody");
-    for(const t of data.trace) {
-      const row=el("tr");
-      const cand=t.candidate_if_supported.map(x=>x.card);
-      const basics=Object.values(t.modeled_basic_sources).reduce((a,b)=>a+b,0);
-      row.append(el("td",t.turn),el("td",t.drawn||"—"),
-        el("td",t.land_played||"—"),el("td",basics,"num"),
-        el("td",cand.length?cand.join(", "):"None"));
-      body.appendChild(row);
-    }
-    table.appendChild(body);box.appendChild(table);root.appendChild(box);
-    $("run-status").textContent="Observation complete · seed "+data.seed
-      +" · no spells cast or card effects executed.";
-    $("copy").disabled=false;
+    const data=await read("/api/observation?key="+encodeURIComponent(currentDeck.key)
+      +"&seed="+encodeURIComponent($("seed").value)
+      +"&turns="+encodeURIComponent($("turns").value));
+    displayObservation(data);
   } catch(error) {
     $("run-status").textContent="Observation unavailable: "+error.message;
   } finally { $("run").disabled=!currentDeck; }
