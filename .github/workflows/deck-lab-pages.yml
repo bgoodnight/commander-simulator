@@ -35,17 +35,30 @@ jobs:
           python -m unittest tests.test_pages_export -v
           node --check web/pages/app.js
           node --check dist/pages/app.js
-      - name: Check whether GitHub Pages is enabled
+      - name: Offer a downloadable preview even before Pages is enabled
+        uses: actions/upload-artifact@v4
+        with:
+          name: deck-lab-static-preview
+          path: ./dist/pages
+          retention-days: 7
+      - name: Check and best-effort enable Pages
         id: pages-check
         env:
           GH_TOKEN: ${{ github.token }}
         run: |
+          if ! gh api "repos/${{ github.repository }}/pages" >/dev/null 2>&1; then
+            # This is an explicit user-requested Pages setup. The token may
+            # lack Administration:write or the owner's plan may not support
+            # Pages on a private repo. Never change repo visibility.
+            gh api --method POST "repos/${{ github.repository }}/pages" \
+              -f build_type=workflow >/dev/null 2>&1 || true
+          fi
           if gh api "repos/${{ github.repository }}/pages" >/dev/null 2>&1; then
             echo "enabled=true" >> "$GITHUB_OUTPUT"
             echo "Pages is enabled; continuing to static deployment." >> "$GITHUB_STEP_SUMMARY"
           else
             echo "enabled=false" >> "$GITHUB_OUTPUT"
-            echo "Static Deck Lab built and tested, but Pages is not enabled or is unavailable for this repository." >> "$GITHUB_STEP_SUMMARY"
+            echo "Static Deck Lab built, tested and uploaded as deck-lab-static-preview, but Pages is not enabled or the account plan/token cannot enable private repository Pages." >> "$GITHUB_STEP_SUMMARY"
             echo "To publish, enable Settings > Pages > Build and deployment: GitHub Actions, then re-run this workflow." >> "$GITHUB_STEP_SUMMARY"
           fi
       - name: Configure Pages
