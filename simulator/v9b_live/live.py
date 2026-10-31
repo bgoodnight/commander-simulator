@@ -20,7 +20,7 @@ class LiveTable(V9Table):
     detailed_player_class = ZoneDetailedPlayer
     battlefield_class = LiveBattlefield
 
-    def __init__(self, providers=None, seed=1, trace=False, opening=None):
+    def __init__(self, providers=None, seed=1, trace=False, opening=None, detailed_factory=None):
         providers = tuple(p if isinstance(p, DeckProvider) else DeckProvider(p)
                           for p in (providers if providers is not None else ('magnus', 'aggro', 'control', 'combo')))
         if len(providers) != 4:
@@ -33,7 +33,8 @@ class LiveTable(V9Table):
         players = []; opponent = 0
         for seat, provider in enumerate(providers):
             if provider.kind == 'magnus':
-                player = self.detailed_player_class(seat, seed * 109 + 3, self.zones)
+                factory = detailed_factory or self.detailed_player_class
+                player = factory(seat, seed * 109 + 3, self.zones)
             else:
                 opponent += 1
                 player = self.player_class(seat, provider.kind, seed * 109 + opponent * 431 + 3,

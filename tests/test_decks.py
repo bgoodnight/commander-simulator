@@ -50,5 +50,13 @@ class DeckProviderTests(unittest.TestCase):
             with self.subTest(line=line), self.assertRaises(ValueError):
                 self.provider.parse('Commander\n1 Magnus the Red\nLibrary\n' + line)
 
+    def test_descriptive_sections_and_adventure_oracle_name(self):
+        text = ('Commander\n1 Magnus the Red\nCreatures (0)\n'
+                'Lands (99)\n1 Lindblum, Industrial Regency // Mage Siege\n98 Island\n')
+        deck = self.provider.parse(text)
+        self.assertIn(('Library', 'Lindblum, Industrial Regency', 1), deck.cards)
+        with self.assertRaisesRegex(ValueError, 'Section count'):
+            self.provider.parse(text.replace('Lands (99)', 'Lands (98)'))
+
 if __name__ == '__main__':
     unittest.main()

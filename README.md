@@ -2,7 +2,7 @@
 
 A reproducible, modular four-player **Magic: The Gathering Commander** simulation project. Current milestone: **v35**: copied-spell target handling, plus v34 Mage Siege Adventure, plus v33 bounded Reiterate spell copying, plus v32 Cyclonic Rift, plus v31 premium Magnus v1.14 deck configuration, plus v30 Phyrexian Altar’s bounded sacrifice-mana ability, plus v29 Step Through spell mode and battlefield cycling-trigger events, plus v28 Spellseeker ETB search, plus v27 Fabricate and Step Through wizardcycling, plus v26 Merchant Scroll and Solve the Equation, plus v25 Personal Tutor sorcery search, plus v24 Ral's Reinforcements and colored token metadata, plus v23 Sapphire Medallion and printed spell colors, plus v22 Consider surveil and draw, plus v21 Frostboil Snarl entry and mana with targeted Magnus cost tests, plus v20 verified v1.13 card identities and search types, building on the v19 card-data verifier and v18 budget deck adapter, plus v17 Mystical Tutor search and v16 Otawara and Sokenzan channel abilities, building on v15 Mystic Sanctuary's targeted graveyard-return trigger, Fiery Islet's draw activation, and Riptide Laboratory's 1U Wizard-return activation. V14 land rules and reference fingerprints, v13 selection/engines, v12 combat, live zones and source-ID mana remain active. **This is not a complete Magic rules engine, and the results are not validated deck win rates.**
 
-The package now includes a [deck composition validator](commander_sim/README.md) for the saved presets and local files with verified identity metadata. Custom files are not yet connected to the live simulation engine.
+Both saved presets and compatible local deck files now use the same active engine through the [deck provider](commander_sim/README.md). Local files must pass validation against the bundled identity snapshots; effect coverage remains incomplete.
 
 ## V35 copied spell targets
 
@@ -22,7 +22,7 @@ The package now includes a [deck composition validator](commander_sim/README.md)
 
 ## V31 premium deck configuration
 
-The current simulator defaults to the [v1.14 premium list](decklists/magnus_thousand_sons_v1_14_premium.txt), committed as `b9b3ba0abcd19676ec4f32cc9f427e52c1f55d8b`. [Configuration, validation, and limits](simulator/v31_premium_deck/README.md); [coverage audit](simulator/v31_premium_deck/CARD_COVERAGE.md). Run `python run_simulation.py`; select the preserved v1.13 version with `python run_simulation.py --deck budget`.
+The current simulator defaults to the [v1.14 premium list](decklists/magnus_thousand_sons_v1_14_premium.txt), committed as `b9b3ba0abcd19676ec4f32cc9f427e52c1f55d8b`. [Configuration, validation, and limits](simulator/v31_premium_deck/README.md); [coverage audit](simulator/v31_premium_deck/CARD_COVERAGE.md). Run `python run_simulation.py`; select the preserved v1.13 version with `python run_simulation.py --deck budget`. Use `python run_simulation.py --deck-file PATH` for a list containing only cards covered by the bundled identity snapshots. The budget preset now uses the v35 engine; historical budget engines remain available for regression.
 
 ## V30 Phyrexian Altar
 
@@ -142,7 +142,7 @@ Requires Python 3.10+ and only the standard library:
 python run_all_tests.py
 ```
 
-**801 tests across thirty-seven suites** (v3:20, v4:15, v5:21, v6:21, v7:50, v8:32, v9a:29, v9b:34, v9c:49, v10:51, v11:50, v12:50, v13:69, v14:56, v15:38, v16:14, v17:6, v18:5, v19:5, v20:4, v21:10, v22:8, v23:13, v24:9, v25:7, v26:12, v27:14, v28:11, v29:9, v30:11, v31:15, v32:11, v33:12, v34:14, v35:6, P0 baseline:4, package contracts:16). The GitHub Actions workflow tests on Python 3.11, 3.12, and 3.13.
+**807 tests across thirty-seven suites** (v3:20, v4:15, v5:21, v6:21, v7:50, v8:32, v9a:29, v9b:34, v9c:49, v10:51, v11:50, v12:50, v13:69, v14:56, v15:38, v16:14, v17:6, v18:5, v19:5, v20:4, v21:10, v22:8, v23:13, v24:9, v25:7, v26:12, v27:14, v28:11, v29:9, v30:11, v31:15, v32:11, v33:12, v34:14, v35:6, P0 baseline:7, package contracts:19). The GitHub Actions workflow tests on Python 3.11, 3.12, and 3.13.
 
 Run historical v15 and reproduce validation:
 

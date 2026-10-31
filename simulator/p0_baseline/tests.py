@@ -1,7 +1,13 @@
-import unittest,json
+import unittest,json,sys
 from pathlib import Path
+from functools import partial
+from collections import Counter
+sys.path.insert(0,str(Path(__file__).resolve().parents[2]))
+from commander_sim.decks import DeckProvider
 from scenarios import scenario
 from baseline import CopyTable,check
+from premium_table import PremiumPlayer
+from reference_state import reference_payload,canonical
 from altar_table import AltarTable,AltarAbility
 from resources import Cost,U,R
 
@@ -42,5 +48,26 @@ class ProviderCompositionTests(unittest.TestCase):
   for name,expected in data["scenarios"].items():
    with self.subTest(name=name):self.assertEqual(scenario(name),expected)
  def test_frozen_current_replays(self):self.assertEqual(check(),4)
+ def test_injected_premium_matches_historical_engine(self):
+  deck=DeckProvider.bundled().preset('premium')
+  for seed in (0,29):
+   with self.subTest(seed=seed):
+    a=CopyTable(seed=seed).run(4)
+    b=CopyTable(seed=seed,detailed_factory=partial(PremiumPlayer,deck=deck)).run(4)
+    self.assertEqual(canonical(reference_payload(a)),canonical(reference_payload(b)))
+    self.assertEqual(a.rule_events,b.rule_events);a.assert_consistent();b.assert_consistent()
+ def test_budget_uses_current_engine_and_preserves_inventory(self):
+  deck=DeckProvider.bundled().preset('budget')
+  t=CopyTable(seed=3,detailed_factory=partial(PremiumPlayer,deck=deck));p=t.details
+  actual=Counter(t.rules.get(oid).card.name for zone in ('library','hand','command') for oid in t.zones.ids(p.seat,zone))
+  expected=Counter({name:qty for _,name,qty in deck.cards})
+  self.assertEqual(actual,expected);self.assertEqual(sum(actual.values()),100)
+  frost=self.enter(t,'Frostboil Snarl',(False,0,None))
+  self.assertEqual({a.output for a in t.resources.abilities(t.rules.get(frost))},{U,R})
+  t.run(2);t.assert_consistent();self.assertIsNone(t.safety_stop)
+ def test_sparse_deck_installs_absent_card_definitions(self):
+  deck=DeckProvider.bundled().parse('Commander\n1 Magnus the Red\nLibrary\n99 Island\n')
+  t=CopyTable(seed=7,detailed_factory=partial(PremiumPlayer,deck=deck)).run(1)
+  self.assertIsNone(t.safety_stop);t.assert_consistent()
 
 if __name__=='__main__':unittest.main()

@@ -1,4 +1,4 @@
-import unittest,subprocess,sys,json
+import unittest,subprocess,sys,json,tempfile
 from pathlib import Path
 from commander_sim import ServiceRegistry,ServiceConfigurationError
 from commander_sim.legacy import run
@@ -35,4 +35,17 @@ class ServiceTests(unittest.TestCase):
  def test_legacy_adapter_runs_both_decks(self):
   for deck in ('premium','budget'):
    result=run(deck,seed=4,rounds=1);self.assertEqual(result['deck'],deck);self.assertIsNone(result['safety_stop'])
+ def test_deck_file_matches_preset(self):
+  root=Path(__file__).resolve().parents[1]
+  for deck in ('premium','budget'):
+   path=root/'decklists'/('magnus_thousand_sons_v1_14_premium.txt' if deck=='premium' else 'magnus_thousand_sons_v1_13_budget.txt')
+   result=json.loads(subprocess.run([sys.executable,str(root/'run_simulation.py'),'--deck-file',str(path),'--seed','4','--rounds','2'],capture_output=True,text=True,check=True).stdout)
+   expected=run(deck,seed=4,rounds=2);result['deck']=deck
+   self.assertEqual(result,expected)
+ def test_deck_file_fails_closed(self):
+  root=Path(__file__).resolve().parents[1]
+  with tempfile.TemporaryDirectory() as directory:
+   path=Path(directory)/'deck.txt';path.write_text('Commander\n1 Magnus the Red\nLibrary\n99 Imaginary Card\n')
+   result=subprocess.run([sys.executable,str(root/'run_simulation.py'),'--deck-file',str(path)],capture_output=True,text=True)
+  self.assertNotEqual(result.returncode,0);self.assertIn('Unverified card identity',result.stderr)
 if __name__=='__main__':unittest.main()

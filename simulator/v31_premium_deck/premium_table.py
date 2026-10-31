@@ -39,24 +39,34 @@ def load_premium():
     if any(qty>1 and name not in {'Island','Mountain'} for (_,name),qty in cards.items()):raise ValueError('Duplicate nonbasic')
     return cards
 
+def premium_spec(name):
+    spec=card_spec(name)
+    if name in EXTRA_VALUES:spec=replace(spec,card_type='instant')
+    if name=='Lindblum, Industrial Regency':spec=base.CardSpec(name,'land',0,'land','none',{}, {})
+    return spec
+
 class PremiumPlayer(BudgetPlayer):
-    def __init__(self,seat,seed,zones):
+    def __init__(self,seat,seed,zones,deck=None):
         base.Player.__init__(self,seat,'magnus',seed,[],v6.MagnusPilot())
         self.zones=zones;self.payment_policy=v6.ColoredPayment()
         self.ready_sources=[];self.floating=(0,0,0);self.commander_casts=0
         self.payments=[];self.treasures=0;self.coverage=Counter();self.unsupported_seen=Counter()
         self.block_policy='never';library=[]
-        for (section,name),qty in load_premium().items():
+        cards=load_premium() if deck is None else {(section,name):qty for section,name,qty in deck.cards}
+        for (section,name),qty in cards.items():
             if section!='Library':continue
-            spec=card_spec(name)
-            if name in EXTRA_VALUES:spec=replace(spec,card_type='instant')
-            if name=='Lindblum, Industrial Regency':spec=base.CardSpec(name,'land',0,'land','none',{}, {})
+            spec=premium_spec(name)
             library.extend([spec]*qty)
         random.Random(seed+601).shuffle(library)
         for spec in library:zones.add_spec(spec,seat,detailed=True)
         zones.add_spec(v6.named_spec('Magnus the Red'),seat,'command',detailed=True)
-        for name in ('Abrade','Arcane Adaptation'):
-            if 'named:'+name not in zones.specs:zones.register(v6.named_spec(name),detailed=True)
+        # Existing rule installers assume their definitions exist even when a
+        # particular deck does not contain those cards. Register definitions
+        # only; this creates no physical objects and consumes no randomness.
+        names={name for _,name in load_premium()} | {name for _,name in load_budget()}
+        names.update(('Abrade','Arcane Adaptation'))
+        for name in sorted(names):
+            if 'named:'+name not in zones.specs:zones.register(premium_spec(name),detailed=True)
         self.draw(7)
         if not 2<=sum(c.kind=='land' for c in self.hand)<=5:self.mulligan()
 

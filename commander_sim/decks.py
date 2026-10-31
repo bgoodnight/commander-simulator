@@ -65,18 +65,31 @@ class DeckProvider:
     def parse(self, text):
         section = None
         cards = Counter()
+        declared = None
+        section_count = 0
         for number, raw in enumerate(text.splitlines(), 1):
             line = raw.strip()
             if not line:
                 continue
-            if line in ('Commander', 'Library'):
-                section = line
+            heading = re.fullmatch(r'(Commander|Library|Creatures|Other Permanents|Instants and Sorceries|Lands)(?: \((\d+)\))?', line)
+            if heading:
+                if declared is not None and section_count != declared:
+                    raise ValueError(f'Section count differs from declared {declared}')
+                section = 'Commander' if heading[1] == 'Commander' else 'Library'
+                declared = int(heading[2]) if heading[2] else None
+                section_count = 0
                 continue
             match = re.fullmatch(r'([1-9]\d*) (\S(?:.*\S)?)', line)
             if not match or section is None:
                 raise ValueError(f'Invalid deck entry on line {number}: {line}')
             qty, name = int(match[1]), match[2]
+            row = self._records.get(name)
+            if row and row.get('deck_name'):
+                name = row['deck_name']
             cards[section, name] += qty
+            section_count += qty
+        if declared is not None and section_count != declared:
+            raise ValueError(f'Section count differs from declared {declared}')
         commander = [(name, qty) for (zone, name), qty in cards.items() if zone == 'Commander']
         if commander != [('Magnus the Red', 1)]:
             raise ValueError('Expected exactly one Magnus the Red commander')
