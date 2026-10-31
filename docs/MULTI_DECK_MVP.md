@@ -1,6 +1,6 @@
 # Product-first delivery plan: usable multi-deck Commander MVP
 
-**Decision (October 31, 2026):** Optimize development order for the **earliest useful comparison of multiple authentic decklists**, not for maximizing exact named-card rules coverage. This is the prioritized delivery sequence. [ROADMAP.md](../ROADMAP.md) retains P0–P7 as an architectural/dependency inventory; this plan determines which small slices should ship next. Follow [AGENTS.md](../AGENTS.md) and [ABILITY_COMPOSITION_ARCHITECTURE.md](ABILITY_COMPOSITION_ARCHITECTURE.md) for fidelity, safety and replay contracts.
+**Decision (October 31, 2026):** Optimize development order for the **earliest useful comparison of multiple authentic decklists and a practical Deck Lab interface**, not maximizing exact named-card rules coverage. The interface gets phased milestones **before** exhaustive card mapping. This is the prioritized delivery sequence. [ROADMAP.md](../ROADMAP.md) retains P0–P7 as an architectural/dependency inventory; this plan determines which small slices should ship next. Follow [AGENTS.md](../AGENTS.md) and [ABILITY_COMPOSITION_ARCHITECTURE.md](ABILITY_COMPOSITION_ARCHITECTURE.md) for fidelity, safety and replay contracts.
 
 ## Definition of usable
 
@@ -10,13 +10,19 @@
 
 Both MVPs produce **mechanics/coverage and sequencing diagnostics**, not validated power rankings or Commander win rates while significant abilities are missing or simplified. Publish omission counts and first materially affected choice.
 
+## User interface milestones (U0–U4) after the engine is useful
+
+The independent [User Interface Roadmap](USER_INTERFACE_ROADMAP.md) is part of this MVP plan. A very small **read-only U0** can preview imported deck/observation data after M1, but it must not call observation a played game. After the **M3 actual early-turn MVP**, prioritize **U0 simple Deck Lab browser viewer → U1 editable, validated, versioned deck variants → U2 explicit local-first new-card import through Scryfall**. Users should be able to choose deck, seed, supported run mode, compare versions and see clear unsupported-card/fidelity reporting without command-line work. The U2 Scryfall button uses the **M0 offline cache first** and requests missing cards only after deliberate user action; no API calls during simulations, page load or automatic autocomplete. These are higher priority than fully mapping every printed card ability.
+
+**M4 two-real-deck head-to-head** can progress alongside U1/U2, but should not displace the user-requested deck-edit/import utility. **U3** focuses on clear turn timelines, mana curves, card-type comparisons and honest coverage diagnostics; **U4** adds actual battlefield/stack/graveyard inspection and replay **only after M4 provides authoritative detailed events**. A thin local browser UI over a stable Python run/deck/card-service API is preferable initially to elaborate tabletop graphics. Preserve CLI usability and canonical immutable deck fixtures. No new rules in UI code.
+
 ## Non-negotiable mechanics versus deferrable detail
 
 **Required for MVP 1:** exact 100-card/commander/color-identity validation, all deck metadata and card instances; basic W/U/B/R/G/C source-payment contract as needed by test decks; land drops and common mana rocks when declared and verified; safe ordinary casting into the authoritative zones; tapping, attacks/blocking/damage/state-based deaths, basic relevant keywords (e.g. flying, menace, double strike only once their global implementation is complete); legal type/subtype/color/mana-value/P/T queries that can find and target unfamiliar cards; draw/turn sequence; deterministic seed/replay, action omissions and fidelity instrumentation. An imported card's personal effect **may be unsupported**, but must not erase its printed characteristics or make it invisible to others. Unknown mandatory static/replacement/ETB, targeting restrictions, complex costs or legality must block or be reported as uncertain, never silently treated as absent.
 
 **Useful generic behavior as soon as primitives exist:** draw, create creature token, destroy/bounce/counter, life change, sacrifice, ordinary type-constrained search, graveyard move/return, common death/cast triggers; reviewed parameters and per-ability handler slots only. Add **a narrow tested vertical slice** rather than implementing every type of spell before any deck is loadable.
 
-**Defer until after MVP 1/2:** all unique Mortarion/Gisa/Necron/Magnus triggers; recursive loops and unusual replacement effects; exhaustive multiface/transform coverage; broad individual-card queue, sophisticated tutoring heuristics, unvalidated win-rate calibration, speculative performance memoization and massive Monte Carlo sweeps. Advanced cards may remain explicitly unsupported or reviewed approximations; don't fake game outcomes.
+**Defer until after MVP 1/2 and the first useful U0/U1/U2 Deck Lab milestones:** all unique Mortarion/Gisa/Necron/Magnus triggers; recursive loops and unusual replacement effects; exhaustive multiface/transform coverage; broad individual-card queue, sophisticated tutoring heuristics, unvalidated win-rate calibration, speculative performance memoization and massive Monte Carlo sweeps. Advanced cards may remain explicitly unsupported or reviewed approximations; don't fake game outcomes.
 
 ## Priority-ordered delivery gates
 
@@ -31,6 +37,8 @@ Both MVPs produce **mechanics/coverage and sequencing diagnostics**, not validat
 | **M6 — Quality, calibration, scaling** | Honest results and efficient experiments | Ground observed metrics in supported mechanics, compare paired seeds as fidelity increases, performance benchmarks, targeted optimizations only after proven invariants; defer blanket win-rate claims |
 
 **Dependency nuance:** the **pure P0.65 `AbilityCatalog` exists now**, and its exact-first per-slot invariant is foundational. Do **not** require a broad named-card directory or the complete P0.65 event adapter before M0/M1 and the basic M2 mana/deck/zone work. A small reviewed handler adapter is required before any **executable** approximations in M3. P0.65's promotion tests must pass before describing the eventual full hybrid system as complete; basic real gameplay can be shipped with exact generic rules while complicated effects remain unsupported.
+
+**Interface milestone dependency:** M0 is a **backend caching/import capability**, not permission for a web page to fetch on navigation. U2 is the separate **user-initiated UI control** for invoking the already implemented cache-first import safely. Implement M0 before U2, not the other way around. The complete ordered UI track is [USER_INTERFACE_ROADMAP.md](USER_INTERFACE_ROADMAP.md).
 
 ## The metadata API / cache workflow (explicit order)
 
@@ -62,4 +70,4 @@ Each fixture must have a correct matching deck hash/catalog manifest. The older 
 
 ## Sequencing note for low-credit Work sessions
 
-Start with **M0 only**, commit after targeted and full tests, then **M1**, then **M2** split into *deck configuration / mana* and *generic verified object actions*. Don't reimplement or replace current `AbilityCatalog`. Minimize repo-wide scans and work on a small set of files each slice; request actual commit SHA/CI pass and limitations. Use focused Sol/high-reasoning review only at mana/priority/state/fidelity boundaries, not every import or unit test.
+Start with **M0 only**, commit after targeted and full tests, then **M1**, then **M2** split into *deck configuration / mana* and *generic verified object actions*. Build a simple read-only U0 preview after M1 only if inexpensive, and deliver U0/U1/U2 in bounded slices **after M3 actual runs**, before the large card-directory queue. Don't reimplement or replace current `AbilityCatalog`. Minimize repo-wide scans and work on a small set of files each slice; request actual commit SHA/CI pass and limitations. Use focused Sol/high-reasoning review only at mana/priority/state/fidelity boundaries, not every import or unit test.
