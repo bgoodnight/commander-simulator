@@ -4,11 +4,28 @@ Status: **approved planning direction; not yet implemented**. Read with [ROADMAP
 
 ## Goal and non-goals
 
-**Goal:** Given a legitimate new decklist (including the temporary Magnus Flameslinger v0.7 and, later, an authenticated mono-black list), produce meaningful opening-hand, mana, deployment, interaction-availability, resource, and turn-by-turn narrative diagnostics without implementing every card individually. Reuse implemented rules and common effect/keyword templates, and label assumptions and the extent to which downstream decisions depend on them.
+**Goal:** Given a legitimate new decklist (including the temporary Magnus Flameslinger v0.7 and, later, an authenticated mono-black list), represent every verified card as a **real interactable game object** with printed and derived characteristics, then produce meaningful opening-hand, mana, deployment, interaction-availability, resource, and turn-by-turn narrative diagnostics without implementing every individual ability. Reuse implemented rules and common effect/keyword templates, and label assumptions and the extent to which downstream decisions depend on them.
 
 **Not goals:** a perfect Magic rules engine, autonomous interpretation/execution of Oracle prose, unqualified win-rate estimates, arbitrary cards automatically acquiring effects, hiding impossible plays, or modifying strict semantics to help approximate runs succeed.
 
 Separately track **identity confidence**, **functional coverage**, and **outcome dependence**. A verified card identity is neither proof that the rules are implemented nor permission to guess the card's effect.
+
+## Foundational requirement: an unfamiliar card is still a real game object
+
+**Separate characteristics from abilities.** A verified creature whose special text is not implemented still has its actual mana cost/color, creature types, power/toughness, printed/recognized keywords, owner/controller, battlefield object ID, tap state, zone identity and relevant characteristics. A verified artifact is still an artifact; a verified land is still a land. These are typed entities in the **same authoritative game state**, not inert cards, fake tokens, anonymous generic 2/2s, or narrative-only projections.
+
+This general characteristic layer must be **usable by other cards and opponents**, regardless of whether the target's own activated/triggered abilities are implemented:
+
+- **Targeting and legality:** targeting by printed/derived type, subtype, color, controller, mana value, power/toughness, spell vs permanent and known restrictions; use correct zones and face-dependent values. Targetable by removal, bounce, counters and creature interaction only when targeting restrictions are verifiably satisfied. Ward/protection/hexproof/shroud or unknown applicable restrictions require actual support or a labeled abstention; **never silently ignore a known restriction**.
+- **General game actions:** source-paid casting, entering the battlefield, tapping, attacking/blocking, damage, dying, sacrifice, bouncing, exiling, returning, and reanimation where the relevant shared rules are implemented. Applying these actions to an unfamiliar card must not require a card-name branch.
+- **Queries and tutors:** an implemented tutor searching for a creature, Zombie, an artifact, an instant of a specified mana value/color, or a creature with power <= 2 must recognize *all* eligible verified library objects, including cards whose own effects are absent. Apply the actual tutor's search/filter/reveal/destination rules; a familiar *role* does not itself authorize a search or grant an ability.
+- **Recognized keywords:** if flying, deathtouch, lifelink, haste, vigilance, trample or similar generic behavior is implemented, unfamiliar cards declaring that keyword receive the same validated mechanic. A keyword with unimplemented behavior remains printed metadata and an explicit interaction gap, not a fictional approximation.
+
+**Hybrid body-only casting:** if a verified ordinary permanent has correct costs/characteristics and the common casting lifecycle supports it, hybrid mode may allow it to resolve as the verified body/land/artifact **with a registered explicit omission of unimplemented abilities**. This remains an approximation of the *full card* and downstream decisions depending on the omitted effect are flagged. Strict mode does not claim the full card is implemented. Unsupported mandatory enters-the-battlefield effects, prohibitions or replacement effects that change whether casting/entering is legal or safe must block or require a specifically reviewed approximation; no silent ignoring.
+
+**Example acceptance:** A verified unfamiliar `{3}{B}` 3/3 Zombie with deathtouch and unsupported triggered text can be cast using actual black mana, entered as a genuine creature object, found by a Zombie/creature/power-restricted tutor, targeted by legal removal, blocked and sacrificed through shared rules. Its unknown trigger is logged as omitted. An opponent's removal targeting it must not require the Zombie's own card implementation. If it has an unimplemented protection/ward restriction, target eligibility must be marked uncertain or blocked rather than incorrectly assumed legal.
+
+**The trust boundary:** printed characteristics are verified data, not guessed from an archetype. Effects remain executable only when their rule operation is fully supported or an explicit simplified handler exists. Roles and archetypes are *descriptive annotations*, not sources of permission, keywords or targeting restrictions.
 
 ## Three execution modes and fidelity contract
 
@@ -30,24 +47,27 @@ For each ability/component record `exact_subset | simplified | unsupported` (wit
 
 **Gate:** v0.7 parses with accurate metadata, names and unsupported effects are clearly accounted for, premium/budget remain regression-equivalent, and no unknown card is silently recast as a generic effect.
 
-### H1 — Observation-only early-game instrument (can run alongside P1 extraction)
+### H1 — Universal object participation, targeting/query and observation-only early-game instrument (can run alongside P1 extraction)
 
-1. Expose an engine-independent `DeckProvider + CardRegistry + observation runner` that accepts a seed, deck, seat, scripted threat events, and turn horizon; report actual opening seven and draw order, mulligan decisions, land drops, recognized sources, hands, and observed opponent threats.
-2. Offer separate fields: `in_hand`, `playable_now` (exact registered legality), `candidate_if_supported` (metadata-based potential), `reserved_mana`, `response_condition`, `not_modeled`. Never treat a possible response as a successfully countered threat.
-3. Support a bounded scripted opponent threat vocabulary (type, mana value, spell/permanent, turn, target/urgency). Do not turn a probabilistic threat description into a fabricated opponent deck.
-4. Emit fixed-seed six-turn narratives; begin with v0.7 and compare a strict premium trace. Record first unmodeled choice and censor outcome claims downstream when material.
+1. Introduce a canonical **card-characteristics / object-view / predicate interface** that works for every verified card, whether or not its own effect handler exists. Use one zone/face-sensitive view for both tutors, costs, targets, battlefield interactions and pilots. Expose owner/controller, object identity, types/subtypes, colors and identity, mana value, power/toughness, recognized keywords and known interaction restrictions.
+2. Make shared actions query/target **unfamiliar** verified creatures, lands, artifacts and spells without depending on their own named effect handlers. Unit-test creature/artifact/color/subtype/mana-value/power predicates, destination zones and legal versus uncertain targets. Preserve all printed/derived restrictions; missing keyword rules produce an explicit gap.
+3. Expose an engine-independent `DeckProvider + CardRegistry + observation runner` that accepts a seed, deck, seat, scripted threat events, and turn horizon; report actual opening seven and draw order, mulligan decisions, land drops, recognized sources, hands, and observed opponent threats.
+4. Offer separate fields: `in_hand`, `playable_now` (exact registered legality), `candidate_if_supported` (metadata-based potential), `reserved_mana`, `response_condition`, `not_modeled`. Never treat a possible response as a successfully countered threat.
+5. Support a bounded scripted opponent threat vocabulary (type, mana value, spell/permanent, turn, target/urgency). Do not turn a probabilistic threat description into a fabricated opponent deck.
+6. Emit fixed-seed six-turn narratives; begin with v0.7 and compare a strict premium trace. Record first unmodeled choice and censor outcome claims downstream when material.
 
-**Gate:** v0.7 produces one reproducible narrative with correctly labeled gaps, conservation of physical cards, and a measured single-run baseline; the same input is replayable.
+**Gate:** v0.7 produces one reproducible narrative with correctly labeled gaps, conservation of physical cards, and a measured single-run baseline; **an unfamiliar verified creature can be found with an implemented tutor and inspected as a valid removal target without its own effect implementation**; the same input is replayable.
 
 ### H2 — Minimal hybrid effects on shared primitives (work with P1/P2; do not create another table inheritance layer)
 
 1. Add opt-in ability descriptors and dispatch *at ability level* with exact-first selection: an exact handler overrides/blocks a simplified handler for that ability, while other unsupported abilities on the card remain independently reported.
-2. Build the first handful of **typed, parameterized** templates: ordinary colored land / conditional tapped land, mana rock, simple draw/filter, token creation, cast-triggered direct damage, conditional counterspell, and bounce/removal. Start only when real cost/timing and required effect primitives exist. Give all instances explicit restrictions and target validation; do not allow a counter to hit an illegal spell type or mana value.
-3. Require shared zone transitions, source-specific mana, target validation and reaction windows. For primitives not yet supported, report a blocked simplified action rather than directly altering state in an ad-hoc shortcut.
-4. For temporary cards, supply a small reviewed mapping from verified printed features to template parameters; no runtime Oracle parsing. One template must serve at least two distinct cards, without a name branch or new table subclass.
-5. Run `strict` and `hybrid` from identical starting seeds/snapshots. Ensure strict traces and stored fingerprints remain unchanged.
+2. Support verified-body-only casting of ordinary creatures/permanents through the same legal action, mana, timing, zone and combat lifecycle in hybrid mode; never collapse them into effectless placeholders or silently drop mandatory restrictions. Track unsupported abilities that might alter resolution or choices, and allow interaction from opponents/other cards using the same predicates and game objects.
+3. Build the first handful of **typed, parameterized** templates: ordinary colored land / conditional tapped land, mana rock, simple draw/filter, token creation, cast-triggered direct damage, conditional counterspell, and bounce/removal. Start only when real cost/timing and required effect primitives exist. Give all instances explicit restrictions and target validation; do not allow a counter to hit an illegal spell type or mana value.
+4. Require shared zone transitions, source-specific mana, target validation and reaction windows. For primitives not yet supported, report a blocked simplified action rather than directly altering state in an ad-hoc shortcut.
+5. For temporary cards, supply a small reviewed mapping from verified printed features to template parameters; no runtime Oracle parsing. One template must serve at least two distinct cards, without a name branch or new table subclass.
+6. Run `strict` and `hybrid` from identical starting seeds/snapshots. Ensure strict traces and stored fingerprints remain unchanged.
 
-**Gate:** one v0.7 run makes more meaningful choices than observation alone while visibly labeling every approximate action, exact gameplay remains identical, and at least two cards reuse each new template.
+**Gate:** one v0.7 run makes more meaningful choices than observation alone while visibly labeling every approximate action; an unfamiliar creature/permanent can be *interacted with* by supported removal, a tutor and an opponent without its own card-specific handler; exact gameplay remains identical, and at least two cards reuse each new template.
 
 ### H3 — Generalized colors, reusable keywords, and archetype composition (promote ahead of additional premium-specific effects)
 
@@ -55,13 +75,14 @@ For each ability/component record `exact_subset | simplified | unsupported` (wit
 2. Expand reusable **effect primitives**: choose, draw, discard/loot/rummage, scry/surveil, mana, create tokens, deal damage versus lose/gain life, counter, bounce/destroy, search/reveal/shuffle, sacrifice, exile/return, and graveyard movement. Preserve actual objects and batch events where implemented.
 3. Add declarative **keyword templates** prioritized by reuse: flying/vigilance/haste/trample/lifelink/deathtouch; flashback, adventure, escape, buyback, convoke, kicker, cycling, prowess, magecraft and cast/dies/ETB triggers. Use timing/cost/permission/event compositions rather than a keyword-as-spell shortcut. Unsupported complex layers/replacements explicitly fail closed.
 4. Add **card-role archetypes** as composable profiles, not replacement card identities: mana dork/rock; cantrip/loot; counter/tax counter; targeted removal; token maker; spellslinger pinger; sac outlet; aristocrat drain; recursion/reanimation; finisher. Roles help pilots rank choices and choose documented simplified templates but must never grant unspecified effects, mana, targets or keywords.
-5. Define commander-independent pilots (development-forward, threat-aware, defensive) driven by available legal/qualified actions, not hidden library contents or generic card-name guesses.
+5. Expand typed **target/query archetypes**, reusable across all cards: creature, nontoken creature, artifact, enchantment, instant/sorcery spell, subtype (Zombie/Wizard/etc.), controlled permanent, mana value bound, power/toughness bound, color, graveyard card and legal stack object. Ensure tokens, copies, faces and zone movement preserve or recompute relevant characteristics. A removal/tutor template consumes this predicate contract rather than card names.
+6. Define commander-independent pilots (development-forward, threat-aware, defensive) driven by available legal/qualified actions, not hidden library contents or generic card-name guesses.
 
-**Gate:** importing another legal card using existing primitives requires a definition/feature mapping and focused tests, not an engine/table change. Shared mechanisms demonstrate at least one blue/red and one mono-black use case. No divergence between exact services and simplified template execution on the same supported subcase.
+**Gate:** importing another legal card using existing primitives requires a definition/feature mapping and focused tests, not an engine/table change. Opponent creatures and imported unfamiliar cards are fully typed targets for already-supported interactions. Shared mechanisms demonstrate at least one blue/red and one mono-black use case. No divergence between exact services and simplified template execution on the same supported subcase.
 
 ### H4 — Measurement, calibration and narrative experiments
 
-1. For each run report: exact/simplified/unsupported **ability activations**; which choices consumed approximated state; first divergent turn; per-outcome dependence flags; unmodeled actions/choices; threat responses legal vs merely candidate; opponent assumptions.
+1. For each run report: verified object/characteristic participation; successful legal targeting/search/combat; blocked or uncertain target eligibility; exact/simplified/unsupported **ability activations**; which choices consumed approximated state; first divergent turn; per-outcome dependence flags; unmodeled actions/choices; threat responses legal vs merely candidate; opponent assumptions.
 2. Record metrics by fidelity: opening land/color availability, effective mana, turn commander becomes castable/actually cast, token generation, cards left in hand, answer availability, hold-up-versus-develop tradeoffs, and fraction of decisions with simplified dependencies. Do not treat an unsupported card as a blank if assessing real deck power.
 3. Compare paired seeds across strict/observation/hybrid and policies. Where possible, replay a card's simplified template against its later exact implementation on equivalent states and calculate metric-specific error/coverage, rather than inventing a global accuracy percentage.
 4. Run **one** engine smoke narrative and timing benchmark first, then **100** six-turn runs with 5–10 selected narratives; expand to **1,000** only after rules audits and p50/p95 timing. No 10,000-run campaign before establishing that sampled actions are sensible.
@@ -91,6 +112,19 @@ For each ability/component record `exact_subset | simplified | unsupported` (wit
 
 These names are illustrative; prefer the package's established domain conventions when implementing.
 
+## Reusable interaction acceptance matrix (required before broad named-card batches)
+
+| Situation | Expected observation/execution | Confidence boundary |
+|---|---|---|
+| Unknown-effect 3/3 Zombie battlefield permanent | Has real type/subtype, P/T, owner/controller, zone identity; is targetable by eligible removal and blockable as an ordinary creature | Unknown trigger omitted with dependencies; known targeting restrictions must not be silently ignored |
+| Implemented creature tutor searches unfamiliar card | Finds it by creature/Zombie/printed power or mana-value predicate; reveals, shuffles and places it correctly | Tutor effect and metadata verified; target card's own effects not needed |
+| Implemented removal vs unfamiliar permanent | Uses verified artifact/creature/enchantment predicates, costs, target legality and zone transition | Distinguish targetable, target conditional, unmodeled protection or replacement |
+| Printed keyword on new creature | Registered shared flying/haste/deathtouch/etc. behavior activates without card-specific code | Unimplemented keyword explicitly marked; body remains typed |
+| Opponent targets user's unfamiliar creature | Same target filters and priority apply to both seats; no named-card special case | Scripted opponent assumptions separately flagged |
+| Mono-black unfamiliar creature | Swamp pays black cost, object is cast/targeted/sacrificed/dies correctly | Only after P3 all-color mana/event gates pass |
+
+**Test standards:** include a new card with its own ability unsupported, a second newly imported card sharing a keyword, an existing implemented tutor, removal from an opponent seat, a token copy, a double-faced/Adventure characteristics check, and a card with an interaction restriction that must fail closed. Use deterministic fixtures. Confirm no hypothetical target is reported as a resolved answer.
+
 ## First acceptance demonstrations
 
 1. **v0.7 temporary Magnus** loads from the authoritative file; missing-snapshot identities are supplied offline; strict mode reports gaps, observation mode narrates six turns, hybrid makes at least one meaningful ordinary action with an explicit simplified handler.
@@ -101,7 +135,7 @@ These names are illustrative; prefer the package's established domain convention
 
 ## Terra implementation cadence
 
-- Deliver H0/H1 first for immediate user value, then H2 slice while P1/P2 are extracted; prioritize H3 shared effects/keywords before another broad named-card batch.
+- Deliver H0/H1 (including universal object/query/target acceptance) first for immediate user value, then H2 slice while P1/P2 are extracted; prioritize H3 shared effects/keywords before another broad named-card batch.
 - Commit each working gate independently with tests, an example narrative, updated coverage and a short performance record. Do not require an entire phase to finish before shipping a usable observation path.
 - Escalate decisions that change priority, payments, identity, event batching, or reproducibility to architectural review. Keep historical implementations regression-accessible.
 - Revisit individual-card queue only when a reusable template is missing or a high-impact card supplies a second independent validation of a mechanism.
