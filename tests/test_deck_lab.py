@@ -75,6 +75,15 @@ class DeckLabTests(unittest.TestCase):
             server.server_close()
             runner.join(timeout=5)
 
+    def test_local_autocomplete_endpoint_uses_cached_printed_names(self):
+        with patch("urllib.request.urlopen", side_effect=AssertionError("Network")):
+            data = respond("/api/cards/suggest", {"q": ["sol"]})
+            self.assertEqual(data["source"], "local_cache")
+            self.assertTrue(any(x["name"] == "Sol Ring" for x in data["suggestions"]))
+            self.assertEqual(respond("/api/cards/suggest", {"q": ["x"]})["suggestions"], [])
+            with self.assertRaisesRegex(ValueError, "Exactly one q"):
+                respond("/api/cards/suggest", {"q": ["sol", "swamp"]})
+
     def test_inputs_are_bounded_and_no_metadata_api_called(self):
         with patch("urllib.request.urlopen", side_effect=AssertionError("Unexpected network")):
             data = respond("/api/observation",
