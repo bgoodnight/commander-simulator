@@ -396,8 +396,15 @@ function renderRecords(){
   select.value=selectedSeed;
   const warning=$("results-current-warning");
   if(isUnsimulatedVersion()){
-    warning.hidden=false;
-    warning.textContent="“"+activeDeckTitle()+"” is a browser-edited deck. No cached Python observations exist for this version. The records below are unavailable until you export and prepare this deck in the simulator. Choose a built-in deck in the editor to view its existing records.";
+    warning.hidden=pageName!=="results";
+    clear(warning);
+    warning.appendChild(el("strong","No cached simulations for “"+activeDeckTitle()+"”. "));
+    warning.appendChild(document.createTextNode(
+      "This is a saved or unsaved edited deck. It has no precomputed Python observations; the original deck's results will not be shown as if they belonged to this revision. "));
+    const baseline=el("button","View built-in deck's cached records","stone-button");
+    baseline.type="button";
+    baseline.addEventListener("click",()=>summon(selected));
+    warning.appendChild(baseline);
     $("show-record").disabled=true;
     $("export-record").disabled=true;
     clear($("record-info"));clear($("turn-timeline"));
@@ -612,6 +619,7 @@ function renderDraft(){
   $("workshop-message").textContent=changes.length?
     changes.length+" card quantities modified · "+sumCounts(activeCounts)+" cards including commander. "+MODE_NOTE:
     "Choose a card to remove, then choose a new card to add.";
+  renderDeckVersionSelector();
 }
 function trySwap(){
   const remove=$("remove-name").value,add=$("add-name").value.trim();
@@ -667,7 +675,14 @@ function renderDeckVersionSelector(){
     }
     control.appendChild(saved);
   }
-  control.value=selectedVersionId?"saved:"+selectedVersionId:"preset:"+selected;
+  if(!selectedVersionId&&isUnsimulatedVersion()){
+    const draft=el("option","Unsaved changes to "+(LABELS[selected]||selected));
+    draft.value="unsaved";
+    control.appendChild(draft);
+    control.value="unsaved";
+  }else{
+    control.value=selectedVersionId?"saved:"+selectedVersionId:"preset:"+selected;
+  }
 }
 function loadDeckSelection(value){
   if(value.startsWith("preset:")){
