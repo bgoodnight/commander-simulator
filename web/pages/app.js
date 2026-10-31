@@ -182,7 +182,14 @@ function versionById(id){
   return localVersions.find(v=>v.id===id&&v.baseKey===selected)||null;
 }
 function activeVersion(){return selectedVersionId?versionById(selectedVersionId):null;}
-function isUnsimulatedVersion(){return !!activeVersion();}
+function isUnsimulatedVersion(){
+  if(activeVersion())return true;
+  if(!selected||!activeCounts)return false;
+  const original=initialCounts(),names=new Set([
+    ...Object.keys(original),...Object.keys(activeCounts)
+  ]);
+  return [...names].some(name=>(original[name]||0)!==(activeCounts[name]||0));
+}
 function visibleCounts(){
   if(activeCounts&&typeof activeCounts==="object")return activeCounts;
   return initialCounts();
@@ -200,7 +207,9 @@ function displayDeckCards(){
   return result;
 }
 function activeDeckTitle(){
-  return activeVersion()?.title||LABELS[selected]||selectedDeck()?.commander||"";
+  return activeVersion()?.title||
+    (isUnsimulatedVersion()?"Unsaved deck draft · "+(LABELS[selected]||selected):
+      LABELS[selected]||selectedDeck()?.commander||"");
 }
 function updateSelectionBadge(){
   if(!selected)return;
@@ -210,7 +219,7 @@ function updateSelectionBadge(){
   $("active-commander").textContent=deck.commander;
   $("active-deck-name").textContent=activeDeckTitle();
   $("active-deck-state").textContent=isUnsimulatedVersion()?
-    "Browser deck · no cached results":"Cached results available";
+    "Edited deck · no cached results":"Cached results available";
   const link=$("change-deck-link"),url=new URL("./editor.html",location.href);
   url.searchParams.set("deck",selected);
   if(selectedVersionId)url.searchParams.set("version",selectedVersionId);
@@ -581,6 +590,9 @@ function activeDelta(){
 }
 function renderDraft(){
   if(!selected)return;
+  updateSelectionBadge();
+  renderLibrary();renderOverview();
+  if(pageName==="results")renderRecords();
   const remove=$("remove-name");clear(remove);
   for(const name of Object.keys(activeCounts).sort((a,b)=>a.localeCompare(b))){
     if(activeCounts[name]<=0)continue;
@@ -710,15 +722,19 @@ function renderVersions(){
   }
 }
 function newDeckVersion(){
-  // This is a fresh, unsaved draft derived from the currently visible deck.
-  // It does not mutate any original or saved deck.
+  // Create a distinct unsaved draft, preserving current card quantities.
+  // A built-in card list remains read-only; no cached results are attached.
   selectedVersionId=null;
   history=[];
   $("draft-title").value="";
-  renderDraft();
-  renderDeckVersionSelector();
-  $("version-help").textContent="New unsaved draft. Enter a name and choose Save as named deck.";
-  note("New draft started from the visible card list.");
+  if(!isUnsimulatedVersion()){
+    $("version-help").textContent="New draft from the built-in deck. Make a swap, enter a name, then Save as named deck.";
+  }else{
+    $("version-help").textContent="New unsaved draft copied from the current deck. Save it under a new name.";
+  }
+  renderDraft();renderDeckVersionSelector();
+  syncPageNavigation();
+  note("New draft created. Enter a name and save to keep it.");
 }
 function exportDeck(){
   if(!selected)return;
@@ -810,6 +826,15 @@ async function fetchCard(){
 }
 function registerEvents(){
   $("audio-toggle").onclick=enableSound;
+  $("commander-medallion").onclick=toggleCommanderPicker;
+  document.addEventListener("click",e=>{
+    if(!e.target.closest(".selector-anchor"))closeCommanderPicker();
+  });
+  document.addEventListener("keydown",e=>{
+    if(e.key==="Escape")closeCommanderPicker();
+  });
+  $("deck-version-select").onchange=e=>loadDeckSelection(e.target.value);
+  $("new-version-button").onclick=newDeckVersion;
   // Navigation links lead to independent static pages (no client router).
   $("library-search").oninput=renderLibrary;
   $("library-category").onchange=renderLibrary;
@@ -842,10 +867,20 @@ async function boot(){
     allNames.sort((a,b)=>a.localeCompare(b));
     for(const card of Object.values(data.cards))addAliases(card);
     loadLocal();buildDeckRail();
-    const key=new URLSearchParams(location.search).get("deck");
-    const start=data.decks.find(d=>d.key===key)?.key||
-      data.decks.find(d=>d.key==="magnus_premium")?.key||data.decks[0].key;
-    summon(start);
+    const params=new URLSearchParams(location.search);
+    const key=params.get("deck"),requestedVersion=params.get("version");
+    let choice;
+    if(data.decks.some(d=>d.key===key)){
+      const validVersion=localVersions.some(v=>v.id===requestedVersion&&v.baseKey===key)?
+        requestedVersion:null;
+      choice={key,version:validVersion};
+    }else if(lastCommanderId&&sameCommanderDecks(lastCommanderId).length){
+      choice=latestSelectionForCommander(lastCommanderId);
+    }else{
+      const first=data.decks.find(d=>d.key==="magnus_premium")||data.decks[0];
+      choice=latestSelectionForCommander(first.commander_id);
+    }
+    summon(choice.key,{versionId:choice.version});
   }catch(err){
     const rail=$("commander-rail");clear(rail);
     rail.appendChild(el("p","Unable to open the archive: "+err.message));
