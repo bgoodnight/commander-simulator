@@ -1,6 +1,6 @@
 # Development roadmap — reusable Commander simulator
 
-Updated October 31, 2026 following the v35 [architecture audit](docs/ARCHITECTURE_AUDIT.md) and deck-provider implementation. Use [DEVELOPMENT_GUIDE.md](docs/DEVELOPMENT_GUIDE.md) and the new [Hybrid Simulation Work Plan](docs/HYBRID_SIMULATION_WORKPLAN.md) as the execution contract. **Universal interactions with verified unfamiliar cards, reusable keywords and typed effects, and transparently qualified simulation are now higher priority than individual premium-deck cards.**
+Updated October 31, 2026 following the v35 [architecture audit](docs/ARCHITECTURE_AUDIT.md) and deck-provider implementation. Use [DEVELOPMENT_GUIDE.md](docs/DEVELOPMENT_GUIDE.md), [Hybrid Simulation Work Plan](docs/HYBRID_SIMULATION_WORKPLAN.md), and the **binding [Progressive Ability-Composition Architecture](docs/ABILITY_COMPOSITION_ARCHITECTURE.md)** as the execution contract. **Universal interactions with verified unfamiliar cards, reusable keywords and typed effects, and transparently qualified simulation are now higher priority than individual premium-deck cards.**
 
 Current entry point: `run_simulation.py` -> `CopyTable`. Default deck: committed `decklists/magnus_thousand_sons_v1_14_premium.txt`, updated in `b9b3ba0abcd19676ec4f32cc9f427e52c1f55d8b`; Training Center and Otawara are pending and represented by basics. Preserve v1.13 budget and historical lists. Do not silently substitute trial/pre-delivery lists from other work.
 
@@ -8,9 +8,9 @@ Status: shared zones, source payments, stack/priority, combat and selected cards
 
 ## Priority and working rules
 
-- Complete P0.5 metadata/coverage readiness, deliver **P0.6 universal interactable card objects + observation mode** and **P0.7 hybrid MVP**, then deepen shared keyword/effect/archetype services before any broad named-card batch. Coordinate with P1/P2/P3 extraction rather than waiting for total engine rewrite.
+- **Next architecture gate: P0.65 per-ability registry and exclusive exact/simplified dispatch.** Build on partially delivered P0.6 identity/observation/query seams, then P0.7 executable hybrid. Reuse general keywords, effect templates and typed characteristic predicates before broad named-card batches. Coordinate with P1/P2/P3 extraction without introducing separate game-state engines.
 - Keep state/zone/priority foundations; extract incrementally. **A verified card remains a fully typed game object regardless of its effect coverage**: other cards and opponents must query, tutor, target, damage, block, sacrifice or move it through common rules, subject to supported legality. Do not add another active card-specific inheritance layer or rewrite everything at once.
-- Preserve historical fingerprints and freeze strict-mode behavior for comparison. Add opt-in observation/hybrid modes with per-ability fidelity, unknown-restriction safety and downstream decision/dependence logs. Document intentional correctness changes separately.
+- Preserve historical fingerprints and freeze strict-mode behavior for comparison. Add opt-in observation/hybrid modes with **per-ability** fidelity, unknown-restriction safety and downstream decision/dependence logs. **Exact replaces only a matching simplified ability slot, never all abilities on its card, and never runs alongside its proxy.** Document intentional correctness changes separately.
 - No new runtime caching until replay/invalidation gates exist. Never reduce legality/safety checks for speed.
 - Commit each complete milestone after checks pass and continue under existing authorization. Update this plan with actual completed gates.
 
@@ -49,17 +49,30 @@ Depends on the P0.5 deck-injection seam and P0 provider fix, **not on completion
 
 **Exit gate:** v0.7 imports with verified metadata; one unknown-effect real creature is found by an implemented type/subtype/power-limited tutor and recognized as a legal or explicitly uncertain target of opponent interaction; all cards remain real game objects; six-turn observation is replayable with honest unsupported-effect limits.
 
+## P0.65 — Progressive ability composition and override contract (new top implementation gate)
+
+Depends on **existing** P0.6 identity registry and conservative queries; can be built as a pure registry/resolver independently of completing P1 extraction. See [ability architecture decision](docs/ABILITY_COMPOSITION_ARCHITECTURE.md), gates G0/G1/G2.
+
+1. **Preserve verified printed data.** Extend `CardRegistry` toward canonical per-face Oracle ID/name, mana cost/value, colors and identity, types/subtypes, P/T (unknown if variable without safe expression), keyword declarations, and source text/provenance. Retain versioned Scryfall snapshots fetched **only during deck import/refresh**. Never infer abilities automatically from free-form Oracle text or roles.
+2. **Stable per-ability slots.** Register reviewed typed declarations with IDs scoped to Oracle ID / face / ability, including mechanics, target/query restrictions, costs, timing, event hooks and prerequisites. One card's verified body and **all unrelated abilities/keywords remain active** when another ability is promoted. Roles (tutor/ramp/creature/aristocrat) guide pilot choices; they never automatically grant effects.
+3. **Exact-first exclusive resolver.** Implement a pure mode-aware `strict | observation | hybrid` resolver with priority `exact -> reviewed simplified -> unsupported` for **each ability slot**. Strict never uses simplified; observation never resolves effects. An exact handler supersedes the matching simplified handler, not the entire card; never double-emit cast/ETB/dies/search/damage. Allow mixing exact and simplified only across **independent typed slots** or demonstrably disjoint suboperations, not overlapping whole effects.
+4. **Generic keyword and target composition.** Implement one canonical derived-object view for verified creatures/permanents and common type/subtype/color/mana-value/P/T predicates used by tutors, removal, opponents, combat, and pilots independent of named card coverage. Start shared ability templates with ordinary keywords such as double strike (two combat damage steps), flying, vigilance, lifelink and deathtouch **as underlying game rules permit**. An unknown restriction or missing required primitive returns UNKNOWN/blocked, never legal by guess.
+5. **Fidelity and provenance.** Record declared ability ID, handler/version, fidelity, omitted components, affected authoritative objects/events and subsequent dependency markers. Store a capability/coverage manifest per card **and per ability**, separate from verified printed characteristics.
+6. **Regression gates.** Simulated simple tutor upgraded to an exact constrained tutor must show one search/shuffle, no duplicate effects, unchanged other card abilities and unchanged strict baseline; two imported cards with the same keyword must reuse the same implementation. Provide an imported unfamiliar creature as a legal/uncertain target of another card's tutor/removal, not a special named handler.
+
+**Exit gate:** deterministic registry composition, exclusive per-slot promotion, strict replay parity, no runtime API calls, and an honest coverage report pass focused tests. **Do not broaden card batches or call P0.7 hybrid “done” until this contract exists.**
+
 ## P0.7 — Hybrid fidelity vertical slice and archetype/keyword pilot (next high priority)
 
-Depends on P0.6 plus the **specific shared primitives** needed from P1/P2/P3/P4, not completion of the entire architecture plan. Implements hybrid work-plan H2 and seeds H3.
+Depends on P0.6 **and P0.65 ability-slot resolver**, plus the **specific shared primitives** needed from P1/P2/P3/P4, not completion of the entire architecture plan. Implements hybrid work-plan H2 and seeds H3.
 
-1. Add mode selection `strict | observation | hybrid`. Preserve strict semantics exactly; hybrid is opt-in, exact-first, and tracks support at the **ability/keyword/effect level**, including assumptions, omitted effects, first approximation and consequences for later choices.
+1. Expose P0.65's mode-aware per-ability selection `strict | observation | hybrid` from the actual runtime. Preserve strict semantics exactly; hybrid is opt-in, exact-first **per ability slot** with no duplicate proxy/exact execution. Track assumptions, omitted components, first approximation and subsequent dependent decisions.
 2. Permit explicitly registered **verified-body-only** casting of ordinary creatures/permanents through canonical mana, timing, stack, zone and combat rules. Unsupported ETB, static restrictions, replacement effects or other interactions must be disclosed; if they affect legality or safety, block rather than silently suppress them.
 3. Register **reusable parameterized behaviors** (colored land/rock, cantrip/filter, token maker, cast-triggered damage, counter with predicate, targeted bounce/removal), each usable by at least two independent cards. All effects operate on authoritative game objects so an unfamiliar body can be targeted, blocked, sacrificed, tutored and interacted with.
-4. Build small verified keyword templates and type/role profiles for relevant mechanisms. Roles such as Zombie creature, mana rock, counterspell, tutor, spellslinger pinger, sacrifice outlet and recursion guide pilot classification but **do not grant rules text or legal abilities**.
+4. Compose verified shared keyword templates (including double strike, where combat steps are supported) and typed ability/effect templates across multiple cards. Roles such as Zombie creature, mana rock, counterspell, tutor, spellslinger pinger, sacrifice outlet and recursion guide pilot classification but **do not grant rules text or legal abilities**. Exact named-card rules may refine a common template or replace **only the same ability's simplified implementation**.
 5. Add representative scripted opponent actions via the same targeting rules and available mana. Run paired-seed strict/observation/hybrid traces, profile one engine game first, then 100 six-turn games with stratified narratives. No deck-strength or win-rate inference from unknown abilities.
 
-**Exit gate:** new verified creatures and permanents behave as correctly typed, interactable objects; reused keyword and effect templates support multiple distinct cards; current rules are unchanged in strict mode; hybrid reports where approximations materially change decisions. Upgrade the common rules/primitives rather than creating new named-card tables.
+**Exit gate:** new verified creatures and permanents behave as correctly typed, interactable objects; reused keyword and effect templates support multiple distinct cards; a simplified tutor is superseded by its exact version without double search while unrelated keywords and triggered abilities persist; strict results are unchanged; hybrid reports where approximations materially change decisions. Upgrade common rules/primitives rather than creating named-card tables.
 
 ## P1 — Normal package and composed engine services
 
@@ -69,7 +82,7 @@ Depends on P0 and coordinates with P0.6/P0.7. Findings A3, A7.
 2. Construct state/zones, queries, resources, stack/priority, events, effect registry and pilots once through a factory. Use narrow interfaces and explicit registration; reject duplicate capabilities.
 3. Wrap existing handlers initially, then port one vertical slice at a time. Remove named-card table overrides without changing their semantics.
 4. Keep historical engines/tests runnable but progressively remove them from active dependencies. Preserve milestones with git history/tags, not another superclass for every new card.
-5. Treat the canonical card-object views, universal targeting/query predicates, reviewed simplified effects and fidelity journal as services to preserve during extraction, not temporary parallel implementations.
+5. Treat the canonical card-object views, universal targeting/query predicates, reviewed simplified effects, **P0.65 ability registry/resolver** and fidelity journal as services to preserve during extraction, not temporary parallel implementations.
 
 **Exit gate:** premium runs through the package with reference-equivalent results; two independent engines/registries coexist in one interpreter; adding a handler requires no table subclass or service replacement.
 
@@ -80,7 +93,7 @@ Depends on P1. Findings A2, A4. B-mana runtime tests finish in P3.
 1. One immutable registry for characteristics, faces, costs, colors versus color identity, token templates, abilities and provenance. Keep network/Oracle fetching outside simulation.
 2. A zone/face-sensitive characteristic service used by views, searches, costs and copies. Retire supplemental color/mana-value maps and setup-time object rewriting.
 3. Commander-independent game/seat/deck/pilot configuration. Permit multiple detailed decks and basic-land multiplicity from metadata, including Swamp.
-4. Generate capability coverage from definitions and explicit omissions, recording independent status for printed characteristics, rules/keyword implementations, and named abilities. Unknown abilities may be omitted only in an explicitly labeled hybrid approximation; they must not become fabricated generic effects.
+4. Generate capability coverage from definitions and explicit omissions, recording independent status for printed characteristics, rules/keyword implementations, **individually identified ability slots and their handler provenance**, and named abilities. Unknown abilities may be omitted only in an explicitly labeled hybrid approximation; they must not become fabricated generic effects.
 5. Promote **shared object interaction and keyword/role definitions**: type/subtype/keyword/value predicates, legal target/query operations, and descriptive role profiles reusable for existing or newly imported cards. Every other card and opponent sees the same characteristics; no target search depends on whether the target's own special ability is implemented.
 
 **Exit gate:** every query sees Mage Siege as an instant on the stack and Lindblum as its normal land elsewhere; two real decks construct without Magnus installers; a black fixture validates/loads normally.
@@ -107,7 +120,7 @@ Depends on P3. Findings A6, A7. Required before graveyard/combo batches.
 
 **Exit gate:** Fabricate/Merchant Scroll/Solve/Spellseeker share searches; Pyromancer/Mage Siege share token and event components; simultaneous deaths and removed-source triggers work; damage and life loss are distinct in events/results.
 
-## P5 — Shared keyword and archetype library, then card batches
+## P5 — Shared keyword/effect templates and archetypes, then limited named-card batches
 
 Depends on P4; **general templates take priority over named premium cards**. Begin reusable partial templates in P0.7 wherever prerequisites exist. Small typed templates, not an Oracle-text interpreter. Test mechanisms once and card wiring/interactions separately.
 
@@ -158,4 +171,6 @@ P7a depends on P4 and stable current references; full new caching waits for requ
 
 ## Immediate next session
 
-**Immediately implement P0.6**: integrate the newly retrieved v0.7 offline identity snapshot into a safe card registry and observation path; establish typed universal card characteristics and target/query predicates so unfamiliar creatures are still valid tutor/removal/opponent targets; deliver honest six-turn observation narratives. **Next implement P0.7** opt-in hybrid behavior using the same objects and registered keyword/effect templates, with ability-level fidelity and strict-mode regression parity. Advance reusable mechanics and generic mono-black compatibility before further isolated premium-only cards. Coordinate safely with the P1 service extraction; preserve P0 replay fixtures, premium/budget outcomes and historical tests.
+**Current observed progress (Oct 31):** identity snapshots for Flameslinger, Gisa and a Mortarion purchase candidate; immutable `CardRegistry`, `Query` YES/NO/UNKNOWN predicates, basic-land observation traces, package service registry, and a verified ordinary U/R library-creature bridge are present. The imported verified creature is **not castable in strict mode**, and current code has **no per-ability exact/simplified dispatcher or hybrid executor**. GitHub Actions passed at inspected `d0de7d9`; no complete P0.6/P0.7 acceptance test has passed.
+
+**Next: complete P0.6's universal-derived-view and target/query integration, and implement P0.65 ability composition before executable hybrid behavior.** Add ability slot IDs, shared keyword/effect declarations, explicit mode precedence and a promotion test (simplified tutor -> exact tutor, unrelated double strike/trigger unchanged). Then P0.7 shared-state hybrid body casting, ordinary effects and fidelity log. Obtain offline snapshots for **Mortarion ideal/current and Necron** before their import acceptance, preserving hashes; continue Gisa and Flameslinger baselines. Advance B-mana and black/Necron cross-deck interactions when the common mana/event primitives exist. Do not return to a card-first queue until the architecture gates are satisfied.
