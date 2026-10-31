@@ -35,7 +35,10 @@ jobs:
         run: |
           python -m unittest tests.test_pages_export -v
           node --check web/pages/app.js
+          node --check web/pages/results_insights.js
+          node --test tests/pages_insights.test.cjs
           node --check dist/pages/app.js
+          node --check dist/pages/results_insights.js
       - name: Offer a downloadable preview even before Pages is enabled
         uses: actions/upload-artifact@v4
         with:
