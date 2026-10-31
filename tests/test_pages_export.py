@@ -43,7 +43,8 @@ class StaticPagesTests(unittest.TestCase):
 
     def test_only_allowlisted_site_data_and_no_workspace_are_exported(self):
         self.run_build()
-        permitted={"index.html","app.js","style.css","decks.json",
+        permitted={"index.html","summary.html","editor.html",
+                   "app.js","style.css","decks.json",
                    "observations.json","names.json","build-manifest.json",".nojekyll"}
         self.assertEqual({p.name for p in self.destination.iterdir()},permitted)
         self.assertNotIn("shared_scryfall_catalog.json",permitted)
@@ -59,6 +60,26 @@ class StaticPagesTests(unittest.TestCase):
         self.assertIn("localStorage",script)
         self.assertNotIn("/api/observation",script)
         self.assertNotIn("eval(",script)
+
+    def test_default_results_and_separate_shareable_summary_editor_pages(self):
+        manifest=self.run_build()
+        for name in ("index.html", "summary.html", "editor.html"):
+            with self.subTest(page=name):
+                page=(self.destination/name).read_text(encoding="utf-8")
+                self.assertIn('data-page="results"',page)
+                self.assertIn('data-page="summary"',page)
+                self.assertIn('data-page="editor"',page)
+                self.assertIn('id="summon-zone"',page)
+                self.assertIn('id="pane-insights"',page)
+                self.assertIn('d3@7',page)
+                self.assertIn(name,manifest["asset_sha256"])
+        js=(self.destination/"app.js").read_text(encoding="utf-8")
+        self.assertIn(':"results"',js)
+        self.assertIn("function showPage()",js)
+        self.assertIn("function renderScrollStory()",js)
+        self.assertIn("IntersectionObserver",js)
+        self.assertIn("window.d3",js)
+        self.assertIn("window.history.replaceState",js)
 
     def test_all_canonical_commander_art_paths_are_optional_official_cdn(self):
         self.run_build()
