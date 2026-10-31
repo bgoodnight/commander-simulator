@@ -4,6 +4,17 @@ A reproducible, modular four-player **Magic: The Gathering Commander** simulatio
 
 Both saved presets and compatible local deck files now use the same active engine through the [deck provider](commander_sim/README.md). Local files must pass validation against the bundled identity snapshots; effect coverage remains incomplete.
 
+## Current priority: practical multi-deck MVP and Deck Lab
+
+The active development order is **shared offline Scryfall cache → validated imports for Magnus/Mortarion/Gisa/Necrons → real shared mana/ordinary actions → usable first-six-turn simulations for different commanders → phased Deck Lab user interface**. This is intentionally ahead of exhaustive named-card implementations. A first read-only UI may preview observation after import; only source-paid actions in the shared engine qualify as actual simulated turns. Rich two-deck versus play and deeper card fidelity follow the applicable acceptance gates.
+
+- [Product-first roadmap](ROADMAP.md) and [Multi-deck MVP gates](docs/MULTI_DECK_MVP.md)
+- [Deck Lab UI milestones](docs/USER_INTERFACE_ROADMAP.md): **U0 viewer**, **U1 versioned deck editing**, **U2 explicit local-first Scryfall lookup/import**, then **U3/U4 richer visuals and replay**
+- [Bounded Work-session handoff](docs/LOW_CREDIT_IMPLEMENTATION_HANDOFF.md) and [coding-agent instructions](AGENTS.md)
+- [Progressive per-ability architecture](docs/ABILITY_COMPOSITION_ARCHITECTURE.md)
+
+**Status:** no GUI is implemented. The `commander_sim.abilities` catalog selects exact/simplified handlers as pure metadata but does **not** execute them. The historical v35 engine is still Magnus-oriented; black and mixed real-deck gameplay are not yet live. Card API requests remain confined to explicit metadata import/refresh, not simulation.
+
 ## V35 copied spell targets
 
 [Copy target handling](simulator/v35_copy_targets/README.md) adds target changes for copied counterspells, two-target Step Through copies, Abrade and Reiterate copies. See the [coverage audit](simulator/v35_copy_targets/CARD_COVERAGE.md).
