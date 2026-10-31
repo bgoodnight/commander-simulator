@@ -162,6 +162,47 @@ def save_draft(base_key, changes, title, *, catalog_path=SHARED_CATALOG,
         raise
 
 
+def get_saved_version(version_id, *, workspace=DEFAULT_WORKSPACE,
+                      catalog_path=SHARED_CATALOG):
+    """Load an existing immutable local version using a safe opaque file ID."""
+    if not isinstance(version_id, str) or not re.fullmatch(r"[a-z0-9-]{1,90}", version_id):
+        raise ValueError("Invalid saved version ID")
+    workspace = Path(workspace)
+    manifest = workspace / (version_id + ".deck.json")
+    if not manifest.is_file():
+        raise ValueError("Saved version not found")
+    item = json.loads(manifest.read_text(encoding="utf-8"))
+    deck_path = Path(item["deck_path"])
+    if deck_path.resolve() != (workspace / (version_id + ".txt")).resolve():
+        raise ValueError("Saved version deck path mismatch")
+    if (not deck_path.is_file() or
+        hashlib.sha256(deck_path.read_bytes()).hexdigest() != item["deck_sha256"]):
+        raise ValueError("Saved version has been modified since creation")
+    from .card_cache import pinned_deck_entries
+    from .snapshots import validate_snapshot
+    pinned_deck_entries(deck_path, item["manifest"], catalog_path)
+    validated = validate_snapshot(deck_path, item["snapshot"],
+                                  commander=item["commander"])
+    if validated.deck.count != 100:
+        raise ValueError("Saved version has invalid card count")
+    return item
+
+
+def observe_saved_version(version_id, *, workspace=DEFAULT_WORKSPACE,
+                          catalog_path=SHARED_CATALOG, seed=0, turns=6):
+    """No network; reuse the same observation engine as canonical fixtures."""
+    if not isinstance(seed, int) or isinstance(seed, bool):
+        raise ValueError("Seed must be an integer")
+    if not isinstance(turns, int) or isinstance(turns, bool) or not 1 <= turns <= 20:
+        raise ValueError("Observation must have 1–20 turns")
+    version = get_saved_version(
+        version_id, workspace=workspace, catalog_path=catalog_path
+    )
+    from .observation import observe
+    return observe(version["deck_path"], version["snapshot"],
+                   commander=version["commander"], seed=seed, turns=turns)
+
+
 def saved_versions(*, workspace=DEFAULT_WORKSPACE):
     """List versions in the workspace, but never mutate canonical decks."""
     workspace = Path(workspace)
@@ -175,5 +216,5 @@ def saved_versions(*, workspace=DEFAULT_WORKSPACE):
             raise ValueError("Workspace path outside configured directory")
         if not deck_path.is_file() or hashlib.sha256(deck_path.read_bytes()).hexdigest() != item["deck_sha256"]:
             raise ValueError("Saved deck has changed since validation: " + str(deck_path))
-        versions.append(item)
+        versions.append({"id": path.name[:-len(".deck.json")], **item})
     return versions
