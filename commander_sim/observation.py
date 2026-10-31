@@ -10,6 +10,9 @@ from pathlib import Path
 import random
 from .snapshots import validate_snapshot
 from .identities import CardRegistry
+from .mana_costs import (
+    parse_fixed_mana_cost, plan_source_payment, UnsupportedManaCost
+)
 
 _BASIC=frozenset({'Plains','Island','Swamp','Mountain','Forest','Wastes',
                   'Snow-Covered Plains','Snow-Covered Island','Snow-Covered Swamp',
@@ -82,13 +85,45 @@ def observe(deck_path, snapshot_path, *, seed=0, turns=6, reserve=0, threats=(),
                 candidates.append({'card':name,'mana_value':value,'mana_cost':primary.mana_cost,
                                    'status':'candidate_if_supported',
                                    'limitations':'total-mana screen only; colors, timing, targets and effects not checked'})
+        # Source-backed *payment preview* for the existing observation trace.
+        # Each hypothetical card uses a fresh independent assignment of
+        # currently modeled basic/Command Tower sources. No spell is cast, no
+        # source taps, no mana floats, and unmodeled mana costs fail closed.
+        source_modes = tuple(_source_colors(source, commander_colors)
+                             for source in lands)
+        paid_previews = []
+        for name in hand:
+            identity = registry.get(name)
+            try:
+                face = identity.primary_face()
+            except NotImplementedError:
+                continue
+            if 'land' in face.types or identity.layout != 'normal':
+                continue
+            try:
+                cost = parse_fixed_mana_cost(face.mana_cost)
+            except UnsupportedManaCost:
+                continue
+            plan = plan_source_payment(cost, source_modes)
+            if plan is not None:
+                paid_previews.append({
+                    'card': name, 'mana_cost': face.mana_cost,
+                    'source_indices': list(plan),
+                    'source_names': [lands[i] for i in plan],
+                    'status': 'source_paid_mana_preview',
+                    'limitations': ('Mana symbols can be matched by modeled sources; '
+                                    'this is NOT a legal spell cast. No extra costs, '
+                                    'timing, targets, abilities or resolution checked')
+                })
         current_threats=[dict(item) for item in threats if item.get('turn')==turn]
         if len(library)+len(hand)+len(lands)+1 != 100:
             raise AssertionError('Physical card conservation failed')
         trace.append({'turn':turn,'drawn':drawn,'land_played':land,'modeled_basic_sources':dict(Counter(name for name in lands if name in _BASIC)),
                       'modeled_sources':[{'card':name,'colors':list(_source_colors(name,commander_colors))} for name in lands],
                       'reserved_mana':reserved,'in_hand':list(hand),'playable_now':[],
-                      'candidate_if_supported':candidates,'scripted_threats':current_threats,
+                      'candidate_if_supported':candidates,
+                      'source_paid_mana_preview':paid_previews,
+                      'scripted_threats':current_threats,
                       'library_count':len(library),'hand_count':len(hand),'battlefield_count':len(lands)})
     return {'mode':'observation','commander':commander,'deck_sha256':snapshot.deck_sha256,'snapshot_sha256':snapshot.snapshot_sha256,
             'seed':seed,'turns':turns,'opening_hand_policy':('keep seven' if mulligan=='keep' else 'one free mulligan if all possible land counts are outside 2–5; otherwise keep'),
@@ -100,8 +135,12 @@ def observe(deck_path, snapshot_path, *, seed=0, turns=6, reserve=0, threats=(),
             'land_policy':'play first basic land or Command Tower in hand; other nonbasic lands are not modeled',
             'reserve_policy':f'reserve up to {reserve} modeled sources as a hypothetical planning choice',
             'first_unmodeled_choice':'turn 1: other nonbasic land and spell decisions are not modeled',
-            'not_modeled':['spell casting or resolution','color requirements','other nonbasic land abilities',
+            'not_modeled':['spell casting or resolution','non-mana legal cast restrictions',
+                           'alternative and additional costs','other nonbasic land abilities',
                            'triggers','opponent actions except supplied threat descriptions','combat','win rates'],
+            'mana_preview_scope': ('Fixed printed W/U/B/R/G/C plus generic costs only, '
+                                   'using currently modeled basics and Command Tower. '
+                                   'No taps, casts, special costs, effects or priority.'),
             'trace':trace}
 
 if __name__=='__main__':
