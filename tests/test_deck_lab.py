@@ -1,10 +1,14 @@
 """Read-only Deck Lab U0 contracts, using real pinned M1 deck files."""
 import unittest
 from unittest.mock import patch
+from http.server import ThreadingHTTPServer
+from threading import Thread
+from urllib.request import urlopen
+import json
 
 from commander_sim.deck_fixtures import FIXTURES
 from commander_sim.deck_lab_api import catalog_response, deck_detail, observation_response
-from tools.deck_lab import respond
+from tools.deck_lab import respond, Handler
 
 
 class DeckLabTests(unittest.TestCase):
@@ -44,6 +48,32 @@ class DeckLabTests(unittest.TestCase):
             respond("/api/edits", {})
         with self.assertRaisesRegex(ValueError, "Unknown deck fixture"):
             respond("/api/deck", {"key": ["fake"]})
+
+    def test_local_http_server_serves_static_page_and_read_only_api(self):
+        server = ThreadingHTTPServer(("127.0.0.1", 0), Handler)
+        runner = Thread(target=server.serve_forever, daemon=True)
+        runner.start()
+        try:
+            base = "http://127.0.0.1:" + str(server.server_port)
+            with urlopen(base + "/", timeout=5) as response:
+                self.assertEqual(response.status, 200)
+                html = response.read().decode("utf-8")
+                self.assertIn("Commander Deck Lab", html)
+                self.assertIn("Observation mode only.", html)
+            with urlopen(base + "/api/decks", timeout=5) as response:
+                self.assertEqual(response.status, 200)
+                body = json.load(response)
+                self.assertEqual(len(body["decks"]), 6)
+            with urlopen(base + "/api/observation?key=wretched_ranks&seed=0&turns=3",
+                         timeout=5) as response:
+                self.assertEqual(response.status, 200)
+                body = json.load(response)
+                self.assertEqual(body["turns"], 3)
+                self.assertEqual(body["mode"], "observation")
+        finally:
+            server.shutdown()
+            server.server_close()
+            runner.join(timeout=5)
 
     def test_inputs_are_bounded_and_no_metadata_api_called(self):
         with patch("urllib.request.urlopen", side_effect=AssertionError("Unexpected network")):
