@@ -10,6 +10,8 @@ The active product order is **shared offline Scryfall cache → validated import
 
 **Theorycraft a new deck (cache-first):** `python tools/theorycraft.py my_deck.txt --commander "Ghoulcaller Gisa"`. This imports exact missing identities **once on first preflight** and runs a labeled offline observation. Add `--offline` to prohibit new Scryfall requests. For the full 35,533-name cached autocomplete index, see [card discovery guide](docs/CARD_DISCOVERY_AND_THEORYCRAFT.md); the separate one-shot refresh command is `python tools/refresh_card_names.py`.
 
+**Use the U1 local Deck Lab editor:** preview a one-for-one cached-card swap, undo/revert, and Save As a separate immutable local variant without changing a canonical decklist. Saved copies can be observed with the same deterministic (not full-game) runner. [Editing and Work browser preview](docs/DECK_LAB_U1.md). Missing-card imports from the browser remain U2; the existing CLI theorycraft preflight already supports them.
+
 **Launch the local Deck Lab:** from the repository root, run `python tools/deck_lab.py`, then open **http://127.0.0.1:8765/** on that computer. Requires Python 3.11+ and no third-party packages. [U0 usage and limitations](docs/DECK_LAB_U0.md).
 
 - [Product-first roadmap](ROADMAP.md) and [Multi-deck MVP gates](docs/MULTI_DECK_MVP.md)
@@ -17,7 +19,7 @@ The active product order is **shared offline Scryfall cache → validated import
 - [Bounded Work-session handoff](docs/LOW_CREDIT_IMPLEMENTATION_HANDOFF.md) and [coding-agent instructions](AGENTS.md)
 - [Progressive per-ability architecture](docs/ABILITY_COMPOSITION_ARCHITECTURE.md)
 
-**Status:** M0 offline caching and **M1 six-deck pinned imports are complete** ([import report](simulator/card_data/m1_import_report.json)). The local U0 Deck Lab is implemented with six deck selections, printed metadata and deterministic observations, plus **offline typeahead against 35,533 Scryfall card names**. New `tools/theorycraft.py` checks the shared Oracle-ID catalog before the **first preparation of a modified deck**, automatically fetches exact missing card metadata unless `--offline` is selected, and reuses a hash-pinned manifest on later runs. **This does not cast spells or implement new card abilities.** The pure `commander_sim.abilities` selector is not an executable hybrid engine; historical v35 gameplay is Magnus-oriented and source-paid black/mixed-deck play remain M2/M3 work. No metadata API requests occur during a turn, existing offline game/observation, page load or typing.
+**Status:** M0 offline caching and **M1 six-deck pinned imports are complete** ([import report](simulator/card_data/m1_import_report.json)). The local U0/U1 Deck Lab has six deck selections, printed metadata, deterministic observations, **offline typeahead against 35,533 Scryfall card names**, and a reversible one-for-one deck editor with strict validation, immutable Save As and observations of saved copies. New `tools/theorycraft.py` checks the shared Oracle-ID catalog before the **first preparation of a modified deck**, automatically fetches exact missing card metadata unless `--offline` is selected, and reuses a hash-pinned manifest on later runs. **This does not cast spells or implement new card abilities.** The pure `commander_sim.abilities` selector is not an executable hybrid engine; historical v35 gameplay is Magnus-oriented and source-paid black/mixed-deck play remain M2/M3 work. No metadata API requests occur during a turn, existing offline game/observation, page load or typing.
 
 ## V35 copied spell targets
 
@@ -167,7 +169,7 @@ Requires Python 3.10+ and only the standard library:
 python run_all_tests.py
 ```
 
-**875 tests across thirty-seven suites** (v3:20, v4:15, v5:21, v6:21, v7:50, v8:32, v9a:29, v9b:34, v9c:49, v10:51, v11:50, v12:50, v13:69, v14:56, v15:38, v16:14, v17:6, v18:5, v19:5, v20:4, v21:10, v22:8, v23:13, v24:9, v25:7, v26:12, v27:14, v28:11, v29:9, v30:11, v31:15, v32:11, v33:12, v34:14, v35:6, P0 baseline:11, package contracts:83). The GitHub Actions workflow tests on Python 3.11, 3.12, and 3.13.
+**885 tests across thirty-seven suites** (v3:20, v4:15, v5:21, v6:21, v7:50, v8:32, v9a:29, v9b:34, v9c:49, v10:51, v11:50, v12:50, v13:69, v14:56, v15:38, v16:14, v17:6, v18:5, v19:5, v20:4, v21:10, v22:8, v23:13, v24:9, v25:7, v26:12, v27:14, v28:11, v29:9, v30:11, v31:15, v32:11, v33:12, v34:14, v35:6, P0 baseline:11, package contracts:93). The GitHub Actions workflow tests on Python 3.11, 3.12, and 3.13.
 
 Run historical v15 and reproduce validation:
 
