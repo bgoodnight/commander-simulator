@@ -10,7 +10,7 @@ Updated October 31, 2026. **Priority is an early usable multi-deck simulator**, 
 - The ability slots **must not be inferred automatically from Scryfall text or role tags**. A reviewed definition/ability catalog is still missing.
 - Package-test expected-count contract lives in `run_all_tests.py`. **When adding tests, update the package_tests expected count and final total**, then verify the CI run; do not mistake count mismatch for a rules regression.
 
-**Current completed milestones:** M0 metadata cache, **M1 six-deck import** (official one-time Scryfall import run, all six 100-card decks pinned and validated, commit `b204f36`), and initial **U0 read-only Deck Lab** (local static browser UI and Python standard-library server, verified offline deck details and observation endpoints). See [DECK_LAB_U0.md](DECK_LAB_U0.md). **The next highest user-value slice is U1 versioned deck editing**, independently of M2 source-paid black gameplay. M2/M3 can progress as a separate engine track, but do not claim an observation is a played game. Do not redo completed M0/M1/U0 work.
+**Current completed milestones:** M0 metadata cache, **M1 six-deck import** (official one-time Scryfall import run, all six 100-card decks pinned and validated, commit `b204f36`), and initial **U0 read-only Deck Lab** (local static browser UI and Python standard-library server, verified offline deck details and observation endpoints). See [DECK_LAB_U0.md](DECK_LAB_U0.md). **U1 one-for-one editor and immutable Save As are now implemented; the next high-value action is real-browser visual inspection, followed by U2 first-run import integration**, independently of M2 source-paid black gameplay. M2/M3 can progress as a separate engine track, but do not claim an observation is a played game. Do not redo completed M0/M1/U0 work.
 
 ## Bounded next Work sessions — execute in priority order
 
@@ -63,7 +63,7 @@ Implement a thin local browser UI **as soon as M1 validates the deck catalog and
 
 `commander_sim/card_discovery.py`, `tools/theorycraft.py`, `commander_sim/card_name_catalog.py`, and `tools/refresh_card_names.py` are now implemented. **A first explicit deck preparation automatically imports missing exact card details into the shared catalog**, pins a new deck-hash snapshot, and reuses it with zero requests on rerun; `--offline` fails if a card isn't cached. The Deck Lab local typeahead uses cached detailed records and optionally the once-fetched complete Scryfall card-name list, not Scryfall requests per key. See [discovery guide](CARD_DISCOVERY_AND_THEORYCRAFT.md). Do **not** duplicate network logic or rewrite these services in U1/U2. The name-only catalog suggests canonical names but **does not assert rule coverage, Commander legality or card ownership**.
 
-### UI Slice U1 — Edit, validate, save and compare deck variants (after U0)
+### UI Slice U1 — DONE: editable swaps and hash-pinned Save As (visual review pending)
 
 Add/remove cards **already in the verified offline catalog**, perform Commander singleton/count/color-identity/commander legality validation via the shared `DeckProvider`, display before/after diff and mana/type summaries, and **Save As** a new version with an exact deck SHA/pinned catalog manifest. Keep canonical Magnus, Mortarion Current/Ideal and factory precon fixtures untouched. Never infer that a user owns a card just because it appears in an ideal or Scryfall-backed list. Commit with round-trip/invalid-save tests.
 
@@ -96,9 +96,13 @@ Do not begin head-to-head by default. If it is reprioritized **after U0–U4 are
 - Avoid **Fast/Ultrafast** unless latency matters more than allowance. Don't assume more reasoning always improves simple coding changes.
 - Work/Codex model selection and credits are account-dependent; check **Settings > Usage** for actual remaining five-hour/weekly allowance. Model switches **do not** restore a shared usage pool. The user's Chat conversation can be used for planning without initiating a cloud Work coding task.
 
-## A copyable starting prompt for the next Work session
+## Next Work session: visual review of Deck Lab
 
-> Read AGENTS.md, ROADMAP.md, docs/USER_INTERFACE_ROADMAP.md, docs/DECK_LAB_U0.md and this handoff. Check latest main and CI. **Perform UI Slice U1 ONLY**: keep existing `tools/deck_lab.py` browser UI and read-only deck/observation endpoints, then add a **separate editable deck workspace** (never modify canonical Magnus/Mortarion/precon files). Support cloning a selected saved deck, adding/removing verified cards through the already available **offline autocomplete**, Commander 100-card/singleton/color-identity validation, clear before/after diff, undo/revert, and **Save As** a new local version with a pinned Oracle-ID revision manifest. **Reuse `prepare_theorycraft_deck` for optional automatic first-run import of a newly selected canonical card**, never direct Scryfall calls from typing, simulation or card-effect resolution. Keep canonical fixtures immutable; no head-to-head or broad card-specific rule work. Test invalid saves and rollback, preserve all historical regressions, update the 37-suite expected test count, commit one coherent milestone with SHA and limitations, then stop.
+Use [Deck Lab U1](DECK_LAB_U1.md) and the current main branch. Run the local Deck Lab server and open it in the Work browser. Inspect the actual desktop/mobile layout, test valid and invalid Gisa card swaps, undo/revert, Save As and observing a saved version. Compare displayed data with the CLI and run the complete regression suite. Commit only observed defects and stop.
+
+## Subsequent development milestone: U2 browser card import
+
+Connect the existing offline name suggestions and `prepare_theorycraft_deck` first-run missing-card importer to U1 draft preparation. Only a user-submitted new deck preparation may trigger Scryfall, not typing or simulation. Confirm Commander legality, cache/version pinning and rollback on failure. No new special-card rule implementations.
 
 ## Stop conditions / avoiding wasted credits
 
