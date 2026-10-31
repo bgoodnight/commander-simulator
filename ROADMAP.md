@@ -8,7 +8,7 @@ Status: shared zones, source payments, stack/priority, combat and selected cards
 
 ## Priority and working rules
 
-- Fix the confirmed provider regression, then consolidate architecture before broad card batches.
+- Fix the confirmed provider regression, introduce the P0.5 deck-configuration seam, then consolidate architecture before broad card batches.
 - Keep state/zone/priority foundations; extract incrementally. Do not add another active card-specific inheritance layer or rewrite everything at once.
 - Preserve historical fingerprints and freeze current behavior for comparison. Document intentional correctness changes separately.
 - No new runtime caching until replay/invalidation gates exist. Never reduce legality/safety checks for speed.
@@ -24,6 +24,18 @@ Dependencies: none. Audit findings A1, A9, A10.
 4. **Initial checks complete:** the runner verifies actual test counts, and assembled budget/premium provider checks join historical suites. Broaden capability coverage as providers are extracted.
 
 **Exit gate:** Frostboil works with Altar, premium behavior remains correct, unrelated providers cannot vanish silently, and the comparison corpus/benchmark protocol exists.
+
+## P0.5 — DeckProvider seam and temporary-deck smoke test (new immediate priority)
+
+Depends on the P0 provider fix and baseline; runs **before or alongside P1 extraction**, without assuming P2's general card registry or B-mana support is complete. This is a narrow portability milestone, not a claim that every deck's effects are executable.
+
+1. Extract deck parsing/validation into one `DeckProvider` with a stable explicit path/config argument. Preserve canonical v1.14 premium and v1.13 budget as named presets, and permit `--deck-file` for an identified local decklist. Validate command zone, quantity, 100-card total, singleton/basic-land exceptions, and color identity using trustworthy available metadata; fail closed when verification is unavailable. Never silently accept unverified cards as supported.
+2. Separate **deck composition** from **engine/rules implementation**. Construct the same active engine for both presets, rather than selecting historical `CopyTable` versus `AltarTable` as the meaning of a deck choice; preserve the historical engines only as explicit regression fixtures. Use one documented commander/Magnus pilot for initial acceptance, with a clear error for unsupported commanders until P2.
+3. Provide a coverage-aware card loading path: verified names/types/mana values/colors where known; mark absent effects as unsupported and uncastable in full-rule mode. Support a separately labeled **observation-only** early-game analysis mode that includes unsupported cards in draws, tracks possible interaction by verified conditions, and never pretends their effects resolved.
+4. Acceptance fixture: load the user's actual **Flameslinger v0.7 temporary list** from an authoritative saved file only; do not invent or reconstruct the deck. Compare premium/budget initialization and opening-hand replay with fixed seeds. Demonstrate a six-turn trace with draws, sources, playable actions, reserved mana, and opponent threat assumptions clearly labeled. Do not claim a win rate or complete card simulation.
+5. Add CLI/loader contract tests, card-count and zone-conservation checks, provider registration tests, fixed-seed reference runs and a short measured runtime report (p50/p95 if sample supports it). Ensure P1 extraction can migrate the adapter unchanged rather than re-implementing deck parsing.
+
+**Exit gate:** deck file/preset selection does not require a new table subclass; both canonical decks use the same current engine; a valid temporary list loads and yields honest coverage/early-turn observations; historical outcomes and known limitations are preserved. General commander identity, arbitrary colors (including B), two detailed seats, face-sensitive characteristics and complete card execution remain P2/P3 work.
 
 ## P1 — Normal package and composed engine services
 
@@ -108,4 +120,4 @@ P7a depends on P4 and stable current references; full new caching waits for requ
 
 ## Immediate next session
 
-Continue **P0/P1**: expand the initial replay corpus beyond its three explicit interaction fixtures and begin package extraction behind compatibility checks. The Frostboil fix, initial provider checks and benchmark protocol are complete.
+Prioritize **P0.5 DeckProvider** now, alongside P1 compatibility-safe package extraction: unify premium/budget deck choice on one active engine, add explicit deck-file loading and truthful unsupported-card coverage, then validate one real v0.7 six-turn trace and benchmark. Continue expanding P0 replay fixtures; preserve the baseline and avoid new historical table subclasses.
