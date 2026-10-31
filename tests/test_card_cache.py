@@ -101,6 +101,33 @@ class CacheTests(unittest.TestCase):
         self.assertEqual(len(CardCatalog(self.catalog_path).current), 76)
         self.assertEqual(validate_snapshot(deck, output).deck.count, 100)
 
+    def test_existing_three_deck_snapshots_share_offline_cache(self):
+        pairs = (
+            (ROOT / "decklists/fixtures/magnus_flameslinger_v0_7_pre_delivery.txt",
+             ROOT / "simulator/card_data/flameslinger_v0_7_scryfall.json"),
+            (ROOT / "decklists/wretched_ranks_foundations_precon_2026.txt",
+             ROOT / "simulator/card_data/gisa_scryfall.json"),
+            (ROOT / "decklists/mortarion_purchase_reconciled_candidate_2026_10_27.txt",
+             ROOT / "simulator/card_data/mortarion_scryfall.json"),
+        )
+        catalog = CardCatalog(self.catalog_path)
+        for deck, snapshot in pairs:
+            catalog.seed_snapshot(snapshot, deck_path=deck)
+        catalog.save()
+        raw_total = sum(len(json.loads(snapshot.read_text())["cards"]) for _, snapshot in pairs)
+        shared_count = len(CardCatalog(self.catalog_path).current)
+        self.assertLess(shared_count, raw_total)
+        self.assertIsNotNone(CardCatalog(self.catalog_path).lookup("Sol Ring"))
+        for i, (deck, _) in enumerate(pairs):
+            output = self.base / f"fixture_{i}.json"
+            result = fetch(deck, output, catalog_path=self.catalog_path,
+                           offline=True, request_batch=self.request)
+            self.assertEqual(result["fetched"], 0)
+            self.assertEqual(validate_snapshot(
+                deck, output, commander=("Magnus the Red", "Ghoulcaller Gisa",
+                                          "Mortarion, Daemon Primarch")[i]).deck.count, 100)
+        self.assertEqual(self.requests, [])
+
     def test_old_pinned_revision_remains_after_refresh_with_new_output(self):
         self.import_deck(self.deck_a, self.output_a)
         initial = pinned_deck_entries(self.deck_a,
