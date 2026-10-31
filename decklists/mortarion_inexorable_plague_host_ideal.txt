@@ -1,0 +1,94 @@
+# Mortarion's Inexorable Plague Host — ideal (not fully owned)
+# Source: user's earlier Mortarion’s Inexorable Plague Host final 100-card report.
+# This is the ideal strategy baseline, NOT the receipt-reconciled physical build.
+
+Commander
+1 Mortarion, Daemon Primarch
+
+# Creatures (25)
+1 Great Unclean One
+1 Plague Drone
+1 Poxwalkers
+1 Sloppity Bilepiper
+1 Tallyman of Nurgle
+1 Venomcrawler
+1 Crypt Rats
+1 Pestilence Demon
+1 Thrashing Wumpus
+1 Plague Spitter
+1 Midnight Banshee
+1 Necroskitter
+1 Yawgmoth, Thran Physician
+1 Mikaeus, the Unhallowed
+1 Reassembling Skeleton
+1 Persistent Specimen
+1 Darksteel Myr
+1 Stuffy Doll
+1 Dread
+1 Vilis, Broker of Blood
+1 Massacre Wurm
+1 Gray Merchant of Asphodel
+1 Morbid Opportunist
+1 Crypt Ghast
+1 Ophiomancer
+
+# Instants (7)
+1 Nurgle's Conscription
+1 Bile Blight
+1 Dark Ritual
+1 Malakir Rebirth // Malakir Mire
+1 Undying Malice
+1 Deadly Dispute
+1 Sudden Spoiling
+
+# Sorceries (8)
+1 Blight Grenade
+1 Mandate of Abaddon
+1 Decree of Pain
+1 Black Sun's Zenith
+1 Toxic Deluge
+1 Feed the Swarm
+1 Victimize
+1 Plague of Vermin
+
+# Enchantments (11)
+1 Nurgle's Rot
+1 Pestilence
+1 Black Market Connections
+1 Phyrexian Arena
+1 The Meathook Massacre
+1 Crumbling Ashes
+1 Phyrexian Reclamation
+1 Unspeakable Symbol
+1 Greed
+1 Nest of Scarabs
+1 Dreadhorde Invasion
+
+# Artifacts (11)
+1 Sol Ring
+1 Arcane Signet
+1 Charcoal Diamond
+1 Wayfarer's Bauble
+1 Worn Powerstone
+1 Caged Sun
+1 Basilisk Collar
+1 Sun Droplet
+1 Skullclamp
+1 Resurrection Orb
+1 Swiftfoot Boots
+
+# Lands (37)
+1 Barren Moor
+1 Bojuka Bog
+1 Cabal Coffers
+1 Urborg, Tomb of Yawgmoth
+1 Nykthos, Shrine to Nyx
+1 War Room
+1 Castle Locthwain
+1 Takenuma, Abandoned Mire
+1 Myriad Landscape
+1 Witch's Cottage
+1 Leechridden Swamp
+1 Phyrexian Tower
+25 Swamp
+
