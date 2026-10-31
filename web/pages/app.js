@@ -399,7 +399,7 @@ function closeCard(){$("dialog-backdrop").hidden=true}
 /* Summary first, and the detailed observation archive second. No fixed
  * deck-specific interpretation: findings are built from the 11 cached seeds.
  */
-let aggregate=null,scrollObserver=null;
+let aggregate=null;
 function showAggregate(){
   const result=$("results-kpis"),intro=$("results-takeaway");
   clear(result);clear(intro);
