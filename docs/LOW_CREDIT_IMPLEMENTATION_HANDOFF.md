@@ -53,12 +53,31 @@ Updated October 31, 2026. **Priority is an early usable multi-deck simulator**, 
 
 **Exit:** two authentic different commander lists generate meaningful reproducible turns under the same actual rules engine.
 
-### Slice 4 — MVP 2: real cross-deck play (M4)
+### UI Slice U0 — Minimal Deck Lab viewer (after M3; read-only preview optional after M1)
+
+Implement a thin local browser UI over **existing** deck/catalog/run services: deck variant chooser, commander/legality/cache/ability-support summary, seed/horizon and **only currently supported modes**, actual versus observation first-six-turn trace and export. No new game logic in UI, no Scryfall calls on navigation or run, no invented full-game outcomes. Compare a CLI run and UI result for exactly the same seed/deck/mode. Commit and stop. UI planning: [USER_INTERFACE_ROADMAP.md](USER_INTERFACE_ROADMAP.md).
+
+### UI Slice U1 — Edit, validate, save and compare deck variants (after U0)
+
+Add/remove cards **already in the verified offline catalog**, perform Commander singleton/count/color-identity/commander legality validation via the shared `DeckProvider`, display before/after diff and mana/type summaries, and **Save As** a new version with an exact deck SHA/pinned catalog manifest. Keep canonical Magnus, Mortarion Current/Ideal and factory precon fixtures untouched. Never infer that a user owns a card just because it appears in an ideal or Scryfall-backed list. Commit with round-trip/invalid-save tests.
+
+### UI Slice U2 — Explicit local-first fetch for new cards (after U1 and M0)
+
+First search names and face aliases in M0's local Oracle-ID catalog. If absent, present a **user-triggered** `Fetch from Scryfall` flow, reviewed card identity/face/legality details and error handling; update cache and a **new** deck manifest only after appropriate confirmation/save. No API on typing/autocomplete, page load or simulation. Test cached lookups use zero calls, missing import makes bounded calls and network failure leaves deck unchanged. Commit and stop. **U0/U1/U2 are more important than exhaustively mapping unique card rules.**
+
+### Slice 4 — MVP 2: real cross-deck play (M4; may advance alongside U1/U2)
 
 - Give two **detailed** seats independently configured authentic decks with shared turn/priority, targets, attack/block, stack and zone state. Verify legal Magnus ↔ Gisa or Mortarion interactions, rather than a detailed deck playing against abstract placeholders. Commit one repeatable mixed-deck scenario.
 - Do not demand every exact named ability before calling the rules interactions functional; emit unsupported/approximation logs and stop games when a missing mandatory rule invalidates continuation.
 
-### Slice 5 — Deepen individual effects and performance (M5/M6)
+### UI Slices U3/U4 — Better visualization and board replay
+
+**U3 (after U2):** compact mana curve, card types, coverage/fidelity and early-turn timeline; compare deck variants at matched seeds, explicitly distinguishing observation/proxy from actual engine effects. Support readable light/dark, keyboard/mobile layout; no custom table animations required.
+
+**U4 (after M4):** battlefield, stack, zones, card/object details and replay controls must consume **authoritative** event/state output from two real detailed seats. UI actions call existing legality/priority APIs; never mutate a parallel board model. Commit visuals in independently testable slices.
+
+### Slice 5 — Deepen individual effects and performance (M5/M6; after U0/U1/U2)
+
 
 - Extend the card directory only for **observed high-impact missing behavior**, and compose shared effect templates. Test common keyword persistence across exact/simplified promotion and exclusive one-tutor-one-search events; add at least two independently named cards per reusable mechanic.
 - Tune and compare with paired seeds and explicit fidelity/coverage reports before making deck-strength or optimization claims. Defer speculative mutable game-state caching to an invalidation/replay-tested phase.
