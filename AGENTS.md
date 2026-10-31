@@ -1,10 +1,11 @@
 # Coding-agent instructions — Commander simulator
 
 Applies to implementation on this repository's active branch. Read, in this order:
-1. [ROADMAP.md](ROADMAP.md) — current priorities and phase exit gates.
-2. [docs/ABILITY_COMPOSITION_ARCHITECTURE.md](docs/ABILITY_COMPOSITION_ARCHITECTURE.md) — **binding progressive card architecture**.
-3. [docs/DEVELOPMENT_GUIDE.md](docs/DEVELOPMENT_GUIDE.md) — correctness and workflow contract.
-4. [docs/HYBRID_SIMULATION_WORKPLAN.md](docs/HYBRID_SIMULATION_WORKPLAN.md) — vertical slices and acceptance fixtures.
+1. [ROADMAP.md](ROADMAP.md) and [docs/MULTI_DECK_MVP.md](docs/MULTI_DECK_MVP.md) — **active product order M0–M6**, multi-deck acceptance.
+2. [docs/LOW_CREDIT_IMPLEMENTATION_HANDOFF.md](docs/LOW_CREDIT_IMPLEMENTATION_HANDOFF.md) — bounded next Work session, starting with M0 cache.
+3. [docs/USER_INTERFACE_ROADMAP.md](docs/USER_INTERFACE_ROADMAP.md) — **U0–U4 UI milestones after usable MVP, before exhaustive named-card work**.
+4. [docs/ABILITY_COMPOSITION_ARCHITECTURE.md](docs/ABILITY_COMPOSITION_ARCHITECTURE.md) — binding progressive card architecture.
+5. [docs/DEVELOPMENT_GUIDE.md](docs/DEVELOPMENT_GUIDE.md) and [docs/HYBRID_SIMULATION_WORKPLAN.md](docs/HYBRID_SIMULATION_WORKPLAN.md) — correctness and fidelity contracts.
 
 ## Non-negotiable architecture
 
@@ -16,20 +17,26 @@ Applies to implementation on this repository's active branch. Read, in this orde
 - **Offline API only.** `tools/fetch_deck_identities.py` uses Scryfall on explicit import/refresh, writing a versioned, hash-checked local snapshot. No network/API calls while loading a saved snapshot, advancing a turn, casting a card, running tests, or running a simulation batch.
 - **Strict and history preserved.** No semantic changes to legacy strict engine except separately diagnosed correctness fixes with updated fixtures. Do not add another card-specific subclass, monkey-patch existing shared services, weaken legality/state checks, or add caching before replay/invalidation gates.
 
-## Current development order
+## Active product-first implementation queue
 
-1. Finish P0.6: stable unified per-face characteristics and universal target/query integration from existing `commander_sim.identities`, `queries`, `snapshots` and narrow live-library bridge. The observation runner is a projection, not a valid gameplay implementation.
-2. **P0.65 mandatory, partly implemented**: `commander_sim.abilities` now has a **pure, non-executing** `AbilityCatalog`, exact/simplified per-slot selection and tests. **Extend rather than replace it** with a reviewed typed card-ability directory, per-slot coverage/provenance, and an integration adapter to canonical events/effects; the existing tests prove selection only, **not** actual double-trigger safety. Finish live promotion/no-duplication tests before large named-card batches or any claim of playable hybrid.
-3. P0.7: wire opt-in hybrid into the **same** legal-action, cost, payment, stack, zone and event engine; implement verified-body-only casting for safe ordinary permanents and several reviewed shared templates, each demonstrated on at least two different cards.
-4. Expand canonical W/U/B/R/G/C mana and event/keyword/effect primitives; compare Flameslinger, Mortarion current and ideal, Wretched Ranks, Necron Dynasties with an authentic offline snapshot for **each deck file**. Ensure the current/ideal Mortarion and Necron decks get their own snapshots; earlier receipt-only Mortarion snapshot does not validate them.
-5. Then resume targeted named-card implementations as **reviews of reusable mechanics** rather than proliferating one-off handlers.
+**Target:** usable multi-deck early-game experiments and a practical Deck Lab **before** mapping every individual card. Historical P0–P7 phase numbers document prerequisites; follow the active **M0–M6 and U0–U4** delivery order instead.
+
+1. **M0 FIRST — shared offline Scryfall catalog:** check a deduplicated immutable Oracle-ID/alias store **before** requesting missing card names on explicit import/refresh, write version-pinned per-deck SHA manifests, and prove zero API calls on repeated/overlapping cache-hit imports or game runs. Do not implement mutable game-state memoization.
+2. **M1 — validated multi-deck import/observation:** load Magnus premium/budget, Wretched Ranks, Mortarion Current/Ideal and Necrons with exact manifests; support general commander identity without deck-specific table subclasses. Reproducible six-turn observation may omit unsupported actions but may not claim they resolved.
+3. **M2 — minimum shared gameplay:** source-paid W/U/B/R/G/C mana incl. Swamp/B and true colorless, canonical safe ordinary creature/permanent casting, universal object typing, basic combat and cross-card legal target/query predicates in the same authoritative v35-derived kernel. Unknown legality must fail closed.
+4. **M3 — usable early-turn MVP:** one shared generic runner executes real legal actions with Magnus and one mono-black deck for six turns, with per-action fidelity/omission and replay. The **pure, non-executing** `commander_sim.abilities.AbilityCatalog` is already present; extend it for a **small reviewed** hybrid template set without replacing the selector or requiring a broad named-card directory. P0.65's full promotion/integration gates are still required before calling hybrid complete.
+5. **U0 → U1 → U2 — user-facing functionality before broad card mapping:** simple local Deck Lab viewer with deck/seed/turn results (optionally read-only *observation* preview after M1); then versioned **deck editing and Save As**; then explicit **local-first Fetch from Scryfall** for missing cards. The UI is thin presentation over existing deck/import/engine APIs, not an independent state or rules engine. Never edit canonical fixture files or auto-fetch while navigating, typing or simulating. Follow [USER_INTERFACE_ROADMAP.md](docs/USER_INTERFACE_ROADMAP.md).
+6. **M4 — two different detailed deck seats**, alongside U1/U2 where feasible. **U3/U4 — visuals and richer replay** once source-paid real events exist. Only then **M5 — broad unique-card effects** and M6 performance/calibration; fix individual cards earlier only when they block an MVP core mechanic.
+
+**Do not let individual-card completeness block M1/M2/M3/U0/U1/U2.** Imported = identity recognized; castable = permitted by validated current rules; fully supported = independent per-ability coverage. Keep these different in all reports.
 
 ## Usage-efficient working procedure
 
-- Start with [LOW_CREDIT_IMPLEMENTATION_HANDOFF.md](docs/LOW_CREDIT_IMPLEMENTATION_HANDOFF.md) and the latest commit/CI. Scope a single Slice A/B/C/D; do not re-audit the entire historical engine or redo already committed foundations.
+- Start with [LOW_CREDIT_IMPLEMENTATION_HANDOFF.md](docs/LOW_CREDIT_IMPLEMENTATION_HANDOFF.md) and the latest commit/CI. Scope a single current **Slice 0/1/2/3 or UI U0/U1/U2**; do not re-audit the entire historical engine, redo already committed foundations, or prioritize the former Slice A card directory over M0 caching.
 - Run **targeted** tests during edits, then the complete 37-suite `python run_all_tests.py` once at a coherent commit. When adding package tests, update both `('package_tests', N)` and the final reported total in `run_all_tests.py` without removing the count gate. Inspect failing CI job logs rather than blindly retrying full tasks.
 - Prefer a smaller coding model on low/medium reasoning for self-contained mechanical changes, and reserve more expensive reasoning for cross-engine priority/event correctness, architectural review and difficult failures. No unbounded "continue until complete" instructions.
-- Fetch card metadata once on explicit import, then reuse a locally verified, shared Oracle-ID catalog when it exists; do not re-fetch card identities on each run or per deck when already cached.
+- Fetch card metadata only on explicit **import/refresh** after consulting the shared immutable Oracle-ID cache; never re-fetch cached identities because another deck uses them. UI U2 may expose an explicit user-initiated fetch control; browser navigation, typing, deck selection and simulation are **not** import requests.
+- Keep UI services thin: one canonical deck validator, shared card catalog and simulation/run API; editable revisions separate from canonical historical fixtures; results display whether they are observation versus real legal actions and which abilities are simplified/unsupported.
 
 ## Milestone completion checklist
 
