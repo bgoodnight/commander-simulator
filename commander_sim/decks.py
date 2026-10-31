@@ -73,7 +73,9 @@ class DeckProvider:
         section_count = 0
         for number, raw in enumerate(text.splitlines(), 1):
             line = raw.strip()
-            if not line:
+            # Decklists may contain standalone provenance/section comments; never
+            # interpret these as card entries or as evidence of a card type.
+            if not line or line.startswith('#'):
                 continue
             heading = re.fullmatch(r'(Commander|Library|Creatures|Other Permanents|Instants and Sorceries|Lands)(?: \((\d+)\))?', line)
             if heading:
