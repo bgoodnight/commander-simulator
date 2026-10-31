@@ -1,0 +1,70 @@
+name: Build and (when enabled) publish Deck Lab Pages
+on:
+  push:
+    branches: [main]
+    paths:
+      - "web/pages/**"
+      - "tools/build_pages_deck_lab.py"
+      - "commander_sim/**"
+      - "simulator/card_data/**"
+      - "tests/test_pages_export.py"
+      - ".github/workflows/deck-lab-pages.yml"
+  workflow_dispatch:
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+concurrency:
+  group: deck-lab-pages
+  cancel-in-progress: false
+jobs:
+  build:
+    name: Export sanitized static Deck Lab
+    runs-on: ubuntu-latest
+    outputs:
+      enabled: ${{ steps.pages-check.outputs.enabled }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+      - name: Build six-deck static snapshot and fixed-seed observations
+        run: python tools/build_pages_deck_lab.py --output ./dist/pages
+      - name: Validate export contracts and Javascript syntax
+        run: |
+          python -m unittest tests.test_pages_export -v
+          node --check web/pages/app.js
+          node --check dist/pages/app.js
+      - name: Check whether GitHub Pages is enabled
+        id: pages-check
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          if gh api "repos/${{ github.repository }}/pages" >/dev/null 2>&1; then
+            echo "enabled=true" >> "$GITHUB_OUTPUT"
+            echo "Pages is enabled; continuing to static deployment." >> "$GITHUB_STEP_SUMMARY"
+          else
+            echo "enabled=false" >> "$GITHUB_OUTPUT"
+            echo "Static Deck Lab built and tested, but Pages is not enabled or is unavailable for this repository." >> "$GITHUB_STEP_SUMMARY"
+            echo "To publish, enable Settings > Pages > Build and deployment: GitHub Actions, then re-run this workflow." >> "$GITHUB_STEP_SUMMARY"
+          fi
+      - name: Configure Pages
+        if: steps.pages-check.outputs.enabled == 'true'
+        uses: actions/configure-pages@v5
+      - name: Upload sanitized Pages artifact
+        if: steps.pages-check.outputs.enabled == 'true'
+        uses: actions/upload-pages-artifact@v4
+        with:
+          path: ./dist/pages
+  deploy:
+    name: Deploy static Deck Lab
+    if: needs.build.outputs.enabled == 'true'
+    runs-on: ubuntu-latest
+    needs: build
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - name: Deploy GitHub Pages
+        id: deployment
+        uses: actions/deploy-pages@v4
