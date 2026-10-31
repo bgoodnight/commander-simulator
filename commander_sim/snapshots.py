@@ -45,11 +45,14 @@ def validate_snapshot(deck_path, snapshot_path, *, commander='Magnus the Red'):
         row = {'name':name, 'oracle_id':card.get('oracle_id'), 'type_line':card.get('type_line'),
                'color_identity':card.get('color_identity'),
                'commander_legality':card.get('legalities', {}).get('commander')}
-        # A deck may name a reviewed face of a modal DFC, transform card,
-        # Adventure, etc. Preserve the actual listed face alias rather than
-        # assuming only the "adventure" layout can have a different parent
-        # Oracle name. The identity remains one canonical Oracle object.
-        if listed != name and listed in [f.get('name') for f in faces]:
+        # Preserve the legacy Adventure normalization: a full printed
+        # name in the decklist becomes its primary face's name for engine
+        # inventory compatibility. Other multi-face cards can also be listed
+        # by a verified face alias; this does not grant executable face rules.
+        if card['layout'] == 'adventure' and faces:
+            row['deck_name'] = faces[0].get('name')
+            row['card_faces'] = faces
+        elif listed != name and listed in [f.get('name') for f in faces]:
             row['deck_name'] = listed
             row['card_faces'] = faces
         rows.append(row)
