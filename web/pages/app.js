@@ -389,14 +389,19 @@ function unveilChart(section){
     d3.select(section).selectAll("rect.bar[data-target-y]")
       .transition().duration(760).ease(d3.easeCubicOut)
       .attr("y",function(){return this.dataset.targetY})
-      .attr("height",function(){return this.dataset.targetHeight});
+      .attr("height",function(){return this.dataset.targetHeight})
+      .on("end",function(){
+        delete this.dataset.targetY;
+        delete this.dataset.targetHeight;
+      });
   }else{
     for(const bar of bars){
       bar.setAttribute("y",bar.dataset.targetY);
       bar.setAttribute("height",bar.dataset.targetHeight);
+      delete bar.dataset.targetY;
+      delete bar.dataset.targetHeight;
     }
   }
-  for(const bar of bars){delete bar.dataset.targetY;delete bar.dataset.targetHeight}
 }
 function installScrollStory(){
   if(scrollObserver){scrollObserver.disconnect();scrollObserver=null}
