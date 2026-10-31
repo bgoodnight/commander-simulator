@@ -2,7 +2,7 @@
 
 Applies to implementation on this repository's active branch. Read, in this order:
 1. [ROADMAP.md](ROADMAP.md) and [docs/MULTI_DECK_MVP.md](docs/MULTI_DECK_MVP.md) — **active product order M0–M6**, multi-deck acceptance.
-2. [docs/LOW_CREDIT_IMPLEMENTATION_HANDOFF.md](docs/LOW_CREDIT_IMPLEMENTATION_HANDOFF.md) — bounded next Work session, now starting with M1 cached multi-deck import.
+2. [docs/LOW_CREDIT_IMPLEMENTATION_HANDOFF.md](docs/LOW_CREDIT_IMPLEMENTATION_HANDOFF.md) — bounded next Work session, now prioritizing U1 deck editing using existing theorycraft preflight.
 3. [docs/USER_INTERFACE_ROADMAP.md](docs/USER_INTERFACE_ROADMAP.md) — **U0–U4 UI milestones after usable MVP, before exhaustive named-card work**.
 4. [docs/ABILITY_COMPOSITION_ARCHITECTURE.md](docs/ABILITY_COMPOSITION_ARCHITECTURE.md) — binding progressive card architecture.
 5. [docs/DEVELOPMENT_GUIDE.md](docs/DEVELOPMENT_GUIDE.md) and [docs/HYBRID_SIMULATION_WORKPLAN.md](docs/HYBRID_SIMULATION_WORKPLAN.md) — correctness and fidelity contracts.
@@ -35,7 +35,8 @@ Applies to implementation on this repository's active branch. Read, in this orde
 - Start with [LOW_CREDIT_IMPLEMENTATION_HANDOFF.md](docs/LOW_CREDIT_IMPLEMENTATION_HANDOFF.md) and the latest commit/CI. Scope one current **Slice 2/3 or UI U1/U2/U3/U4**; do not re-audit the entire historical engine, redo already committed foundations, or prioritize the former Slice A card directory over M0 caching.
 - Run **targeted** tests during edits, then the complete 37-suite `python run_all_tests.py` once at a coherent commit. When adding package tests, update both `('package_tests', N)` and the final reported total in `run_all_tests.py` without removing the count gate. Inspect failing CI job logs rather than blindly retrying full tasks.
 - Prefer a smaller coding model on low/medium reasoning for self-contained mechanical changes, and reserve more expensive reasoning for cross-engine priority/event correctness, architectural review and difficult failures. No unbounded "continue until complete" instructions.
-- Fetch card metadata only on explicit **import/refresh** after consulting the shared immutable Oracle-ID cache; never re-fetch cached identities because another deck uses them. UI U2 may expose an explicit user-initiated fetch control; browser navigation, typing, deck selection and simulation are **not** import requests.
+- **Theorycraft preflight is an import:** `commander_sim.card_discovery.prepare_theorycraft_deck` and `tools/theorycraft.py` already auto-fetch only missing exact card metadata at **first preparation of a modified deck** (unless `--offline`). A deck-hash-pinned snapshot is reused on later runs. Never fetch at a turn/cast/card-effect/simulation step or silently fuzzy-correct invalid names. Do not reimplement this in U1/U2; call its existing service.
+- **Autocomplete:** the U0 `/api/cards/suggest` endpoint serves local cached aliases and the names-only full Scryfall list (refreshed explicitly with `tools/refresh_card_names.py`) without network per keystroke. Name-only suggestions are not imported Oracle records; show `requires_metadata_import` and validate complete card identity when the user saves/prepares the deck. [Implementation guide](docs/CARD_DISCOVERY_AND_THEORYCRAFT.md).
 - Keep UI services thin: one canonical deck validator, shared card catalog and simulation/run API; editable revisions separate from canonical historical fixtures; results display whether they are observation versus real legal actions and which abilities are simplified/unsupported.
 
 ## Milestone completion checklist
