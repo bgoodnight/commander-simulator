@@ -19,8 +19,8 @@ let data=null, archives=null, allNames=[], selected=null, activeTab="overview";
 let cachedByName = new Map(),extraCards={},activeCounts=null,history=[],localVersions=[];
 let selectedSeed="0",soundEnabled=false,audio=null,lastRecord=null,autoTimer=null;
 let selectedVersionId=null,preferredByCommander={},lastCommanderId=null;
-const pageName=location.pathname.endsWith("/summary.html")?"summary":
-  location.pathname.endsWith("/editor.html")?"editor":"results";
+const pageName=location.pathname.endsWith("/results.html")?"results":
+  location.pathname.endsWith("/editor.html")?"editor":"summary";
 const PAGE_INFO={
   results:["Opening-Turn Findings","What the cached runs suggest, how consistent the patterns are, and where to inspect the evidence."],
   summary:["The Commander's Ledger","Inspect commander art, card-type composition and the mana curve of this verified deck."],
