@@ -1,6 +1,6 @@
 # Internal development guide
 
-Implementation contract for subsequent work. Follow [ROADMAP.md](../ROADMAP.md); the [audit](ARCHITECTURE_AUDIT.md) explains the priorities. These are future design targets, not components claimed to exist already.
+Implementation contract for subsequent work. Follow [ROADMAP.md](../ROADMAP.md) and the [Hybrid Simulation Work Plan](HYBRID_SIMULATION_WORKPLAN.md); the [audit](ARCHITECTURE_AUDIT.md) explains the priorities. These are future design targets, not components claimed to exist already.
 
 ## Dependency direction
 
@@ -29,29 +29,49 @@ Begin with typed Python dataclasses/functions and small registries, not an unres
 | Damage / drain / life payment | Recipients, quantities, event infrastructure | Damage, losing/gaining life and paying life are separate operations |
 | Flying / deathtouch / lifelink | Blocking, damage and SBA rule hooks | These are not all on-resolution modifiers |
 
+## Universal card interactions and fidelity contracts
+
+**Every verified card is a typed physical game object before its special abilities are implemented.** A card with unknown effect text does not lose its actual card types, subtypes, mana value, color, power/toughness, recognized keywords, zone identity, owner or controller. Printed traits must come from verified face-sensitive data; do not guess them from name or role tags.
+
+**Separation of responsibilities**
+
+- `CardIdentity/FaceCharacteristics`: authoritative printed card data; verified cost, type line, subtypes, color, P/T, keyword declarations and provenance.
+- `DerivedCharacteristics/TargetPredicate`: read-only, zone-sensitive queries including face, type, subtype, mana value, power/toughness, controller, color, known restrictions and stack/battlefield/graveyard/library. Operates identically whether the target card's own ability is supported or unsupported. Recompute on mutations/copies/transforms instead of maintaining parallel maps.
+- `AbilityRegistration/EffectTemplate`: optional executable functionality, exact or reviewed simplified, with timing/target/cost/zone restrictions and explicit prerequisites. An unsupported ability must not prevent a verified creature from being recognized by a supported tutor or removal effect.
+- `RoleProfile`: descriptive pilot-facing archetype such as ramp source, Zombie, token maker, counter, removal, spell-trigger damage, sacrifice or recursion. **A role alone never grants an ability or a targeting permission.**
+- `FidelityRecord`: per-component `verified_characteristic | exact_subset | simplified | unsupported | unknown_legality`, approximation assumptions, omitted behaviors, and downstream-dependent choices. Printed identity confidence is separate from modeled effect fidelity.
+
+**Targeting/query contract:** An implemented tutor that finds an artifact, Wizard, creature with power <= 2, instant with mana value <= 2, or other verified legal candidate must find unfamiliar qualifying cards. Similarly, a supported removal spell, opponent spell or block/combat rule must interact with the same target's verified characteristics without a card-specific handler. Tutors have their own actual search rules; an unfamiliar card need not have its own effects implemented to be found. Missing target restrictions (e.g., ward, hexproof, protection, conditional static/continuous effects) are not silently treated as absent; block the action or mark its legality conditional until supported.
+
+**Hybrid permanent body contract:** Only when real casting/payment/priority/permanent zone handling is supported, an explicitly registered hybrid behavior may put a verified creature/permanent body onto the battlefield, with printed P/T/types/recognized keywords, even when its separate special abilities are omitted. Log omissions and dependent events. Do not silently ignore mandatory cast/ETB/replacement/prohibitive abilities that may alter legality, costs or zone outcomes. Strict mode retains its established semantics; observation mode does not pretend any unsupported action actually resolved.
+
+**Shared keyword contract:** Implement flying, haste, vigilance, trample, deathtouch, lifelink, prowess, magecraft, cycling, flashback, adventure, convoke, buyback, escape and other features via reusable rule mechanisms when feasible. Keyword labels alone do not implement those mechanics. In addition to normal card tests, require a newly imported *second card* to exercise each template without a new table subclass.
+
+**Acceptance tests:** An unfamiliar verified Zombie creature with unsupported triggered text can (in hybrid under allowed prerequisites) pay actual black mana, enter as a 3/3 with a registered keyword, be found by a creature/Zombie/power tutor, be targeted by legal removal from an opposing seat, be blocked, be sacrificed and die with correct zone/identity effects. An unimplemented protection restriction must prevent false certainty. Separately verify a blue/red unfamiliar creature, an artifact target, a token, a modal/Adventure face-sensitive query, and a candidate-only response against a scripted opposing spell. Check card conservation and strict-mode replay parity. Prerequisite black mana/event gates remain explicit; these tests do not justify fabricating missing capabilities.
+
 ## Domain contracts
 
-- **Characteristics:** immutable printed definitions/faces plus zone-sensitive derived values. Views, search, costs, tokens and copies use one service; no parallel color/mana-value maps in handlers.
+- **Characteristics:** immutable printed definitions/faces plus zone-sensitive derived values. Views, search, **tutor predicates**, target legality, costs, tokens, generic combat, sacrifice, opponent interaction and copies use one service **even when target card abilities are unsupported**; no parallel color/mana-value maps in handlers.
 - **Identity:** source object and zone incarnation, stable action/stack IDs, distinct owner/controller. Copy snapshots capture modes, targets, X and relevant paid choices. Do not select physical sources by card name or identify actions with Python `id()`.
 - **Choices:** immutable target groups with domain, cardinality, distinctness and retain/reselect rules; typed optional choices and quantities. No dynamic action attributes such as `step_targets`.
 - **Lifecycle:** validate intent/permissions; choose modes/targets; compute total cost; plan/validate payments; commit costs and stack entry; emit cast; resolve/recheck targets; apply destination policy. Copies use snapshots without casting/payment.
 - **Mutation:** validate a choice before mutating that operation. Do not undo previously legal casting costs because a later resolution choice fails. Errors must leave a diagnosable, consistent state.
 - **Events:** typed source/target/cause and last-known snapshots. Separate history from dispatch; batch simultaneous operations before proper SBA and APNAP placement. Do not recursively dispatch arbitrary triggers midway through costs/effects.
 - **Strategy:** definitions contain rules; pilots rank legal actions using supported observations without hidden-library leakage. Frozen frames wrapping mutable actions are insufficient isolation.
-- **Capabilities:** reject missing operations/predicates/keywords at load. Unknown behavior fails closed and is reported. Generate coverage from registrations plus explicit limitations.
+- **Capabilities:** reject missing operations/predicates/keywords at load in strict mode. Hybrid handlers are explicit reviewed opt-ins and never bypass needed rule legality; observation tracks candidate actions without executing them. Unknown effects fail closed or are visibly omitted in body-only approximations. Printed characteristics remain usable for generic queries/interactions where legality is known. Generate coverage from registrations plus explicit limitations.
 
 ## Workflow for each new card
 
-1. Identify authoritative card/deck data and the exact supported behavior.
+1. Identify authoritative card/deck data, **its universally usable printed characteristics**, and exact supported behavior. Register a verified unfamiliar card as a target/query/combat object independently of its abilities.
 2. Inventory components. Reuse a primitive/template first; change the engine only for a missing rule.
 3. Define characteristics, faces, costs, abilities and limitations in the registry.
 4. Test new primitives independently, then card wiring and invalidating interactions. Prefer a second card exercising reuse to a test that mirrors implementation.
-5. Cover costs, timing, targets, countering, zone identity and cast/copy distinctions as applicable; include a source-paid current-engine scenario.
+5. Cover costs, timing, targets, countering, zone identity and cast/copy distinctions as applicable; include a source-paid current-engine scenario. **Test another card or opponent targeting/querying the new object**, especially when the new object's own abilities are unsupported.
 6. Verify existing providers remain registered and another deck loads without this card. No instance-method patching or unrelated definition changes.
 7. Run relevant contracts/integration/historical checks and justified conservation sweeps; regenerate coverage.
 8. Measure matched performance if hot paths changed. Commit complete milestones and continue under existing authorization.
 
-**Development-efficiency gate:** the second card with the same behavior should need a definition and focused integration checks, not a core name branch or table/service subclass. Document any genuinely missing rule that prevents this.
+**Development-efficiency gate:** the second card with the same behavior should need a definition and focused integration checks, not a core name branch or table/service subclass. An unfamiliar verified card's target/search/combat participation should require **zero new named-card code** after identity ingestion. Document any genuinely missing rule that prevents this.
 
 ## Performance/testing rules
 
