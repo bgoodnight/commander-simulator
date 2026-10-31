@@ -31,6 +31,21 @@ python -m http.server 8765 --directory ./_pages_dist
 
 Then open `http://127.0.0.1:8765/` in Work's cloud browser to visually inspect desktop/mobile, animation, card artwork, charts and interactions. This does **not** require Pages activation.
 
+## Interpretive Results: evidence-first scrollytelling
+
+The Results landing page now starts with an **automatically generated interpretation of all cached seeds for the chosen canonical deck**, rather than a single seed's raw trace. This is computed in client-side `web/pages/results_insights.js` using the exact Python observations exported in `observations.json`. No commander-specific narrative or arbitrary performance score is hard-coded.
+
+- The first screen shows three observed summaries with counts and percentages: **2–5 modeled lands in the initial seven**, **at least three modeled sources by turn three**, and **any mana-value-only candidate on turn four**. The archive size, exact numerator and denominator, and limitations are displayed.
+- Scroll through three findings describing **opening modeled-land distribution**, **turn-three modeled-source distribution**, and **candidate-screen availability by turn**. Each finding has a numerical summary generated from the selected deck's archive, a conditional interpretation and a prominent "what this does not show" note.
+- Bar charts are **clickable, touch-friendly and keyboard-focusable**. Selecting a bar shows its exact observed numerator, relevant seed identifiers and a button to inspect a matching archived run. The original individual-seed trace remains available in an expandable section at the bottom rather than occupying the main results screen.
+- Chart bars animate using D3 on scroll entry and reset when leaving the viewport. Native SVG still renders if D3 does not load; `prefers-reduced-motion` disables transitions. Unlike decorative motion, every bar is tied to real saved observations.
+- **Sample limitations:** only eleven preselected seeds per canonical deck. These are not independent Monte Carlo outcome samples, do not include colored-cost spell casting or unmodeled nonbasic lands, and cannot estimate game win rates or actual card castability. The opening "land" measure specifically counts modeled basics and Command Tower, not all printed lands. Narratives use measured values and avoid declaring a deck strong or weak.
+- Saved/edited browser versions have **no matched cached observations**. The page shows that absence instead of applying a baseline deck's aggregate results to modified cards. To evaluate a new saved deck, export it, run it through Python and publish its pinned results in a future export.
+
+Node test cases in `tests/pages_insights.test.cjs` verify aggregate denominators, seed-level drilldown correctness, variable data and dynamically changing interpretations. Python release tests verify the extra JS file and interactive evidence controls are included in the allowlisted Pages output. The Pages workflow runs both JavaScript behavior tests and the Python artifact regression tests.
+
+**Future real-game analytics:** as M2/M3 adds verified game events, this report can add actual cast timings, mana-color failures, interaction windows and engine milestones; after sufficiently broad randomized completed games, real outcome/seat/variance statistics may become meaningful. Do **not** interpret these observation-only dashboards as gameplay statistics before then.
+
 ## Three-page navigation and results-first landing
 
 The static build now has **three real HTML entrypoints** (shared source/assets), each supporting an optional `?deck=magnus_premium` query parameter:
