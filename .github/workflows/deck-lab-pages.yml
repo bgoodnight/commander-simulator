@@ -8,6 +8,7 @@ on:
       - "commander_sim/**"
       - "simulator/card_data/**"
       - "tests/test_pages_export.py"
+      - "tests/pages_insights.test.cjs"
       - ".github/workflows/deck-lab-pages.yml"
   workflow_dispatch:
 permissions:
