@@ -319,7 +319,7 @@ function showPage(){
   const [title,desc]=PAGE_INFO[pageName];
   intro.append(el("h1",title),el("p",desc));
   document.title=title+" | Commander Deck Lab";
-  if(pageName==="results")installScrollStory();
+  if(pageName==="results")renderScrollStory();
 }
 function renderOverview(){
   const deck=selectedDeck(),c=commanderCard(deck);
@@ -396,155 +396,213 @@ function showCard(id){
   originalSound("click");
 }
 function closeCard(){$("dialog-backdrop").hidden=true}
-function renderRecords(){
-  const select=$("seed-select");clear(select);
-  for(const seed of data.seeds){
-    const opt=el("option","Seed "+seed);opt.value=String(seed);select.appendChild(opt);
+/* Summary first, and the detailed observation archive second. No fixed
+ * deck-specific interpretation: findings are built from the 11 cached seeds.
+ */
+let aggregate=null,scrollObserver=null;
+function showAggregate(){
+  const result=$("results-kpis"),intro=$("results-takeaway");
+  clear(result);clear(intro);
+  aggregate=null;
+  if(isUnsimulatedVersion()){
+    $("results-sample").textContent="No matched archive";
+    $("results-provenance").textContent="The saved deck has no pinned Python observations.";
+    intro.appendChild(el("p","This modified deck must be exported and run through Python before its performance can be assessed."));
+    return;
   }
-  select.value=selectedSeed;
+  if(!window.DeckInsights){
+    intro.appendChild(el("p","The local results analysis could not be loaded."));
+    return;
+  }
+  aggregate=window.DeckInsights.summarize(archives[selected]);
+  if(!aggregate){
+    intro.appendChild(el("p","No verified cached observations are available."));
+    return;
+  }
+  $("results-sample").textContent=aggregate.n+" cached seeds · 6 turns";
+  $("results-provenance").textContent="Derived from "+aggregate.n+
+    " fixed-seed, keep-seven observations—not independent full games or win-rate estimates.";
+  const metrics=[
+    {label:"2–5 modeled lands in opening hand",value:aggregate.metrics.earlyLand.pct+"%",
+      detail:aggregate.metrics.earlyLand.count+" / "+aggregate.n+" archived hands",target:"opening"},
+    {label:"≥3 modeled sources by turn 3",value:aggregate.metrics.t3Sources.pct+"%",
+      detail:aggregate.metrics.t3Sources.count+" / "+aggregate.n+" archived runs",target:"resources"},
+    {label:"Any mana-value candidate on turn 4",value:aggregate.metrics.t4Candidate.pct+"%",
+      detail:aggregate.metrics.t4Candidate.count+" / "+aggregate.n+" archived runs",target:"candidates"}
+  ];
+  for(const m of metrics){
+    const card=el("button",null,"result-stat");
+    card.type="button";
+    card.append(el("span",m.value,"result-stat-value"),
+      el("span",m.label,"result-stat-label"),el("small",m.detail));
+    card.setAttribute("aria-label",m.label+": "+m.detail+". Scroll to examine evidence.");
+    card.onclick=()=>{
+      const target=document.querySelector('.story-step[data-chart="'+m.target+'"]');
+      target?.scrollIntoView({behavior:window.matchMedia?.("(prefers-reduced-motion: reduce)").matches?
+        "auto":"smooth",block:"center"});
+      originalSound("page");
+    };
+    result.appendChild(card);
+  }
+  const parts=window.DeckInsights.findings(aggregate);
+  intro.appendChild(el("strong","What to take from these observations"));
+  intro.appendChild(el("p",parts.map(p=>p.summary).join(" ")));
+  intro.appendChild(el("p","This is a small, selected set of archived draws. These metrics describe opening land and mana-value screens—not actual casting, board development, victory or deck strength.","micro"));
+}
+function renderRecords(){
+  const seedSelect=$("seed-select");clear(seedSelect);
+  for(const seed of data.seeds){
+    const option=el("option","Seed "+seed);option.value=String(seed);
+    seedSelect.appendChild(option);
+  }
+  seedSelect.value=selectedSeed;
   const warning=$("results-current-warning");
   if(isUnsimulatedVersion()){
     warning.hidden=pageName!=="results";
     clear(warning);
     warning.appendChild(el("strong","No cached simulations for “"+activeDeckTitle()+"”. "));
     warning.appendChild(document.createTextNode(
-      "This is a saved or unsaved edited deck. It has no precomputed Python observations; the original deck's results will not be shown as if they belonged to this revision. "));
+      "This is a browser-edited deck. Its original's results do not describe this version. "));
     const baseline=el("button","View built-in deck's cached records","stone-button");
-    baseline.type="button";
-    baseline.addEventListener("click",()=>summon(selected));
+    baseline.type="button";baseline.onclick=()=>summon(selected);
     warning.appendChild(baseline);
-    $("show-record").disabled=true;
-    $("export-record").disabled=true;
+    $("show-record").disabled=true;$("export-record").disabled=true;
     clear($("record-info"));clear($("turn-timeline"));
-    $("record-info").appendChild(el("p","No cached observations for this saved deck.","warning"));
-    $("turn-timeline").appendChild(el("p","Export this decklist from the Card List & Editor page, then generate new observations with Python.","small"));
+    $("turn-timeline").textContent="Export the edited decklist and generate fresh Python observations.";
     lastRecord=null;
     for(const section of document.querySelectorAll(".story-step"))section.hidden=true;
-    return;
+    showAggregate();return;
   }
   warning.hidden=true;
-  $("show-record").disabled=false;
-  $("export-record").disabled=false;
+  $("show-record").disabled=false;$("export-record").disabled=false;
   for(const section of document.querySelectorAll(".story-step"))section.hidden=false;
+  showAggregate();
   displayRecord();
 }
 function displayRecord(){
-  if(isUnsimulatedVersion()){
-    renderRecords();return;
-  }
-  const deck=selectedDeck(),seed=$("seed-select").value;
-  const record=archives[deck.key]?.[seed];
-  if(!record){note("Cached result not available for this seed.",true);return}
-  selectedSeed=seed;lastRecord=record;
-  const turns=Math.min(Number($("turn-select").value),record.trace.length);
+  if(isUnsimulatedVersion()){renderRecords();return}
+  const record=archives[selected]?.[$("seed-select").value];
+  if(!record){note("No cached observation for that seed.",true);return}
+  selectedSeed=String(record.seed);lastRecord=record;
+  const count=Math.min(Number($("turn-select").value)||6,record.trace.length);
   const info=$("record-info");clear(info);
-  const box=el("div",null,"metrics");
-  for(const [val,label] of [[seed,"Seed"],[record.opening_hand.length,"Opening cards"],[turns,"Turns shown"]]){
-    const row=el("div",null,"metric");row.append(el("strong",val),el("span",label));box.append(row);
-  }
-  info.appendChild(box);
-  info.appendChild(el("h3","Opening hand"));
-  const chips=el("div",null,"chips");
-  for(const name of record.opening_hand){
-    const ch=el("span",name,"chip");chips.appendChild(ch);
-  }
-  info.appendChild(chips);
+  const opener=el("div",null,"archive-summary");
+  opener.append(el("strong","Seed "+record.seed),el("span","Opening hand: "+record.opening_hand.join(" · ")));
+  info.appendChild(opener);
   const timeline=$("turn-timeline");clear(timeline);
-  for(const t of record.trace.slice(0,turns)){
+  for(const t of record.trace.slice(0,count)){
     const node=el("div",null,"turn");
     node.appendChild(el("div",t.turn,"number"));
     const body=el("div",null,"turn-body");
-    const draw=el("div");draw.append(el("strong","Draw "),el("span",t.drawn||"Empty library","muted"));body.append(draw);
-    const land=el("div");land.append(el("strong","Modeled land "),el("span",t.land_played||"No modeled land play","muted"));body.append(land);
-    const sourceCount=t.modeled_sources?.length??t.battlefield_count;
-    body.appendChild(el("div",sourceCount+" modeled mana sources · "+t.hand_count+" cards in hand","small"));
+    const drawn=el("div");drawn.append(el("strong","Draw "),el("span",t.drawn||"No draw","muted"));
+    const land=el("div");land.append(el("strong","Modeled land "),el("span",t.land_played||"None","muted"));
+    body.append(drawn,land);
+    body.appendChild(el("div",window.DeckInsights?.sources(t)+" modeled sources · "+
+      t.hand_count+" cards in hand","small"));
     const candidates=t.candidate_if_supported||[];
     body.appendChild(el("div",candidates.length?
-      "Mana-value candidates: "+candidates.map(c=>c.card).join(", "):
-      "No mana-value candidates identified","small"));
+      "Mana-value candidates (not castability): "+candidates.map(x=>x.card).join(", "):
+      "No candidate passed the mana-value screen","small"));
     node.appendChild(body);timeline.appendChild(node);
   }
-  if(pageName==="results")renderScrollStory();
 }
-/* Scroll-linked chart story. D3 transitions are progressive enhancement; native
- * SVG always renders when the D3 CDN is unavailable or motion is reduced.
- * Every value comes from the selected fixed-seed Python observation.
- */
-function scrollValue(t,kind){
-  if(kind==="sources")return Array.isArray(t.modeled_sources)?t.modeled_sources.length:
-    Number(t.battlefield_count)||0;
-  if(kind==="hand")return Number(t.hand_count)||0;
-  return Array.isArray(t.candidate_if_supported)?t.candidate_if_supported.length:0;
+function detailForBar(kind,group,summary){
+  const seeds=group.seeds||[];
+  const header=kind==="opening"?
+    group.label+" modeled lands in opening seven":
+    kind==="resources"?group.label+" modeled sources on turn three":
+    "Turn "+group.label.slice(1)+" · any mana-value candidate";
+  const exact=kind==="candidates"?
+    group.numerator+" of "+summary.n+" runs ("+group.value+"%)":
+    group.value+" of "+summary.n+" runs";
+  const evidence=seeds.length?"Matching archived seeds: "+seeds.join(", "):
+    "No archived seeds matched this bar.";
+  let implication=kind==="opening"?
+    "These counts only include basic lands and Command Tower.":
+    kind==="resources"?
+    "Other mana sources, ramp and color payment aren't simulated.":
+    "Candidates pass only the total-mana-value screen; legal play is not checked.";
+  return {header,exact,evidence,implication};
 }
-function renderScrollChart(id,kind,trace){
-  const root=$(id);if(!root)return;
-  clear(root);
-  const points=trace.map(t=>[String(t.turn),scrollValue(t,kind)]);
-  const chart=makeBars(points,{color:kind==="sources"?"#73bdb1":
-    kind==="hand"?"#dbb973":"#ae9ad6"});
-  chart.classList.add("reveal-chart");
+function renderInsightChart(kind,groups,rootId,detailId){
+  const root=$(rootId),detail=$(detailId);clear(root);clear(detail);
+  if(!aggregate)return;
+  const chart=makeBars(groups.map(g=>[g.label,g.value]),{
+    color:kind==="opening"?"#d2b47f":kind==="resources"?"#73bdb1":"#aa97cf"
+  });
   root.appendChild(chart);
   const bars=chart.querySelectorAll("rect.bar");
-  const item=chart.closest(".story-step");
-  const reduced=window.matchMedia?.("(prefers-reduced-motion: reduce)").matches;
-  if(!reduced&&item&&!item.classList.contains("visible")){
-    for(const bar of bars){
-      const y=Number(bar.getAttribute("y")),h=Number(bar.getAttribute("height"));
-      bar.dataset.targetY=String(y);
-      bar.dataset.targetHeight=String(h);
-      bar.setAttribute("y",String(y+h));
-      bar.setAttribute("height","0");
-    }
-  }
-}
-function unveilChart(section){
-  section.classList.add("visible");
-  const bars=section.querySelectorAll("rect.bar[data-target-y]");
-  if(!bars.length)return;
-  const reduced=window.matchMedia?.("(prefers-reduced-motion: reduce)").matches;
-  if(!reduced&&window.d3){
-    const d3=window.d3;
-    d3.select(section).selectAll("rect.bar[data-target-y]")
-      .transition().duration(760).ease(d3.easeCubicOut)
-      .attr("y",function(){return this.dataset.targetY})
-      .attr("height",function(){return this.dataset.targetHeight})
-      .on("end",function(){
-        delete this.dataset.targetY;
-        delete this.dataset.targetHeight;
-      });
-  }else{
-    for(const bar of bars){
-      bar.setAttribute("y",bar.dataset.targetY);
-      bar.setAttribute("height",bar.dataset.targetHeight);
-      delete bar.dataset.targetY;
-      delete bar.dataset.targetHeight;
-    }
-  }
+  bars.forEach((bar,index)=>{
+    const group=groups[index];
+    if(!group)return;
+    bar.setAttribute("role","button");
+    bar.setAttribute("tabindex","0");
+    bar.setAttribute("aria-label",group.label+": "+
+      (kind==="candidates"?group.value+" percent":group.value+" observed runs")+
+      ". Select to inspect archived seeds.");
+    bar.classList.add("interactive-bar");
+    const title=document.createElementNS(NS,"title");
+    title.textContent=group.label+" · "+(kind==="candidates"?
+      group.numerator+"/"+aggregate.n+" runs":group.value+"/"+aggregate.n+" runs");
+    bar.appendChild(title);
+    const activate=()=>{
+      for(const b of bars)b.classList.toggle("selected-bar",b===bar);
+      const result=detailForBar(kind,group,aggregate);
+      clear(detail);
+      detail.append(el("strong",result.header),el("span",result.exact),
+        el("p",result.evidence),el("small",result.implication));
+      if(group.seeds?.length){
+        const seedButton=el("button","Inspect seed "+group.seeds[0],"glyph-button");
+        seedButton.type="button";
+        seedButton.onclick=()=>{
+          $("seed-select").value=group.seeds[0];displayRecord();
+          document.querySelector(".archived-details").scrollIntoView({
+            behavior:window.matchMedia?.("(prefers-reduced-motion: reduce)").matches?
+              "auto":"smooth",block:"start"
+          });
+        };
+        detail.appendChild(seedButton);
+      }
+      originalSound("click");
+    };
+    bar.addEventListener("click",activate);
+    bar.addEventListener("keydown",e=>{
+      if(e.key==="Enter"||e.key===" "){e.preventDefault();activate()}
+    });
+  });
 }
 function installScrollStory(){
   if(scrollObserver){scrollObserver.disconnect();scrollObserver=null}
-  const sections=[...document.querySelectorAll(".story-step")];
-  if(!("IntersectionObserver" in window)){
-    sections.forEach(unveilChart);return;
+  const sections=[...document.querySelectorAll(".story-step")].filter(s=>!s.hidden);
+  const reduced=window.matchMedia?.("(prefers-reduced-motion: reduce)").matches;
+  if(reduced||!("IntersectionObserver" in window)){
+    sections.forEach(s=>s.classList.add("visible"));return;
   }
   scrollObserver=new IntersectionObserver(entries=>{
-    for(const e of entries)if(e.isIntersecting){
-      unveilChart(e.target);scrollObserver.unobserve(e.target);
+    for(const entry of entries){
+      // Enter and leave: bring the relevant finding into focus.
+      entry.target.classList.toggle("visible",entry.isIntersecting);
     }
-  },{threshold:.18,rootMargin:"0px 0px -8% 0px"});
-  for(const section of sections)scrollObserver.observe(section);
+  },{threshold:.16,rootMargin:"0px 0px -8% 0px"});
+  sections.forEach(s=>scrollObserver.observe(s));
 }
 function renderScrollStory(){
-  if(!lastRecord){
-    for(const id of ["scroll-sources","scroll-hand","scroll-candidates"])clear($(id));
+  if(!aggregate||isUnsimulatedVersion()){
+    for(const id of ["scroll-sources","scroll-hand","scroll-candidates"])
+      clear($(id));
     return;
   }
-  for(const section of document.querySelectorAll(".story-step"))
-    section.classList.remove("visible");
-  const trace=lastRecord.trace.slice(0,Number($("turn-select").value)||6);
-  renderScrollChart("scroll-sources","sources",trace);
-  renderScrollChart("scroll-hand","hand",trace);
-  renderScrollChart("scroll-candidates","candidates",trace);
+  const findings=window.DeckInsights.findings(aggregate);
+  for(const [index,kind] of ["opening","resources","candidates"].entries()){
+    const f=findings[index];
+    $("story-title-"+kind).textContent=f.title;
+    $("story-summary-"+kind).textContent=f.summary;
+    $("story-meaning-"+kind).textContent=f.meaning;
+    $("story-caveat-"+kind).textContent=f.caveat;
+  }
+  renderInsightChart("opening",aggregate.openingGroups,"scroll-sources","detail-opening");
+  renderInsightChart("resources",aggregate.turn3Groups,"scroll-hand","detail-resources");
+  renderInsightChart("candidates",aggregate.candidateGroups,"scroll-candidates","detail-candidates");
   installScrollStory();
 }
 function exportFile(filename,content,type="text/plain"){
