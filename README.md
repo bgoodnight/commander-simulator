@@ -150,4 +150,4 @@ Milestones are versioned under `simulator/`. The pre-v15 rollback point is `b0b0
 
 ## Development roadmap
 
-See the [premium development roadmap](ROADMAP.md) for ordered milestones, card priorities, validation gates and deferred historical-card work. Identity and color verification is complete in v20; reconcile runtime metadata and implement missing effects next. Preserve previous engines and reference cases while using the premium v1.14 list for future deck-specific testing and performance measurements.
+See the [architecture-first roadmap](ROADMAP.md) for ordered implementation phases and acceptance gates. The [October 31 architecture audit](docs/ARCHITECTURE_AUDIT.md) records confirmed defects, expansion limits and measured runtime pressure. The [internal development guide](docs/DEVELOPMENT_GUIDE.md) specifies reusable effects, keyword templates and the workflow for future cards. Stabilize provider composition and extract a deck-independent engine before another broad card batch; preserve historical engines and current premium references throughout.

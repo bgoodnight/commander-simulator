@@ -1,17 +1,111 @@
-# Magnus premium v1.14 — development roadmap
+# Development roadmap — reusable Commander simulator
 
-The current default is the committed premium input `decklists/magnus_thousand_sons_v1_14_premium.txt`, loaded by `PremiumTable`. Use this list for new integration and performance measurements; the v1.13 budget configuration remains available for comparisons. Preserve historical versioned engines and v14 fingerprints for regression and later caching checks. Supported-subset labels are not Oracle certifications. Do not infer deck strength from the current partial model.
+Updated October 31, 2026 after the v35 [architecture audit](docs/ARCHITECTURE_AUDIT.md). Use [DEVELOPMENT_GUIDE.md](docs/DEVELOPMENT_GUIDE.md) as the implementation contract. This supersedes the old card-first ordering.
 
-## Ordered milestones
+Current entry point: `run_simulation.py` -> `CopyTable`. Default deck: committed `decklists/magnus_thousand_sons_v1_14_premium.txt`, updated in `b9b3ba0abcd19676ec4f32cc9f427e52c1f55d8b`; Training Center and Otawara are pending and represented by basics. Preserve v1.13 budget and historical lists. Do not silently substitute trial/pre-delivery lists from other work.
 
-1. **Card data and legal deck baseline.** V20 verified the 82 identities and supplies kernel search types. Continue by reconciling runtime costs, subtypes and pilot projections. Historical objective: verify all 82 distinct names against an authoritative card catalog, including full type lines, mana costs, color identities, split or double-faced characteristics and commander legality. Verify 100 cards and singleton exceptions. Record provenance. Replace the 29 unknown-type placeholders with verified descriptors, while keeping unsupported effects inert. Re-enable Mystical Tutor only when it can search the complete legal candidate set. Treat Phyrexian Altar as a normal card regardless of physical proxy status. Three restored or added v1.14 cards have separately verified Scryfall identities; Training Center and Otawara are pending acquisition.
-2. **Mana, cost and early turns.** Verify premium-list land behavior and mana sources, including Lindblum, Cascade Bluffs, Exotic Orchard, Springleaf Drum and Sapphire Medallion. Test Magnus, Goblin Electromancer and Baral with each other and with colored costs and additional costs. Implement the deck's other cost reducers as verified. Compare early land drops and source-paid plays; preserve priorities and payment decisions explicitly.
-3. **Early draw and token engines.** Mage Siege and its Wizard token are supported in v34; expand the other early engines. Add a focused batch from Consider, Faithless Looting, Gitaxian Probe, Hard Evidence, Ral's Reinforcements and Strike It Rich. Then implement Improbable Alliance, Saheeli and Talrand, including correct token characteristics and timing. Test the tokens with Magnus, existing Young Pyromancer and Storm-Kiln Artist. Model color where needed rather than assuming existing Spirit tokens are red.
-4. **Tutors and search chains.** Complete and test Mystical Tutor for this deck; add Merchant Scroll, Personal Tutor, Solve the Equation, Fabricate, Gamble, Muddle the Mixture's transmute, Step Through's wizardcycling, Spellseeker and Imperial Recruiter in small batches. Enforce each card's actual search restrictions, destinations, reveal/shuffle, activation timing and associated costs. Test realistic early chains and fail-to-find; default selection policy remains a heuristic until explicitly evaluated.
-5. **Buyback, convoke and reusable spells.** Cyclonic Rift normal and overload modes and bounded Reiterate copies/buyback are implemented; v35 adds copied counterspell retargeting, Step Through target handling, Abrade and Reiterate copies; broaden remaining general copy support. Extend the existing Capsize subset to the actual buyback cards Searing Touch, Fanning the Flames, Spell Burst and Whispers of the Muse; cover alternative costs, X choices, reductions, countered spells and return destinations. Add convoke for Artistic Refusal and Meeting of Minds, including legal tap choices, colored payments and sequencing. Test with Magnus and token makers.
-6. **Wizard/Shaman and copy interactions.** Add Veyran and relevant remaining Wizard/Shaman effects, test with Harmonic Prodigy, triggers, casts and copied spells. Build stack-copy primitives before Increasing Vengeance and Dualcaster Mage; verify copied spell targets and magecraft semantics, including that copies are not casts. Cover responses and source removal.
-7. **Graveyard, sacrifice and combo paths.** Implement Phyrexian Altar's sacrifice-for-mana, Underworld Breach's escape and sacrifice timing, and graveyard casting/recovery for deck cards such as Faithless Looting and Strike It Rich. Model interactions with Capsize and Mystic Sanctuary. Validate bounded, legal tutor-to-engine and finisher sequences, including Crackle with Power; no infinite-loop claim without a demonstrated legal loop and resource accounting.
-8. **Remaining premium cards and game rules.** Triage remaining unsupported deck cards, interaction effects and finishing paths by impact on real sequences. Address Commander-specific rules, opponents and decision quality before drawing deck-strength conclusions. Keep removed cards, such as Frostboil Snarl, Stormsplitter and Arcane Adaptation, as historical regression coverage rather than leading new deck-specific development.
-9. **Performance after correctness.** Measure current premium engine with fixed seeds and recorded environments after milestones; retain v14 historical fingerprints without comparing different deck trajectories as identical. Defer additional caching until functional baselines are stable, then compare cached and uncached outputs under the same deck, rules, choices and seeds.
+Status: shared zones, source payments, stack/priority, combat and selected cards work. All 35 suites pass (780 expected tests); v35's recorded 200-game sweep has no safety stops. Coverage: 41 supported subsets, 6 partial, 35 unsupported distinct names. This does not certify deck strength. Normal mono-black and multiple-real-deck configurations are not yet supported.
 
-Each milestone needs targeted tests, at least representative source-paid narratives and checks of zone conservation, stack timing and payment as applicable. Update the README and premium coverage audit, report limitations, and commit after checks pass. Avoid claiming full rules support from a passing smoke sweep.
+## Priority and working rules
+
+- Fix the confirmed provider regression, then consolidate architecture before broad card batches.
+- Keep state/zone/priority foundations; extract incrementally. Do not add another active card-specific inheritance layer or rewrite everything at once.
+- Preserve historical fingerprints and freeze current behavior for comparison. Document intentional correctness changes separately.
+- No new runtime caching until replay/invalidation gates exist. Never reduce legality/safety checks for speed.
+- Commit each complete milestone after checks pass and continue under existing authorization. Update this plan with actual completed gates.
+
+## P0 — Stabilize providers and establish a baseline
+
+Dependencies: none. Audit findings A1, A9, A10.
+
+1. Reproduce untapped Frostboil Snarl failing to produce U/R in the assembled budget engine. Fix provider composition so adding Altar cannot erase registered abilities. Cover budget and premium, including Lindblum and Altar.
+2. Freeze current references: deck hash, engine/rules revision, seed/seat, choices/RNG state, outputs and semantic fingerprints. Keep the known-bug case separately with corrected expectations; do not claim bug-fix equivalence.
+3. Record reproducible initialization and 8/12-round benchmarks, token-heavy targets and stack/payment stress. Separate profiler overhead, normal timings and wall-clock safety stops.
+4. Observe actual test counts rather than printing expectations; add assembled-engine provider/capability checks alongside historical suites.
+
+**Exit gate:** Frostboil works with Altar, premium behavior remains correct, unrelated providers cannot vanish silently, and the comparison corpus/benchmark protocol exists.
+
+## P1 — Normal package and composed engine services
+
+Depends on P0. Findings A3, A7.
+
+1. Introduce a normal package and explicit imports; remove dependence on `sys.path` order and shared module names such as `cards`, `table`, `state`, `resources`.
+2. Construct state/zones, queries, resources, stack/priority, events, effect registry and pilots once through a factory. Use narrow interfaces and explicit registration; reject duplicate capabilities.
+3. Wrap existing handlers initially, then port one vertical slice at a time. Remove named-card table overrides without changing their semantics.
+4. Keep historical engines/tests runnable but progressively remove them from active dependencies. Preserve milestones with git history/tags, not another superclass for every new card.
+
+**Exit gate:** premium runs through the package with reference-equivalent results; two independent engines/registries coexist in one interpreter; adding a handler requires no table subclass or service replacement.
+
+## P2 — Unified definitions and deck configuration
+
+Depends on P1. Findings A2, A4. B-mana runtime tests finish in P3.
+
+1. One immutable registry for characteristics, faces, costs, colors versus color identity, token templates, abilities and provenance. Keep network/Oracle fetching outside simulation.
+2. A zone/face-sensitive characteristic service used by views, searches, costs and copies. Retire supplemental color/mana-value maps and setup-time object rewriting.
+3. Commander-independent game/seat/deck/pilot configuration. Permit multiple detailed decks and basic-land multiplicity from metadata, including Swamp.
+4. Generate capability coverage from definitions and explicit omissions. Unsupported cards may load but must not become fabricated generic effects.
+
+**Exit gate:** every query sees Mage Siege as an instant on the stack and Lindblum as its normal land elsewhere; two real decks construct without Magnus installers; a black fixture validates/loads normally.
+
+## P3 — Shared mana/costs and one action lifecycle
+
+Depends on P2. Findings A2, A5.
+
+1. Represent W/U/B/R/G/C production explicitly, separating generic from explicit colorless requirements. Add typed tap, sacrifice, discard, exile and life-payment costs. Fail closed for unsupported hybrid/Phyrexian restrictions initially.
+2. Explicit source/action/stack identities and immutable modes, target groups, X and paid options. Retire source selection by name, Python `id()` and dynamic target attributes.
+3. Centralize timing/zone permission, total cost, increases/reductions, payment planning/reservations, stack entry and destinations. Track cross-source dependencies; a creature cannot fund both sacrifice and convoke.
+4. Port ordinary spells, buyback, overload and Mage Siege through one pipeline. Copies use snapshots without casting/payment and share target-validation rules.
+
+**Exit gate:** B mana/repeated Swamps work; Altar can produce all five colors; existing cast/copy/buyback/Adventure stories pass through one lifecycle; a second card using each mechanism needs definition-level wiring. Bind/capture X before implementing X finishers.
+
+## P4 — Events, batches and effect primitives
+
+Depends on P3. Findings A6, A7. Required before graveyard/combo batches.
+
+1. State-changing operations return typed results/events with old/new references, source/cause, controller and last-known information. Unify dispatch; the history list is not the trigger engine.
+2. Batch simultaneous token creation, deaths, damage and movement. Collect triggers from correct snapshots and use proper SBA/APNAP boundaries. Keep replacements explicit.
+3. Extract the guide's effect/query/choice primitives. Preserve draw/mill/discard/sacrifice/destruction distinctions and required ordering.
+4. Port tutors to predicate/choice/reveal/move/shuffle compositions, tokens to templates/batches, and Mage Siege plus a black death/life-change fixture to common event/effect services.
+
+**Exit gate:** Fabricate/Merchant Scroll/Solve/Spellseeker share searches; Pyromancer/Mage Siege share token and event components; simultaneous deaths and removed-source triggers work; damage and life loss are distinct in events/results.
+
+## P5 — Keyword templates and important card batches
+
+Depends on P4. Small typed templates, not an Oracle-text interpreter. Test mechanisms once and card wiring/interactions separately.
+
+1. **Early development:** Springleaf Drum, Stormcatch Mentor, Faithless Looting, Gitaxian Probe, Hard Evidence, Strike It Rich, Of One Mind. Group by shared cost/draw/token needs. Consider and Ral's Reinforcements are migration examples, not still-missing cards.
+2. **Graveyard casting:** flashback for Faithless Looting/Strike It Rich, then Underworld Breach's escape permissions/costs. Reuse lifecycle pieces instead of copying Adventure's special casting path.
+3. **Buyback/X/convoke:** Searing Touch, Whispers of the Muse, Fanning the Flames, Spell Burst, Meeting of Minds, Artistic Refusal; then Crackle with Power and its copies using bound X and typed targets.
+4. **Trigger/copy engines:** Veyran, Talrand, Improbable Alliance, Saheeli, Dualcaster Mage. Extend Reiterate by supported capabilities instead of more card-name lists.
+5. **Remaining tutors:** Gamble, Muddle's transmute, Imperial Recruiter, preserving their different costs/choices/predicates. Existing tutors become component regressions.
+6. Triage other premium cards by rule dependency and impact on real turns. Retain removed cards for regression. Require demonstrated legal resource accounting before any loop/combo claim.
+
+**Per-batch gate:** a second card using the mechanism needs no core name branch; interactions and source-paid current-game narratives pass; coverage/limitations are updated.
+
+## P6 — Mono-black and mixed-deck acceptance
+
+Depends on P4 and applicable P5 templates; may overlap later card batches.
+
+1. Through normal configuration, exercise Swamps/B costs, generic costs, sacrifice outlets, tokens, life payment/loss/gain, death triggers and graveyard return as new objects.
+2. Check token/nontoken deaths, last-known power, simultaneous removal, source removal, control changes and reanimation timing/responses where supported.
+3. Import the user's actual mono-black deck from an authoritative list; audit capabilities and implement necessary rule families first.
+4. Run black versus Magnus and multiple detailed seats. Keep pilot quality separate from legality; replace synthetic opponents incrementally as needed.
+
+**Exit gate:** mono-black needs no commander-specific engine edits; shared-effect contracts pass across decks. State remaining rules/opponent/pilot gaps. Portability is not a win-rate certification.
+
+## P7 — Optimize hot paths and evaluate simulation quality
+
+P7a depends on P4 and stable current references; full new caching waits for required functional baselines. P7b follows relevant P5/P6 coverage.
+
+1. **Queries:** maintain zone/controller indexes at mutations; add type/subtype indexes only when measured. Compare indexes to slow reference queries across moves/tokens/control changes.
+2. **Actions:** one generator per action family, lazy deterministic target/choice enumeration, no repeated build/filter layers. Separate complete legality from pilot candidate-search budgets.
+3. **Payments/checkpoints:** share query context within a read, remove duplicate work, track search states; introduce dependency-aware invalidation only with tests. Never merge required priority/SBA windows.
+4. **Batch mode:** summary versus full trace without semantic changes; release histories between games; share immutable registry data safely. Profile again before multiprocessing, with isolated game state and per-game seeds.
+5. Only then add memoization with cached/uncached equivalence for identical deck/rules/seeds/choices and invalidation tests. Record p50/p95 runtime, peak memory, candidates, queries, payment states and safety stops; do not compare unmatched version medians as controlled evidence.
+6. Review fixed opening-hand/turn replays against manually expected play, then evaluate pilots and real opponents. Unsupported cards and synthetic pods remain limits until separately validated.
+
+**Exit gate:** semantic equivalence, a repeatable targeted performance gain and recorded memory/search budgets. Track development efficiency through core files touched per card and template reuse.
+
+## Immediate next session
+
+Start **P0.1**: reproduce Frostboil/Altar provider loss in an assembled-engine test, then fix registration without replacing resource instances. Do not start another card batch first. Complete P0's comparison corpus before extraction. This audit changed documentation only; future tasks above are not already completed unless explicitly marked.
