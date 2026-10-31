@@ -1,6 +1,6 @@
 # Internal development guide
 
-Implementation contract for subsequent work. Follow [ROADMAP.md](../ROADMAP.md) and the [Hybrid Simulation Work Plan](HYBRID_SIMULATION_WORKPLAN.md); the [audit](ARCHITECTURE_AUDIT.md) explains the priorities. These are future design targets, not components claimed to exist already.
+Implementation contract for subsequent work. Follow [ROADMAP.md](../ROADMAP.md), the [Hybrid Simulation Work Plan](HYBRID_SIMULATION_WORKPLAN.md), and the **[Progressive Ability-Composition Architecture](ABILITY_COMPOSITION_ARCHITECTURE.md)**; the [audit](ARCHITECTURE_AUDIT.md) explains the priorities. These are future design targets, not components claimed to exist already.
 
 ## Dependency direction
 
@@ -28,6 +28,25 @@ Begin with typed Python dataclasses/functions and small registries, not an unres
 | Cast/copy triggers | Event predicate + effect sequence | Copying is not casting |
 | Damage / drain / life payment | Recipients, quantities, event infrastructure | Damage, losing/gaining life and paying life are separate operations |
 | Flying / deathtouch / lifelink | Blocking, damage and SBA rule hooks | These are not all on-resolution modifiers |
+
+## Binding implementation contract: progressive composition, not whole-card replacement
+
+**P0.65 is the next architecture gate.** Before adding large numbers of card-specific handlers, create a **declarative per-ability registry** independent of execution and test it with pure data. The immutable Scryfall-derived `CardIdentity` describes printed characteristics; the derived runtime view describes actual properties in context; shared Magic keyword/rules engines provide generic behavior; reviewed typed `AbilitySlot` declarations provide individual effects. Named-card handlers may configure, extend or supersede their **own slot**, not the printed base object or unrelated slots.
+
+**Specific implementation rules:**
+
+1. Assign stable IDs by Oracle ID, face and ability slot. Include source revision, timing, targeting/predicate, costs, mode, resolution operation, applicable restrictions, event hook, capability prerequisites, `exact|simplified|unsupported` coverage and explicit omissions. Roles remain pilot-only until a reviewed ability declaration binds an actual operation.
+2. Resolve **one selected handler per ability slot**: strict = exact only; hybrid = exact if available, else reviewed simplified if prerequisites present, else unsupported; observation = no actual unsupported or simplified resolution. The exact handler **supersedes** the simplified handler for the same slot. Unrelated printed keywords or separate effects continue independently. If part of an effect is exact, do not run an overlapping proxy on that part; split into disjoint typed suboperations and test independence or abstain.
+3. Reuse global keyword/rules engines for basic combat and printed abilities, including double strike's two combat-damage steps, flying, haste, vigilance, trample, lifelink, deathtouch; do not implement one keyword anew for every card. Keyword detection from verified printed data authorizes **recognition**, not execution until the relevant rules engine is ready.
+4. Reuse typed effect primitives for draw, search, shuffle, movement, token creation, targeted removal, counterspells, damage/life changes and recursion. E.g. a tutor implementation is a composition of actual search predicates, choices, reveal, destination and shuffle, with explicit restrictions—not a blanket “tutor always fetches any creature”.
+5. Every unfamiliar verified card remains a real game object available to other cards' tutor, removal, combat and graveyard predicates irrespective of its own named ability support. When a known static effect/protection/ward/ETB/replacement restriction is unsupported, target legality or body-only casting must return UNKNOWN/blocked, not assume absence.
+6. Keep the Scryfall API confined to **explicit offline import/refresh**. Cache hash-validated raw records; parse identities/keyword declarations from those records; store reviewed structured abilities in a versioned directory/registry keyed to Oracle identity. Do not fetch per turn, per card cast, per run, or in a test. Do not auto-execute Oracle prose or guess from roles.
+7. Replay, fidelity and semantic reports must record: selected ability slot/handler version, exact vs simplified, original typed costs/targets/choices, assumptions and omitted behaviors, resulting event/object IDs, and the first approximation affecting each requested outcome. Prevent duplicate triggers or overlapping subscriptions; preserve source identity and conservation.
+8. Strict premium/budget results and all historical tests remain valid. Introduce hybrid only behind an opt-in mode flag. Do not add named table subclasses or global monkey patches merely to make imported cards work.
+
+**Required promotion regression:** An unfamiliar creature with recognized **double strike** and an independent ETB trigger can be drawn, legally targeted, and later cast when core prerequisites permit. Upgrading the ETB trigger from simplified to exact changes only that trigger; it must not remove double strike, duplicate ETB events, or change the creature's identity. Independently upgrade a reviewed simplified tutor to a constrained exact search and assert only one search/reveal/move/shuffle occurs. Repeat with a creature from a different deck and with an opponent acting as source.
+
+**Review rejection criteria:** silent role-to-effect inference, whole-card exact-mode switch, two handlers for one ability slot, unknown restriction treated as false, fabricated costs/colors/P/T, card-name branching in central rules, introducing a second mutable game state, API requests during games, or reporting win rates as validated while unsupported material effects remain.
 
 ## Universal card interactions and fidelity contracts
 
@@ -58,17 +77,17 @@ Begin with typed Python dataclasses/functions and small registries, not an unres
 - **Mutation:** validate a choice before mutating that operation. Do not undo previously legal casting costs because a later resolution choice fails. Errors must leave a diagnosable, consistent state.
 - **Events:** typed source/target/cause and last-known snapshots. Separate history from dispatch; batch simultaneous operations before proper SBA and APNAP placement. Do not recursively dispatch arbitrary triggers midway through costs/effects.
 - **Strategy:** definitions contain rules; pilots rank legal actions using supported observations without hidden-library leakage. Frozen frames wrapping mutable actions are insufficient isolation.
-- **Capabilities:** reject missing operations/predicates/keywords at load in strict mode. Hybrid handlers are explicit reviewed opt-ins and never bypass needed rule legality; observation tracks candidate actions without executing them. Unknown effects fail closed or are visibly omitted in body-only approximations. Printed characteristics remain usable for generic queries/interactions where legality is known. Generate coverage from registrations plus explicit limitations.
+- **Capabilities:** reject missing operations/predicates/keywords at load in strict mode. Hybrid handlers are explicit **per-slot** reviewed opt-ins with exact-first supersession and never bypass needed rule legality; observation tracks candidate actions without executing them. Unknown effects fail closed or are visibly omitted in body-only approximations. Printed characteristics and independently supported keyword mechanics remain usable for generic queries/interactions where legality is known. Generate coverage from registrations plus explicit limitations.
 
 ## Workflow for each new card
 
 1. Identify authoritative card/deck data, **its universally usable printed characteristics**, and exact supported behavior. Register a verified unfamiliar card as a target/query/combat object independently of its abilities.
-2. Inventory components. Reuse a primitive/template first; change the engine only for a missing rule.
+2. Inventory printed keyword declarations, separate ability slots and their dependencies. Reuse a global primitive/keyword/effect template first; change the engine only for a missing shared rule. Every new exact implementation must identify the **one simplified slot it supersedes**, if any.
 3. Define characteristics, faces, costs, abilities and limitations in the registry.
-4. Test new primitives independently, then card wiring and invalidating interactions. Prefer a second card exercising reuse to a test that mirrors implementation.
+4. Test pure composition/override semantics first, then new primitives independently, card wiring and invalidating interactions. Prefer a second card **from another deck** exercising reuse to a test that mirrors implementation; ensure unrelated keyword and separate-ability dispatch survive exact promotion.
 5. Cover costs, timing, targets, countering, zone identity and cast/copy distinctions as applicable; include a source-paid current-engine scenario. **Test another card or opponent targeting/querying the new object**, especially when the new object's own abilities are unsupported.
 6. Verify existing providers remain registered and another deck loads without this card. No instance-method patching or unrelated definition changes.
-7. Run relevant contracts/integration/historical checks and justified conservation sweeps; regenerate coverage.
+7. Run registry/slot uniqueness tests, behavior promotion and no-duplicate trigger tests, source-paid current-engine examples, relevant historical checks and justified conservation sweeps; regenerate per-slot coverage and dependency reports. Confirm no API/network calls during repeated seeded runs.
 8. Measure matched performance if hot paths changed. Commit complete milestones and continue under existing authorization.
 
 **Development-efficiency gate:** the second card with the same behavior should need a definition and focused integration checks, not a core name branch or table/service subclass. An unfamiliar verified card's target/search/combat participation should require **zero new named-card code** after identity ingestion. Document any genuinely missing rule that prevents this.
