@@ -15,13 +15,16 @@ import json
 
 from .card_cache import CardCatalog, card_aliases
 from .deck_fixtures import SHARED_CATALOG
+from .card_name_catalog import DEFAULT_NAME_CATALOG, read_name_catalog
 
 
-def local_suggestions(query, *, catalog_path=SHARED_CATALOG, limit=20):
-    """Predict card names from cached, *verified* Oracle-ID records (offline).
+def local_suggestions(query, *, catalog_path=SHARED_CATALOG,
+                      name_catalog_path=DEFAULT_NAME_CATALOG, limit=20):
+    """Autocomplete from Scryfall's once-fetched name list and cached records.
 
-    Returns one entry per Oracle ID, choosing a matching face alias when a face
-    matches the user's input. Unknown names are not fabricated as suggestions.
+    A name-only suggestion is *not* a verified Oracle-ID record. Selecting it
+    in a saved deck causes metadata preflight to fetch/validate that specific
+    identity once. This function is entirely offline.
     """
     if not isinstance(query, str) or len(query) > 150:
         raise ValueError("Search must be text of at most 150 characters")
@@ -32,6 +35,7 @@ def local_suggestions(query, *, catalog_path=SHARED_CATALOG, limit=20):
         return []
     catalog = CardCatalog(catalog_path)
     matches = []
+    by_name = set()
     for oracle_id, revision in catalog.current.items():
         card = catalog.get_pinned(oracle_id, revision)
         aliases = card_aliases(card)
@@ -45,10 +49,23 @@ def local_suggestions(query, *, catalog_path=SHARED_CATALOG, limit=20):
         ))
         score = (0 if best.casefold() == needle else
                  1 if best.casefold().startswith(needle) else 2)
+        by_name.update(name.casefold() for name in aliases)
         matches.append((score, best.casefold(), {
             "name": best, "canonical_name": card["name"],
             "oracle_id": oracle_id, "source": "local_cache",
+            "requires_metadata_import": False,
             "type_line": card.get("type_line", ""),
+        }))
+    for name in read_name_catalog(name_catalog_path):
+        if name.casefold() in by_name or needle not in name.casefold():
+            continue
+        score = (0 if name.casefold() == needle else
+                 1 if name.casefold().startswith(needle) else 2)
+        matches.append((score, name.casefold(), {
+            "name": name, "canonical_name": name,
+            "oracle_id": None, "source": "scryfall_name_catalog",
+            "requires_metadata_import": True,
+            "type_line": None,
         }))
     matches.sort(key=lambda row: (row[0], row[1]))
     return [row[2] for row in matches[:limit]]
