@@ -13,7 +13,7 @@ The active product order is **shared offline Scryfall cache → validated import
 - [Bounded Work-session handoff](docs/LOW_CREDIT_IMPLEMENTATION_HANDOFF.md) and [coding-agent instructions](AGENTS.md)
 - [Progressive per-ability architecture](docs/ABILITY_COMPOSITION_ARCHITECTURE.md)
 
-**Status:** no GUI is implemented. The `commander_sim.abilities` catalog selects exact/simplified handlers as pure metadata but does **not** execute them. The historical v35 engine is still Magnus-oriented; black and mixed real-deck gameplay are not yet live. Card API requests remain confined to explicit metadata import/refresh, not simulation.
+**Status:** the M0 cache-first Scryfall importer, immutable shared Oracle-ID revision store and pinned deck manifests are implemented and tested; the shared catalog for all deck variants has **not yet been populated**. [How to bootstrap existing snapshots offline](docs/CARD_METADATA_CACHE.md). No GUI is implemented. The `commander_sim.abilities` catalog selects exact/simplified handlers as pure metadata but does **not** execute them. The historical v35 engine is still Magnus-oriented; black and mixed real-deck gameplay are not yet live. Card API requests remain confined to explicit metadata import/refresh, not simulation.
 
 ## V35 copied spell targets
 
@@ -163,7 +163,7 @@ Requires Python 3.10+ and only the standard library:
 python run_all_tests.py
 ```
 
-**839 tests across thirty-seven suites** (v3:20, v4:15, v5:21, v6:21, v7:50, v8:32, v9a:29, v9b:34, v9c:49, v10:51, v11:50, v12:50, v13:69, v14:56, v15:38, v16:14, v17:6, v18:5, v19:5, v20:4, v21:10, v22:8, v23:13, v24:9, v25:7, v26:12, v27:14, v28:11, v29:9, v30:11, v31:15, v32:11, v33:12, v34:14, v35:6, P0 baseline:11, package contracts:47). The GitHub Actions workflow tests on Python 3.11, 3.12, and 3.13.
+**851 tests across thirty-seven suites** (v3:20, v4:15, v5:21, v6:21, v7:50, v8:32, v9a:29, v9b:34, v9c:49, v10:51, v11:50, v12:50, v13:69, v14:56, v15:38, v16:14, v17:6, v18:5, v19:5, v20:4, v21:10, v22:8, v23:13, v24:9, v25:7, v26:12, v27:14, v28:11, v29:9, v30:11, v31:15, v32:11, v33:12, v34:14, v35:6, P0 baseline:11, package contracts:59). The GitHub Actions workflow tests on Python 3.11, 3.12, and 3.13.
 
 Run historical v15 and reproduce validation:
 
