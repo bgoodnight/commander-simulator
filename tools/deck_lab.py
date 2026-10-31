@@ -22,7 +22,7 @@ from commander_sim.deck_lab_api import (
 )
 from commander_sim.card_discovery import local_suggestions
 from commander_sim.deck_fixtures import SHARED_CATALOG
-from commander_sim.deck_workspace import compose_draft, save_draft, saved_versions
+from commander_sim.deck_workspace import compose_draft, save_draft, saved_versions, observe_saved_version
 
 HTML_PATH = ROOT / "web" / "deck_lab.html"
 
@@ -55,6 +55,18 @@ def respond(path, parameters, *, catalog_path=None, output_dir=None):
                 )}
     if path == "/api/versions":
         return {"versions": saved_versions()}
+    if path == "/api/version/observation":
+        version_id = only("id")
+        if not version_id:
+            raise ValueError("Saved version ID required")
+        try:
+            seed, turns = int(only("seed", "0")), int(only("turns", "6"))
+        except ValueError as exc:
+            raise ValueError("Seed/turns must be integers") from exc
+        opts = {}
+        if catalog_path is not None:
+            opts["catalog_path"] = catalog_path
+        return observe_saved_version(version_id, seed=seed, turns=turns, **opts)
     if path == "/api/decks":
         return catalog_response(**options)
     if path == "/api/deck":
