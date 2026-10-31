@@ -74,7 +74,7 @@ class StaticPagesTests(unittest.TestCase):
                 self.assertIn('d3@7',page)
                 self.assertIn(name,manifest["asset_sha256"])
         js=(self.destination/"app.js").read_text(encoding="utf-8")
-        self.assertIn(':"results"',js)
+        self.assertIn('location.pathname.endsWith("/results.html")?"results"',js)
         self.assertIn("function showPage()",js)
         self.assertIn("function renderScrollStory()",js)
         self.assertIn("IntersectionObserver",js)
