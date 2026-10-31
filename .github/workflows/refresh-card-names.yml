@@ -1,0 +1,34 @@
+name: Explicit refresh of offline MTG card-name suggestions
+on:
+  workflow_dispatch:
+  push:
+    paths:
+      - ".github/refresh-card-names.trigger"
+jobs:
+  refresh:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    concurrency:
+      group: manual-card-name-refresh
+      cancel-in-progress: false
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: true
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+      - name: One explicit Scryfall name catalog download
+        run: python tools/refresh_card_names.py
+      - name: Regression tests after refreshing autocomplete names
+        run: python run_all_tests.py
+      - name: Commit validated offline name index
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add simulator/card_data/scryfall_card_names.json
+          if ! git diff --cached --quiet; then
+            git commit -m "Cache Scryfall full card-name list for offline autocomplete"
+            git push origin HEAD:main
+          fi
