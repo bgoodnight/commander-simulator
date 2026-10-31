@@ -62,8 +62,13 @@ jobs:
             git add -A docs/deck-lab
             if ! git diff --cached --quiet; then
               git commit -m "Publish validated Deck Lab static site for branch-based Pages"
-              git push origin HEAD:main
-              echo "Published the allowlisted static site in docs/deck-lab/." >> "$GITHUB_STEP_SUMMARY"
+              if git push origin HEAD:main; then
+                echo "Published the allowlisted static site in docs/deck-lab/." >> "$GITHUB_STEP_SUMMARY"
+              else
+                # Another commit landed between fetch and push. Never force
+                # push or rebase a potentially stale public site artifact.
+                echo "Main advanced during publishing; skipping stale artifact. A later run from main can safely publish the latest site." >> "$GITHUB_STEP_SUMMARY"
+              fi
             else
               echo "Branch-compatible static site already matches export." >> "$GITHUB_STEP_SUMMARY"
             fi
