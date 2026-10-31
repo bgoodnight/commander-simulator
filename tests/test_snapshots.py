@@ -25,6 +25,15 @@ class SnapshotTests(unittest.TestCase):
         self.assertIn(('Library','Lindblum, Industrial Regency',1),result.deck.cards)
         self.assertEqual(result.deck.commander,'Magnus the Red')
 
+    def test_non_adventure_front_face_alias_is_valid(self):
+        def change(data):
+            entry = next(item for item in data['cards']
+                         if item['deck_name'] == 'Lindblum, Industrial Regency')
+            entry['card']['layout'] = 'modal_dfc'
+        result = self.validate_modified(change)
+        self.assertIn(('Library', 'Lindblum, Industrial Regency', 1), result.deck.cards)
+        self.assertEqual(result.deck.count, 100)
+
     def test_rejects_wrong_deck_hash_and_incomplete_fetch(self):
         for change in (lambda d:d.update(deck_sha256='bad'),
                        lambda d:d.update(problems=[{'name':'missing'}]),
