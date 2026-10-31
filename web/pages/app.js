@@ -310,21 +310,29 @@ function renderOverview(){
   const art=$("overview-art");clear(art);
   const node=imageNode(c,true,"big-portrait");node.classList.add("big-portrait");art.appendChild(node);
   const metrics=$("overview-metrics");clear(metrics);
-  const unique=deck.cards.length;
-  const lands=deck.cards.filter(x=>cardForId(x.oracle_id)?.category==="Land")
+  const cards=displayDeckCards();
+  const unique=cards.length;
+  const lands=cards.filter(x=>cardForId(x.oracle_id)?.category==="Land")
     .reduce((n,x)=>n+x.qty,0);
   for(const [value,label] of [[100,"Cards"],[unique,"Unique names"],[lands,"Lands"]]){
     const x=el("div",null,"metric");
     x.appendChild(el("strong",value));x.appendChild(el("span",label));metrics.appendChild(x);
   }
   const tags=$("overview-tags");clear(tags);
-  for(const txt of [LABELS[deck.key],deck.label.replace(/_/g," "),"Pinned metadata","6-turn cached records"]){
+  for(const txt of [activeDeckTitle(),deck.label.replace(/_/g," "),
+       isUnsimulatedVersion()?"Edited in browser · no cached results":"Pinned metadata",
+       isUnsimulatedVersion()?"Export for new observations":"6-turn cached records"]){
     tags.appendChild(el("span",txt,"chip"));
   }
-  const types=Object.entries(deck.types||{}).sort((a,b)=>b[1]-a[1]);
+  const typeCounts={};
+  for(const item of cards){
+    const kind=cardForId(item.oracle_id)?.category||"Other";
+    typeCounts[kind]=(typeCounts[kind]||0)+item.qty;
+  }
+  const types=Object.entries(typeCounts).sort((a,b)=>b[1]-a[1]);
   const typeBox=$("type-chart");clear(typeBox);typeBox.appendChild(makeBars(types,{color:"#bda46d"}));
   const curve=Array.from({length:9},(_,i)=>[i===8?"8+":String(i),0]);
-  for(const x of deck.cards){
+  for(const x of cards){
     const item=cardForId(x.oracle_id);
     if(!item||item.category==="Land")continue;
     const mv=Math.max(0,Math.min(8,Math.floor(Number(item.mana_value)||0)));
@@ -334,10 +342,9 @@ function renderOverview(){
   curveBox.appendChild(makeBars(curve,{color:"#80bdb2"}));
 }
 function libraryRows(){
-  const deck=selectedDeck();
   const needle=$("library-search").value.trim().toLowerCase();
   const category=$("library-category").value;
-  return deck.cards.filter(x=>{
+  return displayDeckCards().filter(x=>{
     const card=cardForId(x.oracle_id);
     return (!needle||[x.name,card?.type_line,card?.oracle_text].join(" ").toLowerCase().includes(needle))
       && (category==="all"||card?.category===category);
@@ -378,9 +385,29 @@ function renderRecords(){
     const opt=el("option","Seed "+seed);opt.value=String(seed);select.appendChild(opt);
   }
   select.value=selectedSeed;
+  const warning=$("results-current-warning");
+  if(isUnsimulatedVersion()){
+    warning.hidden=false;
+    warning.textContent="“"+activeDeckTitle()+"” is a browser-edited deck. No cached Python observations exist for this version. The records below are unavailable until you export and prepare this deck in the simulator. Choose a built-in deck in the editor to view its existing records.";
+    $("show-record").disabled=true;
+    $("export-record").disabled=true;
+    clear($("record-info"));clear($("turn-timeline"));
+    $("record-info").appendChild(el("p","No cached observations for this saved deck.","warning"));
+    $("turn-timeline").appendChild(el("p","Export this decklist from the Card List & Editor page, then generate new observations with Python.","small"));
+    lastRecord=null;
+    for(const section of document.querySelectorAll(".story-step"))section.hidden=true;
+    return;
+  }
+  warning.hidden=true;
+  $("show-record").disabled=false;
+  $("export-record").disabled=false;
+  for(const section of document.querySelectorAll(".story-step"))section.hidden=false;
   displayRecord();
 }
 function displayRecord(){
+  if(isUnsimulatedVersion()){
+    renderRecords();return;
+  }
   const deck=selectedDeck(),seed=$("seed-select").value;
   const record=archives[deck.key]?.[seed];
   if(!record){note("Cached result not available for this seed.",true);return}
@@ -484,7 +511,10 @@ function installScrollStory(){
   for(const section of sections)scrollObserver.observe(section);
 }
 function renderScrollStory(){
-  if(!lastRecord)return;
+  if(!lastRecord){
+    for(const id of ["scroll-sources","scroll-hand","scroll-candidates"])clear($(id));
+    return;
+  }
   for(const section of document.querySelectorAll(".story-step"))
     section.classList.remove("visible");
   const trace=lastRecord.trace.slice(0,Number($("turn-select").value)||6);
@@ -535,9 +565,11 @@ function validateCounts(counts){
   return true;
 }
 function initializeDraft(){
-  activeCounts=initialCounts();history=[];
-  $("add-name").value="";$("draft-title").value="";
-  renderDraft();renderVersions();
+  activeCounts=isUnsimulatedVersion()?{...activeVersion().counts}:initialCounts();
+  history=[];
+  $("add-name").value="";
+  $("draft-title").value=activeVersion()?.title||"";
+  renderDraft();renderVersions();renderDeckVersionSelector();
 }
 function activeDelta(){
   const initial=initialCounts(),names=new Set([...Object.keys(initial),...Object.keys(activeCounts)]);
@@ -590,39 +622,103 @@ function undo(){
 function revertDraft(){activeCounts=initialCounts();history=[];renderDraft();originalSound("click")}
 function saveVersion(){
   const title=$("draft-title").value.trim();
-  if(title.length<1||title.length>70){note("Give this deck version a title (1–70 characters).",true);return}
+  if(title.length<1||title.length>70){
+    note("Give this deck version a title (1–70 characters).",true);return;
+  }
   try{validateCounts(activeCounts)}catch(err){note(err.message,true);return}
-  const id="v-"+Date.now().toString(36)+"-"+Math.random().toString(36).slice(2,7);
-  const record={id,title,baseKey:selected,counts:{...activeCounts},created:new Date().toISOString()};
+  const now=new Date().toISOString();
+  const id="v-"+Date.now().toString(36)+"-"+Math.random().toString(36).slice(2,9);
+  const record={id,title,baseKey:selected,counts:{...activeCounts},
+    created:now,updated:now};
   localVersions.unshift(record);
   if(localVersions.length>60)localVersions=localVersions.slice(0,60);
-  persist();renderVersions();originalSound("success");
-  note("Saved in this browser. Download the decklist for a durable copy.");
+  // Save As always creates a separately named revision. The original remains intact.
+  summon(selected,{versionId:id});
+  originalSound("success");
+  note("Saved “"+title+"” in this browser. Download the decklist to keep a durable copy.");
+}
+function renderDeckVersionSelector(){
+  const control=$("deck-version-select");clear(control);
+  const commanderId=selectedDeck().commander_id;
+  const presets=el("optgroup");presets.label="Built-in decks · cached results";
+  for(const deck of sameCommanderDecks(commanderId)){
+    const option=el("option",LABELS[deck.key]||deck.key);
+    option.value="preset:"+deck.key;presets.appendChild(option);
+  }
+  control.appendChild(presets);
+  const versions=deckVersionsForCommander(commanderId);
+  if(versions.length){
+    const saved=el("optgroup");saved.label="Your saved browser decks · not simulated";
+    for(const version of versions){
+      const option=el("option",version.title+" · saved "+String(version.updated||version.created||"").slice(0,10));
+      option.value="saved:"+version.id;saved.appendChild(option);
+    }
+    control.appendChild(saved);
+  }
+  control.value=selectedVersionId?"saved:"+selectedVersionId:"preset:"+selected;
+}
+function loadDeckSelection(value){
+  if(value.startsWith("preset:")){
+    const deck=data.decks.find(d=>d.key===value.slice(7));
+    if(deck&&deck.commander_id===selectedDeck().commander_id)
+      summon(deck.key);
+    return;
+  }
+  if(value.startsWith("saved:")){
+    const version=localVersions.find(v=>v.id===value.slice(6));
+    if(!version||!sameCommanderDecks(selectedDeck().commander_id)
+      .some(d=>d.key===version.baseKey))return;
+    const previous=selected;
+    selected=version.baseKey;
+    try{validateCounts(version.counts)}
+    catch(e){selected=previous;note("Saved deck cannot be loaded: "+e.message,true);renderDeckVersionSelector();return}
+    selected=previous;
+    summon(version.baseKey,{versionId:version.id});
+    note("Loaded “"+version.title+"”. No cached simulation is associated with this edited version.");
+  }
 }
 function renderVersions(){
   const root=$("saved-versions");clear(root);
-  const versions=localVersions.filter(v=>v.baseKey===selected);
-  if(!versions.length){root.appendChild(el("p","No saved local versions for this commander.","small"));return}
+  const versions=deckVersionsForCommander(selectedDeck().commander_id);
+  if(!versions.length){
+    root.appendChild(el("p","No named browser decks saved for this commander.","small"));
+    return;
+  }
   for(const version of versions){
     const row=el("div",null,"saved-row");
+    if(version.id===selectedVersionId)row.classList.add("selected-version");
     const label=el("div");
     label.appendChild(el("strong",version.title));
-    label.appendChild(el("div",version.created.slice(0,10)+" · local to this browser","micro"));
+    label.appendChild(el("div",
+      (LABELS[version.baseKey]||version.baseKey)+" · "+
+      String(version.updated||version.created||"").slice(0,10)+" · browser only",
+      "micro"));
     const actions=el("div",null,"control-row");
     const load=el("button","Load","glyph-button");
-    load.onclick=()=>{
-      try{validateCounts(version.counts);activeCounts={...version.counts};history=[];
-        renderDraft();$("draft-title").value=version.title;originalSound("page");
-        note("Local deck loaded. Its edits have no cached simulation results.");
-      }catch(e){note("Invalid saved deck: "+e.message,true)}
-    };
+    load.onclick=()=>loadDeckSelection("saved:"+version.id);
     const del=el("button","Delete","glyph-button");
     del.onclick=()=>{
       localVersions=localVersions.filter(v=>v.id!==version.id);
-      persist();renderVersions();originalSound("click");
+      if(selectedVersionId===version.id){
+        summon(version.baseKey);
+      }else{
+        persist();renderVersions();renderDeckVersionSelector();
+      }
+      originalSound("click");
     };
     actions.append(load,del);row.append(label,actions);root.append(row);
   }
+}
+function newDeckVersion(){
+  // This is a fresh, unsaved draft derived from the currently visible deck.
+  // It does not mutate any original or saved deck.
+  selectedVersionId=null;
+  history=[];
+  $("draft-title").value="";
+  renderDraft();
+  renderDeckVersionSelector();
+  $("version-help").textContent="New unsaved draft. Enter a name and choose Save as named deck.";
+  note("New draft started from the visible card list.");
 }
 function exportDeck(){
   if(!selected)return;
