@@ -1,0 +1,3317 @@
+{
+  "source": "Scryfall collection API, exact card/face match",
+  "retrieved_at": "2026-10-31T14:26:49.484302+00:00",
+  "deck_sha256": "28ff148878e37e5f8c82a55e5f7d6eba54023f5273655d32774867c8b1dff9a5",
+  "distinct_requested": 68,
+  "cards": [
+    {
+      "deck_name": "Ghoulcaller Gisa",
+      "card": {
+        "id": "44d7906e-8a89-4644-acb5-46fbe97ab39f",
+        "oracle_id": "0dd894cb-1968-471c-af08-ea7ec5ce8428",
+        "name": "Ghoulcaller Gisa",
+        "released_at": "2023-08-04",
+        "scryfall_uri": "https://scryfall.com/card/cmm/161/ghoulcaller-gisa?utm_source=api",
+        "layout": "normal",
+        "mana_cost": "{3}{B}{B}",
+        "cmc": 5.0,
+        "type_line": "Legendary Creature — Human Wizard",
+        "oracle_text": "{B}, {T}, Sacrifice another creature: Create X 2/2 black Zombie creature tokens, where X is the sacrificed creature's power.",
+        "power": "3",
+        "toughness": "4",
+        "colors": [
+          "B"
+        ],
+        "color_identity": [
+          "B"
+        ],
+        "keywords": [],
+        "legalities": {
+          "standard": "not_legal",
+          "future": "not_legal",
+          "historic": "legal",
+          "timeless": "legal",
+          "gladiator": "legal",
+          "pioneer": "not_legal",
+          "modern": "not_legal",
+          "legacy": "legal",
+          "pauper": "not_legal",
+          "vintage": "legal",
+          "penny": "not_legal",
+          "commander": "legal",
+          "oathbreaker": "legal",
+          "standardbrawl": "not_legal",
+          "brawl": "legal",
+          "competitivebrawl": "legal",
+          "alchemy": "not_legal",
+          "paupercommander": "not_legal",
+          "duel": "legal",
+          "oldschool": "not_legal",
+          "premodern": "not_legal",
+          "predh": "not_legal",
+          "tlr": "not_legal"
+        },
+        "set": "cmm"
+      }
+    },
+    {
+      "deck_name": "Army of the Damned",
+      "card": {
+        "id": "bf818314-1eb4-48da-8e6f-ff7b89873b63",
+        "oracle_id": "75d667ec-86f4-4850-a3b6-e7a9fc7053b0",
+        "name": "Army of the Damned",
+        "released_at": "2022-04-29",
+        "scryfall_uri": "https://scryfall.com/card/ncc/242/army-of-the-damned?utm_source=api",
+        "layout": "normal",
+        "mana_cost": "{5}{B}{B}{B}",
+        "cmc": 8.0,
+        "type_line": "Sorcery",
+        "oracle_text": "Create thirteen tapped 2/2 black Zombie creature tokens.\nFlashback {7}{B}{B}{B} (You may cast this card from your graveyard for its flashback cost. Then exile it.)",
+        "colors": [
+          "B"
+        ],
+        "color_identity": [
+          "B"
+        ],
+        "keywords": [
+          "Flashback"
+        ],
+        "legalities": {
+          "standard": "not_legal",
+          "future": "not_legal",
+          "historic": "legal",
+          "timeless": "legal",
+          "gladiator": "legal",
+          "pioneer": "not_legal",
+          "modern": "legal",
+          "legacy": "legal",
+          "pauper": "not_legal",
+          "vintage": "legal",
+          "penny": "legal",
+          "commander": "legal",
+          "oathbreaker": "legal",
+          "standardbrawl": "not_legal",
+          "brawl": "legal",
+          "competitivebrawl": "legal",
+          "alchemy": "not_legal",
+          "paupercommander": "not_legal",
+          "duel": "legal",
+          "oldschool": "not_legal",
+          "premodern": "not_legal",
+          "predh": "not_legal",
+          "tlr": "not_legal"
+        },
+        "set": "ncc"
+      }
+    },
+    {
+      "deck_name": "Ayara, First of Locthwain",
+      "card": {
+        "id": "ed0ace28-9a33-4f0d-b8c8-f5517f20ccf1",
+        "oracle_id": "388168b3-ec68-4af2-b88c-6a5ec88c15f6",
+        "name": "Ayara, First of Locthwain",
+        "released_at": "2019-10-04",
+        "scryfall_uri": "https://scryfall.com/card/eld/75/ayara-first-of-locthwain?utm_source=api",
+        "layout": "normal",
+        "mana_cost": "{B}{B}{B}",
+        "cmc": 3.0,
+        "type_line": "Legendary Creature — Elf Noble",
+        "oracle_text": "Whenever Ayara or another black creature you control enters, each opponent loses 1 life and you gain 1 life.\n{T}, Sacrifice another black creature: Draw a card.",
+        "power": "2",
+        "toughness": "3",
+        "colors": [
+          "B"
+        ],
+        "color_identity": [
+          "B"
+        ],
+        "keywords": [],
+        "legalities": {
+          "standard": "not_legal",
+          "future": "not_legal",
+          "historic": "legal",
+          "timeless": "legal",
+          "gladiator": "legal",
+          "pioneer": "legal",
+          "modern": "legal",
+          "legacy": "legal",
+          "pauper": "not_legal",
+          "vintage": "legal",
+          "penny": "legal",
+          "commander": "legal",
+          "oathbreaker": "legal",
+          "standardbrawl": "not_legal",
+          "brawl": "legal",
+          "competitivebrawl": "legal",
+          "alchemy": "not_legal",
+          "paupercommander": "not_legal",
+          "duel": "legal",
+          "oldschool": "not_legal",
+          "premodern": "not_legal",
+          "predh": "not_legal",
+          "tlr": "legal"
+        },
+        "set": "eld"
+      }
+    },
+    {
+      "deck_name": "Bad Moon",
+      "card": {
+        "id": "8f8a75da-ea3c-43e7-9d32-1c92f8ec0fd2",
+        "oracle_id": "fc5d3341-cbce-49e5-93cc-8add92479dca",
+        "name": "Bad Moon",
+        "released_at": "2014-12-05",
+        "scryfall_uri": "https://scryfall.com/card/gvl/48/bad-moon?utm_source=api",
+        "layout": "normal",
+        "mana_cost": "{1}{B}",
+        "cmc": 2.0,
+        "type_line": "Enchantment",
+        "oracle_text": "Black creatures get +1/+1.",
+        "colors": [
+          "B"
+        ],
+        "color_identity": [
+          "B"
+        ],
+        "keywords": [],
+        "legalities": {
+          "standard": "not_legal",
+          "future": "not_legal",
+          "historic": "not_legal",
+          "timeless": "not_legal",
+          "gladiator": "not_legal",
+          "pioneer": "not_legal",
+          "modern": "legal",
+          "legacy": "legal",
+          "pauper": "not_legal",
+          "vintage": "legal",
+          "penny": "not_legal",
+          "commander": "legal",
+          "oathbreaker": "legal",
+          "standardbrawl": "not_legal",
+          "brawl": "not_legal",
+          "competitivebrawl": "not_legal",
+          "alchemy": "not_legal",
+          "paupercommander": "not_legal",
+          "duel": "legal",
+          "oldschool": "not_legal",
+          "premodern": "legal",
+          "predh": "legal",
+          "tlr": "legal"
+        },
+        "set": "gvl"
+      }
+    },
+    {
+      "deck_name": "Cemetery Reaper",
+      "card": {
+        "id": "9008e94a-cfec-473f-ae75-57586e45098d",
+        "oracle_id": "70fa209f-5e79-44de-81ce-1d8d0d8c1006",
+        "name": "Cemetery Reaper",
+        "released_at": "2021-09-24",
+        "scryfall_uri": "https://scryfall.com/card/mic/108/cemetery-reaper?utm_source=api",
+        "layout": "normal",
+        "mana_cost": "{1}{B}{B}",
+        "cmc": 3.0,
+        "type_line": "Creature — Zombie",
+        "oracle_text": "Other Zombie creatures you control get +1/+1.\n{2}{B}, {T}: Exile target creature card from a graveyard. Create a 2/2 black Zombie creature token.",
+        "power": "2",
+        "toughness": "2",
+        "colors": [
+          "B"
+        ],
+        "color_identity": [
+          "B"
+        ],
+        "keywords": [],
+        "legalities": {
+          "standard": "not_legal",
+          "future": "not_legal",
+          "historic": "not_legal",
+          "timeless": "not_legal",
+          "gladiator": "not_legal",
+          "pioneer": "not_legal",
+          "modern": "legal",
+          "legacy": "legal",
+          "pauper": "not_legal",
+          "vintage": "legal",
+          "penny": "legal",
+          "commander": "legal",
+          "oathbreaker": "legal",
+          "standardbrawl": "not_legal",
+          "brawl": "not_legal",
+          "competitivebrawl": "not_legal",
+          "alchemy": "not_legal",
+          "paupercommander": "not_legal",
+          "duel": "legal",
+          "oldschool": "not_legal",
+          "premodern": "not_legal",
+          "predh": "legal",
+          "tlr": "legal"
+        },
+        "set": "mic"
+      }
+    },
+    {
+      "deck_name": "Champion of the Perished",
+      "card": {
+        "id": "8d8e6941-ad6e-4d2f-93c0-be79e75bdf06",
+        "oracle_id": "f3654fbd-16a5-4953-84ac-534e8421032f",
+        "name": "Champion of the Perished",
+        "released_at": "2021-09-24",
+        "scryfall_uri": "https://scryfall.com/card/mid/91/champion-of-the-perished?utm_source=api",
+        "layout": "normal",
+        "mana_cost": "{B}",
+        "cmc": 1.0,
+        "type_line": "Creature — Zombie",
+        "oracle_text": "Whenever another Zombie you control enters, put a +1/+1 counter on this creature.",
+        "power": "1",
+        "toughness": "1",
+        "colors": [
+          "B"
+        ],
+        "color_identity": [
+          "B"
+        ],
+        "keywords": [],
+        "legalities": {
+          "standard": "not_legal",
+          "future": "not_legal",
+          "historic": "legal",
+          "timeless": "legal",
+          "gladiator": "legal",
+          "pioneer": "legal",
+          "modern": "legal",
+          "legacy": "legal",
+          "pauper": "not_legal",
+          "vintage": "legal",
+          "penny": "legal",
+          "commander": "legal",
+          "oathbreaker": "legal",
+          "standardbrawl": "not_legal",
+          "brawl": "legal",
+          "competitivebrawl": "legal",
+          "alchemy": "not_legal",
+          "paupercommander": "not_legal",
+          "duel": "legal",
+          "oldschool": "not_legal",
+          "premodern": "not_legal",
+          "predh": "not_legal",
+          "tlr": "legal"
+        },
+        "set": "mid"
+      }
+    },
+    {
+      "deck_name": "Cryptbreaker",
+      "card": {
+        "id": "629e37d1-c0f3-44f2-926e-41eb3687c1d9",
+        "oracle_id": "16f75a65-d067-4f79-81b9-833c373cf4d2",
+        "name": "Cryptbreaker",
+        "released_at": "2016-07-22",
+        "scryfall_uri": "https://scryfall.com/card/emn/86/cryptbreaker?utm_source=api",
+        "layout": "normal",
+        "mana_cost": "{B}",
+        "cmc": 1.0,
+        "type_line": "Creature — Zombie",
+        "oracle_text": "{1}{B}, {T}, Discard a card: Create a 2/2 black Zombie creature token.\nTap three untapped Zombies you control: You draw a card and lose 1 life.",
+        "power": "1",
+        "toughness": "1",
+        "colors": [
+          "B"
+        ],
+        "color_identity": [
+          "B"
+        ],
+        "keywords": [],
+        "legalities": {
+          "standard": "not_legal",
+          "future": "not_legal",
+          "historic": "legal",
+          "timeless": "legal",
+          "gladiator": "legal",
+          "pioneer": "legal",
+          "modern": "legal",
+          "legacy": "legal",
+          "pauper": "not_legal",
+          "vintage": "legal",
+          "penny": "legal",
+          "commander": "legal",
+          "oathbreaker": "legal",
+          "standardbrawl": "not_legal",
+          "brawl": "legal",
+          "competitivebrawl": "legal",
+          "alchemy": "not_legal",
+          "paupercommander": "not_legal",
+          "duel": "legal",
+          "oldschool": "not_legal",
+          "premodern": "not_legal",
+          "predh": "not_legal",
+          "tlr": "legal"
+        },
+        "set": "emn"
+      }
+    },
+    {
+      "deck_name": "Death Baron",
+      "card": {
+        "id": "34a27142-cf45-4164-9e10-373e5c8bf7c6",
+        "oracle_id": "99024aa8-5687-4d38-8a4b-feef42d6c1ff",
+        "name": "Death Baron",
+        "released_at": "2024-11-15",
+        "scryfall_uri": "https://scryfall.com/card/fdn/521/death-baron?utm_source=api",
+        "layout": "normal",
+        "mana_cost": "{1}{B}{B}",
+        "cmc": 3.0,
+        "type_line": "Creature — Zombie Wizard",
+        "oracle_text": "Skeletons you control and other Zombies you control get +1/+1 and have deathtouch. (Any amount of damage they deal to a creature is enough to destroy it.)",
+        "power": "2",
+        "toughness": "2",
+        "colors": [
+          "B"
+        ],
+        "color_identity": [
+          "B"
+        ],
+        "keywords": [],
+        "legalities": {
+          "standard": "legal",
+          "future": "legal",
+          "historic": "legal",
+          "timeless": "legal",
+          "gladiator": "legal",
+          "pioneer": "legal",
+          "modern": "legal",
+          "legacy": "legal",
+          "pauper": "not_legal",
+          "vintage": "legal",
+          "penny": "legal",
+          "commander": "legal",
+          "oathbreaker": "legal",
+          "standardbrawl": "legal",
+          "brawl": "legal",
+          "competitivebrawl": "legal",
+          "alchemy": "legal",
+          "paupercommander": "not_legal",
+          "duel": "legal",
+          "oldschool": "not_legal",
+          "premodern": "not_legal",
+          "predh": "legal",
+          "tlr": "legal"
+        },
+        "set": "fdn"
+      }
+    },
+    {
+      "deck_name": "Diregraf Colossus",
+      "card": {
+        "id": "02351d67-2d73-43e3-82f7-5277c532d7ac",
+        "oracle_id": "fd62ad01-601f-4250-bc2a-8ef3982e45c4",
+        "name": "Diregraf Colossus",
+        "released_at": "2021-09-24",
+        "scryfall_uri": "https://scryfall.com/card/mic/112/diregraf-colossus?utm_source=api",
+        "layout": "normal",
+        "mana_cost": "{2}{B}",
+        "cmc": 3.0,
+        "type_line": "Creature — Zombie Giant",
+        "oracle_text": "This creature enters with a +1/+1 counter on it for each Zombie card in your graveyard.\nWhenever you cast a Zombie spell, create a tapped 2/2 black Zombie creature token.",
+        "power": "2",
+        "toughness": "2",
+        "colors": [
+          "B"
+        ],
+        "color_identity": [
+          "B"
+        ],
+        "keywords": [],
+        "legalities": {
+          "standard": "not_legal",
+          "future": "not_legal",
+          "historic": "legal",
+          "timeless": "legal",
+          "gladiator": "legal",
+          "pioneer": "legal",
+          "modern": "legal",
+          "legacy": "legal",
+          "pauper": "not_legal",
+          "vintage": "legal",
+          "penny": "legal",
+          "commander": "legal",
+          "oathbreaker": "legal",
+          "standardbrawl": "not_legal",
+          "brawl": "legal",
+          "competitivebrawl": "legal",
+          "alchemy": "not_legal",
+          "paupercommander": "not_legal",
+          "duel": "legal",
+          "oldschool": "not_legal",
+          "premodern": "not_legal",
+          "predh": "not_legal",
+          "tlr": "legal"
+        },
+        "set": "mic"
+      }
+    },
+    {
+      "deck_name": "Endless Ranks of the Dead",
+      "card": {
+        "id": "155ae16c-f32b-421d-a92a-bf13d9f32891",
+        "oracle_id": "69d4ecac-4735-4667-bfc1-c8800b436d08",
+        "name": "Endless Ranks of the Dead",
+        "released_at": "2021-09-24",
+        "scryfall_uri": "https://scryfall.com/card/mic/116/endless-ranks-of-the-dead?utm_source=api",
+        "layout": "normal",
+        "mana_cost": "{2}{B}{B}",
+        "cmc": 4.0,
+        "type_line": "Enchantment",
+        "oracle_text": "At the beginning of your upkeep, create X 2/2 black Zombie creature tokens, where X is half the number of Zombies you control, rounded down.",
+        "colors": [
+          "B"
+        ],
+        "color_identity": [
+          "B"
+        ],
+        "keywords": [],
+        "legalities": {
+          "standard": "not_legal",
+          "future": "not_legal",
+          "historic": "not_legal",
+          "timeless": "not_legal",
+          "gladiator": "not_legal",
+          "pioneer": "not_legal",
+          "modern": "legal",
+          "legacy": "legal",
+          "pauper": "not_legal",
+          "vintage": "legal",
+          "penny": "legal",
+          "commander": "legal",
+          "oathbreaker": "legal",
+          "standardbrawl": "not_legal",
+          "brawl": "not_legal",
+          "competitivebrawl": "not_legal",
+          "alchemy": "not_legal",
+          "paupercommander": "not_legal",
+          "duel": "legal",
+          "oldschool": "not_legal",
+          "premodern": "not_legal",
+          "predh": "not_legal",
+          "tlr": "not_legal"
+        },
+        "set": "mic"
+      }
+    },
+    {
+      "deck_name": "God-Eternal Bontu",
+      "card": {
+        "id": "142b0860-8a82-4830-a4ff-2bbfc102437e",
+        "oracle_id": "183891b0-b5ec-47f4-8d09-b9d3cfc4e7f1",
+        "name": "God-Eternal Bontu",
+        "released_at": "2025-08-01",
+        "scryfall_uri": "https://scryfall.com/card/eoc/83/god-eternal-bontu?utm_source=api",
+        "layout": "normal",
+        "mana_cost": "{3}{B}{B}",
+        "cmc": 5.0,
+        "type_line": "Legendary Creature — Zombie God",
+        "oracle_text": "Menace\nWhen God-Eternal Bontu enters, sacrifice any number of other permanents, then draw that many cards.\nWhen God-Eternal Bontu dies or is put into exile from the battlefield, you may put her into her owner's library third from the top.",
+        "power": "5",
+        "toughness": "6",
+        "colors": [
+          "B"
+        ],
+        "color_identity": [
+          "B"
+        ],
+        "keywords": [
+          "Menace"
+        ],
+        "legalities": {
+          "standard": "not_legal",
+          "future": "not_legal",
+          "historic": "legal",
+          "timeless": "legal",
+          "gladiator": "legal",
+          "pioneer": "legal",
+          "modern": "legal",
+          "legacy": "legal",
+          "pauper": "not_legal",
+          "vintage": "legal",
+          "penny": "legal",
+          "commander": "legal",
+          "oathbreaker": "legal",
+          "standardbrawl": "not_legal",
+          "brawl": "legal",
+          "competitivebrawl": "legal",
+          "alchemy": "not_legal",
+          "paupercommander": "not_legal",
+          "duel": "legal",
+          "oldschool": "not_legal",
+          "premodern": "not_legal",
+          "predh": "not_legal",
+          "tlr": "not_legal"
+        },
+        "set": "eoc"
+      }
+    },
+    {
+      "deck_name": "Grave Titan",
+      "card": {
+        "id": "3b4faa6e-5013-4c59-80f5-662a386672eb",
+        "oracle_id": "f3abd4d1-a975-4e85-8684-aa0fce029670",
+        "name": "Grave Titan",
+        "released_at": "2026-01-23",
+        "scryfall_uri": "https://scryfall.com/card/ecc/74/grave-titan?utm_source=api",
+        "layout": "normal",
+        "mana_cost": "{4}{B}{B}",
+        "cmc": 6.0,
+        "type_line": "Creature — Giant",
+        "oracle_text": "Deathtouch\nWhenever this creature enters or attacks, create two 2/2 black Zombie creature tokens.",
+        "power": "6",
+        "toughness": "6",
+        "colors": [
+          "B"
+        ],
+        "color_identity": [
+          "B"
+        ],
+        "keywords": [
+          "Deathtouch"
+        ],
+        "legalities": {
+          "standard": "not_legal",
+          "future": "not_legal",
+          "historic": "legal",
+          "timeless": "legal",
+          "gladiator": "legal",
+          "pioneer": "not_legal",
+          "modern": "legal",
+          "legacy": "legal",
+          "pauper": "not_legal",
+          "vintage": "legal",
+          "penny": "legal",
+          "commander": "legal",
+          "oathbreaker": "legal",
+          "standardbrawl": "not_legal",
+          "brawl": "legal",
+          "competitivebrawl": "legal",
+          "alchemy": "not_legal",
+          "paupercommander": "not_legal",
+          "duel": "legal",
+          "oldschool": "not_legal",
+          "premodern": "not_legal",
+          "predh": "legal",
+          "tlr": "not_legal"
+        },
+        "set": "ecc"
+      }
+    },
+    {
+      "deck_name": "Graveborn Muse",
+      "card": {
+        "id": "3d460b79-f1a5-41c4-a5b3-61f703fd97df",
+        "oracle_id": "d2a65ff4-ab82-42f7-9d90-feb29132121e",
+        "name": "Graveborn Muse",
+        "released_at": "2007-07-13",
+        "scryfall_uri": "https://scryfall.com/card/10e/145/graveborn-muse?utm_source=api",
+        "layout": "normal",
+        "mana_cost": "{2}{B}{B}",
+        "cmc": 4.0,
+        "type_line": "Creature — Zombie Spirit",
+        "oracle_text": "At the beginning of your upkeep, you draw X cards and lose X life, where X is the number of Zombies you control.",
+        "power": "3",
+        "toughness": "3",
+        "colors": [
+          "B"
+        ],
+        "color_identity": [
+          "B"
+        ],
+        "keywords": [],
+        "legalities": {
+          "standard": "not_legal",
+          "future": "not_legal",
+          "historic": "not_legal",
+          "timeless": "not_legal",
+          "gladiator": "not_legal",
+          "pioneer": "not_legal",
+          "modern": "legal",
+          "legacy": "legal",
+          "pauper": "not_legal",
+          "vintage": "legal",
+          "penny": "legal",
+          "commander": "legal",
+          "oathbreaker": "legal",
+          "standardbrawl": "not_legal",
+          "brawl": "not_legal",
+          "competitivebrawl": "not_legal",
+          "alchemy": "not_legal",
+          "paupercommander": "not_legal",
+          "duel": "legal",
+          "oldschool": "not_legal",
+          "premodern": "legal",
+          "predh": "legal",
+          "tlr": "not_legal"
+        },
+        "set": "10e"
+      }
+    },
+    {
+      "deck_name": "Gravecrawler",
+      "card": {
+        "id": "6987d609-ba0f-42bf-9b61-bdfb943c03b5",
+        "oracle_id": "09ff28b1-b6c9-48e6-b12e-2f0e644f709f",
+        "name": "Gravecrawler",
+        "released_at": "2025-04-11",
+        "scryfall_uri": "https://scryfall.com/card/tdc/93/gravecrawler?utm_source=api",
+        "layout": "normal",
+        "mana_cost": "{B}",
+        "cmc": 1.0,
+        "type_line": "Creature — Zombie",
+        "oracle_text": "This creature can't block.\nYou may cast this card from your graveyard as long as you control a Zombie.",
+        "power": "2",
+        "toughness": "1",
+        "colors": [
+          "B"
+        ],
+        "color_identity": [
+          "B"
+        ],
+        "keywords": [],
+        "legalities": {
+          "standard": "not_legal",
+          "future": "not_legal",
+          "historic": "legal",
+          "timeless": "legal",
+          "gladiator": "legal",
+          "pioneer": "not_legal",
+          "modern": "legal",
+          "legacy": "legal",
+          "pauper": "not_legal",
+          "vintage": "legal",
+          "penny": "legal",
+          "commander": "legal",
+          "oathbreaker": "legal",
+          "standardbrawl": "not_legal",
+          "brawl": "legal",
+          "competitivebrawl": "legal",
+          "alchemy": "not_legal",
+          "paupercommander": "not_legal",
+          "duel": "legal",
+          "oldschool": "not_legal",
+          "premodern": "not_legal",
+          "predh": "not_legal",
+          "tlr": "legal"
+        },
+        "set": "tdc"
+      }
+    },
+    {
+      "deck_name": "Headless Rider",
+      "card": {
+        "id": "c24018e8-b8f1-44a5-9355-8b79f363569d",
+        "oracle_id": "d4fdacd7-3101-44e2-a880-dde7326137a4",
+        "name": "Headless Rider",
+        "released_at": "2021-11-19",
+        "scryfall_uri": "https://scryfall.com/card/vow/118/headless-rider?utm_source=api",
+        "layout": "normal",
+        "mana_cost": "{2}{B}",
+        "cmc": 3.0,
+        "type_line": "Creature — Zombie",
+        "oracle_text": "Whenever this creature or another nontoken Zombie you control dies, create a 2/2 black Zombie creature token.",
+        "power": "3",
+        "toughness": "1",
+        "colors": [
+          "B"
+        ],
+        "color_identity": [
+          "B"
+        ],
+        "keywords": [],
+        "legalities": {
+          "standard": "not_legal",
+          "future": "not_legal",
+          "historic": "legal",
+          "timeless": "legal",
+          "gladiator": "legal",
+          "pioneer": "legal",
+          "modern": "legal",
+          "legacy": "legal",
+          "pauper": "not_legal",
+          "vintage": "legal",
+          "penny": "legal",
+          "commander": "legal",
+          "oathbreaker": "legal",
+          "standardbrawl": "not_legal",
+          "brawl": "legal",
+          "competitivebrawl": "legal",
+          "alchemy": "not_legal",
+          "paupercommander": "not_legal",
+          "duel": "legal",
+          "oldschool": "not_legal",
+          "premodern": "not_legal",
+          "predh": "not_legal",
+          "tlr": "legal"
+        },
+        "set": "vow"
+      }
+    },
+    {
+      "deck_name": "Josu Vess, Lich Knight",
+      "card": {
+        "id": "30553f61-6edf-4e7b-b60f-b8f62ca2bcad",
+        "oracle_id": "974a46f9-aa84-4b34-bee5-c635166e5841",
+        "name": "Josu Vess, Lich Knight",
+        "released_at": "2023-04-21",
+        "scryfall_uri": "https://scryfall.com/card/moc/253/josu-vess-lich-knight?utm_source=api",
+        "layout": "normal",
+        "mana_cost": "{2}{B}{B}",
+        "cmc": 4.0,
+        "type_line": "Legendary Creature — Zombie Knight",
+        "oracle_text": "Kicker {5}{B} (You may pay an additional {5}{B} as you cast this spell.)\nMenace\nWhen Josu Vess enters, if he was kicked, create eight 2/2 black Zombie Knight creature tokens with menace.",
+        "power": "4",
+        "toughness": "5",
+        "colors": [
+          "B"
+        ],
+        "color_identity": [
+          "B"
+        ],
+        "keywords": [
+          "Menace",
+          "Kicker"
+        ],
+        "legalities": {
+          "standard": "not_legal",
+          "future": "not_legal",
+          "historic": "legal",
+          "timeless": "legal",
+          "gladiator": "legal",
+          "pioneer": "legal",
+          "modern": "legal",
+          "legacy": "legal",
+          "pauper": "not_legal",
+          "vintage": "legal",
+          "penny": "legal",
+          "commander": "legal",
+          "oathbreaker": "legal",
+          "standardbrawl": "not_legal",
+          "brawl": "legal",
+          "competitivebrawl": "legal",
+          "alchemy": "not_legal",
+          "paupercommander": "not_legal",
+          "duel": "legal",
+          "oldschool": "not_legal",
+          "premodern": "not_legal",
+          "predh": "not_legal",
+          "tlr": "not_legal"
+        },
+        "set": "moc"
+      }
+    },
+    {
+      "deck_name": "Kalitas, Traitor of Ghet",
+      "card": {
+        "id": "17a278d0-f601-4d57-bc3d-2972f8602a69",
+        "oracle_id": "e1cfd1cb-44a5-429f-a5c1-e6d29bad1c71",
+        "name": "Kalitas, Traitor of Ghet",
+        "released_at": "2016-01-22",
+        "scryfall_uri": "https://scryfall.com/card/ogw/86/kalitas-traitor-of-ghet?utm_source=api",
+        "layout": "normal",
+        "mana_cost": "{2}{B}{B}",
+        "cmc": 4.0,
+        "type_line": "Legendary Creature — Vampire Warrior",
+        "oracle_text": "Lifelink\nIf a nontoken creature an opponent controls would die, instead exile that card and create a 2/2 black Zombie creature token.\n{2}{B}, Sacrifice another Vampire or Zombie: Put two +1/+1 counters on Kalitas.",
+        "power": "3",
+        "toughness": "4",
+        "colors": [
+          "B"
+        ],
+        "color_identity": [
+          "B"
+        ],
+        "keywords": [
+          "Lifelink"
+        ],
+        "legalities": {
+          "standard": "not_legal",
+          "future": "not_legal",
+          "historic": "legal",
+          "timeless": "legal",
+          "gladiator": "legal",
+          "pioneer": "legal",
+          "modern": "legal",
+          "legacy": "legal",
+          "pauper": "not_legal",
+          "vintage": "legal",
+          "penny": "legal",
+          "commander": "legal",
+          "oathbreaker": "legal",
+          "standardbrawl": "not_legal",
+          "brawl": "legal",
+          "competitivebrawl": "legal",
+          "alchemy": "not_legal",
+          "paupercommander": "not_legal",
+          "duel": "legal",
+          "oldschool": "not_legal",
+          "premodern": "not_legal",
+          "predh": "not_legal",
+          "tlr": "not_legal"
+        },
+        "set": "ogw"
+      }
+    },
+    {
+      "deck_name": "Liliana's Mastery",
+      "card": {
+        "id": "a92ee6ec-eebf-40b4-9dd9-c0551e33f5ff",
+        "oracle_id": "bd104c7e-311e-4b03-98d3-5f20f3a99d26",
+        "name": "Liliana's Mastery",
+        "released_at": "2021-09-24",
+        "scryfall_uri": "https://scryfall.com/card/mic/123/lilianas-mastery?utm_source=api",
+        "layout": "normal",
+        "mana_cost": "{3}{B}{B}",
+        "cmc": 5.0,
+        "type_line": "Enchantment",
+        "oracle_text": "Zombies you control get +1/+1.\nWhen this enchantment enters, create two 2/2 black Zombie creature tokens.",
+        "colors": [
+          "B"
+        ],
+        "color_identity": [
+          "B"
+        ],
+        "keywords": [],
+        "legalities": {
+          "standard": "not_legal",
+          "future": "not_legal",
+          "historic": "legal",
+          "timeless": "legal",
+          "gladiator": "legal",
+          "pioneer": "legal",
+          "modern": "legal",
+          "legacy": "legal",
+          "pauper": "not_legal",
+          "vintage": "legal",
+          "penny": "legal",
+          "commander": "legal",
+          "oathbreaker": "legal",
+          "standardbrawl": "not_legal",
+          "brawl": "legal",
+          "competitivebrawl": "legal",
+          "alchemy": "not_legal",
+          "paupercommander": "not_legal",
+          "duel": "legal",
+          "oldschool": "not_legal",
+          "premodern": "not_legal",
+          "predh": "not_legal",
+          "tlr": "not_legal"
+        },
+        "set": "mic"
+      }
+    },
+    {
+      "deck_name": "Liliana's Reaver",
+      "card": {
+        "id": "fa9396f3-a93c-47ee-91da-78af864c86c3",
+        "oracle_id": "97332d4e-a55c-4e4f-9040-bf426a7c8e39",
+        "name": "Liliana's Reaver",
+        "released_at": "2020-07-17",
+        "scryfall_uri": "https://scryfall.com/card/jmp/251/lilianas-reaver?utm_source=api",
+        "layout": "normal",
+        "mana_cost": "{2}{B}{B}",
+        "cmc": 4.0,
+        "type_line": "Creature — Zombie",
+        "oracle_text": "Deathtouch\nWhenever this creature deals combat damage to a player, that player discards a card and you create a tapped 2/2 black Zombie creature token.",
+        "power": "4",
+        "toughness": "3",
+        "colors": [
+          "B"
+        ],
+        "color_identity": [
+          "B"
+        ],
+        "keywords": [
+          "Deathtouch"
+        ],
+        "legalities": {
+          "standard": "not_legal",
+          "future": "not_legal",
+          "historic": "legal",
+          "timeless": "legal",
+          "gladiator": "legal",
+          "pioneer": "legal",
+          "modern": "legal",
+          "legacy": "legal",
+          "pauper": "not_legal",
+          "vintage": "legal",
+          "penny": "legal",
+          "commander": "legal",
+          "oathbreaker": "legal",
+          "standardbrawl": "not_legal",
+          "brawl": "legal",
+          "competitivebrawl": "legal",
+          "alchemy": "not_legal",
+          "paupercommander": "not_legal",
+          "duel": "legal",
+          "oldschool": "not_legal",
+          "premodern": "not_legal",
+          "predh": "not_legal",
+          "tlr": "not_legal"
+        },
+        "set": "jmp"
+      }
+    },
+    {
+      "deck_name": "Lord of the Undead",
+      "card": {
+        "id": "792e773b-5feb-407f-a162-f35d6e693cca",
+        "oracle_id": "7714af0e-41d9-4609-967f-27233b46055f",
+        "name": "Lord of the Undead",
+        "released_at": "2007-07-13",
+        "scryfall_uri": "https://scryfall.com/card/10e/155/lord-of-the-undead?utm_source=api",
+        "layout": "normal",
+        "mana_cost": "{1}{B}{B}",
+        "cmc": 3.0,
+        "type_line": "Creature — Zombie",
+        "oracle_text": "Other Zombie creatures get +1/+1.\n{1}{B}, {T}: Return target Zombie card from your graveyard to your hand.",
+        "power": "2",
+        "toughness": "2",
+        "colors": [
+          "B"
+        ],
+        "color_identity": [
+          "B"
+        ],
+        "keywords": [],
+        "legalities": {
+          "standard": "not_legal",
+          "future": "not_legal",
+          "historic": "legal",
+          "timeless": "legal",
+          "gladiator": "legal",
+          "pioneer": "not_legal",
+          "modern": "legal",
+          "legacy": "legal",
+          "pauper": "not_legal",
+          "vintage": "legal",
+          "penny": "legal",
+          "commander": "legal",
+          "oathbreaker": "legal",
+          "standardbrawl": "not_legal",
+          "brawl": "legal",
+          "competitivebrawl": "legal",
+          "alchemy": "not_legal",
+          "paupercommander": "not_legal",
+          "duel": "legal",
+          "oldschool": "not_legal",
+          "premodern": "legal",
+          "predh": "legal",
+          "tlr": "legal"
+        },
+        "set": "10e"
+      }
+    },
+    {
+      "deck_name": "Midnight Reaper",
+      "card": {
+        "id": "f229b0e6-1ffd-410e-b04b-a0afc179c58c",
+        "oracle_id": "e8c7566d-7cc0-48af-a986-83223ec7e06c",
+        "name": "Midnight Reaper",
+        "released_at": "2024-11-15",
+        "scryfall_uri": "https://scryfall.com/card/fdn/609/midnight-reaper?utm_source=api",
+        "layout": "normal",
+        "mana_cost": "{2}{B}",
+        "cmc": 3.0,
+        "type_line": "Creature — Zombie Knight",
+        "oracle_text": "Whenever a nontoken creature you control dies, this creature deals 1 damage to you and you draw a card.",
+        "power": "3",
+        "toughness": "2",
+        "colors": [
+          "B"
+        ],
+        "color_identity": [
+          "B"
+        ],
+        "keywords": [],
+        "legalities": {
+          "standard": "legal",
+          "future": "legal",
+          "historic": "legal",
+          "timeless": "legal",
+          "gladiator": "legal",
+          "pioneer": "legal",
+          "modern": "legal",
+          "legacy": "legal",
+          "pauper": "not_legal",
+          "vintage": "legal",
+          "penny": "legal",
+          "commander": "legal",
+          "oathbreaker": "legal",
+          "standardbrawl": "legal",
+          "brawl": "legal",
+          "competitivebrawl": "legal",
+          "alchemy": "legal",
+          "paupercommander": "not_legal",
+          "duel": "legal",
+          "oldschool": "not_legal",
+          "premodern": "not_legal",
+          "predh": "not_legal",
+          "tlr": "legal"
+        },
+        "set": "fdn"
+      }
+    },
+    {
+      "deck_name": "Mutilate",
+      "card": {
+        "id": "04587192-e5a6-46f6-98b5-3b349d618880",
+        "oracle_id": "698e79ec-c2bc-4973-a095-f3c57b50e39c",
+        "name": "Mutilate",
+        "released_at": "2014-12-05",
+        "scryfall_uri": "https://scryfall.com/card/gvl/55/mutilate?utm_source=api",
+        "layout": "normal",
+        "mana_cost": "{2}{B}{B}",
+        "cmc": 4.0,
+        "type_line": "Sorcery",
+        "oracle_text": "All creatures get -1/-1 until end of turn for each Swamp you control.",
+        "colors": [
+          "B"
+        ],
+        "color_identity": [
+          "B"
+        ],
+        "keywords": [],
+        "legalities": {
+          "standard": "not_legal",
+          "future": "not_legal",
+          "historic": "not_legal",
+          "timeless": "not_legal",
+          "gladiator": "not_legal",
+          "pioneer": "not_legal",
+          "modern": "legal",
+          "legacy": "legal",
+          "pauper": "not_legal",
+          "vintage": "legal",
+          "penny": "legal",
+          "commander": "legal",
+          "oathbreaker": "legal",
+          "standardbrawl": "not_legal",
+          "brawl": "not_legal",
+          "competitivebrawl": "not_legal",
+          "alchemy": "not_legal",
+          "paupercommander": "not_legal",
+          "duel": "legal",
+          "oldschool": "not_legal",
+          "premodern": "legal",
+          "predh": "legal",
+          "tlr": "not_legal"
+        },
+        "set": "gvl"
+      }
+    },
+    {
+      "deck_name": "Necrotic Hex",
+      "card": {
+        "id": "009d2fb8-6144-46d9-9085-26232c174109",
+        "oracle_id": "a6e720a2-9819-40ec-a811-7812898b531a",
+        "name": "Necrotic Hex",
+        "released_at": "2020-11-20",
+        "scryfall_uri": "https://scryfall.com/card/cmr/137/necrotic-hex?utm_source=api",
+        "layout": "normal",
+        "mana_cost": "{6}{B}",
+        "cmc": 7.0,
+        "type_line": "Sorcery",
+        "oracle_text": "Each player sacrifices six creatures of their choice. You create six tapped 2/2 black Zombie creature tokens.",
+        "colors": [
+          "B"
+        ],
+        "color_identity": [
+          "B"
+        ],
+        "keywords": [],
+        "legalities": {
+          "standard": "not_legal",
+          "future": "not_legal",
+          "historic": "not_legal",
+          "timeless": "not_legal",
+          "gladiator": "not_legal",
+          "pioneer": "not_legal",
+          "modern": "not_legal",
+          "legacy": "legal",
+          "pauper": "not_legal",
+          "vintage": "legal",
+          "penny": "not_legal",
+          "commander": "legal",
+          "oathbreaker": "legal",
+          "standardbrawl": "not_legal",
+          "brawl": "not_legal",
+          "competitivebrawl": "not_legal",
+          "alchemy": "not_legal",
+          "paupercommander": "not_legal",
+          "duel": "legal",
+          "oldschool": "not_legal",
+          "premodern": "not_legal",
+          "predh": "not_legal",
+          "tlr": "not_legal"
+        },
+        "set": "cmr"
+      }
+    },
+    {
+      "deck_name": "Open the Graves",
+      "card": {
+        "id": "130978d1-0b20-4dfa-85f5-3ff2bc2cfda3",
+        "oracle_id": "28778958-a1f9-4fea-b551-c193d1257f18",
+        "name": "Open the Graves",
+        "released_at": "2021-09-24",
+        "scryfall_uri": "https://scryfall.com/card/mic/126/open-the-graves?utm_source=api",
+        "layout": "normal",
+        "mana_cost": "{3}{B}{B}",
+        "cmc": 5.0,
+        "type_line": "Enchantment",
+        "oracle_text": "Whenever a nontoken creature you control dies, create a 2/2 black Zombie creature token.",
+        "colors": [
+          "B"
+        ],
+        "color_identity": [
+          "B"
+        ],
+        "keywords": [],
+        "legalities": {
+          "standard": "not_legal",
+          "future": "not_legal",
+          "historic": "legal",
+          "timeless": "legal",
+          "gladiator": "legal",
+          "pioneer": "legal",
+          "modern": "legal",
+          "legacy": "legal",
+          "pauper": "not_legal",
+          "vintage": "legal",
+          "penny": "legal",
+          "commander": "legal",
+          "oathbreaker": "legal",
+          "standardbrawl": "not_legal",
+          "brawl": "legal",
+          "competitivebrawl": "legal",
+          "alchemy": "not_legal",
+          "paupercommander": "not_legal",
+          "duel": "legal",
+          "oldschool": "not_legal",
+          "premodern": "not_legal",
+          "predh": "not_legal",
+          "tlr": "not_legal"
+        },
+        "set": "mic"
+      }
+    },
+    {
+      "deck_name": "Oversold Cemetery",
+      "card": {
+        "id": "06b7312a-c775-4fa8-ba62-c84ff38459e8",
+        "oracle_id": "ed4cd3a1-688b-4c05-948d-39d3336e00c0",
+        "name": "Oversold Cemetery",
+        "released_at": "2023-01-13",
+        "scryfall_uri": "https://scryfall.com/card/dmr/96/oversold-cemetery?utm_source=api",
+        "layout": "normal",
+        "mana_cost": "{1}{B}",
+        "cmc": 2.0,
+        "type_line": "Enchantment",
+        "oracle_text": "At the beginning of your upkeep, if you have four or more creature cards in your graveyard, you may return target creature card from your graveyard to your hand.",
+        "colors": [
+          "B"
+        ],
+        "color_identity": [
+          "B"
+        ],
+        "keywords": [],
+        "legalities": {
+          "standard": "not_legal",
+          "future": "not_legal",
+          "historic": "legal",
+          "timeless": "legal",
+          "gladiator": "legal",
+          "pioneer": "not_legal",
+          "modern": "not_legal",
+          "legacy": "legal",
+          "pauper": "not_legal",
+          "vintage": "legal",
+          "penny": "not_legal",
+          "commander": "legal",
+          "oathbreaker": "legal",
+          "standardbrawl": "not_legal",
+          "brawl": "legal",
+          "competitivebrawl": "legal",
+          "alchemy": "not_legal",
+          "paupercommander": "not_legal",
+          "duel": "legal",
+          "oldschool": "not_legal",
+          "premodern": "legal",
+          "predh": "legal",
+          "tlr": "legal"
+        },
+        "set": "dmr"
+      }
+    },
+    {
+      "deck_name": "Phyrexian Arena",
+      "card": {
+        "id": "0784b6f0-9ebf-43d2-ba0f-a6bc93ba0c48",
+        "oracle_id": "ee579a32-a048-4335-b966-231ba731cdea",
+        "name": "Phyrexian Arena",
+        "released_at": "2024-11-15",
+        "scryfall_uri": "https://scryfall.com/card/fdn/180/phyrexian-arena?utm_source=api",
+        "layout": "normal",
+        "mana_cost": "{1}{B}{B}",
+        "cmc": 3.0,
+        "type_line": "Enchantment",
+        "oracle_text": "At the beginning of your upkeep, you draw a card and lose 1 life.",
+        "colors": [
+          "B"
+        ],
+        "color_identity": [
+          "B"
+        ],
+        "keywords": [],
+        "legalities": {
+          "standard": "legal",
+          "future": "legal",
+          "historic": "legal",
+          "timeless": "legal",
+          "gladiator": "legal",
+          "pioneer": "legal",
+          "modern": "legal",
+          "legacy": "legal",
+          "pauper": "not_legal",
+          "vintage": "legal",
+          "penny": "legal",
+          "commander": "legal",
+          "oathbreaker": "legal",
+          "standardbrawl": "legal",
+          "brawl": "legal",
+          "competitivebrawl": "legal",
+          "alchemy": "legal",
+          "paupercommander": "not_legal",
+          "duel": "legal",
+          "oldschool": "not_legal",
+          "premodern": "legal",
+          "predh": "legal",
+          "tlr": "legal"
+        },
+        "set": "fdn"
+      }
+    },
+    {
+      "deck_name": "Razorlash Transmogrant",
+      "card": {
+        "id": "edfaf8cc-7819-4ec2-8d79-e3b0c1814590",
+        "oracle_id": "580996d4-db9a-4b57-a0e1-a2dbb524121a",
+        "name": "Razorlash Transmogrant",
+        "released_at": "2022-11-18",
+        "scryfall_uri": "https://scryfall.com/card/bro/122/razorlash-transmogrant?utm_source=api",
+        "layout": "normal",
+        "mana_cost": "{2}",
+        "cmc": 2.0,
+        "type_line": "Artifact Creature — Zombie",
+        "oracle_text": "This creature can't block.\n{4}{B}{B}: Return this card from your graveyard to the battlefield with a +1/+1 counter on it. This ability costs {4} less to activate if an opponent controls four or more nonbasic lands.",
+        "power": "3",
+        "toughness": "1",
+        "colors": [],
+        "color_identity": [
+          "B"
+        ],
+        "keywords": [],
+        "legalities": {
+          "standard": "not_legal",
+          "future": "not_legal",
+          "historic": "legal",
+          "timeless": "legal",
+          "gladiator": "legal",
+          "pioneer": "legal",
+          "modern": "legal",
+          "legacy": "legal",
+          "pauper": "not_legal",
+          "vintage": "legal",
+          "penny": "legal",
+          "commander": "legal",
+          "oathbreaker": "legal",
+          "standardbrawl": "not_legal",
+          "brawl": "legal",
+          "competitivebrawl": "legal",
+          "alchemy": "not_legal",
+          "paupercommander": "not_legal",
+          "duel": "legal",
+          "oldschool": "not_legal",
+          "premodern": "not_legal",
+          "predh": "not_legal",
+          "tlr": "legal"
+        },
+        "set": "bro"
+      }
+    },
+    {
+      "deck_name": "Zul Ashur, Lich Lord",
+      "card": {
+        "id": "34ad4fdb-9805-45b3-ba20-e47a15d6ff38",
+        "oracle_id": "a7c6c9b3-91f2-4ecf-b2b0-b0edd96974d9",
+        "name": "Zul Ashur, Lich Lord",
+        "released_at": "2024-11-15",
+        "scryfall_uri": "https://scryfall.com/card/fdn/77/zul-ashur-lich-lord?utm_source=api",
+        "layout": "normal",
+        "mana_cost": "{1}{B}",
+        "cmc": 2.0,
+        "type_line": "Legendary Creature — Zombie Warlock",
+        "oracle_text": "Ward—Pay 2 life. (Whenever this creature becomes the target of a spell or ability an opponent controls, counter it unless that player pays 2 life.)\n{T}: You may cast target Zombie creature card from your graveyard this turn.",
+        "power": "2",
+        "toughness": "2",
+        "colors": [
+          "B"
+        ],
+        "color_identity": [
+          "B"
+        ],
+        "keywords": [
+          "Ward"
+        ],
+        "legalities": {
+          "standard": "legal",
+          "future": "legal",
+          "historic": "legal",
+          "timeless": "legal",
+          "gladiator": "legal",
+          "pioneer": "legal",
+          "modern": "legal",
+          "legacy": "legal",
+          "pauper": "not_legal",
+          "vintage": "legal",
+          "penny": "legal",
+          "commander": "legal",
+          "oathbreaker": "legal",
+          "standardbrawl": "legal",
+          "brawl": "legal",
+          "competitivebrawl": "legal",
+          "alchemy": "legal",
+          "paupercommander": "not_legal",
+          "duel": "legal",
+          "oldschool": "not_legal",
+          "premodern": "not_legal",
+          "predh": "not_legal",
+          "tlr": "legal"
+        },
+        "set": "fdn"
+      }
+    },
+    {
+      "deck_name": "Castle Locthwain",
+      "card": {
+        "id": "19336e3a-2242-4a30-a563-32f2e4fc18e9",
+        "oracle_id": "be811e70-aaaa-41f3-bf9e-5d3f9f719b49",
+        "name": "Castle Locthwain",
+        "released_at": "2022-06-10",
+        "scryfall_uri": "https://scryfall.com/card/clb/884/castle-locthwain?utm_source=api",
+        "layout": "normal",
+        "mana_cost": "",
+        "cmc": 0.0,
+        "type_line": "Land",
+        "oracle_text": "This land enters tapped unless you control a Swamp.\n{T}: Add {B}.\n{1}{B}{B}, {T}: Draw a card, then you lose life equal to the number of cards in your hand.",
+        "colors": [],
+        "color_identity": [
+          "B"
+        ],
+        "keywords": [],
+        "legalities": {
+          "standard": "not_legal",
+          "future": "not_legal",
+          "historic": "legal",
+          "timeless": "legal",
+          "gladiator": "legal",
+          "pioneer": "legal",
+          "modern": "legal",
+          "legacy": "legal",
+          "pauper": "not_legal",
+          "vintage": "legal",
+          "penny": "not_legal",
+          "commander": "legal",
+          "oathbreaker": "legal",
+          "standardbrawl": "not_legal",
+          "brawl": "legal",
+          "competitivebrawl": "legal",
+          "alchemy": "not_legal",
+          "paupercommander": "not_legal",
+          "duel": "legal",
+          "oldschool": "not_legal",
+          "premodern": "not_legal",
+          "predh": "not_legal",
+          "tlr": "legal"
+        },
+        "set": "clb"
+      }
+    },
+    {
+      "deck_name": "Geier Reach Sanitarium",
+      "card": {
+        "id": "4b9c92f0-4242-4a3e-9ede-6a4935f5c75d",
+        "oracle_id": "7b9fafe7-d26a-4ed5-b4c4-ce13763770b5",
+        "name": "Geier Reach Sanitarium",
+        "released_at": "2023-11-17",
+        "scryfall_uri": "https://scryfall.com/card/lcc/335/geier-reach-sanitarium?utm_source=api",
+        "layout": "normal",
+        "mana_cost": "",
+        "cmc": 0.0,
+        "type_line": "Legendary Land",
+        "oracle_text": "{T}: Add {C}.\n{2}, {T}: Each player draws a card, then discards a card.",
+        "colors": [],
+        "color_identity": [],
+        "keywords": [],
+        "legalities": {
+          "standard": "not_legal",
+          "future": "not_legal",
+          "historic": "legal",
+          "timeless": "legal",
+          "gladiator": "legal",
+          "pioneer": "legal",
+          "modern": "legal",
+          "legacy": "legal",
+          "pauper": "not_legal",
+          "vintage": "legal",
+          "penny": "legal",
+          "commander": "legal",
+          "oathbreaker": "legal",
+          "standardbrawl": "not_legal",
+          "brawl": "legal",
+          "competitivebrawl": "legal",
+          "alchemy": "not_legal",
+          "paupercommander": "not_legal",
+          "duel": "legal",
+          "oldschool": "not_legal",
+          "premodern": "not_legal",
+          "predh": "not_legal",
+          "tlr": "legal"
+        },
+        "set": "lcc"
+      }
+    },
+    {
+      "deck_name": "Ambition's Cost",
+      "card": {
+        "id": "d560c996-ef80-4117-8642-a632ae51c07d",
+        "oracle_id": "84de4fec-2f38-4293-93d3-b3882c5aac14",
+        "name": "Ambition's Cost",
+        "released_at": "2023-04-21",
+        "scryfall_uri": "https://scryfall.com/card/moc/246/ambitions-cost?utm_source=api",
+        "layout": "normal",
+        "mana_cost": "{3}{B}",
+        "cmc": 4.0,
+        "type_line": "Sorcery",
+        "oracle_text": "You draw three cards and lose 3 life.",
+        "colors": [
+          "B"
+        ],
+        "color_identity": [
+          "B"
+        ],
+        "keywords": [],
+        "legalities": {
+          "standard": "not_legal",
+          "future": "not_legal",
+          "historic": "legal",
+          "timeless": "legal",
+          "gladiator": "legal",
+          "pioneer": "not_legal",
+          "modern": "legal",
+          "legacy": "legal",
+          "pauper": "not_legal",
+          "vintage": "legal",
+          "penny": "not_legal",
+          "commander": "legal",
+          "oathbreaker": "legal",
+          "standardbrawl": "not_legal",
+          "brawl": "legal",
+          "competitivebrawl": "legal",
+          "alchemy": "not_legal",
+          "paupercommander": "not_legal",
+          "duel": "legal",
+          "oldschool": "not_legal",
+          "premodern": "not_legal",
+          "predh": "legal",
+          "tlr": "not_legal"
+        },
+        "set": "moc"
+      }
+    },
+    {
+      "deck_name": "Carrion Feeder",
+      "card": {
+        "id": "0a19da90-880e-4eca-8cf7-6d7baf090d53",
+        "oracle_id": "a1cc5e37-b09a-4b7f-afd5-77c1c35aa425",
+        "name": "Carrion Feeder",
+        "released_at": "2019-06-14",
+        "scryfall_uri": "https://scryfall.com/card/mh1/81/carrion-feeder?utm_source=api",
+        "layout": "normal",
+        "mana_cost": "{B}",
+        "cmc": 1.0,
+        "type_line": "Creature — Zombie",
+        "oracle_text": "This creature can't block.\nSacrifice a creature: Put a +1/+1 counter on this creature.",
+        "power": "1",
+        "toughness": "1",
+        "colors": [
+          "B"
+        ],
+        "color_identity": [
+          "B"
+        ],
+        "keywords": [],
+        "legalities": {
+          "standard": "not_legal",
+          "future": "not_legal",
+          "historic": "not_legal",
+          "timeless": "not_legal",
+          "gladiator": "not_legal",
+          "pioneer": "not_legal",
+          "modern": "legal",
+          "legacy": "legal",
+          "pauper": "legal",
+          "vintage": "legal",
+          "penny": "not_legal",
+          "commander": "legal",
+          "oathbreaker": "legal",
+          "standardbrawl": "not_legal",
+          "brawl": "not_legal",
+          "competitivebrawl": "not_legal",
+          "alchemy": "not_legal",
+          "paupercommander": "legal",
+          "duel": "legal",
+          "oldschool": "not_legal",
+          "premodern": "legal",
+          "predh": "legal",
+          "tlr": "legal"
+        },
+        "set": "mh1"
+      }
+    },
+    {
+      "deck_name": "Cemetery Recruitment",
+      "card": {
+        "id": "34a80873-86d7-44a9-894b-65e8f77dd2ea",
+        "oracle_id": "07792d72-d5db-41b9-871c-e720e12ce659",
+        "name": "Cemetery Recruitment",
+        "released_at": "2024-11-15",
+        "scryfall_uri": "https://scryfall.com/card/fdn/517/cemetery-recruitment?utm_source=api",
+        "layout": "normal",
+        "mana_cost": "{1}{B}",
+        "cmc": 2.0,
+        "type_line": "Sorcery",
+        "oracle_text": "Return target creature card from your graveyard to your hand. If it's a Zombie card, draw a card.",
+        "colors": [
+          "B"
+        ],
+        "color_identity": [
+          "B"
+        ],
+        "keywords": [],
+        "legalities": {
+          "standard": "legal",
+          "future": "legal",
+          "historic": "legal",
+          "timeless": "legal",
+          "gladiator": "legal",
+          "pioneer": "legal",
+          "modern": "legal",
+          "legacy": "legal",
+          "pauper": "legal",
+          "vintage": "legal",
+          "penny": "legal",
+          "commander": "legal",
+          "oathbreaker": "legal",
+          "standardbrawl": "legal",
+          "brawl": "legal",
+          "competitivebrawl": "legal",
+          "alchemy": "legal",
+          "paupercommander": "legal",
+          "duel": "legal",
+          "oldschool": "not_legal",
+          "premodern": "not_legal",
+          "predh": "not_legal",
+          "tlr": "legal"
+        },
+        "set": "fdn"
+      }
+    },
+    {
+      "deck_name": "Consumed by Greed",
+      "card": {
+        "id": "e50acc41-3517-42db-b1d3-1bdfd7294d84",
+        "oracle_id": "b548578c-4910-402c-8e78-498924e0a9be",
+        "name": "Consumed by Greed",
+        "released_at": "2024-08-02",
+        "scryfall_uri": "https://scryfall.com/card/blb/87/consumed-by-greed?utm_source=api",
+        "layout": "normal",
+        "mana_cost": "{1}{B}{B}",
+        "cmc": 3.0,
+        "type_line": "Instant",
+        "oracle_text": "Gift a card (You may promise an opponent a gift as you cast this spell. If you do, they draw a card before its other effects.)\nTarget opponent sacrifices a creature with the greatest power among creatures they control. If the gift was promised, return target creature card from your graveyard to your hand.",
+        "colors": [
+          "B"
+        ],
+        "color_identity": [
+          "B"
+        ],
+        "keywords": [
+          "Gift"
+        ],
+        "legalities": {
+          "standard": "legal",
+          "future": "legal",
+          "historic": "legal",
+          "timeless": "legal",
+          "gladiator": "legal",
+          "pioneer": "legal",
+          "modern": "legal",
+          "legacy": "legal",
+          "pauper": "not_legal",
+          "vintage": "legal",
+          "penny": "not_legal",
+          "commander": "legal",
+          "oathbreaker": "legal",
+          "standardbrawl": "legal",
+          "brawl": "legal",
+          "competitivebrawl": "legal",
+          "alchemy": "legal",
+          "paupercommander": "not_legal",
+          "duel": "legal",
+          "oldschool": "not_legal",
+          "premodern": "not_legal",
+          "predh": "not_legal",
+          "tlr": "legal"
+        },
+        "set": "blb"
+      }
+    },
+    {
+      "deck_name": "Consuming Corruption",
+      "card": {
+        "id": "9068b3a4-9130-42d8-a26b-52010b7daa8b",
+        "oracle_id": "3bc0bd36-70be-4180-9fb3-b10ce054107b",
+        "name": "Consuming Corruption",
+        "released_at": "2024-06-14",
+        "scryfall_uri": "https://scryfall.com/card/mh3/84/consuming-corruption?utm_source=api",
+        "layout": "normal",
+        "mana_cost": "{B}{B}",
+        "cmc": 2.0,
+        "type_line": "Instant",
+        "oracle_text": "Consuming Corruption deals X damage to target creature or planeswalker and you gain X life, where X is the number of Swamps you control.",
+        "colors": [
+          "B"
+        ],
+        "color_identity": [
+          "B"
+        ],
+        "keywords": [],
+        "legalities": {
+          "standard": "not_legal",
+          "future": "not_legal",
+          "historic": "legal",
+          "timeless": "legal",
+          "gladiator": "legal",
+          "pioneer": "not_legal",
+          "modern": "legal",
+          "legacy": "legal",
+          "pauper": "not_legal",
+          "vintage": "legal",
+          "penny": "not_legal",
+          "commander": "legal",
+          "oathbreaker": "legal",
+          "standardbrawl": "not_legal",
+          "brawl": "legal",
+          "competitivebrawl": "legal",
+          "alchemy": "not_legal",
+          "paupercommander": "not_legal",
+          "duel": "legal",
+          "oldschool": "not_legal",
+          "premodern": "not_legal",
+          "predh": "not_legal",
+          "tlr": "legal"
+        },
+        "set": "mh3"
+      }
+    },
+    {
+      "deck_name": "Eternal Taskmaster",
+      "card": {
+        "id": "94a6644a-52e6-454e-a479-44b086240974",
+        "oracle_id": "a7c000a8-1864-4bb2-80fa-a61d74dbd966",
+        "name": "Eternal Taskmaster",
+        "released_at": "2020-07-17",
+        "scryfall_uri": "https://scryfall.com/card/jmp/228/eternal-taskmaster?utm_source=api",
+        "layout": "normal",
+        "mana_cost": "{1}{B}",
+        "cmc": 2.0,
+        "type_line": "Creature — Zombie",
+        "oracle_text": "This creature enters tapped.\nWhenever this creature attacks, you may pay {2}{B}. If you do, return target creature card from your graveyard to your hand.",
+        "power": "2",
+        "toughness": "3",
+        "colors": [
+          "B"
+        ],
+        "color_identity": [
+          "B"
+        ],
+        "keywords": [],
+        "legalities": {
+          "standard": "not_legal",
+          "future": "not_legal",
+          "historic": "legal",
+          "timeless": "legal",
+          "gladiator": "legal",
+          "pioneer": "legal",
+          "modern": "legal",
+          "legacy": "legal",
+          "pauper": "not_legal",
+          "vintage": "legal",
+          "penny": "not_legal",
+          "commander": "legal",
+          "oathbreaker": "legal",
+          "standardbrawl": "not_legal",
+          "brawl": "legal",
+          "competitivebrawl": "legal",
+          "alchemy": "not_legal",
+          "paupercommander": "not_legal",
+          "duel": "legal",
+          "oldschool": "not_legal",
+          "premodern": "not_legal",
+          "predh": "not_legal",
+          "tlr": "legal"
+        },
+        "set": "jmp"
+      }
+    },
+    {
+      "deck_name": "Fleshbag Marauder",
+      "card": {
+        "id": "fce2baa4-2976-4bbd-b6c5-a5a3c6a901be",
+        "oracle_id": "4b1bf05e-753e-4350-a913-894cf3cecc0c",
+        "name": "Fleshbag Marauder",
+        "released_at": "2024-02-23",
+        "scryfall_uri": "https://scryfall.com/card/clu/111/fleshbag-marauder?utm_source=api",
+        "layout": "normal",
+        "mana_cost": "{2}{B}",
+        "cmc": 3.0,
+        "type_line": "Creature — Zombie Warrior",
+        "oracle_text": "When this creature enters, each player sacrifices a creature of their choice.",
+        "power": "3",
+        "toughness": "1",
+        "colors": [
+          "B"
+        ],
+        "color_identity": [
+          "B"
+        ],
+        "keywords": [],
+        "legalities": {
+          "standard": "not_legal",
+          "future": "not_legal",
+          "historic": "legal",
+          "timeless": "legal",
+          "gladiator": "legal",
+          "pioneer": "legal",
+          "modern": "legal",
+          "legacy": "legal",
+          "pauper": "legal",
+          "vintage": "legal",
+          "penny": "legal",
+          "commander": "legal",
+          "oathbreaker": "legal",
+          "standardbrawl": "not_legal",
+          "brawl": "legal",
+          "competitivebrawl": "legal",
+          "alchemy": "not_legal",
+          "paupercommander": "legal",
+          "duel": "legal",
+          "oldschool": "not_legal",
+          "premodern": "not_legal",
+          "predh": "legal",
+          "tlr": "legal"
+        },
+        "set": "clu"
+      }
+    },
+    {
+      "deck_name": "Go for the Throat",
+      "card": {
+        "id": "5446e1ba-c745-45b2-ad05-b22abf04daec",
+        "oracle_id": "2f092562-9e17-43cd-aeb8-d0567f99363e",
+        "name": "Go for the Throat",
+        "released_at": "2023-04-21",
+        "scryfall_uri": "https://scryfall.com/card/moc/250/go-for-the-throat?utm_source=api",
+        "layout": "normal",
+        "mana_cost": "{1}{B}",
+        "cmc": 2.0,
+        "type_line": "Instant",
+        "oracle_text": "Destroy target nonartifact creature.",
+        "colors": [
+          "B"
+        ],
+        "color_identity": [
+          "B"
+        ],
+        "keywords": [],
+        "legalities": {
+          "standard": "not_legal",
+          "future": "not_legal",
+          "historic": "legal",
+          "timeless": "legal",
+          "gladiator": "legal",
+          "pioneer": "legal",
+          "modern": "legal",
+          "legacy": "legal",
+          "pauper": "legal",
+          "vintage": "legal",
+          "penny": "not_legal",
+          "commander": "legal",
+          "oathbreaker": "legal",
+          "standardbrawl": "not_legal",
+          "brawl": "legal",
+          "competitivebrawl": "legal",
+          "alchemy": "not_legal",
+          "paupercommander": "legal",
+          "duel": "legal",
+          "oldschool": "not_legal",
+          "premodern": "not_legal",
+          "predh": "legal",
+          "tlr": "legal"
+        },
+        "set": "moc"
+      }
+    },
+    {
+      "deck_name": "Gray Merchant of Asphodel",
+      "card": {
+        "id": "00d001d0-fd29-4b7c-9d0e-9131b995f910",
+        "oracle_id": "38f3b157-0df4-409b-89cc-086e1531cd5b",
+        "name": "Gray Merchant of Asphodel",
+        "released_at": "2024-09-27",
+        "scryfall_uri": "https://scryfall.com/card/dsc/142/gray-merchant-of-asphodel?utm_source=api",
+        "layout": "normal",
+        "mana_cost": "{3}{B}{B}",
+        "cmc": 5.0,
+        "type_line": "Creature — Zombie",
+        "oracle_text": "When this creature enters, each opponent loses X life, where X is your devotion to black. You gain life equal to the life lost this way. (Each {B} in the mana costs of permanents you control counts toward your devotion to black.)",
+        "power": "2",
+        "toughness": "4",
+        "colors": [
+          "B"
+        ],
+        "color_identity": [
+          "B"
+        ],
+        "keywords": [],
+        "legalities": {
+          "standard": "not_legal",
+          "future": "not_legal",
+          "historic": "legal",
+          "timeless": "legal",
+          "gladiator": "legal",
+          "pioneer": "legal",
+          "modern": "legal",
+          "legacy": "legal",
+          "pauper": "legal",
+          "vintage": "legal",
+          "penny": "not_legal",
+          "commander": "legal",
+          "oathbreaker": "legal",
+          "standardbrawl": "not_legal",
+          "brawl": "legal",
+          "competitivebrawl": "legal",
+          "alchemy": "not_legal",
+          "paupercommander": "legal",
+          "duel": "legal",
+          "oldschool": "not_legal",
+          "premodern": "not_legal",
+          "predh": "not_legal",
+          "tlr": "not_legal"
+        },
+        "set": "dsc"
+      }
+    },
+    {
+      "deck_name": "Lord of the Accursed",
+      "card": {
+        "id": "20bfecb3-2dc8-4549-9297-413131de8fdc",
+        "oracle_id": "3f372107-6c52-4f1f-8bf0-7b3fa21b2cae",
+        "name": "Lord of the Accursed",
+        "released_at": "2021-09-24",
+        "scryfall_uri": "https://scryfall.com/card/mic/124/lord-of-the-accursed?utm_source=api",
+        "layout": "normal",
+        "mana_cost": "{2}{B}",
+        "cmc": 3.0,
+        "type_line": "Creature — Zombie",
+        "oracle_text": "Other Zombies you control get +1/+1.\n{1}{B}, {T}: All Zombies gain menace until end of turn.",
+        "power": "2",
+        "toughness": "3",
+        "colors": [
+          "B"
+        ],
+        "color_identity": [
+          "B"
+        ],
+        "keywords": [],
+        "legalities": {
+          "standard": "not_legal",
+          "future": "not_legal",
+          "historic": "legal",
+          "timeless": "legal",
+          "gladiator": "legal",
+          "pioneer": "legal",
+          "modern": "legal",
+          "legacy": "legal",
+          "pauper": "not_legal",
+          "vintage": "legal",
+          "penny": "not_legal",
+          "commander": "legal",
+          "oathbreaker": "legal",
+          "standardbrawl": "not_legal",
+          "brawl": "legal",
+          "competitivebrawl": "legal",
+          "alchemy": "not_legal",
+          "paupercommander": "not_legal",
+          "duel": "legal",
+          "oldschool": "not_legal",
+          "premodern": "not_legal",
+          "predh": "not_legal",
+          "tlr": "legal"
+        },
+        "set": "mic"
+      }
+    },
+    {
+      "deck_name": "Marchesa's Decree",
+      "card": {
+        "id": "413bec4e-e2ce-46f1-b038-6e359cd78b53",
+        "oracle_id": "e4ab5ee4-4683-4219-9e15-31975e69efbb",
+        "name": "Marchesa's Decree",
+        "released_at": "2016-08-26",
+        "scryfall_uri": "https://scryfall.com/card/cn2/44/marchesas-decree?utm_source=api",
+        "layout": "normal",
+        "mana_cost": "{3}{B}",
+        "cmc": 4.0,
+        "type_line": "Enchantment",
+        "oracle_text": "When this enchantment enters, you become the monarch.\nWhenever a creature attacks you or a planeswalker you control, that creature's controller loses 1 life.",
+        "colors": [
+          "B"
+        ],
+        "color_identity": [
+          "B"
+        ],
+        "keywords": [],
+        "legalities": {
+          "standard": "not_legal",
+          "future": "not_legal",
+          "historic": "not_legal",
+          "timeless": "not_legal",
+          "gladiator": "not_legal",
+          "pioneer": "not_legal",
+          "modern": "not_legal",
+          "legacy": "legal",
+          "pauper": "not_legal",
+          "vintage": "legal",
+          "penny": "not_legal",
+          "commander": "legal",
+          "oathbreaker": "legal",
+          "standardbrawl": "not_legal",
+          "brawl": "not_legal",
+          "competitivebrawl": "not_legal",
+          "alchemy": "not_legal",
+          "paupercommander": "not_legal",
+          "duel": "legal",
+          "oldschool": "not_legal",
+          "premodern": "not_legal",
+          "predh": "not_legal",
+          "tlr": "not_legal"
+        },
+        "set": "cn2"
+      }
+    },
+    {
+      "deck_name": "Mire Triton",
+      "card": {
+        "id": "a070b7af-7c85-4129-81ca-e2ec0540085e",
+        "oracle_id": "4fe6f784-0290-4d4a-85ae-0b66522d31e9",
+        "name": "Mire Triton",
+        "released_at": "2023-08-04",
+        "scryfall_uri": "https://scryfall.com/card/cmm/174/mire-triton?utm_source=api",
+        "layout": "normal",
+        "mana_cost": "{1}{B}",
+        "cmc": 2.0,
+        "type_line": "Creature — Zombie Merfolk",
+        "oracle_text": "Deathtouch\nWhen this creature enters, mill two cards and you gain 2 life. (To mill two cards, put the top two cards of your library into your graveyard.)",
+        "power": "2",
+        "toughness": "1",
+        "colors": [
+          "B"
+        ],
+        "color_identity": [
+          "B"
+        ],
+        "keywords": [
+          "Mill",
+          "Deathtouch"
+        ],
+        "legalities": {
+          "standard": "not_legal",
+          "future": "not_legal",
+          "historic": "legal",
+          "timeless": "legal",
+          "gladiator": "legal",
+          "pioneer": "legal",
+          "modern": "legal",
+          "legacy": "legal",
+          "pauper": "legal",
+          "vintage": "legal",
+          "penny": "not_legal",
+          "commander": "legal",
+          "oathbreaker": "legal",
+          "standardbrawl": "not_legal",
+          "brawl": "legal",
+          "competitivebrawl": "legal",
+          "alchemy": "not_legal",
+          "paupercommander": "legal",
+          "duel": "legal",
+          "oldschool": "not_legal",
+          "premodern": "not_legal",
+          "predh": "not_legal",
+          "tlr": "legal"
+        },
+        "set": "cmm"
+      }
+    },
+    {
+      "deck_name": "Moan of the Unhallowed",
+      "card": {
+        "id": "2a1f42ee-7f4e-4b2a-b60b-750662878a5c",
+        "oracle_id": "ce87e5ed-2562-4563-9a5b-bd53c04ec4a5",
+        "name": "Moan of the Unhallowed",
+        "released_at": "2018-12-07",
+        "scryfall_uri": "https://scryfall.com/card/uma/107/moan-of-the-unhallowed?utm_source=api",
+        "layout": "normal",
+        "mana_cost": "{2}{B}{B}",
+        "cmc": 4.0,
+        "type_line": "Sorcery",
+        "oracle_text": "Create two 2/2 black Zombie creature tokens.\nFlashback {5}{B}{B} (You may cast this card from your graveyard for its flashback cost. Then exile it.)",
+        "colors": [
+          "B"
+        ],
+        "color_identity": [
+          "B"
+        ],
+        "keywords": [
+          "Flashback"
+        ],
+        "legalities": {
+          "standard": "not_legal",
+          "future": "not_legal",
+          "historic": "legal",
+          "timeless": "legal",
+          "gladiator": "legal",
+          "pioneer": "not_legal",
+          "modern": "legal",
+          "legacy": "legal",
+          "pauper": "legal",
+          "vintage": "legal",
+          "penny": "legal",
+          "commander": "legal",
+          "oathbreaker": "legal",
+          "standardbrawl": "not_legal",
+          "brawl": "legal",
+          "competitivebrawl": "legal",
+          "alchemy": "not_legal",
+          "paupercommander": "legal",
+          "duel": "legal",
+          "oldschool": "not_legal",
+          "premodern": "not_legal",
+          "predh": "not_legal",
+          "tlr": "not_legal"
+        },
+        "set": "uma"
+      }
+    },
+    {
+      "deck_name": "Night's Whisper",
+      "card": {
+        "id": "8c8f954b-0da2-412c-ad7a-86225bb330ea",
+        "oracle_id": "7ffae8f8-3006-4969-a339-6d30678f87ea",
+        "name": "Night's Whisper",
+        "released_at": "2026-11-13",
+        "scryfall_uri": "https://scryfall.com/card/trc/446/nights-whisper?utm_source=api",
+        "layout": "normal",
+        "mana_cost": "{1}{B}",
+        "cmc": 2.0,
+        "type_line": "Sorcery",
+        "oracle_text": "You draw two cards and lose 2 life.",
+        "colors": [
+          "B"
+        ],
+        "color_identity": [
+          "B"
+        ],
+        "keywords": [],
+        "legalities": {
+          "standard": "not_legal",
+          "future": "not_legal",
+          "historic": "legal",
+          "timeless": "legal",
+          "gladiator": "legal",
+          "pioneer": "not_legal",
+          "modern": "legal",
+          "legacy": "legal",
+          "pauper": "legal",
+          "vintage": "legal",
+          "penny": "not_legal",
+          "commander": "legal",
+          "oathbreaker": "legal",
+          "standardbrawl": "not_legal",
+          "brawl": "legal",
+          "competitivebrawl": "legal",
+          "alchemy": "not_legal",
+          "paupercommander": "legal",
+          "duel": "legal",
+          "oldschool": "not_legal",
+          "premodern": "not_legal",
+          "predh": "legal",
+          "tlr": "legal"
+        },
+        "set": "trc"
+      }
+    },
+    {
+      "deck_name": "Noxious Ghoul",
+      "card": {
+        "id": "7d67511b-c130-44d5-8536-4278a695627c",
+        "oracle_id": "602e421e-afab-4488-8a52-af66b4fdce4b",
+        "name": "Noxious Ghoul",
+        "released_at": "2009-09-04",
+        "scryfall_uri": "https://scryfall.com/card/hop/35/noxious-ghoul?utm_source=api",
+        "layout": "normal",
+        "mana_cost": "{3}{B}{B}",
+        "cmc": 5.0,
+        "type_line": "Creature — Zombie",
+        "oracle_text": "Whenever this creature or another Zombie enters, all non-Zombie creatures get -1/-1 until end of turn.",
+        "power": "3",
+        "toughness": "3",
+        "colors": [
+          "B"
+        ],
+        "color_identity": [
+          "B"
+        ],
+        "keywords": [],
+        "legalities": {
+          "standard": "not_legal",
+          "future": "not_legal",
+          "historic": "not_legal",
+          "timeless": "not_legal",
+          "gladiator": "not_legal",
+          "pioneer": "not_legal",
+          "modern": "not_legal",
+          "legacy": "legal",
+          "pauper": "not_legal",
+          "vintage": "legal",
+          "penny": "not_legal",
+          "commander": "legal",
+          "oathbreaker": "legal",
+          "standardbrawl": "not_legal",
+          "brawl": "not_legal",
+          "competitivebrawl": "not_legal",
+          "alchemy": "not_legal",
+          "paupercommander": "not_legal",
+          "duel": "legal",
+          "oldschool": "not_legal",
+          "premodern": "legal",
+          "predh": "legal",
+          "tlr": "not_legal"
+        },
+        "set": "hop"
+      }
+    },
+    {
+      "deck_name": "Sign in Blood",
+      "card": {
+        "id": "b89d9372-8682-4a61-a003-8bccfbb6cbb4",
+        "oracle_id": "c6207f6a-a624-4754-88f5-dbe700c841ff",
+        "name": "Sign in Blood",
+        "released_at": "2024-09-27",
+        "scryfall_uri": "https://scryfall.com/card/dsc/156/sign-in-blood?utm_source=api",
+        "layout": "normal",
+        "mana_cost": "{B}{B}",
+        "cmc": 2.0,
+        "type_line": "Sorcery",
+        "oracle_text": "Target player draws two cards and loses 2 life.",
+        "colors": [
+          "B"
+        ],
+        "color_identity": [
+          "B"
+        ],
+        "keywords": [],
+        "legalities": {
+          "standard": "not_legal",
+          "future": "not_legal",
+          "historic": "legal",
+          "timeless": "legal",
+          "gladiator": "legal",
+          "pioneer": "legal",
+          "modern": "legal",
+          "legacy": "legal",
+          "pauper": "legal",
+          "vintage": "legal",
+          "penny": "not_legal",
+          "commander": "legal",
+          "oathbreaker": "legal",
+          "standardbrawl": "not_legal",
+          "brawl": "legal",
+          "competitivebrawl": "legal",
+          "alchemy": "not_legal",
+          "paupercommander": "legal",
+          "duel": "legal",
+          "oldschool": "not_legal",
+          "premodern": "not_legal",
+          "predh": "legal",
+          "tlr": "legal"
+        },
+        "set": "dsc"
+      }
+    },
+    {
+      "deck_name": "Soulless One",
+      "card": {
+        "id": "410a214b-09c4-49bd-a461-3330d0249ae5",
+        "oracle_id": "27d98b94-a8a1-442b-8940-4ffab51b5164",
+        "name": "Soulless One",
+        "released_at": "2009-09-04",
+        "scryfall_uri": "https://scryfall.com/card/hop/41/soulless-one?utm_source=api",
+        "layout": "normal",
+        "mana_cost": "{3}{B}",
+        "cmc": 4.0,
+        "type_line": "Creature — Zombie Avatar",
+        "oracle_text": "Soulless One's power and toughness are each equal to the number of Zombies on the battlefield plus the number of Zombie cards in all graveyards.",
+        "power": "*",
+        "toughness": "*",
+        "colors": [
+          "B"
+        ],
+        "color_identity": [
+          "B"
+        ],
+        "keywords": [],
+        "legalities": {
+          "standard": "not_legal",
+          "future": "not_legal",
+          "historic": "not_legal",
+          "timeless": "not_legal",
+          "gladiator": "not_legal",
+          "pioneer": "not_legal",
+          "modern": "not_legal",
+          "legacy": "legal",
+          "pauper": "not_legal",
+          "vintage": "legal",
+          "penny": "legal",
+          "commander": "legal",
+          "oathbreaker": "legal",
+          "standardbrawl": "not_legal",
+          "brawl": "not_legal",
+          "competitivebrawl": "not_legal",
+          "alchemy": "not_legal",
+          "paupercommander": "not_legal",
+          "duel": "legal",
+          "oldschool": "not_legal",
+          "premodern": "legal",
+          "predh": "legal",
+          "tlr": "not_legal"
+        },
+        "set": "hop"
+      }
+    },
+    {
+      "deck_name": "Syphon Flesh",
+      "card": {
+        "id": "63124d37-d16c-48d6-b1a2-a1a3834b3dc1",
+        "oracle_id": "bc7c3151-ad07-429a-8af8-e4f24b7d9f6b",
+        "name": "Syphon Flesh",
+        "released_at": "2021-09-24",
+        "scryfall_uri": "https://scryfall.com/card/mic/129/syphon-flesh?utm_source=api",
+        "layout": "normal",
+        "mana_cost": "{4}{B}",
+        "cmc": 5.0,
+        "type_line": "Sorcery",
+        "oracle_text": "Each other player sacrifices a creature of their choice. You create a 2/2 black Zombie creature token for each creature sacrificed this way.",
+        "colors": [
+          "B"
+        ],
+        "color_identity": [
+          "B"
+        ],
+        "keywords": [],
+        "legalities": {
+          "standard": "not_legal",
+          "future": "not_legal",
+          "historic": "not_legal",
+          "timeless": "not_legal",
+          "gladiator": "not_legal",
+          "pioneer": "not_legal",
+          "modern": "not_legal",
+          "legacy": "legal",
+          "pauper": "not_legal",
+          "vintage": "legal",
+          "penny": "not_legal",
+          "commander": "legal",
+          "oathbreaker": "legal",
+          "standardbrawl": "not_legal",
+          "brawl": "not_legal",
+          "competitivebrawl": "not_legal",
+          "alchemy": "not_legal",
+          "paupercommander": "not_legal",
+          "duel": "legal",
+          "oldschool": "not_legal",
+          "premodern": "not_legal",
+          "predh": "not_legal",
+          "tlr": "not_legal"
+        },
+        "set": "mic"
+      }
+    },
+    {
+      "deck_name": "Tendrils of Corruption",
+      "card": {
+        "id": "c338b459-6bb8-4bc7-a6b5-945a09589c05",
+        "oracle_id": "84ee0da2-d886-4603-9aaa-bc5326a424d7",
+        "name": "Tendrils of Corruption",
+        "released_at": "2021-03-19",
+        "scryfall_uri": "https://scryfall.com/card/tsr/145/tendrils-of-corruption?utm_source=api",
+        "layout": "normal",
+        "mana_cost": "{3}{B}",
+        "cmc": 4.0,
+        "type_line": "Instant",
+        "oracle_text": "Tendrils of Corruption deals X damage to target creature and you gain X life, where X is the number of Swamps you control.",
+        "colors": [
+          "B"
+        ],
+        "color_identity": [
+          "B"
+        ],
+        "keywords": [],
+        "legalities": {
+          "standard": "not_legal",
+          "future": "not_legal",
+          "historic": "legal",
+          "timeless": "legal",
+          "gladiator": "legal",
+          "pioneer": "not_legal",
+          "modern": "legal",
+          "legacy": "legal",
+          "pauper": "legal",
+          "vintage": "legal",
+          "penny": "legal",
+          "commander": "legal",
+          "oathbreaker": "legal",
+          "standardbrawl": "not_legal",
+          "brawl": "legal",
+          "competitivebrawl": "legal",
+          "alchemy": "not_legal",
+          "paupercommander": "legal",
+          "duel": "legal",
+          "oldschool": "not_legal",
+          "premodern": "not_legal",
+          "predh": "legal",
+          "tlr": "not_legal"
+        },
+        "set": "tsr"
+      }
+    },
+    {
+      "deck_name": "Undead Augur",
+      "card": {
+        "id": "9c3baad6-d087-436f-a9f4-c138639e3422",
+        "oracle_id": "c26887e1-27f4-4550-921b-53460e43c079",
+        "name": "Undead Augur",
+        "released_at": "2021-09-24",
+        "scryfall_uri": "https://scryfall.com/card/mic/130/undead-augur?utm_source=api",
+        "layout": "normal",
+        "mana_cost": "{B}{B}",
+        "cmc": 2.0,
+        "type_line": "Creature — Zombie Wizard",
+        "oracle_text": "Whenever this creature or another Zombie you control dies, you draw a card and lose 1 life.",
+        "power": "2",
+        "toughness": "2",
+        "colors": [
+          "B"
+        ],
+        "color_identity": [
+          "B"
+        ],
+        "keywords": [],
+        "legalities": {
+          "standard": "not_legal",
+          "future": "not_legal",
+          "historic": "legal",
+          "timeless": "legal",
+          "gladiator": "legal",
+          "pioneer": "not_legal",
+          "modern": "legal",
+          "legacy": "legal",
+          "pauper": "not_legal",
+          "vintage": "legal",
+          "penny": "not_legal",
+          "commander": "legal",
+          "oathbreaker": "legal",
+          "standardbrawl": "not_legal",
+          "brawl": "legal",
+          "competitivebrawl": "legal",
+          "alchemy": "not_legal",
+          "paupercommander": "not_legal",
+          "duel": "legal",
+          "oldschool": "not_legal",
+          "premodern": "not_legal",
+          "predh": "not_legal",
+          "tlr": "legal"
+        },
+        "set": "mic"
+      }
+    },
+    {
+      "deck_name": "Undead Butler",
+      "card": {
+        "id": "2c9b8582-8887-4652-82e2-f9b11ee21545",
+        "oracle_id": "426fa8e8-b0f9-4b6c-b22b-04ec2073187a",
+        "name": "Undead Butler",
+        "released_at": "2021-11-19",
+        "scryfall_uri": "https://scryfall.com/card/vow/133/undead-butler?utm_source=api",
+        "layout": "normal",
+        "mana_cost": "{1}{B}",
+        "cmc": 2.0,
+        "type_line": "Creature — Zombie",
+        "oracle_text": "When this creature enters, mill three cards. (Put the top three cards of your library into your graveyard.)\nWhen this creature dies, you may exile it. When you do, return target creature card from your graveyard to your hand.",
+        "power": "1",
+        "toughness": "2",
+        "colors": [
+          "B"
+        ],
+        "color_identity": [
+          "B"
+        ],
+        "keywords": [
+          "Mill"
+        ],
+        "legalities": {
+          "standard": "not_legal",
+          "future": "not_legal",
+          "historic": "legal",
+          "timeless": "legal",
+          "gladiator": "legal",
+          "pioneer": "legal",
+          "modern": "legal",
+          "legacy": "legal",
+          "pauper": "not_legal",
+          "vintage": "legal",
+          "penny": "not_legal",
+          "commander": "legal",
+          "oathbreaker": "legal",
+          "standardbrawl": "not_legal",
+          "brawl": "legal",
+          "competitivebrawl": "legal",
+          "alchemy": "not_legal",
+          "paupercommander": "not_legal",
+          "duel": "legal",
+          "oldschool": "not_legal",
+          "premodern": "not_legal",
+          "predh": "not_legal",
+          "tlr": "legal"
+        },
+        "set": "vow"
+      }
+    },
+    {
+      "deck_name": "Undead Warchief",
+      "card": {
+        "id": "01482b0c-d05b-4356-9144-e044159f4dcb",
+        "oracle_id": "e6af56bf-bd78-4801-8f6e-033cdd68de3d",
+        "name": "Undead Warchief",
+        "released_at": "2009-09-04",
+        "scryfall_uri": "https://scryfall.com/card/hop/44/undead-warchief?utm_source=api",
+        "layout": "normal",
+        "mana_cost": "{2}{B}{B}",
+        "cmc": 4.0,
+        "type_line": "Creature — Zombie",
+        "oracle_text": "Zombie spells you cast cost {1} less to cast.\nZombie creatures you control get +2/+1.",
+        "power": "1",
+        "toughness": "1",
+        "colors": [
+          "B"
+        ],
+        "color_identity": [
+          "B"
+        ],
+        "keywords": [],
+        "legalities": {
+          "standard": "not_legal",
+          "future": "not_legal",
+          "historic": "not_legal",
+          "timeless": "not_legal",
+          "gladiator": "not_legal",
+          "pioneer": "not_legal",
+          "modern": "legal",
+          "legacy": "legal",
+          "pauper": "not_legal",
+          "vintage": "legal",
+          "penny": "not_legal",
+          "commander": "legal",
+          "oathbreaker": "legal",
+          "standardbrawl": "not_legal",
+          "brawl": "not_legal",
+          "competitivebrawl": "not_legal",
+          "alchemy": "not_legal",
+          "paupercommander": "not_legal",
+          "duel": "legal",
+          "oldschool": "not_legal",
+          "premodern": "legal",
+          "predh": "legal",
+          "tlr": "not_legal"
+        },
+        "set": "hop"
+      }
+    },
+    {
+      "deck_name": "Vengeful Dead",
+      "card": {
+        "id": "7c11c11d-9809-4031-8cbc-21aef07d7f1f",
+        "oracle_id": "277c8ee9-0157-4e45-96ad-1b67716955ee",
+        "name": "Vengeful Dead",
+        "released_at": "2003-05-26",
+        "scryfall_uri": "https://scryfall.com/card/scg/80/vengeful-dead?utm_source=api",
+        "layout": "normal",
+        "mana_cost": "{3}{B}",
+        "cmc": 4.0,
+        "type_line": "Creature — Zombie",
+        "oracle_text": "Whenever this creature or another Zombie dies, each opponent loses 1 life.",
+        "power": "3",
+        "toughness": "2",
+        "colors": [
+          "B"
+        ],
+        "color_identity": [
+          "B"
+        ],
+        "keywords": [],
+        "legalities": {
+          "standard": "not_legal",
+          "future": "not_legal",
+          "historic": "not_legal",
+          "timeless": "not_legal",
+          "gladiator": "not_legal",
+          "pioneer": "not_legal",
+          "modern": "not_legal",
+          "legacy": "legal",
+          "pauper": "legal",
+          "vintage": "legal",
+          "penny": "not_legal",
+          "commander": "legal",
+          "oathbreaker": "legal",
+          "standardbrawl": "not_legal",
+          "brawl": "not_legal",
+          "competitivebrawl": "not_legal",
+          "alchemy": "not_legal",
+          "paupercommander": "legal",
+          "duel": "legal",
+          "oldschool": "not_legal",
+          "premodern": "legal",
+          "predh": "legal",
+          "tlr": "not_legal"
+        },
+        "set": "scg"
+      }
+    },
+    {
+      "deck_name": "Wight of Precinct Six",
+      "card": {
+        "id": "32aec0ec-0feb-4276-ab9c-5bb18b5005a0",
+        "oracle_id": "6397c046-4c59-4f0b-9b44-2a804eb95edf",
+        "name": "Wight of Precinct Six",
+        "released_at": "2020-07-17",
+        "scryfall_uri": "https://scryfall.com/card/jmp/287/wight-of-precinct-six?utm_source=api",
+        "layout": "normal",
+        "mana_cost": "{1}{B}",
+        "cmc": 2.0,
+        "type_line": "Creature — Zombie",
+        "oracle_text": "This creature gets +1/+1 for each creature card in your opponents' graveyards.",
+        "power": "1",
+        "toughness": "1",
+        "colors": [
+          "B"
+        ],
+        "color_identity": [
+          "B"
+        ],
+        "keywords": [],
+        "legalities": {
+          "standard": "not_legal",
+          "future": "not_legal",
+          "historic": "legal",
+          "timeless": "legal",
+          "gladiator": "legal",
+          "pioneer": "legal",
+          "modern": "legal",
+          "legacy": "legal",
+          "pauper": "legal",
+          "vintage": "legal",
+          "penny": "legal",
+          "commander": "legal",
+          "oathbreaker": "legal",
+          "standardbrawl": "not_legal",
+          "brawl": "legal",
+          "competitivebrawl": "legal",
+          "alchemy": "not_legal",
+          "paupercommander": "legal",
+          "duel": "legal",
+          "oldschool": "not_legal",
+          "premodern": "not_legal",
+          "predh": "not_legal",
+          "tlr": "legal"
+        },
+        "set": "jmp"
+      }
+    },
+    {
+      "deck_name": "Withering Torment",
+      "card": {
+        "id": "06d44ada-f98e-405f-89d3-ac1002bfb854",
+        "oracle_id": "ffce81c5-1b58-4882-a4e7-6f8d7cb170de",
+        "name": "Withering Torment",
+        "released_at": "2026-06-26",
+        "scryfall_uri": "https://scryfall.com/card/msc/162/withering-torment?utm_source=api",
+        "layout": "normal",
+        "mana_cost": "{2}{B}",
+        "cmc": 3.0,
+        "type_line": "Instant",
+        "oracle_text": "Destroy target creature or enchantment. You lose 2 life.",
+        "colors": [
+          "B"
+        ],
+        "color_identity": [
+          "B"
+        ],
+        "keywords": [],
+        "legalities": {
+          "standard": "legal",
+          "future": "legal",
+          "historic": "legal",
+          "timeless": "legal",
+          "gladiator": "legal",
+          "pioneer": "legal",
+          "modern": "legal",
+          "legacy": "legal",
+          "pauper": "not_legal",
+          "vintage": "legal",
+          "penny": "not_legal",
+          "commander": "legal",
+          "oathbreaker": "legal",
+          "standardbrawl": "legal",
+          "brawl": "legal",
+          "competitivebrawl": "legal",
+          "alchemy": "legal",
+          "paupercommander": "not_legal",
+          "duel": "legal",
+          "oldschool": "not_legal",
+          "premodern": "not_legal",
+          "predh": "not_legal",
+          "tlr": "legal"
+        },
+        "set": "msc"
+      }
+    },
+    {
+      "deck_name": "Arcane Signet",
+      "card": {
+        "id": "795df2ee-fbfc-4961-852c-e3ec50cc52da",
+        "oracle_id": "0bc7f093-bef0-4f1a-852c-4b75ebf54838",
+        "name": "Arcane Signet",
+        "released_at": "2026-11-13",
+        "scryfall_uri": "https://scryfall.com/card/trc/485/arcane-signet?utm_source=api",
+        "layout": "normal",
+        "mana_cost": "{2}",
+        "cmc": 2.0,
+        "type_line": "Artifact",
+        "oracle_text": "{T}: Add one mana of any color in your commander's color identity.",
+        "colors": [],
+        "color_identity": [],
+        "keywords": [],
+        "legalities": {
+          "standard": "not_legal",
+          "future": "not_legal",
+          "historic": "legal",
+          "timeless": "legal",
+          "gladiator": "legal",
+          "pioneer": "legal",
+          "modern": "legal",
+          "legacy": "legal",
+          "pauper": "legal",
+          "vintage": "legal",
+          "penny": "not_legal",
+          "commander": "legal",
+          "oathbreaker": "legal",
+          "standardbrawl": "legal",
+          "brawl": "legal",
+          "competitivebrawl": "legal",
+          "alchemy": "legal",
+          "paupercommander": "legal",
+          "duel": "legal",
+          "oldschool": "not_legal",
+          "premodern": "not_legal",
+          "predh": "not_legal",
+          "tlr": "legal"
+        },
+        "set": "trc"
+      }
+    },
+    {
+      "deck_name": "Bontu's Monument",
+      "card": {
+        "id": "171a9a3f-6278-4921-9848-2b8459869d6c",
+        "oracle_id": "940ba435-7abc-40f8-a5af-c1c653b3284e",
+        "name": "Bontu's Monument",
+        "released_at": "2022-09-09",
+        "scryfall_uri": "https://scryfall.com/card/dmc/179/bontus-monument?utm_source=api",
+        "layout": "normal",
+        "mana_cost": "{3}",
+        "cmc": 3.0,
+        "type_line": "Legendary Artifact",
+        "oracle_text": "Black creature spells you cast cost {1} less to cast.\nWhenever you cast a creature spell, each opponent loses 1 life and you gain 1 life.",
+        "colors": [],
+        "color_identity": [],
+        "keywords": [],
+        "legalities": {
+          "standard": "not_legal",
+          "future": "not_legal",
+          "historic": "legal",
+          "timeless": "legal",
+          "gladiator": "legal",
+          "pioneer": "legal",
+          "modern": "legal",
+          "legacy": "legal",
+          "pauper": "not_legal",
+          "vintage": "legal",
+          "penny": "not_legal",
+          "commander": "legal",
+          "oathbreaker": "legal",
+          "standardbrawl": "not_legal",
+          "brawl": "legal",
+          "competitivebrawl": "legal",
+          "alchemy": "not_legal",
+          "paupercommander": "not_legal",
+          "duel": "legal",
+          "oldschool": "not_legal",
+          "premodern": "not_legal",
+          "predh": "not_legal",
+          "tlr": "legal"
+        },
+        "set": "dmc"
+      }
+    },
+    {
+      "deck_name": "Charcoal Diamond",
+      "card": {
+        "id": "f0475c79-bc7f-4de8-a020-226bc658d303",
+        "oracle_id": "1386d111-a2a7-4df1-91d7-947664126989",
+        "name": "Charcoal Diamond",
+        "released_at": "2022-06-10",
+        "scryfall_uri": "https://scryfall.com/card/clb/305/charcoal-diamond?utm_source=api",
+        "layout": "normal",
+        "mana_cost": "{2}",
+        "cmc": 2.0,
+        "type_line": "Artifact",
+        "oracle_text": "This artifact enters tapped.\n{T}: Add {B}.",
+        "colors": [],
+        "color_identity": [
+          "B"
+        ],
+        "keywords": [],
+        "legalities": {
+          "standard": "not_legal",
+          "future": "not_legal",
+          "historic": "not_legal",
+          "timeless": "not_legal",
+          "gladiator": "not_legal",
+          "pioneer": "not_legal",
+          "modern": "not_legal",
+          "legacy": "legal",
+          "pauper": "legal",
+          "vintage": "legal",
+          "penny": "not_legal",
+          "commander": "legal",
+          "oathbreaker": "legal",
+          "standardbrawl": "not_legal",
+          "brawl": "not_legal",
+          "competitivebrawl": "not_legal",
+          "alchemy": "not_legal",
+          "paupercommander": "legal",
+          "duel": "legal",
+          "oldschool": "not_legal",
+          "premodern": "legal",
+          "predh": "legal",
+          "tlr": "legal"
+        },
+        "set": "clb"
+      }
+    },
+    {
+      "deck_name": "Commander's Sphere",
+      "card": {
+        "id": "a145fe99-1cca-45c6-aa7e-ec5d8a7bcd13",
+        "oracle_id": "0b67c4e2-f88b-4e01-85a1-9d5f5b8db13b",
+        "name": "Commander's Sphere",
+        "released_at": "2026-11-13",
+        "scryfall_uri": "https://scryfall.com/card/trc/487/commanders-sphere?utm_source=api",
+        "layout": "normal",
+        "mana_cost": "{3}",
+        "cmc": 3.0,
+        "type_line": "Artifact",
+        "oracle_text": "{T}: Add one mana of any color in your commander's color identity.\nSacrifice this artifact: Draw a card.",
+        "colors": [],
+        "color_identity": [],
+        "keywords": [],
+        "legalities": {
+          "standard": "not_legal",
+          "future": "not_legal",
+          "historic": "not_legal",
+          "timeless": "not_legal",
+          "gladiator": "not_legal",
+          "pioneer": "not_legal",
+          "modern": "not_legal",
+          "legacy": "legal",
+          "pauper": "legal",
+          "vintage": "legal",
+          "penny": "not_legal",
+          "commander": "legal",
+          "oathbreaker": "legal",
+          "standardbrawl": "not_legal",
+          "brawl": "not_legal",
+          "competitivebrawl": "not_legal",
+          "alchemy": "not_legal",
+          "paupercommander": "legal",
+          "duel": "legal",
+          "oldschool": "not_legal",
+          "premodern": "not_legal",
+          "predh": "not_legal",
+          "tlr": "legal"
+        },
+        "set": "trc"
+      }
+    },
+    {
+      "deck_name": "Infernal Idol",
+      "card": {
+        "id": "21a72531-329c-43fd-adc1-a671b3b1edc4",
+        "oracle_id": "a0802918-e18a-4716-befb-96ae6667f2f3",
+        "name": "Infernal Idol",
+        "released_at": "2026-10-02",
+        "scryfall_uri": "https://scryfall.com/card/fdc/266/infernal-idol?utm_source=api",
+        "layout": "normal",
+        "mana_cost": "{3}",
+        "cmc": 3.0,
+        "type_line": "Artifact",
+        "oracle_text": "{T}: Add {B}.\n{1}{B}{B}, {T}, Sacrifice this artifact: You draw two cards and lose 2 life.",
+        "colors": [],
+        "color_identity": [
+          "B"
+        ],
+        "keywords": [],
+        "legalities": {
+          "standard": "not_legal",
+          "future": "not_legal",
+          "historic": "not_legal",
+          "timeless": "not_legal",
+          "gladiator": "not_legal",
+          "pioneer": "not_legal",
+          "modern": "not_legal",
+          "legacy": "legal",
+          "pauper": "legal",
+          "vintage": "legal",
+          "penny": "not_legal",
+          "commander": "legal",
+          "oathbreaker": "legal",
+          "standardbrawl": "not_legal",
+          "brawl": "not_legal",
+          "competitivebrawl": "not_legal",
+          "alchemy": "not_legal",
+          "paupercommander": "legal",
+          "duel": "legal",
+          "oldschool": "not_legal",
+          "premodern": "not_legal",
+          "predh": "not_legal",
+          "tlr": "legal"
+        },
+        "set": "fdc"
+      }
+    },
+    {
+      "deck_name": "Mind Stone",
+      "card": {
+        "id": "091600ae-6578-4353-8e0f-d170f555bcd0",
+        "oracle_id": "c97361b5-af16-4a7b-af85-a429dbaf4ad2",
+        "name": "Mind Stone",
+        "released_at": "2026-11-13",
+        "scryfall_uri": "https://scryfall.com/card/trc/497/mind-stone?utm_source=api",
+        "layout": "normal",
+        "mana_cost": "{2}",
+        "cmc": 2.0,
+        "type_line": "Artifact",
+        "oracle_text": "{T}: Add {C}.\n{1}, {T}, Sacrifice this artifact: Draw a card.",
+        "colors": [],
+        "color_identity": [],
+        "keywords": [],
+        "legalities": {
+          "standard": "not_legal",
+          "future": "not_legal",
+          "historic": "legal",
+          "timeless": "legal",
+          "gladiator": "legal",
+          "pioneer": "not_legal",
+          "modern": "legal",
+          "legacy": "legal",
+          "pauper": "legal",
+          "vintage": "legal",
+          "penny": "not_legal",
+          "commander": "legal",
+          "oathbreaker": "legal",
+          "standardbrawl": "not_legal",
+          "brawl": "legal",
+          "competitivebrawl": "legal",
+          "alchemy": "not_legal",
+          "paupercommander": "legal",
+          "duel": "legal",
+          "oldschool": "not_legal",
+          "premodern": "legal",
+          "predh": "legal",
+          "tlr": "legal"
+        },
+        "set": "trc"
+      }
+    },
+    {
+      "deck_name": "Patchwork Banner",
+      "card": {
+        "id": "537ea7e7-e8e8-4736-bdd9-1085f1a7c259",
+        "oracle_id": "4fb00dbe-1f82-4ba6-b18c-97e816d10d3a",
+        "name": "Patchwork Banner",
+        "released_at": "2026-06-26",
+        "scryfall_uri": "https://scryfall.com/card/msc/207/patchwork-banner?utm_source=api",
+        "layout": "normal",
+        "mana_cost": "{3}",
+        "cmc": 3.0,
+        "type_line": "Artifact",
+        "oracle_text": "As this artifact enters, choose a creature type.\nCreatures you control of the chosen type get +1/+1.\n{T}: Add one mana of any color.",
+        "colors": [],
+        "color_identity": [],
+        "keywords": [],
+        "legalities": {
+          "standard": "legal",
+          "future": "legal",
+          "historic": "legal",
+          "timeless": "legal",
+          "gladiator": "legal",
+          "pioneer": "legal",
+          "modern": "legal",
+          "legacy": "legal",
+          "pauper": "not_legal",
+          "vintage": "legal",
+          "penny": "not_legal",
+          "commander": "legal",
+          "oathbreaker": "legal",
+          "standardbrawl": "legal",
+          "brawl": "legal",
+          "competitivebrawl": "legal",
+          "alchemy": "legal",
+          "paupercommander": "not_legal",
+          "duel": "legal",
+          "oldschool": "not_legal",
+          "premodern": "not_legal",
+          "predh": "not_legal",
+          "tlr": "legal"
+        },
+        "set": "msc"
+      }
+    },
+    {
+      "deck_name": "Sol Ring",
+      "card": {
+        "id": "fc817e07-c1f3-469f-9cf7-0945dea7400f",
+        "oracle_id": "6ad8011d-3471-4369-9d68-b264cc027487",
+        "name": "Sol Ring",
+        "released_at": "2026-11-13",
+        "scryfall_uri": "https://scryfall.com/card/trc/499/sol-ring?utm_source=api",
+        "layout": "normal",
+        "mana_cost": "{1}",
+        "cmc": 1.0,
+        "type_line": "Artifact",
+        "oracle_text": "{T}: Add {C}{C}.",
+        "colors": [],
+        "color_identity": [],
+        "keywords": [],
+        "legalities": {
+          "standard": "not_legal",
+          "future": "not_legal",
+          "historic": "not_legal",
+          "timeless": "not_legal",
+          "gladiator": "not_legal",
+          "pioneer": "not_legal",
+          "modern": "not_legal",
+          "legacy": "banned",
+          "pauper": "not_legal",
+          "vintage": "restricted",
+          "penny": "not_legal",
+          "commander": "legal",
+          "oathbreaker": "banned",
+          "standardbrawl": "not_legal",
+          "brawl": "not_legal",
+          "competitivebrawl": "not_legal",
+          "alchemy": "not_legal",
+          "paupercommander": "not_legal",
+          "duel": "banned",
+          "oldschool": "not_legal",
+          "premodern": "not_legal",
+          "predh": "legal",
+          "tlr": "banned"
+        },
+        "set": "trc"
+      }
+    },
+    {
+      "deck_name": "Barren Moor",
+      "card": {
+        "id": "380eb7fd-bc79-4cad-9c2b-9b2b10761a72",
+        "oracle_id": "326ba371-124c-4949-a048-3a0c8962e567",
+        "name": "Barren Moor",
+        "released_at": "2024-09-27",
+        "scryfall_uri": "https://scryfall.com/card/dsc/262/barren-moor?utm_source=api",
+        "layout": "normal",
+        "mana_cost": "",
+        "cmc": 0.0,
+        "type_line": "Land",
+        "oracle_text": "This land enters tapped.\n{T}: Add {B}.\nCycling {B} ({B}, Discard this card: Draw a card.)",
+        "colors": [],
+        "color_identity": [
+          "B"
+        ],
+        "keywords": [
+          "Cycling"
+        ],
+        "legalities": {
+          "standard": "not_legal",
+          "future": "not_legal",
+          "historic": "legal",
+          "timeless": "legal",
+          "gladiator": "legal",
+          "pioneer": "not_legal",
+          "modern": "legal",
+          "legacy": "legal",
+          "pauper": "legal",
+          "vintage": "legal",
+          "penny": "not_legal",
+          "commander": "legal",
+          "oathbreaker": "legal",
+          "standardbrawl": "not_legal",
+          "brawl": "legal",
+          "competitivebrawl": "legal",
+          "alchemy": "not_legal",
+          "paupercommander": "legal",
+          "duel": "legal",
+          "oldschool": "not_legal",
+          "premodern": "legal",
+          "predh": "legal",
+          "tlr": "legal"
+        },
+        "set": "dsc"
+      }
+    },
+    {
+      "deck_name": "Bojuka Bog",
+      "card": {
+        "id": "55b5b094-9d2d-4d96-b90c-78fecdae725a",
+        "oracle_id": "04b7362d-0490-4cb0-b5d7-2a7732f659ce",
+        "name": "Bojuka Bog",
+        "released_at": "2026-04-24",
+        "scryfall_uri": "https://scryfall.com/card/soc/363/bojuka-bog?utm_source=api",
+        "layout": "normal",
+        "mana_cost": "",
+        "cmc": 0.0,
+        "type_line": "Land",
+        "oracle_text": "This land enters tapped.\nWhen this land enters, exile target player's graveyard.\n{T}: Add {B}.",
+        "colors": [],
+        "color_identity": [
+          "B"
+        ],
+        "keywords": [],
+        "legalities": {
+          "standard": "not_legal",
+          "future": "not_legal",
+          "historic": "legal",
+          "timeless": "legal",
+          "gladiator": "legal",
+          "pioneer": "not_legal",
+          "modern": "legal",
+          "legacy": "legal",
+          "pauper": "legal",
+          "vintage": "legal",
+          "penny": "not_legal",
+          "commander": "legal",
+          "oathbreaker": "legal",
+          "standardbrawl": "not_legal",
+          "brawl": "legal",
+          "competitivebrawl": "legal",
+          "alchemy": "not_legal",
+          "paupercommander": "legal",
+          "duel": "legal",
+          "oldschool": "not_legal",
+          "premodern": "not_legal",
+          "predh": "legal",
+          "tlr": "legal"
+        },
+        "set": "soc"
+      }
+    },
+    {
+      "deck_name": "Memorial to Folly",
+      "card": {
+        "id": "2c5c070e-91d3-4613-8a46-0323ee425027",
+        "oracle_id": "2bc38f14-0314-4351-8138-e2b8bf041404",
+        "name": "Memorial to Folly",
+        "released_at": "2025-04-11",
+        "scryfall_uri": "https://scryfall.com/card/tdc/377/memorial-to-folly?utm_source=api",
+        "layout": "normal",
+        "mana_cost": "",
+        "cmc": 0.0,
+        "type_line": "Land",
+        "oracle_text": "This land enters tapped.\n{T}: Add {B}.\n{2}{B}, {T}, Sacrifice this land: Return target creature card from your graveyard to your hand.",
+        "colors": [],
+        "color_identity": [
+          "B"
+        ],
+        "keywords": [],
+        "legalities": {
+          "standard": "not_legal",
+          "future": "not_legal",
+          "historic": "legal",
+          "timeless": "legal",
+          "gladiator": "legal",
+          "pioneer": "legal",
+          "modern": "legal",
+          "legacy": "legal",
+          "pauper": "not_legal",
+          "vintage": "legal",
+          "penny": "not_legal",
+          "commander": "legal",
+          "oathbreaker": "legal",
+          "standardbrawl": "not_legal",
+          "brawl": "legal",
+          "competitivebrawl": "legal",
+          "alchemy": "not_legal",
+          "paupercommander": "not_legal",
+          "duel": "legal",
+          "oldschool": "not_legal",
+          "premodern": "not_legal",
+          "predh": "not_legal",
+          "tlr": "legal"
+        },
+        "set": "tdc"
+      }
+    },
+    {
+      "deck_name": "Witch's Cottage",
+      "card": {
+        "id": "b87891cd-b457-4dff-8d18-a7eaf6748fc6",
+        "oracle_id": "6c8f276e-4e7b-4974-ab02-9356cc0ffb2b",
+        "name": "Witch's Cottage",
+        "released_at": "2019-10-04",
+        "scryfall_uri": "https://scryfall.com/card/eld/249/witchs-cottage?utm_source=api",
+        "layout": "normal",
+        "mana_cost": "",
+        "cmc": 0.0,
+        "type_line": "Land — Swamp",
+        "oracle_text": "({T}: Add {B}.)\nThis land enters tapped unless you control three or more other Swamps.\nWhen this land enters untapped, you may put target creature card from your graveyard on top of your library.",
+        "colors": [],
+        "color_identity": [
+          "B"
+        ],
+        "keywords": [],
+        "legalities": {
+          "standard": "not_legal",
+          "future": "not_legal",
+          "historic": "legal",
+          "timeless": "legal",
+          "gladiator": "legal",
+          "pioneer": "legal",
+          "modern": "legal",
+          "legacy": "legal",
+          "pauper": "legal",
+          "vintage": "legal",
+          "penny": "not_legal",
+          "commander": "legal",
+          "oathbreaker": "legal",
+          "standardbrawl": "not_legal",
+          "brawl": "legal",
+          "competitivebrawl": "legal",
+          "alchemy": "not_legal",
+          "paupercommander": "legal",
+          "duel": "legal",
+          "oldschool": "not_legal",
+          "premodern": "not_legal",
+          "predh": "not_legal",
+          "tlr": "legal"
+        },
+        "set": "eld"
+      }
+    },
+    {
+      "deck_name": "Swamp",
+      "card": {
+        "id": "b233b117-9369-45c1-80c5-cc857386b6be",
+        "oracle_id": "56719f6a-1a6c-4c0a-8d21-18f7d7350b68",
+        "name": "Swamp",
+        "released_at": "2027-04-09",
+        "scryfall_uri": "https://scryfall.com/card/mdd/296/swamp?utm_source=api",
+        "layout": "normal",
+        "mana_cost": "",
+        "cmc": 0.0,
+        "type_line": "Basic Land — Swamp",
+        "oracle_text": "({T}: Add {B}.)",
+        "colors": [],
+        "color_identity": [
+          "B"
+        ],
+        "keywords": [],
+        "legalities": {
+          "standard": "legal",
+          "future": "legal",
+          "historic": "legal",
+          "timeless": "legal",
+          "gladiator": "legal",
+          "pioneer": "legal",
+          "modern": "legal",
+          "legacy": "legal",
+          "pauper": "legal",
+          "vintage": "legal",
+          "penny": "legal",
+          "commander": "legal",
+          "oathbreaker": "legal",
+          "standardbrawl": "legal",
+          "brawl": "legal",
+          "competitivebrawl": "legal",
+          "alchemy": "legal",
+          "paupercommander": "legal",
+          "duel": "legal",
+          "oldschool": "not_legal",
+          "premodern": "legal",
+          "predh": "legal",
+          "tlr": "legal"
+        },
+        "set": "mdd"
+      }
+    }
+  ],
+  "problems": []
+}

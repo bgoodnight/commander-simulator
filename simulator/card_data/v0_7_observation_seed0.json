@@ -1,5 +1,6 @@
 {
   "mode": "observation",
+  "commander": "Magnus the Red",
   "deck_sha256": "79c050f8615d717b37d50087c0c7dcb641da1a5aded00b6c3e28e7b8f1ece831",
   "snapshot_sha256": "ea14ef5f9260c8800a38943762c971f6e9ea02d58e0a3e217dfcd00a09b11c73",
   "seed": 0,
@@ -15,7 +16,7 @@
     "Stormsplitter"
   ],
   "seat_assumption": "not the starting player; draw on turn one",
-  "land_policy": "play first Island or Mountain in hand; nonbasic lands are not modeled",
+  "land_policy": "play first basic land in hand; nonbasic lands are not modeled",
   "reserve_policy": "reserve up to 1 basic sources as a hypothetical planning choice",
   "first_unmodeled_choice": "turn 1: nonbasic land and spell decisions are not modeled",
   "not_modeled": [

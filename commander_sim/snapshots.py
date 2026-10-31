@@ -19,7 +19,7 @@ class ValidatedSnapshot:
     cards: tuple
 
 
-def validate_snapshot(deck_path, snapshot_path):
+def validate_snapshot(deck_path, snapshot_path, *, commander='Magnus the Red'):
     deck_bytes = Path(deck_path).read_bytes()
     snapshot_bytes = Path(snapshot_path).read_bytes()
     data = json.loads(snapshot_bytes)
@@ -49,7 +49,18 @@ def validate_snapshot(deck_path, snapshot_path):
             row['deck_name'] = faces[0].get('name')
             row['card_faces'] = faces
         rows.append(row)
-    provider = DeckProvider(rows)
+    commanders = [row for row in rows if row['name'] == commander]
+    if len(commanders) != 1:
+        raise ValueError('Commander missing or ambiguous in snapshot')
+    commander_row = commanders[0]
+    type_line = commander_row.get('type_line')
+    words = set(type_line.split(' — ', 1)[0].split()) if isinstance(type_line,str) else set()
+    if not {'Legendary','Creature'} <= words:
+        raise ValueError('Only a verified legendary creature commander is supported')
+    identity=commander_row.get('color_identity')
+    if not isinstance(identity,list) or any(not isinstance(c,str) or len(c)!=1 or c not in 'WUBRG' for c in identity):
+        raise ValueError('Commander color identity is missing or invalid')
+    provider = DeckProvider(rows, commander=commander, color_identity=frozenset(identity))
     deck = provider.parse(deck_bytes.decode('utf-8'))
     return ValidatedSnapshot(deck, digest, hashlib.sha256(snapshot_bytes).hexdigest(),
                              data['source'], data['retrieved_at'], tuple(entries))
@@ -58,9 +69,10 @@ if __name__ == '__main__':
     import argparse
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument('deck'); parser.add_argument('snapshot')
+    parser.add_argument('--commander', default='Magnus the Red', help='Explicit verified legendary creature commander')
     args = parser.parse_args()
     try:
-        result = validate_snapshot(args.deck, args.snapshot)
+        result = validate_snapshot(args.deck, args.snapshot, commander=args.commander)
     except (OSError, ValueError, KeyError, TypeError) as exc:
         parser.error(str(exc))
     print(json.dumps({'commander': result.deck.commander, 'physical_cards': result.deck.count,

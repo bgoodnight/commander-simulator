@@ -102,5 +102,16 @@ class ProviderCompositionTests(unittest.TestCase):
   t.tutor_policy=lambda request:next(c.object_id for c in request.cards if c.name=='Stormsplitter')
   self.assertTrue(t.resolve_activation(SimpleNamespace(ability=WIZARDCYCLING,controller=p.seat,source_id=0)))
   self.assertIn('Stormsplitter',[c.name for c in p.hand]);t.assert_consistent()
+ def test_cross_deck_zombie_query_uses_verified_characteristics(self):
+  root=Path(__file__).resolve().parents[2]
+  snapshot=validate_snapshot(root/'decklists/mortarion_purchase_reconciled_candidate_2026_10_27.txt',root/'simulator/card_data/mortarion_scryfall.json',commander='Mortarion, Daemon Primarch')
+  face=CardRegistry(snapshot).get('Shambling Ghast').primary_face()
+  t=CopyTable(seed=119);oid=t.zones.add_spec(card_spec(face.name),1,'library',detailed=True)
+  obj=t.rules.get(oid);obj.card=replace(obj.card,types=face.types,subtypes=face.subtypes,
+      colors=face.colors,base_power=face.power,base_toughness=face.toughness,coverage='unimplemented')
+  query=Query(types_all=frozenset({'creature'}),subtypes_all=frozenset({'Zombie'}),max_power=1)
+  self.assertIs(query.matches_kernel(t.rules,oid,power_verified=True),Match.YES)
+  self.assertIs(target_legality(ObjectView.from_kernel(t.rules,oid,power_verified=True),source_controller=0),Match.UNKNOWN)
+  t.assert_consistent()
 
 if __name__=='__main__':unittest.main()

@@ -31,8 +31,12 @@ class Deck:
         return sum(qty for _, _, qty in self.cards)
 
 class DeckProvider:
-    """Parse and validate Magnus lists; does not load or execute card effects."""
-    def __init__(self, records):
+    """Validate one configured commander list; defaults to Magnus and UR."""
+    def __init__(self, records, *, commander='Magnus the Red', color_identity=frozenset({'U','R'})):
+        if not isinstance(commander,str) or not commander or not set(color_identity) <= set('WUBRG'):
+            raise ValueError('Invalid commander configuration')
+        self.commander = commander
+        self.color_identity = frozenset(color_identity)
         self._records = {}
         for row in records:
             name = row.get('name')
@@ -91,8 +95,8 @@ class DeckProvider:
         if declared is not None and section_count != declared:
             raise ValueError(f'Section count differs from declared {declared}')
         commander = [(name, qty) for (zone, name), qty in cards.items() if zone == 'Commander']
-        if commander != [('Magnus the Red', 1)]:
-            raise ValueError('Expected exactly one Magnus the Red commander')
+        if commander != [(self.commander, 1)]:
+            raise ValueError(f'Expected exactly one {self.commander} commander')
         if sum(cards.values()) != 100:
             raise ValueError('Expected exactly 100 cards including commander')
         totals = Counter()
@@ -109,10 +113,12 @@ class DeckProvider:
                 or not isinstance(row.get('type_line'), str) or not row['type_line'].strip()
                 or row.get('commander_legality') != 'legal'):
                 raise ValueError(f'Incomplete card metadata: {name}')
-            if not set(identity) <= {'U', 'R'}:
+            if name == self.commander and set(identity) != self.color_identity:
+                raise ValueError('Commander color identity does not match configuration')
+            if not set(identity) <= self.color_identity:
                 raise ValueError(f'Card outside commander color identity: {name}')
             if name not in _BASIC:
                 ids[oracle_id] += qty
                 if ids[oracle_id] > 1:
                     raise ValueError(f'Duplicate nonbasic card: {name}')
-        return Deck('Magnus the Red', tuple((zone, name, qty) for (zone, name), qty in cards.items()))
+        return Deck(self.commander, tuple((zone, name, qty) for (zone, name), qty in cards.items()))
