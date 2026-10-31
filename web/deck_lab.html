@@ -99,14 +99,14 @@
       <div id="type-chips" class="chips"></div>
       <p class="small">Inventory labels reflect the saved build's intended role, not a verified physical collection.</p>
       <div class="detail" style="margin-top:18px">
-        <h3>Find a card in the local catalog</h3>
-        <label for="card-lookup">Card name (autocomplete; no network requests)</label>
+        <h3>Search Magic card names</h3>
+        <label for="card-lookup">Card name (offline autocomplete; no API per keystroke)</label>
         <input id="card-lookup" list="card-options" autocomplete="off"
                placeholder="Try Sol Ring, Ophiomancer, Midnight…"
                aria-describedby="card-lookup-status">
         <datalist id="card-options"></datalist>
         <div id="card-lookup-status" class="status" role="status">
-          Start typing to see verified cached names. Deck editing is coming next.
+          Type to search cached card metadata and the offline Scryfall name list. Deck editing is coming next.
         </div>
       </div>
     </section>
@@ -180,8 +180,10 @@ async function findCachedCardNames() {
       const option=el("option"); option.value=item.name;
       list.appendChild(option);
     }
+    const ready=result.suggestions.filter(x=>!x.requires_metadata_import).length;
     $("card-lookup-status").textContent=result.suggestions.length
-      +" verified matches in the local catalog. No Scryfall request made.";
+      +" Scryfall names ("+ready+" with cached card details)."
+      +" New card details will download only during deck preparation.";
   } catch(error) {
     $("card-lookup-status").textContent="Suggestions unavailable: "+error.message;
   }
