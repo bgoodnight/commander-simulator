@@ -3,6 +3,8 @@ from dataclasses import dataclass,replace
 from pathlib import Path
 from types import MappingProxyType
 import json,sys
+sys.path.insert(0,str(Path(__file__).resolve().parents[2]))
+from commander_sim.queries import Query,Match
 sys.path.insert(0,str(Path(__file__).resolve().parents[1]/'v26_search'))
 from search_table import SearchTable
 from priority import Choice
@@ -10,6 +12,8 @@ from rules import Cost,Event
 from simulation import Action
 
 FABRICATE='Fabricate';STEP='Step Through'
+ARTIFACT_QUERY=Query(types_all=frozenset({'artifact'}))
+WIZARD_QUERY=Query(subtypes_all=frozenset({'Wizard'}))
 IDENTITIES=json.loads((Path(__file__).resolve().parents[1]/'v20_verified_types'/'CARD_IDENTITIES.json').read_text())
 
 @dataclass(frozen=True)
@@ -58,7 +62,7 @@ class WizardTutorTable(SearchTable):
 
     def resolve_fabricate(self,table,action):
         seat=action.actor
-        self.search_to_hand(seat,tuple(oid for oid in self.zones.ids(seat,'library') if 'artifact' in self.rules.get(oid).types),'fabricate')
+        self.search_to_hand(seat,tuple(oid for oid in self.zones.ids(seat,'library') if ARTIFACT_QUERY.matches_kernel(self.rules,oid) is Match.YES),'fabricate')
 
     def wizardcycling_available(self,seat,oid):
         obj=self.rules.objects.get(oid)
@@ -92,7 +96,7 @@ class WizardTutorTable(SearchTable):
     def resolve_activation(self,frame):
         if frame.ability!=WIZARDCYCLING:return super().resolve_activation(frame)
         seat=frame.controller
-        eligible=tuple(oid for oid in self.zones.ids(seat,'library') if 'Wizard' in self.rules.subtypes(oid))
+        eligible=tuple(oid for oid in self.zones.ids(seat,'library') if WIZARD_QUERY.matches_kernel(self.rules,oid) is Match.YES)
         self.search_to_hand(seat,eligible,'wizardcycling')
         self.rules.events.append(Event('ability_resolved',seat,frame.source_id))
         self.emit('ability_resolved',controller=seat,source_id=frame.source_id,ability=WIZARDCYCLING.key)

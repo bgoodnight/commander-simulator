@@ -2,11 +2,14 @@ import unittest,json,sys
 from pathlib import Path
 from functools import partial
 from collections import Counter
+from dataclasses import replace
 sys.path.insert(0,str(Path(__file__).resolve().parents[2]))
 from commander_sim.decks import DeckProvider
 from scenarios import scenario
 from baseline import CopyTable,check
 from premium_table import PremiumPlayer
+from budget_table import card_spec
+from commander_sim.queries import Query, Match, ObjectView, target_legality
 from reference_state import reference_payload,canonical
 from altar_table import AltarTable,AltarAbility
 from resources import Cost,U,R
@@ -69,5 +72,16 @@ class ProviderCompositionTests(unittest.TestCase):
   deck=DeckProvider.bundled().parse('Commander\n1 Magnus the Red\nLibrary\n99 Island\n')
   t=CopyTable(seed=7,detailed_factory=partial(PremiumPlayer,deck=deck)).run(1)
   self.assertIsNone(t.safety_stop);t.assert_consistent()
+ def test_unimplemented_artifact_is_found_by_real_tutor(self):
+  t=CopyTable(seed=117);p=t.details
+  spec=card_spec('Swiftfoot Boots')
+  oid=t.zones.add_spec(spec,p.seat,'library',detailed=True)
+  obj=t.rules.get(oid);obj.card=replace(obj.card,types=frozenset({'artifact'}),coverage='unimplemented')
+  self.assertIs(Query(types_all=frozenset({'artifact'})).matches_kernel(t.rules,oid),Match.YES)
+  self.assertIs(target_legality(ObjectView.from_kernel(t.rules,oid),source_controller=1),Match.UNKNOWN)
+  t.tutor_policy=lambda request:next(c.object_id for c in request.cards if c.name=='Swiftfoot Boots')
+  action=type('SearchAction',(),{'actor':p.seat})()
+  t.resolve_fabricate(t,action)
+  self.assertIn('Swiftfoot Boots',[c.name for c in p.hand]);t.assert_consistent()
 
 if __name__=='__main__':unittest.main()

@@ -1,0 +1,85 @@
+Commander
+1 Magnus the Red
+
+Creatures (17)
+1 Exalted Flamer of Tzeentch
+1 Stormsplitter
+1 Harmonic Prodigy
+1 Firebrand Archer
+1 Thermo-Alchemist
+1 Mocking Sprite
+1 Goblin Glasswright // Craft with Pride
+1 Sanar, Unfinished Genius // Wild Idea
+1 Omni-Changeling
+1 Hexing Squelcher
+1 Jadzi, Steward of Fate // Oracle's Gift
+1 Heralds of Tzeentch
+1 Pink Horror
+1 Lord of Change
+1 Mutalith Vortex Beast
+1 Molten-Core Maestro
+1 Banishing Betrayal
+
+Other Permanents (13)
+1 Sol Ring
+1 Swiftfoot Boots
+1 Commander's Sphere
+1 Izzet Signet
+1 Talisman of Creativity
+1 Chromatic Lantern
+1 Springleaf Drum
+1 Firdoch Core
+1 Resonating Lute
+1 Seize the Spoils
+1 The Lost and the Damned
+1 Passionate Archaeologist
+1 Saheeli Rai
+
+Instants and Sorceries (31)
+1 Brainstorm
+1 Ponder
+1 Preordain
+1 Anticipate
+1 Think Twice
+1 Consult the Star Charts
+1 Sleight of Hand
+1 Hard Evidence
+1 Jeska's Will
+1 Pyretic Ritual
+1 High Tide
+1 Chaos Warp
+1 Chaos Mutation
+1 Blasphemous Act
+1 Brotherhood's End
+1 Abrade
+1 Rewind
+1 Forbid
+1 Louisoix's Sacrifice
+1 Spell Pierce
+1 Wild Unraveling
+1 Disdainful Stroke
+1 Mana Sculpt
+1 Prismari Charm
+1 Return the Favor
+1 Mathemagics
+1 Let the Galaxy Burn
+1 Burst Lightning
+1 Quick Study
+1 Deduce
+1 Wisdom of Ages
+
+Lands (38)
+1 Command Tower
+1 Evolving Wilds
+1 Exotic Orchard
+1 Great Hall of the Biblioplex
+1 Hidden Grotto
+1 Lindblum, Industrial Regency // Mage Siege
+1 Path of Ancestry
+1 Shivan Reef
+1 Spectacle Summit
+1 Stormcarved Coast
+1 Swiftwater Cliffs
+1 Terramorphic Expanse
+17 Island
+9 Mountain
