@@ -39,7 +39,7 @@ The static build now has **three real HTML entrypoints** (shared source/assets),
 - **Deck Summary** — `summary.html`. Commander portrait/art, card composition, printed mana curve, pinned metadata and limitations.
 - **Card List & Editor** — `editor.html`. Search the verified cardlist, open card art/details, use offline full-name autocomplete, try a one-for-one swap, undo/revert, save browser-local versions and download a decklist. A user-triggered fetch can retrieve missing printed card details from Scryfall.
 
-The top brass-and-stone navigation is shared by all pages; selected commander travels between pages via query string. The original drag-to-summon rune remains available on each page.
+The top brass-and-stone navigation is shared by all pages; the selected commander **and its selected saved deck version** travel between pages via the query string. A **compact circular commander medallion** is positioned above the results and deck content. Click or tap it to open a four-commander chooser (rather than taking up the initial screen with six large portraits). The last selected commander and deck are remembered in the same browser; if no previous selection is recorded, the most recently saved browser deck is preferred, otherwise a built-in deck is used. The Card List & Editor has a separate **Load a deck or saved version** selector listing all original variants and named saved browser versions under that commander.
 
 **GitHub Pages publishing works with either setting:**
 
@@ -50,7 +50,7 @@ In either mode, ensure the latest Pages build actually completed before assuming
 
 ## What the static version already supports
 
-- **Commander summoning chamber:** six deck variants displayed as art-backed draggable cards; drag a portrait onto the central rune or tap/click it (keyboard focusable) on touch devices. The chosen deck fades in.
+- **Compact commander medallion:** the circular commander portrait sits near the top of the page; clicking/tapping it opens a small artwork picker grouping Magnus Premium/Budget and Mortarion Current/Ideal under their shared commander. The chosen deck is displayed immediately, allowing results and summaries to appear above the fold.
 - **Original sounds:** opt-in toggle (OFF by default). Synthesized stone/glyph cues through Web Audio on summon, page change and successful/invalid actions. No borrowed game soundtrack or sound assets; respects user/browser audio policies.
 - **Fantasy tabletop styling:** layered stone/basalt backgrounds, warm brass detail, original rune shapes, subdued cyan magical light, accessible controls, responsive layouts and `prefers-reduced-motion` support.
 - **Card art:** derives official Scryfall CDN artwork references from cached printing IDs for all cards when available; otherwise shows a themed fallback. Images are loaded remotely by the browser and are not re-hosted from our repo. Commander art is prominent; all available card art can be viewed in card details. Copyright remains with respective owners; Scryfall is credited.
@@ -59,6 +59,13 @@ In either mode, ensure the latest Pages build actually completed before assuming
 - **Cached results:** exactly the previously generated **11 seeds per deck** (`0,1,2,3,4,5,7,11,21,42,99`, **66** fixed-seed observations in all). View up to six turns, opening hand, basic land model, draws, mana-value candidates and limitations; export the underlying JSON. No browser simulation or extrapolated win rates.
 - **Static Deck Workshop:** one-for-one card swaps, real card color identity and Commander singleton/100-card checks using exported cached details. Undo/revert; Save As a named **localStorage** browser version and reload/delete versions; export a version as a plain-text `.txt` list compatible with the Python deck importer. Canonical deck files stay untouched. Browser storage is **local to that device/browser**, not GitHub or a cross-device account.
 - **35,533-name typeahead:** all Scryfall names filtered **offline**, no request per keystroke. Existing cached full identity can be used immediately. If a name is only in the names index, a deliberate **Fetch card details** action can request its full Scryfall JSON over HTTPS (subject to network/CORS) and store the returned record in browser storage. It remains metadata, not executable rules. Strict names and color checks apply before editing.
+
+## Named deck selection and save/load behavior
+
+- The circular commander selector remembers the last-used commander and last-used deck selection in browser storage, including a named saved version. For a newly selected commander, it prioritizes that commander's last selection or newest saved deck, then its built-in deck.
+- The editor's **Load a deck or saved version** dropdown groups built-in decklists separately from user-saved named versions. Built-in Magnus/Mortarion variants remain selectable. The **Start a new version** action creates a local draft, and **Save as named deck** creates a separate immutable named browser version. Duplicate names for the same commander are rejected rather than silently overwritten; old versions can be loaded or explicitly deleted.
+- Browser versions are saved only in that browser/device. They are not committed to GitHub, synchronized between devices, or added to the site's Python-generated observation archives. A modified deck's Summary and Card List reflect its own saved card counts, but its Results page **clearly states that no new results exist** and offers a button to return to the corresponding original deck's cached results.
+- Unsaved edits are visually flagged and require confirmation before switching decks through the commander picker or editor load selector. Export important deck versions as text so browser storage loss cannot erase your work.
 
 ## Honest boundaries / safety
 
