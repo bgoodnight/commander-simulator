@@ -140,8 +140,14 @@ def build(output, *, catalog_path=SHARED_CATALOG, name_catalog_path=DEFAULT_NAME
     if not static.is_dir():
         raise ValueError("Missing static Deck Lab source")
     output.mkdir(parents=True, exist_ok=True)
-    for filename in ("index.html", "app.js", "style.css"):
+    # Three real, shareable static HTML routes. index.html is intentionally
+    # the cached simulation-results landing page. The same tested application
+    # shell detects its pathname and exposes the relevant content without a
+    # server router, so subpaths work on GitHub Pages and offline preview.
+    for filename in ("app.js", "style.css"):
         shutil.copy2(static / filename, output / filename)
+    for filename in ("index.html", "summary.html", "editor.html"):
+        shutil.copy2(static / "index.html", output / filename)
     (output / ".nojekyll").write_text("", encoding="utf-8")
     def write_json(name, obj):
         (output / name).write_text(
@@ -157,7 +163,8 @@ def build(output, *, catalog_path=SHARED_CATALOG, name_catalog_path=DEFAULT_NAME
         "seeds": list(seeds),
         "asset_sha256": {name: hashlib.sha256((output / name).read_bytes()).hexdigest()
                          for name in ("decks.json", "observations.json", "names.json",
-                                      "index.html", "app.js", "style.css")},
+                                      "index.html", "summary.html", "editor.html",
+                                      "app.js", "style.css")},
         "note": "Published data includes only approved six canonical decks and fixed-seed observations.",
     }
     write_json("build-manifest.json", manifest)
