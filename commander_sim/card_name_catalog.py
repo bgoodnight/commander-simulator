@@ -26,7 +26,9 @@ def read_name_catalog(path=DEFAULT_NAME_CATALOG):
     if not path.exists():
         return ()
     record = json.loads(path.read_text(encoding="utf-8"))
-    names = record.get("names") if isinstance(record, dict) else None
+    if not isinstance(record, dict):
+        raise ValueError("Invalid offline card-name catalog")
+    names = record.get("names")
     if (record.get("schema_version") != 1 or
         record.get("source") != "Scryfall card-names catalog" or
         not isinstance(names, list) or
