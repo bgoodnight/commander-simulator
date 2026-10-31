@@ -1,0 +1,80 @@
+# Mortarion — current cards ordered + confirmed owned (provisional)
+# Based on October 27, 2026 Card Kingdom order #166962484 and user's confirmed owned Blight Grenade,
+# plus Bile Blight and Sloppity Bilepiper reported owned in their October 26 Plague Host document.
+# Card Kingdom's order is shipped, not verified delivered/assembled. No other ownership assumed.
+# Four purchased cards deliberately excluded: Soul of New Phyrexia, Gift of Doom,
+# Falkenrath Noble, Festering Evil. These remain available as sideboard/potential swaps.
+# Prior saved revised budget list remains intact; this is a physical-pool candidate.
+
+Commander
+1 Mortarion, Daemon Primarch
+
+Library
+1 Arcane Signet
+1 Ashnod's Altar
+1 Barren Moor
+1 Basilisk Collar
+1 Bastion of Remembrance
+1 Blood Artist
+1 Bojuka Bog
+1 Burnished Hart
+1 Charcoal Diamond
+1 Crypt Rats
+1 Dark Ritual
+1 Darksteel Myr
+1 Deadly Dispute
+1 Dreadhorde Invasion
+1 Eldrazi Monument
+1 Exsanguinate
+1 Feed the Swarm
+1 Great Unclean One
+1 Infernal Grasp
+1 Jadar, Ghoulcaller of Nephalia
+1 K'rrik, Son of Yawgmoth
+1 Leechridden Swamp
+1 Marionette Apprentice
+1 Massacre Wurm
+1 Mind Stone
+1 Mirkwood Bats
+1 Morbid Opportunist
+1 Mortuary Mire
+1 Myriad Landscape
+1 Nadier's Nightblade
+1 Nurgle's Conscription
+1 Nurgle's Rot
+1 Ophiomancer
+1 Pestilence
+1 Pestilence Demon
+1 Phyrexian Reclamation
+1 Pitiless Plunderer
+1 Plague Drone
+1 Plague Spitter
+1 Plumb the Forbidden
+1 Poxwalkers
+1 Pristine Talisman
+1 Reassembling Skeleton
+1 Sangromancer
+1 Shambling Ghast
+1 Sign in Blood
+1 Skullclamp
+1 Sol Ring
+1 Solemn Simulacrum
+1 Stuffy Doll
+1 Syr Konrad, the Grim
+1 Tallyman of Nurgle
+1 Thrashing Wumpus
+1 Toxic Deluge
+1 Undying Malice
+1 Unspeakable Symbol
+1 Venomcrawler
+1 Viscera Seer
+1 Vito, Thorn of the Dusk Rose
+1 War Room
+1 Wayfarer's Bauble
+1 Woe Strider
+1 Worn Powerstone
+1 Yahenni, Undying Partisan
+1 Blight Grenade
+1 Bile Blight
+1 Sloppity Bilepiper
+32 Swamp
