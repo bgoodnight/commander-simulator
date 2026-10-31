@@ -19,14 +19,14 @@ class DeckWorkspaceTests(unittest.TestCase):
         self.addCleanup(self.temp.cleanup)
         self.workspace = Path(self.temp.name) / "workspace"
         self.key = "wretched_ranks"
-        self.swaps = [{"remove": "Swamp", "add": "Bojuka Bog"}]
+        self.swaps = [{"remove": "Swamp", "add": "Pestilence"}]
 
     def test_real_cached_singleton_swap_is_valid_and_reports_diff(self):
         result = compose_draft(self.key, self.swaps)
         self.assertEqual(result["physical_cards"], 100)
         self.assertEqual(result["swaps"], 1)
         changed = {x["name"]: x["delta"] for x in result["diff"]}
-        self.assertEqual(changed, {"Swamp": -1, "Bojuka Bog": 1})
+        self.assertEqual(changed, {"Swamp": -1, "Pestilence": 1})
         self.assertFalse(result["actual_gameplay_available"])
 
     def test_save_as_pins_replay_and_never_edits_original_fixture(self):
