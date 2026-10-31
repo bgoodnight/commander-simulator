@@ -1,6 +1,6 @@
 # Development roadmap — reusable Commander simulator
 
-Updated October 31, 2026 following the v35 [architecture audit](docs/ARCHITECTURE_AUDIT.md) and deck-provider implementation. Use [DEVELOPMENT_GUIDE.md](docs/DEVELOPMENT_GUIDE.md), [Hybrid Simulation Work Plan](docs/HYBRID_SIMULATION_WORKPLAN.md), and the **binding [Progressive Ability-Composition Architecture](docs/ABILITY_COMPOSITION_ARCHITECTURE.md)** as the execution contract. **Universal interactions with verified unfamiliar cards, reusable keywords and typed effects, and transparently qualified simulation are now higher priority than individual premium-deck cards.**
+Updated October 31, 2026 following the v35 [architecture audit](docs/ARCHITECTURE_AUDIT.md) and deck-provider implementation. Use [DEVELOPMENT_GUIDE.md](docs/DEVELOPMENT_GUIDE.md), [Hybrid Simulation Work Plan](docs/HYBRID_SIMULATION_WORKPLAN.md), and the **binding [Progressive Ability-Composition Architecture](docs/ABILITY_COMPOSITION_ARCHITECTURE.md)** as the execution contract. **The immediate delivery objective is a usable multi-deck MVP, not full named-card coverage.** The priority-ordered product gates are in [MULTI_DECK_MVP.md](docs/MULTI_DECK_MVP.md): shared offline Scryfall catalog **first**, then general deck import, shared B/W/U/R/G/C mana and generic card objects, meaningful early-game actions, cross-deck play, and only then deep individual-card abilities.
 
 Current entry point: `run_simulation.py` -> `CopyTable`. Default deck: committed `decklists/magnus_thousand_sons_v1_14_premium.txt`, updated in `b9b3ba0abcd19676ec4f32cc9f427e52c1f55d8b`; Training Center and Otawara are pending and represented by basics. Preserve v1.13 budget and historical lists. Do not silently substitute trial/pre-delivery lists from other work.
 
@@ -8,11 +8,34 @@ Status: shared zones, source payments, stack/priority, combat and selected cards
 
 ## Priority and working rules
 
-- **Next architecture gate: P0.65 per-ability registry and exclusive exact/simplified dispatch.** Build on partially delivered P0.6 identity/observation/query seams, then P0.7 executable hybrid. Reuse general keywords, effect templates and typed characteristic predicates before broad named-card batches. Coordinate with P1/P2/P3 extraction without introducing separate game-state engines.
+- **Active delivery queue: M0 shared offline card catalog → M1 validated multi-deck import/observation → M2 shared mana + generic interactable bodies → M3 usable early-turn multi-deck MVP → M4 two detailed deck seats → M5 unique card depth.** See [MULTI_DECK_MVP.md](docs/MULTI_DECK_MVP.md) for precise exit gates. The pure P0.65 ability selector already exists; implement its required reviewed/typed adapter incrementally for M3 rather than delaying M0/M1/M2 for a full card directory. Continue preserving P0–P7 architectural contracts.
 - Keep state/zone/priority foundations; extract incrementally. **A verified card remains a fully typed game object regardless of its effect coverage**: other cards and opponents must query, tutor, target, damage, block, sacrifice or move it through common rules, subject to supported legality. Do not add another active card-specific inheritance layer or rewrite everything at once.
 - Preserve historical fingerprints and freeze strict-mode behavior for comparison. Add opt-in observation/hybrid modes with **per-ability** fidelity, unknown-restriction safety and downstream decision/dependence logs. **Exact replaces only a matching simplified ability slot, never all abilities on its card, and never runs alongside its proxy.** Document intentional correctness changes separately.
-- No new runtime caching until replay/invalidation gates exist. Never reduce legality/safety checks for speed.
+- **Do implement verified Scryfall metadata reuse immediately**: one shared, versioned, immutable offline catalog keyed by Oracle ID and per-deck SHA manifests, with API calls only for missing/explicitly refreshed identities. This is separate from **runtime game-state caching**, which remains deferred until replay/invalidation gates exist. Never reduce legality/safety checks for speed.
 - Commit each complete milestone after checks pass and continue under existing authorization. Update this plan with actual completed gates.
+
+## Delivery priorities (ordered by earliest usable multi-deck result)
+
+This section is the **execution queue**. The older P0–P7 sections below describe architectural dependencies and historical migration obligations; they are **not** a requirement to finish each phase in numeric order before shipping a usable tool. Binding scope and acceptance tests: [Multi-Deck MVP](docs/MULTI_DECK_MVP.md). Each row is an independently testable milestone; preserve strict legacy parity.
+
+| Sequence | Scope now | Ship/check before moving on |
+|---|---|---|
+| **M0 — FIRST: offline shared identity cache** | Upgrade the explicit Scryfall import/refresh path to check a shared verified, content/version-pinned Oracle-ID catalog **before** requesting missing names. Deduplicate names across decks, preserve exact deck SHA manifests and invalidate safely on refresh. | Same deck imported twice = zero extra API calls; overlapping new deck = only missing-name requests; zero API calls in every run or test; fail closed on ambiguous/stale identity |
+| **M1 — multi-deck ingestion and basic observation** | Import all saved Magnus, Wretched Ranks, Mortarion current/ideal and Necrons from matching offline manifests; parameterize commander/identity and emit reproducible early draws/land-source candidates. | Verified card/zone identities for all deck files, correct counts and color identity; six-turn **observation** without misrepresenting legal casts |
+| **M2 — minimal shared game core across colors** | Generalize source-paid W/U/B/R/G/C mana (true colorless distinct from generic), safe verified-body casting, ordinary card/zone characteristics and type/target predicates; reuse existing v35 kernel rather than creating a second engine. | Genuine Swamp-paid B creature cast in current engine, unknown creature targetable by implemented removal/tutor, ordinary combat/damage/death and supported shared keywords, premium strict parity |
+| **M3 — MVP 1: usable actual early turns** | One generic detailed-deck runner for Magnus and Wretched Ranks, with other saved decks added as supported; real legal land/mana/casts/combat and a few reviewed typed effects. Continue using abstract opponents initially if needed. | Reproducible 6-turn **actual-game actions** for 2 different decks, limitations/omissions per action, 10–100 seed sanity checks only after one replayable seed; **not** validated win rates |
+| **M4 — MVP 2: two detailed real decks** | Let two independently configured decks take the table together with actual targeting/combat/priority/response. | Magnus vs Gisa/Mortarion cross-seat interactions using common state/rules and honest unsupported effects |
+| **M5 — progressive effect fidelity** | Expand reusable keyword/effect families, reviewed ability-slot declarations and exact-per-slot promotion; prioritize gaps seen in MVP traces. | One template shared by two cards, exact tutor supersedes its simplified **same slot** without duplicate search; unrelated keywords/abilities persist |
+| **M6 — calibration/performance** | Deeper coverage, behavior calibration, paired-seed experiments and optimization of measured hotspots. | Semantically correct replays, per-ability uncertainty and defensible metrics rather than invented win rates |
+
+**Important early-MVP definition:** every verified card is imported as a genuine typed identity, but some have unsupported mandatory effects and must remain unusable in strict mode or conditional/blocked in hybrid until safe. **M1 observation is not the actual-game MVP.** M3 is only achieved after real source-paid actions in the **same** engine for multiple commanders. M4 is separately required to claim real-deck-vs-real-deck gameplay. The existing `commander_sim.abilities.AbilityCatalog` pure exact-first selector is already present; do not rewrite it or require the whole P0.65 named-card library as a dependency of M0/M1/M2.
+
+### Scryfall import/refresh order (M0)
+
+1. Parse distinct names/faces and deck hash locally; look up aliases in the shared catalog to stable Oracle IDs.
+2. **Read cached verified immutable records first.** Query Scryfall only for unresolved/missing cards during an explicit import/refresh; once resolved, store the result by Oracle ID. Never refetch shared Sol Ring/Swamp/etc. merely because they appear in another deck.
+3. Validate each result's identity, face data, legalities, source and revision, then atomically save catalog + **deck SHA → pinned card revision** manifest. Preserve existing snapshot/replay provenance. If a face or printed restriction is uncertain, fail closed or flag explicitly.
+4. At game launch and during a game, use local pinned data: **zero network calls**. Tests cover repeat import, overlapping deck, offline replay, explicit refresh and stale/ambiguous identities.
 
 ## P0 — Stabilize providers and establish a baseline
 
@@ -25,7 +48,7 @@ Dependencies: none. Audit findings A1, A9, A10.
 
 **Exit gate:** Frostboil works with Altar, premium behavior remains correct, unrelated providers cannot vanish silently, and the comparison corpus/benchmark protocol exists.
 
-## P0.5 — DeckProvider seam and temporary-deck smoke test (new immediate priority)
+## P0.5 — DeckProvider seam and temporary-deck smoke test (existing foundation; M1)
 
 Depends on the P0 provider fix and baseline; runs **before or alongside P1 extraction**, without assuming P2's general card registry or B-mana support is complete. This is a narrow portability milestone, not a claim that every deck's effects are executable.
 
@@ -37,7 +60,7 @@ Depends on the P0 provider fix and baseline; runs **before or alongside P1 extra
 
 **Exit gate:** deck file/preset selection does not require a new table subclass; both canonical decks use the same current engine; a valid temporary list loads and yields honest coverage/early-turn observations; historical outcomes and known limitations are preserved. General commander identity, arbitrary colors (including B), two detailed seats, face-sensitive characteristics and complete card execution remain P2/P3 work.
 
-## P0.6 — Interactable unfamiliar cards, verified metadata and observation mode (immediate)
+## P0.6 — Interactable unfamiliar cards, verified metadata and observation mode (supports M1/M2)
 
 Depends on the P0.5 deck-injection seam and P0 provider fix, **not on completion of P1/P2**. Implements hybrid work-plan H0/H1.
 
@@ -49,7 +72,7 @@ Depends on the P0.5 deck-injection seam and P0 provider fix, **not on completion
 
 **Exit gate:** v0.7 imports with verified metadata; one unknown-effect real creature is found by an implemented type/subtype/power-limited tutor and recognized as a legal or explicitly uncertain target of opponent interaction; all cards remain real game objects; six-turn observation is replayable with honest unsupported-effect limits.
 
-## P0.65 — Progressive ability composition and override contract (new top implementation gate)
+## P0.65 — Progressive ability composition and override contract (pure selector started; required for M3/M5)
 
 Depends on **existing** P0.6 identity registry and conservative queries; can be built as a pure registry/resolver independently of completing P1 extraction. See [ability architecture decision](docs/ABILITY_COMPOSITION_ARCHITECTURE.md), gates G0/G1/G2.
 
@@ -62,7 +85,7 @@ Depends on **existing** P0.6 identity registry and conservative queries; can be 
 
 **Exit gate:** deterministic registry composition, exclusive per-slot promotion, strict replay parity, no runtime API calls, and an honest coverage report pass focused tests. **Do not broaden card batches or call P0.7 hybrid “done” until this contract exists.**
 
-## P0.7 — Hybrid fidelity vertical slice and archetype/keyword pilot (next high priority)
+## P0.7 — Hybrid fidelity vertical slice and archetype/keyword pilot (M3 after shared core)
 
 Depends on P0.6 **and P0.65 ability-slot resolver**, plus the **specific shared primitives** needed from P1/P2/P3/P4, not completion of the entire architecture plan. Implements hybrid work-plan H2 and seeds H3.
 
@@ -159,11 +182,11 @@ P7a depends on P4 and stable current references; full new caching waits for requ
 
 **Exit gate:** semantic equivalence, a repeatable targeted performance gain and recorded memory/search budgets. Track development efficiency through core files touched per card and template reuse.
 
-## Offline metadata reuse and development efficiency
+## Ongoing development efficiency
 
-- The repository currently keeps a **separate raw Scryfall snapshot per deck file**. Preserve the deck-specific hash/manifests but prioritize a **shared, deduplicated offline catalog by Oracle ID** so repeated cards across Magnus, Mortarion, Gisa and Necrons are not fetched and stored independently on every import. Only an explicit metadata import/refresh may make Scryfall requests; no game, pilot step or batch may. The raw snapshot is evidence, not automatically executable text.
-- When adding a new named card, use reviewed **ability slots + shared templates** rather than card-name branching. Maintain per-slot exact/simplified/unsupported coverage, prerequisites and event/provenance links; require at least a second independent card test for reusable keyword/effect families.
-- Keep each working slice small (one capability family/one execution boundary), run targeted tests first and the complete 37-suite runner at committed milestones. Compare strict replay fingerprints, document limitations, and inspect failing CI logs before retrying; follow [low-credit handoff](docs/LOW_CREDIT_IMPLEMENTATION_HANDOFF.md).
+- The **M0 metadata cache is prioritized above**, not postponed to the historical P7 runtime optimization phase. Keep it separate from mutable game-state memoization.
+- Add reviewed ability slots and shared templates for cards after multi-deck engine capabilities, with a second-card reuse test. Avoid named-card-specific tables and unsupported effects disguised as generic rules.
+- Use short independently testable slices, focused regressions during development and full 37-suite CI at milestones; follow [low-credit handoff](docs/LOW_CREDIT_IMPLEMENTATION_HANDOFF.md).
 
 ## Additional authenticated deck fixtures (October 31, 2026)
 
@@ -177,6 +200,6 @@ P7a depends on P4 and stable current references; full new caching waits for requ
 
 ## Immediate next session
 
-**Current observed progress (Oct 31):** identity snapshots for Flameslinger, Gisa and a Mortarion purchase candidate; immutable `CardRegistry`, `Query` YES/NO/UNKNOWN predicates, basic-land observation traces, package service registry, and a verified ordinary U/R library-creature bridge are present. The imported verified creature is **not castable in strict mode**, and current code has **no per-ability exact/simplified dispatcher or hybrid executor**. GitHub Actions passed at inspected `d0de7d9`; no complete P0.6/P0.7 acceptance test has passed.
+**Baseline checked October 31:** 839 tests / 37 suites passed on the last confirmed code+instruction CI. Existing identity snapshots cover Flameslinger, Gisa and the earlier purchase-only Mortarion fixture; the pure `commander_sim.abilities` selection catalog, conservative queries and limited observation are implemented. **No shared cross-deck metadata catalog, general black source-paid gameplay, two detailed real decks, or executable full hybrid ability dispatcher exists yet.** Preserve v35 strict baselines and avoid presenting observation as simulated turns.
 
-**Next: complete P0.6's universal-derived-view and target/query integration; build P0.65's reviewed ability-directory schema and real-event adapter on the now-present pure `AbilityCatalog` selection seam.** The pure resolver and synthetic promotion/independent-slot tests exist but **do not execute or validate actual Magic effects**. Add source IDs, shared keyword/effect declarations, explicit type-safe execution dispatch and a live promotion test (simplified tutor -> exact tutor with one search; unrelated double strike/trigger unchanged). Then P0.7 shared-state hybrid body casting, ordinary effects and fidelity log. Obtain offline snapshots for **Mortarion ideal/current and Necron** before their import acceptance, preserving hashes; continue Gisa and Flameslinger baselines. Advance B-mana and black/Necron cross-deck interactions when the common mana/event primitives exist. Do not return to a card-first queue until the architecture gates are satisfied. For a bounded next Work session, see [LOW_CREDIT_IMPLEMENTATION_HANDOFF.md](docs/LOW_CREDIT_IMPLEMENTATION_HANDOFF.md); preserve independent milestones, and update package test counts in `run_all_tests.py` when adding tests.
+**Do M0 FIRST, not the old Slice A card-directory expansion.** Implement offline Oracle-ID catalog reuse and exact-deck pinned manifests; confirm zero network for cache hits and games. Then M1 validate/import all deck variants from matching manifests (Gisa/Mortarion/Necrons), then M2 focus shared B-mana, verified ordinary card bodies and universal targets. Use the existing pure `AbilityCatalog` when M3's small reviewed executable effect slice is ready. This puts an actual 2-deck early-turn runner ahead of exhaustive named-card abilities. Explicitly separate M3 usable standalone deck experiments from M4 two-deck head-to-head. Continue at [LOW_CREDIT_IMPLEMENTATION_HANDOFF.md](docs/LOW_CREDIT_IMPLEMENTATION_HANDOFF.md). Update documentation, targeted tests and run-count expectation at each committed gate.
