@@ -22,9 +22,12 @@ def read_types():
     return result
 
 class VerifiedTable(BudgetTable):
+    def deck_types(self):
+        return read_types()
+
     def __init__(self,*args,**kwargs):
         super().__init__(*args,**kwargs)
-        types=read_types()
+        types=self.deck_types()
         for obj in self.rules.objects.values():
             if obj.owner==self.detailed_seat and not obj.token:
                 obj.card=replace(obj.card,types=types[obj.card.name])

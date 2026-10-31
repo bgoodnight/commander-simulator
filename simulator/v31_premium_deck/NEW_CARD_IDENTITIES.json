@@ -1,0 +1,90 @@
+{
+  "source": "Scryfall named-card API",
+  "cards": [
+    {
+      "name": "Cyclonic Rift",
+      "oracle_id": "d75b9c82-1b49-4c3e-a1b5-aeef57d6644b",
+      "type_line": "Instant",
+      "color_identity": [
+        "U"
+      ],
+      "mana_cost": "{1}{U}",
+      "layout": "normal",
+      "scryfall_uri": "https://scryfall.com/card/rvr/40/cyclonic-rift?utm_source=api",
+      "commander_legality": "legal",
+      "colors": [
+        "U"
+      ]
+    },
+    {
+      "name": "Reiterate",
+      "oracle_id": "38394ee3-6726-4f91-bc25-36bce0c6aab9",
+      "type_line": "Instant",
+      "color_identity": [
+        "R"
+      ],
+      "mana_cost": "{1}{R}{R}",
+      "layout": "normal",
+      "scryfall_uri": "https://scryfall.com/card/tsr/182/reiterate?utm_source=api",
+      "commander_legality": "legal",
+      "colors": [
+        "R"
+      ]
+    },
+    {
+      "name": "Training Center",
+      "oracle_id": "e3570ac7-c593-40e3-bbd6-ec3da6d8158d",
+      "type_line": "Land",
+      "color_identity": [
+        "R",
+        "U"
+      ],
+      "mana_cost": "",
+      "layout": "normal",
+      "scryfall_uri": "https://scryfall.com/card/trc/413/training-center?utm_source=api",
+      "commander_legality": "legal",
+      "colors": []
+    },
+    {
+      "name": "Otawara, Soaring City",
+      "oracle_id": "e9b6a394-691c-425a-9307-76d8edc7375e",
+      "type_line": "Legendary Land",
+      "color_identity": [
+        "U"
+      ],
+      "mana_cost": "",
+      "layout": "normal",
+      "scryfall_uri": "https://scryfall.com/card/neo/271/otawara-soaring-city?utm_source=api",
+      "commander_legality": "legal",
+      "colors": []
+    },
+    {
+      "name": "Lindblum, Industrial Regency // Mage Siege",
+      "oracle_id": "4cc014f3-05e0-442e-9dee-03eab1aa65a3",
+      "type_line": "Land \u2014 Town // Instant \u2014 Adventure",
+      "color_identity": [
+        "R"
+      ],
+      "mana_cost": "{2}{R}",
+      "layout": "adventure",
+      "scryfall_uri": "https://scryfall.com/card/fin/285/lindblum-industrial-regency-mage-siege?utm_source=api",
+      "commander_legality": "legal",
+      "colors": [],
+      "deck_name": "Lindblum, Industrial Regency",
+      "card_faces": [
+        {
+          "name": "Lindblum, Industrial Regency",
+          "type_line": "Land \u2014 Town",
+          "mana_cost": "",
+          "oracle_text": "This land enters tapped.\n{T}: Add {R}."
+        },
+        {
+          "name": "Mage Siege",
+          "type_line": "Instant \u2014 Adventure",
+          "mana_cost": "{2}{R}",
+          "oracle_text": "Create a 0/1 black Wizard creature token with \"Whenever you cast a noncreature spell, this token deals 1 damage to each opponent.\""
+        }
+      ]
+    }
+  ]
+}

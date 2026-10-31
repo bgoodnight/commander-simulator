@@ -1,0 +1,7 @@
+# V31 premium Magnus configuration
+
+The default `run_simulation.py` uses `PremiumTable`, loading the committed `decklists/magnus_thousand_sons_v1_14_premium.txt` as updated in commit `b9b3ba0abcd19676ec4f32cc9f427e52c1f55d8b`. Compared with v1.13 budget, it includes Cyclonic Rift, Reiterate and Lindblum in place of Snap, Increasing Vengeance and Frostboil Snarl. Per that commit, Training Center and Otawara are pending acquisition and their slots currently contain an Island and Mountain. The initial premium version remains in git history; an earlier saved v1.12 list is retained separately.
+
+Run `python run_simulation.py` for premium; use `python run_simulation.py --deck budget` for the preserved v1.13 engine. Both accept `--seed` and `--rounds`. Historical versioned tables retain their original decks.
+
+All 100 physical entries, including Magnus, are loaded. The v20 card identity report covers the shared cards; `NEW_CARD_IDENTITIES.json` records Scryfall API metadata and Commander legality for the three additions and two lands from the earlier premium version. Search sees Rift as a blue instant with mana value two, and Reiterate as a red instant with mana value three. Both spell effects are unsupported and cannot be cast. Lindblum's land side enters tapped and can tap for red; Mage Siege and its Wizard-token trigger remain unsupported. See the audit and interaction report. Card/rules coverage and synthetic opponents remain incomplete; no deck-strength inference is supported.
