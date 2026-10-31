@@ -1,0 +1,363 @@
+{
+  "schema_version": 1,
+  "deck_sha256": "056ee9bb094c884b828cf77a8c247918448eb08ef1583cf148cf13868e732e53",
+  "catalog_schema_version": 1,
+  "created_at": "2026-10-31T17:22:00.970469+00:00",
+  "cards": [
+    {
+      "deck_name": "Szarekh, the Silent King",
+      "oracle_id": "9a63f950-2e8a-4617-896c-1d0af538dbc7",
+      "revision": "e727d7690fa9762025e877cc096a17e8dda65e836ea2bb0fda2e9e5c1a3b6892"
+    },
+    {
+      "deck_name": "Imotekh the Stormlord",
+      "oracle_id": "425fea06-76ec-4cd9-bd3b-750504fd7fd2",
+      "revision": "153d3b382cf91954df37e98dce59577510223b149caa346e29028bcb6cdecbed"
+    },
+    {
+      "deck_name": "Anrakyr the Traveller",
+      "oracle_id": "32476743-c9d4-49ca-bec2-0669c215841b",
+      "revision": "71e41f745a62857568d59432fdf2d64be31c3b636cd7fa9069764413fdbd1a2f"
+    },
+    {
+      "deck_name": "Chronomancer",
+      "oracle_id": "9833e3bd-6e7f-41b7-bf7e-ffb74ff17844",
+      "revision": "df5ce86e07c896e5a6b0f573b78b732b953047c158650ec183781e444c4deda3"
+    },
+    {
+      "deck_name": "Cryptek",
+      "oracle_id": "27a4b633-5a62-4d8c-8cc6-44959c311de9",
+      "revision": "094666845505e6b833b63a1940ebf3ef3a73238585c2d57b9bdf0a970f9a5dec"
+    },
+    {
+      "deck_name": "Illuminor Szeras",
+      "oracle_id": "10f274f9-9044-447b-81c9-d4906ad9e6be",
+      "revision": "c1e053da6739bbb1bed7bff49a8d427774ea0f46c1bcbd1903d91738f9668111"
+    },
+    {
+      "deck_name": "Lokhust Heavy Destroyer",
+      "oracle_id": "fd03f20a-d365-48fb-8b2a-ad4b502a0045",
+      "revision": "4d2dce72c0694593ebb5174988c5a09861185f5be003e32952c844fb61f60c89"
+    },
+    {
+      "deck_name": "Lychguard",
+      "oracle_id": "e82daa7b-d9fd-48c4-b5b2-f3b1f6ef1a24",
+      "revision": "795dfd0b14650c7391191515a11c845dd8a625707cdfefb9b5c66176bfd3d175"
+    },
+    {
+      "deck_name": "Necron Deathmark",
+      "oracle_id": "45866598-4ee4-46b6-ade2-ffcdbe98e58f",
+      "revision": "2ef138cbf822936c1eb89ee77543e3546e51c27c00217827e771cbd27d1fe082"
+    },
+    {
+      "deck_name": "Necron Overlord",
+      "oracle_id": "2c0de95f-4269-439c-a1bc-faa11348b185",
+      "revision": "a5efb8aa199d9acfd662ae953a2ab2b54c39b0b3a0e9b28ef863b92e7507c807"
+    },
+    {
+      "deck_name": "Royal Warden",
+      "oracle_id": "0192ba05-6144-4fec-a803-462ecdf64195",
+      "revision": "3328cb786ed02364e106e058faff91a6f342fdee3c74e8d0e4d48d1bb5e546ad"
+    },
+    {
+      "deck_name": "Shard of the Nightbringer",
+      "oracle_id": "eedd5a17-d0fe-4a13-8f2c-f343bfa43f92",
+      "revision": "aa3c05174eeb4d93c1a683d2235d4662f4db7a32e34171462f8a44f2b5f20ae8"
+    },
+    {
+      "deck_name": "Shard of the Void Dragon",
+      "oracle_id": "d04d2434-121e-4420-abfc-fa21ad5577c3",
+      "revision": "bafbea73b4833a8d77c3dcd28dd3790a9d90384c93978654c553b6c7b37b9be3"
+    },
+    {
+      "deck_name": "Skorpekh Lord",
+      "oracle_id": "c40e8d52-d4cc-4502-8b51-a5612dbe1ada",
+      "revision": "2308e058a3738d0dfc38f7a270ce0925bf50686531fc8e7e04650284e8bf3af2"
+    },
+    {
+      "deck_name": "Technomancer",
+      "oracle_id": "3f97541e-34f3-4f7f-8ac2-7167b2ec9b33",
+      "revision": "210f6d9c711d7dfa4454d8f482e6a813b32ebb0a3fd4b266c177b5b8ec53b7dc"
+    },
+    {
+      "deck_name": "Tomb Blade",
+      "oracle_id": "c857de66-f4e0-4e97-ad01-fac623af8225",
+      "revision": "8884c297701b1120a9f2a5ace683c8dbee3957869ccf7d65317eba97a8a4de17"
+    },
+    {
+      "deck_name": "Trazyn the Infinite",
+      "oracle_id": "1ef3b48a-55ef-422e-ac7f-e1c1057eec2c",
+      "revision": "70fce3606ab9a394bcca9a130eff22bc5827dfa10d5f5654fce6e629b82907dc"
+    },
+    {
+      "deck_name": "Triarch Stalker",
+      "oracle_id": "1b3ae9c3-1940-4fb8-a47c-2d9e1790f4a3",
+      "revision": "1fd48f87be2c1b5d3412b20da7c7362a3ac425904bec4ccf14b4c47c695e82ba"
+    },
+    {
+      "deck_name": "Canoptek Scarab Swarm",
+      "oracle_id": "5b7f6cc3-8d4e-42e5-a908-7ebe3bccaf1e",
+      "revision": "d25d3c75bfeb3cd21a82ea71527ef9df00bb38e9b4c1338b8d19ba560c0769f8"
+    },
+    {
+      "deck_name": "Canoptek Spyder",
+      "oracle_id": "bcad5b83-5513-4455-a9c9-716281505eaa",
+      "revision": "78b62c421372cdb8bb36312ebd52adb403ec9fff3306868cac71b534c503ccf0"
+    },
+    {
+      "deck_name": "Canoptek Tomb Sentinel",
+      "oracle_id": "678b3fb5-aa9f-4268-9433-2a89dd37b927",
+      "revision": "dcd5790d53e96d3244a9efd75232032d1d7b00e69178c63d5ae7c198dca63318"
+    },
+    {
+      "deck_name": "Canoptek Wraith",
+      "oracle_id": "61849685-b407-4ed0-aafc-ec3a003200b9",
+      "revision": "f9c8d9f28f9f5f1dc66795b9efa467b516fae80c5f983473fa0ab29c00f6f21a"
+    },
+    {
+      "deck_name": "Cryptothrall",
+      "oracle_id": "e26f0fcd-d6d2-4e7b-82dd-711bc0b9dad3",
+      "revision": "ae32f32d1614a3674e18d51fac3c20742b2e8f36fcb94d829ce15485d577a3fd"
+    },
+    {
+      "deck_name": "Flayed One",
+      "oracle_id": "899415fd-4164-42a5-a0c7-eef1967c5ec5",
+      "revision": "74ae5ceb9e8655423ca4e093f26644be6dc2bbd5a3f2f81861d9d9e799389202"
+    },
+    {
+      "deck_name": "Hexmark Destroyer",
+      "oracle_id": "b3329240-c812-45ea-a7f8-4d79cd4ed515",
+      "revision": "8a737506773bb334d69f009b151af435ba1a6f0fda5b8aaff38003fbd3e4b073"
+    },
+    {
+      "deck_name": "Plasmancer",
+      "oracle_id": "b3ff8da4-f2cc-41c3-8950-9cc531854b78",
+      "revision": "e061bf61255d1445a776e928a405ec4f74524fd06823e00b73783994a365cf63"
+    },
+    {
+      "deck_name": "Psychomancer",
+      "oracle_id": "589b742c-fee5-413a-a56c-4d4ffaf0f73d",
+      "revision": "bacb8ce201c16ac46a0a1506e0890519e48b3a9fc279d47bb39801c3b0366f09"
+    },
+    {
+      "deck_name": "Sautekh Immortal",
+      "oracle_id": "7388a797-d40d-4783-a281-d17bc159b856",
+      "revision": "d620a9b066a7a99afd2035f0e291f59cbe1839c0603d1e6f5a1aec24df115476"
+    },
+    {
+      "deck_name": "Skorpekh Destroyer",
+      "oracle_id": "f96fcb37-5f17-4231-b1a2-64f5fe45730b",
+      "revision": "8bcaffbdcf6d47fcad2b15bd4e63c2002adb0ef4ad767cb80d51eedbbf84b167"
+    },
+    {
+      "deck_name": "Triarch Praetorian",
+      "oracle_id": "52aa5a79-db0e-4eaa-b2df-e41674c47794",
+      "revision": "c14940138338db0249fe090711e6f8986d2af53ba711065c489702f2355e0a67"
+    },
+    {
+      "deck_name": "Their Name Is Death",
+      "oracle_id": "97f9aa5e-e34d-4029-9213-b32ebaf9859c",
+      "revision": "d9c2e9246f1e610aa3a6cb302ee1dcf0d6eaf579a5dcac0d5042062e56975bdb"
+    },
+    {
+      "deck_name": "Their Number Is Legion",
+      "oracle_id": "8cd45064-2ad9-4247-902e-aefaf3bc1a43",
+      "revision": "7dc98dd66bef85ff3717f6f3e5c0e57c6e1050ae69b159b16d1f6ae67de0fb31"
+    },
+    {
+      "deck_name": "Beacon of Unrest",
+      "oracle_id": "aef874fa-93c0-4f86-8b0d-dc24ec51467d",
+      "revision": "83f83c9f49f2b04c6dea04b05ed86926a2c39fe864b5216daa18cf8c3e340991"
+    },
+    {
+      "deck_name": "Living Death",
+      "oracle_id": "9e6a3df4-67a3-452e-a6ef-f04dbadb21ef",
+      "revision": "0802cdfbfabc9fbcb8af2fc66a24d72e80503a2c211b168fb4231ff6e101cdda"
+    },
+    {
+      "deck_name": "Mutilate",
+      "oracle_id": "698e79ec-c2bc-4973-a095-f3c57b50e39c",
+      "revision": "5b9f286637040781b41dfb9117bc886a30158bd1467a3643791c2cedb673f306"
+    },
+    {
+      "deck_name": "Dread Return",
+      "oracle_id": "352b64d2-2ae5-44ee-a64f-94932ef545d3",
+      "revision": "6db09110189f0e386b3cc4954ed5b96e583cef0afab5ad137cf485c3ee95dee5"
+    },
+    {
+      "deck_name": "Defile",
+      "oracle_id": "49dddec0-d958-4810-8c6e-225fc8118c8f",
+      "revision": "7ae17b086bc522aa1a478e2ec42fc3bebb6a8a914c37caeefb6c900e2d1f460a"
+    },
+    {
+      "deck_name": "Darkness",
+      "oracle_id": "932708ae-9d5c-4561-aa8b-0d2222d37fdc",
+      "revision": "655dc430f385979d6c8fa1dc2037dcb35bee09b82c81d5ca284466253f90e8cc"
+    },
+    {
+      "deck_name": "Go for the Throat",
+      "oracle_id": "2f092562-9e17-43cd-aeb8-d0567f99363e",
+      "revision": "7db567abbf562a18b0e084ef6256d628511918b453b5dc32793c33faa83b1a7f"
+    },
+    {
+      "deck_name": "Convergence of Dominion",
+      "oracle_id": "655aece2-f33a-46e0-8f80-112ae8a457fe",
+      "revision": "ded23ae993012c7e84cbfedd68d7ea8f540ded05a9064d640672681c8eeb2a08"
+    },
+    {
+      "deck_name": "Ghost Ark",
+      "oracle_id": "bb1b4786-3804-486b-9fd9-85848d24d362",
+      "revision": "4753715c22c39bcab62921196b29d598306c2f8d7b05ff062fb57c58a153c9f3"
+    },
+    {
+      "deck_name": "Necron Monolith",
+      "oracle_id": "20932bca-52be-4288-9c7d-4154650c5ec9",
+      "revision": "0629508ea98f9b50f54c86c68d147412fc3f3bb2087f6d186f6adf9f093add69"
+    },
+    {
+      "deck_name": "Resurrection Orb",
+      "oracle_id": "b410f294-cbb6-4016-981f-808fd9b7bbae",
+      "revision": "904e8f36b3ae38f64c5c606a3500d635caeda6e20d1d2e8da55013d674c2b02b"
+    },
+    {
+      "deck_name": "Sceptre of Eternal Glory",
+      "oracle_id": "ce08aff3-efe6-4186-9557-274e00a7ca38",
+      "revision": "28f726d69cb1658608c60cc809d3562b2a2d12f4e177187ff79c78a12da2fb05"
+    },
+    {
+      "deck_name": "Night Scythe",
+      "oracle_id": "dea9741a-3360-4a17-aeea-a854e2174d25",
+      "revision": "3e5832afe3e172cbc04bdfb3d593fc187642eace6c2d3fc390aaa4c235eb55ad"
+    },
+    {
+      "deck_name": "Caged Sun",
+      "oracle_id": "09b895ff-e729-48d1-bfc1-ea5fd7adda6a",
+      "revision": "280e898b656147a9fb27bde5146c009bf4452271a27d60c0209969e9b5c13b41"
+    },
+    {
+      "deck_name": "Endless Atlas",
+      "oracle_id": "cb923c4d-1d2e-4039-90bb-72d1981b9738",
+      "revision": "aa15180f7d8e63a8669b5c78b1d3af4981fe2e693c9cef5cb467dc41636c09e8"
+    },
+    {
+      "deck_name": "Gilded Lotus",
+      "oracle_id": "9a02a9a7-39d9-4763-85d3-747a0540b60b",
+      "revision": "2834056ddb38d9255f854b2548dbc9c10694e721454c97ecb8b39af276c64ab5"
+    },
+    {
+      "deck_name": "Mystic Forge",
+      "oracle_id": "994bc16d-fdc6-475c-96df-beeb4d5aa03e",
+      "revision": "f46cf2aad615835be7686f91c57bfc861e2f36dce3be8c5f292d0604cb98038e"
+    },
+    {
+      "deck_name": "Sculpting Steel",
+      "oracle_id": "6c85271c-c711-49b0-a72e-9e576c33714d",
+      "revision": "de8177db5b1aa7c5b94d5b46bc751fb93713101bf079a5f94cbff3f837849176"
+    },
+    {
+      "deck_name": "Cranial Plating",
+      "oracle_id": "75564721-e4e9-463a-b49e-f0c7cd6f53a7",
+      "revision": "e4a828b196abf55fc6415bf6eec577702755cc199b2ebb498519e15cfe929f68"
+    },
+    {
+      "deck_name": "Hedron Archive",
+      "oracle_id": "32263baa-d3f0-463f-92b3-4e9938476add",
+      "revision": "b499d97831572a24416d8924d33ee8bbf97e3b8fbf836b2d94220582379e8eb8"
+    },
+    {
+      "deck_name": "Mask of Memory",
+      "oracle_id": "d6b2c998-a226-426c-a40d-6e6007041bfe",
+      "revision": "5450d88a8c6c9c62bb77714f21d3aed39cedc32583317ed2d7c146d3f2c157ab"
+    },
+    {
+      "deck_name": "Sol Ring",
+      "oracle_id": "6ad8011d-3471-4369-9d68-b264cc027487",
+      "revision": "0eb2cff19d45b2615524f21e00b3cb9eff75eb59b8652c3a52d0a6c0f7c5c8a6"
+    },
+    {
+      "deck_name": "Arcane Signet",
+      "oracle_id": "0bc7f093-bef0-4f1a-852c-4b75ebf54838",
+      "revision": "face9ebc2cd63a3015693d6e58b7fe977c7c1aa9e4a5d25d5042a6c89b2852ea"
+    },
+    {
+      "deck_name": "Commander's Sphere",
+      "oracle_id": "0b67c4e2-f88b-4e01-85a1-9d5f5b8db13b",
+      "revision": "76009e9cda66419dcfece553f8395779a0fe092cc9e814dda57e5d76ed499e8d"
+    },
+    {
+      "deck_name": "Mind Stone",
+      "oracle_id": "c97361b5-af16-4a7b-af85-a429dbaf4ad2",
+      "revision": "e8105065d14da7e945c1121bcb25e7270435b670b89a462aca43a97e9461ac6d"
+    },
+    {
+      "deck_name": "Thought Vessel",
+      "oracle_id": "9965d9c5-2ebf-4a6c-930e-55c5890979be",
+      "revision": "b06717a2bf00ce2c525323abea6d2b4fbd1e3ce2d49e3856cd296a8305da8592"
+    },
+    {
+      "deck_name": "Unstable Obelisk",
+      "oracle_id": "060ae1bb-956a-4264-b405-a33151f31493",
+      "revision": "c7e01b267ad6be9550640775455ec62e38326df4c19bcef2d864b60a198cd275"
+    },
+    {
+      "deck_name": "Wayfarer's Bauble",
+      "oracle_id": "31f15274-301b-47c5-ba19-0ced04520878",
+      "revision": "e5a73d717e97e6f70714e9cd835209e2ab189174d4a390e7dd3312f8857952e6"
+    },
+    {
+      "deck_name": "Biotransference",
+      "oracle_id": "5443557e-440f-4fdd-a29b-7740d7cec085",
+      "revision": "2be37e709442d2a54e500297f0f315d7f5e503b46f96f81363eea0a7a0da0975"
+    },
+    {
+      "deck_name": "Out of the Tombs",
+      "oracle_id": "473a7998-669d-4181-83fe-f178a2e781f0",
+      "revision": "2fa75fbfa85a843d7e584574b8f46ecbd2845b2ca7f7ac31509ef9502b2f57f5"
+    },
+    {
+      "deck_name": "The War in Heaven",
+      "oracle_id": "5924cbb0-19b5-449c-a7c5-722e744a54f8",
+      "revision": "debb3c54c6ad462563b106526f6a342d789d251324c5a3228204e7df2a83f9b5"
+    },
+    {
+      "deck_name": "Tomb Fortress",
+      "oracle_id": "986f510c-e2ec-423e-a443-51a169939558",
+      "revision": "ac772abc8bd048b2ef75994578ff254a73816eb9fc8966b755b34f10de9d3da4"
+    },
+    {
+      "deck_name": "Barren Moor",
+      "oracle_id": "326ba371-124c-4949-a048-3a0c8962e567",
+      "revision": "27c9d27dd9bcc01f592fa868aa0751047899d9568f3a72d0f3222a660a148ed6"
+    },
+    {
+      "deck_name": "Myriad Landscape",
+      "oracle_id": "2549bc57-9ffb-4053-9f10-f2a5f792b845",
+      "revision": "f55dacb3f166b6654c5b91348e089d458f7ef9cc5c1db41ddeaf3bcf67ed45bd"
+    },
+    {
+      "deck_name": "Reliquary Tower",
+      "oracle_id": "c23e5b80-08d2-4e24-9908-fe2aa4f30f6f",
+      "revision": "9c36b51f311716dd1ee314c4824804ae9f0ae8fc8ec104f096ef56c36f4d00b1"
+    },
+    {
+      "deck_name": "Desert of the Glorified",
+      "oracle_id": "190e664b-9875-4335-af46-353886ed18ff",
+      "revision": "b3b4ccb204602e48ef37797c7e9fa15584e6a02eb77c3efda2c7744d0a8efd9d"
+    },
+    {
+      "deck_name": "Polluted Mire",
+      "oracle_id": "9809d975-7ef8-4946-9041-607c4e954b13",
+      "revision": "9e8780023b748137832849ac656f3c8baa842c57b63b098be13cc45dfa49e5e1"
+    },
+    {
+      "deck_name": "Vault of Whispers",
+      "oracle_id": "09496421-74e4-466a-9546-56f2a0c8eef4",
+      "revision": "704d618aacdd6569f9d61c2602186c26d1054d023acefc285a20eb6b184d53a5"
+    },
+    {
+      "deck_name": "Swamp",
+      "oracle_id": "56719f6a-1a6c-4c0a-8d21-18f7d7350b68",
+      "revision": "74131b0e6dafa0e223fe1e44abd35c97ba351f6dc74bc32ff01de65754e99fd4"
+    }
+  ]
+}

@@ -1,0 +1,388 @@
+{
+  "schema_version": 1,
+  "deck_sha256": "7395a28584933f5b6018a49b624c213ba791697132473b01b999bec978454a53",
+  "catalog_schema_version": 1,
+  "created_at": "2026-10-31T17:21:59.860940+00:00",
+  "cards": [
+    {
+      "deck_name": "Mortarion, Daemon Primarch",
+      "oracle_id": "588eecbf-dcfc-4b97-b81c-8b9f3d39e08f",
+      "revision": "00e65fc71225f09953727ea25fcfeb4767bc0d381e0a375d82b58d1ca64e89ff"
+    },
+    {
+      "deck_name": "Great Unclean One",
+      "oracle_id": "cd9031e4-9f6f-4dd8-908e-dcf7b79438e5",
+      "revision": "9232d5525536d3e56c9cca40573f180403081e49c6f5cee7d9a9e5e976569f0f"
+    },
+    {
+      "deck_name": "Plague Drone",
+      "oracle_id": "9552fc97-9e6d-4307-bf58-30bf956356bf",
+      "revision": "a1b99a5f126283620672aa6f33329f7add251ea91e1a4daff2ff3f83bc6e335a"
+    },
+    {
+      "deck_name": "Poxwalkers",
+      "oracle_id": "e4275202-4960-4cde-b941-27be8163ad6e",
+      "revision": "75660f74f288ededf534d41eb48154f35a43735dcfb8a8810d8c1622e3112e12"
+    },
+    {
+      "deck_name": "Sloppity Bilepiper",
+      "oracle_id": "6bd38092-7788-4bb6-9447-16c56e11e603",
+      "revision": "a1dbf94a38c18637c3912e0f9946c459705bef4a715928f27c41df9b66c4c2ab"
+    },
+    {
+      "deck_name": "Tallyman of Nurgle",
+      "oracle_id": "7cc4a635-8730-4018-a8fd-b29fb5479928",
+      "revision": "d973fd08b20e8a47c191ab79e65a4cc831e5e79f708735ed4118e951907ddf71"
+    },
+    {
+      "deck_name": "Venomcrawler",
+      "oracle_id": "f3a07ae4-b0f8-43e6-adba-217f220cc2d0",
+      "revision": "f6b6ebc70e185d456c0909d96ee8c2e1b4f785a3d6bfe5a708c51b1facc7983c"
+    },
+    {
+      "deck_name": "Crypt Rats",
+      "oracle_id": "104095ed-55e3-408e-bf70-4fe06bb16d2f",
+      "revision": "863e1d3394381e3cf7fc3bc1895c0974f98e89c916a8b96df9b8822fb81e265f"
+    },
+    {
+      "deck_name": "Pestilence Demon",
+      "oracle_id": "2572add6-c0b1-44bd-8713-1e94e3fe69d6",
+      "revision": "45c5a815ee4a634251007ea02db2015a8c85f93132ff67411bcefe8bdd815327"
+    },
+    {
+      "deck_name": "Thrashing Wumpus",
+      "oracle_id": "ef220824-fab4-4d8e-9ba4-65ff5ba1db66",
+      "revision": "2d26f0d7ad99d5f0f307c95aafefa012a290fac921622090ac1dcd0ad4f05e0d"
+    },
+    {
+      "deck_name": "Plague Spitter",
+      "oracle_id": "5feedfb0-30e6-400d-9e28-d541ea1aa14e",
+      "revision": "9dfc48931ee8cc9118502bdd0fe1b7ab2b28e87ed52f41fe7282b71b855facea"
+    },
+    {
+      "deck_name": "Midnight Banshee",
+      "oracle_id": "dd8b6067-a97f-402f-bba1-70ebc6ee1599",
+      "revision": "9a3219aa4ed857910158356f77919b0c43175a37dc3732dc9a2c3a828223ad6d"
+    },
+    {
+      "deck_name": "Necroskitter",
+      "oracle_id": "536f7c92-2f1e-49e7-98de-47382a9488f1",
+      "revision": "c3adf9cc225e171f35f6dd4971ecf3e4a1c88b41df34a5268f439d7400253c86"
+    },
+    {
+      "deck_name": "Yawgmoth, Thran Physician",
+      "oracle_id": "a1e232c0-dc38-47be-a5a0-f68bc1d86a29",
+      "revision": "051f3ae8bf6721a8a5d6a9775bbe428675c600f07f3db7b891ed68c0440b90e4"
+    },
+    {
+      "deck_name": "Mikaeus, the Unhallowed",
+      "oracle_id": "5d27c63e-d1ef-48af-b51d-01ebc6daeac9",
+      "revision": "2506eff393aa0de71ec2106bd392a349dc94d6744b4735761f94b52dbb35e5d6"
+    },
+    {
+      "deck_name": "Reassembling Skeleton",
+      "oracle_id": "9dbc3530-b278-4c8d-b2cc-a09dfac9d5e5",
+      "revision": "14ff52a36cb5c715b1339614d8116cc250b222576955e26642ce781f6cffaa3d"
+    },
+    {
+      "deck_name": "Persistent Specimen",
+      "oracle_id": "5f4ad578-f2c4-47f6-8080-8fbc17383f6f",
+      "revision": "33a7cd0f75e477f8b970c7f20712030fff72586b8d680433e2a1b913b79f8771"
+    },
+    {
+      "deck_name": "Darksteel Myr",
+      "oracle_id": "f90fe86c-5cca-483b-93c2-6e856fa01c88",
+      "revision": "684b7dea79712c7d7f6e3b2eecdd855a2970c7fb435394517949fa171e608c95"
+    },
+    {
+      "deck_name": "Stuffy Doll",
+      "oracle_id": "499dceab-1890-49c8-b35d-b059a1dc950f",
+      "revision": "7f9ae34b04f51315e67d9d3d48b56251a9ff50d6c27bd9a3405a409416562193"
+    },
+    {
+      "deck_name": "Dread",
+      "oracle_id": "09f41fac-8285-457a-bb71-8c6a93af2df9",
+      "revision": "1c8afd3b255bea4999ee6805e442ed9fe0162420194dfbd9478d1f264ee27d89"
+    },
+    {
+      "deck_name": "Vilis, Broker of Blood",
+      "oracle_id": "7c209753-121b-4859-944b-4e33f885e777",
+      "revision": "88d71a8df957b3ad5dec75dc6f014c1d1de979ffe0502928c8bca04f0f659cef"
+    },
+    {
+      "deck_name": "Massacre Wurm",
+      "oracle_id": "93cf50cf-0ecc-4d3e-abea-778c1ebacec4",
+      "revision": "6db6174008ad388f0e3cc2617075bf23a482506caae7796e4ddcad36382065ca"
+    },
+    {
+      "deck_name": "Gray Merchant of Asphodel",
+      "oracle_id": "38f3b157-0df4-409b-89cc-086e1531cd5b",
+      "revision": "d1a2ecd63a14725df1a64a6a1a0c24fe5c4eb970db581d9e1c267129ecc75a6a"
+    },
+    {
+      "deck_name": "Morbid Opportunist",
+      "oracle_id": "322f44f0-e6da-4ee0-b474-e7d5e9a461c5",
+      "revision": "eb53dfe82d7e147e52c4172d39907ad1cc9d3d39bd0084ee8194944c44c852fb"
+    },
+    {
+      "deck_name": "Crypt Ghast",
+      "oracle_id": "a3c8d817-7949-4dae-b9f5-f9d952479270",
+      "revision": "781e6d4f15d14b4332bf464f048ee1384a7dd4570a624213af05d1fb6f684a20"
+    },
+    {
+      "deck_name": "Ophiomancer",
+      "oracle_id": "55eca80c-dcd8-4c2f-aa0f-fb0aec7b80f7",
+      "revision": "31339b9e4812e024d3e87a1f2a17a64b60a221080ce9fa0dbbe51a2403aedeb8"
+    },
+    {
+      "deck_name": "Nurgle's Conscription",
+      "oracle_id": "967f0c23-7af2-4e86-9ebc-dc2f8856c7c5",
+      "revision": "6acd5ec6c02ea5795f37b19255ac6278201d7a9ae3ec5d704e3a8ae12593d80f"
+    },
+    {
+      "deck_name": "Bile Blight",
+      "oracle_id": "0dd95516-893d-477e-a38c-3cc37c6e7ae0",
+      "revision": "8619e1fb1bd637976116f044a542f36b0d26179c04048a1d0d04eb5cfbac35f4"
+    },
+    {
+      "deck_name": "Dark Ritual",
+      "oracle_id": "53f7c868-b03e-4fc2-8dcf-a75bbfa3272b",
+      "revision": "a14e9c3197474ccab13c4336c7625761a0cde7be37622da2e352af373a6b75c7"
+    },
+    {
+      "deck_name": "Malakir Rebirth // Malakir Mire",
+      "oracle_id": "a731e87b-8d99-4b64-8ee3-8e540d652366",
+      "revision": "02d981dc9353f9d63df521a3885fedcfbb0f230e1500cc8c63260a84582e6144"
+    },
+    {
+      "deck_name": "Undying Malice",
+      "oracle_id": "8b061702-1bc3-45aa-a758-446b25034801",
+      "revision": "a83670209d521775b98e06c6e09f900d9d33ee15bff55dca64e6d256ad72fbf3"
+    },
+    {
+      "deck_name": "Deadly Dispute",
+      "oracle_id": "457af74a-02b3-4659-846d-63e482667f34",
+      "revision": "f3283f3fddda03ed1fabd11ff7a50db7eb7acfb30a434c2a57eeee032c1d4ba7"
+    },
+    {
+      "deck_name": "Sudden Spoiling",
+      "oracle_id": "dce202c7-fe8e-462a-858e-7a5a69bd5b6b",
+      "revision": "c7d8e4b7834a3f1a117f02c908420f1693725530611eccc8afbc0c1f569298c9"
+    },
+    {
+      "deck_name": "Blight Grenade",
+      "oracle_id": "ae24b863-974c-4efa-ab41-23cfa1906c54",
+      "revision": "46e295e7c771bef23a7b2cc335f294c5180e04ea2813d30a464b976dadb95d1f"
+    },
+    {
+      "deck_name": "Mandate of Abaddon",
+      "oracle_id": "20582c7b-edd3-4189-98ec-8fabd39034b0",
+      "revision": "800f93a9b45f0823dc2860f357001baf7f2b76b8a28f69e3552288f5a163dbfa"
+    },
+    {
+      "deck_name": "Decree of Pain",
+      "oracle_id": "932668fa-d6e3-41c0-ad0c-8e0a00e68d11",
+      "revision": "4d264465f55f361cc5d3b1fa4e2707556928a78ea4a75672490ea34f644f23bf"
+    },
+    {
+      "deck_name": "Black Sun's Zenith",
+      "oracle_id": "038c0165-32b6-4e81-8180-604b49905207",
+      "revision": "e208e1cf2810ec6eb2575326d90c7117af17ac9d4a4ae0f863dcc7dd318b00f7"
+    },
+    {
+      "deck_name": "Toxic Deluge",
+      "oracle_id": "afaef788-34d1-460b-b884-9d7ae6ddeb18",
+      "revision": "ff6fcc8a23bd3fc6da15f0b17dd2a6d3d193e4d9868e476ea67167fe5adf074d"
+    },
+    {
+      "deck_name": "Feed the Swarm",
+      "oracle_id": "5825997b-10d7-4a36-972c-a80ddd90b8ed",
+      "revision": "054f7ade395f5f3721df3ceec3a321b5013d6d1f8d581ac5ead6f746e740db48"
+    },
+    {
+      "deck_name": "Victimize",
+      "oracle_id": "240e85d3-e495-4877-8609-4b4056c402f7",
+      "revision": "d1148d33404c2b476c7e873a97ea3879417ceac997331d4373cd2b81d67a45d1"
+    },
+    {
+      "deck_name": "Plague of Vermin",
+      "oracle_id": "efc12acf-ffef-40a6-b2ce-fe93e89ad840",
+      "revision": "0d292cdca31e73dc29efa2baf2e9d8b76b9d495be99817d7e9241835dce0b5ad"
+    },
+    {
+      "deck_name": "Nurgle's Rot",
+      "oracle_id": "1b01dcff-0639-4ed0-bd9e-f28429cb803d",
+      "revision": "11dca6e42a67c741053b902ecdbf021afde2702801b54c376a41c9a89104f0ab"
+    },
+    {
+      "deck_name": "Pestilence",
+      "oracle_id": "dafe63ef-f3d6-45e7-877a-573da92ba85e",
+      "revision": "5e0d98ee79fd84141d22a5dbbc70e654f6f109e146240992b6481be99611fcdc"
+    },
+    {
+      "deck_name": "Black Market Connections",
+      "oracle_id": "d2664f28-49e1-46f8-a863-b217e961a57c",
+      "revision": "365e15e0a2d3f3749549885ec8e3f9336d19e260a571a39e33d18fb50603809d"
+    },
+    {
+      "deck_name": "Phyrexian Arena",
+      "oracle_id": "ee579a32-a048-4335-b966-231ba731cdea",
+      "revision": "0430279ff448b0303520e68d40813ffb7e58ec50bbc91ad5ba1e30fd1f3c7ece"
+    },
+    {
+      "deck_name": "The Meathook Massacre",
+      "oracle_id": "127de52b-df75-4342-95a0-20d84c5bf916",
+      "revision": "316d5abd2ed912dc4ef87e09b3afbe968659feec9d8e600f5b506de885181ea7"
+    },
+    {
+      "deck_name": "Crumbling Ashes",
+      "oracle_id": "2e4030eb-c74f-4f81-8d35-8f1d080b15cf",
+      "revision": "c5df630faf982eb4f4a5234157a6bba2519d37aa4eb1e56c3e88202a39a642ed"
+    },
+    {
+      "deck_name": "Phyrexian Reclamation",
+      "oracle_id": "647ca69e-cc01-4b2b-b376-bee2a98331e8",
+      "revision": "5ee34c1e697986483b79c2763043c0d4a5c6420bca11be4cc86b911b22d5e93e"
+    },
+    {
+      "deck_name": "Unspeakable Symbol",
+      "oracle_id": "a5690d5f-633c-4a1e-afba-5fd79dcbf20e",
+      "revision": "0ee60dc3e0496d909d8766a85e106629528791d60a62d0e8e9e741c448caa378"
+    },
+    {
+      "deck_name": "Greed",
+      "oracle_id": "1ff62220-be95-4901-b8d8-812b9a1a1b0a",
+      "revision": "df76fe4c8e61136271075ac8fa79d484dd4f0da2198b4cf54436629b5429a5f9"
+    },
+    {
+      "deck_name": "Nest of Scarabs",
+      "oracle_id": "1f21cf59-6390-44b4-ab2e-ef290dfd8c85",
+      "revision": "51b2578418371c73cfcc88d518b1e8f96101d42e571a9847b12c553fe3891b84"
+    },
+    {
+      "deck_name": "Dreadhorde Invasion",
+      "oracle_id": "01deabbb-af6a-4998-99a7-35b7cfa9ef77",
+      "revision": "41b11850882a0c252dd378a4b01fdc8f1513a21a81ecff2f50a386e15f87144b"
+    },
+    {
+      "deck_name": "Sol Ring",
+      "oracle_id": "6ad8011d-3471-4369-9d68-b264cc027487",
+      "revision": "0eb2cff19d45b2615524f21e00b3cb9eff75eb59b8652c3a52d0a6c0f7c5c8a6"
+    },
+    {
+      "deck_name": "Arcane Signet",
+      "oracle_id": "0bc7f093-bef0-4f1a-852c-4b75ebf54838",
+      "revision": "face9ebc2cd63a3015693d6e58b7fe977c7c1aa9e4a5d25d5042a6c89b2852ea"
+    },
+    {
+      "deck_name": "Charcoal Diamond",
+      "oracle_id": "1386d111-a2a7-4df1-91d7-947664126989",
+      "revision": "aa0b2b75ed3d0f0ef285f42e254ae30803b2d412e3bcc7f570c684e33b9d96cf"
+    },
+    {
+      "deck_name": "Wayfarer's Bauble",
+      "oracle_id": "31f15274-301b-47c5-ba19-0ced04520878",
+      "revision": "e5a73d717e97e6f70714e9cd835209e2ab189174d4a390e7dd3312f8857952e6"
+    },
+    {
+      "deck_name": "Worn Powerstone",
+      "oracle_id": "b166b670-febc-4821-855e-f8d465644c03",
+      "revision": "56921f1235480740be24cfa35e3b94e37bc0c005d444ea00ba9f4ca1259a3e1d"
+    },
+    {
+      "deck_name": "Caged Sun",
+      "oracle_id": "09b895ff-e729-48d1-bfc1-ea5fd7adda6a",
+      "revision": "280e898b656147a9fb27bde5146c009bf4452271a27d60c0209969e9b5c13b41"
+    },
+    {
+      "deck_name": "Basilisk Collar",
+      "oracle_id": "f5f4dd28-f4ae-4d39-b9b8-6ebfd63c93fe",
+      "revision": "cb913c0f71063ac330c01744f6127b2f2fabd2ab148d4adb9262bdff76ed6b88"
+    },
+    {
+      "deck_name": "Sun Droplet",
+      "oracle_id": "1820af5c-9cc2-4b77-b4ca-86084442f087",
+      "revision": "21f856c1cd7715b6beb0f793a61371079935f47824f823d261f5cc011e9cc949"
+    },
+    {
+      "deck_name": "Skullclamp",
+      "oracle_id": "65986c1b-8e51-4604-b685-d82fa7d1263a",
+      "revision": "0cd6cecab0d9117731401081d002d9224110a1b245f82ce142d6aa83278361b5"
+    },
+    {
+      "deck_name": "Resurrection Orb",
+      "oracle_id": "b410f294-cbb6-4016-981f-808fd9b7bbae",
+      "revision": "904e8f36b3ae38f64c5c606a3500d635caeda6e20d1d2e8da55013d674c2b02b"
+    },
+    {
+      "deck_name": "Swiftfoot Boots",
+      "oracle_id": "c8b143ad-43ec-4e0d-a440-e348daa31391",
+      "revision": "074cfd50a799fd42c26431b03fa1de07092c759e55429851a58bfc5ab71421d7"
+    },
+    {
+      "deck_name": "Barren Moor",
+      "oracle_id": "326ba371-124c-4949-a048-3a0c8962e567",
+      "revision": "27c9d27dd9bcc01f592fa868aa0751047899d9568f3a72d0f3222a660a148ed6"
+    },
+    {
+      "deck_name": "Bojuka Bog",
+      "oracle_id": "04b7362d-0490-4cb0-b5d7-2a7732f659ce",
+      "revision": "7ff44aadf212138243c87926015faf752d78b5ea93224496abf040a0b6d5c8eb"
+    },
+    {
+      "deck_name": "Cabal Coffers",
+      "oracle_id": "7358e164-5704-4e78-9b21-6a9bf2a968ce",
+      "revision": "62d753e57beedfac944846267e9fcff1a892cd9ebc7a94b46f6ef67e9dc2118c"
+    },
+    {
+      "deck_name": "Urborg, Tomb of Yawgmoth",
+      "oracle_id": "db6174d7-211d-4817-b8e4-8384594c83f9",
+      "revision": "0951d3789ec64e33478eb66db27b8b74eb725ec75e5995c4cd6b1cf2ab20973c"
+    },
+    {
+      "deck_name": "Nykthos, Shrine to Nyx",
+      "oracle_id": "84dc18f0-8225-4b40-a165-b10321e41769",
+      "revision": "a9db4eb272304602f7bc05867ce7a7ab40c490faca1840116298239ca7208cd1"
+    },
+    {
+      "deck_name": "War Room",
+      "oracle_id": "71c52bf5-2a5d-488e-8b15-7ef290e4b77d",
+      "revision": "00db7d28f1b036e0c1cfeb67d475eede812fc67a6e179289ca7c9c2bb3cf6bac"
+    },
+    {
+      "deck_name": "Castle Locthwain",
+      "oracle_id": "be811e70-aaaa-41f3-bf9e-5d3f9f719b49",
+      "revision": "f07cd3767c6c32efb72cef0cfb9754edea58cc90ba00b7efcc8e8f2a54635db6"
+    },
+    {
+      "deck_name": "Takenuma, Abandoned Mire",
+      "oracle_id": "ac2dd694-d2f1-4025-8400-12332bdc882a",
+      "revision": "e69225e817ccdc9676daea76697e947645cf371a777b0201d6154ce0e50bded0"
+    },
+    {
+      "deck_name": "Myriad Landscape",
+      "oracle_id": "2549bc57-9ffb-4053-9f10-f2a5f792b845",
+      "revision": "f55dacb3f166b6654c5b91348e089d458f7ef9cc5c1db41ddeaf3bcf67ed45bd"
+    },
+    {
+      "deck_name": "Witch's Cottage",
+      "oracle_id": "6c8f276e-4e7b-4974-ab02-9356cc0ffb2b",
+      "revision": "94856ecbff4f30e30d34caca8e45d0e4027d8a0046f0b17a48f12a2a5c782021"
+    },
+    {
+      "deck_name": "Leechridden Swamp",
+      "oracle_id": "d83c86c1-126d-49e9-9b13-9e55784c49c5",
+      "revision": "8b1cf3803384493b847116146b16ca16497530654d1b67040c84989661fbb876"
+    },
+    {
+      "deck_name": "Phyrexian Tower",
+      "oracle_id": "1861e642-21d5-4232-89f3-b5557f2946c1",
+      "revision": "6e714f4f74d1710762a807e9659df363d3bc81e042a3931a1d86c9d7e0c82086"
+    },
+    {
+      "deck_name": "Swamp",
+      "oracle_id": "56719f6a-1a6c-4c0a-8d21-18f7d7350b68",
+      "revision": "74131b0e6dafa0e223fe1e44abd35c97ba351f6dc74bc32ff01de65754e99fd4"
+    }
+  ]
+}
