@@ -13,6 +13,14 @@ class AltarTests(unittest.TestCase):
   self.assertTrue(self.t.cast(self.t.action_for_card(self.p,card)))
   self.altar=next(o.object_id for o in self.t.rules.controlled(0) if o.card.name==NAME)
  def creature(self,seat=0):return self.t.add_creature(self.t.players[seat],1,1,'fixture',token=True).id
+ def test_frostboil_mana_survives_altar_resource_installation(self):
+  card=next(c for c in self.p.hand+self.p.library if c.name=='Frostboil Snarl')
+  oid=self.t.enter_land(self.p,card.object_id,choices=(False,0,None))
+  self.assertEqual({a.output for a in self.t.resources.abilities(self.t.rules.get(oid))},{U,R})
+  self.t.resources.pay(0,Cost(blue=1))
+  self.assertTrue(self.t.rules.get(oid).tapped)
+  self.assertTrue(any(a['source_id']==oid and a['output']==U for a in self.t.resources.activations))
+  self.t.assert_consistent()
  def test_cast_altar(self):self.assertIn(self.altar,self.t.rules.objects);self.assertEqual(self.t.resources.pool(0),(0,0,0))
  def test_sacrifice_produces_colored_not_colorless(self):
   victim=self.creature();abilities=dict(self.t.resources.sources(0))[victim]

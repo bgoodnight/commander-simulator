@@ -35,12 +35,6 @@ class EarlyManaTable(VerifiedTable):
     detailed_player_class=EarlyManaPlayer
     def __init__(self,*args,**kwargs):
         super().__init__(*args,**kwargs)
-        previous=self.resources.abilities
-        def abilities(obj,visiting=frozenset()):
-            if obj.card.name=='Frostboil Snarl' and obj.zone=='battlefield' and obj.object_id not in visiting:
-                return fixed(U,R)
-            return previous(obj,visiting)
-        self.resources.abilities=abilities
         self.snarl_events=[]
 
     def entry_choices(self,player,oid,force_tapped=False):

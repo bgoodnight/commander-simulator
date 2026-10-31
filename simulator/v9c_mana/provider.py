@@ -8,6 +8,7 @@ from state import v6
 
 
 NAMED = {
+    'Frostboil Snarl': fixed(U, R),
     'Fabled Passage': (),
     'Sol Ring': fixed((2, 0, 0)),
     'Izzet Signet': (Ability((0, 1, 1), Cost(generic=1)),),
