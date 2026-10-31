@@ -13,6 +13,7 @@ from budget_table import card_spec
 from commander_sim.queries import Query, Match, ObjectView, target_legality
 from commander_sim.snapshots import validate_snapshot
 from commander_sim.identities import CardRegistry
+from commander_sim.legacy_verified import add_library_creature
 from wizard_tutor_table import WIZARDCYCLING
 from reference_state import reference_payload,canonical
 from altar_table import AltarTable,AltarAbility
@@ -92,16 +93,34 @@ class ProviderCompositionTests(unittest.TestCase):
   snapshot=validate_snapshot(root/'decklists/fixtures/magnus_flameslinger_v0_7_pre_delivery.txt',root/'simulator/card_data/flameslinger_v0_7_scryfall.json')
   face=CardRegistry(snapshot).get('Stormsplitter').primary_face()
   t=CopyTable(seed=118);p=t.details
-  oid=t.zones.add_spec(card_spec(face.name),p.seat,'library',detailed=True)
+  oid=add_library_creature(t,CardRegistry(snapshot),face.name,p.seat)
   obj=t.rules.get(oid)
-  obj.card=replace(obj.card,types=face.types,subtypes=face.subtypes,colors=face.colors,
-                   base_power=face.power,base_toughness=face.toughness,coverage='unimplemented')
+  self.assertEqual((obj.card.cost.generic,obj.card.cost.red),(3,1))
+  self.assertEqual(obj.card.coverage,'unimplemented')
   query=Query(types_all=frozenset({'creature'}),subtypes_all=frozenset({'Wizard'}),max_power=2)
   self.assertIs(query.matches_kernel(t.rules,oid,power_verified=True),Match.YES)
   self.assertIs(target_legality(ObjectView.from_kernel(t.rules,oid,power_verified=True),source_controller=1),Match.UNKNOWN)
   t.tutor_policy=lambda request:next(c.object_id for c in request.cards if c.name=='Stormsplitter')
   self.assertTrue(t.resolve_activation(SimpleNamespace(ability=WIZARDCYCLING,controller=p.seat,source_id=0)))
-  self.assertIn('Stormsplitter',[c.name for c in p.hand]);t.assert_consistent()
+  self.assertIn('Stormsplitter',[c.name for c in p.hand])
+  card=next(c for c in p.hand if c.name=='Stormsplitter')
+  t.active_seat=p.seat;t.phase='main'
+  with self.assertRaisesRegex(ValueError,'Unsupported'):
+   t.cast(t.action_for_card(p,card))
+  t.assert_consistent()
+ def test_verified_bridge_handles_second_card_and_rejects_black_cost(self):
+  root=Path(__file__).resolve().parents[2]
+  deck=root/'decklists/fixtures/magnus_flameslinger_v0_7_pre_delivery.txt'
+  data=root/'simulator/card_data/flameslinger_v0_7_scryfall.json'
+  registry=CardRegistry(validate_snapshot(deck,data));t=CopyTable(seed=120)
+  oid=add_library_creature(t,registry,'Mocking Sprite',t.details.seat)
+  obj=t.rules.get(oid);self.assertEqual((obj.card.cost.generic,obj.card.cost.blue),(2,1))
+  self.assertEqual((obj.power,obj.toughness),(2,1));self.assertIn('flying',{k.lower() for k in registry.get('Mocking Sprite').primary_face().keywords})
+  self.assertNotIn('flying',obj.keywords)
+  with self.assertRaisesRegex(ValueError,'already registered'):add_library_creature(t,registry,'Mocking Sprite',t.details.seat)
+  black=CardRegistry(validate_snapshot(root/'decklists/mortarion_purchase_reconciled_candidate_2026_10_27.txt',root/'simulator/card_data/mortarion_scryfall.json',commander='Mortarion, Daemon Primarch'))
+  with self.assertRaises(NotImplementedError):add_library_creature(t,black,'Shambling Ghast',t.details.seat)
+  t.assert_consistent()
  def test_cross_deck_zombie_query_uses_verified_characteristics(self):
   root=Path(__file__).resolve().parents[2]
   snapshot=validate_snapshot(root/'decklists/mortarion_purchase_reconciled_candidate_2026_10_27.txt',root/'simulator/card_data/mortarion_scryfall.json',commander='Mortarion, Daemon Primarch')
