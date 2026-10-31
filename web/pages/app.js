@@ -168,20 +168,26 @@ function deckVersionsForCommander(commanderId){
     .sort((a,b)=>String(b.updated||b.created||"").localeCompare(String(a.updated||a.created||"")));
 }
 function latestSelectionForCommander(commanderId){
-  const saved=deckVersionsForCommander(commanderId)[0];
-  if(saved)return {key:saved.baseKey,version:saved.id};
   const preferred=preferredByCommander[commanderId];
   if(preferred?.key&&sameCommanderDecks(commanderId).some(d=>d.key===preferred.key)){
     const version=localVersions.some(v=>v.id===preferred.version&&v.baseKey===preferred.key)?
       preferred.version:null;
     return {key:preferred.key,version};
   }
+  const saved=deckVersionsForCommander(commanderId)[0];
+  if(saved)return {key:saved.baseKey,version:saved.id};
   return {key:sameCommanderDecks(commanderId)[0]?.key,version:null};
 }
 function versionById(id){
   return localVersions.find(v=>v.id===id&&v.baseKey===selected)||null;
 }
 function activeVersion(){return selectedVersionId?versionById(selectedVersionId):null;}
+function hasUnsavedChanges(){
+  if(!selected||!activeCounts)return false;
+  const reference=activeVersion()?.counts||initialCounts();
+  return [...new Set([...Object.keys(reference),...Object.keys(activeCounts)])]
+    .some(name=>(reference[name]||0)!==(activeCounts[name]||0));
+}
 function isUnsimulatedVersion(){
   if(activeVersion())return true;
   if(!selected||!activeCounts)return false;
@@ -239,6 +245,8 @@ function buildDeckRail(){
       " built-in deck(s) · "+deckVersionsForCommander(deck.commander_id).length+" saved"));
     button.appendChild(details);
     button.addEventListener("click",()=>{
+      if(hasUnsavedChanges()&&!window.confirm(
+          "Discard unsaved deck changes? You can save this version first."))return;
       const choice=latestSelectionForCommander(deck.commander_id);
       summon(choice.key,{versionId:choice.version});
       closeCommanderPicker();originalSound("summon");
@@ -646,6 +654,12 @@ function saveVersion(){
     note("Give this deck version a title (1–70 characters).",true);return;
   }
   try{validateCounts(activeCounts)}catch(err){note(err.message,true);return}
+  const duplicate=deckVersionsForCommander(selectedDeck().commander_id)
+    .some(v=>v.title.trim().toLocaleLowerCase()===title.toLocaleLowerCase());
+  if(duplicate){
+    note("A saved deck with that name already exists for this commander. Choose a new name.",true);
+    return;
+  }
   const now=new Date().toISOString();
   const id="v-"+Date.now().toString(36)+"-"+Math.random().toString(36).slice(2,9);
   const record={id,title,baseKey:selected,counts:{...activeCounts},
@@ -675,8 +689,8 @@ function renderDeckVersionSelector(){
     }
     control.appendChild(saved);
   }
-  if(!selectedVersionId&&isUnsimulatedVersion()){
-    const draft=el("option","Unsaved changes to "+(LABELS[selected]||selected));
+  if(hasUnsavedChanges()){
+    const draft=el("option","● Unsaved changes to "+activeDeckTitle());
     draft.value="unsaved";
     control.appendChild(draft);
     control.value="unsaved";
@@ -685,6 +699,11 @@ function renderDeckVersionSelector(){
   }
 }
 function loadDeckSelection(value){
+  if(value==="unsaved")return;
+  if(hasUnsavedChanges()&&!window.confirm(
+      "Discard unsaved deck changes? Save as a named deck first to keep them.")){
+    renderDeckVersionSelector();return;
+  }
   if(value.startsWith("preset:")){
     const deck=data.decks.find(d=>d.key===value.slice(7));
     if(deck&&deck.commander_id===selectedDeck().commander_id)
