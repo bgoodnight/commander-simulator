@@ -14,6 +14,18 @@ Open **http://127.0.0.1:8765/** in that computer's browser. The server defaults 
 
 The browser has a responsive dark-themed deck selector, commander/inventory labels, 100-card composition, printed card types and mana values, seed/turn controls, and an observation timeline. You can copy the JSON observation to the clipboard. It does **not** let you change a cardlist or contact Scryfall.
 
+## Cached card-name autocomplete and theorycraft preflight
+
+The read-only Deck Lab now has a **Find a card** input with offline suggestions, including names from the **35,533-card Scryfall name index** downloaded once and stored in `simulator/card_data/scryfall_card_names.json`. It does not make a request for each keystroke. Entries with detailed Oracle records already cached are distinguished from names awaiting a future metadata import. **The field is informational; the U1 deck editor is not implemented yet.**
+
+For a standalone theorycrafted 100-card list, you can already use:
+
+```sh
+python tools/theorycraft.py my_modified_deck.txt --commander "Ghoulcaller Gisa"
+```
+
+The preparatory step **automatically fetches missing exact card identities** on the first run, pins the snapshot to the deck's file hash, and reuses it in later runs. Add `--offline` to prohibit fetches. The output remains an **observation only**, not a played game. [Details and API boundaries](CARD_DISCOVERY_AND_THEORYCRAFT.md).
+
 ## What is currently supported
 
 - **Six authenticated snapshots**: Magnus Premium, Magnus Budget, Wretched Ranks (Ghoulcaller Gisa), Mortarion Current ordered-plus-owned, Mortarion Ideal, and original Necron Dynasties.
@@ -32,6 +44,7 @@ Spells are **not cast**, no combat is resolved, no abilities/triggers run, color
 - `tools/deck_lab.py` is a **Python standard-library HTTP server**, bound to `127.0.0.1` by default; it only supports read-only GET endpoints.
 - `web/deck_lab.html` is a static local page using no CDN, web framework, or external images. It requests only the local API, not Scryfall.
 - `GET /api/decks`: all saved deck variants, metadata readiness, and explicit limitations.
+- `GET /api/cards/suggest?q=midnight`: local cached Oracle identities and offline full-name index suggestions only; **zero Scryfall requests**.
 - `GET /api/deck?key=mortarion_current`: verified card quantities and printed metadata.
 - `GET /api/observation?key=mortarion_current&seed=0&turns=6`: unchanged deterministic observation output (max 20 turns from the UI).
 - Input decks and manifests are read-only; no UI action writes to GitHub, mutates canonical decklists, fetches Scryfall, or enables unimplemented rules. The card-copy button only copies the returned JSON locally.
