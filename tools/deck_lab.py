@@ -20,6 +20,8 @@ if str(ROOT) not in sys.path:
 from commander_sim.deck_lab_api import (
     catalog_response, deck_detail, observation_response
 )
+from commander_sim.card_discovery import local_suggestions
+from commander_sim.deck_fixtures import SHARED_CATALOG
 
 HTML_PATH = ROOT / "web" / "deck_lab.html"
 
@@ -40,6 +42,16 @@ def respond(path, parameters, *, catalog_path=None, output_dir=None):
     if output_dir is not None:
         options["output_dir"] = output_dir
 
+    if path == "/api/cards/suggest":
+        query = only("q", "")
+        if len(query) > 150:
+            raise ValueError("Suggestion query too long")
+        # This endpoint deliberately performs zero network calls. Online name
+        # completion is an opt-in UI feature for a later milestone.
+        return {"query": query, "source": "local_cache",
+                "suggestions": local_suggestions(
+                    query, catalog_path=options.get("catalog_path", SHARED_CATALOG)
+                )}
     if path == "/api/decks":
         return catalog_response(**options)
     if path == "/api/deck":
