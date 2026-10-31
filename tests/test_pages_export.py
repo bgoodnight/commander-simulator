@@ -44,7 +44,7 @@ class StaticPagesTests(unittest.TestCase):
     def test_only_allowlisted_site_data_and_no_workspace_are_exported(self):
         self.run_build()
         permitted={"index.html","summary.html","editor.html",
-                   "app.js","style.css","decks.json",
+                   "app.js","results_insights.js","style.css","decks.json",
                    "observations.json","names.json","build-manifest.json",".nojekyll"}
         self.assertEqual({p.name for p in self.destination.iterdir()},permitted)
         self.assertNotIn("shared_scryfall_catalog.json",permitted)
@@ -113,6 +113,25 @@ class StaticPagesTests(unittest.TestCase):
         self.assertIn('$("save-local").disabled=total!==100',js)
         self.assertIn('$("export-deck").disabled=total!==100',js)
         self.assertIn('function hasUnsavedChanges()',js)
+
+    def test_results_story_uses_derived_archive_insights_and_clickable_evidence(self):
+        manifest=self.run_build()
+        html=(self.destination/"index.html").read_text(encoding="utf-8")
+        js=(self.destination/"app.js").read_text(encoding="utf-8")
+        pure=(self.destination/"results_insights.js").read_text(encoding="utf-8")
+        for key in ("results-kpis","results-takeaway","results-provenance",
+                    "detail-opening","detail-resources","detail-candidates",
+                    "story-summary-opening","story-meaning-resources",
+                    "story-caveat-candidates","turn-timeline"):
+            self.assertIn('id="'+key+'"',html)
+        self.assertIn('./results_insights.js',html)
+        self.assertIn("results_insights.js",manifest["asset_sha256"])
+        self.assertIn("DeckInsights.summarize(archives[selected])",js)
+        self.assertIn("DeckInsights.findings(aggregate)",js)
+        self.assertIn('addEventListener("click",activate)',js)
+        self.assertIn('bar.addEventListener("keydown"',js)
+        self.assertIn("root.DeckInsights=api",pure)
+        self.assertNotIn("results_sample_data",js)
 
     def test_all_canonical_commander_art_paths_are_optional_official_cdn(self):
         self.run_build()
