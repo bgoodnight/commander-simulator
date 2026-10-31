@@ -61,7 +61,7 @@ class CacheTests(unittest.TestCase):
     def test_first_import_fetches_each_unique_identity_once(self):
         manifest = self.import_deck(self.deck_a, self.output_a)
         self.assertEqual(self.requests, [("Magnus the Red", "Sol Ring", "Island")])
-        self.assertEqual(len(manifest["cards"]), 3)
+        self.assertEqual(len(manifest["manifest"]["cards"]), 3)
         self.assertEqual(len(CardCatalog(self.catalog_path).current), 3)
         self.assertEqual(len(pinned_deck_entries(self.deck_a,
                          self.output_a.with_suffix(".manifest.json"), self.catalog_path)), 3)
@@ -96,7 +96,7 @@ class CacheTests(unittest.TestCase):
         output = self.base / "imported_from_seed.json"
         manifest = fetch(deck, output, catalog_path=self.catalog_path,
                          seed_pairs=((deck, snap),), offline=True, request_batch=self.request)
-        self.assertEqual(len(manifest["cards"]), 76)
+        self.assertEqual(len(manifest["manifest"]["cards"]), 76)
         self.assertEqual(self.requests, [])
         self.assertEqual(len(CardCatalog(self.catalog_path).current), 76)
         self.assertEqual(validate_snapshot(deck, output).deck.count, 100)
@@ -117,8 +117,17 @@ class CacheTests(unittest.TestCase):
         self.assertEqual(old_entries[1]["card"]["oracle_text"], "Original metadata")
         self.assertEqual(new_entries[1]["card"]["oracle_text"], "Updated rules text")
         self.assertEqual(len(CardCatalog(self.catalog_path).revisions["sol-ring"]), 2)
+        # The old deck must remain replayable and importable after refresh.
+        self.requests.clear()
+        restored = self.import_deck(self.deck_a, self.output_a)
+        self.assertEqual(restored["fetched"], 0)
+        self.assertEqual(self.requests, [])
+        self.assertEqual(pinned_deck_entries(
+            self.deck_a, self.output_a.with_suffix(".manifest.json"),
+            self.catalog_path), initial)
+        # Refresh may not overwrite an existing pinned snapshot path.
         with self.assertRaisesRegex(ValueError, "Manifest already pins different"):
-            self.import_deck(self.deck_a, self.output_a)
+            self.import_deck(self.deck_a, self.output_a, refresh=True)
 
     def test_corrupt_revision_fails_closed(self):
         self.import_deck(self.deck_a, self.output_a)
@@ -131,7 +140,7 @@ class CacheTests(unittest.TestCase):
     def test_ambiguous_alias_rejected_and_import_not_saved(self):
         duplicate = card("Sol Ring", "counterfeit-sol")
         self.records["Island"] = duplicate
-        with self.assertRaisesRegex(ValueError, "Ambiguous cached card alias"):
+        with self.assertRaisesRegex(ValueError, "Expected one exact card/face"):
             self.import_deck(self.deck_a, self.output_a)
         self.assertFalse(self.output_a.exists())
         self.assertFalse(self.catalog_path.exists())
