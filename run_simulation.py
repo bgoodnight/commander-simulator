@@ -1,8 +1,8 @@
 """Run the current simulator with the premium deck, or the preserved budget deck."""
 import argparse,json,sys
 from pathlib import Path
-sys.path.insert(0,str(Path(__file__).resolve().parent/'simulator'/'v34_mage_siege'))
-from adventure_table import AdventureTable
+sys.path.insert(0,str(Path(__file__).resolve().parent/'simulator'/'v35_copy_targets'))
+from copy_table import CopyTable
 from altar_table import AltarTable
 
 def main():
@@ -12,7 +12,7 @@ def main():
     parser.add_argument('--rounds',type=int,default=8)
     args=parser.parse_args()
     if args.rounds<1:parser.error('rounds must be positive')
-    table=(AdventureTable if args.deck=='premium' else AltarTable)(seed=args.seed).run(args.rounds)
+    table=(CopyTable if args.deck=='premium' else AltarTable)(seed=args.seed).run(args.rounds)
     table.assert_consistent()
     print(json.dumps({'deck':args.deck,'seed':args.seed,'round_limit':args.rounds,
         'safety_stop':table.safety_stop,'life':[p.life for p in table.players],
