@@ -98,6 +98,17 @@
       </div>
       <div id="type-chips" class="chips"></div>
       <p class="small">Inventory labels reflect the saved build's intended role, not a verified physical collection.</p>
+      <div class="detail" style="margin-top:18px">
+        <h3>Find a card in the local catalog</h3>
+        <label for="card-lookup">Card name (autocomplete; no network requests)</label>
+        <input id="card-lookup" list="card-options" autocomplete="off"
+               placeholder="Try Sol Ring, Ophiomancer, Midnight…"
+               aria-describedby="card-lookup-status">
+        <datalist id="card-options"></datalist>
+        <div id="card-lookup-status" class="status" role="status">
+          Start typing to see verified cached names. Deck editing is coming next.
+        </div>
+      </div>
     </section>
     <section class="panel" aria-labelledby="run-title">
       <h2 id="run-title">2 · Explore opening turns</h2>
@@ -154,7 +165,32 @@ async function read(url) {
   if(!response.ok)throw Error(body.error || ("HTTP "+response.status));
   return body;
 }
+let suggestionTimer = null;
+async function findCachedCardNames() {
+  const query=$("card-lookup").value.trim();
+  const list=$("card-options"); clear(list);
+  if(query.length<2) {
+    $("card-lookup-status").textContent="Type at least two characters to search saved card identities.";
+    return;
+  }
+  try {
+    const result=await read("/api/cards/suggest?q="+encodeURIComponent(query));
+    if($("card-lookup").value.trim()!==query)return;
+    for(const item of result.suggestions) {
+      const option=el("option"); option.value=item.name;
+      list.appendChild(option);
+    }
+    $("card-lookup-status").textContent=result.suggestions.length
+      +" verified matches in the local catalog. No Scryfall request made.";
+  } catch(error) {
+    $("card-lookup-status").textContent="Suggestions unavailable: "+error.message;
+  }
+}
 async function init() {
+  $("card-lookup").addEventListener("input",()=>{
+    clearTimeout(suggestionTimer);
+    suggestionTimer=setTimeout(findCachedCardNames,180);
+  });
   $("deck-status").textContent="Checking offline deck metadata…";
   try {
     const data=await read("/api/decks");
