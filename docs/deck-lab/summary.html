@@ -33,43 +33,32 @@
     <a class="site-link" data-page="summary" href="./summary.html">◈ Deck Summary</a>
     <a class="site-link" data-page="editor" href="./editor.html">⚒ Card List &amp; Editor</a>
   </nav>
-  <p class="hero-note">
-    Summon a commander to explore its library, study cached draws and shape your next deck.
-    Drag a commander into the rune, or tap a portrait to summon it.
-  </p>
-  <section class="stage-shell" aria-labelledby="stage-heading">
-    <div id="stage-heading" class="stage-title">The Summoning Chamber</div>
-    <div class="stage-grid">
-      <div class="stage-side" aria-hidden="true">
-        <svg viewBox="0 0 50 50" fill="none" stroke="currentColor" stroke-width="1.6">
-          <path d="M25 5 42 22 25 45 8 22zM25 5v40M8 22h34M16 14 35 34M34 14 15 34"/>
-        </svg>
-        <span class="label">Choose your legend</span>
-        <span class="desc">Six authentic builds, each with a pinned decklist and cached card records.</span>
-      </div>
-      <div id="summon-zone" class="summon-zone">
-        <button type="button" id="drop-ring" class="drop-ring" aria-label="Choose a commander from the six cards below" title="Drag a commander here or tap a portrait below">
-          <span class="seal-placeholder"><span class="symbol">✧</span>
-            Place your<br>commander here
-          </span>
-        </button>
-      </div>
-      <div class="stage-side" aria-hidden="true">
-        <svg viewBox="0 0 50 50" fill="none" stroke="currentColor" stroke-width="1.4">
-          <path d="M10 9h30v32H10zM15 15h20v20H15zM25 3v11M25 35v12M3 25h12M35 25h12"/>
-          <circle cx="25" cy="25" r="5"/>
-        </svg>
-        <span class="label">Consult the archive</span>
-        <span class="desc">Turn the pages of your library. Listen to the stone awaken.</span>
+  <section class="compact-selection" aria-label="Commander and deck selection">
+    <div class="selector-anchor">
+      <button type="button" id="commander-medallion" class="commander-medallion"
+        aria-expanded="false" aria-controls="commander-picker"
+        aria-label="Choose commander">
+        <span id="medallion-portrait" class="medallion-portrait" aria-hidden="true">✧</span>
+        <span class="medallion-rune" aria-hidden="true">✦</span>
+      </button>
+      <div id="commander-picker" class="commander-picker" hidden>
+        <div class="picker-heading">Choose a commander</div>
+        <div id="commander-rail" class="commander-rail" role="group" aria-label="Available commanders"></div>
       </div>
     </div>
+    <div class="selection-copy">
+      <span class="eyebrow">Your commander's archive</span>
+      <h2 id="active-commander">Select a commander</h2>
+      <p id="active-deck-name">Open the rune to choose a deck.</p>
+    </div>
+    <div class="selection-actions">
+      <span id="active-deck-state" class="selection-state">Cached decks</span>
+      <a href="./editor.html" id="change-deck-link" class="stone-button">Manage decks</a>
+    </div>
   </section>
-  <div class="rail-title">Choose a deck to summon</div>
-  <div class="commander-rail" id="commander-rail" role="group" aria-label="Choose a commander deck">
-    <div class="loader" style="grid-column:1/-1"></div>
-  </div>
   <section id="app-content" hidden aria-live="off">
     <div id="page-introduction" class="page-introduction" aria-live="polite"></div>
+    <div id="results-current-warning" class="warning current-deck-warning" hidden role="status"></div>
     <div class="tab-pane" id="pane-overview">
       <div class="two-col">
         <section class="panel">
@@ -168,6 +157,12 @@
       <div class="two-col">
         <section class="panel">
           <h2 class="panel-title">The Decksmith's Forge</h2>
+          <div class="version-selector">
+            <label for="deck-version-select">Load a deck or saved version</label>
+            <select id="deck-version-select" aria-describedby="version-help"></select>
+            <p class="micro" id="version-help">Choose a built-in deck or a saved browser version. Changes stay local until you save.</p>
+            <button type="button" id="new-version-button" class="stone-button">Start a new version from this deck</button>
+          </div>
           <p class="small">Build a variation in this browser. The original deck is immutable. Edits are saved locally on this device; export to keep or share them.</p>
           <div class="control-row">
             <div class="control"><label for="remove-name">Remove one card</label><select id="remove-name"></select></div>
@@ -187,7 +182,7 @@
             <div class="control"><label for="draft-title">Version name</label><input id="draft-title" maxlength="70" placeholder="Mortarion · Plague test"></div>
           </div>
           <div class="control-row">
-            <button type="button" class="gold-button" id="save-local">Save browser version</button>
+            <button type="button" class="gold-button" id="save-local">Save as named deck</button>
             <button type="button" class="stone-button" id="export-deck">Download decklist .txt</button>
           </div>
           <p class="micro">Browser versions are stored only in this browser and can be cleared by browser settings.

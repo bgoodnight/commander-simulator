@@ -221,3 +221,95 @@ transition:opacity .8s ease,transform .8s ease}
   .story-step.reveal{opacity:1;transform:none}
   .site-link{transition:none}
 }
+
+/* Compact commander medallion: results and deck details arrive above the fold.
+ * Click/tap the rune to open a grouped commander picker. */
+.compact-selection{
+  display:flex;align-items:center;gap:18px;position:relative;
+  width:min(100%,1100px);min-height:108px;margin:12px auto 18px;
+  padding:12px 20px;
+  background:linear-gradient(110deg,#373832dd,#212a2ad9 55%,#2a2c27d8);
+  border:1px solid #897451;border-radius:20px;
+  box-shadow:inset 0 1px #d5b88255,0 8px 29px #0005;
+}
+.selector-anchor{position:relative;flex-shrink:0;z-index:35}
+.commander-medallion{
+  position:relative;width:80px;height:80px;border-radius:50%;
+  display:grid;place-items:center;overflow:hidden;
+  background:radial-gradient(circle,#3e6b69,#142529 68%);
+  border:3px solid #d6ac66;
+  box-shadow:0 0 0 4px #181d1a,0 0 0 5px #8f7954,0 0 19px #76d8bd2a,
+    inset 0 0 14px #000;
+  color:#e8ca84;transition:transform .2s,box-shadow .2s;
+}
+.commander-medallion:hover,.commander-medallion[aria-expanded=true]{
+  transform:scale(1.04);box-shadow:0 0 0 4px #18221f,0 0 0 5px #edc67e,
+    0 0 24px #82cbbb70;
+}
+.medallion-portrait{position:absolute;inset:0;display:grid;place-items:center;font-size:2.1rem}
+.medallion-art{display:block;width:100%;height:100%;object-fit:cover;object-position:center 20%}
+.medallion-rune{position:absolute;right:-1px;bottom:-1px;display:grid;place-items:center;
+width:23px;height:23px;background:#3e554e;color:#ffecb9;border:1px solid #d4b77e;
+border-radius:50%;font-size:12px;box-shadow:0 0 10px #000}
+.commander-picker{
+  position:absolute;z-index:50;top:calc(100% + 15px);left:-13px;
+  width:min(420px,calc(100vw - 35px));max-height:min(70vh,570px);overflow:auto;
+  padding:16px;border:2px solid #c19c64;border-radius:16px;
+  background:linear-gradient(145deg,#383932,#121f21 90%);
+  box-shadow:0 19px 55px #000b,0 0 22px #caa15e44;
+}
+.picker-heading{font-family:Cinzel,Georgia,serif;letter-spacing:.13em;
+color:var(--gold);font-size:.82rem;text-align:center;margin-bottom:12px}
+.commander-picker .commander-rail{display:grid;grid-template-columns:1fr;gap:8px}
+.commander-choice{
+  display:flex;align-items:center;gap:12px;width:100%;padding:7px;
+  border-radius:11px;border:1px solid #796a51;
+  color:var(--ink);background:linear-gradient(130deg,#48473b,#233133);
+  text-align:left;transition:background .15s;
+}
+.commander-choice:hover{background:#536455;border-color:var(--gold)}
+.commander-choice .choice-art{width:62px;height:62px;flex-shrink:0;
+object-fit:cover;object-position:center 21%;border-radius:9px;
+border:1px solid #c7a363}
+.commander-choice span{display:grid;gap:5px;min-width:0}
+.commander-choice strong{font-family:Cinzel,Georgia,serif;font-size:.86rem}
+.commander-choice small{font-size:.72rem}
+.selection-copy{min-width:0;flex:1}
+.selection-copy .eyebrow{font-size:.66rem}
+.selection-copy h2{font-size:clamp(1rem,1.9vw,1.32rem);
+margin:4px 0 6px;color:#edd5a6;line-height:1.2}
+.selection-copy p{font-size:.78rem;margin:0;color:#d2be95}
+.selection-actions{display:flex;align-items:center;gap:11px;flex-wrap:wrap}
+.selection-actions .stone-button{font-size:.7rem;text-decoration:none;padding:9px 10px}
+.selection-state{font-size:.67rem;color:#afcfc3;max-width:180px;text-align:right}
+.page-introduction{margin:17px auto 18px}
+.page-introduction h1{font-size:clamp(1.55rem,2.6vw,2.25rem)}
+.version-selector{background:#151e1cae;padding:14px;border:1px solid #78654b;
+border-radius:10px;margin-bottom:19px;display:grid;gap:8px}
+.version-selector label{font-family:Cinzel,Georgia,serif;font-size:.82rem;color:#efd9a7}
+.version-selector select{width:100%;max-width:100%;font-weight:600}
+.version-selector p{margin:0}
+.version-selector button{justify-self:start;font-size:.75rem}
+.saved-row.selected-version{border-color:#dcb16e;box-shadow:0 0 12px #caaa5440}
+.current-deck-warning{margin:10px 0 19px}
+#pane-records .warning.current-deck-warning{margin:0}
+@media(max-width:720px){
+  .compact-selection{gap:13px;padding:10px 11px;min-height:86px}
+  .commander-medallion{width:62px;height:62px}
+  .selection-copy h2{font-size:1rem}
+  .selection-copy p,.selection-state{font-size:.67rem}
+  .selection-actions{gap:5px;justify-content:flex-end}
+  .selection-actions .stone-button{padding:7px 8px;font-size:.64rem}
+  .commander-picker{left:-6px}
+}
+@media(max-width:450px){
+  .compact-selection{flex-wrap:wrap}
+  .selector-anchor{order:0}
+  .selection-copy{order:1;flex:1 1 calc(100% - 96px)}
+  .selection-actions{order:2;width:100%;justify-content:space-between;
+    border-top:1px solid #6d654f;padding-top:8px}
+  .selection-state{text-align:left}
+}
+@media(prefers-reduced-motion:reduce){
+  .commander-medallion,.commander-choice{transition:none!important}
+}
