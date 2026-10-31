@@ -1,0 +1,56 @@
+{
+  "format": 1,
+  "source_engine_commit": "d13047b22e9d915b670c9a98397ee35952d504d7",
+  "description": "Forced fixtures; mana pools are declared, not source-paid games. Decisions and semantic outputs are versioned.",
+  "scenarios": {
+    "tutor_to_rift": {
+      "decisions": [
+        [
+          "merchant_scroll",
+          427
+        ]
+      ],
+      "sha256": "4de62c219185cd77154b2711cd03ee02d3841e797dc76691969e6de0e9098b41",
+      "life": [
+        40,
+        40,
+        40,
+        40
+      ]
+    },
+    "copy_and_buyback": {
+      "decisions": [
+        [
+          "reiterate_buyback",
+          1
+        ]
+      ],
+      "sha256": "a5bc39ce82c327d7ec53523a983d7eae7fc287f6ef02a0d62e79b950e5e32eaf",
+      "life": [
+        40,
+        40,
+        40,
+        40
+      ]
+    },
+    "adventure_harmonic": {
+      "decisions": [
+        [
+          "cast_adventure",
+          429
+        ],
+        [
+          "play_adventure_land",
+          432
+        ]
+      ],
+      "sha256": "e892b2343cd77c4f331e0c33c4cf4439dec839ec8424a31d55ff7ffc00afebb3",
+      "life": [
+        40,
+        38,
+        38,
+        38
+      ]
+    }
+  }
+}

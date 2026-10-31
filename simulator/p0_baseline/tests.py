@@ -1,4 +1,6 @@
-import unittest
+import unittest,json
+from pathlib import Path
+from scenarios import scenario
 from baseline import CopyTable,check
 from altar_table import AltarTable,AltarAbility
 from resources import Cost,U,R
@@ -35,6 +37,10 @@ class ProviderCompositionTests(unittest.TestCase):
   victim=t.add_creature(p,1,1,'fixture',token=True).id
   self.assertTrue(any(isinstance(a,AltarAbility) for a in dict(t.resources.sources(p.seat))[victim]))
   self.assertEqual({a.output for a in t.resources.abilities(t.rules.get(lind))},{R});t.assert_consistent()
+ def test_explicit_interaction_replays(self):
+  data=json.loads(Path(__file__).with_name("SCENARIOS.json").read_text())
+  for name,expected in data["scenarios"].items():
+   with self.subTest(name=name):self.assertEqual(scenario(name),expected)
  def test_frozen_current_replays(self):self.assertEqual(check(),4)
 
 if __name__=='__main__':unittest.main()

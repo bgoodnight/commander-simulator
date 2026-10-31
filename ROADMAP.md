@@ -19,7 +19,7 @@ Status: shared zones, source payments, stack/priority, combat and selected cards
 Dependencies: none. Audit findings A1, A9, A10.
 
 1. **Completed:** reproduced and fixed Frostboil Snarl losing U/R mana in the assembled budget engine by registering its abilities in the shared provider catalog. The Altar integration regression verifies source-paid blue mana. Broader provider-composition contracts and premium integration remain to be completed.
-2. **Initial baseline complete:** four eight-round premium cases include deck hash, engine revision, seed/seat, resulting state, RNG and semantic fingerprints. These are end-state references, not resumable snapshots or a complete choice transcript. Expand cases and retain corrected bug expectations before claiming comprehensive equivalence.
+2. **Initial baseline complete:** four eight-round premium cases include deck hash, engine revision, seed/seat, resulting state, RNG and semantic fingerprints. These are end-state references, not resumable snapshots or a complete choice transcript. Three additional forced interaction fixtures record explicit decisions for tutor, copy/buyback, and Adventure/Harmonic paths. Expand cases and retain corrected bug expectations before claiming comprehensive equivalence.
 3. **Initial benchmark complete:** reproducible initialization, 8/12-round, token-target and stack/payment diagnostics are recorded in `simulator/p0_baseline/`. Timing is unprofiled, host-dependent, and does not change safety budgets.
 4. **Initial checks complete:** the runner verifies actual test counts, and assembled budget/premium provider checks join historical suites. Broaden capability coverage as providers are extracted.
 
@@ -108,4 +108,4 @@ P7a depends on P4 and stable current references; full new caching waits for requ
 
 ## Immediate next session
 
-Continue **P0/P1**: expand the initial four-case replay corpus to include representative supported interactions and explicit decisions, then begin package extraction behind compatibility checks. The Frostboil fix, initial provider checks and benchmark protocol are complete.
+Continue **P0/P1**: expand the initial replay corpus beyond its three explicit interaction fixtures and begin package extraction behind compatibility checks. The Frostboil fix, initial provider checks and benchmark protocol are complete.
