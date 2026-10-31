@@ -4,7 +4,7 @@ Updated October 31, 2026 after the v35 [architecture audit](docs/ARCHITECTURE_AU
 
 Current entry point: `run_simulation.py` -> `CopyTable`. Default deck: committed `decklists/magnus_thousand_sons_v1_14_premium.txt`, updated in `b9b3ba0abcd19676ec4f32cc9f427e52c1f55d8b`; Training Center and Otawara are pending and represented by basics. Preserve v1.13 budget and historical lists. Do not silently substitute trial/pre-delivery lists from other work.
 
-Status: shared zones, source payments, stack/priority, combat and selected cards work. All 36 suites pass (784 observed tests); v35's recorded 200-game sweep has no safety stops. Coverage: 41 supported subsets, 6 partial, 35 unsupported distinct names. This does not certify deck strength. Normal mono-black and multiple-real-deck configurations are not yet supported.
+Status: shared zones, source payments, stack/priority, combat and selected cards work. All 37 suites pass (794 observed tests); v35's recorded 200-game sweep has no safety stops. Coverage: 41 supported subsets, 6 partial, 35 unsupported distinct names. This does not certify deck strength. Normal mono-black and multiple-real-deck configurations are not yet supported.
 
 ## Priority and working rules
 
@@ -41,7 +41,7 @@ Depends on the P0 provider fix and baseline; runs **before or alongside P1 extra
 
 Depends on P0. Findings A3, A7.
 
-1. Introduce a normal package and explicit imports; remove dependence on `sys.path` order and shared module names such as `cards`, `table`, `state`, `resources`.
+1. **Started:** `commander_sim` provides a normal package, dependency-validated service registry, and subprocess-isolated legacy adapter. Historical rules still use `sys.path` and shared module names; migrate their actual implementations before claiming import isolation.
 2. Construct state/zones, queries, resources, stack/priority, events, effect registry and pilots once through a factory. Use narrow interfaces and explicit registration; reject duplicate capabilities.
 3. Wrap existing handlers initially, then port one vertical slice at a time. Remove named-card table overrides without changing their semantics.
 4. Keep historical engines/tests runnable but progressively remove them from active dependencies. Preserve milestones with git history/tags, not another superclass for every new card.
@@ -120,4 +120,4 @@ P7a depends on P4 and stable current references; full new caching waits for requ
 
 ## Immediate next session
 
-Prioritize **P0.5 DeckProvider** now, alongside P1 compatibility-safe package extraction: unify premium/budget deck choice on one active engine, add explicit deck-file loading and truthful unsupported-card coverage, then validate one real v0.7 six-turn trace and benchmark. Continue expanding P0 replay fixtures; preserve the baseline and avoid new historical table subclasses.
+Prioritize **P0.5 DeckProvider** now, alongside P1 compatibility-safe package extraction (the registry and subprocess adapter are initial seams only): unify premium/budget deck choice on one active engine, add explicit deck-file loading and truthful unsupported-card coverage, then validate one real v0.7 six-turn trace and benchmark. Continue expanding P0 replay fixtures; preserve the baseline and avoid new historical table subclasses.
