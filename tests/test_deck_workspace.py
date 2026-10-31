@@ -6,7 +6,10 @@ import tempfile
 import unittest
 from unittest.mock import patch
 
-from commander_sim.deck_workspace import compose_draft, save_draft, saved_versions
+from commander_sim.deck_workspace import (
+    compose_draft, save_draft, saved_versions,
+    get_saved_version, observe_saved_version
+)
 from commander_sim.deck_fixtures import FIXTURES, SHARED_CATALOG
 from commander_sim.card_cache import pinned_deck_entries
 from commander_sim.snapshots import validate_snapshot
@@ -87,6 +90,28 @@ class DeckWorkspaceTests(unittest.TestCase):
             post_response("/api/draft/preview", dict(payload, title="bad"))
         with self.assertRaises(KeyError):
             post_response("/api/draft/unknown", payload)
+
+    def test_saved_variant_produces_deterministic_offline_observations(self):
+        saved = save_draft(self.key, self.swaps, "Observe Gisa Experiment",
+                           workspace=self.workspace)
+        version = saved_versions(workspace=self.workspace)[0]
+        self.assertEqual(get_saved_version(
+            version["id"], workspace=self.workspace)["deck_sha256"],
+            saved["deck_sha256"])
+        with patch("urllib.request.urlopen", side_effect=AssertionError("Network")):
+            first = observe_saved_version(version["id"],
+                        workspace=self.workspace, seed=5, turns=4)
+            again = observe_saved_version(version["id"],
+                        workspace=self.workspace, seed=5, turns=4)
+        self.assertEqual(first, again)
+        self.assertEqual(first["mode"], "observation")
+        self.assertEqual(len(first["trace"]), 4)
+
+    def test_saved_variant_id_rejects_traversal_and_unknown(self):
+        with self.assertRaisesRegex(ValueError, "Invalid saved version ID"):
+            get_saved_version("../secret", workspace=self.workspace)
+        with self.assertRaisesRegex(ValueError, "Saved version not found"):
+            observe_saved_version("no-such-version", workspace=self.workspace)
 
     def test_saved_version_tampering_is_detected(self):
         saved = save_draft(self.key, self.swaps, "Integrity Test",
