@@ -11,7 +11,8 @@ on:
       - ".github/workflows/deck-lab-pages.yml"
   workflow_dispatch:
 permissions:
-  contents: read
+  # Only the allowlisted static export is committed under docs/deck-lab/.
+  contents: write
   pages: write
   id-token: write
 concurrency:
@@ -41,6 +42,28 @@ jobs:
           name: deck-lab-static-preview
           path: ./dist/pages
           retention-days: 7
+      - name: Publish branch-compatible Deck Lab files under docs/deck-lab
+        run: |
+          # Root-index Pages can serve docs/deck-lab/ directly. This is
+          # supplemental to the official workflow Pages artifact/deployment.
+          # Avoid publishing stale data from a superseded build run.
+          git fetch origin main
+          if [ "$(git rev-parse HEAD)" != "$(git rev-parse origin/main)" ]; then
+            echo "Main advanced since checkout; skipping stale branch export." >> "$GITHUB_STEP_SUMMARY"
+          else
+            mkdir -p docs/deck-lab
+            rsync -a --delete ./dist/pages/ ./docs/deck-lab/
+            git config user.name "github-actions[bot]"
+            git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+            git add -A docs/deck-lab
+            if ! git diff --cached --quiet; then
+              git commit -m "Publish validated Deck Lab static site for branch-based Pages"
+              git push origin HEAD:main
+              echo "Published the allowlisted static site in docs/deck-lab/." >> "$GITHUB_STEP_SUMMARY"
+            else
+              echo "Branch-compatible static site already matches export." >> "$GITHUB_STEP_SUMMARY"
+            fi
+          fi
       - name: Check and best-effort enable Pages
         id: pages-check
         env:
