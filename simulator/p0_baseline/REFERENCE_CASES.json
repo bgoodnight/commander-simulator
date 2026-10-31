@@ -1,0 +1,73 @@
+{
+  "format": 1,
+  "engine": "CopyTable v35 after Frostboil fix",
+  "engine_commit": "d13047b22e9d915b670c9a98397ee35952d504d7",
+  "deck_sha256": "6a3b0eee03ebc1f79d751ca3b23f8e079622ded08f5d41280ec2d4a32d4e21fc",
+  "scope": "End-of-game deterministic semantic fingerprints; default pilot choices and RNG states included. Does not serialize a resumable mid-game checkpoint.",
+  "cases": [
+    {
+      "seat": 0,
+      "seed": 0,
+      "rounds": 8,
+      "expected": {
+        "sha256": "50da9c06dfbeacc3c9fa4f7e767e129f1c2d0e6b1f56b2670b2ef876c77ee3a8",
+        "life": [
+          36,
+          40,
+          31,
+          28
+        ],
+        "reason": "turn_limit",
+        "safety": null
+      }
+    },
+    {
+      "seat": 1,
+      "seed": 1,
+      "rounds": 8,
+      "expected": {
+        "sha256": "712e786c923242b4d12c147e6c9af284209a8b5e54bd6dec3b860b8ecf429951",
+        "life": [
+          40,
+          26,
+          34,
+          28
+        ],
+        "reason": "turn_limit",
+        "safety": null
+      }
+    },
+    {
+      "seat": 2,
+      "seed": 2,
+      "rounds": 8,
+      "expected": {
+        "sha256": "dbfbe3c9102758a9e99e1555856d9362ad12d461be35b1a154ca35f263476f0d",
+        "life": [
+          40,
+          35,
+          26,
+          30
+        ],
+        "reason": "turn_limit",
+        "safety": null
+      }
+    },
+    {
+      "seat": 3,
+      "seed": 3,
+      "rounds": 8,
+      "expected": {
+        "sha256": "0afb42041a1dec7eac28b6d0be034db08ae05288b344bd8cac01af27148cdc8a",
+        "life": [
+          30,
+          17,
+          10,
+          17
+        ],
+        "reason": "turn_limit",
+        "safety": null
+      }
+    }
+  ]
+}

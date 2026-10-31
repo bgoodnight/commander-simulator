@@ -4,7 +4,7 @@ Updated October 31, 2026 after the v35 [architecture audit](docs/ARCHITECTURE_AU
 
 Current entry point: `run_simulation.py` -> `CopyTable`. Default deck: committed `decklists/magnus_thousand_sons_v1_14_premium.txt`, updated in `b9b3ba0abcd19676ec4f32cc9f427e52c1f55d8b`; Training Center and Otawara are pending and represented by basics. Preserve v1.13 budget and historical lists. Do not silently substitute trial/pre-delivery lists from other work.
 
-Status: shared zones, source payments, stack/priority, combat and selected cards work. All 35 suites pass (781 expected tests); v35's recorded 200-game sweep has no safety stops. Coverage: 41 supported subsets, 6 partial, 35 unsupported distinct names. This does not certify deck strength. Normal mono-black and multiple-real-deck configurations are not yet supported.
+Status: shared zones, source payments, stack/priority, combat and selected cards work. All 36 suites pass (784 observed tests); v35's recorded 200-game sweep has no safety stops. Coverage: 41 supported subsets, 6 partial, 35 unsupported distinct names. This does not certify deck strength. Normal mono-black and multiple-real-deck configurations are not yet supported.
 
 ## Priority and working rules
 
@@ -19,9 +19,9 @@ Status: shared zones, source payments, stack/priority, combat and selected cards
 Dependencies: none. Audit findings A1, A9, A10.
 
 1. **Completed:** reproduced and fixed Frostboil Snarl losing U/R mana in the assembled budget engine by registering its abilities in the shared provider catalog. The Altar integration regression verifies source-paid blue mana. Broader provider-composition contracts and premium integration remain to be completed.
-2. Freeze current references: deck hash, engine/rules revision, seed/seat, choices/RNG state, outputs and semantic fingerprints. Keep the known-bug case separately with corrected expectations; do not claim bug-fix equivalence.
-3. Record reproducible initialization and 8/12-round benchmarks, token-heavy targets and stack/payment stress. Separate profiler overhead, normal timings and wall-clock safety stops.
-4. Observe actual test counts rather than printing expectations; add assembled-engine provider/capability checks alongside historical suites.
+2. **Initial baseline complete:** four eight-round premium cases include deck hash, engine revision, seed/seat, resulting state, RNG and semantic fingerprints. These are end-state references, not resumable snapshots or a complete choice transcript. Expand cases and retain corrected bug expectations before claiming comprehensive equivalence.
+3. **Initial benchmark complete:** reproducible initialization, 8/12-round, token-target and stack/payment diagnostics are recorded in `simulator/p0_baseline/`. Timing is unprofiled, host-dependent, and does not change safety budgets.
+4. **Initial checks complete:** the runner verifies actual test counts, and assembled budget/premium provider checks join historical suites. Broaden capability coverage as providers are extracted.
 
 **Exit gate:** Frostboil works with Altar, premium behavior remains correct, unrelated providers cannot vanish silently, and the comparison corpus/benchmark protocol exists.
 
@@ -108,4 +108,4 @@ P7a depends on P4 and stable current references; full new caching waits for requ
 
 ## Immediate next session
 
-Continue **P0**: add broader provider-composition contracts and premium integration checks, then freeze the current comparison corpus and benchmark protocol before extraction. P0.1 Frostboil regression is fixed.
+Continue **P0/P1**: expand the initial four-case replay corpus to include representative supported interactions and explicit decisions, then begin package extraction behind compatibility checks. The Frostboil fix, initial provider checks and benchmark protocol are complete.

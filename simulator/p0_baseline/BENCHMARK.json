@@ -1,0 +1,62 @@
+{
+  "python": "3.12.14",
+  "platform": "Linux-6.18.57-x86_64-with-glibc2.39",
+  "deck_sha256": "6a3b0eee03ebc1f79d751ca3b23f8e079622ded08f5d41280ec2d4a32d4e21fc",
+  "trace": false,
+  "samples": 4,
+  "initialization": {
+    "samples_ms": [
+      9.395,
+      8.655,
+      8.337,
+      8.234
+    ],
+    "median_ms": 8.496,
+    "safety_stops": []
+  },
+  "eight_round": {
+    "samples_ms": [
+      505.047,
+      618.6,
+      396.226,
+      449.068
+    ],
+    "median_ms": 477.058,
+    "safety_stops": []
+  },
+  "twelve_round": {
+    "samples_ms": [
+      814.191,
+      790.676,
+      741.646,
+      685.944
+    ],
+    "median_ms": 766.161,
+    "safety_stops": []
+  },
+  "target_stress": [
+    {
+      "tokens": 10,
+      "pairs": 45,
+      "elapsed_ms": 0.656
+    },
+    {
+      "tokens": 30,
+      "pairs": 435,
+      "elapsed_ms": 1.609
+    },
+    {
+      "tokens": 60,
+      "pairs": 1770,
+      "elapsed_ms": 6.025
+    }
+  ],
+  "payment_and_stack_stress": {
+    "payment_tokens": 8,
+    "payment_states": 41,
+    "payment_ms": 0.394,
+    "stack_copy_ms": 10.723,
+    "max_stack_depth": 2
+  },
+  "limitations": "Unprofiled single-process elapsed times; host load and game paths vary. No deck-strength inference. No safety budget is changed."
+}
