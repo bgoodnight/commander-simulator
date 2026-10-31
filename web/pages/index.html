@@ -7,6 +7,7 @@
   <meta name="description" content="Commander Deck Lab: explore cached Commander decklists, card art and precomputed early-turn observations.">
   <title>Commander Deck Lab — The Arcane Table</title>
   <link rel="stylesheet" href="./style.css">
+  <script src="https://cdn.jsdelivr.net/npm/d3@7/dist/d3.min.js" defer></script>
   <script src="./app.js" defer></script>
 </head>
 <body>
@@ -27,6 +28,11 @@
       <a class="little-button" href="https://github.com/bgoodnight/commander-simulator" target="_blank" rel="noopener noreferrer">Source on GitHub</a>
     </div>
   </header>
+  <nav class="site-navigation" aria-label="Main pages">
+    <a class="site-link" data-page="results" href="./index.html">✧ Simulation Results</a>
+    <a class="site-link" data-page="summary" href="./summary.html">◈ Deck Summary</a>
+    <a class="site-link" data-page="editor" href="./editor.html">⚒ Card List &amp; Editor</a>
+  </nav>
   <p class="hero-note">
     Summon a commander to explore its library, study cached draws and shape your next deck.
     Drag a commander into the rune, or tap a portrait to summon it.
@@ -63,12 +69,7 @@
     <div class="loader" style="grid-column:1/-1"></div>
   </div>
   <section id="app-content" hidden aria-live="off">
-    <nav class="nav-tabs" aria-label="Deck Lab sections">
-      <button class="navtab selected" data-tab="overview" type="button" aria-current="page">✦ Overview</button>
-      <button class="navtab" data-tab="library" type="button">◈ Card Library</button>
-      <button class="navtab" data-tab="records" type="button">◉ Cached Results</button>
-      <button class="navtab" data-tab="workshop" type="button">⚒ Deck Workshop</button>
-    </nav>
+    <div id="page-introduction" class="page-introduction" aria-live="polite"></div>
     <div class="tab-pane" id="pane-overview">
       <div class="two-col">
         <section class="panel">
@@ -132,6 +133,36 @@
           <div id="turn-timeline" class="timeline"><p>Select a saved seed.</p></div>
         </section>
       </div>
+    </div>
+    <div class="tab-pane" id="pane-insights" hidden>
+      <section class="scroll-story" aria-labelledby="story-head">
+        <div class="story-heading">
+          <span class="eyebrow">Reading the arcane record</span>
+          <h2 id="story-head">A deck's opening turns, revealed</h2>
+          <p>Scroll to reveal three perspectives on the selected cached observation. These are descriptive measurements, not rules-engine decisions.</p>
+        </div>
+        <article class="story-step reveal" data-chart="sources">
+          <div class="story-copy"><div class="story-num">I · Resource growth</div>
+            <h3>How the land base unfolds</h3>
+            <p>Modeled mana sources by turn. Land abilities and colored spell payment are not executed in this observation.</p>
+          </div>
+          <div class="story-graphic panel"><h3>Modeled sources by turn</h3><div id="scroll-sources"></div></div>
+        </article>
+        <article class="story-step reveal" data-chart="hand">
+          <div class="story-copy"><div class="story-num">II · Cards in hand</div>
+            <h3>The choices that accumulate</h3>
+            <p>Hand size is an observed quantity, not a guarantee those cards could be cast under Magic's rules.</p>
+          </div>
+          <div class="story-graphic panel"><h3>Hand size over six turns</h3><div id="scroll-hand"></div></div>
+        </article>
+        <article class="story-step reveal" data-chart="candidates">
+          <div class="story-copy"><div class="story-num">III · Mana-value candidates</div>
+            <h3>Possible avenues, not played spells</h3>
+            <p>These counts describe a simple mana-value screen. Costs, timing, targets and abilities have not been resolved.</p>
+          </div>
+          <div class="story-graphic panel"><h3>Candidate counts by turn</h3><div id="scroll-candidates"></div></div>
+        </article>
+      </section>
     </div>
     <div class="tab-pane" id="pane-workshop" hidden>
       <div class="two-col">
