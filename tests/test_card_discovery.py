@@ -115,11 +115,19 @@ class DiscoveryTests(unittest.TestCase):
             "1 Midnight Banshee\n97 Swamp\n", encoding="utf-8")
         self.prepare()
         with patch("urllib.request.urlopen", side_effect=AssertionError("No API requests")):
-            matches = local_suggestions("mid", catalog_path=self.catalog)
+            # Isolate this cache-only test from the optional globally downloaded
+            # full-name index (which contains many other Midnight cards).
+            no_names = self.root / "missing_name_index.json"
+            matches = local_suggestions("mid", catalog_path=self.catalog,
+                                        name_catalog_path=no_names)
             self.assertEqual([m["name"] for m in matches], ["Midnight Banshee"])
             self.assertEqual(matches[0]["source"], "local_cache")
-            self.assertEqual(local_suggestions("so", catalog_path=self.catalog)[0]["name"], "Sol Ring")
-            self.assertEqual(local_suggestions("x", catalog_path=self.catalog), [])
+            self.assertEqual(local_suggestions(
+                "so", catalog_path=self.catalog,
+                name_catalog_path=no_names)[0]["name"], "Sol Ring")
+            self.assertEqual(local_suggestions(
+                "x", catalog_path=self.catalog,
+                name_catalog_path=no_names), [])
         with self.assertRaises(ValueError):
             local_suggestions("b" * 151, catalog_path=self.catalog)
 
