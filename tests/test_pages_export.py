@@ -52,7 +52,7 @@ class StaticPagesTests(unittest.TestCase):
         page=(self.destination/"index.html").read_text()
         script=(self.destination/"app.js").read_text()
         self.assertIn("commander-rail",page)
-        self.assertIn("drop-ring",page)
+        self.assertIn("commander-medallion",page)
         self.assertIn("audio-toggle",page)
         self.assertIn("Simulation Results",page)
         self.assertIn("prefers-reduced-motion",(self.destination/"style.css").read_text())
@@ -69,7 +69,7 @@ class StaticPagesTests(unittest.TestCase):
                 self.assertIn('data-page="results"',page)
                 self.assertIn('data-page="summary"',page)
                 self.assertIn('data-page="editor"',page)
-                self.assertIn('id="summon-zone"',page)
+                self.assertIn('id="commander-picker"',page)
                 self.assertIn('id="pane-insights"',page)
                 self.assertIn('d3@7',page)
                 self.assertIn(name,manifest["asset_sha256"])
@@ -80,6 +80,25 @@ class StaticPagesTests(unittest.TestCase):
         self.assertIn("IntersectionObserver",js)
         self.assertIn("window.d3",js)
         self.assertIn("window.history.replaceState",js)
+
+    def test_compact_commander_picker_and_named_version_workflow(self):
+        self.run_build()
+        html=(self.destination/"editor.html").read_text(encoding="utf-8")
+        script=(self.destination/"app.js").read_text(encoding="utf-8")
+        css=(self.destination/"style.css").read_text(encoding="utf-8")
+        for needle in ('id="commander-medallion"', 'id="commander-picker"',
+                       'id="active-commander"', 'id="active-deck-name"',
+                       'id="deck-version-select"', 'id="new-version-button"',
+                       'id="save-local"', 'id="draft-title"'):
+            self.assertIn(needle,html)
+        for needle in ("latestSelectionForCommander", "loadDeckSelection",
+                       "renderDeckVersionSelector", "preferredByCommander",
+                       "lastCommanderId", "isUnsimulatedVersion",
+                       "selectedVersionId", "versionById", "saveVersion"):
+            self.assertIn(needle,script)
+        self.assertIn("No cached observations for this saved deck",script)
+        self.assertIn(".compact-selection",css)
+        self.assertIn(".commander-picker",css)
 
     def test_all_canonical_commander_art_paths_are_optional_official_cdn(self):
         self.run_build()
