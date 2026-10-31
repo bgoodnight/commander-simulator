@@ -73,17 +73,20 @@ class DeckProvider:
         section_count = 0
         for number, raw in enumerate(text.splitlines(), 1):
             line = raw.strip()
-            # Decklists may contain standalone provenance/section comments; never
-            # interpret these as card entries or as evidence of a card type.
-            if not line or line.startswith('#'):
+            # Headings describe sections, never card type; other comments are ignored.
+            if not line:
                 continue
-            heading = re.fullmatch(r'(Commander|Library|Creatures|Other Permanents|Instants and Sorceries|Lands)(?: \((\d+)\))?', line)
+            comment = line.startswith('#')
+            heading_text = line[1:].strip() if comment else line
+            heading = re.fullmatch(r'(Commander|Library|Creatures|Other Permanents|Instants and Sorceries|Instants|Sorceries|Enchantments|Artifacts|Lands)(?: \((\d+)\))?', heading_text)
             if heading:
                 if declared is not None and section_count != declared:
                     raise ValueError(f'Section count differs from declared {declared}')
                 section = 'Commander' if heading[1] == 'Commander' else 'Library'
                 declared = int(heading[2]) if heading[2] else None
                 section_count = 0
+                continue
+            if comment:
                 continue
             match = re.fullmatch(r'([1-9]\d*) (\S(?:.*\S)?)', line)
             if not match or section is None:

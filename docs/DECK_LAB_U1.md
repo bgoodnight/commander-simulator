@@ -18,7 +18,7 @@ Open `http://127.0.0.1:8765/` in the **same** computer/browser environment. Work
 2. Under **Theorycraft a new version**, select a card to remove and type an exact card name to add. Scryfall's **35,533-name** local index helps with spelling; however, **U1 swaps require the selected card's detailed Oracle record to already be cached**. An uncached name displays an error rather than secretly contacting Scryfall.
 3. Click **Try swap**. The Python backend revalidates a 100-card singleton Commander deck with the original commander and its color identity; invalid swaps are not added to the draft. Multiple successive swaps can be stacked, undone or reverted. The display shows the signed card-count difference for each changed name.
 4. Enter a title and click **Save validated copy**. The system writes an entirely new immutable local `workspace/deck_lab/<title>-<deck-hash>.txt`, a metadata record and a matching deck-hash-pinned offline snapshot and manifest under `workspace/deck_lab/metadata/`. A saved variant is never written over a canonical fixture or an existing saved version.
-5. Under **Saved local versions**, use **Observe version** to run the existing deterministic observation using the saved deck's own snapshot. These are opening-hand and mana-value candidate observations—not legal casting or resolved Magic abilities.
+5. Under **Saved local versions**, use **Observe version** to run the existing deterministic observation using the saved deck's own snapshot. The result labels the saved copy explicitly. The editor search supplies its own offline suggestions and distinguishes names requiring metadata import. A failed swap preserves the previous valid draft. These are opening-hand and mana-value candidate observations—not legal casting or resolved Magic abilities.
 
 The server binds only to `127.0.0.1` by default. U1 preview/save POST requests require same-origin local HTTP JSON and bounded payloads; no Scryfall requests occur on typing, preview, save or observation.
 
@@ -45,3 +45,5 @@ Regression tests cover legal and illegal swaps, unchanged source fixtures, stric
 **U2** connects the same existing `prepare_theorycraft_deck()` cache-first service to an explicit new-card import action at deck editing time, with a preview of fetched metadata and full Commander legality before saving. It should not call Scryfall per keystroke or during gameplay.
 
 **U3** adds mana-curve visuals, readable version comparisons, hand and turn timelines. Use Work mode to visually inspect this first interface before polishing or adding elaborate tabletop interactions.
+
+The observation settings optionally apply one free multiplayer mulligan under a conservative land-count policy. Basic lands and Command Tower are the only currently modeled sources; candidate spells remain a total-mana-value screen, not legal actions.

@@ -189,7 +189,7 @@ def get_saved_version(version_id, *, workspace=DEFAULT_WORKSPACE,
 
 
 def observe_saved_version(version_id, *, workspace=DEFAULT_WORKSPACE,
-                          catalog_path=SHARED_CATALOG, seed=0, turns=6):
+                          catalog_path=SHARED_CATALOG, seed=0, turns=6, mulligan='keep'):
     """No network; reuse the same observation engine as canonical fixtures."""
     if not isinstance(seed, int) or isinstance(seed, bool):
         raise ValueError("Seed must be an integer")
@@ -200,7 +200,7 @@ def observe_saved_version(version_id, *, workspace=DEFAULT_WORKSPACE,
     )
     from .observation import observe
     return observe(version["deck_path"], version["snapshot"],
-                   commander=version["commander"], seed=seed, turns=turns)
+                   commander=version["commander"], seed=seed, turns=turns, mulligan=mulligan)
 
 
 def saved_versions(*, workspace=DEFAULT_WORKSPACE):

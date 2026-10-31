@@ -32,6 +32,13 @@ class DeckWorkspaceTests(unittest.TestCase):
         self.assertEqual(changed, {"Swamp": -1, "Pestilence": 1})
         self.assertFalse(result["actual_gameplay_available"])
 
+    def test_saved_version_observation_accepts_mulligan_policy(self):
+        save_draft(self.key, self.swaps, 'Mulligan test', workspace=self.workspace)
+        version = saved_versions(workspace=self.workspace)[0]
+        result=observe_saved_version(version['id'],workspace=self.workspace,seed=0,mulligan='one-free')
+        self.assertEqual(result['mulligan']['policy'],'one-free')
+        self.assertEqual(len(result['opening_hand']),7)
+
     def test_save_as_pins_replay_and_never_edits_original_fixture(self):
         fixture = next(f for f in FIXTURES if f.key == self.key)
         before = hashlib.sha256(fixture.deck_path.read_bytes()).hexdigest()

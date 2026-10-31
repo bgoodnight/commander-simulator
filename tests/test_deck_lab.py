@@ -49,6 +49,15 @@ class DeckLabTests(unittest.TestCase):
         with self.assertRaisesRegex(ValueError, "Unknown deck fixture"):
             respond("/api/deck", {"key": ["fake"]})
 
+    def test_optional_free_mulligan_and_invalid_policy(self):
+        data=respond('/api/observation',{'key':['wretched_ranks'],'seed':['0'],
+                                         'turns':['6'],'mulligan':['one-free']})
+        self.assertEqual(data['mulligan']['decision'],'mulligan')
+        self.assertEqual(len(data['opening_hand']),7)
+        self.assertTrue(all(not turn['playable_now'] for turn in data['trace']))
+        with self.assertRaisesRegex(ValueError,'Mulligan policy'):
+            respond('/api/observation',{'key':['wretched_ranks'],'mulligan':['invalid']})
+
     def test_local_http_server_serves_static_page_and_read_only_api(self):
         server = ThreadingHTTPServer(("127.0.0.1", 0), Handler)
         runner = Thread(target=server.serve_forever, daemon=True)

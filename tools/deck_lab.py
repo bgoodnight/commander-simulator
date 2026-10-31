@@ -66,7 +66,7 @@ def respond(path, parameters, *, catalog_path=None, output_dir=None):
         opts = {}
         if catalog_path is not None:
             opts["catalog_path"] = catalog_path
-        return observe_saved_version(version_id, seed=seed, turns=turns, **opts)
+        return observe_saved_version(version_id, seed=seed, turns=turns, mulligan=only("mulligan", "keep"), **opts)
     if path == "/api/decks":
         return catalog_response(**options)
     if path == "/api/deck":
@@ -83,7 +83,7 @@ def respond(path, parameters, *, catalog_path=None, output_dir=None):
             turns = int(only("turns", "6"))
         except ValueError as exc:
             raise ValueError("Seed and turns must be integers") from exc
-        return observation_response(key, seed=seed, turns=turns, **options)
+        return observation_response(key, seed=seed, turns=turns, mulligan=only("mulligan", "keep"), **options)
     raise KeyError("Unknown local API route")
 
 

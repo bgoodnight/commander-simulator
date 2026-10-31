@@ -76,7 +76,7 @@ def catalog_response(*, catalog_path=SHARED_CATALOG, output_dir=None):
     return inventory(catalog_path=catalog_path, output_dir=output_dir)
 
 
-def observation_response(key, *, seed=0, turns=6, catalog_path=SHARED_CATALOG,
+def observation_response(key, *, seed=0, turns=6, mulligan='keep', catalog_path=SHARED_CATALOG,
                          output_dir=None):
     if not isinstance(seed, int) or isinstance(seed, bool):
         raise ValueError("Seed must be an integer")
@@ -84,5 +84,5 @@ def observation_response(key, *, seed=0, turns=6, catalog_path=SHARED_CATALOG,
         raise ValueError("The Deck Lab observation horizon must be 1–20 turns")
     return fixture_observation(
         key, catalog_path=catalog_path, output_dir=output_dir,
-        seed=seed, turns=turns
+        seed=seed, turns=turns, mulligan=mulligan
     )

@@ -56,7 +56,7 @@ def inventory(*, catalog_path=SHARED_CATALOG, output_dir=None):
 
 
 def fixture_observation(key, *, catalog_path=SHARED_CATALOG, output_dir=None,
-                        seed=0, turns=6):
+                        seed=0, turns=6, mulligan='keep'):
     """Produce an existing six-turn observation for one validated fixture."""
     fixture = next((f for f in FIXTURES if f.key == key), None)
     if fixture is None:
@@ -66,7 +66,7 @@ def fixture_observation(key, *, catalog_path=SHARED_CATALOG, output_dir=None,
     pinned_deck_entries(fixture.deck_path, snapshot.with_suffix(".manifest.json"),
                         catalog_path)
     return observe(fixture.deck_path, snapshot, seed=seed, turns=turns,
-                   commander=fixture.commander)
+                   commander=fixture.commander, mulligan=mulligan)
 
 
 if __name__ == "__main__":

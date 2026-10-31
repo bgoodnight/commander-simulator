@@ -64,6 +64,7 @@
     @media(max-width:780px) { .grid { grid-template-columns:1fr; } .panel { padding:15px; }
       main { padding:19px 12px 60px; } .summary { grid-template-columns:repeat(3,minmax(0,1fr)); }
       td,th { padding:10px 7px; } }
+    @media(max-width:520px) { .formrow { grid-template-columns:1fr; } }
   </style>
 </head>
 <body>
@@ -76,7 +77,7 @@
     </div>
     <div class="flag">U1 · versioned deck editing</div>
   </header>
-  <div class="notice"><strong>Observation mode only.</strong> This preview models draws, basic land plays and
+  <div class="notice"><strong>Observation mode only.</strong> This preview models draws, basic lands, Command Tower and
     printed mana-value candidates. It does <strong>not</strong> cast spells, execute card abilities, resolve combat,
     or estimate wins. The real multi-deck rules engine is a later milestone.</div>
   <div class="grid">
@@ -106,7 +107,7 @@
                aria-describedby="card-lookup-status">
         <datalist id="card-options"></datalist>
         <div id="card-lookup-status" class="status" role="status">
-          Type to search cached card metadata and the offline Scryfall name list. Deck editing is coming next.
+          Type to search the offline card-name list; detailed metadata is needed to add a card.
         </div>
       </div>
     </section>
@@ -117,6 +118,11 @@
           <input id="seed" type="number" step="1" value="0"></div>
         <div><label for="turns">Number of turns</label>
           <select id="turns"><option>3</option><option selected>6</option><option>10</option><option>15</option><option>20</option></select></div>
+      </div>
+      <div style="margin-top:12px"><label for="mulligan">Opening-hand policy</label>
+        <select id="mulligan"><option value="keep">Keep the first seven</option>
+          <option value="one-free">Use one free multiplayer mulligan when the land count is clearly outside 2–5</option></select>
+        <p class="small">The optional policy checks land count only and keeps the replacement seven.</p>
       </div>
       <div class="buttonrow">
         <button id="run" disabled>Run observation</button>
@@ -132,7 +138,8 @@
         <div><label for="remove-card">Remove from the selected deck</label>
           <select id="remove-card" disabled><option>Select a deck first</option></select></div>
         <div><label for="add-card">Add card (type an exact cached name)</label>
-          <input id="add-card" list="card-options" autocomplete="off" placeholder="e.g. Midnight Banshee"></div>
+          <input id="add-card" list="add-card-options" autocomplete="off" placeholder="e.g. Midnight Banshee" aria-describedby="add-card-status">
+          <datalist id="add-card-options"></datalist><div id="add-card-status" class="status" role="status">Type to search; swaps require cached card details.</div></div>
       </div>
       <div class="buttonrow">
         <button id="swap" disabled>Try swap</button>
@@ -193,7 +200,7 @@ async function refreshVersions() {
         +" · "+version.deck_sha256.slice(0,10),"small"));
       const button=el("button","Observe version","secondary");
       button.style.marginLeft="10px";
-      button.addEventListener("click",()=>runSavedVersion(version.id));
+      button.addEventListener("click",()=>runSavedVersion(version.id,version.title));
       line.appendChild(button);
       root.appendChild(line);
     }
@@ -253,7 +260,12 @@ async function trySwap() {
   }
   draftSwaps.push({remove:old,add:name});
   await previewDraft();
-  if(!latestDraft)draftSwaps.pop();
+  if(!latestDraft) {
+    const message=$("draft-status").textContent;
+    draftSwaps.pop();
+    await previewDraft();
+    $("draft-status").textContent=message+" Previous draft retained.";
+  }
   populateRemovalOptions();
 }
 async function saveDraft() {
@@ -296,34 +308,37 @@ async function read(url) {
   if(!response.ok)throw Error(body.error || ("HTTP "+response.status));
   return body;
 }
-let suggestionTimer = null;
-async function findCachedCardNames() {
-  const query=$("card-lookup").value.trim();
-  const list=$("card-options"); clear(list);
+const suggestionTimers = {};
+async function findCachedCardNames(inputId,listId,statusId) {
+  const query=$(inputId).value.trim();
+  const list=$(listId); clear(list);
   if(query.length<2) {
-    $("card-lookup-status").textContent="Type at least two characters to search saved card identities.";
+    $(statusId).textContent="Type at least two characters to search saved card identities.";
     return;
   }
   try {
     const result=await read("/api/cards/suggest?q="+encodeURIComponent(query));
-    if($("card-lookup").value.trim()!==query)return;
+    if($(inputId).value.trim()!==query)return;
     for(const item of result.suggestions) {
       const option=el("option"); option.value=item.name;
+      if(item.requires_metadata_import)option.label="Details need importing";
       list.appendChild(option);
     }
     const ready=result.suggestions.filter(x=>!x.requires_metadata_import).length;
-    $("card-lookup-status").textContent=result.suggestions.length
+    $(statusId).textContent=result.suggestions.length
       +" Scryfall names ("+ready+" with cached card details)."
-      +" New card details will download only during deck preparation.";
+      +" Swaps require cached details; uncached names need a separate import.";
   } catch(error) {
-    $("card-lookup-status").textContent="Suggestions unavailable: "+error.message;
+    $(statusId).textContent="Suggestions unavailable: "+error.message;
   }
 }
 async function init() {
-  $("card-lookup").addEventListener("input",()=>{
-    clearTimeout(suggestionTimer);
-    suggestionTimer=setTimeout(findCachedCardNames,180);
-  });
+  for(const [inputId,listId,statusId] of [["card-lookup","card-options","card-lookup-status"],["add-card","add-card-options","add-card-status"]]) {
+    $(inputId).addEventListener("input",()=>{
+      clearTimeout(suggestionTimers[inputId]);
+      suggestionTimers[inputId]=setTimeout(()=>findCachedCardNames(inputId,listId,statusId),180);
+    });
+  }
   $("deck-status").textContent="Checking offline deck metadata…";
   try {
     const data=await read("/api/decks");
@@ -391,21 +406,23 @@ async function loadDeck() {
     currentDeck=null;$("run-status").textContent=error.message;
   }
 }
-function displayObservation(data) {
+function displayObservation(data,sourceLabel) {
   lastResult=data;
   const root=$("result");clear(root);
-  const intro=el("p","Opening hand: "+data.opening_hand.join(" · "),"small");
+  root.appendChild(el("h3",sourceLabel));
+  const policy=data.mulligan ? " · "+data.mulligan.decision : "";
+  const intro=el("p","Opening hand"+policy+": "+data.opening_hand.join(" · "),"small");
   intro.style.marginBottom="12px";root.appendChild(intro);
   const box=el("div",undefined,"tablebox"), table=el("table");
   const head=el("thead"), headings=el("tr");
-  for(const name of ["Turn","Drawn","Basic land played","Basic sources","Mana-value candidates"])
+  for(const name of ["Turn","Drawn","Modeled land played","Modeled sources","Mana-value candidates"])
     headings.appendChild(el("th",name));
   head.appendChild(headings);table.appendChild(head);
   const body=el("tbody");
   for(const t of data.trace) {
     const row=el("tr");
     const cand=t.candidate_if_supported.map(x=>x.card);
-    const basics=Object.values(t.modeled_basic_sources).reduce((a,b)=>a+b,0);
+    const basics=t.modeled_sources ? t.modeled_sources.length : Object.values(t.modeled_basic_sources).reduce((a,b)=>a+b,0);
     row.append(el("td",t.turn),el("td",t.drawn||"—"),
       el("td",t.land_played||"—"),el("td",basics,"num"),
       el("td",cand.length?cand.join(", "):"None"));
@@ -416,13 +433,13 @@ function displayObservation(data) {
     +" · no spells cast or card effects executed.";
   $("copy").disabled=false;
 }
-async function runSavedVersion(id) {
+async function runSavedVersion(id,title) {
   $("run-status").textContent="Observing saved deck copy…";
   try {
     const data=await read("/api/version/observation?id="+encodeURIComponent(id)
       +"&seed="+encodeURIComponent($("seed").value)
-      +"&turns="+encodeURIComponent($("turns").value));
-    displayObservation(data);
+      +"&turns="+encodeURIComponent($("turns").value)+"&mulligan="+encodeURIComponent($("mulligan").value));
+    displayObservation(data,"Saved copy: "+title);
   } catch(error) {
     $("run-status").textContent="Saved version unavailable: "+error.message;
   }
@@ -434,8 +451,8 @@ async function runObservation() {
   try {
     const data=await read("/api/observation?key="+encodeURIComponent(currentDeck.key)
       +"&seed="+encodeURIComponent($("seed").value)
-      +"&turns="+encodeURIComponent($("turns").value));
-    displayObservation(data);
+      +"&turns="+encodeURIComponent($("turns").value)+"&mulligan="+encodeURIComponent($("mulligan").value));
+    displayObservation(data,"Selected deck: "+(nameLabels[currentDeck.key]||currentDeck.key));
   } catch(error) {
     $("run-status").textContent="Observation unavailable: "+error.message;
   } finally { $("run").disabled=!currentDeck; }
