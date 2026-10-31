@@ -140,13 +140,13 @@ def build(output, *, catalog_path=SHARED_CATALOG, name_catalog_path=DEFAULT_NAME
     if not static.is_dir():
         raise ValueError("Missing static Deck Lab source")
     output.mkdir(parents=True, exist_ok=True)
-    # Three real, shareable static HTML routes. index.html is intentionally
-    # the cached simulation-results landing page. The same tested application
-    # shell detects its pathname and exposes the relevant content without a
-    # server router, so subpaths work on GitHub Pages and offline preview.
+    # Four real HTML routes: index.html and summary.html display the
+    # attractive Deck Summary by default; results.html retains the
+    # interpretive observation archive and editor.html the deck workshop.
+    # The same source shell selects content by pathname without a server.
     for filename in ("app.js", "results_insights.js", "style.css"):
         shutil.copy2(static / filename, output / filename)
-    for filename in ("index.html", "summary.html", "editor.html"):
+    for filename in ("index.html", "summary.html", "results.html", "editor.html"):
         shutil.copy2(static / "index.html", output / filename)
     (output / ".nojekyll").write_text("", encoding="utf-8")
     def write_json(name, obj):
@@ -163,7 +163,7 @@ def build(output, *, catalog_path=SHARED_CATALOG, name_catalog_path=DEFAULT_NAME
         "seeds": list(seeds),
         "asset_sha256": {name: hashlib.sha256((output / name).read_bytes()).hexdigest()
                          for name in ("decks.json", "observations.json", "names.json",
-                                      "index.html", "summary.html", "editor.html",
+                                      "index.html", "summary.html", "results.html", "editor.html",
                                       "app.js", "results_insights.js", "style.css")},
         "note": "Published data includes only approved six canonical decks and fixed-seed observations.",
     }
