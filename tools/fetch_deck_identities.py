@@ -84,9 +84,31 @@ def fetch(deck_path, output, *, catalog_path=None, manifest_path=None,
     for seed_deck, seed_snapshot in seed_pairs:
         catalog.seed_snapshot(seed_snapshot, deck_path=seed_deck)
 
+    # A saved manifest is authoritative for this deck's replay. Explicit
+    # refreshes may advance the catalog's "current" revision, but must not
+    # change an older deck's pinned card data.
+    pinned_old = None
+    if manifest_path.exists():
+        pinned_old = json.loads(manifest_path.read_text(encoding="utf-8"))
+        if (pinned_old.get("schema_version") != SCHEMA_VERSION
+            or pinned_old.get("deck_sha256") != deck_sha
+            or [e.get("deck_name") for e in pinned_old.get("cards", [])] != names):
+            raise ValueError("Existing manifest does not match this deck; choose new paths")
+
     resolved = {}
+    if pinned_old is not None and not refresh:
+        for entry in pinned_old["cards"]:
+            card = catalog.get_pinned(entry["oracle_id"], entry["revision"])
+            if entry["deck_name"] not in card_aliases(card):
+                raise ValueError("Pinned manifest contains mismatched card identity")
+            resolved[entry["deck_name"]] = (
+                entry["oracle_id"], entry["revision"], card
+            )
+
     missing = []
     for name in names:
+        if name in resolved:
+            continue
         result = None if refresh else catalog.lookup(name)
         if result is None:
             missing.append(name)
@@ -143,11 +165,10 @@ def fetch(deck_path, output, *, catalog_path=None, manifest_path=None,
     if not output.exists():
         atomic_json(output, snapshot)
 
-    print(json.dumps({"requested": len(names), "cache_hits": len(names) - len(missing),
-                      "fetched": len(missing), "catalog": str(catalog_path),
-                      "manifest": str(manifest_path), "snapshot": str(output)},
-                     indent=2))
-    return manifest
+    return {"manifest": manifest, "requested": len(names),
+            "cache_hits": len(names) - len(missing), "fetched": len(missing),
+            "catalog_path": str(catalog_path), "manifest_path": str(manifest_path),
+            "snapshot_path": str(output)}
 
 
 if __name__ == "__main__":
@@ -162,8 +183,9 @@ if __name__ == "__main__":
     parser.add_argument("--refresh", action="store_true", help="Explicitly refresh all identities")
     args = parser.parse_args()
     try:
-        fetch(args.deck, args.output, catalog_path=args.catalog,
-              manifest_path=args.manifest, seed_pairs=args.seed_pair,
-              offline=args.offline, refresh=args.refresh)
+        result = fetch(args.deck, args.output, catalog_path=args.catalog,
+                       manifest_path=args.manifest, seed_pairs=args.seed_pair,
+                       offline=args.offline, refresh=args.refresh)
+        print(json.dumps(result, indent=2))
     except (OSError, ValueError, KeyError, TypeError) as exc:
         parser.error(str(exc))
