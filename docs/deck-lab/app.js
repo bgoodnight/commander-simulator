@@ -19,8 +19,8 @@ let data=null, archives=null, allNames=[], selected=null, activeTab="overview";
 let cachedByName = new Map(),extraCards={},activeCounts=null,history=[],localVersions=[];
 let selectedSeed="0",soundEnabled=false,audio=null,lastRecord=null,autoTimer=null;
 let selectedVersionId=null,preferredByCommander={},lastCommanderId=null;
-const pageName=location.pathname.endsWith("/summary.html")?"summary":
-  location.pathname.endsWith("/editor.html")?"editor":"results";
+const pageName=location.pathname.endsWith("/results.html")?"results":
+  location.pathname.endsWith("/editor.html")?"editor":"summary";
 const PAGE_INFO={
   results:["Opening-Turn Findings","What the cached runs suggest, how consistent the patterns are, and where to inspect the evidence."],
   summary:["The Commander's Ledger","Inspect commander art, card-type composition and the mana curve of this verified deck."],
@@ -503,6 +503,12 @@ function displayRecord(){
     body.appendChild(el("div",candidates.length?
       "Mana-value candidates (not castability): "+candidates.map(x=>x.card).join(", "):
       "No candidate passed the mana-value screen","small"));
+    const affordable=t.source_paid_mana_preview||[];
+    body.appendChild(el("div",affordable.length?
+      "Modeled sources can pay printed symbols for: "+affordable.map(x=>x.card).join(", "):
+      "No fixed printed costs payable with modeled sources on this turn",
+      "small"));
+    body.appendChild(el("div","Payment feasibility only; no legal casts, effects, optional costs, or priority modeled.","micro"));
     node.appendChild(body);timeline.appendChild(node);
   }
 }
