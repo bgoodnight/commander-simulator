@@ -10,6 +10,6 @@ python -m commander_sim.observation decklists/fixtures/magnus_flameslinger_v0_7_
 
 The checked-in [`v0_7_observation_seed0.json`](v0_7_observation_seed0.json) additionally includes a scripted opposing noncreature spell on turn three. In that run the kept opening seven contains no basic lands; Mountains are drawn and modeled as played on turns one and two. A hypothetical one-source reserve is applied each turn. The turn-five Exotic Orchard remains in hand because nonbasic lands are not modeled. These details illustrate the projection's limitations; they do not demonstrate a sensible mulligan, an actual mana screw, or deck strength.
 
-[`v0_7_observation_performance.json`](v0_7_observation_performance.json) records 20 local seed runs, including snapshot validation. On that host p50 was 1.758 ms and p95 was 2.781 ms. These are not engine-game timings and are not comparable to the eight-round live-engine baseline.
+[`v0_7_observation_performance.json`](v0_7_observation_performance.json) records 20 local seed runs, including snapshot validation. On that host p50 was 2.216 ms and p95 was 6.23 ms. These are not engine-game timings and are not comparable to the eight-round live-engine baseline.
 
 Next: verified shared characteristics and targets in the live engine, a reviewed nonbasic source model and mulligan policy, real supported actions with explicit costs/legality, and fidelity/dependence logging before hybrid gameplay.

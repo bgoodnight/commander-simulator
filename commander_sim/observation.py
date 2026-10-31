@@ -9,6 +9,7 @@ import json
 from pathlib import Path
 import random
 from .snapshots import validate_snapshot
+from .identities import CardRegistry
 
 
 def observe(deck_path, snapshot_path, *, seed=0, turns=6, reserve=0, threats=()):
@@ -19,12 +20,7 @@ def observe(deck_path, snapshot_path, *, seed=0, turns=6, reserve=0, threats=())
     if not isinstance(threats, (tuple, list)) or any(not isinstance(item, dict) or type(item.get('turn')) is not int or item['turn'] < 1 for item in threats):
         raise ValueError('Threats must be objects with a positive integer turn')
     snapshot = validate_snapshot(deck_path, snapshot_path)
-    index = {}
-    for item in snapshot.cards:
-        card = item['card']; faces = card.get('card_faces', [])
-        index[card['name']] = card
-        if card.get('layout') == 'adventure' and faces:
-            index[faces[0]['name']] = card
+    registry = CardRegistry(snapshot)
     library = [name for section,name,quantity in snapshot.deck.cards if section == 'Library' for _ in range(quantity)]
     random.Random(seed).shuffle(library)
     hand=library[:7]; del library[:7]
@@ -40,18 +36,18 @@ def observe(deck_path, snapshot_path, *, seed=0, turns=6, reserve=0, threats=())
         capacity=len(lands);reserved=min(reserve,capacity)
         candidates=[]
         for name in hand:
-            card=index[name]
-            primary=card.get('card_faces', [{}])[0] if card.get('layout')=='adventure' else card
-            primary_type=primary.get('type_line','').split(' — ',1)[0]
-            if 'Land' in primary_type:
+            card=registry.get(name)
+            try:primary=card.primary_face()
+            except NotImplementedError:continue
+            if 'land' in primary.types:
                 continue
             # Scryfall's aggregate CMC can describe another face; avoid claiming
             # a candidate for multiface cards until face-specific values exist.
-            if card.get('layout') not in ('normal',):
+            if card.layout != 'normal':
                 continue
-            value=card.get('cmc')
+            value=primary.mana_value
             if isinstance(value,(int,float)) and value <= capacity-reserved:
-                candidates.append({'card':name,'mana_value':value,'mana_cost':primary.get('mana_cost'),
+                candidates.append({'card':name,'mana_value':value,'mana_cost':primary.mana_cost,
                                    'status':'candidate_if_supported',
                                    'limitations':'total-mana screen only; colors, timing, targets and effects not checked'})
         current_threats=[dict(item) for item in threats if item.get('turn')==turn]

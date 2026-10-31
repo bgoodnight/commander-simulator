@@ -3,6 +3,7 @@ from pathlib import Path
 from functools import partial
 from collections import Counter
 from dataclasses import replace
+from types import SimpleNamespace
 sys.path.insert(0,str(Path(__file__).resolve().parents[2]))
 from commander_sim.decks import DeckProvider
 from scenarios import scenario
@@ -10,6 +11,9 @@ from baseline import CopyTable,check
 from premium_table import PremiumPlayer
 from budget_table import card_spec
 from commander_sim.queries import Query, Match, ObjectView, target_legality
+from commander_sim.snapshots import validate_snapshot
+from commander_sim.identities import CardRegistry
+from wizard_tutor_table import WIZARDCYCLING
 from reference_state import reference_payload,canonical
 from altar_table import AltarTable,AltarAbility
 from resources import Cost,U,R
@@ -83,5 +87,20 @@ class ProviderCompositionTests(unittest.TestCase):
   action=type('SearchAction',(),{'actor':p.seat})()
   t.resolve_fabricate(t,action)
   self.assertIn('Swiftfoot Boots',[c.name for c in p.hand]);t.assert_consistent()
+ def test_verified_unimplemented_wizard_is_found_by_real_tutor(self):
+  root=Path(__file__).resolve().parents[2]
+  snapshot=validate_snapshot(root/'decklists/fixtures/magnus_flameslinger_v0_7_pre_delivery.txt',root/'simulator/card_data/flameslinger_v0_7_scryfall.json')
+  face=CardRegistry(snapshot).get('Stormsplitter').primary_face()
+  t=CopyTable(seed=118);p=t.details
+  oid=t.zones.add_spec(card_spec(face.name),p.seat,'library',detailed=True)
+  obj=t.rules.get(oid)
+  obj.card=replace(obj.card,types=face.types,subtypes=face.subtypes,colors=face.colors,
+                   base_power=face.power,base_toughness=face.toughness,coverage='unimplemented')
+  query=Query(types_all=frozenset({'creature'}),subtypes_all=frozenset({'Wizard'}),max_power=2)
+  self.assertIs(query.matches_kernel(t.rules,oid,power_verified=True),Match.YES)
+  self.assertIs(target_legality(ObjectView.from_kernel(t.rules,oid,power_verified=True),source_controller=1),Match.UNKNOWN)
+  t.tutor_policy=lambda request:next(c.object_id for c in request.cards if c.name=='Stormsplitter')
+  self.assertTrue(t.resolve_activation(SimpleNamespace(ability=WIZARDCYCLING,controller=p.seat,source_id=0)))
+  self.assertIn('Stormsplitter',[c.name for c in p.hand]);t.assert_consistent()
 
 if __name__=='__main__':unittest.main()
