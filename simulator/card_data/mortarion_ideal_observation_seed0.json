@@ -1,0 +1,319 @@
+{
+  "mode": "observation",
+  "commander": "Mortarion, Daemon Primarch",
+  "deck_sha256": "13aa67a71ab3ef355363b83aed39bc7b6f7cc368e37854b8dcbfc609ea053230",
+  "snapshot_sha256": "b551f01d7a266b5f2e55729d172dec6c766a386b78d9715d1b40af8ad4db375e",
+  "seed": 0,
+  "turns": 6,
+  "opening_hand_policy": "keep seven",
+  "mulligan": {
+    "policy": "keep",
+    "decision": "keep",
+    "initial_hand": [
+      "Crypt Ghast",
+      "Thrashing Wumpus",
+      "Necroskitter",
+      "Pestilence Demon",
+      "Greed",
+      "Mikaeus, the Unhallowed",
+      "Plague Drone"
+    ],
+    "known_lands": 0,
+    "unknown_faces": 0,
+    "limitations": "at most one free multiplayer mulligan; no color, curve or spell quality assessment"
+  },
+  "opening_hand": [
+    "Crypt Ghast",
+    "Thrashing Wumpus",
+    "Necroskitter",
+    "Pestilence Demon",
+    "Greed",
+    "Mikaeus, the Unhallowed",
+    "Plague Drone"
+  ],
+  "seat_assumption": "not the starting player; draw on turn one",
+  "land_policy": "play first basic land or Command Tower in hand; other nonbasic lands are not modeled",
+  "reserve_policy": "reserve up to 1 modeled sources as a hypothetical planning choice",
+  "first_unmodeled_choice": "turn 1: other nonbasic land and spell decisions are not modeled",
+  "not_modeled": [
+    "spell casting or resolution",
+    "color requirements",
+    "other nonbasic land abilities",
+    "triggers",
+    "opponent actions except supplied threat descriptions",
+    "combat",
+    "win rates"
+  ],
+  "trace": [
+    {
+      "turn": 1,
+      "drawn": "Swamp",
+      "land_played": "Swamp",
+      "modeled_basic_sources": {
+        "Swamp": 1
+      },
+      "modeled_sources": [
+        {
+          "card": "Swamp",
+          "colors": [
+            "B"
+          ]
+        }
+      ],
+      "reserved_mana": 1,
+      "in_hand": [
+        "Crypt Ghast",
+        "Thrashing Wumpus",
+        "Necroskitter",
+        "Pestilence Demon",
+        "Greed",
+        "Mikaeus, the Unhallowed",
+        "Plague Drone"
+      ],
+      "playable_now": [],
+      "candidate_if_supported": [],
+      "scripted_threats": [],
+      "library_count": 91,
+      "hand_count": 7,
+      "battlefield_count": 1
+    },
+    {
+      "turn": 2,
+      "drawn": "Swamp",
+      "land_played": "Swamp",
+      "modeled_basic_sources": {
+        "Swamp": 2
+      },
+      "modeled_sources": [
+        {
+          "card": "Swamp",
+          "colors": [
+            "B"
+          ]
+        },
+        {
+          "card": "Swamp",
+          "colors": [
+            "B"
+          ]
+        }
+      ],
+      "reserved_mana": 1,
+      "in_hand": [
+        "Crypt Ghast",
+        "Thrashing Wumpus",
+        "Necroskitter",
+        "Pestilence Demon",
+        "Greed",
+        "Mikaeus, the Unhallowed",
+        "Plague Drone"
+      ],
+      "playable_now": [],
+      "candidate_if_supported": [],
+      "scripted_threats": [],
+      "library_count": 90,
+      "hand_count": 7,
+      "battlefield_count": 2
+    },
+    {
+      "turn": 3,
+      "drawn": "Wayfarer's Bauble",
+      "land_played": null,
+      "modeled_basic_sources": {
+        "Swamp": 2
+      },
+      "modeled_sources": [
+        {
+          "card": "Swamp",
+          "colors": [
+            "B"
+          ]
+        },
+        {
+          "card": "Swamp",
+          "colors": [
+            "B"
+          ]
+        }
+      ],
+      "reserved_mana": 1,
+      "in_hand": [
+        "Crypt Ghast",
+        "Thrashing Wumpus",
+        "Necroskitter",
+        "Pestilence Demon",
+        "Greed",
+        "Mikaeus, the Unhallowed",
+        "Plague Drone",
+        "Wayfarer's Bauble"
+      ],
+      "playable_now": [],
+      "candidate_if_supported": [
+        {
+          "card": "Wayfarer's Bauble",
+          "mana_value": 1.0,
+          "mana_cost": "{1}",
+          "status": "candidate_if_supported",
+          "limitations": "total-mana screen only; colors, timing, targets and effects not checked"
+        }
+      ],
+      "scripted_threats": [
+        {
+          "turn": 3,
+          "description": "Illustrative opposing noncreature spell",
+          "assumption": "scripted; no response is resolved"
+        }
+      ],
+      "library_count": 89,
+      "hand_count": 8,
+      "battlefield_count": 2
+    },
+    {
+      "turn": 4,
+      "drawn": "Darksteel Myr",
+      "land_played": null,
+      "modeled_basic_sources": {
+        "Swamp": 2
+      },
+      "modeled_sources": [
+        {
+          "card": "Swamp",
+          "colors": [
+            "B"
+          ]
+        },
+        {
+          "card": "Swamp",
+          "colors": [
+            "B"
+          ]
+        }
+      ],
+      "reserved_mana": 1,
+      "in_hand": [
+        "Crypt Ghast",
+        "Thrashing Wumpus",
+        "Necroskitter",
+        "Pestilence Demon",
+        "Greed",
+        "Mikaeus, the Unhallowed",
+        "Plague Drone",
+        "Wayfarer's Bauble",
+        "Darksteel Myr"
+      ],
+      "playable_now": [],
+      "candidate_if_supported": [
+        {
+          "card": "Wayfarer's Bauble",
+          "mana_value": 1.0,
+          "mana_cost": "{1}",
+          "status": "candidate_if_supported",
+          "limitations": "total-mana screen only; colors, timing, targets and effects not checked"
+        }
+      ],
+      "scripted_threats": [],
+      "library_count": 88,
+      "hand_count": 9,
+      "battlefield_count": 2
+    },
+    {
+      "turn": 5,
+      "drawn": "Bojuka Bog",
+      "land_played": null,
+      "modeled_basic_sources": {
+        "Swamp": 2
+      },
+      "modeled_sources": [
+        {
+          "card": "Swamp",
+          "colors": [
+            "B"
+          ]
+        },
+        {
+          "card": "Swamp",
+          "colors": [
+            "B"
+          ]
+        }
+      ],
+      "reserved_mana": 1,
+      "in_hand": [
+        "Crypt Ghast",
+        "Thrashing Wumpus",
+        "Necroskitter",
+        "Pestilence Demon",
+        "Greed",
+        "Mikaeus, the Unhallowed",
+        "Plague Drone",
+        "Wayfarer's Bauble",
+        "Darksteel Myr",
+        "Bojuka Bog"
+      ],
+      "playable_now": [],
+      "candidate_if_supported": [
+        {
+          "card": "Wayfarer's Bauble",
+          "mana_value": 1.0,
+          "mana_cost": "{1}",
+          "status": "candidate_if_supported",
+          "limitations": "total-mana screen only; colors, timing, targets and effects not checked"
+        }
+      ],
+      "scripted_threats": [],
+      "library_count": 87,
+      "hand_count": 10,
+      "battlefield_count": 2
+    },
+    {
+      "turn": 6,
+      "drawn": "Arcane Signet",
+      "land_played": null,
+      "modeled_basic_sources": {
+        "Swamp": 2
+      },
+      "modeled_sources": [
+        {
+          "card": "Swamp",
+          "colors": [
+            "B"
+          ]
+        },
+        {
+          "card": "Swamp",
+          "colors": [
+            "B"
+          ]
+        }
+      ],
+      "reserved_mana": 1,
+      "in_hand": [
+        "Crypt Ghast",
+        "Thrashing Wumpus",
+        "Necroskitter",
+        "Pestilence Demon",
+        "Greed",
+        "Mikaeus, the Unhallowed",
+        "Plague Drone",
+        "Wayfarer's Bauble",
+        "Darksteel Myr",
+        "Bojuka Bog",
+        "Arcane Signet"
+      ],
+      "playable_now": [],
+      "candidate_if_supported": [
+        {
+          "card": "Wayfarer's Bauble",
+          "mana_value": 1.0,
+          "mana_cost": "{1}",
+          "status": "candidate_if_supported",
+          "limitations": "total-mana screen only; colors, timing, targets and effects not checked"
+        }
+      ],
+      "scripted_threats": [],
+      "library_count": 86,
+      "hand_count": 11,
+      "battlefield_count": 2
+    }
+  ]
+}

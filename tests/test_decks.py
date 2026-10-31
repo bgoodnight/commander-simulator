@@ -58,5 +58,11 @@ class DeckProviderTests(unittest.TestCase):
         with self.assertRaisesRegex(ValueError, 'Section count'):
             self.provider.parse(text.replace('Lands (99)', 'Lands (98)'))
 
+    def test_comments_and_comment_section_counts(self):
+        text='# provenance\nCommander\n1 Magnus the Red\n# Lands (99)\n99 Island\n'
+        self.assertEqual(self.provider.parse(text).count,100)
+        with self.assertRaisesRegex(ValueError,'Section count'):
+            self.provider.parse(text.replace('Lands (99)','Lands (98)'))
+
 if __name__ == '__main__':
     unittest.main()

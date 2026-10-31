@@ -4,7 +4,9 @@ from commander_sim.snapshots import validate_snapshot
 from commander_sim.observation import observe
 ROOT=Path(__file__).resolve().parents[1]
 FIXTURES=(('Ghoulcaller Gisa','decklists/wretched_ranks_foundations_precon_2026.txt','simulator/card_data/gisa_scryfall.json',33),
-          ('Mortarion, Daemon Primarch','decklists/mortarion_purchase_reconciled_candidate_2026_10_27.txt','simulator/card_data/mortarion_scryfall.json',32))
+          ('Mortarion, Daemon Primarch','decklists/mortarion_purchase_reconciled_candidate_2026_10_27.txt','simulator/card_data/mortarion_scryfall.json',32),
+          ('Mortarion, Daemon Primarch','decklists/mortarion_current_ordered_plus_owned_2026_10_31.txt','simulator/card_data/mortarion_current_scryfall.json',32),
+          ('Mortarion, Daemon Primarch','decklists/mortarion_inexorable_plague_host_ideal.txt','simulator/card_data/mortarion_ideal_scryfall.json',25))
 class MonoBlackTests(unittest.TestCase):
  def test_offline_validation(self):
   for commander,deck,data,swamps in FIXTURES:

@@ -5,7 +5,23 @@
   "snapshot_sha256": "d8e494f8cd892965cd0a7367f7afb48e49d6b33a9734aded30eaa7d54e231fbd",
   "seed": 0,
   "turns": 6,
-  "opening_hand_policy": "keep seven; no mulligan model",
+  "opening_hand_policy": "keep seven",
+  "mulligan": {
+    "policy": "keep",
+    "decision": "keep",
+    "initial_hand": [
+      "Oversold Cemetery",
+      "Endless Ranks of the Dead",
+      "Graveborn Muse",
+      "Diregraf Colossus",
+      "Undead Augur",
+      "Headless Rider",
+      "Ayara, First of Locthwain"
+    ],
+    "known_lands": 0,
+    "unknown_faces": 0,
+    "limitations": "at most one free multiplayer mulligan; no color, curve or spell quality assessment"
+  },
   "opening_hand": [
     "Oversold Cemetery",
     "Endless Ranks of the Dead",
@@ -16,13 +32,13 @@
     "Ayara, First of Locthwain"
   ],
   "seat_assumption": "not the starting player; draw on turn one",
-  "land_policy": "play first basic land in hand; nonbasic lands are not modeled",
-  "reserve_policy": "reserve up to 1 basic sources as a hypothetical planning choice",
-  "first_unmodeled_choice": "turn 1: nonbasic land and spell decisions are not modeled",
+  "land_policy": "play first basic land or Command Tower in hand; other nonbasic lands are not modeled",
+  "reserve_policy": "reserve up to 1 modeled sources as a hypothetical planning choice",
+  "first_unmodeled_choice": "turn 1: other nonbasic land and spell decisions are not modeled",
   "not_modeled": [
     "spell casting or resolution",
     "color requirements",
-    "nonbasic land abilities",
+    "other nonbasic land abilities",
     "triggers",
     "opponent actions except supplied threat descriptions",
     "combat",
@@ -36,6 +52,14 @@
       "modeled_basic_sources": {
         "Swamp": 1
       },
+      "modeled_sources": [
+        {
+          "card": "Swamp",
+          "colors": [
+            "B"
+          ]
+        }
+      ],
       "reserved_mana": 1,
       "in_hand": [
         "Oversold Cemetery",
@@ -60,6 +84,20 @@
       "modeled_basic_sources": {
         "Swamp": 2
       },
+      "modeled_sources": [
+        {
+          "card": "Swamp",
+          "colors": [
+            "B"
+          ]
+        },
+        {
+          "card": "Swamp",
+          "colors": [
+            "B"
+          ]
+        }
+      ],
       "reserved_mana": 1,
       "in_hand": [
         "Oversold Cemetery",
@@ -84,6 +122,20 @@
       "modeled_basic_sources": {
         "Swamp": 2
       },
+      "modeled_sources": [
+        {
+          "card": "Swamp",
+          "colors": [
+            "B"
+          ]
+        },
+        {
+          "card": "Swamp",
+          "colors": [
+            "B"
+          ]
+        }
+      ],
       "reserved_mana": 1,
       "in_hand": [
         "Oversold Cemetery",
@@ -115,6 +167,20 @@
       "modeled_basic_sources": {
         "Swamp": 2
       },
+      "modeled_sources": [
+        {
+          "card": "Swamp",
+          "colors": [
+            "B"
+          ]
+        },
+        {
+          "card": "Swamp",
+          "colors": [
+            "B"
+          ]
+        }
+      ],
       "reserved_mana": 1,
       "in_hand": [
         "Oversold Cemetery",
@@ -141,6 +207,20 @@
       "modeled_basic_sources": {
         "Swamp": 2
       },
+      "modeled_sources": [
+        {
+          "card": "Swamp",
+          "colors": [
+            "B"
+          ]
+        },
+        {
+          "card": "Swamp",
+          "colors": [
+            "B"
+          ]
+        }
+      ],
       "reserved_mana": 1,
       "in_hand": [
         "Oversold Cemetery",
@@ -168,6 +248,20 @@
       "modeled_basic_sources": {
         "Swamp": 2
       },
+      "modeled_sources": [
+        {
+          "card": "Swamp",
+          "colors": [
+            "B"
+          ]
+        },
+        {
+          "card": "Swamp",
+          "colors": [
+            "B"
+          ]
+        }
+      ],
       "reserved_mana": 1,
       "in_hand": [
         "Oversold Cemetery",

@@ -1,0 +1,3706 @@
+{
+  "source": "Scryfall collection API, exact card/face match",
+  "retrieved_at": "2026-10-31T14:39:25.621552+00:00",
+  "deck_sha256": "13aa67a71ab3ef355363b83aed39bc7b6f7cc368e37854b8dcbfc609ea053230",
+  "distinct_requested": 76,
+  "cards": [
+    {
+      "deck_name": "Mortarion, Daemon Primarch",
+      "card": {
+        "id": "3b6b1bcf-10a4-4643-9db0-b2a4fee340a2",
+        "oracle_id": "588eecbf-dcfc-4b97-b81c-8b9f3d39e08f",
+        "name": "Mortarion, Daemon Primarch",
+        "released_at": "2022-10-07",
+        "scryfall_uri": "https://scryfall.com/card/40k/41/mortarion-daemon-primarch?utm_source=api",
+        "layout": "normal",
+        "mana_cost": "{5}{B}",
+        "cmc": 6.0,
+        "type_line": "Legendary Creature — Demon Primarch",
+        "oracle_text": "Flying\nPrimarch of the Death Guard — At the beginning of your end step, you may pay {X}. If you do, create X 2/2 black Astartes Warrior creature tokens with menace. X can't be greater than the amount of life you lost this turn.",
+        "power": "5",
+        "toughness": "6",
+        "colors": [
+          "B"
+        ],
+        "color_identity": [
+          "B"
+        ],
+        "keywords": [
+          "Flying",
+          "Primarch of the Death Guard"
+        ],
+        "legalities": {
+          "standard": "not_legal",
+          "future": "not_legal",
+          "historic": "not_legal",
+          "timeless": "not_legal",
+          "gladiator": "not_legal",
+          "pioneer": "not_legal",
+          "modern": "not_legal",
+          "legacy": "legal",
+          "pauper": "not_legal",
+          "vintage": "legal",
+          "penny": "not_legal",
+          "commander": "legal",
+          "oathbreaker": "legal",
+          "standardbrawl": "not_legal",
+          "brawl": "not_legal",
+          "competitivebrawl": "not_legal",
+          "alchemy": "not_legal",
+          "paupercommander": "not_legal",
+          "duel": "legal",
+          "oldschool": "not_legal",
+          "premodern": "not_legal",
+          "predh": "not_legal",
+          "tlr": "not_legal"
+        },
+        "set": "40k"
+      }
+    },
+    {
+      "deck_name": "Great Unclean One",
+      "card": {
+        "id": "757e79f2-23dc-44de-8531-6eb3e2f015f3",
+        "oracle_id": "cd9031e4-9f6f-4dd8-908e-dcf7b79438e5",
+        "name": "Great Unclean One",
+        "released_at": "2022-10-07",
+        "scryfall_uri": "https://scryfall.com/card/40k/35/great-unclean-one?utm_source=api",
+        "layout": "normal",
+        "mana_cost": "{4}{B}",
+        "cmc": 5.0,
+        "type_line": "Creature — Demon",
+        "oracle_text": "Reverberating Summons — At the beginning of your end step, each opponent loses 2 life. Then for each opponent who has less life than you, create a 1/3 black Demon creature token named Plaguebearer of Nurgle.",
+        "power": "4",
+        "toughness": "5",
+        "colors": [
+          "B"
+        ],
+        "color_identity": [
+          "B"
+        ],
+        "keywords": [
+          "Reverberating Summons"
+        ],
+        "legalities": {
+          "standard": "not_legal",
+          "future": "not_legal",
+          "historic": "not_legal",
+          "timeless": "not_legal",
+          "gladiator": "not_legal",
+          "pioneer": "not_legal",
+          "modern": "not_legal",
+          "legacy": "legal",
+          "pauper": "not_legal",
+          "vintage": "legal",
+          "penny": "not_legal",
+          "commander": "legal",
+          "oathbreaker": "legal",
+          "standardbrawl": "not_legal",
+          "brawl": "not_legal",
+          "competitivebrawl": "not_legal",
+          "alchemy": "not_legal",
+          "paupercommander": "not_legal",
+          "duel": "legal",
+          "oldschool": "not_legal",
+          "premodern": "not_legal",
+          "predh": "not_legal",
+          "tlr": "not_legal"
+        },
+        "set": "40k"
+      }
+    },
+    {
+      "deck_name": "Plague Drone",
+      "card": {
+        "id": "95df49ae-e75f-4d97-8323-ebb62ff1df33",
+        "oracle_id": "9552fc97-9e6d-4307-bf58-30bf956356bf",
+        "name": "Plague Drone",
+        "released_at": "2022-10-07",
+        "scryfall_uri": "https://scryfall.com/card/40k/47/plague-drone?utm_source=api",
+        "layout": "normal",
+        "mana_cost": "{3}{B}",
+        "cmc": 4.0,
+        "type_line": "Creature — Demon",
+        "oracle_text": "Flying\nRot Fly — If an opponent would gain life, that player loses that much life instead.",
+        "power": "3",
+        "toughness": "3",
+        "colors": [
+          "B"
+        ],
+        "color_identity": [
+          "B"
+        ],
+        "keywords": [
+          "Flying",
+          "Rot Fly"
+        ],
+        "legalities": {
+          "standard": "not_legal",
+          "future": "not_legal",
+          "historic": "not_legal",
+          "timeless": "not_legal",
+          "gladiator": "not_legal",
+          "pioneer": "not_legal",
+          "modern": "not_legal",
+          "legacy": "legal",
+          "pauper": "not_legal",
+          "vintage": "legal",
+          "penny": "not_legal",
+          "commander": "legal",
+          "oathbreaker": "legal",
+          "standardbrawl": "not_legal",
+          "brawl": "not_legal",
+          "competitivebrawl": "not_legal",
+          "alchemy": "not_legal",
+          "paupercommander": "not_legal",
+          "duel": "legal",
+          "oldschool": "not_legal",
+          "premodern": "not_legal",
+          "predh": "not_legal",
+          "tlr": "not_legal"
+        },
+        "set": "40k"
+      }
+    },
+    {
+      "deck_name": "Poxwalkers",
+      "card": {
+        "id": "ca79cd21-daaa-4a1c-bab5-cc4c783994ae",
+        "oracle_id": "e4275202-4960-4cde-b941-27be8163ad6e",
+        "name": "Poxwalkers",
+        "released_at": "2022-10-07",
+        "scryfall_uri": "https://scryfall.com/card/40k/49/poxwalkers?utm_source=api",
+        "layout": "normal",
+        "mana_cost": "{2}{B}",
+        "cmc": 3.0,
+        "type_line": "Creature — Zombie",
+        "oracle_text": "Deathtouch\nCurse of the Walking Pox — Whenever you cast a spell from anywhere other than your hand, return this card from your graveyard to the battlefield tapped.",
+        "power": "3",
+        "toughness": "1",
+        "colors": [
+          "B"
+        ],
+        "color_identity": [
+          "B"
+        ],
+        "keywords": [
+          "Curse of the Walking Pox",
+          "Deathtouch"
+        ],
+        "legalities": {
+          "standard": "not_legal",
+          "future": "not_legal",
+          "historic": "not_legal",
+          "timeless": "not_legal",
+          "gladiator": "not_legal",
+          "pioneer": "not_legal",
+          "modern": "not_legal",
+          "legacy": "legal",
+          "pauper": "not_legal",
+          "vintage": "legal",
+          "penny": "not_legal",
+          "commander": "legal",
+          "oathbreaker": "legal",
+          "standardbrawl": "not_legal",
+          "brawl": "not_legal",
+          "competitivebrawl": "not_legal",
+          "alchemy": "not_legal",
+          "paupercommander": "not_legal",
+          "duel": "legal",
+          "oldschool": "not_legal",
+          "premodern": "not_legal",
+          "predh": "not_legal",
+          "tlr": "legal"
+        },
+        "set": "40k"
+      }
+    },
+    {
+      "deck_name": "Sloppity Bilepiper",
+      "card": {
+        "id": "7eadbe1b-12a2-4791-b51d-e5eebf652af6",
+        "oracle_id": "6bd38092-7788-4bb6-9447-16c56e11e603",
+        "name": "Sloppity Bilepiper",
+        "released_at": "2022-10-07",
+        "scryfall_uri": "https://scryfall.com/card/40k/59/sloppity-bilepiper?utm_source=api",
+        "layout": "normal",
+        "mana_cost": "{3}{B}",
+        "cmc": 4.0,
+        "type_line": "Creature — Demon",
+        "oracle_text": "Jolly Gutpipes — {2}, {T}, Sacrifice a creature: The next creature spell you cast this turn has cascade. (When you next cast a creature spell, exile cards from the top of your library until you exile a nonland card that costs less. You may cast it without paying its mana cost. Put the exiled cards on the bottom in a random order.)",
+        "power": "3",
+        "toughness": "3",
+        "colors": [
+          "B"
+        ],
+        "color_identity": [
+          "B"
+        ],
+        "keywords": [
+          "Jolly Gutpipes"
+        ],
+        "legalities": {
+          "standard": "not_legal",
+          "future": "not_legal",
+          "historic": "not_legal",
+          "timeless": "not_legal",
+          "gladiator": "not_legal",
+          "pioneer": "not_legal",
+          "modern": "not_legal",
+          "legacy": "legal",
+          "pauper": "not_legal",
+          "vintage": "legal",
+          "penny": "not_legal",
+          "commander": "legal",
+          "oathbreaker": "legal",
+          "standardbrawl": "not_legal",
+          "brawl": "not_legal",
+          "competitivebrawl": "not_legal",
+          "alchemy": "not_legal",
+          "paupercommander": "not_legal",
+          "duel": "legal",
+          "oldschool": "not_legal",
+          "premodern": "not_legal",
+          "predh": "not_legal",
+          "tlr": "not_legal"
+        },
+        "set": "40k"
+      }
+    },
+    {
+      "deck_name": "Tallyman of Nurgle",
+      "card": {
+        "id": "72ce155e-af65-47f9-8967-6608bd69ee55",
+        "oracle_id": "7cc4a635-8730-4018-a8fd-b29fb5479928",
+        "name": "Tallyman of Nurgle",
+        "released_at": "2022-10-07",
+        "scryfall_uri": "https://scryfall.com/card/40k/60/tallyman-of-nurgle?utm_source=api",
+        "layout": "normal",
+        "mana_cost": "{2}{B}",
+        "cmc": 3.0,
+        "type_line": "Creature — Astartes Warrior",
+        "oracle_text": "Lifelink\nThe Seven-fold Chant — At the beginning of your end step, if a creature died this turn, you draw a card and you lose 1 life. If seven or more creatures died this turn, instead you draw seven cards and you lose 7 life.",
+        "power": "2",
+        "toughness": "3",
+        "colors": [
+          "B"
+        ],
+        "color_identity": [
+          "B"
+        ],
+        "keywords": [
+          "Lifelink",
+          "The Seven-fold Chant"
+        ],
+        "legalities": {
+          "standard": "not_legal",
+          "future": "not_legal",
+          "historic": "not_legal",
+          "timeless": "not_legal",
+          "gladiator": "not_legal",
+          "pioneer": "not_legal",
+          "modern": "not_legal",
+          "legacy": "legal",
+          "pauper": "not_legal",
+          "vintage": "legal",
+          "penny": "not_legal",
+          "commander": "legal",
+          "oathbreaker": "legal",
+          "standardbrawl": "not_legal",
+          "brawl": "not_legal",
+          "competitivebrawl": "not_legal",
+          "alchemy": "not_legal",
+          "paupercommander": "not_legal",
+          "duel": "legal",
+          "oldschool": "not_legal",
+          "premodern": "not_legal",
+          "predh": "not_legal",
+          "tlr": "legal"
+        },
+        "set": "40k"
+      }
+    },
+    {
+      "deck_name": "Venomcrawler",
+      "card": {
+        "id": "7b44099c-0b24-423a-b8c0-5d5e8687fe61",
+        "oracle_id": "f3a07ae4-b0f8-43e6-adba-217f220cc2d0",
+        "name": "Venomcrawler",
+        "released_at": "2022-10-07",
+        "scryfall_uri": "https://scryfall.com/card/40k/68/venomcrawler?utm_source=api",
+        "layout": "normal",
+        "mana_cost": "{3}{B}",
+        "cmc": 4.0,
+        "type_line": "Artifact Creature — Demon",
+        "oracle_text": "Lifelink\nDevourer of Souls — Whenever another creature dies, put a +1/+1 counter on this creature.",
+        "power": "2",
+        "toughness": "2",
+        "colors": [
+          "B"
+        ],
+        "color_identity": [
+          "B"
+        ],
+        "keywords": [
+          "Lifelink",
+          "Devourer of Souls"
+        ],
+        "legalities": {
+          "standard": "not_legal",
+          "future": "not_legal",
+          "historic": "not_legal",
+          "timeless": "not_legal",
+          "gladiator": "not_legal",
+          "pioneer": "not_legal",
+          "modern": "not_legal",
+          "legacy": "legal",
+          "pauper": "not_legal",
+          "vintage": "legal",
+          "penny": "not_legal",
+          "commander": "legal",
+          "oathbreaker": "legal",
+          "standardbrawl": "not_legal",
+          "brawl": "not_legal",
+          "competitivebrawl": "not_legal",
+          "alchemy": "not_legal",
+          "paupercommander": "not_legal",
+          "duel": "legal",
+          "oldschool": "not_legal",
+          "premodern": "not_legal",
+          "predh": "not_legal",
+          "tlr": "not_legal"
+        },
+        "set": "40k"
+      }
+    },
+    {
+      "deck_name": "Crypt Rats",
+      "card": {
+        "id": "96916db2-5121-4ff1-880c-369744f11ecf",
+        "oracle_id": "104095ed-55e3-408e-bf70-4fe06bb16d2f",
+        "name": "Crypt Rats",
+        "released_at": "2019-06-14",
+        "scryfall_uri": "https://scryfall.com/card/mh1/84/crypt-rats?utm_source=api",
+        "layout": "normal",
+        "mana_cost": "{2}{B}",
+        "cmc": 3.0,
+        "type_line": "Creature — Rat",
+        "oracle_text": "{X}: This creature deals X damage to each creature and each player. Spend only black mana on X.",
+        "power": "1",
+        "toughness": "1",
+        "colors": [
+          "B"
+        ],
+        "color_identity": [
+          "B"
+        ],
+        "keywords": [],
+        "legalities": {
+          "standard": "not_legal",
+          "future": "not_legal",
+          "historic": "not_legal",
+          "timeless": "not_legal",
+          "gladiator": "not_legal",
+          "pioneer": "not_legal",
+          "modern": "legal",
+          "legacy": "legal",
+          "pauper": "legal",
+          "vintage": "legal",
+          "penny": "not_legal",
+          "commander": "legal",
+          "oathbreaker": "legal",
+          "standardbrawl": "not_legal",
+          "brawl": "not_legal",
+          "competitivebrawl": "not_legal",
+          "alchemy": "not_legal",
+          "paupercommander": "legal",
+          "duel": "legal",
+          "oldschool": "not_legal",
+          "premodern": "legal",
+          "predh": "legal",
+          "tlr": "legal"
+        },
+        "set": "mh1"
+      }
+    },
+    {
+      "deck_name": "Pestilence Demon",
+      "card": {
+        "id": "058eb32f-2ae2-4276-ae1a-242bbb150418",
+        "oracle_id": "2572add6-c0b1-44bd-8713-1e94e3fe69d6",
+        "name": "Pestilence Demon",
+        "released_at": "2016-09-02",
+        "scryfall_uri": "https://scryfall.com/card/ddr/56/pestilence-demon?utm_source=api",
+        "layout": "normal",
+        "mana_cost": "{5}{B}{B}{B}",
+        "cmc": 8.0,
+        "type_line": "Creature — Demon",
+        "oracle_text": "Flying\n{B}: This creature deals 1 damage to each creature and each player.",
+        "power": "7",
+        "toughness": "6",
+        "colors": [
+          "B"
+        ],
+        "color_identity": [
+          "B"
+        ],
+        "keywords": [
+          "Flying"
+        ],
+        "legalities": {
+          "standard": "not_legal",
+          "future": "not_legal",
+          "historic": "not_legal",
+          "timeless": "not_legal",
+          "gladiator": "not_legal",
+          "pioneer": "not_legal",
+          "modern": "legal",
+          "legacy": "legal",
+          "pauper": "not_legal",
+          "vintage": "legal",
+          "penny": "legal",
+          "commander": "legal",
+          "oathbreaker": "legal",
+          "standardbrawl": "not_legal",
+          "brawl": "not_legal",
+          "competitivebrawl": "not_legal",
+          "alchemy": "not_legal",
+          "paupercommander": "not_legal",
+          "duel": "legal",
+          "oldschool": "not_legal",
+          "premodern": "not_legal",
+          "predh": "legal",
+          "tlr": "not_legal"
+        },
+        "set": "ddr"
+      }
+    },
+    {
+      "deck_name": "Thrashing Wumpus",
+      "card": {
+        "id": "86bc07c6-2ba7-41f8-90ab-f9bbac86dd08",
+        "oracle_id": "ef220824-fab4-4d8e-9ba4-65ff5ba1db66",
+        "name": "Thrashing Wumpus",
+        "released_at": "1999-10-04",
+        "scryfall_uri": "https://scryfall.com/card/mmq/166/thrashing-wumpus?utm_source=api",
+        "layout": "normal",
+        "mana_cost": "{3}{B}{B}",
+        "cmc": 5.0,
+        "type_line": "Creature — Beast",
+        "oracle_text": "{B}: This creature deals 1 damage to each creature and each player.",
+        "power": "3",
+        "toughness": "3",
+        "colors": [
+          "B"
+        ],
+        "color_identity": [
+          "B"
+        ],
+        "keywords": [],
+        "legalities": {
+          "standard": "not_legal",
+          "future": "not_legal",
+          "historic": "not_legal",
+          "timeless": "not_legal",
+          "gladiator": "not_legal",
+          "pioneer": "not_legal",
+          "modern": "not_legal",
+          "legacy": "legal",
+          "pauper": "not_legal",
+          "vintage": "legal",
+          "penny": "not_legal",
+          "commander": "legal",
+          "oathbreaker": "legal",
+          "standardbrawl": "not_legal",
+          "brawl": "not_legal",
+          "competitivebrawl": "not_legal",
+          "alchemy": "not_legal",
+          "paupercommander": "not_legal",
+          "duel": "legal",
+          "oldschool": "not_legal",
+          "premodern": "legal",
+          "predh": "legal",
+          "tlr": "not_legal"
+        },
+        "set": "mmq"
+      }
+    },
+    {
+      "deck_name": "Plague Spitter",
+      "card": {
+        "id": "a82559e5-110b-4c6a-956a-7cba83788dc8",
+        "oracle_id": "5feedfb0-30e6-400d-9e28-d541ea1aa14e",
+        "name": "Plague Spitter",
+        "released_at": "2022-06-10",
+        "scryfall_uri": "https://scryfall.com/card/clb/767/plague-spitter?utm_source=api",
+        "layout": "normal",
+        "mana_cost": "{2}{B}",
+        "cmc": 3.0,
+        "type_line": "Creature — Phyrexian Horror",
+        "oracle_text": "At the beginning of your upkeep, this creature deals 1 damage to each creature and each player.\nWhen this creature dies, it deals 1 damage to each creature and each player.",
+        "power": "2",
+        "toughness": "2",
+        "colors": [
+          "B"
+        ],
+        "color_identity": [
+          "B"
+        ],
+        "keywords": [],
+        "legalities": {
+          "standard": "not_legal",
+          "future": "not_legal",
+          "historic": "not_legal",
+          "timeless": "not_legal",
+          "gladiator": "not_legal",
+          "pioneer": "not_legal",
+          "modern": "not_legal",
+          "legacy": "legal",
+          "pauper": "not_legal",
+          "vintage": "legal",
+          "penny": "not_legal",
+          "commander": "legal",
+          "oathbreaker": "legal",
+          "standardbrawl": "not_legal",
+          "brawl": "not_legal",
+          "competitivebrawl": "not_legal",
+          "alchemy": "not_legal",
+          "paupercommander": "not_legal",
+          "duel": "legal",
+          "oldschool": "not_legal",
+          "premodern": "legal",
+          "predh": "legal",
+          "tlr": "legal"
+        },
+        "set": "clb"
+      }
+    },
+    {
+      "deck_name": "Midnight Banshee",
+      "card": {
+        "id": "f0a38737-22e6-469f-94d8-12b9a62f4495",
+        "oracle_id": "dd8b6067-a97f-402f-bba1-70ebc6ee1599",
+        "name": "Midnight Banshee",
+        "released_at": "2026-01-23",
+        "scryfall_uri": "https://scryfall.com/card/ecc/80/midnight-banshee?utm_source=api",
+        "layout": "normal",
+        "mana_cost": "{3}{B}{B}{B}",
+        "cmc": 6.0,
+        "type_line": "Creature — Spirit",
+        "oracle_text": "Wither (This deals damage to creatures in the form of -1/-1 counters.)\nAt the beginning of your upkeep, put a -1/-1 counter on each nonblack creature.",
+        "power": "5",
+        "toughness": "5",
+        "colors": [
+          "B"
+        ],
+        "color_identity": [
+          "B"
+        ],
+        "keywords": [
+          "Wither"
+        ],
+        "legalities": {
+          "standard": "not_legal",
+          "future": "not_legal",
+          "historic": "not_legal",
+          "timeless": "not_legal",
+          "gladiator": "not_legal",
+          "pioneer": "not_legal",
+          "modern": "legal",
+          "legacy": "legal",
+          "pauper": "not_legal",
+          "vintage": "legal",
+          "penny": "legal",
+          "commander": "legal",
+          "oathbreaker": "legal",
+          "standardbrawl": "not_legal",
+          "brawl": "not_legal",
+          "competitivebrawl": "not_legal",
+          "alchemy": "not_legal",
+          "paupercommander": "not_legal",
+          "duel": "legal",
+          "oldschool": "not_legal",
+          "premodern": "not_legal",
+          "predh": "legal",
+          "tlr": "not_legal"
+        },
+        "set": "ecc"
+      }
+    },
+    {
+      "deck_name": "Necroskitter",
+      "card": {
+        "id": "1743ff46-7bfe-46f7-a2cf-170dd92bf28f",
+        "oracle_id": "536f7c92-2f1e-49e7-98de-47382a9488f1",
+        "name": "Necroskitter",
+        "released_at": "2026-01-23",
+        "scryfall_uri": "https://scryfall.com/card/ecc/48/necroskitter?utm_source=api",
+        "layout": "normal",
+        "mana_cost": "{1}{B}{B}",
+        "cmc": 3.0,
+        "type_line": "Creature — Elemental",
+        "oracle_text": "Wither (This deals damage to creatures in the form of -1/-1 counters.)\nWhenever a creature an opponent controls with a -1/-1 counter on it dies, you may return that card to the battlefield under your control.",
+        "power": "1",
+        "toughness": "4",
+        "colors": [
+          "B"
+        ],
+        "color_identity": [
+          "B"
+        ],
+        "keywords": [
+          "Wither"
+        ],
+        "legalities": {
+          "standard": "not_legal",
+          "future": "not_legal",
+          "historic": "not_legal",
+          "timeless": "not_legal",
+          "gladiator": "not_legal",
+          "pioneer": "not_legal",
+          "modern": "legal",
+          "legacy": "legal",
+          "pauper": "not_legal",
+          "vintage": "legal",
+          "penny": "legal",
+          "commander": "legal",
+          "oathbreaker": "legal",
+          "standardbrawl": "not_legal",
+          "brawl": "not_legal",
+          "competitivebrawl": "not_legal",
+          "alchemy": "not_legal",
+          "paupercommander": "not_legal",
+          "duel": "legal",
+          "oldschool": "not_legal",
+          "premodern": "not_legal",
+          "predh": "legal",
+          "tlr": "legal"
+        },
+        "set": "ecc"
+      }
+    },
+    {
+      "deck_name": "Yawgmoth, Thran Physician",
+      "card": {
+        "id": "b5a79f5d-d0df-4799-ac3a-84305e3af0c9",
+        "oracle_id": "a1e232c0-dc38-47be-a5a0-f68bc1d86a29",
+        "name": "Yawgmoth, Thran Physician",
+        "released_at": "2023-01-13",
+        "scryfall_uri": "https://scryfall.com/card/dmr/110/yawgmoth-thran-physician?utm_source=api",
+        "layout": "normal",
+        "mana_cost": "{2}{B}{B}",
+        "cmc": 4.0,
+        "type_line": "Legendary Creature — Human Cleric",
+        "oracle_text": "Protection from Humans\nPay 1 life, Sacrifice another creature: Put a -1/-1 counter on up to one target creature and draw a card.\n{B}{B}, Discard a card: Proliferate. (Choose any number of permanents and/or players, then give each another counter of each kind already there.)",
+        "power": "2",
+        "toughness": "4",
+        "colors": [
+          "B"
+        ],
+        "color_identity": [
+          "B"
+        ],
+        "keywords": [
+          "Protection",
+          "Proliferate"
+        ],
+        "legalities": {
+          "standard": "not_legal",
+          "future": "not_legal",
+          "historic": "legal",
+          "timeless": "legal",
+          "gladiator": "legal",
+          "pioneer": "not_legal",
+          "modern": "legal",
+          "legacy": "legal",
+          "pauper": "not_legal",
+          "vintage": "legal",
+          "penny": "not_legal",
+          "commander": "legal",
+          "oathbreaker": "legal",
+          "standardbrawl": "not_legal",
+          "brawl": "legal",
+          "competitivebrawl": "legal",
+          "alchemy": "not_legal",
+          "paupercommander": "not_legal",
+          "duel": "legal",
+          "oldschool": "not_legal",
+          "premodern": "not_legal",
+          "predh": "not_legal",
+          "tlr": "not_legal"
+        },
+        "set": "dmr"
+      }
+    },
+    {
+      "deck_name": "Mikaeus, the Unhallowed",
+      "card": {
+        "id": "bc1f42a2-fe11-45da-9552-069803b4068a",
+        "oracle_id": "5d27c63e-d1ef-48af-b51d-01ebc6daeac9",
+        "name": "Mikaeus, the Unhallowed",
+        "released_at": "2023-08-04",
+        "scryfall_uri": "https://scryfall.com/card/cmm/173/mikaeus-the-unhallowed?utm_source=api",
+        "layout": "normal",
+        "mana_cost": "{3}{B}{B}{B}",
+        "cmc": 6.0,
+        "type_line": "Legendary Creature — Zombie Cleric",
+        "oracle_text": "Intimidate (This creature can't be blocked except by artifact creatures and/or creatures that share a color with it.)\nWhenever a Human deals damage to you, destroy it.\nOther non-Human creatures you control get +1/+1 and have undying. (When a creature with undying dies, if it had no +1/+1 counters on it, return it to the battlefield under its owner's control with a +1/+1 counter on it.)",
+        "power": "5",
+        "toughness": "5",
+        "colors": [
+          "B"
+        ],
+        "color_identity": [
+          "B"
+        ],
+        "keywords": [
+          "Intimidate"
+        ],
+        "legalities": {
+          "standard": "not_legal",
+          "future": "not_legal",
+          "historic": "not_legal",
+          "timeless": "not_legal",
+          "gladiator": "not_legal",
+          "pioneer": "not_legal",
+          "modern": "legal",
+          "legacy": "legal",
+          "pauper": "not_legal",
+          "vintage": "legal",
+          "penny": "legal",
+          "commander": "legal",
+          "oathbreaker": "legal",
+          "standardbrawl": "not_legal",
+          "brawl": "not_legal",
+          "competitivebrawl": "not_legal",
+          "alchemy": "not_legal",
+          "paupercommander": "not_legal",
+          "duel": "legal",
+          "oldschool": "not_legal",
+          "premodern": "not_legal",
+          "predh": "not_legal",
+          "tlr": "not_legal"
+        },
+        "set": "cmm"
+      }
+    },
+    {
+      "deck_name": "Reassembling Skeleton",
+      "card": {
+        "id": "4d431445-d7db-4ce1-b422-41494d9be1b4",
+        "oracle_id": "9dbc3530-b278-4c8d-b2cc-a09dfac9d5e5",
+        "name": "Reassembling Skeleton",
+        "released_at": "2025-04-11",
+        "scryfall_uri": "https://scryfall.com/card/tdc/195/reassembling-skeleton?utm_source=api",
+        "layout": "normal",
+        "mana_cost": "{1}{B}",
+        "cmc": 2.0,
+        "type_line": "Creature — Skeleton Warrior",
+        "oracle_text": "{1}{B}: Return this card from your graveyard to the battlefield tapped.",
+        "power": "1",
+        "toughness": "1",
+        "colors": [
+          "B"
+        ],
+        "color_identity": [
+          "B"
+        ],
+        "keywords": [],
+        "legalities": {
+          "standard": "legal",
+          "future": "legal",
+          "historic": "legal",
+          "timeless": "legal",
+          "gladiator": "legal",
+          "pioneer": "legal",
+          "modern": "legal",
+          "legacy": "legal",
+          "pauper": "not_legal",
+          "vintage": "legal",
+          "penny": "not_legal",
+          "commander": "legal",
+          "oathbreaker": "legal",
+          "standardbrawl": "legal",
+          "brawl": "legal",
+          "competitivebrawl": "legal",
+          "alchemy": "legal",
+          "paupercommander": "not_legal",
+          "duel": "legal",
+          "oldschool": "not_legal",
+          "premodern": "not_legal",
+          "predh": "legal",
+          "tlr": "legal"
+        },
+        "set": "tdc"
+      }
+    },
+    {
+      "deck_name": "Persistent Specimen",
+      "card": {
+        "id": "f7baf973-3202-4fea-8861-a4a5ec228640",
+        "oracle_id": "5f4ad578-f2c4-47f6-8080-8fbc17383f6f",
+        "name": "Persistent Specimen",
+        "released_at": "2021-11-19",
+        "scryfall_uri": "https://scryfall.com/card/vow/125/persistent-specimen?utm_source=api",
+        "layout": "normal",
+        "mana_cost": "{B}",
+        "cmc": 1.0,
+        "type_line": "Creature — Skeleton",
+        "oracle_text": "{2}{B}: Return this card from your graveyard to the battlefield tapped.",
+        "power": "1",
+        "toughness": "1",
+        "colors": [
+          "B"
+        ],
+        "color_identity": [
+          "B"
+        ],
+        "keywords": [],
+        "legalities": {
+          "standard": "not_legal",
+          "future": "not_legal",
+          "historic": "legal",
+          "timeless": "legal",
+          "gladiator": "legal",
+          "pioneer": "legal",
+          "modern": "legal",
+          "legacy": "legal",
+          "pauper": "legal",
+          "vintage": "legal",
+          "penny": "not_legal",
+          "commander": "legal",
+          "oathbreaker": "legal",
+          "standardbrawl": "not_legal",
+          "brawl": "legal",
+          "competitivebrawl": "legal",
+          "alchemy": "not_legal",
+          "paupercommander": "legal",
+          "duel": "legal",
+          "oldschool": "not_legal",
+          "premodern": "not_legal",
+          "predh": "not_legal",
+          "tlr": "legal"
+        },
+        "set": "vow"
+      }
+    },
+    {
+      "deck_name": "Darksteel Myr",
+      "card": {
+        "id": "0f5712cf-c6a9-4a2e-90db-8ca17c621724",
+        "oracle_id": "f90fe86c-5cca-483b-93c2-6e856fa01c88",
+        "name": "Darksteel Myr",
+        "released_at": "2010-10-01",
+        "scryfall_uri": "https://scryfall.com/card/som/151/darksteel-myr?utm_source=api",
+        "layout": "normal",
+        "mana_cost": "{3}",
+        "cmc": 3.0,
+        "type_line": "Artifact Creature — Myr",
+        "oracle_text": "Indestructible (Damage and effects that say \"destroy\" don't destroy this creature. If its toughness is 0 or less, it still dies.)",
+        "power": "0",
+        "toughness": "1",
+        "colors": [],
+        "color_identity": [],
+        "keywords": [
+          "Indestructible"
+        ],
+        "legalities": {
+          "standard": "not_legal",
+          "future": "not_legal",
+          "historic": "not_legal",
+          "timeless": "not_legal",
+          "gladiator": "not_legal",
+          "pioneer": "not_legal",
+          "modern": "legal",
+          "legacy": "legal",
+          "pauper": "not_legal",
+          "vintage": "legal",
+          "penny": "not_legal",
+          "commander": "legal",
+          "oathbreaker": "legal",
+          "standardbrawl": "not_legal",
+          "brawl": "not_legal",
+          "competitivebrawl": "not_legal",
+          "alchemy": "not_legal",
+          "paupercommander": "not_legal",
+          "duel": "legal",
+          "oldschool": "not_legal",
+          "premodern": "not_legal",
+          "predh": "legal",
+          "tlr": "legal"
+        },
+        "set": "som"
+      }
+    },
+    {
+      "deck_name": "Stuffy Doll",
+      "card": {
+        "id": "978c2c7d-6898-4be2-aed7-e673210ce654",
+        "oracle_id": "499dceab-1890-49c8-b35d-b059a1dc950f",
+        "name": "Stuffy Doll",
+        "released_at": "2022-06-10",
+        "scryfall_uri": "https://scryfall.com/card/clb/875/stuffy-doll?utm_source=api",
+        "layout": "normal",
+        "mana_cost": "{5}",
+        "cmc": 5.0,
+        "type_line": "Artifact Creature — Construct",
+        "oracle_text": "Indestructible\nAs this creature enters, choose a player.\nWhenever this creature is dealt damage, it deals that much damage to the chosen player.\n{T}: This creature deals 1 damage to itself.",
+        "power": "0",
+        "toughness": "1",
+        "colors": [],
+        "color_identity": [],
+        "keywords": [
+          "Indestructible"
+        ],
+        "legalities": {
+          "standard": "not_legal",
+          "future": "not_legal",
+          "historic": "not_legal",
+          "timeless": "not_legal",
+          "gladiator": "not_legal",
+          "pioneer": "not_legal",
+          "modern": "legal",
+          "legacy": "legal",
+          "pauper": "not_legal",
+          "vintage": "legal",
+          "penny": "legal",
+          "commander": "legal",
+          "oathbreaker": "legal",
+          "standardbrawl": "not_legal",
+          "brawl": "not_legal",
+          "competitivebrawl": "not_legal",
+          "alchemy": "not_legal",
+          "paupercommander": "not_legal",
+          "duel": "legal",
+          "oldschool": "not_legal",
+          "premodern": "not_legal",
+          "predh": "legal",
+          "tlr": "not_legal"
+        },
+        "set": "clb"
+      }
+    },
+    {
+      "deck_name": "Dread",
+      "card": {
+        "id": "9b608658-9150-439b-b0a0-4a994722b95c",
+        "oracle_id": "09f41fac-8285-457a-bb71-8c6a93af2df9",
+        "name": "Dread",
+        "released_at": "2007-10-12",
+        "scryfall_uri": "https://scryfall.com/card/lrw/107/dread?utm_source=api",
+        "layout": "normal",
+        "mana_cost": "{3}{B}{B}{B}",
+        "cmc": 6.0,
+        "type_line": "Creature — Elemental Incarnation",
+        "oracle_text": "Fear (This creature can't be blocked except by artifact creatures and/or black creatures.)\nWhenever a creature deals damage to you, destroy it.\nWhen Dread is put into a graveyard from anywhere, shuffle it into its owner's library.",
+        "power": "6",
+        "toughness": "6",
+        "colors": [
+          "B"
+        ],
+        "color_identity": [
+          "B"
+        ],
+        "keywords": [
+          "Fear"
+        ],
+        "legalities": {
+          "standard": "not_legal",
+          "future": "not_legal",
+          "historic": "not_legal",
+          "timeless": "not_legal",
+          "gladiator": "not_legal",
+          "pioneer": "not_legal",
+          "modern": "legal",
+          "legacy": "legal",
+          "pauper": "not_legal",
+          "vintage": "legal",
+          "penny": "legal",
+          "commander": "legal",
+          "oathbreaker": "legal",
+          "standardbrawl": "not_legal",
+          "brawl": "not_legal",
+          "competitivebrawl": "not_legal",
+          "alchemy": "not_legal",
+          "paupercommander": "not_legal",
+          "duel": "legal",
+          "oldschool": "not_legal",
+          "premodern": "not_legal",
+          "predh": "legal",
+          "tlr": "not_legal"
+        },
+        "set": "lrw"
+      }
+    },
+    {
+      "deck_name": "Vilis, Broker of Blood",
+      "card": {
+        "id": "ecdf2bd9-87b9-470a-ad2e-0ebf98560f87",
+        "oracle_id": "7c209753-121b-4859-944b-4e33f885e777",
+        "name": "Vilis, Broker of Blood",
+        "released_at": "2019-07-12",
+        "scryfall_uri": "https://scryfall.com/card/m20/122/vilis-broker-of-blood?utm_source=api",
+        "layout": "normal",
+        "mana_cost": "{5}{B}{B}{B}",
+        "cmc": 8.0,
+        "type_line": "Legendary Creature — Demon",
+        "oracle_text": "Flying\n{B}, Pay 2 life: Target creature gets -1/-1 until end of turn.\nWhenever you lose life, draw that many cards. (Damage causes loss of life.)",
+        "power": "8",
+        "toughness": "8",
+        "colors": [
+          "B"
+        ],
+        "color_identity": [
+          "B"
+        ],
+        "keywords": [
+          "Flying"
+        ],
+        "legalities": {
+          "standard": "not_legal",
+          "future": "not_legal",
+          "historic": "legal",
+          "timeless": "legal",
+          "gladiator": "legal",
+          "pioneer": "legal",
+          "modern": "legal",
+          "legacy": "legal",
+          "pauper": "not_legal",
+          "vintage": "legal",
+          "penny": "legal",
+          "commander": "legal",
+          "oathbreaker": "legal",
+          "standardbrawl": "not_legal",
+          "brawl": "legal",
+          "competitivebrawl": "legal",
+          "alchemy": "not_legal",
+          "paupercommander": "not_legal",
+          "duel": "legal",
+          "oldschool": "not_legal",
+          "premodern": "not_legal",
+          "predh": "not_legal",
+          "tlr": "not_legal"
+        },
+        "set": "m20"
+      }
+    },
+    {
+      "deck_name": "Massacre Wurm",
+      "card": {
+        "id": "670a36cc-34e1-4d11-808e-1b6bc88eb5d8",
+        "oracle_id": "93cf50cf-0ecc-4d3e-abea-778c1ebacec4",
+        "name": "Massacre Wurm",
+        "released_at": "2026-04-24",
+        "scryfall_uri": "https://scryfall.com/card/fdn/754/massacre-wurm?utm_source=api",
+        "layout": "normal",
+        "mana_cost": "{3}{B}{B}{B}",
+        "cmc": 6.0,
+        "type_line": "Creature — Phyrexian Wurm",
+        "oracle_text": "When this creature enters, creatures your opponents control get -2/-2 until end of turn.\nWhenever a creature an opponent controls dies, that player loses 2 life.",
+        "power": "6",
+        "toughness": "5",
+        "colors": [
+          "B"
+        ],
+        "color_identity": [
+          "B"
+        ],
+        "keywords": [],
+        "legalities": {
+          "standard": "legal",
+          "future": "legal",
+          "historic": "legal",
+          "timeless": "legal",
+          "gladiator": "legal",
+          "pioneer": "legal",
+          "modern": "legal",
+          "legacy": "legal",
+          "pauper": "not_legal",
+          "vintage": "legal",
+          "penny": "legal",
+          "commander": "legal",
+          "oathbreaker": "legal",
+          "standardbrawl": "legal",
+          "brawl": "legal",
+          "competitivebrawl": "legal",
+          "alchemy": "legal",
+          "paupercommander": "not_legal",
+          "duel": "legal",
+          "oldschool": "not_legal",
+          "premodern": "not_legal",
+          "predh": "legal",
+          "tlr": "not_legal"
+        },
+        "set": "fdn"
+      }
+    },
+    {
+      "deck_name": "Gray Merchant of Asphodel",
+      "card": {
+        "id": "00d001d0-fd29-4b7c-9d0e-9131b995f910",
+        "oracle_id": "38f3b157-0df4-409b-89cc-086e1531cd5b",
+        "name": "Gray Merchant of Asphodel",
+        "released_at": "2024-09-27",
+        "scryfall_uri": "https://scryfall.com/card/dsc/142/gray-merchant-of-asphodel?utm_source=api",
+        "layout": "normal",
+        "mana_cost": "{3}{B}{B}",
+        "cmc": 5.0,
+        "type_line": "Creature — Zombie",
+        "oracle_text": "When this creature enters, each opponent loses X life, where X is your devotion to black. You gain life equal to the life lost this way. (Each {B} in the mana costs of permanents you control counts toward your devotion to black.)",
+        "power": "2",
+        "toughness": "4",
+        "colors": [
+          "B"
+        ],
+        "color_identity": [
+          "B"
+        ],
+        "keywords": [],
+        "legalities": {
+          "standard": "not_legal",
+          "future": "not_legal",
+          "historic": "legal",
+          "timeless": "legal",
+          "gladiator": "legal",
+          "pioneer": "legal",
+          "modern": "legal",
+          "legacy": "legal",
+          "pauper": "legal",
+          "vintage": "legal",
+          "penny": "not_legal",
+          "commander": "legal",
+          "oathbreaker": "legal",
+          "standardbrawl": "not_legal",
+          "brawl": "legal",
+          "competitivebrawl": "legal",
+          "alchemy": "not_legal",
+          "paupercommander": "legal",
+          "duel": "legal",
+          "oldschool": "not_legal",
+          "premodern": "not_legal",
+          "predh": "not_legal",
+          "tlr": "not_legal"
+        },
+        "set": "dsc"
+      }
+    },
+    {
+      "deck_name": "Morbid Opportunist",
+      "card": {
+        "id": "08838865-a9b6-4323-96a2-0d3a7aba9d3d",
+        "oracle_id": "322f44f0-e6da-4ee0-b474-e7d5e9a461c5",
+        "name": "Morbid Opportunist",
+        "released_at": "2026-04-24",
+        "scryfall_uri": "https://scryfall.com/card/soc/219/morbid-opportunist?utm_source=api",
+        "layout": "normal",
+        "mana_cost": "{2}{B}",
+        "cmc": 3.0,
+        "type_line": "Creature — Human Rogue",
+        "oracle_text": "Whenever one or more other creatures die, draw a card. This ability triggers only once each turn.",
+        "power": "1",
+        "toughness": "3",
+        "colors": [
+          "B"
+        ],
+        "color_identity": [
+          "B"
+        ],
+        "keywords": [],
+        "legalities": {
+          "standard": "not_legal",
+          "future": "not_legal",
+          "historic": "legal",
+          "timeless": "legal",
+          "gladiator": "legal",
+          "pioneer": "legal",
+          "modern": "legal",
+          "legacy": "legal",
+          "pauper": "not_legal",
+          "vintage": "legal",
+          "penny": "legal",
+          "commander": "legal",
+          "oathbreaker": "legal",
+          "standardbrawl": "not_legal",
+          "brawl": "legal",
+          "competitivebrawl": "legal",
+          "alchemy": "not_legal",
+          "paupercommander": "not_legal",
+          "duel": "legal",
+          "oldschool": "not_legal",
+          "premodern": "not_legal",
+          "predh": "not_legal",
+          "tlr": "legal"
+        },
+        "set": "soc"
+      }
+    },
+    {
+      "deck_name": "Crypt Ghast",
+      "card": {
+        "id": "60bebd79-f88c-44ef-8920-e19031bad1d6",
+        "oracle_id": "a3c8d817-7949-4dae-b9f5-f9d952479270",
+        "name": "Crypt Ghast",
+        "released_at": "2024-01-12",
+        "scryfall_uri": "https://scryfall.com/card/rvr/70/crypt-ghast?utm_source=api",
+        "layout": "normal",
+        "mana_cost": "{3}{B}",
+        "cmc": 4.0,
+        "type_line": "Creature — Spirit",
+        "oracle_text": "Extort (Whenever you cast a spell, you may pay {W/B}. If you do, each opponent loses 1 life and you gain that much life.)\nWhenever you tap a Swamp for mana, add an additional {B}.",
+        "power": "2",
+        "toughness": "2",
+        "colors": [
+          "B"
+        ],
+        "color_identity": [
+          "B"
+        ],
+        "keywords": [
+          "Extort"
+        ],
+        "legalities": {
+          "standard": "not_legal",
+          "future": "not_legal",
+          "historic": "not_legal",
+          "timeless": "not_legal",
+          "gladiator": "not_legal",
+          "pioneer": "legal",
+          "modern": "legal",
+          "legacy": "legal",
+          "pauper": "not_legal",
+          "vintage": "legal",
+          "penny": "legal",
+          "commander": "legal",
+          "oathbreaker": "legal",
+          "standardbrawl": "not_legal",
+          "brawl": "not_legal",
+          "competitivebrawl": "not_legal",
+          "alchemy": "not_legal",
+          "paupercommander": "not_legal",
+          "duel": "legal",
+          "oldschool": "not_legal",
+          "premodern": "not_legal",
+          "predh": "not_legal",
+          "tlr": "not_legal"
+        },
+        "set": "rvr"
+      }
+    },
+    {
+      "deck_name": "Ophiomancer",
+      "card": {
+        "id": "baf793b6-9612-43f3-9f1b-2e53e81cb89f",
+        "oracle_id": "55eca80c-dcd8-4c2f-aa0f-fb0aec7b80f7",
+        "name": "Ophiomancer",
+        "released_at": "2026-04-24",
+        "scryfall_uri": "https://scryfall.com/card/soc/118/ophiomancer?utm_source=api",
+        "layout": "normal",
+        "mana_cost": "{2}{B}",
+        "cmc": 3.0,
+        "type_line": "Creature — Human Shaman",
+        "oracle_text": "At the beginning of each upkeep, if you control no Snakes, create a 1/1 black Snake creature token with deathtouch.",
+        "power": "2",
+        "toughness": "2",
+        "colors": [
+          "B"
+        ],
+        "color_identity": [
+          "B"
+        ],
+        "keywords": [],
+        "legalities": {
+          "standard": "not_legal",
+          "future": "not_legal",
+          "historic": "legal",
+          "timeless": "legal",
+          "gladiator": "legal",
+          "pioneer": "not_legal",
+          "modern": "legal",
+          "legacy": "legal",
+          "pauper": "not_legal",
+          "vintage": "legal",
+          "penny": "legal",
+          "commander": "legal",
+          "oathbreaker": "legal",
+          "standardbrawl": "not_legal",
+          "brawl": "legal",
+          "competitivebrawl": "legal",
+          "alchemy": "not_legal",
+          "paupercommander": "not_legal",
+          "duel": "legal",
+          "oldschool": "not_legal",
+          "premodern": "not_legal",
+          "predh": "not_legal",
+          "tlr": "legal"
+        },
+        "set": "soc"
+      }
+    },
+    {
+      "deck_name": "Nurgle's Conscription",
+      "card": {
+        "id": "9e663ce3-1871-4cde-82ba-4f009d582b77",
+        "oracle_id": "967f0c23-7af2-4e86-9ebc-dc2f8856c7c5",
+        "name": "Nurgle's Conscription",
+        "released_at": "2022-10-07",
+        "scryfall_uri": "https://scryfall.com/card/40k/44/nurgles-conscription?utm_source=api",
+        "layout": "normal",
+        "mana_cost": "{4}{B}",
+        "cmc": 5.0,
+        "type_line": "Instant",
+        "oracle_text": "Put target creature card from an opponent's graveyard onto the battlefield tapped under your control, then exile that player's graveyard.",
+        "colors": [
+          "B"
+        ],
+        "color_identity": [
+          "B"
+        ],
+        "keywords": [],
+        "legalities": {
+          "standard": "not_legal",
+          "future": "not_legal",
+          "historic": "not_legal",
+          "timeless": "not_legal",
+          "gladiator": "not_legal",
+          "pioneer": "not_legal",
+          "modern": "not_legal",
+          "legacy": "legal",
+          "pauper": "not_legal",
+          "vintage": "legal",
+          "penny": "not_legal",
+          "commander": "legal",
+          "oathbreaker": "legal",
+          "standardbrawl": "not_legal",
+          "brawl": "not_legal",
+          "competitivebrawl": "not_legal",
+          "alchemy": "not_legal",
+          "paupercommander": "not_legal",
+          "duel": "legal",
+          "oldschool": "not_legal",
+          "premodern": "not_legal",
+          "predh": "not_legal",
+          "tlr": "not_legal"
+        },
+        "set": "40k"
+      }
+    },
+    {
+      "deck_name": "Bile Blight",
+      "card": {
+        "id": "3ca11057-e50a-4817-924a-5bb504d0780f",
+        "oracle_id": "0dd95516-893d-477e-a38c-3cc37c6e7ae0",
+        "name": "Bile Blight",
+        "released_at": "2014-02-07",
+        "scryfall_uri": "https://scryfall.com/card/bng/61/bile-blight?utm_source=api",
+        "layout": "normal",
+        "mana_cost": "{B}{B}",
+        "cmc": 2.0,
+        "type_line": "Instant",
+        "oracle_text": "Target creature and all other creatures with the same name as that creature get -3/-3 until end of turn.",
+        "colors": [
+          "B"
+        ],
+        "color_identity": [
+          "B"
+        ],
+        "keywords": [],
+        "legalities": {
+          "standard": "not_legal",
+          "future": "not_legal",
+          "historic": "legal",
+          "timeless": "legal",
+          "gladiator": "legal",
+          "pioneer": "legal",
+          "modern": "legal",
+          "legacy": "legal",
+          "pauper": "not_legal",
+          "vintage": "legal",
+          "penny": "legal",
+          "commander": "legal",
+          "oathbreaker": "legal",
+          "standardbrawl": "not_legal",
+          "brawl": "legal",
+          "competitivebrawl": "legal",
+          "alchemy": "not_legal",
+          "paupercommander": "not_legal",
+          "duel": "legal",
+          "oldschool": "not_legal",
+          "premodern": "not_legal",
+          "predh": "not_legal",
+          "tlr": "legal"
+        },
+        "set": "bng"
+      }
+    },
+    {
+      "deck_name": "Dark Ritual",
+      "card": {
+        "id": "11e12a84-e7be-4afc-a230-c2e644743fa8",
+        "oracle_id": "53f7c868-b03e-4fc2-8dcf-a75bbfa3272b",
+        "name": "Dark Ritual",
+        "released_at": "2026-06-26",
+        "scryfall_uri": "https://scryfall.com/card/msc/793/dark-ritual?utm_source=api",
+        "layout": "normal",
+        "mana_cost": "{B}",
+        "cmc": 1.0,
+        "type_line": "Instant",
+        "oracle_text": "Add {B}{B}{B}.",
+        "colors": [
+          "B"
+        ],
+        "color_identity": [
+          "B"
+        ],
+        "keywords": [],
+        "legalities": {
+          "standard": "not_legal",
+          "future": "not_legal",
+          "historic": "banned",
+          "timeless": "legal",
+          "gladiator": "legal",
+          "pioneer": "not_legal",
+          "modern": "not_legal",
+          "legacy": "legal",
+          "pauper": "legal",
+          "vintage": "legal",
+          "penny": "not_legal",
+          "commander": "legal",
+          "oathbreaker": "banned",
+          "standardbrawl": "not_legal",
+          "brawl": "legal",
+          "competitivebrawl": "legal",
+          "alchemy": "not_legal",
+          "paupercommander": "legal",
+          "duel": "banned",
+          "oldschool": "not_legal",
+          "premodern": "legal",
+          "predh": "legal",
+          "tlr": "legal"
+        },
+        "set": "msc"
+      }
+    },
+    {
+      "deck_name": "Malakir Rebirth // Malakir Mire",
+      "card": {
+        "id": "609d3ecf-f88d-4268-a8d3-4bf2bcf5df60",
+        "oracle_id": "a731e87b-8d99-4b64-8ee3-8e540d652366",
+        "name": "Malakir Rebirth // Malakir Mire",
+        "released_at": "2020-09-25",
+        "scryfall_uri": "https://scryfall.com/card/znr/111/malakir-rebirth-malakir-mire?utm_source=api",
+        "layout": "modal_dfc",
+        "cmc": 1.0,
+        "type_line": "Instant // Land",
+        "color_identity": [
+          "B"
+        ],
+        "keywords": [],
+        "card_faces": [
+          {
+            "name": "Malakir Rebirth",
+            "mana_cost": "{B}",
+            "type_line": "Instant",
+            "oracle_text": "Choose target creature. You lose 2 life. Until end of turn, that creature gains \"When this creature dies, return it to the battlefield tapped under its owner's control.\"",
+            "colors": [
+              "B"
+            ]
+          },
+          {
+            "name": "Malakir Mire",
+            "mana_cost": "",
+            "type_line": "Land",
+            "oracle_text": "This land enters tapped.\n{T}: Add {B}.",
+            "colors": []
+          }
+        ],
+        "legalities": {
+          "standard": "not_legal",
+          "future": "not_legal",
+          "historic": "legal",
+          "timeless": "legal",
+          "gladiator": "legal",
+          "pioneer": "legal",
+          "modern": "legal",
+          "legacy": "legal",
+          "pauper": "not_legal",
+          "vintage": "legal",
+          "penny": "not_legal",
+          "commander": "legal",
+          "oathbreaker": "legal",
+          "standardbrawl": "not_legal",
+          "brawl": "legal",
+          "competitivebrawl": "legal",
+          "alchemy": "not_legal",
+          "paupercommander": "not_legal",
+          "duel": "legal",
+          "oldschool": "not_legal",
+          "premodern": "not_legal",
+          "predh": "not_legal",
+          "tlr": "legal"
+        },
+        "set": "znr"
+      }
+    },
+    {
+      "deck_name": "Undying Malice",
+      "card": {
+        "id": "97b3cf11-e352-4ee1-8c03-13898f576ef9",
+        "oracle_id": "8b061702-1bc3-45aa-a758-446b25034801",
+        "name": "Undying Malice",
+        "released_at": "2024-11-15",
+        "scryfall_uri": "https://scryfall.com/card/fdn/528/undying-malice?utm_source=api",
+        "layout": "normal",
+        "mana_cost": "{B}",
+        "cmc": 1.0,
+        "type_line": "Instant",
+        "oracle_text": "Until end of turn, target creature gains \"When this creature dies, return it to the battlefield tapped under its owner's control with a +1/+1 counter on it.\"",
+        "colors": [
+          "B"
+        ],
+        "color_identity": [
+          "B"
+        ],
+        "keywords": [],
+        "legalities": {
+          "standard": "legal",
+          "future": "legal",
+          "historic": "legal",
+          "timeless": "legal",
+          "gladiator": "legal",
+          "pioneer": "legal",
+          "modern": "legal",
+          "legacy": "legal",
+          "pauper": "legal",
+          "vintage": "legal",
+          "penny": "not_legal",
+          "commander": "legal",
+          "oathbreaker": "legal",
+          "standardbrawl": "legal",
+          "brawl": "legal",
+          "competitivebrawl": "legal",
+          "alchemy": "legal",
+          "paupercommander": "legal",
+          "duel": "legal",
+          "oldschool": "not_legal",
+          "premodern": "not_legal",
+          "predh": "not_legal",
+          "tlr": "legal"
+        },
+        "set": "fdn"
+      }
+    },
+    {
+      "deck_name": "Deadly Dispute",
+      "card": {
+        "id": "d86fa72c-25c1-43ef-9cb0-fe76f7568ed3",
+        "oracle_id": "457af74a-02b3-4659-846d-63e482667f34",
+        "name": "Deadly Dispute",
+        "released_at": "2026-06-26",
+        "scryfall_uri": "https://scryfall.com/card/msc/794/deadly-dispute?utm_source=api",
+        "layout": "normal",
+        "mana_cost": "{1}{B}",
+        "cmc": 2.0,
+        "type_line": "Instant",
+        "oracle_text": "As an additional cost to cast this spell, sacrifice an artifact or creature.\nDraw two cards and create a Treasure token. (It's an artifact with \"{T}, Sacrifice this token: Add one mana of any color.\")",
+        "colors": [
+          "B"
+        ],
+        "color_identity": [
+          "B"
+        ],
+        "keywords": [
+          "Treasure"
+        ],
+        "legalities": {
+          "standard": "not_legal",
+          "future": "not_legal",
+          "historic": "legal",
+          "timeless": "legal",
+          "gladiator": "legal",
+          "pioneer": "legal",
+          "modern": "legal",
+          "legacy": "legal",
+          "pauper": "banned",
+          "vintage": "legal",
+          "penny": "not_legal",
+          "commander": "legal",
+          "oathbreaker": "legal",
+          "standardbrawl": "not_legal",
+          "brawl": "legal",
+          "competitivebrawl": "legal",
+          "alchemy": "not_legal",
+          "paupercommander": "legal",
+          "duel": "legal",
+          "oldschool": "not_legal",
+          "premodern": "not_legal",
+          "predh": "not_legal",
+          "tlr": "legal"
+        },
+        "set": "msc"
+      }
+    },
+    {
+      "deck_name": "Sudden Spoiling",
+      "card": {
+        "id": "73514b51-6c19-4b3c-9cf9-2cf5028d7708",
+        "oracle_id": "dce202c7-fe8e-462a-858e-7a5a69bd5b6b",
+        "name": "Sudden Spoiling",
+        "released_at": "2021-03-19",
+        "scryfall_uri": "https://scryfall.com/card/tsr/144/sudden-spoiling?utm_source=api",
+        "layout": "normal",
+        "mana_cost": "{1}{B}{B}",
+        "cmc": 3.0,
+        "type_line": "Instant",
+        "oracle_text": "Split second (As long as this spell is on the stack, players can't cast spells or activate abilities that aren't mana abilities.)\nUntil end of turn, creatures target player controls lose all abilities and have base power and toughness 0/2.",
+        "colors": [
+          "B"
+        ],
+        "color_identity": [
+          "B"
+        ],
+        "keywords": [
+          "Split second"
+        ],
+        "legalities": {
+          "standard": "not_legal",
+          "future": "not_legal",
+          "historic": "not_legal",
+          "timeless": "not_legal",
+          "gladiator": "not_legal",
+          "pioneer": "not_legal",
+          "modern": "legal",
+          "legacy": "legal",
+          "pauper": "not_legal",
+          "vintage": "legal",
+          "penny": "legal",
+          "commander": "legal",
+          "oathbreaker": "legal",
+          "standardbrawl": "not_legal",
+          "brawl": "not_legal",
+          "competitivebrawl": "not_legal",
+          "alchemy": "not_legal",
+          "paupercommander": "not_legal",
+          "duel": "legal",
+          "oldschool": "not_legal",
+          "premodern": "not_legal",
+          "predh": "legal",
+          "tlr": "legal"
+        },
+        "set": "tsr"
+      }
+    },
+    {
+      "deck_name": "Blight Grenade",
+      "card": {
+        "id": "88cdcf69-e04d-46ab-9cce-76f1fac5bc40",
+        "oracle_id": "ae24b863-974c-4efa-ab41-23cfa1906c54",
+        "name": "Blight Grenade",
+        "released_at": "2022-10-07",
+        "scryfall_uri": "https://scryfall.com/card/40k/31/blight-grenade?utm_source=api",
+        "layout": "normal",
+        "mana_cost": "{4}{B}",
+        "cmc": 5.0,
+        "type_line": "Sorcery",
+        "oracle_text": "Destroy target creature.\nAll creatures get -3/-3 until end of turn.",
+        "colors": [
+          "B"
+        ],
+        "color_identity": [
+          "B"
+        ],
+        "keywords": [],
+        "legalities": {
+          "standard": "not_legal",
+          "future": "not_legal",
+          "historic": "not_legal",
+          "timeless": "not_legal",
+          "gladiator": "not_legal",
+          "pioneer": "not_legal",
+          "modern": "not_legal",
+          "legacy": "legal",
+          "pauper": "not_legal",
+          "vintage": "legal",
+          "penny": "not_legal",
+          "commander": "legal",
+          "oathbreaker": "legal",
+          "standardbrawl": "not_legal",
+          "brawl": "not_legal",
+          "competitivebrawl": "not_legal",
+          "alchemy": "not_legal",
+          "paupercommander": "not_legal",
+          "duel": "legal",
+          "oldschool": "not_legal",
+          "premodern": "not_legal",
+          "predh": "not_legal",
+          "tlr": "not_legal"
+        },
+        "set": "40k"
+      }
+    },
+    {
+      "deck_name": "Mandate of Abaddon",
+      "card": {
+        "id": "b63fa88b-a177-49b7-a583-a0a041313f77",
+        "oracle_id": "20582c7b-edd3-4189-98ec-8fabd39034b0",
+        "name": "Mandate of Abaddon",
+        "released_at": "2022-10-07",
+        "scryfall_uri": "https://scryfall.com/card/40k/40/mandate-of-abaddon?utm_source=api",
+        "layout": "normal",
+        "mana_cost": "{3}{B}",
+        "cmc": 4.0,
+        "type_line": "Sorcery",
+        "oracle_text": "Choose target creature you control. Destroy all creatures with power less than that creature's power.",
+        "colors": [
+          "B"
+        ],
+        "color_identity": [
+          "B"
+        ],
+        "keywords": [],
+        "legalities": {
+          "standard": "not_legal",
+          "future": "not_legal",
+          "historic": "not_legal",
+          "timeless": "not_legal",
+          "gladiator": "not_legal",
+          "pioneer": "not_legal",
+          "modern": "not_legal",
+          "legacy": "legal",
+          "pauper": "not_legal",
+          "vintage": "legal",
+          "penny": "not_legal",
+          "commander": "legal",
+          "oathbreaker": "legal",
+          "standardbrawl": "not_legal",
+          "brawl": "not_legal",
+          "competitivebrawl": "not_legal",
+          "alchemy": "not_legal",
+          "paupercommander": "not_legal",
+          "duel": "legal",
+          "oldschool": "not_legal",
+          "premodern": "not_legal",
+          "predh": "not_legal",
+          "tlr": "not_legal"
+        },
+        "set": "40k"
+      }
+    },
+    {
+      "deck_name": "Decree of Pain",
+      "card": {
+        "id": "bd594aeb-f5cc-4435-8ea8-c35c5824b58c",
+        "oracle_id": "932668fa-d6e3-41c0-ad0c-8e0a00e68d11",
+        "name": "Decree of Pain",
+        "released_at": "2024-09-27",
+        "scryfall_uri": "https://scryfall.com/card/dsc/136/decree-of-pain?utm_source=api",
+        "layout": "normal",
+        "mana_cost": "{6}{B}{B}",
+        "cmc": 8.0,
+        "type_line": "Sorcery",
+        "oracle_text": "Destroy all creatures. They can't be regenerated. Draw a card for each creature destroyed this way.\nCycling {3}{B}{B} ({3}{B}{B}, Discard this card: Draw a card.)\nWhen you cycle this card, all creatures get -2/-2 until end of turn.",
+        "colors": [
+          "B"
+        ],
+        "color_identity": [
+          "B"
+        ],
+        "keywords": [
+          "Cycling"
+        ],
+        "legalities": {
+          "standard": "not_legal",
+          "future": "not_legal",
+          "historic": "not_legal",
+          "timeless": "not_legal",
+          "gladiator": "not_legal",
+          "pioneer": "not_legal",
+          "modern": "not_legal",
+          "legacy": "legal",
+          "pauper": "not_legal",
+          "vintage": "legal",
+          "penny": "not_legal",
+          "commander": "legal",
+          "oathbreaker": "legal",
+          "standardbrawl": "not_legal",
+          "brawl": "not_legal",
+          "competitivebrawl": "not_legal",
+          "alchemy": "not_legal",
+          "paupercommander": "not_legal",
+          "duel": "legal",
+          "oldschool": "not_legal",
+          "premodern": "legal",
+          "predh": "legal",
+          "tlr": "not_legal"
+        },
+        "set": "dsc"
+      }
+    },
+    {
+      "deck_name": "Black Sun's Zenith",
+      "card": {
+        "id": "eda98f51-a918-4ef7-a123-7d4200c79620",
+        "oracle_id": "038c0165-32b6-4e81-8180-604b49905207",
+        "name": "Black Sun's Zenith",
+        "released_at": "2026-01-23",
+        "scryfall_uri": "https://scryfall.com/card/ecc/71/black-suns-zenith?utm_source=api",
+        "layout": "normal",
+        "mana_cost": "{X}{B}{B}",
+        "cmc": 2.0,
+        "type_line": "Sorcery",
+        "oracle_text": "Put X -1/-1 counters on each creature. Shuffle Black Sun's Zenith into its owner's library.",
+        "colors": [
+          "B"
+        ],
+        "color_identity": [
+          "B"
+        ],
+        "keywords": [],
+        "legalities": {
+          "standard": "not_legal",
+          "future": "not_legal",
+          "historic": "legal",
+          "timeless": "legal",
+          "gladiator": "legal",
+          "pioneer": "not_legal",
+          "modern": "legal",
+          "legacy": "legal",
+          "pauper": "not_legal",
+          "vintage": "legal",
+          "penny": "legal",
+          "commander": "legal",
+          "oathbreaker": "legal",
+          "standardbrawl": "not_legal",
+          "brawl": "legal",
+          "competitivebrawl": "legal",
+          "alchemy": "not_legal",
+          "paupercommander": "not_legal",
+          "duel": "legal",
+          "oldschool": "not_legal",
+          "premodern": "not_legal",
+          "predh": "legal",
+          "tlr": "legal"
+        },
+        "set": "ecc"
+      }
+    },
+    {
+      "deck_name": "Toxic Deluge",
+      "card": {
+        "id": "1df2c2a6-94a9-4365-9bd5-dd5f2854c562",
+        "oracle_id": "afaef788-34d1-460b-b884-9d7ae6ddeb18",
+        "name": "Toxic Deluge",
+        "released_at": "2026-11-13",
+        "scryfall_uri": "https://scryfall.com/card/trc/448/toxic-deluge?utm_source=api",
+        "layout": "normal",
+        "mana_cost": "{2}{B}",
+        "cmc": 3.0,
+        "type_line": "Sorcery",
+        "oracle_text": "As an additional cost to cast this spell, pay X life.\nAll creatures get -X/-X until end of turn.",
+        "colors": [
+          "B"
+        ],
+        "color_identity": [
+          "B"
+        ],
+        "keywords": [],
+        "legalities": {
+          "standard": "not_legal",
+          "future": "not_legal",
+          "historic": "legal",
+          "timeless": "legal",
+          "gladiator": "legal",
+          "pioneer": "not_legal",
+          "modern": "legal",
+          "legacy": "legal",
+          "pauper": "not_legal",
+          "vintage": "legal",
+          "penny": "not_legal",
+          "commander": "legal",
+          "oathbreaker": "legal",
+          "standardbrawl": "not_legal",
+          "brawl": "legal",
+          "competitivebrawl": "legal",
+          "alchemy": "not_legal",
+          "paupercommander": "not_legal",
+          "duel": "legal",
+          "oldschool": "not_legal",
+          "premodern": "not_legal",
+          "predh": "not_legal",
+          "tlr": "legal"
+        },
+        "set": "trc"
+      }
+    },
+    {
+      "deck_name": "Feed the Swarm",
+      "card": {
+        "id": "2246c098-1071-4cc3-a60a-802406e2827b",
+        "oracle_id": "5825997b-10d7-4a36-972c-a80ddd90b8ed",
+        "name": "Feed the Swarm",
+        "released_at": "2025-11-21",
+        "scryfall_uri": "https://scryfall.com/card/tle/257/feed-the-swarm?utm_source=api",
+        "layout": "normal",
+        "mana_cost": "{1}{B}",
+        "cmc": 2.0,
+        "type_line": "Sorcery",
+        "oracle_text": "Destroy target creature or enchantment an opponent controls. You lose life equal to that permanent's mana value.",
+        "colors": [
+          "B"
+        ],
+        "color_identity": [
+          "B"
+        ],
+        "keywords": [],
+        "legalities": {
+          "standard": "legal",
+          "future": "legal",
+          "historic": "legal",
+          "timeless": "legal",
+          "gladiator": "legal",
+          "pioneer": "legal",
+          "modern": "legal",
+          "legacy": "legal",
+          "pauper": "legal",
+          "vintage": "legal",
+          "penny": "not_legal",
+          "commander": "legal",
+          "oathbreaker": "legal",
+          "standardbrawl": "legal",
+          "brawl": "legal",
+          "competitivebrawl": "legal",
+          "alchemy": "legal",
+          "paupercommander": "legal",
+          "duel": "legal",
+          "oldschool": "not_legal",
+          "premodern": "not_legal",
+          "predh": "not_legal",
+          "tlr": "legal"
+        },
+        "set": "tle"
+      }
+    },
+    {
+      "deck_name": "Victimize",
+      "card": {
+        "id": "ee008d81-df28-49a8-917d-44f66527e469",
+        "oracle_id": "240e85d3-e495-4877-8609-4b4056c402f7",
+        "name": "Victimize",
+        "released_at": "2025-04-11",
+        "scryfall_uri": "https://scryfall.com/card/tdc/198/victimize?utm_source=api",
+        "layout": "normal",
+        "mana_cost": "{2}{B}",
+        "cmc": 3.0,
+        "type_line": "Sorcery",
+        "oracle_text": "Choose two target creature cards in your graveyard. Sacrifice a creature. If you do, return the chosen cards to the battlefield tapped.",
+        "colors": [
+          "B"
+        ],
+        "color_identity": [
+          "B"
+        ],
+        "keywords": [],
+        "legalities": {
+          "standard": "not_legal",
+          "future": "not_legal",
+          "historic": "legal",
+          "timeless": "legal",
+          "gladiator": "legal",
+          "pioneer": "not_legal",
+          "modern": "legal",
+          "legacy": "legal",
+          "pauper": "not_legal",
+          "vintage": "legal",
+          "penny": "not_legal",
+          "commander": "legal",
+          "oathbreaker": "legal",
+          "standardbrawl": "not_legal",
+          "brawl": "legal",
+          "competitivebrawl": "legal",
+          "alchemy": "not_legal",
+          "paupercommander": "not_legal",
+          "duel": "legal",
+          "oldschool": "not_legal",
+          "premodern": "legal",
+          "predh": "legal",
+          "tlr": "legal"
+        },
+        "set": "tdc"
+      }
+    },
+    {
+      "deck_name": "Plague of Vermin",
+      "card": {
+        "id": "231613d6-d3b8-4b41-bc93-4d5da3fec5d0",
+        "oracle_id": "efc12acf-ffef-40a6-b2ce-fe93e89ad840",
+        "name": "Plague of Vermin",
+        "released_at": "2008-05-02",
+        "scryfall_uri": "https://scryfall.com/card/shm/73/plague-of-vermin?utm_source=api",
+        "layout": "normal",
+        "mana_cost": "{6}{B}",
+        "cmc": 7.0,
+        "type_line": "Sorcery",
+        "oracle_text": "Starting with you, each player may pay any amount of life. Repeat this process until no one pays life. Each player creates a 1/1 black Rat creature token for each 1 life they paid this way.",
+        "colors": [
+          "B"
+        ],
+        "color_identity": [
+          "B"
+        ],
+        "keywords": [],
+        "legalities": {
+          "standard": "not_legal",
+          "future": "not_legal",
+          "historic": "legal",
+          "timeless": "legal",
+          "gladiator": "legal",
+          "pioneer": "not_legal",
+          "modern": "legal",
+          "legacy": "legal",
+          "pauper": "not_legal",
+          "vintage": "legal",
+          "penny": "legal",
+          "commander": "legal",
+          "oathbreaker": "legal",
+          "standardbrawl": "not_legal",
+          "brawl": "legal",
+          "competitivebrawl": "legal",
+          "alchemy": "not_legal",
+          "paupercommander": "not_legal",
+          "duel": "legal",
+          "oldschool": "not_legal",
+          "premodern": "not_legal",
+          "predh": "legal",
+          "tlr": "not_legal"
+        },
+        "set": "shm"
+      }
+    },
+    {
+      "deck_name": "Nurgle's Rot",
+      "card": {
+        "id": "9116138a-679d-4169-a4a9-c76460bbb3fd",
+        "oracle_id": "1b01dcff-0639-4ed0-bd9e-f28429cb803d",
+        "name": "Nurgle's Rot",
+        "released_at": "2022-10-07",
+        "scryfall_uri": "https://scryfall.com/card/40k/45/nurgles-rot?utm_source=api",
+        "layout": "normal",
+        "mana_cost": "{B}",
+        "cmc": 1.0,
+        "type_line": "Enchantment — Aura",
+        "oracle_text": "Enchant creature an opponent controls\nWhen enchanted creature dies, return this card to its owner's hand and you create a 1/3 black Demon creature token named Plaguebearer of Nurgle.",
+        "colors": [
+          "B"
+        ],
+        "color_identity": [
+          "B"
+        ],
+        "keywords": [
+          "Enchant"
+        ],
+        "legalities": {
+          "standard": "not_legal",
+          "future": "not_legal",
+          "historic": "not_legal",
+          "timeless": "not_legal",
+          "gladiator": "not_legal",
+          "pioneer": "not_legal",
+          "modern": "not_legal",
+          "legacy": "legal",
+          "pauper": "not_legal",
+          "vintage": "legal",
+          "penny": "not_legal",
+          "commander": "legal",
+          "oathbreaker": "legal",
+          "standardbrawl": "not_legal",
+          "brawl": "not_legal",
+          "competitivebrawl": "not_legal",
+          "alchemy": "not_legal",
+          "paupercommander": "not_legal",
+          "duel": "legal",
+          "oldschool": "not_legal",
+          "premodern": "not_legal",
+          "predh": "not_legal",
+          "tlr": "legal"
+        },
+        "set": "40k"
+      }
+    },
+    {
+      "deck_name": "Pestilence",
+      "card": {
+        "id": "29d852c4-bd53-4a3b-b1e2-896917cbc27f",
+        "oracle_id": "dafe63ef-f3d6-45e7-877a-573da92ba85e",
+        "name": "Pestilence",
+        "released_at": "1999-04-21",
+        "scryfall_uri": "https://scryfall.com/card/6ed/149/pestilence?utm_source=api",
+        "layout": "normal",
+        "mana_cost": "{2}{B}{B}",
+        "cmc": 4.0,
+        "type_line": "Enchantment",
+        "oracle_text": "At the beginning of the end step, if no creatures are on the battlefield, sacrifice this enchantment.\n{B}: This enchantment deals 1 damage to each creature and each player.",
+        "colors": [
+          "B"
+        ],
+        "color_identity": [
+          "B"
+        ],
+        "keywords": [],
+        "legalities": {
+          "standard": "not_legal",
+          "future": "not_legal",
+          "historic": "not_legal",
+          "timeless": "not_legal",
+          "gladiator": "not_legal",
+          "pioneer": "not_legal",
+          "modern": "not_legal",
+          "legacy": "legal",
+          "pauper": "legal",
+          "vintage": "legal",
+          "penny": "not_legal",
+          "commander": "legal",
+          "oathbreaker": "legal",
+          "standardbrawl": "not_legal",
+          "brawl": "not_legal",
+          "competitivebrawl": "not_legal",
+          "alchemy": "not_legal",
+          "paupercommander": "legal",
+          "duel": "legal",
+          "oldschool": "not_legal",
+          "premodern": "legal",
+          "predh": "legal",
+          "tlr": "not_legal"
+        },
+        "set": "6ed"
+      }
+    },
+    {
+      "deck_name": "Black Market Connections",
+      "card": {
+        "id": "9d9ca869-e68a-4f53-9f52-85c714dac6f3",
+        "oracle_id": "d2664f28-49e1-46f8-a863-b217e961a57c",
+        "name": "Black Market Connections",
+        "released_at": "2026-06-26",
+        "scryfall_uri": "https://scryfall.com/card/msc/155/black-market-connections?utm_source=api",
+        "layout": "normal",
+        "mana_cost": "{2}{B}",
+        "cmc": 3.0,
+        "type_line": "Enchantment",
+        "oracle_text": "At the beginning of your first main phase, choose one or more —\n• Sell Contraband — Create a Treasure token. You lose 1 life.\n• Buy Information — Draw a card. You lose 2 life.\n• Hire a Mercenary — Create a 3/2 colorless Shapeshifter creature token with changeling. You lose 3 life. (It is every creature type.)",
+        "colors": [
+          "B"
+        ],
+        "color_identity": [
+          "B"
+        ],
+        "keywords": [
+          "Hire a Mercenary",
+          "Treasure",
+          "Sell Contraband",
+          "Buy Information"
+        ],
+        "legalities": {
+          "standard": "not_legal",
+          "future": "not_legal",
+          "historic": "legal",
+          "timeless": "legal",
+          "gladiator": "legal",
+          "pioneer": "not_legal",
+          "modern": "legal",
+          "legacy": "legal",
+          "pauper": "not_legal",
+          "vintage": "legal",
+          "penny": "legal",
+          "commander": "legal",
+          "oathbreaker": "legal",
+          "standardbrawl": "not_legal",
+          "brawl": "legal",
+          "competitivebrawl": "legal",
+          "alchemy": "not_legal",
+          "paupercommander": "not_legal",
+          "duel": "legal",
+          "oldschool": "not_legal",
+          "premodern": "not_legal",
+          "predh": "not_legal",
+          "tlr": "legal"
+        },
+        "set": "msc"
+      }
+    },
+    {
+      "deck_name": "Phyrexian Arena",
+      "card": {
+        "id": "0784b6f0-9ebf-43d2-ba0f-a6bc93ba0c48",
+        "oracle_id": "ee579a32-a048-4335-b966-231ba731cdea",
+        "name": "Phyrexian Arena",
+        "released_at": "2024-11-15",
+        "scryfall_uri": "https://scryfall.com/card/fdn/180/phyrexian-arena?utm_source=api",
+        "layout": "normal",
+        "mana_cost": "{1}{B}{B}",
+        "cmc": 3.0,
+        "type_line": "Enchantment",
+        "oracle_text": "At the beginning of your upkeep, you draw a card and lose 1 life.",
+        "colors": [
+          "B"
+        ],
+        "color_identity": [
+          "B"
+        ],
+        "keywords": [],
+        "legalities": {
+          "standard": "legal",
+          "future": "legal",
+          "historic": "legal",
+          "timeless": "legal",
+          "gladiator": "legal",
+          "pioneer": "legal",
+          "modern": "legal",
+          "legacy": "legal",
+          "pauper": "not_legal",
+          "vintage": "legal",
+          "penny": "legal",
+          "commander": "legal",
+          "oathbreaker": "legal",
+          "standardbrawl": "legal",
+          "brawl": "legal",
+          "competitivebrawl": "legal",
+          "alchemy": "legal",
+          "paupercommander": "not_legal",
+          "duel": "legal",
+          "oldschool": "not_legal",
+          "premodern": "legal",
+          "predh": "legal",
+          "tlr": "legal"
+        },
+        "set": "fdn"
+      }
+    },
+    {
+      "deck_name": "The Meathook Massacre",
+      "card": {
+        "id": "70d0540f-93c6-4af5-ab2d-65e6c03001c7",
+        "oracle_id": "127de52b-df75-4342-95a0-20d84c5bf916",
+        "name": "The Meathook Massacre",
+        "released_at": "2025-01-24",
+        "scryfall_uri": "https://scryfall.com/card/inr/122/the-meathook-massacre?utm_source=api",
+        "layout": "normal",
+        "mana_cost": "{X}{B}{B}",
+        "cmc": 2.0,
+        "type_line": "Legendary Enchantment",
+        "oracle_text": "When The Meathook Massacre enters, each creature gets -X/-X until end of turn.\nWhenever a creature you control dies, each opponent loses 1 life.\nWhenever a creature an opponent controls dies, you gain 1 life.",
+        "colors": [
+          "B"
+        ],
+        "color_identity": [
+          "B"
+        ],
+        "keywords": [],
+        "legalities": {
+          "standard": "not_legal",
+          "future": "not_legal",
+          "historic": "legal",
+          "timeless": "legal",
+          "gladiator": "legal",
+          "pioneer": "legal",
+          "modern": "legal",
+          "legacy": "legal",
+          "pauper": "not_legal",
+          "vintage": "legal",
+          "penny": "not_legal",
+          "commander": "legal",
+          "oathbreaker": "legal",
+          "standardbrawl": "not_legal",
+          "brawl": "legal",
+          "competitivebrawl": "legal",
+          "alchemy": "not_legal",
+          "paupercommander": "not_legal",
+          "duel": "legal",
+          "oldschool": "not_legal",
+          "premodern": "not_legal",
+          "predh": "not_legal",
+          "tlr": "legal"
+        },
+        "set": "inr"
+      }
+    },
+    {
+      "deck_name": "Crumbling Ashes",
+      "card": {
+        "id": "3e73ac3c-bd5a-4993-be65-76396b7d38ad",
+        "oracle_id": "2e4030eb-c74f-4f81-8d35-8f1d080b15cf",
+        "name": "Crumbling Ashes",
+        "released_at": "2008-07-25",
+        "scryfall_uri": "https://scryfall.com/card/eve/35/crumbling-ashes?utm_source=api",
+        "layout": "normal",
+        "mana_cost": "{1}{B}",
+        "cmc": 2.0,
+        "type_line": "Enchantment",
+        "oracle_text": "At the beginning of your upkeep, destroy target creature with a -1/-1 counter on it.",
+        "colors": [
+          "B"
+        ],
+        "color_identity": [
+          "B"
+        ],
+        "keywords": [],
+        "legalities": {
+          "standard": "not_legal",
+          "future": "not_legal",
+          "historic": "not_legal",
+          "timeless": "not_legal",
+          "gladiator": "not_legal",
+          "pioneer": "not_legal",
+          "modern": "legal",
+          "legacy": "legal",
+          "pauper": "not_legal",
+          "vintage": "legal",
+          "penny": "not_legal",
+          "commander": "legal",
+          "oathbreaker": "legal",
+          "standardbrawl": "not_legal",
+          "brawl": "not_legal",
+          "competitivebrawl": "not_legal",
+          "alchemy": "not_legal",
+          "paupercommander": "not_legal",
+          "duel": "legal",
+          "oldschool": "not_legal",
+          "premodern": "not_legal",
+          "predh": "legal",
+          "tlr": "legal"
+        },
+        "set": "eve"
+      }
+    },
+    {
+      "deck_name": "Phyrexian Reclamation",
+      "card": {
+        "id": "10c09b68-1d92-42da-8d4d-0d60453a6aa7",
+        "oracle_id": "647ca69e-cc01-4b2b-b376-bee2a98331e8",
+        "name": "Phyrexian Reclamation",
+        "released_at": "2025-04-11",
+        "scryfall_uri": "https://scryfall.com/card/tdc/194/phyrexian-reclamation?utm_source=api",
+        "layout": "normal",
+        "mana_cost": "{B}",
+        "cmc": 1.0,
+        "type_line": "Enchantment",
+        "oracle_text": "{1}{B}, Pay 2 life: Return target creature card from your graveyard to your hand.",
+        "colors": [
+          "B"
+        ],
+        "color_identity": [
+          "B"
+        ],
+        "keywords": [],
+        "legalities": {
+          "standard": "not_legal",
+          "future": "not_legal",
+          "historic": "legal",
+          "timeless": "legal",
+          "gladiator": "legal",
+          "pioneer": "not_legal",
+          "modern": "not_legal",
+          "legacy": "legal",
+          "pauper": "not_legal",
+          "vintage": "legal",
+          "penny": "not_legal",
+          "commander": "legal",
+          "oathbreaker": "legal",
+          "standardbrawl": "not_legal",
+          "brawl": "legal",
+          "competitivebrawl": "legal",
+          "alchemy": "not_legal",
+          "paupercommander": "not_legal",
+          "duel": "legal",
+          "oldschool": "not_legal",
+          "premodern": "legal",
+          "predh": "legal",
+          "tlr": "legal"
+        },
+        "set": "tdc"
+      }
+    },
+    {
+      "deck_name": "Unspeakable Symbol",
+      "card": {
+        "id": "2cc4601b-5f34-4733-8c32-9779de4c502c",
+        "oracle_id": "a5690d5f-633c-4a1e-afba-5fd79dcbf20e",
+        "name": "Unspeakable Symbol",
+        "released_at": "2003-05-26",
+        "scryfall_uri": "https://scryfall.com/card/scg/79/unspeakable-symbol?utm_source=api",
+        "layout": "normal",
+        "mana_cost": "{1}{B}{B}",
+        "cmc": 3.0,
+        "type_line": "Enchantment",
+        "oracle_text": "Pay 3 life: Put a +1/+1 counter on target creature.",
+        "colors": [
+          "B"
+        ],
+        "color_identity": [
+          "B"
+        ],
+        "keywords": [],
+        "legalities": {
+          "standard": "not_legal",
+          "future": "not_legal",
+          "historic": "not_legal",
+          "timeless": "not_legal",
+          "gladiator": "not_legal",
+          "pioneer": "not_legal",
+          "modern": "not_legal",
+          "legacy": "legal",
+          "pauper": "not_legal",
+          "vintage": "legal",
+          "penny": "not_legal",
+          "commander": "legal",
+          "oathbreaker": "legal",
+          "standardbrawl": "not_legal",
+          "brawl": "not_legal",
+          "competitivebrawl": "not_legal",
+          "alchemy": "not_legal",
+          "paupercommander": "not_legal",
+          "duel": "legal",
+          "oldschool": "not_legal",
+          "premodern": "legal",
+          "predh": "legal",
+          "tlr": "legal"
+        },
+        "set": "scg"
+      }
+    },
+    {
+      "deck_name": "Greed",
+      "card": {
+        "id": "851f8d1f-163c-4c4f-beee-431b64ec8a99",
+        "oracle_id": "1ff62220-be95-4901-b8d8-812b9a1a1b0a",
+        "name": "Greed",
+        "released_at": "2021-06-18",
+        "scryfall_uri": "https://scryfall.com/card/mh2/274/greed?utm_source=api",
+        "layout": "normal",
+        "mana_cost": "{3}{B}",
+        "cmc": 4.0,
+        "type_line": "Enchantment",
+        "oracle_text": "{B}, Pay 2 life: Draw a card.",
+        "colors": [
+          "B"
+        ],
+        "color_identity": [
+          "B"
+        ],
+        "keywords": [],
+        "legalities": {
+          "standard": "not_legal",
+          "future": "not_legal",
+          "historic": "not_legal",
+          "timeless": "not_legal",
+          "gladiator": "not_legal",
+          "pioneer": "not_legal",
+          "modern": "legal",
+          "legacy": "legal",
+          "pauper": "not_legal",
+          "vintage": "legal",
+          "penny": "not_legal",
+          "commander": "legal",
+          "oathbreaker": "legal",
+          "standardbrawl": "not_legal",
+          "brawl": "not_legal",
+          "competitivebrawl": "not_legal",
+          "alchemy": "not_legal",
+          "paupercommander": "not_legal",
+          "duel": "legal",
+          "oldschool": "not_legal",
+          "premodern": "legal",
+          "predh": "legal",
+          "tlr": "not_legal"
+        },
+        "set": "mh2"
+      }
+    },
+    {
+      "deck_name": "Nest of Scarabs",
+      "card": {
+        "id": "97aa6b45-055a-411e-b2db-b373a4d3826d",
+        "oracle_id": "1f21cf59-6390-44b4-ab2e-ef290dfd8c85",
+        "name": "Nest of Scarabs",
+        "released_at": "2017-04-28",
+        "scryfall_uri": "https://scryfall.com/card/akh/101/nest-of-scarabs?utm_source=api",
+        "layout": "normal",
+        "mana_cost": "{2}{B}",
+        "cmc": 3.0,
+        "type_line": "Enchantment",
+        "oracle_text": "Whenever you put one or more -1/-1 counters on a creature, create that many 1/1 black Insect creature tokens.",
+        "colors": [
+          "B"
+        ],
+        "color_identity": [
+          "B"
+        ],
+        "keywords": [],
+        "legalities": {
+          "standard": "not_legal",
+          "future": "not_legal",
+          "historic": "legal",
+          "timeless": "legal",
+          "gladiator": "legal",
+          "pioneer": "legal",
+          "modern": "legal",
+          "legacy": "legal",
+          "pauper": "not_legal",
+          "vintage": "legal",
+          "penny": "not_legal",
+          "commander": "legal",
+          "oathbreaker": "legal",
+          "standardbrawl": "not_legal",
+          "brawl": "legal",
+          "competitivebrawl": "legal",
+          "alchemy": "not_legal",
+          "paupercommander": "not_legal",
+          "duel": "legal",
+          "oldschool": "not_legal",
+          "premodern": "not_legal",
+          "predh": "not_legal",
+          "tlr": "legal"
+        },
+        "set": "akh"
+      }
+    },
+    {
+      "deck_name": "Dreadhorde Invasion",
+      "card": {
+        "id": "9bbfad2d-a3b5-4119-aea4-0793b7a9da88",
+        "oracle_id": "01deabbb-af6a-4998-99a7-35b7cfa9ef77",
+        "name": "Dreadhorde Invasion",
+        "released_at": "2026-10-02",
+        "scryfall_uri": "https://scryfall.com/card/frc/48/dreadhorde-invasion?utm_source=api",
+        "layout": "normal",
+        "mana_cost": "{1}{B}",
+        "cmc": 2.0,
+        "type_line": "Enchantment",
+        "oracle_text": "At the beginning of your upkeep, you lose 1 life and amass Zombies 1. (Put a +1/+1 counter on an Army you control. It's also a Zombie. If you don't control an Army, create a 0/0 black Zombie Army creature token first.)\nWhenever a Zombie token you control with power 6 or greater attacks, it gains lifelink until end of turn.",
+        "colors": [
+          "B"
+        ],
+        "color_identity": [
+          "B"
+        ],
+        "keywords": [
+          "Amass"
+        ],
+        "legalities": {
+          "standard": "not_legal",
+          "future": "not_legal",
+          "historic": "legal",
+          "timeless": "legal",
+          "gladiator": "legal",
+          "pioneer": "legal",
+          "modern": "legal",
+          "legacy": "legal",
+          "pauper": "not_legal",
+          "vintage": "legal",
+          "penny": "legal",
+          "commander": "legal",
+          "oathbreaker": "legal",
+          "standardbrawl": "not_legal",
+          "brawl": "legal",
+          "competitivebrawl": "legal",
+          "alchemy": "not_legal",
+          "paupercommander": "not_legal",
+          "duel": "legal",
+          "oldschool": "not_legal",
+          "premodern": "not_legal",
+          "predh": "not_legal",
+          "tlr": "legal"
+        },
+        "set": "frc"
+      }
+    },
+    {
+      "deck_name": "Sol Ring",
+      "card": {
+        "id": "fc817e07-c1f3-469f-9cf7-0945dea7400f",
+        "oracle_id": "6ad8011d-3471-4369-9d68-b264cc027487",
+        "name": "Sol Ring",
+        "released_at": "2026-11-13",
+        "scryfall_uri": "https://scryfall.com/card/trc/499/sol-ring?utm_source=api",
+        "layout": "normal",
+        "mana_cost": "{1}",
+        "cmc": 1.0,
+        "type_line": "Artifact",
+        "oracle_text": "{T}: Add {C}{C}.",
+        "colors": [],
+        "color_identity": [],
+        "keywords": [],
+        "legalities": {
+          "standard": "not_legal",
+          "future": "not_legal",
+          "historic": "not_legal",
+          "timeless": "not_legal",
+          "gladiator": "not_legal",
+          "pioneer": "not_legal",
+          "modern": "not_legal",
+          "legacy": "banned",
+          "pauper": "not_legal",
+          "vintage": "restricted",
+          "penny": "not_legal",
+          "commander": "legal",
+          "oathbreaker": "banned",
+          "standardbrawl": "not_legal",
+          "brawl": "not_legal",
+          "competitivebrawl": "not_legal",
+          "alchemy": "not_legal",
+          "paupercommander": "not_legal",
+          "duel": "banned",
+          "oldschool": "not_legal",
+          "premodern": "not_legal",
+          "predh": "legal",
+          "tlr": "banned"
+        },
+        "set": "trc"
+      }
+    },
+    {
+      "deck_name": "Arcane Signet",
+      "card": {
+        "id": "795df2ee-fbfc-4961-852c-e3ec50cc52da",
+        "oracle_id": "0bc7f093-bef0-4f1a-852c-4b75ebf54838",
+        "name": "Arcane Signet",
+        "released_at": "2026-11-13",
+        "scryfall_uri": "https://scryfall.com/card/trc/485/arcane-signet?utm_source=api",
+        "layout": "normal",
+        "mana_cost": "{2}",
+        "cmc": 2.0,
+        "type_line": "Artifact",
+        "oracle_text": "{T}: Add one mana of any color in your commander's color identity.",
+        "colors": [],
+        "color_identity": [],
+        "keywords": [],
+        "legalities": {
+          "standard": "not_legal",
+          "future": "not_legal",
+          "historic": "legal",
+          "timeless": "legal",
+          "gladiator": "legal",
+          "pioneer": "legal",
+          "modern": "legal",
+          "legacy": "legal",
+          "pauper": "legal",
+          "vintage": "legal",
+          "penny": "not_legal",
+          "commander": "legal",
+          "oathbreaker": "legal",
+          "standardbrawl": "legal",
+          "brawl": "legal",
+          "competitivebrawl": "legal",
+          "alchemy": "legal",
+          "paupercommander": "legal",
+          "duel": "legal",
+          "oldschool": "not_legal",
+          "premodern": "not_legal",
+          "predh": "not_legal",
+          "tlr": "legal"
+        },
+        "set": "trc"
+      }
+    },
+    {
+      "deck_name": "Charcoal Diamond",
+      "card": {
+        "id": "f0475c79-bc7f-4de8-a020-226bc658d303",
+        "oracle_id": "1386d111-a2a7-4df1-91d7-947664126989",
+        "name": "Charcoal Diamond",
+        "released_at": "2022-06-10",
+        "scryfall_uri": "https://scryfall.com/card/clb/305/charcoal-diamond?utm_source=api",
+        "layout": "normal",
+        "mana_cost": "{2}",
+        "cmc": 2.0,
+        "type_line": "Artifact",
+        "oracle_text": "This artifact enters tapped.\n{T}: Add {B}.",
+        "colors": [],
+        "color_identity": [
+          "B"
+        ],
+        "keywords": [],
+        "legalities": {
+          "standard": "not_legal",
+          "future": "not_legal",
+          "historic": "not_legal",
+          "timeless": "not_legal",
+          "gladiator": "not_legal",
+          "pioneer": "not_legal",
+          "modern": "not_legal",
+          "legacy": "legal",
+          "pauper": "legal",
+          "vintage": "legal",
+          "penny": "not_legal",
+          "commander": "legal",
+          "oathbreaker": "legal",
+          "standardbrawl": "not_legal",
+          "brawl": "not_legal",
+          "competitivebrawl": "not_legal",
+          "alchemy": "not_legal",
+          "paupercommander": "legal",
+          "duel": "legal",
+          "oldschool": "not_legal",
+          "premodern": "legal",
+          "predh": "legal",
+          "tlr": "legal"
+        },
+        "set": "clb"
+      }
+    },
+    {
+      "deck_name": "Wayfarer's Bauble",
+      "card": {
+        "id": "7ccf086d-6ea2-4222-a7c1-325c22587ed6",
+        "oracle_id": "31f15274-301b-47c5-ba19-0ced04520878",
+        "name": "Wayfarer's Bauble",
+        "released_at": "2026-11-13",
+        "scryfall_uri": "https://scryfall.com/card/trc/511/wayfarers-bauble?utm_source=api",
+        "layout": "normal",
+        "mana_cost": "{1}",
+        "cmc": 1.0,
+        "type_line": "Artifact",
+        "oracle_text": "{2}, {T}, Sacrifice this artifact: Search your library for a basic land card, put that card onto the battlefield tapped, then shuffle.",
+        "colors": [],
+        "color_identity": [],
+        "keywords": [],
+        "legalities": {
+          "standard": "not_legal",
+          "future": "not_legal",
+          "historic": "legal",
+          "timeless": "legal",
+          "gladiator": "legal",
+          "pioneer": "not_legal",
+          "modern": "legal",
+          "legacy": "legal",
+          "pauper": "legal",
+          "vintage": "legal",
+          "penny": "not_legal",
+          "commander": "legal",
+          "oathbreaker": "legal",
+          "standardbrawl": "not_legal",
+          "brawl": "legal",
+          "competitivebrawl": "legal",
+          "alchemy": "not_legal",
+          "paupercommander": "legal",
+          "duel": "legal",
+          "oldschool": "not_legal",
+          "premodern": "not_legal",
+          "predh": "legal",
+          "tlr": "legal"
+        },
+        "set": "trc"
+      }
+    },
+    {
+      "deck_name": "Worn Powerstone",
+      "card": {
+        "id": "ace686ad-9e3f-41b3-b8eb-d1b6d45eb4e1",
+        "oracle_id": "b166b670-febc-4821-855e-f8d465644c03",
+        "name": "Worn Powerstone",
+        "released_at": "2024-06-14",
+        "scryfall_uri": "https://scryfall.com/card/mh3/298/worn-powerstone?utm_source=api",
+        "layout": "normal",
+        "mana_cost": "{3}",
+        "cmc": 3.0,
+        "type_line": "Artifact",
+        "oracle_text": "This artifact enters tapped.\n{T}: Add {C}{C}.",
+        "colors": [],
+        "color_identity": [],
+        "keywords": [],
+        "legalities": {
+          "standard": "not_legal",
+          "future": "not_legal",
+          "historic": "legal",
+          "timeless": "legal",
+          "gladiator": "legal",
+          "pioneer": "not_legal",
+          "modern": "legal",
+          "legacy": "legal",
+          "pauper": "not_legal",
+          "vintage": "legal",
+          "penny": "not_legal",
+          "commander": "legal",
+          "oathbreaker": "legal",
+          "standardbrawl": "not_legal",
+          "brawl": "legal",
+          "competitivebrawl": "legal",
+          "alchemy": "not_legal",
+          "paupercommander": "not_legal",
+          "duel": "legal",
+          "oldschool": "not_legal",
+          "premodern": "legal",
+          "predh": "legal",
+          "tlr": "legal"
+        },
+        "set": "mh3"
+      }
+    },
+    {
+      "deck_name": "Caged Sun",
+      "card": {
+        "id": "dfe6f9ec-3b7f-4c11-acd1-440e14217e5d",
+        "oracle_id": "09b895ff-e729-48d1-bfc1-ea5fd7adda6a",
+        "name": "Caged Sun",
+        "released_at": "2018-06-08",
+        "scryfall_uri": "https://scryfall.com/card/cm2/178/caged-sun?utm_source=api",
+        "layout": "normal",
+        "mana_cost": "{6}",
+        "cmc": 6.0,
+        "type_line": "Artifact",
+        "oracle_text": "As this artifact enters, choose a color.\nCreatures you control of the chosen color get +1/+1.\nWhenever a land's ability causes you to add one or more mana of the chosen color, add an additional one mana of that color.",
+        "colors": [],
+        "color_identity": [],
+        "keywords": [],
+        "legalities": {
+          "standard": "not_legal",
+          "future": "not_legal",
+          "historic": "legal",
+          "timeless": "legal",
+          "gladiator": "legal",
+          "pioneer": "not_legal",
+          "modern": "legal",
+          "legacy": "legal",
+          "pauper": "not_legal",
+          "vintage": "legal",
+          "penny": "legal",
+          "commander": "legal",
+          "oathbreaker": "legal",
+          "standardbrawl": "not_legal",
+          "brawl": "legal",
+          "competitivebrawl": "legal",
+          "alchemy": "not_legal",
+          "paupercommander": "not_legal",
+          "duel": "legal",
+          "oldschool": "not_legal",
+          "premodern": "not_legal",
+          "predh": "legal",
+          "tlr": "not_legal"
+        },
+        "set": "cm2"
+      }
+    },
+    {
+      "deck_name": "Basilisk Collar",
+      "card": {
+        "id": "7b36fba7-71f7-4b7f-bde5-b3a9752ad21c",
+        "oracle_id": "f5f4dd28-f4ae-4d39-b9b8-6ebfd63c93fe",
+        "name": "Basilisk Collar",
+        "released_at": "2024-11-15",
+        "scryfall_uri": "https://scryfall.com/card/fdn/669/basilisk-collar?utm_source=api",
+        "layout": "normal",
+        "mana_cost": "{1}",
+        "cmc": 1.0,
+        "type_line": "Artifact — Equipment",
+        "oracle_text": "Equipped creature has deathtouch and lifelink. (Any amount of damage it deals to a creature is enough to destroy it. Damage dealt by this creature also causes you to gain that much life.)\nEquip {2} ({2}: Attach to target creature you control. Equip only as a sorcery.)",
+        "colors": [],
+        "color_identity": [],
+        "keywords": [
+          "Equip"
+        ],
+        "legalities": {
+          "standard": "legal",
+          "future": "legal",
+          "historic": "legal",
+          "timeless": "legal",
+          "gladiator": "legal",
+          "pioneer": "legal",
+          "modern": "legal",
+          "legacy": "legal",
+          "pauper": "not_legal",
+          "vintage": "legal",
+          "penny": "legal",
+          "commander": "legal",
+          "oathbreaker": "legal",
+          "standardbrawl": "legal",
+          "brawl": "legal",
+          "competitivebrawl": "legal",
+          "alchemy": "legal",
+          "paupercommander": "not_legal",
+          "duel": "legal",
+          "oldschool": "not_legal",
+          "premodern": "not_legal",
+          "predh": "legal",
+          "tlr": "legal"
+        },
+        "set": "fdn"
+      }
+    },
+    {
+      "deck_name": "Sun Droplet",
+      "card": {
+        "id": "466e2a5d-f230-4e32-a92c-15df9d220966",
+        "oracle_id": "1820af5c-9cc2-4b77-b4ca-86084442f087",
+        "name": "Sun Droplet",
+        "released_at": "2021-04-23",
+        "scryfall_uri": "https://scryfall.com/card/c21/268/sun-droplet?utm_source=api",
+        "layout": "normal",
+        "mana_cost": "{2}",
+        "cmc": 2.0,
+        "type_line": "Artifact",
+        "oracle_text": "Whenever you're dealt damage, put that many charge counters on this artifact.\nAt the beginning of each upkeep, you may remove a charge counter from this artifact. If you do, you gain 1 life.",
+        "colors": [],
+        "color_identity": [],
+        "keywords": [],
+        "legalities": {
+          "standard": "not_legal",
+          "future": "not_legal",
+          "historic": "not_legal",
+          "timeless": "not_legal",
+          "gladiator": "not_legal",
+          "pioneer": "not_legal",
+          "modern": "legal",
+          "legacy": "legal",
+          "pauper": "not_legal",
+          "vintage": "legal",
+          "penny": "not_legal",
+          "commander": "legal",
+          "oathbreaker": "legal",
+          "standardbrawl": "not_legal",
+          "brawl": "not_legal",
+          "competitivebrawl": "not_legal",
+          "alchemy": "not_legal",
+          "paupercommander": "not_legal",
+          "duel": "legal",
+          "oldschool": "not_legal",
+          "premodern": "not_legal",
+          "predh": "legal",
+          "tlr": "legal"
+        },
+        "set": "c21"
+      }
+    },
+    {
+      "deck_name": "Skullclamp",
+      "card": {
+        "id": "e1da8b79-249b-439a-a0ad-c8784bd716df",
+        "oracle_id": "65986c1b-8e51-4604-b685-d82fa7d1263a",
+        "name": "Skullclamp",
+        "released_at": "2026-11-13",
+        "scryfall_uri": "https://scryfall.com/card/trc/498/skullclamp?utm_source=api",
+        "layout": "normal",
+        "mana_cost": "{1}",
+        "cmc": 1.0,
+        "type_line": "Artifact — Equipment",
+        "oracle_text": "Equipped creature gets +1/-1.\nWhenever equipped creature dies, draw two cards.\nEquip {1}",
+        "colors": [],
+        "color_identity": [],
+        "keywords": [
+          "Equip"
+        ],
+        "legalities": {
+          "standard": "not_legal",
+          "future": "not_legal",
+          "historic": "not_legal",
+          "timeless": "not_legal",
+          "gladiator": "not_legal",
+          "pioneer": "not_legal",
+          "modern": "banned",
+          "legacy": "banned",
+          "pauper": "not_legal",
+          "vintage": "legal",
+          "penny": "not_legal",
+          "commander": "legal",
+          "oathbreaker": "legal",
+          "standardbrawl": "not_legal",
+          "brawl": "not_legal",
+          "competitivebrawl": "not_legal",
+          "alchemy": "not_legal",
+          "paupercommander": "not_legal",
+          "duel": "legal",
+          "oldschool": "not_legal",
+          "premodern": "not_legal",
+          "predh": "legal",
+          "tlr": "banned"
+        },
+        "set": "trc"
+      }
+    },
+    {
+      "deck_name": "Resurrection Orb",
+      "card": {
+        "id": "2d6209c8-9fa1-4f0a-ab65-ac2fedfcd09b",
+        "oracle_id": "b410f294-cbb6-4016-981f-808fd9b7bbae",
+        "name": "Resurrection Orb",
+        "released_at": "2022-10-07",
+        "scryfall_uri": "https://scryfall.com/card/40k/165/resurrection-orb?utm_source=api",
+        "layout": "normal",
+        "mana_cost": "{2}",
+        "cmc": 2.0,
+        "type_line": "Artifact — Equipment",
+        "oracle_text": "Equipped creature has lifelink.\nWhenever equipped creature dies, return that card to the battlefield under its owner's control at the beginning of the next end step.\nEquip {4} ({4}: Attach to target creature you control. Equip only as a sorcery.)",
+        "colors": [],
+        "color_identity": [],
+        "keywords": [
+          "Equip"
+        ],
+        "legalities": {
+          "standard": "not_legal",
+          "future": "not_legal",
+          "historic": "not_legal",
+          "timeless": "not_legal",
+          "gladiator": "not_legal",
+          "pioneer": "not_legal",
+          "modern": "not_legal",
+          "legacy": "legal",
+          "pauper": "not_legal",
+          "vintage": "legal",
+          "penny": "not_legal",
+          "commander": "legal",
+          "oathbreaker": "legal",
+          "standardbrawl": "not_legal",
+          "brawl": "not_legal",
+          "competitivebrawl": "not_legal",
+          "alchemy": "not_legal",
+          "paupercommander": "not_legal",
+          "duel": "legal",
+          "oldschool": "not_legal",
+          "premodern": "not_legal",
+          "predh": "not_legal",
+          "tlr": "legal"
+        },
+        "set": "40k"
+      }
+    },
+    {
+      "deck_name": "Swiftfoot Boots",
+      "card": {
+        "id": "3b69b12e-ef29-455c-8939-eacf44c6c3f6",
+        "oracle_id": "c8b143ad-43ec-4e0d-a440-e348daa31391",
+        "name": "Swiftfoot Boots",
+        "released_at": "2026-11-13",
+        "scryfall_uri": "https://scryfall.com/card/trc/501/swiftfoot-boots?utm_source=api",
+        "layout": "normal",
+        "mana_cost": "{2}",
+        "cmc": 2.0,
+        "type_line": "Artifact — Equipment",
+        "oracle_text": "Equipped creature has hexproof and haste. (It can't be the target of spells or abilities your opponents control. It can attack and {T} no matter when it came under your control.)\nEquip {1} ({1}: Attach to target creature you control. Equip only as a sorcery.)",
+        "colors": [],
+        "color_identity": [],
+        "keywords": [
+          "Equip"
+        ],
+        "legalities": {
+          "standard": "legal",
+          "future": "legal",
+          "historic": "legal",
+          "timeless": "legal",
+          "gladiator": "legal",
+          "pioneer": "legal",
+          "modern": "legal",
+          "legacy": "legal",
+          "pauper": "not_legal",
+          "vintage": "legal",
+          "penny": "not_legal",
+          "commander": "legal",
+          "oathbreaker": "legal",
+          "standardbrawl": "legal",
+          "brawl": "legal",
+          "competitivebrawl": "legal",
+          "alchemy": "legal",
+          "paupercommander": "not_legal",
+          "duel": "legal",
+          "oldschool": "not_legal",
+          "premodern": "not_legal",
+          "predh": "not_legal",
+          "tlr": "legal"
+        },
+        "set": "trc"
+      }
+    },
+    {
+      "deck_name": "Barren Moor",
+      "card": {
+        "id": "380eb7fd-bc79-4cad-9c2b-9b2b10761a72",
+        "oracle_id": "326ba371-124c-4949-a048-3a0c8962e567",
+        "name": "Barren Moor",
+        "released_at": "2024-09-27",
+        "scryfall_uri": "https://scryfall.com/card/dsc/262/barren-moor?utm_source=api",
+        "layout": "normal",
+        "mana_cost": "",
+        "cmc": 0.0,
+        "type_line": "Land",
+        "oracle_text": "This land enters tapped.\n{T}: Add {B}.\nCycling {B} ({B}, Discard this card: Draw a card.)",
+        "colors": [],
+        "color_identity": [
+          "B"
+        ],
+        "keywords": [
+          "Cycling"
+        ],
+        "legalities": {
+          "standard": "not_legal",
+          "future": "not_legal",
+          "historic": "legal",
+          "timeless": "legal",
+          "gladiator": "legal",
+          "pioneer": "not_legal",
+          "modern": "legal",
+          "legacy": "legal",
+          "pauper": "legal",
+          "vintage": "legal",
+          "penny": "not_legal",
+          "commander": "legal",
+          "oathbreaker": "legal",
+          "standardbrawl": "not_legal",
+          "brawl": "legal",
+          "competitivebrawl": "legal",
+          "alchemy": "not_legal",
+          "paupercommander": "legal",
+          "duel": "legal",
+          "oldschool": "not_legal",
+          "premodern": "legal",
+          "predh": "legal",
+          "tlr": "legal"
+        },
+        "set": "dsc"
+      }
+    },
+    {
+      "deck_name": "Bojuka Bog",
+      "card": {
+        "id": "55b5b094-9d2d-4d96-b90c-78fecdae725a",
+        "oracle_id": "04b7362d-0490-4cb0-b5d7-2a7732f659ce",
+        "name": "Bojuka Bog",
+        "released_at": "2026-04-24",
+        "scryfall_uri": "https://scryfall.com/card/soc/363/bojuka-bog?utm_source=api",
+        "layout": "normal",
+        "mana_cost": "",
+        "cmc": 0.0,
+        "type_line": "Land",
+        "oracle_text": "This land enters tapped.\nWhen this land enters, exile target player's graveyard.\n{T}: Add {B}.",
+        "colors": [],
+        "color_identity": [
+          "B"
+        ],
+        "keywords": [],
+        "legalities": {
+          "standard": "not_legal",
+          "future": "not_legal",
+          "historic": "legal",
+          "timeless": "legal",
+          "gladiator": "legal",
+          "pioneer": "not_legal",
+          "modern": "legal",
+          "legacy": "legal",
+          "pauper": "legal",
+          "vintage": "legal",
+          "penny": "not_legal",
+          "commander": "legal",
+          "oathbreaker": "legal",
+          "standardbrawl": "not_legal",
+          "brawl": "legal",
+          "competitivebrawl": "legal",
+          "alchemy": "not_legal",
+          "paupercommander": "legal",
+          "duel": "legal",
+          "oldschool": "not_legal",
+          "premodern": "not_legal",
+          "predh": "legal",
+          "tlr": "legal"
+        },
+        "set": "soc"
+      }
+    },
+    {
+      "deck_name": "Cabal Coffers",
+      "card": {
+        "id": "e1efb0d3-2c72-46ff-bdc1-1069967365a0",
+        "oracle_id": "7358e164-5704-4e78-9b21-6a9bf2a968ce",
+        "name": "Cabal Coffers",
+        "released_at": "2021-06-18",
+        "scryfall_uri": "https://scryfall.com/card/mh2/301/cabal-coffers?utm_source=api",
+        "layout": "normal",
+        "mana_cost": "",
+        "cmc": 0.0,
+        "type_line": "Land",
+        "oracle_text": "{2}, {T}: Add {B} for each Swamp you control.",
+        "colors": [],
+        "color_identity": [
+          "B"
+        ],
+        "keywords": [],
+        "legalities": {
+          "standard": "not_legal",
+          "future": "not_legal",
+          "historic": "not_legal",
+          "timeless": "not_legal",
+          "gladiator": "not_legal",
+          "pioneer": "not_legal",
+          "modern": "legal",
+          "legacy": "legal",
+          "pauper": "not_legal",
+          "vintage": "legal",
+          "penny": "not_legal",
+          "commander": "legal",
+          "oathbreaker": "legal",
+          "standardbrawl": "not_legal",
+          "brawl": "not_legal",
+          "competitivebrawl": "not_legal",
+          "alchemy": "not_legal",
+          "paupercommander": "not_legal",
+          "duel": "legal",
+          "oldschool": "not_legal",
+          "premodern": "legal",
+          "predh": "legal",
+          "tlr": "legal"
+        },
+        "set": "mh2"
+      }
+    },
+    {
+      "deck_name": "Urborg, Tomb of Yawgmoth",
+      "card": {
+        "id": "9e1a9e38-6ffc-490f-b0be-23ba4e8204c6",
+        "oracle_id": "db6174d7-211d-4817-b8e4-8384594c83f9",
+        "name": "Urborg, Tomb of Yawgmoth",
+        "released_at": "2021-03-19",
+        "scryfall_uri": "https://scryfall.com/card/tsr/287/urborg-tomb-of-yawgmoth?utm_source=api",
+        "layout": "normal",
+        "mana_cost": "",
+        "cmc": 0.0,
+        "type_line": "Legendary Land",
+        "oracle_text": "Each land is a Swamp in addition to its other land types.",
+        "colors": [],
+        "color_identity": [],
+        "keywords": [],
+        "legalities": {
+          "standard": "not_legal",
+          "future": "not_legal",
+          "historic": "legal",
+          "timeless": "legal",
+          "gladiator": "legal",
+          "pioneer": "legal",
+          "modern": "legal",
+          "legacy": "legal",
+          "pauper": "not_legal",
+          "vintage": "legal",
+          "penny": "not_legal",
+          "commander": "legal",
+          "oathbreaker": "legal",
+          "standardbrawl": "not_legal",
+          "brawl": "legal",
+          "competitivebrawl": "legal",
+          "alchemy": "not_legal",
+          "paupercommander": "not_legal",
+          "duel": "legal",
+          "oldschool": "not_legal",
+          "premodern": "not_legal",
+          "predh": "legal",
+          "tlr": "legal"
+        },
+        "set": "tsr"
+      }
+    },
+    {
+      "deck_name": "Nykthos, Shrine to Nyx",
+      "card": {
+        "id": "834b27a0-dfd7-4f96-8cde-cacac4b24acc",
+        "oracle_id": "84dc18f0-8225-4b40-a165-b10321e41769",
+        "name": "Nykthos, Shrine to Nyx",
+        "released_at": "2013-09-27",
+        "scryfall_uri": "https://scryfall.com/card/ths/223/nykthos-shrine-to-nyx?utm_source=api",
+        "layout": "normal",
+        "mana_cost": "",
+        "cmc": 0.0,
+        "type_line": "Legendary Land",
+        "oracle_text": "{T}: Add {C}.\n{2}, {T}: Choose a color. Add an amount of mana of that color equal to your devotion to that color. (Your devotion to a color is the number of mana symbols of that color in the mana costs of permanents you control.)",
+        "colors": [],
+        "color_identity": [],
+        "keywords": [],
+        "legalities": {
+          "standard": "not_legal",
+          "future": "not_legal",
+          "historic": "legal",
+          "timeless": "legal",
+          "gladiator": "legal",
+          "pioneer": "legal",
+          "modern": "legal",
+          "legacy": "legal",
+          "pauper": "not_legal",
+          "vintage": "legal",
+          "penny": "not_legal",
+          "commander": "legal",
+          "oathbreaker": "legal",
+          "standardbrawl": "not_legal",
+          "brawl": "legal",
+          "competitivebrawl": "legal",
+          "alchemy": "not_legal",
+          "paupercommander": "not_legal",
+          "duel": "legal",
+          "oldschool": "not_legal",
+          "premodern": "not_legal",
+          "predh": "not_legal",
+          "tlr": "legal"
+        },
+        "set": "ths"
+      }
+    },
+    {
+      "deck_name": "War Room",
+      "card": {
+        "id": "0775b4be-881c-4832-8954-d961064315b6",
+        "oracle_id": "71c52bf5-2a5d-488e-8b15-7ef290e4b77d",
+        "name": "War Room",
+        "released_at": "2026-04-24",
+        "scryfall_uri": "https://scryfall.com/card/soc/422/war-room?utm_source=api",
+        "layout": "normal",
+        "mana_cost": "",
+        "cmc": 0.0,
+        "type_line": "Land",
+        "oracle_text": "{T}: Add {C}.\n{3}, {T}, Pay life equal to the number of colors in your commanders' color identity: Draw a card.",
+        "colors": [],
+        "color_identity": [],
+        "keywords": [],
+        "legalities": {
+          "standard": "not_legal",
+          "future": "not_legal",
+          "historic": "not_legal",
+          "timeless": "not_legal",
+          "gladiator": "not_legal",
+          "pioneer": "not_legal",
+          "modern": "not_legal",
+          "legacy": "legal",
+          "pauper": "not_legal",
+          "vintage": "legal",
+          "penny": "not_legal",
+          "commander": "legal",
+          "oathbreaker": "legal",
+          "standardbrawl": "not_legal",
+          "brawl": "not_legal",
+          "competitivebrawl": "not_legal",
+          "alchemy": "not_legal",
+          "paupercommander": "not_legal",
+          "duel": "legal",
+          "oldschool": "not_legal",
+          "premodern": "not_legal",
+          "predh": "not_legal",
+          "tlr": "legal"
+        },
+        "set": "soc"
+      }
+    },
+    {
+      "deck_name": "Castle Locthwain",
+      "card": {
+        "id": "19336e3a-2242-4a30-a563-32f2e4fc18e9",
+        "oracle_id": "be811e70-aaaa-41f3-bf9e-5d3f9f719b49",
+        "name": "Castle Locthwain",
+        "released_at": "2022-06-10",
+        "scryfall_uri": "https://scryfall.com/card/clb/884/castle-locthwain?utm_source=api",
+        "layout": "normal",
+        "mana_cost": "",
+        "cmc": 0.0,
+        "type_line": "Land",
+        "oracle_text": "This land enters tapped unless you control a Swamp.\n{T}: Add {B}.\n{1}{B}{B}, {T}: Draw a card, then you lose life equal to the number of cards in your hand.",
+        "colors": [],
+        "color_identity": [
+          "B"
+        ],
+        "keywords": [],
+        "legalities": {
+          "standard": "not_legal",
+          "future": "not_legal",
+          "historic": "legal",
+          "timeless": "legal",
+          "gladiator": "legal",
+          "pioneer": "legal",
+          "modern": "legal",
+          "legacy": "legal",
+          "pauper": "not_legal",
+          "vintage": "legal",
+          "penny": "not_legal",
+          "commander": "legal",
+          "oathbreaker": "legal",
+          "standardbrawl": "not_legal",
+          "brawl": "legal",
+          "competitivebrawl": "legal",
+          "alchemy": "not_legal",
+          "paupercommander": "not_legal",
+          "duel": "legal",
+          "oldschool": "not_legal",
+          "premodern": "not_legal",
+          "predh": "not_legal",
+          "tlr": "legal"
+        },
+        "set": "clb"
+      }
+    },
+    {
+      "deck_name": "Takenuma, Abandoned Mire",
+      "card": {
+        "id": "499037cc-a577-41cb-8ca2-5e117945634f",
+        "oracle_id": "ac2dd694-d2f1-4025-8400-12332bdc882a",
+        "name": "Takenuma, Abandoned Mire",
+        "released_at": "2022-02-18",
+        "scryfall_uri": "https://scryfall.com/card/neo/278/takenuma-abandoned-mire?utm_source=api",
+        "layout": "normal",
+        "mana_cost": "",
+        "cmc": 0.0,
+        "type_line": "Legendary Land",
+        "oracle_text": "{T}: Add {B}.\nChannel — {3}{B}, Discard this card: Mill three cards, then return a creature or planeswalker card from your graveyard to your hand. This ability costs {1} less to activate for each legendary creature you control.",
+        "colors": [],
+        "color_identity": [
+          "B"
+        ],
+        "keywords": [
+          "Mill",
+          "Channel"
+        ],
+        "legalities": {
+          "standard": "not_legal",
+          "future": "not_legal",
+          "historic": "legal",
+          "timeless": "legal",
+          "gladiator": "legal",
+          "pioneer": "legal",
+          "modern": "legal",
+          "legacy": "legal",
+          "pauper": "not_legal",
+          "vintage": "legal",
+          "penny": "not_legal",
+          "commander": "legal",
+          "oathbreaker": "legal",
+          "standardbrawl": "not_legal",
+          "brawl": "legal",
+          "competitivebrawl": "legal",
+          "alchemy": "not_legal",
+          "paupercommander": "not_legal",
+          "duel": "legal",
+          "oldschool": "not_legal",
+          "premodern": "not_legal",
+          "predh": "not_legal",
+          "tlr": "legal"
+        },
+        "set": "neo"
+      }
+    },
+    {
+      "deck_name": "Myriad Landscape",
+      "card": {
+        "id": "a0e2098f-1d94-491a-a7e9-a45a9f69e3a8",
+        "oracle_id": "2549bc57-9ffb-4053-9f10-f2a5f792b845",
+        "name": "Myriad Landscape",
+        "released_at": "2025-08-01",
+        "scryfall_uri": "https://scryfall.com/card/eoc/169/myriad-landscape?utm_source=api",
+        "layout": "normal",
+        "mana_cost": "",
+        "cmc": 0.0,
+        "type_line": "Land",
+        "oracle_text": "This land enters tapped.\n{T}: Add {C}.\n{2}, {T}, Sacrifice this land: Search your library for up to two basic land cards that share a land type, put them onto the battlefield tapped, then shuffle.",
+        "colors": [],
+        "color_identity": [],
+        "keywords": [],
+        "legalities": {
+          "standard": "not_legal",
+          "future": "not_legal",
+          "historic": "not_legal",
+          "timeless": "not_legal",
+          "gladiator": "not_legal",
+          "pioneer": "not_legal",
+          "modern": "not_legal",
+          "legacy": "legal",
+          "pauper": "not_legal",
+          "vintage": "legal",
+          "penny": "not_legal",
+          "commander": "legal",
+          "oathbreaker": "legal",
+          "standardbrawl": "not_legal",
+          "brawl": "not_legal",
+          "competitivebrawl": "not_legal",
+          "alchemy": "not_legal",
+          "paupercommander": "not_legal",
+          "duel": "legal",
+          "oldschool": "not_legal",
+          "premodern": "not_legal",
+          "predh": "not_legal",
+          "tlr": "legal"
+        },
+        "set": "eoc"
+      }
+    },
+    {
+      "deck_name": "Witch's Cottage",
+      "card": {
+        "id": "b87891cd-b457-4dff-8d18-a7eaf6748fc6",
+        "oracle_id": "6c8f276e-4e7b-4974-ab02-9356cc0ffb2b",
+        "name": "Witch's Cottage",
+        "released_at": "2019-10-04",
+        "scryfall_uri": "https://scryfall.com/card/eld/249/witchs-cottage?utm_source=api",
+        "layout": "normal",
+        "mana_cost": "",
+        "cmc": 0.0,
+        "type_line": "Land — Swamp",
+        "oracle_text": "({T}: Add {B}.)\nThis land enters tapped unless you control three or more other Swamps.\nWhen this land enters untapped, you may put target creature card from your graveyard on top of your library.",
+        "colors": [],
+        "color_identity": [
+          "B"
+        ],
+        "keywords": [],
+        "legalities": {
+          "standard": "not_legal",
+          "future": "not_legal",
+          "historic": "legal",
+          "timeless": "legal",
+          "gladiator": "legal",
+          "pioneer": "legal",
+          "modern": "legal",
+          "legacy": "legal",
+          "pauper": "legal",
+          "vintage": "legal",
+          "penny": "not_legal",
+          "commander": "legal",
+          "oathbreaker": "legal",
+          "standardbrawl": "not_legal",
+          "brawl": "legal",
+          "competitivebrawl": "legal",
+          "alchemy": "not_legal",
+          "paupercommander": "legal",
+          "duel": "legal",
+          "oldschool": "not_legal",
+          "premodern": "not_legal",
+          "predh": "not_legal",
+          "tlr": "legal"
+        },
+        "set": "eld"
+      }
+    },
+    {
+      "deck_name": "Leechridden Swamp",
+      "card": {
+        "id": "a07a0e31-ace6-40ad-8700-2d58135b5320",
+        "oracle_id": "d83c86c1-126d-49e9-9b13-9e55784c49c5",
+        "name": "Leechridden Swamp",
+        "released_at": "2024-09-27",
+        "scryfall_uri": "https://scryfall.com/card/dsc/286/leechridden-swamp?utm_source=api",
+        "layout": "normal",
+        "mana_cost": "",
+        "cmc": 0.0,
+        "type_line": "Land — Swamp",
+        "oracle_text": "({T}: Add {B}.)\nThis land enters tapped.\n{B}, {T}: Each opponent loses 1 life. Activate only if you control two or more black permanents.",
+        "colors": [],
+        "color_identity": [
+          "B"
+        ],
+        "keywords": [],
+        "legalities": {
+          "standard": "not_legal",
+          "future": "not_legal",
+          "historic": "not_legal",
+          "timeless": "not_legal",
+          "gladiator": "not_legal",
+          "pioneer": "not_legal",
+          "modern": "legal",
+          "legacy": "legal",
+          "pauper": "not_legal",
+          "vintage": "legal",
+          "penny": "not_legal",
+          "commander": "legal",
+          "oathbreaker": "legal",
+          "standardbrawl": "not_legal",
+          "brawl": "not_legal",
+          "competitivebrawl": "not_legal",
+          "alchemy": "not_legal",
+          "paupercommander": "not_legal",
+          "duel": "legal",
+          "oldschool": "not_legal",
+          "premodern": "not_legal",
+          "predh": "legal",
+          "tlr": "legal"
+        },
+        "set": "dsc"
+      }
+    },
+    {
+      "deck_name": "Phyrexian Tower",
+      "card": {
+        "id": "0b47f6d2-9f65-47a4-bfc4-15619befe53d",
+        "oracle_id": "1861e642-21d5-4232-89f3-b5557f2946c1",
+        "name": "Phyrexian Tower",
+        "released_at": "2024-06-14",
+        "scryfall_uri": "https://scryfall.com/card/mh3/303/phyrexian-tower?utm_source=api",
+        "layout": "normal",
+        "mana_cost": "",
+        "cmc": 0.0,
+        "type_line": "Legendary Land",
+        "oracle_text": "{T}: Add {C}.\n{T}, Sacrifice a creature: Add {B}{B}.",
+        "colors": [],
+        "color_identity": [
+          "B"
+        ],
+        "keywords": [],
+        "legalities": {
+          "standard": "not_legal",
+          "future": "not_legal",
+          "historic": "legal",
+          "timeless": "legal",
+          "gladiator": "legal",
+          "pioneer": "not_legal",
+          "modern": "legal",
+          "legacy": "legal",
+          "pauper": "not_legal",
+          "vintage": "legal",
+          "penny": "not_legal",
+          "commander": "legal",
+          "oathbreaker": "legal",
+          "standardbrawl": "not_legal",
+          "brawl": "legal",
+          "competitivebrawl": "legal",
+          "alchemy": "not_legal",
+          "paupercommander": "not_legal",
+          "duel": "legal",
+          "oldschool": "not_legal",
+          "premodern": "legal",
+          "predh": "legal",
+          "tlr": "legal"
+        },
+        "set": "mh3"
+      }
+    },
+    {
+      "deck_name": "Swamp",
+      "card": {
+        "id": "b233b117-9369-45c1-80c5-cc857386b6be",
+        "oracle_id": "56719f6a-1a6c-4c0a-8d21-18f7d7350b68",
+        "name": "Swamp",
+        "released_at": "2027-04-09",
+        "scryfall_uri": "https://scryfall.com/card/mdd/296/swamp?utm_source=api",
+        "layout": "normal",
+        "mana_cost": "",
+        "cmc": 0.0,
+        "type_line": "Basic Land — Swamp",
+        "oracle_text": "({T}: Add {B}.)",
+        "colors": [],
+        "color_identity": [
+          "B"
+        ],
+        "keywords": [],
+        "legalities": {
+          "standard": "legal",
+          "future": "legal",
+          "historic": "legal",
+          "timeless": "legal",
+          "gladiator": "legal",
+          "pioneer": "legal",
+          "modern": "legal",
+          "legacy": "legal",
+          "pauper": "legal",
+          "vintage": "legal",
+          "penny": "legal",
+          "commander": "legal",
+          "oathbreaker": "legal",
+          "standardbrawl": "legal",
+          "brawl": "legal",
+          "competitivebrawl": "legal",
+          "alchemy": "legal",
+          "paupercommander": "legal",
+          "duel": "legal",
+          "oldschool": "not_legal",
+          "premodern": "legal",
+          "predh": "legal",
+          "tlr": "legal"
+        },
+        "set": "mdd"
+      }
+    }
+  ],
+  "problems": []
+}
