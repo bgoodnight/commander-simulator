@@ -22,7 +22,7 @@ let selectedVersionId=null,preferredByCommander={},lastCommanderId=null;
 const pageName=location.pathname.endsWith("/summary.html")?"summary":
   location.pathname.endsWith("/editor.html")?"editor":"results";
 const PAGE_INFO={
-  results:["The Archive of Outcomes","Study cached opening turns, then descend through a visual chronicle of the selected seed."],
+  results:["Opening-Turn Findings","What the cached runs suggest, how consistent the patterns are, and where to inspect the evidence."],
   summary:["The Commander's Ledger","Inspect commander art, card-type composition and the mana curve of this verified deck."],
   editor:["The Decksmith's Forge","Search the card list, make validated browser-local changes and export a new decklist."]
 };
@@ -532,7 +532,13 @@ function renderInsightChart(kind,groups,rootId,detailId){
   });
   root.appendChild(chart);
   const bars=chart.querySelectorAll("rect.bar");
+  const ink={opening:"#d2b47f",resources:"#73bdb1",candidates:"#aa97cf"}[kind];
   bars.forEach((bar,index)=>{
+    bar.style.fill=ink;
+    const y=Number(bar.getAttribute("y"));
+    const h=Number(bar.getAttribute("height"));
+    bar.dataset.targetY=String(y);
+    bar.dataset.targetHeight=String(h);
     const group=groups[index];
     if(!group)return;
     bar.setAttribute("role","button");
@@ -571,18 +577,40 @@ function renderInsightChart(kind,groups,rootId,detailId){
     });
   });
 }
+function animateFinding(section,visible){
+  section.classList.toggle("visible",visible);
+  const bars=[...section.querySelectorAll("rect.bar[data-target-y]")];
+  if(!bars.length)return;
+  const reduced=window.matchMedia?.("(prefers-reduced-motion: reduce)").matches;
+  if(reduced||!window.d3){
+    for(const bar of bars){
+      bar.setAttribute("y",bar.dataset.targetY);
+      bar.setAttribute("height",bar.dataset.targetHeight);
+    }
+    return;
+  }
+  const chart=window.d3.select(section).selectAll("rect.bar[data-target-y]");
+  chart.interrupt();
+  if(visible){
+    chart.transition().duration(750).ease(window.d3.easeCubicOut)
+      .attr("y",function(){return this.dataset.targetY})
+      .attr("height",function(){return this.dataset.targetHeight});
+  }else{
+    chart.attr("y",function(){
+      return Number(this.dataset.targetY)+Number(this.dataset.targetHeight);
+    }).attr("height",0);
+  }
+}
 function installScrollStory(){
   if(scrollObserver){scrollObserver.disconnect();scrollObserver=null}
   const sections=[...document.querySelectorAll(".story-step")].filter(s=>!s.hidden);
   const reduced=window.matchMedia?.("(prefers-reduced-motion: reduce)").matches;
   if(reduced||!("IntersectionObserver" in window)){
-    sections.forEach(s=>s.classList.add("visible"));return;
+    sections.forEach(s=>animateFinding(s,true));return;
   }
+  sections.forEach(s=>animateFinding(s,false));
   scrollObserver=new IntersectionObserver(entries=>{
-    for(const entry of entries){
-      // Enter and leave: bring the relevant finding into focus.
-      entry.target.classList.toggle("visible",entry.isIntersecting);
-    }
+    for(const entry of entries)animateFinding(entry.target,entry.isIntersecting);
   },{threshold:.16,rootMargin:"0px 0px -8% 0px"});
   sections.forEach(s=>scrollObserver.observe(s));
 }
