@@ -1,4 +1,5 @@
 import json
+import hashlib
 from pathlib import Path
 import tempfile
 import unittest
@@ -26,11 +27,23 @@ class SnapshotTests(unittest.TestCase):
         self.assertEqual(result.deck.commander,'Magnus the Red')
 
     def test_non_adventure_front_face_alias_is_valid(self):
-        def change(data):
-            entry = next(item for item in data['cards']
-                         if item['deck_name'] == 'Lindblum, Industrial Regency')
-            entry['card']['layout'] = 'modal_dfc'
-        result = self.validate_modified(change)
+        text = DECK.read_text(encoding='utf-8')
+        full = '1 Lindblum, Industrial Regency // Mage Siege'
+        front = '1 Lindblum, Industrial Regency'
+        self.assertIn(full, text)
+        edited = text.replace(full, front)
+        data = self.data
+        entry = next(item for item in data['cards']
+                     if item['deck_name'] == 'Lindblum, Industrial Regency // Mage Siege')
+        entry['deck_name'] = 'Lindblum, Industrial Regency'
+        entry['card']['layout'] = 'modal_dfc'
+        data['deck_sha256'] = hashlib.sha256(edited.encode('utf-8')).hexdigest()
+        with tempfile.TemporaryDirectory() as tmp:
+            deck_path = Path(tmp) / 'front_face.txt'
+            snapshot_path = Path(tmp) / 'front_face.json'
+            deck_path.write_text(edited, encoding='utf-8')
+            snapshot_path.write_text(json.dumps(data), encoding='utf-8')
+            result = validate_snapshot(deck_path, snapshot_path)
         self.assertIn(('Library', 'Lindblum, Industrial Regency', 1), result.deck.cards)
         self.assertEqual(result.deck.count, 100)
 
