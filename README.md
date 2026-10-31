@@ -4,6 +4,16 @@ A reproducible, modular four-player **Magic: The Gathering Commander** simulatio
 
 Both saved presets and compatible local deck files now use the same active engine through the [deck provider](commander_sim/README.md). Local files must pass validation against the bundled identity snapshots; effect coverage remains incomplete.
 
+## Launch Deck Lab — three-page fantasy website
+
+**[Open Commander Deck Lab](https://bgoodnight.github.io/commander-simulator/)** · [Simulation Results](https://bgoodnight.github.io/commander-simulator/docs/deck-lab/index.html) · [Deck Summary](https://bgoodnight.github.io/commander-simulator/docs/deck-lab/summary.html) · [Card List & Editor](https://bgoodnight.github.io/commander-simulator/docs/deck-lab/editor.html)
+
+The default landing page is **Simulation Results**. Select or drag a commander into the rune; inspect **11 fixed-seed cached observations** for any of six decks; scroll through D3-enhanced charts showing observed mana sources, hand size, and mana-value candidate counts. The **Deck Summary** page presents commander/card art, composition and mana curve. The **Card List & Editor** page offers name/type search, printed Oracle detail, browser-local validated swaps/versions and decklist export. A persistent top navigation carries the selected commander between these real HTML pages. The design is original fantasy stone-and-brass with opt-in synthesized UI sound and reduced-motion accessibility support.
+
+**Important:** these are **precomputed observations, not actual game simulation**. Edits do **not** get new cached results until processed by the Python simulator. Browser-local saves are not committed to GitHub. Scryfall card art loads remotely when available; explicit new-card metadata lookups are user initiated.
+
+Pages supports **both publishing modes**: an `index.html` at repository root forwards branch-based Pages to the generated `docs/deck-lab/` site, while the [GitHub Pages Actions workflow](.github/workflows/deck-lab-pages.yml) also publishes the same tested static files as a Pages deployment. See [Pages setup, architecture and preview instructions](docs/DECK_LAB_PAGES.md). If Pages is rebuilding, the site may briefly show an older version.
+
 ## Current priority: practical multi-deck MVP and Deck Lab
 
 The active product order is **shared offline Scryfall cache → validated imports for Magnus/Mortarion/Gisa/Necrons → early read-only Deck Lab viewer → deck editing and explicit card imports**, while the core advances toward **source-paid basic turns for each deck**. Then deliver visual deck comparisons and **single-deck event-backed replay**. Full two-detailed-deck head-to-head is **optional and deferred** until the interface is useful; it is not required for a usable simulator. A read-only preview must label observations accurately, and only source-paid actions in the shared engine qualify as actual simulated turns. Exhaustive named-card implementations also remain later work.
