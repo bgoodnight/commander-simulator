@@ -24,7 +24,7 @@ Library
 1 Fanning the Flames
 1 Fiery Islet
 1 Frantic Search
-1 Training Center
+1 Mountain
 1 Gamble
 1 Gitaxian Probe
 1 Goblin Electromancer
@@ -35,7 +35,7 @@ Library
 1 Improbable Alliance
 1 Reiterate
 13 Island
-1 Otawara, Soaring City
+1 Island
 1 Izzet Signet
 1 Lord of Change
 1 Mathemagics
