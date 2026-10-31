@@ -570,9 +570,10 @@ function normalizedCounts(counts){
     if(Number.isInteger(num)&&num>0)normalized[name]=num;
   return normalized;
 }
-function validateCounts(counts){
+function validateCounts(counts,{allowIncomplete=false}={}){
   const deck=selectedDeck(),cmd=commanderCard(deck);
-  if(sumCounts(counts)!==100)throw Error("A Commander deck must have exactly 100 cards, including its commander.");
+  if(!allowIncomplete&&sumCounts(counts)!==100)
+    throw Error("A Commander deck must have exactly 100 cards, including its commander.");
   const identities=new Set([deck.commander_id]);
   for(const [name,qty] of Object.entries(counts)){
     if(!Number.isInteger(qty)||qty<0)throw Error("Card quantities must be whole positive numbers.");
@@ -624,10 +625,37 @@ function renderDraft(){
   }
   $("undo-button").disabled=!history.length;
   $("reset-button").disabled=!changes.length;
+  const total=sumCounts(activeCounts);
   $("workshop-message").textContent=changes.length?
-    changes.length+" card quantities modified · "+sumCounts(activeCounts)+" cards including commander. "+MODE_NOTE:
-    "Choose a card to remove, then choose a new card to add.";
+    changes.length+" card quantities modified · "+total+" / 100 cards including commander. "+
+      (total===100?"Ready for legality validation and Save As.":"Add or remove cards to return to 100 before saving.")+
+      " "+MODE_NOTE:
+    "Choose cards to add, remove or swap. The saved source deck remains unchanged.";
+  $("workshop-message").classList.toggle("error",total!==100);
+  $("save-local").disabled=total!==100;
+  $("export-deck").disabled=total!==100;
   renderDeckVersionSelector();
+}
+function changeDraftQuantity(action){
+  if(!activeCounts)return;
+  const name=(action==="remove"?$("remove-name").value:$("add-name").value.trim());
+  if(!name){note("Select a card to "+action+".",true);return}
+  const candidate={...activeCounts};
+  if(action==="remove"){
+    if(!candidate[name]||candidate[name]<1){
+      note("That card is not in this draft.",true);return;
+    }
+    candidate[name]--;
+    if(!candidate[name])delete candidate[name];
+  }else{
+    candidate[name]=(candidate[name]||0)+1;
+  }
+  try{
+    validateCounts(candidate,{allowIncomplete:true});
+    history.push({...activeCounts});activeCounts=candidate;
+    renderDraft();originalSound("success");
+    if(action==="add")$("add-name").value="";
+  }catch(err){note(err.message,true);originalSound("error")}
 }
 function trySwap(){
   const remove=$("remove-name").value,add=$("add-name").value.trim();
@@ -877,6 +905,8 @@ function registerEvents(){
   $("turn-select").onchange=displayRecord;
   $("seed-select").onchange=displayRecord;
   $("swap-button").onclick=trySwap;
+  $("remove-one-button").onclick=()=>changeDraftQuantity("remove");
+  $("add-one-button").onclick=()=>changeDraftQuantity("add");
   $("undo-button").onclick=undo;
   $("reset-button").onclick=revertDraft;
   $("save-local").onclick=saveVersion;
