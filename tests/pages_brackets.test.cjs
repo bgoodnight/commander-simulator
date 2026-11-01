@@ -75,3 +75,15 @@ test("insufficient complete games preserve card-only assessment",()=>{
   }));
   assert.equal(combineEvidence(base,runs,"deck-1").evidence_mode,"cards_only");
 });
+
+test("bounded evidence is visible but cannot promote the bracket",()=>{
+  const {entries,cards}=fixtures(["Arcane Signet"]);
+  const base=assess(entries,cards,registry);
+  const batch={deck_sha256:"deck-1",mode:"bounded_real_action_batch",seed_count:100,
+    turns:[{turn:6,mean_land_plus_rock_objects:3.7,mean_unsupported_hand_cards:8.2}]};
+  const result=combineEvidence(base,null,"deck-1",batch);
+  assert.equal(result.estimated_bracket,2);
+  assert.equal(result.evidence_mode,"cards_only");
+  assert.equal(result.development.sample,100);
+  assert.equal(combineEvidence(base,null,"wrong revision",batch).development,null);
+});
