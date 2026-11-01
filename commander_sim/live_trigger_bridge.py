@@ -1,7 +1,7 @@
 """Opt-in adapter binding reviewed ability slots to the historical live stack.
 
 The existing GameKernel discovers triggers; its priority stack orders and
-resolves them. This adapter registers only two pinned, already-supported
+resolves them. This adapter registers only pinned, already-supported
 triggers and invokes their old host operations via AbilityDispatcher.
 No Oracle parser, duplicate trigger generator or second mutable game state.
 """
@@ -18,7 +18,23 @@ _BARAL_TEXT = ("Instant and sorcery spells you cast cost {1} less to cast.\n"
                "If you do, discard a card.")
 _MAGE_ID = "8305d576-21d8-4ce7-8eda-a7cd9793aca5"
 _MAGE_TEXT = "Magecraft — Whenever you cast or copy an instant or sorcery spell, draw a card."
-_CAPABILITIES = frozenset({"historical_trigger_stack", "draw", "discard", "selection"})
+_PYRO_ID = "5fac139a-07d3-4e6c-98e3-d98b199f7a6f"
+_PYRO_TEXT = "Whenever you cast an instant or sorcery spell, create a 1/1 red Elemental creature token."
+_KILN_ID = "a145ff8c-5812-4bcb-bd16-9839dc25121d"
+_KILN_TEXT = ("This creature gets +1/+0 for each artifact you control.\\n"
+              "Magecraft — Whenever you cast or copy an instant or sorcery spell, create a Treasure token. "
+              '(It\'s an artifact with "{T}, Sacrifice this token: Add one mana of any color.")')
+_CAPABILITIES = frozenset({"historical_trigger_stack", "draw", "discard", "selection", "token_creation"})
+
+
+@dataclass(frozen=True)
+class TriggerToken:
+    token_id: str
+    count: int = 1
+
+    def __post_init__(self):
+        if not isinstance(self.token_id, str) or not self.token_id or type(self.count) is not int or self.count<1:
+            raise ValueError("Invalid reviewed triggered token parameters")
 
 
 def _reviewed_trigger(oracle_id, oracle_text, source_excerpt, kind, operation,
@@ -42,11 +58,22 @@ MAGECRAFT_DRAW = _reviewed_trigger(
     _MAGE_ID, _MAGE_TEXT, _MAGE_TEXT, "draw",
     DrawDiscard(1), {"historical_trigger_stack", "draw"})
 
+PYROMANCER_TOKEN = _reviewed_trigger(
+    _PYRO_ID, _PYRO_TEXT, _PYRO_TEXT, "create_token",
+    TriggerToken("elemental_1_1"), {"historical_trigger_stack", "token_creation"})
+KILN_TREASURE = _reviewed_trigger(
+    _KILN_ID, _KILN_TEXT,
+    'Magecraft — Whenever you cast or copy an instant or sorcery spell, create a Treasure token.',
+    "create_token", TriggerToken("treasure"),
+    {"historical_trigger_stack", "token_creation"})
+
 # Explicitly reviewed historical names; never infer behavior from "Wizard",
 # a card role, or raw Oracle text. Event hooks come from the existing kernel.
 TRIGGER_CARDS = {
     "named:Baral, Chief of Compliance": (BARAL_LOOT, "optional_loot"),
     "named:Archmage Emeritus": (MAGECRAFT_DRAW, "draw"),
+    "named:Young Pyromancer": (PYROMANCER_TOKEN, "create_token"),
+    "named:Storm-Kiln Artist": (KILN_TREASURE, "create_token"),
 }
 
 
@@ -65,8 +92,11 @@ class LiveTriggerBridge:
         if registration is None or obj.card.name != obj.card.card_id[6:]:
             return None
         card, operation = registration
+        effect = card.slots[0].declaration
         hooks = tuple(a.event for a in obj.card.abilities
-                      if a.kind == "triggered" and a.op == operation and a.event)
+                      if a.kind == "triggered" and a.op == operation and a.event
+                      and (not isinstance(effect, TriggerToken)
+                           or dict(a.args).get("token_id") == effect.token_id))
         if not hooks:
             return None
         return card, operation, hooks
@@ -103,6 +133,11 @@ class LiveTriggerBridge:
         if entry is None or entry[0] != item.op:
             return False
         operation, dispatcher = entry
+        declaration = dispatcher.card.slots[0].declaration
+        if isinstance(declaration, TriggerToken):
+            if (dict(item.args).get("token_id") != declaration.token_id
+                    or item.quantity != 1):
+                raise ValueError("Live token trigger does not match pinned parameters")
         before = len(dispatcher.events)
         dispatcher.invoke(operation, item.source_id, executor)
         self.invocations.extend(dispatcher.events[before:])
