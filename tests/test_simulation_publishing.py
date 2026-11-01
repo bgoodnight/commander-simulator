@@ -76,6 +76,28 @@ class PublishedSimulationTests(unittest.TestCase):
         self.assertEqual(len(c["releases"]), 2)
         self.assertEqual(validate_index(self.destination), c)
 
+    def test_newest_published_release_first_even_when_sha_sorts_earlier(self):
+        self.prepare()
+        first = publish_archives(
+            self.source, self.destination, engine_commit="f" * 40,
+            keys=(self.key,))
+        self.assertEqual(first["releases"][0]["engine_commit"], "f" * 40)
+        # A later commit may have a lexically smaller SHA. Publication
+        # order, not SHA sorting, determines the current UI archive.
+        self.prepare(start_seed=200)
+        second = publish_archives(
+            self.source, self.destination, engine_commit="0" * 40,
+            keys=(self.key,))
+        self.assertEqual(len(second["releases"]), 2)
+        self.assertEqual(second["releases"][0]["engine_commit"], "0" * 40)
+        self.assertEqual(second["releases"][1]["engine_commit"], "f" * 40)
+        self.assertEqual(validate_index(self.destination), second)
+        # Republishing the same version must not reshuffle history.
+        third = publish_archives(
+            self.source, self.destination, engine_commit="0" * 40,
+            keys=(self.key,))
+        self.assertEqual(third, second)
+
     def test_rejects_archive_tampering(self):
         self.prepare()
         publish_archives(self.source, self.destination, engine_commit=ENGINE,
