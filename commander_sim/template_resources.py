@@ -177,13 +177,17 @@ class TemplateManaService:
         payable, _ = self.spell_cost(seat, mana_cost, source)
         return self.pay(seat, payable)
 
-    def plan(self, seat, mana_cost):
+    def plan(self, seat, mana_cost, *, excluded_source_ids=()):
         cost = parse_fixed_mana_cost(mana_cost)
+        excluded_source_ids = frozenset(excluded_source_ids)
+        if any(type(oid) is not int for oid in excluded_source_ids):
+            raise ValueError('Excluded source IDs must be integers')
         if type(seat) is not int or not 0 <= seat < 4:
             raise ValueError("Invalid seat")
         candidates = sorted((obj.object_id, self.modes(obj))
                             for obj in self.kernel.objects.values()
-                            if obj.zone == "battlefield" and obj.controller == seat and not obj.tapped)
+                            if obj.zone == "battlefield" and obj.controller == seat and not obj.tapped
+                            and obj.object_id not in excluded_source_ids)
         candidates = [(oid, modes) for oid, modes in candidates if modes]
         initial = self.floating(seat)
         serial = count()
@@ -215,9 +219,9 @@ class TemplateManaService:
                                         actions + (PlannedActivation(oid, mode),)))
         return None
 
-    def pay(self, seat, mana_cost):
+    def pay(self, seat, mana_cost, *, excluded_source_ids=()):
         """Commit an affordable plan from authoritative physical source IDs."""
-        plan = self.plan(seat, mana_cost)
+        plan = self.plan(seat, mana_cost, excluded_source_ids=excluded_source_ids)
         if plan is None:
             return None
         # No callback between planning and commit: one synchronous turn driver.
