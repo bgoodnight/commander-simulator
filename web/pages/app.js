@@ -383,7 +383,8 @@ function currentBracketResult(){
   // Current six-turn early-game traces must not change the estimated bracket.
   const qualifying=isUnsimulatedVersion()?null:detailedArchives?.[selected]?.runs;
   return window.CommanderBrackets.combineEvidence(cardResult,qualifying,
-    isUnsimulatedVersion()?null:deck.deck_sha256);
+    isUnsimulatedVersion()?null:deck.deck_sha256,
+    isUnsimulatedVersion()?null:boundedBatches?.decks?.[selected]);
 }
 function bracketName(result){
   return result&&result.status!=="unavailable"?"Bracket "+result.estimated_bracket+
@@ -483,6 +484,14 @@ function renderBracketAssessment(){
       [result.extraTurns,"Extra-turn text signals"],[result.landDenial,"Mass-land-denial text signals"]]){
     body.appendChild(el("p",label+": "+(items.length?items.join(", "):"none detected"),"micro"));
   }
+  if(result.development){
+    const d=result.development;
+    body.appendChild(el("p","Early-development simulation · "+d.sample+
+      " runs · turn "+d.turn+": average "+d.average_sources.toFixed(1)+
+      " modeled land/rock sources; "+d.unsupported_hand_average.toFixed(1)+
+      " unsupported cards in hand.","small"));
+    body.appendChild(el("p",d.limitation,"micro"));
+  }
   if(result.performance){
     const p=result.performance;
     body.appendChild(el("p","Complete multiplayer simulations: "+p.sample+
@@ -490,9 +499,8 @@ function renderBracketAssessment(){
       " · "+p.early_wins+" wins by turn 5.","small"));
     body.appendChild(el("p",p.note,"micro"));
   }else{
-    body.appendChild(el("p","Simulation-based bracket adjustment unavailable. Current six-turn"+
-      " runs show early development but do not model complete multiplayer wins; "+
-      "the displayed bracket is based on card content alone.","micro"));
+    body.appendChild(el("p","No qualifying complete multiplayer simulation results. "+
+      "The bracket uses card content only; partial early-game results are supplemental evidence.","micro"));
   }
   if(result.status==="incomplete")
     body.appendChild(el("p","Incomplete identities or deck size: "+result.unknown.join(", "),"micro"));
