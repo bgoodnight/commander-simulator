@@ -10,7 +10,10 @@
 typed operation declarations, and required shared capabilities. They are
 constructed from **reviewed registrations**, never from guessed card roles
 or arbitrary Oracle prose. Each slot can have **at most one exact and one
-simplified implementation**. The `strict` policy only selects exact;
+simplified implementation**. Promotion may replace the earlier bounded
+operation's *parameters* within the same reviewed typed effect family
+(e.g. impose a maximum tutor mana value) without affecting the other
+ability slots; the source revision must remain pinned. The `strict` policy only selects exact;
 `hybrid` prefers exact and selects simplified only when explicitly reviewed,
 while `observation` never executes an ability. Missing capabilities and
 unregistered slots fail closed. Only the selected slot is promoted;
