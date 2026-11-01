@@ -21,7 +21,7 @@ if str(ROOT) not in sys.path:
     sys.path.insert(0, str(ROOT))
 
 from commander_sim.card_cache import CardCatalog, pinned_deck_entries
-from commander_sim.deck_fixtures import FIXTURES, SHARED_CATALOG
+from commander_sim.deck_fixtures import FIXTURES, EXPERIMENTAL_FIXTURES, ROOT, SHARED_CATALOG
 from commander_sim.deck_lab_api import deck_detail
 from commander_sim.card_name_catalog import read_name_catalog, DEFAULT_NAME_CATALOG
 from commander_sim.observation import observe
@@ -87,7 +87,9 @@ def build(output, *, catalog_path=SHARED_CATALOG, name_catalog_path=DEFAULT_NAME
     decks = []
     identities = {}
     observations = {}
-    for fixture in FIXTURES:
+    # Both physical simulation fixtures have pinned, offline card metadata.
+    # They do not replace the six historical canonical fixtures.
+    for fixture in (*FIXTURES, *EXPERIMENTAL_FIXTURES):
         checked = deck_detail(fixture.key, catalog_path=catalog_path)
         pinned = pinned_deck_entries(fixture.deck_path, fixture.manifest_path, catalog_path)
         if checked["physical_cards"] != 100:
@@ -133,6 +135,62 @@ def build(output, *, catalog_path=SHARED_CATALOG, name_catalog_path=DEFAULT_NAME
             if result["deck_sha256"] != checked["deck_sha256"]:
                 raise ValueError("Observation uses wrong deck revision")
             observations[fixture.key][str(seed)] = result
+    # Present the user's exact, sleeved Magnus build independently of the
+    # legal simulation trial. Its off-color Narset's Rebuke is not in the
+    # pinned catalog, so this is a DISPLAY-ONLY, unverified source list.
+    # Never borrow the legal trial's observations or invent an Oracle ID.
+    import re
+    physical_path = ROOT / "decklists/magnus_the_red_v1_1_physical_starter.txt"
+    physical_text = physical_path.read_text(encoding="utf-8")
+    sections = {"Commander": [], "Library": [], "Sideboard": []}
+    section = None
+    for raw in physical_text.splitlines():
+        line = raw.strip()
+        if line in sections:
+            section = line
+            continue
+        if not line or line.startswith("#"):
+            continue
+        match = re.fullmatch(r"(\\d+)\\s+(.+)", line)
+        if not match or section is None:
+            raise ValueError("Unexpected physical starter row: " + line)
+        sections[section].append((match.group(2), int(match.group(1))))
+    actual = Counter({name: qty for section in ("Commander", "Library")
+                      for name, qty in sections[section]})
+    if sum(actual.values()) != 100 or sections["Commander"] != [("Magnus the Red", 1)]:
+        raise ValueError("Physical Magnus source does not have exactly 100 commander cards")
+    trial = next(d for d in decks if d["key"] == "magnus_physical_trial")
+    trial_counts = {item["name"]: item["qty"] for item in trial["cards"]}
+    expected = Counter(trial_counts)
+    expected["Island"] -= 1
+    expected["Narset's Rebuke"] = 1
+    if dict(expected) != dict(actual):
+        raise ValueError("Physical Magnus differs from the documented trial by more than one replacement")
+    source_cards = [dict(card) for card in trial["cards"]]
+    island = next(item for item in source_cards if item["name"] == "Island")
+    island["qty"] -= 1
+    source_cards.append({"name": "Narset's Rebuke", "oracle_id": None,
+                         "qty": 1, "zone": "Library"})
+    physical_updated = subprocess.run(
+        ["git", "log", "-1", "--format=%cI", "--", str(physical_path.relative_to(ROOT))],
+        cwd=ROOT, text=True, capture_output=True, check=False)
+    source = dict(trial,
+        key="magnus_physical_owned",
+        updated_at=physical_updated.stdout.strip() or trial["updated_at"],
+        label="physical_sleeved_unverified",
+        deck_sha256=hashlib.sha256(physical_path.read_bytes()).hexdigest(),
+        cards=source_cards,
+        card_count=100,
+        snapshot_sha256=None,
+        observation_available=False,
+        unverified_cards=["Narset's Rebuke"],
+        sideboard=[{"name": name, "qty": qty} for name, qty in sections["Sideboard"]],
+    )
+    source["types"] = dict(trial["types"])
+    source["types"]["Land"] -= 1
+    source["types"]["Other"] = source["types"].get("Other", 0) + 1
+    decks.append(source)
+    observations[source["key"]] = {}
     names = list(read_name_catalog(name_catalog_path))
     if len(names) < 1000:
         raise ValueError("Full offline Scryfall name catalog must be initialized")
@@ -215,7 +273,7 @@ def build(output, *, catalog_path=SHARED_CATALOG, name_catalog_path=DEFAULT_NAME
                                       "app.js", "results_insights.js", "brackets.js", "style.css", "game-changers.json",
                                       *(f"bounded-runs-{key}.json" for key in batches["decks"]),
                                       *(f"simulation-data/{relative}" for relative in archive_files))},
-        "note": "Published data includes only approved six canonical decks and fixed-seed observations.",
+        "note": "Six canonical decks, two verified physical trials, and one exact but unverified owned source list; observations are per verified deck only.",
     }
     write_json("build-manifest.json", manifest)
     return manifest
