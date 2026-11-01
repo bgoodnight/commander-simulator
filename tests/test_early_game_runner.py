@@ -58,6 +58,7 @@ class BoundedEarlyGameTests(unittest.TestCase):
                     "enchantment_cast", "enchantment_resolved",
                     "reviewed_sacrifice_activated", "reviewed_enter_resolved",
                     "reviewed_unearth_resolved", "reviewed_unearth_expired",
+                    "reviewed_flashback_cast", "reviewed_flashback_resolved",
                 } for event in turn["events"]))
 
     def test_magnus_reviewed_tutors_pay_and_move_actual_cards(self):
@@ -100,6 +101,11 @@ class BoundedEarlyGameTests(unittest.TestCase):
                         +len(state["battlefield"])+len(state["graveyard"])+1,100)
                 for turn in run["events"]:
                     for event in turn["events"]:
+                        if event["type"] == "reviewed_flashback_resolved":
+                            self.assertIn(event["card"], {
+                                "Strike It Rich", "Moan of the Unhallowed",
+                                "Army of the Damned", "Faithless Looting"})
+                            self.assertIsInstance(event["exiled_object_id"], int)
                         if event["type"] == "reviewed_unearth_resolved":
                             self.assertIn(event["card"], {
                                 "Chronomancer", "Skorpekh Lord", "Tomb Blade",
