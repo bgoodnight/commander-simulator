@@ -27,11 +27,17 @@ def run_bounded_batch(deck_key, *, seeds=20, turns=6, mulligan="one-free", profi
             e["type"] == "creature_cast" for turn in r["events"][:t]
             for e in turn["events"]) for r in runs)
         any_board = sum(row["creature_count"] > 0 for row in rows)
+        any_rock = sum(row["mana_rock_count"] > 0 for row in rows)
         checkpoints.append({
             "turn": t,
             "mean_lands_in_play": round(sum(x["land_count"] for x in rows)/seeds, 3),
             "mean_reviewed_creatures_in_play": round(
                 sum(x["creature_count"] for x in rows)/seeds, 3),
+            "mean_reviewed_mana_rocks_in_play": round(
+                sum(x["mana_rock_count"] for x in rows)/seeds, 3),
+            "pct_with_reviewed_rock_in_play": round(100*any_rock/seeds, 2),
+            "mean_land_plus_rock_objects": round(
+                sum(x["land_count"]+x["mana_rock_count"] for x in rows)/seeds, 3),
             "pct_with_reviewed_creature_by_turn": round(100*cast_by_turn/seeds, 2),
             "reviewed_cast_95pct_interval": wilson_interval(cast_by_turn, seeds),
             "pct_with_creature_on_board": round(100*any_board/seeds, 2),
@@ -53,7 +59,8 @@ def run_bounded_batch(deck_key, *, seeds=20, turns=6, mulligan="one-free", profi
         "curated_milestones": strategic,
         "limitations": ("These actual object, land and reviewed-creature cast events "
                         "are generated from a small manually approved subset. "
-                        "Unsupported cards do not cast; mana rocks, actual tutor chains, "
+                        "Unsupported cards do not cast; reviewed rocks make mana, but " 
+                        "other ramp abilities and actual tutor chains, "
                         "commander casting, combat, opponents and full win conditions "
                         "are not simulated. Never interpret these measurements as "
                         "complete deck performance or win probabilities."),
