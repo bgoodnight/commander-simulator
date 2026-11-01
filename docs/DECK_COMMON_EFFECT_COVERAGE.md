@@ -38,6 +38,7 @@ simulated object has all its printed side abilities.
 | Land and mana-rock payment | `effect_templates.py`, `template_resources.py`, `legacy_mana_adapter.py` | Actual tapped source IDs and floating U/R/B/etc. mana for admitted basic lands and reviewed rocks; side costs on unreviewed modes fail closed |
 | Library search and tutor cast | `reviewed_tutors.py`, `template_search.py`, `reviewed_tutor_cast.py` | Pinned instant/sorcery tutors with paid hand→stack→graveyard; searched physical card to hand or shuffled library top |
 | Fixed token batches | `legacy_common_ops.py`, `reviewed_token_spells.py` | Ral's Reinforcements, Hard Evidence, Strike It Rich, Moan of the Unhallowed and Army of the Damned hand-cast batches; count, colors, P/T, artifact subtype and tapped entry are reviewed |
+| Reviewed cast-trigger batches | `bounded_trigger_effects.py` | Physically cast sorceries/tutors can activate approved Talrand, Pyromancer, Archmage and Storm-Kiln spell-cast abilities in the no-priority bounded runner; no arbitrary Oracle trigger parsing |
 | Triggered draw and tokens | `ability_composition.py`, `live_trigger_bridge.py` | Baral, Archmage Emeritus, Young Pyromancer, Storm-Kiln Artist in the historical live stack; doubled triggers and source departure remain kernel-owned |
 | Draw/mill/counters | `physical_common_effects.py` | Physical library→hand/graveyard movement and real battlefield counters under a reviewed host callback; **not yet attached automatically to all printed effects** |
 | Sacrifice and graveyard retrieval | `legacy_common_ops.py`, `physical_common_effects.py` | Physical sacrifice restrictions and owned, type-restricted graveyard→hand moves; paid source, permission and targets must be checked by host |
@@ -54,10 +55,20 @@ that every deck card invoking the mechanic is legally cast or fully resolves**.
 
 `run_bounded_early_game` now accepts all **six** pinned decks. It executes
 reviewed land and mana-rock actions using a common physical resource planner.
-The Magnus lists can additionally cast reviewed hand-based tutors and reviewed
-fixed-token sorceries. Wretched Ranks can cast its approved subset of ordinary
+The Magnus lists additionally cast reviewed hand-based tutors and reviewed
+fixed-token sorceries. Wretched Ranks casts its approved subset of ordinary
 creatures and fixed Zombie-token sorceries. Other deck creatures are not
 authorized merely by their printed card type.
+
+The newer `bounded_trigger_effects.py` resolves a limited, explicitly
+reviewed **cast-trigger slice** from the same physical battlefield: Young
+Pyromancer makes red Elementals, Talrand makes flying Drakes, Archmage
+Emeritus draws from the actual library, and Storm-Kiln Artist's reviewed
+magecraft mode makes Treasures when its source is present. A real paid
+instant/sorcery cast occurs before the trigger resolver is invoked, and the
+trigger resolves before its original spell's printed effect. These are
+no-opponent/no-priority actions; the historical full stack remains separate
+and authoritative when simulating its reviewed Magnus interactions.
 
 Tokens from the reviewed sorceries are physical battlefield token objects.
 They do not replace any of the original 100 non-token cards. Unreviewed
