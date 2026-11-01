@@ -1,4 +1,8 @@
 """V7a/b reusable rules primitives; intentionally NOT a complete MTG rules engine.
+from pathlib import Path as _TemplatePath
+import sys as _template_sys
+_template_sys.path.insert(0,str(_TemplatePath(__file__).resolve().parents[2]))
+from commander_sim.legacy_common_ops import spawn_repeated_tokens
 
 No card-name branches in rules. Cards declare characteristics and ability descriptors.
 Each GameKernel is independent: no global mutable game state or singleton trigger lists.
@@ -334,9 +338,8 @@ class GameKernel:
             args=dict(item.args)
             if item.op=='create_token':
                 definition=token_catalog[args['token_id']]
-                for _ in range(item.quantity):
-                    obj=self.add(definition,item.controller,token=True)
-                    result.append(obj)
+                result.extend(spawn_repeated_tokens(
+                    lambda: self.add(definition,item.controller,token=True),item.quantity))
             else:raise ValueError('Unimplemented reusable effect '+item.op)
         return result
 
