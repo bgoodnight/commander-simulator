@@ -96,3 +96,35 @@ class PhysicalMagnusTests(unittest.TestCase):
                     self.assertGreaterEqual(len(done["drawn_ids"]),1)
                     self.assertEqual(done["fidelity"],"reviewed_physical_draw")
         self.assertGreater(seen,0)
+
+    def test_pinned_nonbasic_lands_share_typed_entry_and_mana_rules(self):
+        from commander_sim.card_cache import pinned_deck_entries
+        from commander_sim.deck_fixtures import SHARED_CATALOG
+        from commander_sim.reviewed_lands import reviewed_land
+        fixture=EXPERIMENTAL_FIXTURES[0]
+        data={e["deck_name"]:e["card"] for e in pinned_deck_entries(
+            fixture.deck_path,fixture.manifest_path,SHARED_CATALOG)}
+        shivan=reviewed_land("Shivan Reef",data["Shivan Reef"],frozenset("UR"))
+        self.assertIsNotNone(shivan)
+        self.assertEqual(tuple(mode.output for mode in shivan.modes("UR")),(("C",),))
+        self.assertFalse(shivan.enters_tapped(0))
+        coast=reviewed_land("Stormcarved Coast",data["Stormcarved Coast"],frozenset("UR"))
+        self.assertTrue(coast.enters_tapped(1))
+        self.assertFalse(coast.enters_tapped(2))
+        self.assertEqual({mode.output for mode in coast.modes("UR")},{("U",),("R",)})
+        ancestry=reviewed_land("Path of Ancestry",data["Path of Ancestry"],frozenset("UR"))
+        self.assertTrue(ancestry.enters_tapped(3))
+        self.assertEqual({mode.output for mode in ancestry.modes("UR")},{("U",),("R",)})
+        tampered=dict(data["Shivan Reef"],oracle_text="Fake any-color land text")
+        self.assertIsNone(reviewed_land("Shivan Reef",tampered,frozenset("UR")))
+
+    def test_nonbasic_land_play_events_report_limited_fidelity(self):
+        found=[]
+        for seed in range(20):
+            record=run_bounded_early_game("magnus_physical_trial",seed=seed,turns=6)
+            for turn in record["events"]:
+                found.extend(e for e in turn["events"] if e["type"]=="land_play"
+                             and e["fidelity"]=="reviewed_partial_land")
+        self.assertTrue(found)
+        self.assertTrue(all(isinstance(e["entered_tapped"],bool) for e in found))
+        self.assertTrue(all("unsupported_abilities" in e for e in found))
