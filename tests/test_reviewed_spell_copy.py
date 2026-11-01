@@ -130,6 +130,27 @@ class ReiterateCopyTests(unittest.TestCase):
         self.assertIsNone(reviewed_copy_spell(
             "Reiterate",{**self.catalog["Reiterate"],"oracle_text":"bad"}))
 
+    def test_bounded_pilot_copy_events_have_single_legal_response_pair(self):
+        for deck in ("magnus_premium","magnus_budget"):
+            for seed in (0,1,2,7,9):
+                with self.subTest(deck=deck,seed=seed):
+                    run=run_bounded_early_game(deck,seed=seed,turns=6)
+                    for turn in run["events"]:
+                        casts=[e for e in turn["events"]
+                               if e["type"]=="reviewed_spell_copy_cast"]
+                        resolutions=[e for e in turn["events"]
+                            if e["type"]=="reviewed_spell_copy_resolved"]
+                        self.assertLessEqual(len(casts),1)
+                        self.assertEqual(len(casts),len(resolutions))
+                        for cast,resolved in zip(casts,resolutions):
+                            self.assertEqual(cast["card"],"Reiterate")
+                            self.assertEqual(cast["copied_spell"],
+                                             resolved["copied_spell"])
+                            self.assertEqual(resolved["card"],"Reiterate")
+                            self.assertEqual(resolved["destination"],
+                                             "hand" if cast["buyback"] else "graveyard")
+                            self.assertTrue(resolved["created_token_ids"])
+
     def test_all_six_decks_replay_without_unauthorized_copy(self):
         for key in ("magnus_premium","magnus_budget","wretched_ranks",
                     "mortarion_current","mortarion_ideal","necron_dynasties"):
