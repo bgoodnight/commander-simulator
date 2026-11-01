@@ -352,7 +352,10 @@ function renderOverview(){
   const deck=selectedDeck(),c=commanderCard(deck);
   $("overview-name").textContent=deck.commander;
   const art=$("overview-art");clear(art);
-  const node=imageNode(c,true,"big-portrait");node.classList.add("big-portrait");art.appendChild(node);
+  const portrait=el("button",null,"commander-art-button");portrait.type="button";
+  portrait.setAttribute("aria-label","View "+deck.commander+" card details");
+  portrait.appendChild(imageNode(c,true,"big-portrait"));
+  portrait.addEventListener("click",()=>showCard(deck.commander_id));art.appendChild(portrait);
   const metrics=$("overview-metrics");clear(metrics);
   const cards=displayDeckCards();
   const facts=deckFacts();
@@ -390,6 +393,16 @@ function renderThemes(cards,commander){
   if(!groups.length){root.appendChild(el("p","No recurring signals found in available card metadata.","small"));return}
   for(const group of groups.slice(0,8)){
     const box=el("article",null,"theme-card");
+    const examples=group.cards.map(item=>cardInfo(item.name)).filter(Boolean);
+    const illustrated=examples.filter(card=>card.art||card.image);
+    const choices=(illustrated.length?illustrated:examples).sort((a,b)=>a.name.localeCompare(b.name));
+    if(choices.length){
+      const index=[...group.id].reduce((hash,ch)=>(hash*31+ch.charCodeAt(0))>>>0,0)%choices.length;
+      const example=choices[index],preview=el("button",null,"theme-art-button");
+      preview.type="button";preview.setAttribute("aria-label","View "+example.name+" card details");
+      preview.append(imageNode(example,!!example.art,"theme-art"),el("span",example.name,"theme-art-caption"));
+      preview.addEventListener("click",()=>showCard(example.oracle_id));box.appendChild(preview);
+    }
     const heading=el("div",null,"theme-card-heading");
     heading.append(el("h3",group.label),el("strong",group.copies+" cards"));box.appendChild(heading);
     box.appendChild(el("p",group.kind+(group.commanderMatch?" · commander connection":""),"theme-kind"));
@@ -401,8 +414,19 @@ function renderThemes(cards,commander){
       box.appendChild(row);
     }else box.appendChild(el("p",isUnsimulatedVersion()?"No archived draws for this edited deck.":"No complete draw archive available.","theme-unavailable"));
     const detail=el("details",null,"theme-details"),summary=el("summary","Matching cards");
-    detail.append(summary,el("p",group.cards.map(c=>(c.qty>1?c.qty+" × ":"")+c.name).join(" · ")));
-    box.appendChild(detail);root.appendChild(box);
+    detail.appendChild(summary);
+    const list=el("ul",null,"theme-card-list");
+    for(const item of group.cards){
+      const line=el("li"),card=cardInfo(item.name);
+      const label=(item.qty>1?item.qty+" × ":"")+item.name;
+      if(card){
+        const link=el("button",label,"theme-card-link");link.type="button";
+        link.setAttribute("aria-label","View "+item.name+" card details");
+        link.addEventListener("click",()=>showCard(card.oracle_id));line.appendChild(link);
+      }else line.appendChild(el("span",label));
+      list.appendChild(line);
+    }
+    detail.appendChild(list);box.appendChild(detail);root.appendChild(box);
   }
 }
 function libraryRows(){
@@ -432,17 +456,23 @@ function renderLibrary(){
     const tr=el("tr"),td=el("td","No matching cards.");td.colSpan=4;tr.appendChild(td);root.appendChild(tr);
   }
 }
+let cardDialogReturnFocus=null;
 function showCard(id){
   const card=cardForId(id);if(!card)return;
-  const box=$("modal-art");clear(box);box.appendChild(imageNode(card,false));
+  cardDialogReturnFocus=document.activeElement;
+  const box=$("modal-art");clear(box);box.appendChild(imageNode(card,!card.image&&!!card.art));
   $("card-dialog-title").textContent=card.name;
-  $("modal-meta").textContent=card.type_line+" · Mana value "+card.mana_value;
+  $("modal-meta").textContent=[card.type_line,card.mana_cost?"Mana cost "+card.mana_cost:null,
+    "Mana value "+card.mana_value,card.power!=null&&card.toughness!=null?card.power+"/"+card.toughness:null].filter(Boolean).join(" · ");
   $("modal-oracle").textContent=card.oracle_text||"No Oracle text in the saved record.";
   $("modal-scryfall").href=card.scryfall||"https://scryfall.com/";
   $("dialog-backdrop").hidden=false;$("modal-close").focus();
   originalSound("click");
 }
-function closeCard(){$("dialog-backdrop").hidden=true}
+function closeCard(){
+  const dialog=$("dialog-backdrop");if(dialog.hidden)return;
+  dialog.hidden=true;cardDialogReturnFocus?.focus();cardDialogReturnFocus=null;
+}
 /* Summary first, and the detailed observation archive second. No fixed
  * deck-specific interpretation: findings are built from the 11 cached seeds.
  */
