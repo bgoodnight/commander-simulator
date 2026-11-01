@@ -109,7 +109,8 @@ class UtilityTable(LandTable):
             if not self.wizard_target_legal(frame.controller,frame.target_frame):
                 self.utility_events.append(('riptide_fizzle',frame.source_id,frame.target_frame))
                 return False
-            self.world.move(frame.target_frame,'hand','bounce')
+            transfer_physical_object(self,frame.controller,frame.target_frame,
+                ZoneTransfer('battlefield','hand',require_controller=True,reason='bounce'))
             self.utility_events.append(('riptide_return',frame.source_id,frame.target_frame))
         else:
             apply_draw_discard(self,frame.controller,DrawDiscard(1))
