@@ -39,7 +39,7 @@ function context(){
 test('newest deck is default candidate across every commander and both sources',()=>{
   const {ctx}=context();
   const choices=vm.runInContext('allDeckChoices()',ctx);
-  assert.deepEqual(choices.map(c=>c.id),['saved:v-new','saved:v-one','preset:beta','preset:alpha']);
+  assert.deepEqual(Array.from(choices,c=>c.id),['saved:v-new','saved:v-one','preset:beta','preset:alpha']);
   assert.equal(vm.runInContext('latestDeckChoice().title',ctx),'The Latest Build');
   assert.match(vm.runInContext('deckChoiceLabel(latestDeckChoice())',ctx),
                /The Latest Build.*Beta Commander.*2026-11-01.*Saved in this browser/);
