@@ -266,6 +266,62 @@ class EngineTests(unittest.TestCase):
         a=self.place('Storm-Kiln Artist');self.t.world.create_treasure(self.p);self.t.spell_stack.checkpoint()
         view=next(c for c in self.p.creatures if c.id==a.object_id);self.assertEqual(view.power,3)
 
+    def test_live_pyromancer_token_slot_uses_stack_without_extra_tokens(self):
+        pyromancer=self.place('Young Pyromancer')
+        before=len([o for o in self.t.rules.on_battlefield()
+                    if o.controller==0 and o.token and o.card.name=='Elemental'])
+        self.cast('Ponder')
+        after=len([o for o in self.t.rules.on_battlefield()
+                   if o.controller==0 and o.token and o.card.name=='Elemental'])
+        self.assertEqual(after-before,1)
+        found=[x for x in self.t.live_ability_bridge.invocations
+               if x.source_object_id==pyromancer.object_id
+               and x.slot_key[2]=='create_token']
+        self.assertEqual(len(found),1)
+        self.assertEqual(found[0].fidelity,'exact')
+
+    def test_live_pyromancer_doubled_token_frames_both_execute(self):
+        pyro=self.place('Young Pyromancer')
+        self.place('Harmonic Prodigy')
+        before=len([o for o in self.t.rules.on_battlefield()
+                    if o.controller==0 and o.token and o.card.name=='Elemental'])
+        self.cast('Ponder')
+        after=len([o for o in self.t.rules.on_battlefield()
+                   if o.controller==0 and o.token and o.card.name=='Elemental'])
+        self.assertEqual(after-before,2)
+        found=[x for x in self.t.live_ability_bridge.invocations
+               if x.source_object_id==pyro.object_id
+               and x.slot_key[2]=='create_token']
+        self.assertEqual(len(found),2)
+
+    def test_live_kiln_cast_and_copy_token_hooks_share_slot(self):
+        kiln=self.place('Storm-Kiln Artist')
+        self.cast('Ponder')
+        first=self.p.treasures
+        self.t._apply_pending(self.t.rules.triggers(
+            Event('spell_copied',0,spell_types=frozenset({'instant'}))))
+        self.t.spell_stack.resolve()
+        self.assertEqual(self.p.treasures,first+1)
+        found=[x for x in self.t.live_ability_bridge.invocations
+               if x.source_object_id==kiln.object_id
+               and x.slot_key[2]=='create_token']
+        self.assertEqual(len(found),2)
+        hooks=[x for x in self.t.live_ability_bridge.subscriptions._live
+               if x[0]==kiln.object_id]
+        self.assertEqual(len(hooks),2)
+
+    def test_live_token_trigger_uses_last_known_source_after_departure(self):
+        pyro=self.place('Young Pyromancer')
+        self.t._apply_pending(self.t.rules.triggers(
+            Event('spell_cast',0,spell_types=frozenset({'instant'}))))
+        self.t.world.move(pyro.object_id,'hand','bounce')
+        self.t.spell_stack.resolve()
+        found=[x for x in self.t.live_ability_bridge.invocations
+               if x.source_object_id==pyro.object_id
+               and x.slot_key[2]=='create_token']
+        self.assertEqual(len(found),1)
+        self.assertNotIn(pyro.object_id,self.t.live_ability_bridge._sources)
+
     def test_storm_kiln_magecraft_descriptor_handles_copy_event(self):
         self.place('Storm-Kiln Artist')
         self.t._apply_pending(self.t.rules.triggers(Event('spell_copied',0,spell_types=frozenset({'instant'}))))
