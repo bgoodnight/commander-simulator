@@ -52,6 +52,7 @@ from .hand_cleanup import cleanup_hand
 from .reviewed_escape import (reviewed_breach, escape_candidates,
     cast_reviewed_escape_token_spell, sacrifice_breach_at_end_step)
 from .reviewed_buyback import reviewed_buyback, buyback_total_cost, cast_reviewed_buyback
+from .reviewed_spell_copy import reviewed_copy_spell,cast_reiterate_copy,REITERATE
 
 ROOT = Path(__file__).resolve().parents[1]
 
@@ -152,7 +153,8 @@ def run_bounded_early_game(deck_key, *, seed=0, turns=6, mulligan="one-free", pr
                     or reviewed_sacrifice_artifact(name,raw_by_name[name])
                     or approved_enter_hand_cast(name)
                     or reviewed_breach(name,raw_by_name[name])
-                    or reviewed_buyback(name,raw_by_name[name]) is not None)
+                    or reviewed_buyback(name,raw_by_name[name]) is not None
+                    or reviewed_copy_spell(name,raw_by_name[name]) is not None)
         definition = CardDefinition(
             identity.oracle_id, name, types, subtypes=subtypes,
             supertypes=frozenset({"commander"}) if section == "Commander" else frozenset(),
@@ -244,6 +246,7 @@ def run_bounded_early_game(deck_key, *, seed=0, turns=6, mulligan="one-free", pr
             new_id = zones.play_land(0, land_id)
             events.append({"type": "land_play", "card": name,
                            "from_object_id": land_id, "object_id": new_id})
+        copied_this_turn=set()
         # Reuse the same source-paid action for approved artifacts and creatures.
         # Prefer affordable ramp rocks before creatures: a limited pilot policy.
         while True:
@@ -315,10 +318,66 @@ def run_bounded_early_game(deck_key, *, seed=0, turns=6, mulligan="one-free", pr
                 continue
             if kind == "token_spell":
                 triggered=[]
+                def cast_copy_response(ticket):
+                    triggered.extend(approved_spell_triggers(ticket))
+                    # Exactly one bounded response per turn; the original
+                    # remains pending on the real stack until its own resolve.
+                    if copied_this_turn:
+                        return
+                    for copy_id in zones.ids(0,"hand"):
+                        copy_obj=kernel.get(copy_id)
+                        if (copy_obj.card.coverage=="unimplemented"
+                                or reviewed_copy_spell(copy_obj.card.name,
+                                        raw_by_name[copy_obj.card.name]) is None):
+                            continue
+                        extra=buyback_total_cost(REITERATE,True)
+                        afford_buyback=(mana_service.plan_spell(
+                            0,extra,copy_obj) is not None)
+                        if (not afford_buyback and mana_service.plan_spell(
+                                0,REITERATE.mana_cost,copy_obj) is None):
+                            continue
+                        response_triggers=[]
+                        copied=cast_reiterate_copy(
+                            zones,0,copy_id,ticket,raw_by_name,mana_service,
+                            buyback=afford_buyback,casting_window=True,
+                            on_cast=lambda copy_ticket:response_triggers.extend(
+                                approved_spell_triggers(copy_ticket)),
+                            on_copy=lambda original:response_triggers.extend(
+                                {"type":"reviewed_trigger_resolved",
+                                 "source":effect.card_name,
+                                 "source_object_id":effect.source_id,
+                                 "ability_slot":effect.slot_id,
+                                 "created_token_ids":list(effect.created_token_ids),
+                                 "drawn_ids":list(effect.drawn_ids),
+                                 "fidelity":"bounded_reviewed_copy"}
+                                for effect in resolve_reviewed_spell_triggers(
+                                    zones,0,raw_by_name,event="spell_copied",
+                                    spell_types=frozenset({"sorcery"}))))
+                        if copied is None:
+                            raise AssertionError("Reviewed response payment invalidated")
+                        copied_this_turn.add(copy_id)
+                        triggered.append({
+                            "type":"reviewed_spell_copy_cast","card":"Reiterate",
+                            "copier_source_id":copied.copier_old_id,
+                            "copied_spell":copied.copied_card_name,
+                            "original_stack_id":copied.original_target_stack_id,
+                            "buyback":copied.bought_back,
+                            "paid_source_ids":list(copied.mana_source_ids),
+                            "fidelity":"bounded_reviewed_copy"})
+                        triggered.extend(response_triggers)
+                        triggered.append({
+                            "type":"reviewed_spell_copy_resolved",
+                            "card":"Reiterate",
+                            "copied_spell":copied.copied_card_name,
+                            "created_token_ids":list(copied.created_token_ids),
+                            "copy_effect_source_id":copied.copy_effect_source_id,
+                            "destination":copied.copier_destination,
+                            "destination_object_id":copied.copier_destination_id,
+                            "fidelity":"bounded_reviewed_copy"})
+                        break
                 result = cast_and_resolve_reviewed_token_spell(
                     zones, 0, oid, raw_by_name, colors, mana_service,
-                    on_cast=lambda ticket: triggered.extend(
-                        approved_spell_triggers(ticket)))
+                    on_cast=cast_copy_response)
                 if result is None:
                     raise AssertionError("Token spell payment changed without an action")
                 events.append({"type": "token_spell_cast", "card": name,
@@ -690,6 +749,8 @@ def run_bounded_early_game(deck_key, *, seed=0, turns=6, mulligan="one-free", pr
                     raw_by_name[kernel.get(oid).card.name])
                 and not approved_enter_hand_cast(kernel.get(oid).card.name)
                 and reviewed_buyback(kernel.get(oid).card.name,
+                    raw_by_name[kernel.get(oid).card.name]) is None
+                and reviewed_copy_spell(kernel.get(oid).card.name,
                     raw_by_name[kernel.get(oid).card.name]) is None
                 and not supported_land(oid)),
         })
