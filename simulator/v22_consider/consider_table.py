@@ -7,6 +7,7 @@ sys.path.insert(0,str(Path(__file__).resolve().parents[1]/'v21_early_mana'))
 from mana_table import EarlyManaTable
 from rules import Cost
 from simulation import Action
+from commander_sim.legacy_common_ops import DrawDiscard, apply_draw_discard
 
 class ConsiderTable(EarlyManaTable):
     def __init__(self,*args,**kwargs):
@@ -38,5 +39,5 @@ class ConsiderTable(EarlyManaTable):
         if top is not None and to_graveyard:self.zones.move(top,'graveyard','resolve')
         self.consider_events.append((seat,top,to_graveyard))
         self.note(f'    CONSIDER P{seat}: surveil card #{top}, move to graveyard={to_graveyard}; draw one.')
-        player.draw()
+        apply_draw_discard(self,seat,DrawDiscard(draw=1))
         if not player.alive:self.eliminate(player,'empty_library')
