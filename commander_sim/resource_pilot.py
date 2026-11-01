@@ -38,7 +38,9 @@ def choose_token_mana_sacrifice(zones, seat, catalog, mana_service,
         return None
     resource = assess_resources(zones.kernel, mana_service, seat)
     current = resource.available_fixed_mana
-    capacity = current + 2 * min(len(tokens), max_sacrifices)
+    per_token = max(2 if SACRIFICE_MODES[source.card.name].action == "colorless_mana"
+                    else 1 for source in sources)
+    capacity = current + per_token * min(len(tokens), max_sacrifices)
     has_payoff = False
     for oid in zones.ids(seat, "hand"):
         card = zones.kernel.get(oid)
