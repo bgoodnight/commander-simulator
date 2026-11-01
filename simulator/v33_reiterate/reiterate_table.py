@@ -9,6 +9,8 @@ from spellseeker_table import SeekerStack
 from priority import Choice
 from rules import Cost,Event
 from simulation import Action
+sys.path.insert(0,str(Path(__file__).resolve().parents[2]))
+from commander_sim.legacy_spell_copy import prepare_reviewed_spell_copy,commit_reviewed_spell_copy
 import integrated as v6
 
 NAME='Reiterate'
@@ -75,23 +77,10 @@ class ReiterateTable(RiftTable):
  def resolve_reiterate(self,table,action):
   original=self.spell_stack.get(action.target_object)
   if not original or not self.copy_target_legal(original.frame_id):raise AssertionError('Illegal copy target after check')
-  copied=replace(original.action,actor=action.actor)
-  # Existing single-target effect choices may retain a now-illegal target;
-  # changed targets must be legal at the time of copying.
-  policy=getattr(self,'copy_target_policy',None)
-  if policy and copied.effect in {'named_cyclonic_rift','named_capsize'} and copied.target_object is not None:
-   chosen=policy(action.actor,original.action)
-   if chosen!=copied.target_object:
-    if chosen not in self.rules.objects:raise ValueError('Invalid copy target')
-    trial=replace(copied,target_object=chosen,target=self.rules.get(chosen).controller)
-    if not self.targets_legal(trial):raise ValueError('Illegal copy target')
-    copied=trial
-  self.copy_actions.add(id(copied))
-  if copied.effect=='counter':self.copy_counter_types[id(copied)]=v6.COUNTERS[copied.source]
-  self.spell_stack.spell(copied,None)
-  self.rules.events.append(Event('spell_copied',action.actor,spell_types=frozenset({copied.card_type})))
-  self._apply_pending(self.rules.triggers(Event('spell_copied',controller=action.actor,spell_types=frozenset({copied.card_type}))))
-  self.note(f'    COPY P{action.actor}: {copied.source} copied onto stack (not cast).')
+  copied=prepare_reviewed_spell_copy(self,original.action,action.actor,
+    allowed_effects=frozenset({'named_cyclonic_rift','named_capsize'}),
+    counter_types=v6.COUNTERS)
+  commit_reviewed_spell_copy(self,copied,action.actor,Event,v6.COUNTERS)
  def emit(self,name,action=None,**payload):
   if name=='spell_resolved' and action is not None and action.source==NAME and action.parameters.get('buyback'):
    ticket=self._spells.pop(id(action),None)
