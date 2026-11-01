@@ -4,6 +4,38 @@ A reproducible, modular four-player **Magic: The Gathering Commander** simulatio
 
 Both saved presets and compatible local deck files now use the same active engine through the [deck provider](commander_sim/README.md). Local files must pass validation against the bundled identity snapshots; effect coverage remains incomplete.
 
+## Current backend: six-deck shared-effect migration (M2.12–M2.13)
+
+The backend now audits all six pinned Commander deck variants (**448 deck
+entries, 299 distinct card names**) with
+[`commander_sim.deck_effect_audit`](commander_sim/deck_effect_audit.py).
+Oracle-text matching is only a candidate-effect inventory: it is **not**
+evidence that an entire card is executable.
+
+The physical bounded runner accepts all six decks for reviewed lands,
+mana rocks and source-paid actions, and admits individually reviewed creature
+bodies, instant/sorcery tutor spells, and fixed-count token sorceries as
+applicable. Five reviewed token-spell recipes share one configurable
+token-generation operation: Ral's Reinforcements, Hard Evidence, Strike It
+Rich, Moan of the Unhallowed and Army of the Damned. Four separately pinned
+cast/copy-trigger suboperations for Young Pyromancer, Talrand, Archmage
+Emeritus and Storm-Kiln Artist use shared token/draw operations. Reusable
+physical draw, mill, +1/+1 / -1/-1 counter placement, restricted
+graveyard-to-hand, destroy/exile/bounce and per-opponent damage primitives
+are independently regression-tested, but **not automatically legal or
+integrated for every printed card**.
+
+Historical Magnus v35 continues to own its own reviewed multiplayer stack
+and trigger timing; the six-deck bounded run has **no opposing priority**.
+Flashback, true comprehensive graveyard recursion, death/sacrifice payoff
+triggers, Clue/Treasure activations, general replacement and continuous
+rules, commander casting, and full all-deck multiplayer gameplay remain
+incomplete. No simulated win-rate claim is made.
+
+See the [six-deck common-effect coverage ledger](docs/DECK_COMMON_EFFECT_COVERAGE.md)
+for implemented families, test boundaries and the remaining roadmap.
+Backend-only migration; the Deck Lab UI is maintained separately.
+
 ## Launch Deck Lab — three-page fantasy website
 
 **[Open Commander Deck Lab](https://bgoodnight.github.io/commander-simulator/)** · [Deck Summary](https://bgoodnight.github.io/commander-simulator/docs/deck-lab/index.html) · [Simulation Results](https://bgoodnight.github.io/commander-simulator/docs/deck-lab/results.html) · [Card List & Editor](https://bgoodnight.github.io/commander-simulator/docs/deck-lab/editor.html)
