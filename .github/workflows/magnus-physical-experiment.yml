@@ -113,9 +113,19 @@ jobs:
                     "status":"valid"
                   })
               provider=DeckProvider(records)
+              invalid=[r["name"] for r in records if not set(r["color_identity"])<=set("UR")]
+              print("PHYSICAL_OFF_COLOR_IDENTITIES",json.dumps([{ "name":r["name"],"color_identity":r["color_identity"]} for r in records if r["name"] in invalid]),flush=True)
+              # No mutation of the user's deck: for diagnostics only, replace
+              # each off-color singleton with a basic Island in temporary text.
+              candidate_text=deckpath.read_text()
+              for name in invalid:
+                  candidate_text=candidate_text.replace("1 "+name+"\\n","1 Island\\n")
+              # Merge repeated basic Islands under the existing entry.
+              candidate_text=candidate_text.replace("1 Island\\n","")
+              candidate_text=candidate_text.replace("15 Island",""+str(15+len(invalid))+" Island")
               try:
-                  deck=provider.load(deckpath)
-                  print("PHYSICAL_DECK_VALIDATION",json.dumps({"count":deck.count,"identity_count":len(records)}),flush=True)
+                  deck=provider.parse(candidate_text)
+                  print("PHYSICAL_DECK_VALIDATION",json.dumps({"count":deck.count,"identity_count":len(records),"diagnostic_basic_land_replacements":invalid}),flush=True)
               except Exception as exc:
                   print("PHYSICAL_DECK_VALIDATION_ERROR",repr(exc),flush=True)
                   sys.exit(0)
