@@ -1,9 +1,19 @@
 name: Generate bounded simulation archives (isolated)
 on:
+  push:
+    branches: [main]
+    paths:
+      - "tools/build_simulation_archive.py"
+      - "tools/publish_simulation_archive.py"
+      - "tools/build_pages_deck_lab.py"
+      - ".github/workflows/simulation-archives.yml"
   pull_request:
     paths:
       - "tools/build_simulation_archive.py"
       - "tests/test_simulation_archive.py"
+      - "tests/test_simulation_publishing.py"
+      - "tools/publish_simulation_archive.py"
+      - "tools/build_pages_deck_lab.py"
       - ".github/workflows/simulation-archives.yml"
   workflow_dispatch:
     inputs:
@@ -19,7 +29,8 @@ on:
         type: string
 
 permissions:
-  contents: read
+  contents: write
+  actions: write
 
 concurrency:
   group: bounded-archive-${{ github.ref }}
@@ -49,8 +60,8 @@ jobs:
         run: python -m unittest tests.test_simulation_archive -v
       - name: Generate the pinned bounded-action archive
         env:
-          ARCHIVE_SEEDS: ${{ github.event_name == 'pull_request' && '2' || inputs.seeds }}
-          ARCHIVE_TURNS: ${{ github.event_name == 'pull_request' && '3' || inputs.turns }}
+          ARCHIVE_SEEDS: ${{ github.event_name == 'pull_request' && '2' || github.event_name == 'push' && '20' || inputs.seeds }}
+          ARCHIVE_TURNS: ${{ github.event_name == 'pull_request' && '3' || github.event_name == 'push' && '6' || inputs.turns }}
           ARCHIVE_DECK: ${{ matrix.deck }}
         run: |
           python tools/build_simulation_archive.py \
@@ -65,3 +76,48 @@ jobs:
           path: dist/simulation-archives/*.json
           if-no-files-found: error
           retention-days: 90
+
+  publish:
+    name: Validate and stage immutable Pages archive
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    needs: archive
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+      - name: Download all six verified deck archives
+        uses: actions/download-artifact@v4
+        with:
+          pattern: bounded-*-${{ github.sha }}
+          path: dist/incoming-archives
+          merge-multiple: true
+      - name: Validate the persistent archive and Pages compatibility
+        run: |
+          python -m unittest tests.test_simulation_archive tests.test_simulation_publishing tests.test_pages_export -v
+          python tools/publish_simulation_archive.py \
+            --source dist/incoming-archives \
+            --output web/pages/data/simulation-archive \
+            --engine-commit "${{ github.sha }}"
+          python tools/build_pages_deck_lab.py --output dist/validated-pages
+      - name: Commit archive data without touching UI source or deployments
+        if: (github.event_name == 'push' || github.event_name == 'workflow_dispatch') && github.ref == 'refs/heads/main'
+        run: |
+          git fetch origin main
+          if [ "$(git rev-parse HEAD)" != "$(git rev-parse origin/main)" ]; then
+            echo "Main changed while simulations ran; refusing stale archive push."
+            exit 1
+          fi
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add -A web/pages/data/simulation-archive/
+          if ! git diff --cached --quiet; then
+            git commit -m "Publish versioned bounded simulation archive ${{ github.sha }}"
+            git push origin HEAD:main
+          fi
+      - name: Rebuild existing Pages export using the new saved data
+        if: (github.event_name == 'push' || github.event_name == 'workflow_dispatch') && github.ref == 'refs/heads/main'
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: gh workflow run deck-lab-pages.yml --ref main
