@@ -42,5 +42,38 @@
       caveat:"Provisional rules-text/decklist screening only: combinations, intentional strategies, actual win speed, playgroup expectations and cEDH intent require review. Neither simulations nor early-game win probabilities are inferred."
     };
   }
-  return {assess,normalize};
+
+  // Game-performance evidence must be explicitly complete, revision-matched,
+  // and include modeled opponents and win conditions. Six-turn bounded runs
+  // and opening-hand observations are NOT qualifying performance samples.
+  function performanceEvidence(runs,deckSha){
+    if(!Array.isArray(runs)||!deckSha)return null;
+    const valid=runs.filter(run=>run&&run.deck_sha256===deckSha&&
+      run.mode==="complete_multiplayer_game"&&run.game_complete===true&&
+      run.opponents_modeled===true&&run.win_conditions_modeled===true&&
+      Number.isInteger(run.winning_turn)&&run.winning_turn>0&&
+      typeof run.won==="boolean");
+    if(valid.length<30)return null;
+    const sorted=valid.map(run=>run.winning_turn).sort((a,b)=>a-b);
+    const wins=valid.filter(run=>run.won).length;
+    const median=sorted[Math.floor((sorted.length-1)/2)];
+    const early=valid.filter(run=>run.won&&run.winning_turn<=5).length;
+    return {sample:valid.length,wins,win_rate:Math.round(100*wins/valid.length),
+      median_finish_turn:median,early_wins:early,
+      note:"Complete modeled four-player games, matched to this exact deck revision. Performance depends on opponent selection and pilot fidelity."};
+  }
+  function combineEvidence(cardResult,runs,deckSha){
+    if(!cardResult||cardResult.status==="unavailable")return cardResult;
+    const performance=performanceEvidence(runs,deckSha);
+    if(!performance)return {...cardResult,evidence_mode:"cards_only",performance:null};
+    // A completed-game dataset supplies additional evidence, but game speed
+    // alone cannot override Wizards' intent/strategy requirements or determine
+    // an official bracket. Preserve hard Game Changer minimum.
+    let suggested=cardResult.estimated_bracket;
+    if(performance.early_wins/performance.sample>=0.20)
+      suggested=Math.max(suggested,4);
+    return {...cardResult,estimated_bracket:suggested,
+      evidence_mode:"cards_and_games",performance};
+  }
+  return {assess,normalize,performanceEvidence,combineEvidence};
 });
