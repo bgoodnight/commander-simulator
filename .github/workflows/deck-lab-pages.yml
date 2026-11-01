@@ -38,6 +38,7 @@ jobs:
           node --check web/pages/app.js
           node --check web/pages/results_insights.js
           node --test tests/pages_insights.test.cjs
+          node --test tests/pages_deck_selection.test.cjs
           node --check dist/pages/app.js
           node --check dist/pages/results_insights.js
       - name: Offer a downloadable preview even before Pages is enabled
