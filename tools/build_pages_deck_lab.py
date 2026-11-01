@@ -107,12 +107,11 @@ def build(output, *, catalog_path=SHARED_CATALOG, name_catalog_path=DEFAULT_NAME
         commander_card = next(item["card"] for item in pinned if item["card"]["oracle_id"] == commander["oracle_id"])
         modeled_rocks = [item["card"]["oracle_id"] for item in pinned
                          if reviewed_rock(item["deck_name"], item["card"], commander_card.get("color_identity", [])) is not None]
-        # Deck timestamps are the last committed changes to the pinned list
-        # or its Oracle snapshot, not the Pages build/deployment date.
-        source_paths=[fixture.deck_path,fixture.snapshot_path]
+        # Last updated means the pinned deckLIST revision, not a shared
+        # Oracle snapshot refresh or the Pages deployment timestamp.
         updated=subprocess.run(
-            ["git","log","-1","--format=%cI","--",*[
-                str(p.relative_to(ROOT)) for p in source_paths]],
+            ["git","log","-1","--format=%cI","--",
+             str(fixture.deck_path.relative_to(ROOT))],
             cwd=ROOT,text=True,capture_output=True,check=False)
         updated_at=updated.stdout.strip() if updated.returncode==0 else ""
         decks.append({
