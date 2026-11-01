@@ -44,6 +44,7 @@ from .reviewed_sacrifice_actions import (
     SACRIFICE_MODES, reviewed_sacrifice_artifact,
     activate_reviewed_sacrifice)
 from .template_resources import TemplateManaService
+from .hand_cleanup import cleanup_hand
 
 ROOT = Path(__file__).resolve().parents[1]
 
@@ -483,6 +484,36 @@ def run_bounded_early_game(deck_key, *, seed=0, turns=6, mulligan="one-free", pr
             events.append({"type":"reviewed_unearth_expired",
                            "object_id":old_id,"exiled_object_id":exiled_id,
                            "fidelity":"bounded_no_opponent_priority"})
+        # Cleanup follows all end-step abilities; use actual kernel movement.
+        # The limited pilot already spent available main-phase mana and cast
+        # supported spells before this point, avoiding excess hand cards when
+        # possible. Cleanup discards follow a modest board-aware ranking.
+        def hand_action_supported(obj):
+            name = obj.card.name
+            raw = raw_by_name[name]
+            return bool(
+                supported_land(obj.object_id)
+                or reviewed_creature(deck_key, name, raw)
+                or reviewed_rock(name, raw, colors) is not None
+                or reviewed_token_spell(name, raw) is not None
+                or reviewed_tutor(name, raw) is not None
+                or reviewed_phase_permanent(name, raw)
+                or reviewed_sacrifice_artifact(name, raw)
+                or approved_enter_hand_cast(name))
+        cleanup = cleanup_hand(
+            zones, 0, raw_by_name, supported_action=hand_action_supported)
+        for choice in cleanup.discarded:
+            events.append({
+                "type": "cleanup_discard", "card": choice.name,
+                "from_object_id": choice.old_id,
+                "graveyard_object_id": choice.graveyard_id,
+                "hand_before_cleanup": cleanup.hand_before,
+                "maximum_hand_size": cleanup.maximum_hand_size,
+                "utility_score": choice.utility_score,
+                "policy": "bounded_board_utility_v1",
+                "fidelity": "physical_cleanup_no_discard_triggers"})
+        if cleanup.maximum_hand_size is not None:
+            assert cleanup.hand_after <= cleanup.maximum_hand_size
         floating_end = list(mana_service.floating())
         mana_service.clear()
         if (not zones.assert_consistent()
@@ -492,6 +523,9 @@ def run_bounded_early_game(deck_key, *, seed=0, turns=6, mulligan="one-free", pr
         states.append(state)
         actions_by_turn.append({
             "turn": turn, "events": events, "hand_size": len(zones.ids(0, "hand")),
+            "hand_size_before_cleanup": cleanup.hand_before,
+            "maximum_hand_size": cleanup.maximum_hand_size,
+            "cleanup_discard_count": len(cleanup.discarded),
             "library_size": len(zones.ids(0, "library")),
             "land_count": sum("land" in o.types and o.zone == "battlefield"
                               for o in kernel.objects.values()),
