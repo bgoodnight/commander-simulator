@@ -91,7 +91,8 @@ class KernelZones:
         ids=self.order[seat,'library']
         self.rng.shuffle(ids)
         self.operations.append(('shuffle',seat,len(ids)))
-    def cast(self,seat:int,oid:int,*,reviewed_origin=None):
+    def cast(self,seat:int,oid:int,*,reviewed_origin=None,
+             exile_on_stack_exit=False):
         # Physical zone kernel is not the permission engine. Only callers that
         # have independently reviewed an ability may request a graveyard cast;
         # the default remains legal hand/command only.
@@ -104,13 +105,23 @@ class KernelZones:
         if not allowed:
             raise ValueError('Card not available to cast')
         card=self.kernel.get(oid).card
+        if type(exile_on_stack_exit) is not bool:
+            raise ValueError('Exile replacement permission must be Boolean')
+        if exile_on_stack_exit and (reviewed_origin!='graveyard'
+                or not hasattr(self.kernel,'flashback_pending')
+                or not card.types.intersection({'instant','sorcery'})):
+            raise ValueError('Reviewed graveyard flashback stack required')
         if 'land' in card.types:raise ValueError('Land is played, not cast')
         if card.coverage=='unimplemented':raise NotImplementedError('Unsupported card '+card.name)
         new=self.move(oid,'stack')
         ticket=CastTicket(new,seat,card.types,card.name)
         self._pending[new]=ticket
+        if exile_on_stack_exit:
+            self.kernel.flashback_pending.add(new)
         # Cast event is separate from both subsequent countering and resolving.
-        self.kernel.events.append(Event('spell_cast',seat,new,spell_types=card.types))
+        metadata=(('origin','graveyard'),) if reviewed_origin=='graveyard' else ()
+        self.kernel.events.append(Event('spell_cast',seat,new,spell_types=card.types,
+                                        metadata=metadata))
         return ticket
     def counter(self,ticket:CastTicket,commander_to_command=True):
         self._require_ticket(ticket)
