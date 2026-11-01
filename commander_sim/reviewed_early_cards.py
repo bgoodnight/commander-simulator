@@ -1,9 +1,10 @@
 """Manually reviewed conditional creatures for the bounded M3 early-turn runner.
 
 Reviewed here means: casting from HAND and entering normally has no immediately
-mandatory unresolved effect under the *limited* creature/land-only no-combat,
-no-opponent environment. Activated, combat and conditional triggered effects
-remain unsupported. This is NOT a blanket simplification of their full card
+mandatory unresolved effect under the *limited* no-combat,
+no-opponent environment. Only independently pinned reviewed cast-trigger
+abilities are available in the bounded runner; activated, combat, death,
+ETB, and other triggered effects remain unsupported. This is NOT a blanket simplification of their full card
 rules. Oracle IDs and text are pinned to the inspected 2026-10-31 fixtures;
 changes fail closed. No metadata-only card is automatically granted abilities.
 """
@@ -91,11 +92,16 @@ def reviewed_creature(deck_key, name, source_card):
 
 
 LIMITATIONS = (
-    "This bounded runner permits supported land plays and approved source-paid "
-    "creature and mana-rock casts from hand. Reviewed rock mana abilities include "
-    "Sol Ring two-colorless output, basic colored rocks and funded Signet modes. "
-    "Colored damage/life-paying modes, activated draw/sacrifice side abilities, "
-    "other ramp, tutor spells, combat, opponents, death/cast/ETB triggers, "
-    "priority and commander casting remain unmodeled. No full deck power, "
-    "win rates or functional combo accessibility may be inferred."
+    "This bounded no-opponent runner imports all six pinned decks and plays "
+    "reviewed land and source-paid mana-rock actions. Separately approved "
+    "ordinary creatures, hand-cast instant/sorcery tutors with hand/library-top "
+    "destinations, and hand-cast fixed token sorceries also resolve through "
+    "the same physical zones. Four pinned cast-trigger source abilities "
+    "(Young Pyromancer, Talrand, Archmage Emeritus, Storm-Kiln Artist) "
+    "execute without opposing priority. Other cards or ability slots "
+    "remain unsupported. Treasure/Clue activations, flashback, broad ETB/death "
+    "triggers, sacrifice payoffs, full priority, multiplayer interaction, "
+    "combat, replacement/continuous rules, commander casting and complete "
+    "graveyard recursion remain unavailable. No validated win rates, "
+    "full-deck performance or functional combo rankings may be inferred."
 )
