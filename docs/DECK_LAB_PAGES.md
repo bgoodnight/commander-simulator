@@ -105,3 +105,9 @@ The artifact **does not contain** the full repository. Build integrity is covere
 ## Next iteration
 
 Use Work's browser to check the actual rendered mobile and desktop layouts, art cropping, drag/drop vs tap, sound-on/off, reduced-motion, SVG legibility, card modal, seed switch, invalid and valid swap and `localStorage` persistence. Then prioritize visual fixes and card art caching (respecting artist/copyright/provider terms), version-compare visualizations and explicitly requested improvements; real generic Magic gameplay remains a separate engine milestone.
+
+### Reviewed-action batch snapshot (2026-11-01)
+
+The Results page also displays 100 six-turn bounded-action runs for Magnus premium v1.14, Wretched Ranks, Mortarion current and Necron Dynasties, seeds 0–99, plus inspectable seeds 0–2. The separate `bounded-batches.json` pins each deck hash and records the prior base commit and SHA-256 hashes of the changed engine files. It is a fixed snapshot, not automatically recomputed when the engine changes; regenerate it to reflect later engine changes. Saved or edited deck versions must never inherit these results.
+
+These runs use the limited source-paid single-player kernel and the reviewed action subset. Unsupported cards remain unavailable; commanders, combat, opponents and wins are not simulated. Unequal coverage prevents interpreting between-deck differences as relative strength. The sample runs are illustrative seeds, not statistically selected representatives. The observation archive below remains a separate model.

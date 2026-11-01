@@ -49,7 +49,8 @@ def _cast_reviewed_card(zones, seat, object_id, review, commander_colors, *,
     card = obj.card
     if (obj.owner != seat or obj.controller != seat or obj.zone != "hand"
             or card.card_id != review.card_id or card.coverage == "unimplemented"
-            or card.types != frozenset({card_type})):
+            or (card.types != frozenset({card_type}) if card_type in {"instant", "sorcery"}
+                else card_type not in card.types or not card.types <= {"artifact", "creature", "enchantment"})):
         raise ValueError("Not an approved reviewed permanent")
     parse_fixed_mana_cost(review.mana_cost)
     if mana_service is not None and mana_service.kernel is not kernel:

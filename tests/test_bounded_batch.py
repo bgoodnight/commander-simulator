@@ -5,6 +5,11 @@ from commander_sim.bounded_batch import run_bounded_batch
 
 
 class BoundedBatchTests(unittest.TestCase):
+    def test_necron_multitype_permanent_batch(self):
+        result = run_bounded_batch('necron_dynasties', seeds=3, turns=6)
+        self.assertEqual(result['seed_count'], 3)
+        self.assertEqual(len(result['turns']), 6)
+
     def test_repeated_seeds_identical(self):
         a = run_bounded_batch("wretched_ranks", seeds=3, turns=4)
         self.assertEqual(a, run_bounded_batch("wretched_ranks", seeds=3, turns=4))

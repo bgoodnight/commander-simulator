@@ -82,6 +82,17 @@ class ReviewedCastKernelTests(unittest.TestCase):
             self.cast()
         self.assertEqual(len(self.zones.ids(0, 'stack')), 0)
 
+    def test_reviewed_artifact_creature_keeps_both_types(self):
+        self.kernel.get(self.card_id).card = CardDefinition(
+            self.review.card_id, 'Test artifact creature',
+            frozenset({'artifact', 'creature'}), coverage='approx')
+        for _ in range(3):
+            self.land('Swamp')
+        result = self.cast()
+        permanent = self.zones.resolve(result.ticket)
+        self.assertEqual(self.kernel.get(permanent).types, frozenset({'artifact', 'creature'}))
+        self.assertTrue(self.zones.assert_consistent())
+
     def test_review_identity_cannot_substitute_another_card(self):
         for _ in range(3):
             self.land('Swamp')

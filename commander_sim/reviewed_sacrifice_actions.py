@@ -154,7 +154,7 @@ def activate_reviewed_sacrifice(
         raise ValueError("Cannot pay reviewed life activation cost")
     if mode.action=="black_mana_by_value":
         victim_raw=catalog.get(victim.card.name)
-        mana_value=None if victim_raw is None else victim_raw.get("cmc")
+        mana_value=0 if victim.token else (None if victim_raw is None else victim_raw.get("cmc"))
         if (type(mana_value) not in (int,float) or mana_value<0
                 or int(mana_value)!=mana_value):
             raise ValueError("Sacrificed creature mana value is unreviewed")
@@ -192,7 +192,7 @@ def activate_reviewed_sacrifice(
         if operation.life_cost:
             life.lose(source.controller,operation.life_cost,source_id)
         movement=zones.move(victim_id,"graveyard","sacrifice")
-        if movement is None:
+        if victim_id in kernel.objects or len(kernel.moves) == move_index:
             raise AssertionError("Sacrifice movement did not occur")
         created=()
         drawn=()

@@ -157,12 +157,19 @@ def build(output, *, catalog_path=SHARED_CATALOG, name_catalog_path=DEFAULT_NAME
     write_json("decks.json", dataset)
     write_json("observations.json", observations)
     write_json("names.json", names)
+    # Results are precomputed separately and must match the exported deck revisions.
+    batches = json.loads((static / "data" / "bounded-batches.json").read_text(encoding="utf-8"))
+    for key, batch in batches["decks"].items():
+        deck = next(d for d in decks if d["key"] == key)
+        if batch["deck_sha256"] != deck["deck_sha256"]:
+            raise ValueError("Bounded batch uses wrong deck revision: " + key)
+    write_json("bounded-batches.json", batches)
     manifest = {
         "format": dataset["format"], "decks": len(decks),
         "cards": len(identities), "names": len(names),
         "seeds": list(seeds),
         "asset_sha256": {name: hashlib.sha256((output / name).read_bytes()).hexdigest()
-                         for name in ("decks.json", "observations.json", "names.json",
+                         for name in ("decks.json", "observations.json", "names.json", "bounded-batches.json",
                                       "index.html", "summary.html", "results.html", "editor.html",
                                       "app.js", "results_insights.js", "style.css")},
         "note": "Published data includes only approved six canonical decks and fixed-seed observations.",

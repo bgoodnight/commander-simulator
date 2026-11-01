@@ -520,7 +520,31 @@ function closeCard(){
  * deck-specific interpretation: findings are built from the 11 cached seeds.
  */
 let aggregate=null;
+let boundedBatches=null;
+function showBoundedBatch(){
+  const root=$("bounded-results"); clear(root);
+  const batch=boundedBatches?.decks?.[selected];
+  if(isUnsimulatedVersion() || !batch || batch.deck_sha256!==selectedDeck().deck_sha256){
+    root.appendChild(el("p","No matching reviewed-action batch is available for this deck version.")); return;
+  }
+  root.appendChild(el("p",batch.seed_count+" seeds (0–99), six turns, one free mulligan. Reviewed actions only; no opponents, commander casting, combat, or win rates. Unsupported cards cannot be played. Differences in support between decks make comparisons misleading.","small"));
+  const table=el("table"), head=el("tr");
+  ["Turn","Avg. lands","Avg. creatures on board","Avg. rocks","Avg. unsupported cards in hand"].forEach(x=>head.appendChild(el("th",x)));
+  table.appendChild(head);
+  for(const row of batch.turns){const tr=el("tr"); [row.turn,row.mean_lands_in_play,row.mean_reviewed_creatures_in_play,row.mean_reviewed_mana_rocks_in_play,row.mean_unsupported_hand_cards].forEach(x=>tr.appendChild(el("td",String(x))));table.appendChild(tr);}
+  const wrap=el("div",null,"table-scroll"); wrap.appendChild(table);root.appendChild(wrap);
+  const label=el("label","Inspect a sample run: "), select=el("select");
+  batch.examples.forEach((run,i)=>{const o=el("option","Seed "+run.seed);o.value=String(i);select.appendChild(o)});
+  label.appendChild(select);root.appendChild(label);const trace=el("div");root.appendChild(trace);
+  function render(){clear(trace);const run=batch.examples[Number(select.value)];
+    trace.appendChild(el("p","Opening hand: "+run.mulligan.opening_hand.join(", ")+". Mulligan: "+(run.mulligan.taken?"yes":"no")+".","small"));
+    for(const turn of run.events){const details=document.createElement("details"),summary=el("summary","Turn "+turn.turn+" · "+turn.land_count+" lands · "+turn.creature_count+" creatures · "+turn.hand_size+" cards in hand");details.appendChild(summary);
+      for(const event of turn.events)details.appendChild(el("p",event.type.replaceAll("_"," ")+(event.card?": "+event.card:""),"small"));
+      details.appendChild(el("p","Unsupported in hand: "+(turn.unsupported_cards_in_hand.join(", ")||"none"),"small"));trace.appendChild(details);}}
+  select.onchange=render;render();
+}
 function showAggregate(){
+  showBoundedBatch();
   const result=$("results-kpis"),intro=$("results-takeaway");
   clear(result);clear(intro);
   aggregate=null;
@@ -1347,10 +1371,10 @@ async function boot(){
   registerEvents();
   try{
     const response=await Promise.all([
-      fetch("./decks.json"),fetch("./observations.json"),fetch("./names.json")
+      fetch("./decks.json"),fetch("./observations.json"),fetch("./names.json"),fetch("./bounded-batches.json")
     ]);
     if(response.some(r=>!r.ok))throw Error("Site data could not be loaded. Check the Pages deployment.");
-    [data,archives,allNames]=await Promise.all(response.map(r=>r.json()));
+    [data,archives,allNames,boundedBatches]=await Promise.all(response.map(r=>r.json()));
     if(data.format!=="commander-deck-lab-static-v1"||!data.decks.length)
       throw Error("Unexpected static dataset format.");
     allNames.sort((a,b)=>a.localeCompare(b));

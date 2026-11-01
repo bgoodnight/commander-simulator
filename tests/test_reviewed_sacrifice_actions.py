@@ -80,6 +80,17 @@ class ReviewedSacrificeActionTests(unittest.TestCase):
         self.assertEqual(sum(o.token and o.card.name=="Treasure"
                              for o in self.kernel.on_battlefield()),1)
 
+    def test_sacrificed_token_ceases_and_still_triggers_death(self):
+        feeder=self.add("Carrion Feeder")
+        self.add("Pitiless Plunderer")
+        victim=self.add("Victim")
+        self.kernel.get(victim).token=True
+        out=self.activate(feeder,victim)
+        self.assertNotIn(victim,self.kernel.objects)
+        self.assertIsNone(out.victim_new_id)
+        self.assertEqual(out.death_trigger_count,1)
+        self.assertTrue(self.zones.assert_consistent())
+
     def test_ayara_requires_other_black_creature_and_draws_card(self):
         ayara=self.add("Ayara, First of Locthwain")
         victim=self.add("Victim",colors={"B"})

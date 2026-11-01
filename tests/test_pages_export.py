@@ -45,7 +45,7 @@ class StaticPagesTests(unittest.TestCase):
         self.run_build()
         permitted={"index.html","summary.html","results.html","editor.html",
                    "app.js","results_insights.js","style.css","decks.json",
-                   "observations.json","names.json","build-manifest.json",".nojekyll"}
+                   "observations.json","names.json","bounded-batches.json","build-manifest.json",".nojekyll"}
         self.assertEqual({p.name for p in self.destination.iterdir()},permitted)
         self.assertNotIn("shared_scryfall_catalog.json",permitted)
         self.assertFalse(any(p.is_dir() for p in self.destination.iterdir()))
