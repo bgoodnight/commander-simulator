@@ -26,6 +26,12 @@ class StaticPagesTests(unittest.TestCase):
         self.assertEqual(manifest["seeds"],list(DEFAULT_SEEDS))
         datasets=json.loads((self.destination/"decks.json").read_text())
         results=json.loads((self.destination/"observations.json").read_text())
+        batches=json.loads((self.destination/"bounded-batches.json").read_text())
+        self.assertEqual(len(batches["decks"]),4)
+        for key in batches["decks"]:
+            runs=json.loads((self.destination/f"bounded-runs-{key}.json").read_text())
+            self.assertEqual(len(runs),100)
+            self.assertEqual({r["seed"] for r in runs},set(range(100)))
         self.assertEqual(datasets["data_mode"],"precomputed_observation_only")
         self.assertEqual(len(datasets["decks"]),6)
         for deck in datasets["decks"]:
@@ -46,6 +52,7 @@ class StaticPagesTests(unittest.TestCase):
         permitted={"index.html","summary.html","results.html","editor.html",
                    "app.js","results_insights.js","style.css","decks.json",
                    "observations.json","names.json","bounded-batches.json","build-manifest.json",".nojekyll"}
+        permitted.update(f"bounded-runs-{key}.json" for key in ("magnus_premium","wretched_ranks","mortarion_current","necron_dynasties"))
         self.assertEqual({p.name for p in self.destination.iterdir()},permitted)
         self.assertNotIn("shared_scryfall_catalog.json",permitted)
         self.assertFalse(any(p.is_dir() for p in self.destination.iterdir()))

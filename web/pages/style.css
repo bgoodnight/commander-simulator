@@ -506,3 +506,8 @@ body{background-color:#101019;background-image:radial-gradient(ellipse at 50% -1
 .quiet-example-actions{display:flex;align-items:center;gap:9px;flex-wrap:wrap}
 .quiet-example-actions button{min-height:44px}
 .quiet-label{margin:13px 0 6px;color:#e4cc9d;font-weight:700;font-size:.72rem}
+.quiet-turn-controls{grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:10px}
+.quiet-bar{display:grid;grid-template-columns:1fr auto;gap:8px;text-align:left;padding:12px;border:1px solid #716779;border-radius:9px;background:#172322;color:#f2dfbb;cursor:pointer;min-height:60px}
+.quiet-bar[aria-pressed=true]{border-color:#edcb80;background:#2b332c}
+.quiet-bar-track{grid-column:1 / -1;display:block;height:8px;border-radius:5px;background:#424849;overflow:hidden}
+.quiet-bar-fill{display:block;height:100%;background:#d9b66d;border-radius:5px}

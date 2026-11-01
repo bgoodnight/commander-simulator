@@ -142,3 +142,13 @@ test('quiet-turn analysis uses consecutive recorded actions and exposes unsuppor
   assert.throws(()=>quietTurns([runs[0],runs[0]],'d','abc'),/distinct/);
   assert.throws(()=>quietTurns([{mode:'observation'}],'d','abc'));
 });
+
+test('quiet detection counts enchantments, phase effects and sacrifices as recorded actions',()=>{
+  const {quietTurns}=require('../web/pages/results_insights.js');
+  const run=(seed,type)=>({mode:'bounded_authoritative_early_actions',deck_key:'d',deck_sha256:'h',seed,mulligan:{policy:'one-free'},
+    events:[{turn:1,events:[],unsupported_cards_in_hand:[],land_count:0,hand_size:0},
+      {turn:2,events:[{type}],unsupported_cards_in_hand:[],land_count:0,hand_size:0}],
+    state_snapshots:[1,2].map(turn=>({turn,hand:[],battlefield:[]}))});
+  const points=quietTurns(['enchantment_resolved','reviewed_phase_resolved','reviewed_sacrifice_activated','draw'].map((t,i)=>run(i,t)),'d','h');
+  assert.equal(points[0].count,1);assert.equal(points[0].examples[0].seed,3);
+});

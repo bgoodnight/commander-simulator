@@ -163,7 +163,17 @@ def build(output, *, catalog_path=SHARED_CATALOG, name_catalog_path=DEFAULT_NAME
         deck = next(d for d in decks if d["key"] == key)
         if batch["deck_sha256"] != deck["deck_sha256"]:
             raise ValueError("Bounded batch uses wrong deck revision: " + key)
+        runs = json.loads((static / "data" / f"bounded-runs-{key}.json").read_text(encoding="utf-8"))
+        if (len(runs) != batch["seed_count"] or
+            {r["seed"] for r in runs} != set(range(batch["seed_count"])) or
+            any(r["deck_key"] != key or r["deck_sha256"] != deck["deck_sha256"] or
+                r["mode"] != "bounded_authoritative_early_actions" or
+                len(r["events"]) != len(batch["turns"]) or
+                len(r["state_snapshots"]) != len(batch["turns"]) for r in runs)):
+            raise ValueError("Invalid bounded run archive: " + key)
     write_json("bounded-batches.json", batches)
+    for key in batches["decks"]:
+        shutil.copy2(static / "data" / f"bounded-runs-{key}.json", output / f"bounded-runs-{key}.json")
     manifest = {
         "format": dataset["format"], "decks": len(decks),
         "cards": len(identities), "names": len(names),
@@ -171,7 +181,8 @@ def build(output, *, catalog_path=SHARED_CATALOG, name_catalog_path=DEFAULT_NAME
         "asset_sha256": {name: hashlib.sha256((output / name).read_bytes()).hexdigest()
                          for name in ("decks.json", "observations.json", "names.json", "bounded-batches.json",
                                       "index.html", "summary.html", "results.html", "editor.html",
-                                      "app.js", "results_insights.js", "style.css")},
+                                      "app.js", "results_insights.js", "style.css",
+                                      *(f"bounded-runs-{key}.json" for key in batches["decks"]))},
         "note": "Published data includes only approved six canonical decks and fixed-seed observations.",
     }
     write_json("build-manifest.json", manifest)

@@ -326,6 +326,7 @@ function summon(key,{versionId=null,remember=true}={}){
   const deck=data.decks.find(d=>d.key===key);
   if(!deck)return;
   selected=key;
+  quietRuns=null; quietTurn=-1; quietExample=0;
   selectedVersionId=versionId&&localVersions.some(v=>v.id===versionId&&v.baseKey===key)?
     versionId:null;
   activeCounts=selectedVersionId?{...versionById(selectedVersionId).counts}:null;
@@ -379,7 +380,7 @@ function renderPageIntro(){
   let detail=facts.total+" cards · "+facts.lands+" lands";
   if(pageName==="results"){
     detail=isUnsimulatedVersion()?"No archived observations for this version":
-      (aggregate?aggregate.n+" hands · 6 turns":"Observations");
+      (boundedBatches?.decks?.[selected]?.runs?.length ? boundedBatches.decks[selected].runs.length+" simulated runs · 6 turns" : "No matching simulation batch");
   }
   intro.append(el("h1",PAGE_INFO[pageName]),el("p",detail));
 }
@@ -527,21 +528,24 @@ function showBoundedBatch(){
   if(isUnsimulatedVersion() || !batch || batch.deck_sha256!==selectedDeck().deck_sha256){
     root.appendChild(el("p","No matching reviewed-action batch is available for this deck version.")); return;
   }
-  root.appendChild(el("p",batch.seed_count+" seeds (0–99), six turns, one free mulligan. Reviewed actions only; no opponents, commander casting, combat, or win rates. Unsupported cards cannot be played. Differences in support between decks make comparisons misleading.","small"));
+  const t3=batch.turns[2], t6=batch.turns[5];
+  root.appendChild(el("p",batch.seed_count+" simulated runs · 6 turns · one free mulligan", "small"));
+  const cards=el("div",null,"results-kpis");
+  for(const [value,label] of [[t3.mean_lands_in_play,"Average lands on turn 3"],
+      [t3.pct_with_reviewed_rock_in_play+"%","Have a mana rock on turn 3"],
+      [t6.mean_unsupported_hand_cards,"Average cards in hand not yet supported on turn 6"]]){
+    const card=el("div",null,"quiet-group");card.append(el("strong",String(value)),el("p",label,"small"));cards.appendChild(card);
+  }
+  root.appendChild(cards);
+  const details=document.createElement("details");details.className="story-drilldown";
+  details.appendChild(el("summary","View turn-by-turn averages"));
   const table=el("table"), head=el("tr");
   ["Turn","Avg. lands","Avg. creatures on board","Avg. rocks","Avg. unsupported cards in hand"].forEach(x=>head.appendChild(el("th",x)));
   table.appendChild(head);
   for(const row of batch.turns){const tr=el("tr"); [row.turn,row.mean_lands_in_play,row.mean_reviewed_creatures_in_play,row.mean_reviewed_mana_rocks_in_play,row.mean_unsupported_hand_cards].forEach(x=>tr.appendChild(el("td",String(x))));table.appendChild(tr);}
-  const wrap=el("div",null,"table-scroll"); wrap.appendChild(table);root.appendChild(wrap);
-  const label=el("label","Inspect a sample run: "), select=el("select");
-  batch.examples.forEach((run,i)=>{const o=el("option","Seed "+run.seed);o.value=String(i);select.appendChild(o)});
-  label.appendChild(select);root.appendChild(label);const trace=el("div");root.appendChild(trace);
-  function render(){clear(trace);const run=batch.examples[Number(select.value)];
-    trace.appendChild(el("p","Opening hand: "+run.mulligan.opening_hand.join(", ")+". Mulligan: "+(run.mulligan.taken?"yes":"no")+".","small"));
-    for(const turn of run.events){const details=document.createElement("details"),summary=el("summary","Turn "+turn.turn+" · "+turn.land_count+" lands · "+turn.creature_count+" creatures · "+turn.hand_size+" cards in hand");details.appendChild(summary);
-      for(const event of turn.events)details.appendChild(el("p",event.type.replaceAll("_"," ")+(event.card?": "+event.card:""),"small"));
-      details.appendChild(el("p","Unsupported in hand: "+(turn.unsupported_cards_in_hand.join(", ")||"none"),"small"));trace.appendChild(details);}}
-  select.onchange=render;render();
+  const wrap=el("div",null,"table-scroll");wrap.appendChild(table);details.appendChild(wrap);root.appendChild(details);
+  const model=document.createElement("details");model.className="story-drilldown";
+  model.appendChild(el("summary","About this simulation"));model.appendChild(el("p",batch.limitations,"small"));root.appendChild(model);
 }
 function showAggregate(){
   showBoundedBatch();
@@ -1250,7 +1254,7 @@ async function fetchCard(){
     originalSound("error");
   }finally{$("fetch-card").disabled=false}
 }
-let quietRuns=null,quietPoints=[],quietTurn=0,quietExample=0;
+let quietRuns=null,quietPoints=[],quietTurn=-1,quietExample=0;
 function quietCardList(names){
   const list=el("div",null,"curve-sources");
   if(!names.length)list.appendChild(el("span","None recorded"));
@@ -1269,16 +1273,21 @@ function renderQuietDiagnostic(){
   if(isUnsimulatedVersion()){
     status.textContent="Action runs are unavailable for this edited deck.";return;
   }
-  if(!quietRuns){status.textContent="No action runs loaded. Select run files from the Python simulator to explore this diagnostic.";return}
-  try{quietPoints=window.DeckInsights.quietTurns(quietRuns,deck.key,deck.deck_sha256)}
+  const batch=boundedBatches?.decks?.[deck.key];
+  const runs=quietRuns || (batch?.deck_sha256===deck.deck_sha256 ? batch.runs : null);
+  if(!runs?.length){status.textContent="No matching simulation batch for this deck.";return}
+  try{quietPoints=window.DeckInsights.quietTurns(runs,deck.key,deck.deck_sha256)}
   catch(error){status.textContent="Loaded runs cannot be used: "+error.message;return}
-  status.textContent=quietRuns.length+" runs · same deck and mulligan policy · results stay in this browser";
+  status.textContent=runs.length+" runs · two consecutive turns without a recorded development or setup action";
+  if(quietTurn<0)quietTurn=quietPoints.reduce((best,p,i)=>p.count>quietPoints[best].count?i:best,0);
   quietTurn=Math.min(quietTurn,quietPoints.length-1);const point=quietPoints[quietTurn];
   const headline=el("h3",point.count+" / "+point.total+" runs had quiet turns "+(point.turn-1)+" and "+point.turn,"quiet-headline");
-  output.append(headline,el("p",point.uncertain+" of these runs had unsupported cards in hand during those turns; inspect before interpreting.","micro"));
+  output.append(headline,el("p","Select a turn to compare hands and explore matching runs.","small"));
   const controls=el("div",null,"quiet-turn-controls");
   quietPoints.forEach((item,index)=>{
-    const button=el("button","T"+item.turn+" · "+item.pct+"%","curve-turn");button.type="button";
+    const button=el("button",null,"quiet-bar");button.type="button";
+    button.append(el("span","Turns "+(item.turn-1)+"–"+item.turn),el("span",item.pct+"%"));
+    const track=el("span",null,"quiet-bar-track"),fill=el("span",null,"quiet-bar-fill");fill.style.width=item.pct+"%";track.appendChild(fill);button.appendChild(track);
     button.setAttribute("aria-pressed",String(index===quietTurn));
     button.addEventListener("click",()=>{quietTurn=index;quietExample=0;renderQuietDiagnostic()});controls.appendChild(button);
   });output.appendChild(controls);
@@ -1299,9 +1308,23 @@ function renderQuietDiagnostic(){
     prevalence.appendChild(box);
   }
   output.append(el("h3","What was in hand?"),el("p","Runs with at least one card of each primary card type; groups can overlap.","micro"),prevalence);
+  const names={};
+  for(const item of point.examples){for(const name of new Set(item.hand))names[name]=(names[name]||0)+1;}
+  const common=Object.entries(names).sort((a,b)=>b[1]-a[1]||a[0].localeCompare(b[0])).slice(0,6);
+  if(common.length){const list=el("div",null,"quiet-group");list.appendChild(el("strong","Most common cards in these hands"));
+    list.appendChild(el("p",common.map(([name,n])=>name+" · "+n+" / "+point.count+" runs").join("  •  "),"small"));output.appendChild(list);}
+  if(point.nonquiet.length){
+    const other={};for(const item of point.nonquiet)for(const name of new Set(item.hand))other[name]=(other[name]||0)+1;
+    const gaps=Object.entries(other).map(([name,n])=>({name,n,quiet:names[name]||0,delta:n/point.nonquiet.length-(names[name]||0)/point.count}))
+      .filter(x=>x.delta>0).sort((a,b)=>b.delta-a.delta||a.name.localeCompare(b.name)).slice(0,4);
+    if(gaps.length){const box=el("div",null,"quiet-group");box.appendChild(el("strong","More common in other runs"));
+      box.appendChild(el("p",gaps.map(x=>x.name+" · "+x.quiet+"/"+point.count+" quiet vs "+x.n+"/"+point.nonquiet.length+" other").join("  •  "),"small"));
+      box.appendChild(el("p","Presence in hand at the selected turn; this does not establish what caused the difference.","micro"));output.appendChild(box);}
+  }
+
   quietExample=Math.min(quietExample,point.examples.length-1);
   const example=point.examples[quietExample],section=el("div",null,"quiet-example");
-  section.append(el("strong",(quietExample===0?"Typical example":"Example")+" · seed "+example.seed),
+  section.append(el("strong",(quietExample===0?"Closest to group averages":"Matching example")+" · simulation seed "+example.seed),
     el("p",example.landCount+" lands · "+example.hand.length+" cards in hand · "+example.unsupported.length+" unsupported cards across the two turns","small"));
   const actions=el("div",null,"quiet-example-actions");
   for(const [label,offset] of [["← Previous",-1],["Next →",1]]){
@@ -1313,10 +1336,13 @@ function renderQuietDiagnostic(){
   section.append(el("p","Hand","quiet-label"),quietCardList(example.hand),el("p","Recorded battlefield","quiet-label"),quietCardList(example.battlefield));
   if(example.unsupported.length)section.append(el("p","Unsupported cards in hand during the two turns","quiet-label"),quietCardList(example.unsupported));
   for(const turn of example.events){
-    const eventSummary=turn.events.map(event=>event.type.replaceAll("_"," ")+(event.card?": "+event.card:"")).join(" · ");
-    section.appendChild(el("p","Turn "+turn.turn+": "+(eventSummary||"No recorded events"),"micro"));
+    const draws=turn.events.filter(event=>event.type==="draw").map(event=>event.card).filter(Boolean);
+    const actions=turn.events.filter(event=>!["draw","untap"].includes(event.type));
+    const text=(draws.length?"Drew "+draws.join(", ")+". ":"")+
+      (actions.length?"Recorded: "+actions.map(event=>event.type.replaceAll("_"," ")+(event.card?" — "+event.card:"")).join("; ")+".":"No other actions recorded.");
+    section.appendChild(el("p","Turn "+turn.turn+": "+text,"small"));
   }
-  section.appendChild(el("p","Example closest to the group's average lands and unsupported-card count is shown first.","micro"));
+  section.appendChild(el("p","The first example is closest to the group’s average lands and unsupported-card count.","micro"));
   output.appendChild(section);
 }
 async function loadQuietFiles(event){
@@ -1327,7 +1353,7 @@ async function loadQuietFiles(event){
     const parsed=await Promise.all(files.map(async file=>JSON.parse(await file.text())));
     const runs=parsed.flat();if(runs.length>1000)throw Error("At most 1,000 runs can be loaded at once.");
     window.DeckInsights.quietTurns(runs,selectedDeck().key,selectedDeck().deck_sha256);
-    quietRuns=runs;quietTurn=0;quietExample=0;renderQuietDiagnostic();
+    quietRuns=runs;quietTurn=-1;quietExample=0;renderQuietDiagnostic();
   }catch(error){quietRuns=null;clear($("quiet-output"));$("quiet-status").textContent="Could not load runs: "+error.message;}
   finally{event.target.value=""}
 }
@@ -1375,6 +1401,11 @@ async function boot(){
     ]);
     if(response.some(r=>!r.ok))throw Error("Site data could not be loaded. Check the Pages deployment.");
     [data,archives,allNames,boundedBatches]=await Promise.all(response.map(r=>r.json()));
+    const batchKeys=Object.keys(boundedBatches.decks);
+    const runResponses=await Promise.all(batchKeys.map(key=>fetch("./bounded-runs-"+key+".json")));
+    if(runResponses.some(r=>!r.ok))throw Error("Simulation run data could not be loaded.");
+    const runSets=await Promise.all(runResponses.map(r=>r.json()));
+    batchKeys.forEach((key,i)=>{boundedBatches.decks[key].runs=runSets[i]});
     if(data.format!=="commander-deck-lab-static-v1"||!data.decks.length)
       throw Error("Unexpected static dataset format.");
     allNames.sort((a,b)=>a.localeCompare(b));
