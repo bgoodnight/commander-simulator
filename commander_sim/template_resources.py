@@ -148,7 +148,7 @@ class TemplateManaService:
             return cost_symbols(original), ()
         printed = raw.get("colors")
         if not isinstance(printed, list):
-            printed = list(source.card.colors)
+            printed = list(source.card.colors or ())
         colors = frozenset(printed)
         spell_types = frozenset(source.types)
         cost, evidence = reduced_fixed_cost(
