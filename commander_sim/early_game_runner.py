@@ -39,6 +39,7 @@ from .reviewed_phase_effects import ReviewedPhaseEngine,reviewed_phase_permanent
 from .reviewed_death_effects import ReviewedDeathEngine
 from .reviewed_enter_effects import reviewed_enter_rule, execute_reviewed_enter
 from .reviewed_unearth import reviewed_unearth, activate_reviewed_unearth, expire_reviewed_unearth
+from .reviewed_flashback import reviewed_flashback, cast_reviewed_flashback
 from .reviewed_sacrifice_actions import (
     SACRIFICE_MODES, reviewed_sacrifice_artifact,
     activate_reviewed_sacrifice)
@@ -401,6 +402,36 @@ def run_bounded_early_game(deck_key, *, seed=0, turns=6, mulligan="one-free", pr
                 "mana_added":list(resolved.mana_added),
                 "death_trigger_count":resolved.death_trigger_count,
                 "fidelity":"bounded_no_opponent_priority"})
+        # Reuse the reviewed paid graveyard spell path, with cast triggers
+        # tied to the real stack ticket and exile on resolution.
+        flashback_options=[]
+        for grave_id in zones.ids(0,"graveyard"):
+            spell=kernel.get(grave_id)
+            review=reviewed_flashback(spell.card.name,raw_by_name.get(spell.card.name))
+            if review and mana_service.plan(0,review.alternate_cost) is not None:
+                if (review.operation!="draw_discard_two"
+                        or len(zones.ids(0,"library"))>=2):
+                    flashback_options.append((review.alternate_cost,spell.card.name,grave_id))
+        if flashback_options:
+            _,_,grave_id=min(flashback_options)
+            triggered=[]
+            result=cast_reviewed_flashback(
+                zones,0,grave_id,raw_by_name,mana_service,
+                sorcery_window=True,on_cast=lambda ticket:triggered.extend(
+                    approved_spell_triggers(ticket)))
+            if result is None:
+                raise AssertionError("Flashback payment invalidated")
+            events.append({"type":"reviewed_flashback_cast",
+                           "card":result.card_name,
+                           "source_graveyard_id":result.source_old_id,
+                           "source_object_ids":list(result.mana_source_ids),
+                           "fidelity":"bounded_no_opponent_priority"})
+            events.extend(triggered)
+            events.append({"type":"reviewed_flashback_resolved",
+                           "card":result.card_name,"exiled_object_id":result.exiled_id,
+                           "created_token_ids":list(result.created_token_ids),
+                           "drawn_ids":list(result.drawn_ids),
+                           "fidelity":"bounded_no_opponent_priority"})
         # One conservative, source-paid graveyard activation per turn.
         # This uses the existing physical unearth replacement map, not a
         # shadow battlefield. Opponent-choice Lokhust is deferred.
