@@ -126,7 +126,14 @@ class TemplateManaService:
                 return basic
             raw=self.card_metadata.get(name)
             reviewed=reviewed_land(name,raw,self.colors)
-            return reviewed.modes(self.colors) if reviewed is not None else ()
+            if reviewed is not None:
+                return reviewed.modes(self.colors)
+            # Shared review: Myriad Landscape's ordinary colorless tap mode.
+            if name == "Myriad Landscape":
+                from .reviewed_ramp import reviewed_ramp
+                if reviewed_ramp(name,raw) is not None and obj.card.card_id == raw["oracle_id"]:
+                    return (ManaMode(("C",)),)
+            return ()
         if "artifact" in obj.types:
             card = self.card_metadata.get(name)
             if card is None:

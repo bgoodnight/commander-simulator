@@ -51,6 +51,8 @@ from .reviewed_sacrifice_actions import (
     SACRIFICE_MODES, reviewed_sacrifice_artifact,
     activate_reviewed_sacrifice)
 from .template_resources import TemplateManaService
+from .resource_development import assess_resources, choose_tutor_target
+from .reviewed_ramp import reviewed_ramp, reviewed_ritual, cast_ritual, activate_land_ramp, resolve_enter_ramp
 from .hand_cleanup import cleanup_hand
 from .reviewed_escape import (reviewed_breach, escape_candidates,
     cast_reviewed_escape_token_spell, sacrifice_breach_at_end_step)
@@ -184,7 +186,8 @@ def run_bounded_early_game(deck_key, *, seed=0, turns=6, mulligan="one-free", pr
         if "land" not in obj.types:
             return False
         return bool(_reviewed_modes(obj.card.name,colors)
-                    or reviewed_land(obj.card.name,raw_by_name[obj.card.name],colors))
+                    or reviewed_land(obj.card.name,raw_by_name[obj.card.name],colors)
+                    or (obj.card.name == 'Myriad Landscape' and reviewed_ramp(obj.card.name,raw_by_name[obj.card.name])))
     possible_lands = sum(supported_land(oid) for oid in zones.ids(0, "hand"))
     mulligan_taken = mulligan == "one-free" and not 2 <= possible_lands <= 5
     if mulligan_taken:
@@ -263,6 +266,7 @@ def run_bounded_early_game(deck_key, *, seed=0, turns=6, mulligan="one-free", pr
                            "fidelity":"reviewed_partial_land" if land_review else "reviewed_basic_land",
                            "entered_tapped":bool(kernel.get(new_id).tapped),
                            "unsupported_abilities":list(land_review.ignored) if land_review else []})
+        resource_start = assess_resources(kernel, mana_service, 0).__dict__
         copied_this_turn=set()
         # Reuse the same source-paid action for approved artifacts and creatures.
         # Prefer affordable ramp rocks before creatures: a limited pilot policy.
@@ -279,33 +283,28 @@ def run_bounded_early_game(deck_key, *, seed=0, turns=6, mulligan="one-free", pr
                 phase_enchantment = reviewed_phase_permanent(name, raw) or reviewed_breach(name, raw)
                 sacrifice_artifact = reviewed_sacrifice_artifact(name, raw)
                 entering = approved_enter_hand_cast(name)
+                ramp = reviewed_ramp(name,raw)
+                ritual = reviewed_ritual(name,raw)
                 tutor = reviewed_tutor(name, raw)
                 eligible = (eligible_reviewed_tutor_targets(zones, 0, name, raw_by_name)
                             if tutor and tutor[2] in {"instant", "sorcery"} else ())
                 if (not is_creature and rock is None and not eligible
                         and token_spell is None and draw_spell is None and not phase_enchantment
-                        and not sacrifice_artifact and not entering):
+                        and not sacrifice_artifact and not entering and not ramp and not ritual):
                     continue
                 cost = registry.get(name).primary_face().mana_cost
                 payment = mana_service.plan_spell(0, cost, obj)
                 if payment is not None:
-                    kind = ("artifact" if rock is not None or sacrifice_artifact else
+                    kind = ("ritual" if ritual else
+                            "artifact" if rock is not None or sacrifice_artifact or (ramp and name == "Wayfarer\u0027s Bauble") else
                             "enchantment" if phase_enchantment or (entering and "Enchantment" in raw.get("type_line","").split(" — ",1)[0]) else
                             "tutor" if eligible else
                             "draw_spell" if draw_spell is not None else
                             "token_spell" if token_spell is not None else "creature")
-                    target = (min(eligible, key=lambda target_id: (
-                        0 if kernel.get(target_id).card.name == "Sol Ring" else
-                        1 if reviewed_rock(kernel.get(target_id).card.name,
-                                            raw_by_name[kernel.get(target_id).card.name],
-                                            colors) is not None else
-                        2 if reviewed_creature(deck_key,
-                             kernel.get(target_id).card.name,
-                             raw_by_name[kernel.get(target_id).card.name]) else 3,
-                        target_id)) if eligible else None)
+                    target = choose_tutor_target(zones, 0, eligible, raw_by_name, colors) if eligible else None
                     # Reviewed trigger creatures precede spells so their
                     # shared effects may fire on subsequent actual casts.
-                    options.append((0 if rock is not None else
+                    options.append((0 if rock is not None or ritual else
                                     1 if is_creature else
                                     2 if sacrifice_artifact else
                                     3 if phase_enchantment or entering else
@@ -314,6 +313,14 @@ def run_bounded_early_game(deck_key, *, seed=0, turns=6, mulligan="one-free", pr
             if not options:
                 break
             _, _, name, oid, kind, cost, target = min(options)
+            if kind == "ritual":
+                result = cast_ritual(zones, 0, oid, raw_by_name, colors, mana_service)
+                if result is None:
+                    raise AssertionError("Reviewed ritual payment changed")
+                events.append({"type":"reviewed_ritual_cast","card":name,
+                               "graveyard_id":result,"mana_added":["B","B","B"],
+                               "fidelity":"reviewed_shared_mana"})
+                continue
             if kind == "tutor":
                 triggered=[]
                 result = cast_and_resolve_reviewed_tutor(
@@ -457,6 +464,10 @@ def run_bounded_early_game(deck_key, *, seed=0, turns=6, mulligan="one-free", pr
                     kernel._dirty()
             events.append({"type": kind + "_resolved", "card": name,
                            "object_id": resolved_id, "fidelity": "limited_generic_resolution"})
+            if name == "Solemn Simulacrum" and reviewed_ramp(name,raw_by_name[name]):
+                moved = resolve_enter_ramp(zones,0,resolved_id,raw_by_name)
+                events.append({"type":"reviewed_enter_ramp","card":name,
+                               "land_ids":list(moved or ()),"fidelity":"reviewed_shared_basic_search"})
             if approved_enter_hand_cast(name) and not reviewed_enter_rule(name,raw_by_name[name]).only_from_graveyard:
                 rule = reviewed_enter_rule(name, raw_by_name[name])
                 # The pilot explicitly chooses the Servo fabricate mode.
@@ -472,6 +483,13 @@ def run_bounded_early_game(deck_key, *, seed=0, turns=6, mulligan="one-free", pr
                                "created_token_ids":list(entered.token_ids),
                                "drawn_ids":list(entered.drawn_ids),
                                "fidelity":"bounded_no_opponent_priority"})
+        # Shared ramp activation uses actual paid sources and shuffled basic lands.
+        for source in list(kernel.on_battlefield()):
+            if source.controller == 0 and source.card.name in {"Wayfarer's Bauble", "Myriad Landscape"}:
+                moved = activate_land_ramp(zones, 0, source.object_id, raw_by_name, mana_service)
+                if moved:
+                    events.append({"type":"reviewed_land_ramp","card":source.card.name,
+                                   "land_ids":list(moved),"fidelity":"reviewed_shared_basic_search"})
         # One reviewed instant spell per turn in the verified main-phase
         # window. Optional buyback is preferred only when fully payable.
         buyback_options=[]
@@ -780,6 +798,7 @@ def run_bounded_early_game(deck_key, *, seed=0, turns=6, mulligan="one-free", pr
         if cleanup.maximum_hand_size is not None:
             assert cleanup.hand_after <= cleanup.maximum_hand_size
         floating_end = list(mana_service.floating())
+        resource_end = assess_resources(kernel, mana_service, 0).__dict__
         mana_service.clear()
         if (not zones.assert_consistent()
                 or sum(not obj.token for obj in kernel.objects.values()) != 100):
@@ -801,6 +820,8 @@ def run_bounded_early_game(deck_key, *, seed=0, turns=6, mulligan="one-free", pr
                                   and reviewed_rock(o.card.name, raw_by_name[o.card.name], colors) is not None
                                   for o in kernel.objects.values()),
             "floating_at_end_of_main": floating_end,
+            "resource_start": resource_start,
+            "resource_end": resource_end,
             "life_totals":dict(life.kernel.life_totals),
             "unsupported_cards_in_hand": sorted(
                 kernel.get(oid).card.name for oid in zones.ids(0, "hand")
