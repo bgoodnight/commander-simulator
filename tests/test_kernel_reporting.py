@@ -61,8 +61,11 @@ class KernelReportingTests(unittest.TestCase):
 
     def test_nonbattlefield_private_zones_are_owner_scoped(self):
         self.add("Zombie", owner=0, zone="graveyard")
+        self.add("Wizard", owner=0, zone="exile")
         self.add("Tutor", owner=1, zone="hand")
         self.assertEqual(self.project(0)["graveyard"], ["Zombie"])
+        self.assertEqual(self.project(0)["exile"], ["Wizard"])
+        self.assertEqual(self.project(1)["exile"], [])
         self.assertEqual(self.project(0)["hand"], [])
         self.assertEqual(self.project(1)["hand"], ["Tutor"])
 
