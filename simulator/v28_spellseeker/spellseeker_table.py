@@ -8,6 +8,7 @@ from wizard_tutor_table import WizardTutorTable, IDENTITIES
 from utility_table import UtilityStack
 from rules import Cost,Ability,Event
 from simulation import Action
+from commander_sim.legacy_tutor_ops import resolve_historical_search
 
 NAME='Spellseeker'
 MANA_COSTS={r['name']:r['mana_cost'] for r in IDENTITIES['cards']}
@@ -63,6 +64,4 @@ class SpellseekerTable(WizardTutorTable):
         if not take:
             self.tutor_events.append(('spellseeker_declined',item.controller,None,None));return
         seat=item.controller
-        spells=tuple(oid for oid in self.zones.ids(seat,'library') if self.rules.get(oid).types & {'instant','sorcery'})
-        eligible=tuple(oid for oid in spells if library_mana_value(self.rules.get(oid).card.name)<=2)
-        self.search_to_hand(seat,eligible,'spellseeker')
+        resolve_historical_search(self,seat,'spellseeker',mana_value=library_mana_value)
