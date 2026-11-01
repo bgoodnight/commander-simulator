@@ -5,6 +5,7 @@ from types import MappingProxyType
 import json,sys
 sys.path.insert(0,str(Path(__file__).resolve().parents[2]))
 from commander_sim.queries import Query,Match
+from commander_sim.legacy_tutor_ops import resolve_historical_search
 sys.path.insert(0,str(Path(__file__).resolve().parents[1]/'v26_search'))
 from search_table import SearchTable
 from priority import Choice
@@ -49,20 +50,8 @@ class WizardTutorTable(SearchTable):
         action=Action(player.seat,FABRICATE,'sorcery',card.effect,cost.total,parameters={**card.parameters,'U':1,'R':0})
         return self.adjust_named_action_cost(action)
 
-    def search_to_hand(self,seat,eligible,kind):
-        request=self.selection.request(kind,seat,eligible)
-        ranked=sorted(request.cards,key=lambda c:-self.selection.score(seat,c))
-        default=ranked[0].object_id if ranked else None
-        policy=getattr(self,'tutor_policy',None);chosen=policy(request) if policy else default
-        if chosen is not None and chosen not in eligible:raise ValueError('Search must choose an eligible card or fail to find')
-        name=self.rules.get(chosen).card.name if chosen is not None else None
-        new=self.zones.move(chosen,'hand') if chosen is not None else None
-        self.zones.shuffle(seat);self.tutor_events.append((kind,seat,new,name))
-        self.note(f'    {kind.upper()} P{seat}: revealed {name}, put into hand, then shuffled.')
-
     def resolve_fabricate(self,table,action):
-        seat=action.actor
-        self.search_to_hand(seat,tuple(oid for oid in self.zones.ids(seat,'library') if ARTIFACT_QUERY.matches_kernel(self.rules,oid) is Match.YES),'fabricate')
+        return resolve_historical_search(self,action.actor,'fabricate')
 
     def wizardcycling_available(self,seat,oid):
         obj=self.rules.objects.get(oid)
@@ -96,8 +85,7 @@ class WizardTutorTable(SearchTable):
     def resolve_activation(self,frame):
         if frame.ability!=WIZARDCYCLING:return super().resolve_activation(frame)
         seat=frame.controller
-        eligible=tuple(oid for oid in self.zones.ids(seat,'library') if WIZARD_QUERY.matches_kernel(self.rules,oid) is Match.YES)
-        self.search_to_hand(seat,eligible,'wizardcycling')
+        resolve_historical_search(self,seat,'wizardcycling')
         self.rules.events.append(Event('ability_resolved',seat,frame.source_id))
         self.emit('ability_resolved',controller=seat,source_id=frame.source_id,ability=WIZARDCYCLING.key)
         return True
