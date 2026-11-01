@@ -91,9 +91,11 @@ def reviewed_creature(deck_key, name, source_card):
 
 
 LIMITATIONS = (
-    "The reviewed subset only permits source-paid creature casting from hand "
-    "with no modeled combat, opponents, activated abilities, conditional death "
-    "or spell triggers, ETB interactions, priority windows or commander casting. "
-    "All printed abilities outside this subset are unimplemented; do not "
-    "derive deck power, real win rates, or functional combo accessibility."
+    "This bounded runner permits supported land plays and approved source-paid "
+    "creature and mana-rock casts from hand. Reviewed rock mana abilities include "
+    "Sol Ring two-colorless output, basic colored rocks and funded Signet modes. "
+    "Colored damage/life-paying modes, activated draw/sacrifice side abilities, "
+    "other ramp, tutor spells, combat, opponents, death/cast/ETB triggers, "
+    "priority and commander casting remain unmodeled. No full deck power, "
+    "win rates or functional combo accessibility may be inferred."
 )
