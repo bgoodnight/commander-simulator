@@ -59,6 +59,7 @@ class BoundedEarlyGameTests(unittest.TestCase):
                     "reviewed_sacrifice_activated", "reviewed_enter_resolved",
                     "reviewed_unearth_resolved", "reviewed_unearth_expired",
                     "reviewed_flashback_cast", "reviewed_flashback_resolved",
+                    "cleanup_discard",
                 } for event in turn["events"]))
 
     def test_magnus_reviewed_tutors_pay_and_move_actual_cards(self):
