@@ -65,16 +65,31 @@ def apply_draw_discard(table, seat, effect: DrawDiscard, *, selection=None):
         selection.discard(seat, effect.discard, effect.discard_kind)
 
 
+def spawn_repeated_tokens(add_one, count):
+    """Invoke the authoritative token creator exactly count times.
+
+    Both the legacy trigger kernel and the full table engine can use this
+    operation while preserving their own object construction, ordering,
+    safety checks, and trigger lifecycle.
+    """
+    if type(count) is not int or count < 0:
+        raise ValueError("Invalid token count")
+    if not callable(add_one):
+        raise TypeError("Token creation requires a real kernel callback")
+    return tuple(add_one() for _ in range(count))
+
+
 def apply_token_batch(table, seat, effect: TokenBatch):
     """Create physical tokens with existing add_creature, preserving order."""
     if not isinstance(effect, TokenBatch):
         raise TypeError("Expected TokenBatch")
     player = table.players[seat]
-    return tuple(table.add_creature(player, effect.power, effect.toughness,
-                                   effect.name, token=True,
-                                   **({"definition": effect.definition}
-                                      if effect.definition is not None else {}))
-                 for _ in range(effect.count))
+    return spawn_repeated_tokens(
+        lambda: table.add_creature(player, effect.power, effect.toughness,
+                                  effect.name, token=True,
+                                  **({"definition": effect.definition}
+                                     if effect.definition is not None else {})),
+        effect.count)
 
 
 def apply_generic_discount(action, controlled, effect: GenericDiscount,
@@ -146,6 +161,7 @@ class ZoneTransfer:
     from_zone: str
     to_zone: str
     required_types: frozenset[str] = frozenset()
+    allowed_types_any: frozenset[str] = frozenset()
     require_owner: bool = False
     require_controller: bool = False
     reason: str | None = None
@@ -155,7 +171,9 @@ class ZoneTransfer:
         if (self.from_zone not in valid or self.to_zone not in valid
                 or self.from_zone==self.to_zone
                 or not isinstance(self.required_types,frozenset)
-                or any(not isinstance(x,str) or not x for x in self.required_types)
+                or not isinstance(self.allowed_types_any,frozenset)
+                or any(not isinstance(x,str) or not x for x in
+                       self.required_types | self.allowed_types_any)
                 or type(self.require_owner) is not bool
                 or type(self.require_controller) is not bool
                 or (self.reason is not None and (not isinstance(self.reason,str) or not self.reason))):
@@ -174,6 +192,7 @@ def transfer_physical_object(table, seat, object_id, effect: ZoneTransfer):
     obj=table.rules.objects.get(object_id)
     if (obj is None or obj.zone!=effect.from_zone
             or not effect.required_types<=obj.types
+            or (effect.allowed_types_any and not obj.types & effect.allowed_types_any)
             or (effect.require_owner and obj.owner!=seat)
             or (effect.require_controller and obj.controller!=seat)):
         raise ValueError("Object not eligible for reviewed zone move")
