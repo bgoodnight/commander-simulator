@@ -1,0 +1,82 @@
+name: Physical Magnus starter simulation experiment
+on:
+  push:
+    branches:
+      - experiment/magnus-physical-starter-simulations
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  experiment:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      - name: Run reproducible physical deck trials
+        run: |
+          python - <<'PY'
+          import collections, json, random, re, subprocess, sys
+          from pathlib import Path
+          deck=Path("decklists/magnus_the_red_v1_1_physical_simulation.txt")
+          cards=[]
+          section=None
+          for line in deck.read_text().splitlines():
+              line=line.strip()
+              if line in ("Commander","Library"):
+                  section=line
+                  continue
+              match=re.fullmatch(r"(\d+) (.+)",line)
+              if match and section=="Library":
+                  cards.extend([match.group(2)]*int(match.group(1)))
+          lands=set("Island|Mountain|Command Tower|Evolving Wilds|Exotic Orchard|Great Hall of the Biblioplex|Hidden Grotto|Path of Ancestry|Shivan Reef|Stormcarved Coast|Swiftwater Cliffs|Terramorphic Expanse|Tyrite Sanctum".split("|"))
+          assert len(cards)==99,(len(cards),collections.Counter(cards))
+          assert sum(c in lands for c in cards)==37
+          count=10000
+          opening=[]; t3=[]; t4=[]; t6=[]; kept_mulligans=0; t4four=0
+          for seed in range(count):
+              rng=random.Random(seed)
+              shuffle=cards.copy()
+              rng.shuffle(shuffle)
+              hand=shuffle[:7]
+              initial=sum(c in lands for c in hand)
+              opening.append(initial)
+              # One free London mulligan, simplified: redraw 7 if 0-1 or 6-7 lands.
+              if initial < 2 or initial > 5:
+                  kept_mulligans+=1
+                  rng.shuffle(shuffle)
+                  hand=shuffle[:7]
+              library=iter(shuffle[7:])
+              in_hand=list(hand)
+              plays=0; counts=[]
+              for turn in range(1,7):
+                  # On play, no first-turn draw, then draw one each turn.
+                  if turn>1:in_hand.append(next(library))
+                  land=next((c for c in in_hand if c in lands),None)
+                  if land:
+                      in_hand.remove(land)
+                      plays+=1
+                  counts.append(plays)
+              t3.append(counts[2]);t4.append(counts[3]);t6.append(counts[5])
+          def pct(p):return round(100*sum(p)/count,2)
+          summary={
+             "deck":"Magnus physical starter v1.1","deck_card_count":100,
+             "land_count":sum(c in lands for c in cards),"n":count,
+             "opening_land_distribution":{str(i):opening.count(i) for i in range(8)},
+             "free_mulligan_fraction":pct([x<2 or x>5 for x in opening]),
+             "land_drop_probability":{"turn_3":pct([x>=3 for x in t3]),"turn_4":pct([x>=4 for x in t4]),"turn_6":pct([x>=6 for x in t6])},
+             "land_plays_mean":{"turn_3":round(sum(t3)/count,3),"turn_4":round(sum(t4)/count,3),"turn_6":round(sum(t6)/count,3)},
+             "method":"one free redraw for opening 0-1 or 6-7 lands; always play a land; on play; no spell/ramp modeling; all nonbasic lands assumed eligible for immediate land drops."
+          }
+          print("PHYSICAL_MAGNUS_OPENING_HAND_REPORT",json.dumps(summary,sort_keys=True),flush=True)
+          print("PHYSICAL_MAGNUS_ENGINE_SMOKE_BEGIN",flush=True)
+          for seed in range(10):
+              cmd=[sys.executable,"run_simulation.py","--deck-file",str(deck),"--seed",str(seed),"--rounds","8"]
+              try:
+                  done=subprocess.run(cmd,capture_output=True,text=True,timeout=70)
+                  print("ENGINE_TRIAL",json.dumps({"seed":seed,"return_code":done.returncode,"stdout":done.stdout[-600:],"stderr":done.stderr[-600:]}),flush=True)
+              except subprocess.TimeoutExpired:
+                  print("ENGINE_TRIAL",json.dumps({"seed":seed,"status":"timeout"}),flush=True)
+          PY
