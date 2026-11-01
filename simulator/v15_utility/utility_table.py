@@ -9,7 +9,8 @@ from priority import Choice
 from rules import Event,TriggerResult
 from utility_cards import ISLET,RIPTIDE,install
 sys.path.insert(0,str(Path(__file__).resolve().parents[2]))
-from commander_sim.legacy_common_ops import DrawDiscard,apply_draw_discard
+from commander_sim.legacy_common_ops import (DrawDiscard,apply_draw_discard,
+    ZoneTransfer,transfer_physical_object)
 
 @dataclass(frozen=True)
 class SanctuaryChoice:
@@ -73,7 +74,8 @@ class UtilityTable(LandTable):
         policy=getattr(self,'sanctuary_return_policy',None)
         take=policy(item.controller,item.source_id,target) if policy else True
         if type(take) is not bool:raise ValueError('Sanctuary return choice must be boolean')
-        if take:self.zones.move(target,'library')
+        if take:transfer_physical_object(self,item.controller,target,
+            ZoneTransfer('graveyard','library',frozenset(),require_owner=True))
         self.utility_events.append(('sanctuary_resolved',item.source_id,target,take))
         self.note(f'    SANCTUARY: target #{target}; return to library top={take}.')
 
