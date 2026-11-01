@@ -260,7 +260,8 @@ def run_bounded_early_game(deck_key, *, seed=0, turns=6, mulligan="one-free", pr
                             and obj.controller==0 for obj in kernel.objects.values())
             land_review=reviewed_land(name,raw_by_name[name],colors)
             new_id = zones.play_land(0, land_id)
-            if land_review is not None and land_review.enters_tapped(other_lands):
+            if ((land_review is not None and land_review.enters_tapped(other_lands))
+                    or (name == 'Myriad Landscape' and reviewed_ramp(name,raw_by_name[name]) is not None)):
                 kernel.get(new_id).tapped=True
                 kernel._dirty()
             events.append({"type": "land_play", "card": name,
