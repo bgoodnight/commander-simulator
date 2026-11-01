@@ -30,7 +30,7 @@ class NamedCoverageTests(unittest.TestCase):
                      "death_trigger","sacrifice_activation",
                      "phase_trigger","unearth","flashback","enter_trigger",
                      "cost_reduction","graveyard_creature_cast",
-                     "nonhand_cast_trigger","escape_grant","buyback"):
+                     "nonhand_cast_trigger","escape_grant","buyback","spell_copy"):
             self.assertIn(kind,kinds)
             self.assertGreater(kinds[kind],0)
         self.assertGreaterEqual(report["with_reviewed_suboperations"],30)
