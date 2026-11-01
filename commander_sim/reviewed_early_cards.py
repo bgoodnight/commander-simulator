@@ -211,6 +211,14 @@ _PHYSICAL_MAGNUS_SAFE_BODIES = {
 REVIEWED_BY_DECK.setdefault("magnus_physical_trial", {}).update(
     _PHYSICAL_MAGNUS_SAFE_BODIES)
 
+# Physical Mortarion is a deck fixture, not a separate ruleset. Reuse the
+# exact pinned safe-body reviews from its provisional and ideal ancestors.
+# Oracle identity/text checks in reviewed_creature still gate every entry.
+REVIEWED_BY_DECK["mortarion_physical_final"] = {
+    **REVIEWED_BY_DECK["mortarion_ideal"],
+    **REVIEWED_BY_DECK["mortarion_current"],
+}
+
 def reviewed_creature(deck_key, name, source_card):
     approved = REVIEWED_BY_DECK.get(deck_key, {}).get(name)
     return bool(approved and source_card.get("layout") == "normal"
