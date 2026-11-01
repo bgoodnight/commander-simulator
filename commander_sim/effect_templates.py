@@ -154,6 +154,8 @@ def tutor_matches(template: EffectTemplate, identity: Mapping):
         raise ValueError("Not a search template")
     if not isinstance(identity, Mapping) or not isinstance(identity.get("type_line"), str):
         return False
+    if identity.get("layout", "normal") != "normal":
+        return False  # Multi-face search characteristics require explicit review.
     if "any" not in template.search_types:
         head = identity["type_line"].split(" — ", 1)[0].lower().split()
         if not any(kind in head for kind in template.search_types):
