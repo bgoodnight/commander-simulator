@@ -10,6 +10,8 @@ from wizard_tutor_table import STEP
 from priority import Choice
 from rules import Cost, Event
 from simulation import Action
+sys.path.insert(0,str(Path(__file__).resolve().parents[2]))
+from commander_sim.legacy_common_ops import ZoneTransfer,transfer_physical_object
 
 class StepCyclingTable(SpellseekerTable):
     def __init__(self,*args,**kwargs):
@@ -47,7 +49,8 @@ class StepCyclingTable(SpellseekerTable):
     def resolve_step_through(self,table,action):
         for oid in action.step_targets:
             if oid in self.legal_step_targets(action.actor):
-                self.world.move(oid,'hand','bounce')
+                transfer_physical_object(self,action.actor,oid,
+                    ZoneTransfer('battlefield','hand',frozenset({'creature'}),reason='bounce'))
 
     def priority_choices(self,seat):
         choices=[c for c in super().priority_choices(seat) if c.kind!='spell' or c.action.source!=STEP]
