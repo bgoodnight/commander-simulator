@@ -151,7 +151,8 @@ def run_bounded_early_game(deck_key, *, seed=0, turns=6, mulligan="one-free", pr
                     or reviewed_phase_permanent(name, raw_by_name[name])
                     or reviewed_sacrifice_artifact(name,raw_by_name[name])
                     or approved_enter_hand_cast(name)
-                    or reviewed_breach(name,raw_by_name[name]))
+                    or reviewed_breach(name,raw_by_name[name])
+                    or reviewed_buyback(name,raw_by_name[name]) is not None)
         definition = CardDefinition(
             identity.oracle_id, name, types, subtypes=subtypes,
             supertypes=frozenset({"commander"}) if section == "Commander" else frozenset(),
