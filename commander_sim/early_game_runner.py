@@ -20,6 +20,7 @@ from pathlib import Path
 import sys
 
 from .card_cache import pinned_deck_entries
+from .mana_costs import UnsupportedManaCost
 from .deck_fixtures import FIXTURES, EXPERIMENTAL_FIXTURES, SHARED_CATALOG
 from .generic_cast import ReviewedCreatureCast, cast_reviewed_permanent
 from .kernel_reporting import project_kernel_turn
@@ -675,6 +676,37 @@ def run_bounded_early_game(deck_key, *, seed=0, turns=6, mulligan="one-free", pr
                            "source_object_id":old_id,
                            "graveyard_object_id":new_id,
                            "fidelity":"bounded_no_opponent_priority"})
+        # Generic reusable *feasibility* fallback for every unreviewed card.
+        # This is a read-only source-paid preview over existing physical
+        # objects. It never invents a legal cast, effect, zone move, target,
+        # priority pass, or mana spent. Thus future imported cards remain
+        # useful in diagnostic traces without granting unknown abilities.
+        candidates_seen=set()
+        for oid in zones.ids(0, "hand"):
+            obj=kernel.get(oid)
+            name=obj.card.name
+            if name in candidates_seen or "land" in obj.types:
+                continue
+            candidates_seen.add(name)
+            if obj.card.coverage!="unimplemented":
+                continue
+            try:
+                printed=registry.get(name).primary_face().mana_cost
+                payment=mana_service.plan_spell(0,printed,obj)
+            except (NotImplementedError,UnsupportedManaCost):
+                continue
+            if payment is not None:
+                events.append({
+                    "type":"source_paid_candidate",
+                    "card":name,
+                    "object_id":oid,
+                    "source_object_ids":list(payment.source_ids),
+                    "fidelity":"payment_preview_only",
+                    "effect_status":"unsupported",
+                    "limitations":("Cost feasibility is not casting permission; "
+                                   "timing, targets, mandatory abilities, "
+                                   "priority and resolution were not assessed")
+                })
         # Cleanup follows all end-step abilities; use actual kernel movement.
         # The limited pilot already spent available main-phase mana and cast
         # supported spells before this point, avoiding excess hand cards when
