@@ -45,13 +45,12 @@ test('newest deck is default candidate across every commander and both sources',
                /The Latest Build.*Beta Commander.*2026-11-01.*Saved in this browser/);
 });
 
-test('the global selector and editor selector expose all named decks',()=>{
+test('single full-width editor deck selector exposes all named decks',()=>{
   const {ctx,nodes}=context();
   vm.runInContext('renderGlobalDeckSelector();renderDeckVersionSelector()',ctx);
   const values=node=>node.children.map(x=>x.value);
   const expected=['saved:v-new','saved:v-one','preset:beta','preset:alpha'];
   assert.deepEqual(values(nodes.get('global-deck-select')),expected);
-  assert.deepEqual(values(nodes.get('deck-version-select')),expected);
   assert.equal(nodes.get('global-deck-select').value,'preset:alpha');
 });
 
@@ -86,10 +85,11 @@ test('unsaved edits require confirmation before deck switch',()=>{
   assert.equal(vm.runInContext('switched',ctx),false);
 });
 
-test('header and manager UI elements exist in shared page shell',()=>{
+test('deck selection appears after commander header, above editor content',()=>{
   const html=fs.readFileSync('web/pages/index.html','utf8');
-  assert.match(html,/id="global-deck-select"/);
+  assert.match(html,/<\/section>\s*<section class="deck-selection-row"[\s\S]*?id="global-deck-select"[\s\S]*?<\/section>\s*<section id="app-content"/);
   assert.match(html,/id="saved-versions"/);
-  assert.match(html,/id="deck-version-select"/);
+  assert.match(html,/class="deck-selection-row"/);
+  assert.doesNotMatch(html,/id="deck-version-select"/);
   assert.match(html,/Manage Decks/);
 });
