@@ -1,11 +1,16 @@
-"""Bounded M3 live early turns over actual 99-card pinned decks and kernel zones.
+"""Bounded real-action early turns over six pinned 100-card Commander decks.
 
-This is a deliberately limited *real-action slice*, NOT the v35 full multiplayer
-turn driver. Cards never get executable behavior from printed metadata alone.
-Only reviewed basic/Command Tower land plays, mana-rock casts, source-paid\nreviewed tutor search casts, and a small
-exact Oracle/text-reviewed creature subset are permitted; unsupported card
-effects remain blocked. No combat, opponent turns, tutor casting, priority,
-general triggers, arbitrary activated abilities, or win rates.
+This is a deliberately limited no-opponent physical-kernel slice, NOT the
+historical v35 full multiplayer priority/stack driver. Cards never acquire
+executable effects solely from printed Oracle text or inferred role tags.
+
+All six decks may play reviewed lands and mana rocks with real source payment.
+Specifically reviewed creatures, instant/sorcery tutors and token-producing
+sorceries may be cast from hand and resolve on the same authoritative zones.
+Four pinned spell-cast trigger effects have limited execution after such
+paid casts. Unsupported abilities remain unavailable; there is no universal
+priority, combat, replacement-effect, flashback, death-trigger or win-rate
+engine here.
 """
 from __future__ import annotations
 
