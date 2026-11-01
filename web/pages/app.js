@@ -25,11 +25,7 @@ let selectedSeed="0",soundEnabled=readSoundPreference(),audioUnlocked=false,audi
 let selectedVersionId=null,preferredByCommander={},lastCommanderId=null;
 const pageName=location.pathname.endsWith("/results.html")?"results":
   location.pathname.endsWith("/editor.html")?"editor":"summary";
-const PAGE_INFO={
-  results:["Opening-Turn Findings","What the cached runs suggest, how consistent the patterns are, and where to inspect the evidence."],
-  summary:["The Commander's Ledger","Inspect commander art, card-type composition and the mana curve of this verified deck."],
-  editor:["The Decksmith's Forge","Search the card list, make validated browser-local changes and export a new decklist."]
-};
+const PAGE_INFO={results:"Early turns",summary:"Deck overview",editor:"Deck editor"};
 let scrollObserver=null;
 const storageKey="commander-deck-lab-pages-v1";
 const el=(tag,text,className)=>{
@@ -325,11 +321,32 @@ function showPage(){
     if(active)link.setAttribute("aria-current","page");
     else link.removeAttribute("aria-current");
   }
-  const intro=$("page-introduction");clear(intro);
-  const [title,desc]=PAGE_INFO[pageName];
-  intro.append(el("h1",title),el("p",desc));
-  document.title=title+" | Commander Deck Lab";
+  renderPageIntro();
+  document.title=PAGE_INFO[pageName]+" | Commander Deck Lab";
   if(pageName==="results")renderScrollStory();
+}
+function deckFacts(){
+  const cards=displayDeckCards();
+  let total=0,lands=0,manaTotal=0,manaCards=0;
+  for(const entry of cards){
+    const card=cardForId(entry.oracle_id),qty=entry.qty;
+    total+=qty;
+    if(card?.category==="Land"){lands+=qty;continue}
+    if(card&&card.mana_value!==null&&card.mana_value!==undefined&&Number.isFinite(Number(card.mana_value))){
+      manaTotal+=Number(card.mana_value)*qty;manaCards+=qty;
+    }
+  }
+  return {total,lands,averageMana:manaCards?(manaTotal/manaCards).toFixed(1):"—"};
+}
+function renderPageIntro(){
+  const intro=$("page-introduction");clear(intro);
+  const facts=deckFacts();
+  let detail=facts.total+" cards · "+facts.lands+" lands";
+  if(pageName==="results"){
+    detail=isUnsimulatedVersion()?"No archived observations for this version":
+      (aggregate?aggregate.n+" archived hands · 6 turns":"Archived observations");
+  }
+  intro.append(el("h1",PAGE_INFO[pageName]),el("p",detail));
 }
 function renderOverview(){
   const deck=selectedDeck(),c=commanderCard(deck);
@@ -338,17 +355,13 @@ function renderOverview(){
   const node=imageNode(c,true,"big-portrait");node.classList.add("big-portrait");art.appendChild(node);
   const metrics=$("overview-metrics");clear(metrics);
   const cards=displayDeckCards();
-  const unique=cards.length;
-  const lands=cards.filter(x=>cardForId(x.oracle_id)?.category==="Land")
-    .reduce((n,x)=>n+x.qty,0);
-  for(const [value,label] of [[100,"Cards"],[unique,"Unique names"],[lands,"Lands"]]){
+  const facts=deckFacts();
+  for(const [value,label] of [[facts.total,"Cards"],[facts.lands,"Lands"],[facts.averageMana,"Avg. nonland mana value"]]){
     const x=el("div",null,"metric");
     x.appendChild(el("strong",value));x.appendChild(el("span",label));metrics.appendChild(x);
   }
   const tags=$("overview-tags");clear(tags);
-  for(const txt of [activeDeckTitle(),deck.label.replace(/_/g," "),
-       isUnsimulatedVersion()?"Edited in browser · no cached results":"Pinned metadata",
-       isUnsimulatedVersion()?"Export for new observations":"6-turn cached records"]){
+  for(const txt of [isUnsimulatedVersion()?"Edited deck · no archived results":"Archived observations available"]){
     tags.appendChild(el("span",txt,"chip"));
   }
   const typeCounts={};
@@ -711,6 +724,7 @@ function renderDraft(){
   updateSelectionBadge();
   renderLibrary();renderOverview();
   if(pageName==="results")renderRecords();
+  renderPageIntro();
   const remove=$("remove-name");clear(remove);
   for(const name of Object.keys(activeCounts).sort((a,b)=>a.localeCompare(b))){
     if(activeCounts[name]<=0)continue;
