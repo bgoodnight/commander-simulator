@@ -1,4 +1,8 @@
 """Lindblum's Mage Siege Adventure and its triggered Wizard token."""
+from pathlib import Path as _TemplatePath
+import sys as _template_sys
+_template_sys.path.insert(0,str(_TemplatePath(__file__).resolve().parents[2]))
+from commander_sim.legacy_common_ops import TokenBatch,apply_token_batch
 from dataclasses import replace
 from pathlib import Path
 import sys
@@ -85,7 +89,7 @@ class AdventureTable(ReiterateTable):
   self.emit('land_played',controller=seat,round=self.round_num,object_id=new)
   return True
  def resolve_mage_siege(self,table,action):
-  self.add_creature(self.players[action.actor],0,1,'Wizard',token=True,definition=WIZARD)
+  apply_token_batch(self,action.actor,TokenBatch(1,0,1,'Wizard',definition=WIZARD))
   self.note('    MAGE SIEGE: create a 0/1 black Wizard token.')
  def resolve_trigger(self,item):
   if item.op!='mage_siege_damage':return super().resolve_trigger(item)
