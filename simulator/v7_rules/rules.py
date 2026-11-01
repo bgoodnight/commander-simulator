@@ -1,13 +1,13 @@
 """V7a/b reusable rules primitives; intentionally NOT a complete MTG rules engine.
+No card-name branches in rules. Cards declare characteristics and ability descriptors.
+Each GameKernel is independent: no global mutable game state or singleton trigger lists.
+"""
+from __future__ import annotations
 from pathlib import Path as _TemplatePath
 import sys as _template_sys
 _template_sys.path.insert(0,str(_TemplatePath(__file__).resolve().parents[2]))
 from commander_sim.legacy_common_ops import spawn_repeated_tokens
 
-No card-name branches in rules. Cards declare characteristics and ability descriptors.
-Each GameKernel is independent: no global mutable game state or singleton trigger lists.
-"""
-from __future__ import annotations
 from collections import Counter, defaultdict
 from dataclasses import dataclass, field, replace
 from typing import Callable, Iterable
