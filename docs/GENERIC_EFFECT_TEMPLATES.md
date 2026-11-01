@@ -128,3 +128,45 @@ replacement-effect checks; extract copy-source targeting and delayed exile
 into reusable primitives. Avoid card-specific condition branches in the
 shared executor. Preserve the existing exact fidelity before promoting
 unknown cards to reviewed hybrids.
+
+## M2.9 — recurring token, recursion and spell-copy composition
+
+The historical v7 trigger resolver and v34 Mage Siege token effect now use
+the shared `spawn_repeated_tokens` operation from
+`commander_sim/legacy_common_ops.py`. The existing v24 Ral's Reinforcements
+already uses the same token batch abstraction. The kernel/table callback
+still creates each real object with its original printed identity, colors,
+controller and event rules; **no generic trigger registration is invented**.
+
+Graveyard-to-library recursion is now explicitly constrained through
+`ZoneTransfer(allowed_types_any=frozenset({'instant','sorcery'}),
+require_owner=True)` for Mystic Sanctuary. This check is deliberately
+shared with other zone transfers and fails closed for ineligible object
+IDs; the old trigger policy/targeting and fizzle checks remain intact.
+Other possible destinations such as graveyard→hand and graveyard→battlefield
+use the same typed zone-move structure, but must still be authorized by a
+reviewed card effect and the full timing/permission rules. They are not
+automatically enabled in the bounded six-turn pilot.
+
+The large duplicated Reiterate implementations in historical v33 and v35
+now call `commander_sim/legacy_spell_copy.py` for **one** virtual-copy
+lifecycle and configurable retargeting. `CopyTargetRule` supports original
+target retention, a single legal permanent target, counterspell spell-type
+restrictions, a target spell for copying Reiterate, and Step Through's
+two distinct creature targets. The game table remains responsible for
+deciding whether a spell is copyable, paying for Reiterate, choosing legal
+priority and applying copied-effect resolution. A virtual copy is **not**
+cast and does not create a physical hand or library card; the existing
+spell-copied event and triggers still fire once.
+
+Regression requirements include explicit tests for preserved original
+targets, illegal retarget refusal, copied counterspells, two-target copies,
+repeated token identity/order, Mystic Sanctuary eligibility, and the
+historical frozen replay fingerprints. New cards reuse these operations by
+registering verified parameters and authorization; no broad text-based
+ability inference is introduced.
+
+Still pending: multi-card token-trigger **declaration registration** and
+stable ability-slot dispatcher, arbitrary graveyard-to-hand/battlefield
+recursion with actual cost/permission/replacement handling, complex delayed
+effects, and the first multi-deck cross-color turn-driver integration.
