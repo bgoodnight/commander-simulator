@@ -5,21 +5,28 @@ and plans generic Ability values. Unknown sources produce no mana.
 """
 from resources import Ability, Cost, fixed, C, U, R
 from state import v6
+from pathlib import Path
+import sys
+sys.path.insert(0, str(Path(__file__).resolve().parents[2]))
+from commander_sim.legacy_mana_adapter import reviewed_legacy_rock_modes
+
+# These five historical named sources were already supported in v9c.
+# Reuse their pinned reviewed declarations; do not enable previously
+# unsupported sources merely because a generic template now exists.
+MIGRATED_ROCKS = frozenset({
+    'Sol Ring', 'Izzet Signet', 'Talisman of Creativity',
+    'Mind Stone', 'Arcane Signet',
+})
 
 
 NAMED = {
     'Frostboil Snarl': fixed(U, R),
     'Fabled Passage': (),
-    'Sol Ring': fixed((2, 0, 0)),
-    'Izzet Signet': (Ability((0, 1, 1), Cost(generic=1)),),
     'Cascade Bluffs': fixed(C) + tuple(Ability(output, cost)
         for cost in (Cost(blue=1), Cost(red=1))
         for output in ((0, 2, 0), (0, 1, 1), (0, 0, 2))),
     'Shivan Reef': fixed(C) + fixed(U, R, damage=1),
-    'Talisman of Creativity': fixed(C) + fixed(U, R, damage=1),
     'Fiery Islet': fixed(U, R, life=1),
-    'Mind Stone': fixed(C),
-    'Arcane Signet': fixed(U, R),
     'Riverglide Pathway [U]': fixed(U),
     'Riverglide Pathway [R]': fixed(R),
 }
@@ -40,6 +47,8 @@ def abilities_for(resources, obj, visiting=frozenset()):
         if entry and entry.kind == 'permanent' and entry.view.kind == 'ramp':
             return fixed((entry.view.value, 0, 0)) if entry.view.value > 0 else ()
         return ()
+    if name in MIGRATED_ROCKS:
+        return reviewed_legacy_rock_modes(name, Ability, Cost)
     if name in NAMED: return NAMED[name]
     if name in ('Fellwar Stone', 'Exotic Orchard'):
         # Derive available types from opposing lands; ignore activation costs
