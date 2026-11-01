@@ -51,6 +51,7 @@ class UnearthOutcome:
     card_name: str
     paid_source_ids: tuple[int,...]
     expires_at: str = "next_end_step"
+    enter_result: object | None = None
 
 
 def reviewed_unearth(name,raw):
@@ -64,7 +65,8 @@ def reviewed_unearth(name,raw):
 
 
 def activate_reviewed_unearth(zones,seat,old_id,catalog,mana_service,*,
-                               sorcery_window=False):
+                               sorcery_window=False,life=None,
+                               enter_choice=None,death_engine=None,turn=1):
     """Pay reviewed printed unearth cost and return ONE physical card.
 
     No stack is constructed for an activated ability in this bounded pilot;
@@ -84,7 +86,18 @@ def activate_reviewed_unearth(zones,seat,old_id,catalog,mana_service,*,
             or source.card.card_id!=review.oracle_id):
         raise ValueError("Unreviewed unearth permission")
     if review.etb_requires_review:
-        raise NotImplementedError("Printed ETB effect needs a reviewed stack handler")
+        if life is None or life.kernel is not zones.kernel:
+            raise NotImplementedError("Printed ETB effect needs reviewed life/stack host")
+        if source.card.name=="Triarch Praetorian" and len(zones.ids(seat,"library"))<2:
+            raise NotImplementedError("Triarch mandatory draw needs loss/SBA host")
+        if source.card.name=="Lokhust Heavy Destroyer":
+            if not isinstance(enter_choice,dict) or 0 not in enter_choice:
+                raise ValueError("Lokhust mandatory per-player choices are required")
+        if source.card.name=="Canoptek Tomb Sentinel" and enter_choice is not None:
+            target=zones.kernel.objects.get(enter_choice)
+            if (target is None or target.zone!="battlefield"
+                    or "land" in target.types):
+                raise ValueError("Illegal preselected nonland exile target")
     if (mana_service is None or mana_service.kernel is not zones.kernel
             or not hasattr(zones.kernel,"unearth_pending")):
         raise ValueError("Matching physical resource/kernel service required")
@@ -109,7 +122,18 @@ def activate_reviewed_unearth(zones,seat,old_id,catalog,mana_service,*,
         live.card=replace(original,keywords=original.keywords|frozenset({"haste"}))
         zones.kernel.unearth_pending[permanent_id]=original
         zones.kernel._dirty()
-        return UnearthOutcome(old_id,permanent_id,source.card.name,paid.source_ids)
+        result=None
+        if operation.etb_requires_review:
+            from .reviewed_enter_effects import execute_reviewed_enter
+            selected=enter_choice
+            if source.card.name=="Lokhust Heavy Destroyer":
+                selected={seat_id:(permanent_id if selection=="source" else selection)
+                          for seat_id,selection in enter_choice.items()}
+            result=execute_reviewed_enter(
+                zones,life,permanent_id,catalog,
+                choice=selected,death_engine=death_engine,turn=turn)
+        return UnearthOutcome(old_id,permanent_id,source.card.name,
+                              paid.source_ids,enter_result=result)
     return dispatcher.invoke(slot.slot_id,old_id,perform)
 
 
