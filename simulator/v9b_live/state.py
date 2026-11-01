@@ -27,6 +27,9 @@ class IndexedKernel(CentralKernel):
         self.order = defaultdict(list)
         self.adopt = None
         self.resource_names = {}
+        # Object-ID keyed exile replacement for reviewed unearth activation.
+        # This is existing-kernel state, not a second zone index.
+        self.unearth_pending = {}
 
     def add(self, card, owner, controller=None, zone='battlefield', token=False):
         # A permanent's normal effect creates its legacy view. Adopt the spell's
@@ -48,12 +51,21 @@ class IndexedKernel(CentralKernel):
     def move(self, oid, to_zone, reason, commander_choice=False):
         obj = self.get(oid)
         old_key = obj.owner, obj.zone
+        if obj.zone == 'battlefield' and oid in self.unearth_pending:
+            # Restore printed characteristics before the zone-change new
+            # object is constructed; haste does not persist in the graveyard.
+            obj.card = self.unearth_pending[oid]
+            if to_zone != 'battlefield':
+                # Unearth replaces *any* attempt to leave with exile, not just
+                # death. This excludes phase-out, which isn't a zone move.
+                to_zone, reason = 'exile', 'exile'
         if obj.zone == 'battlefield' and reason == 'state_based' and 'commander' in obj.card.supertypes:
             commander_choice = True
         result = super().move(oid, to_zone, reason, commander_choice)
         if result is not None:
             self.order[old_key].remove(oid)
             self.resource_names.pop(oid, None)
+            self.unearth_pending.pop(oid, None)
         return result
 
     def remove_owned(self, seat):
