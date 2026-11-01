@@ -44,7 +44,7 @@ def eligible_reviewed_tutor_targets(zones, seat, name, catalog):
 
 def cast_and_resolve_reviewed_tutor(zones, seat, source_id, catalog,
                                     commander_colors, mana_service, *,
-                                    target_id):
+                                    target_id, on_cast=None):
     """Commit a source-paid, main-phase-permitted reviewed tutor and search.
 
     Target is selected from actual live library IDs *before* payment.
@@ -69,12 +69,16 @@ def cast_and_resolve_reviewed_tutor(zones, seat, source_id, catalog,
         raise ValueError("Tutor target is not eligible")
     if mana_service is None or mana_service.kernel is not zones.kernel:
         raise ValueError("A physical, matching mana service is required")
+    if on_cast is not None and not callable(on_cast):
+        raise TypeError("Reviewed cast-event hook must be callable")
     review=ReviewedCreatureCast(source.card.card_id,mana_cost,True,
         ("Only the verified library-search effect is resolved",))
     committed=cast_reviewed_spell(zones,seat,source_id,review,commander_colors,
                                   mana_service=mana_service,spell_type=kind)
     if committed is None:
         return None
+    if on_cast is not None:
+        on_cast(committed.ticket)
     outcomes=[]
     def apply(kernel,ticket):
         outcomes.append(execute_reviewed_search_to_destination(
