@@ -60,6 +60,7 @@ test('cross-commander built-in and saved variants load without filtering',()=>{
   vm.runInContext(`
     var loaded=[];
     validateCounts=()=>{};
+    note=()=>{};
     summon=(key,{versionId=null}={})=>loaded.push({key,versionId});
     loadDeckSelection('preset:beta');
     loadDeckSelection('saved:v-new');
