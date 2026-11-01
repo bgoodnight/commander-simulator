@@ -39,6 +39,9 @@ class StaticPagesTests(unittest.TestCase):
         self.assertEqual(len(datasets["decks"]),6)
         for deck in datasets["decks"]:
             with self.subTest(deck=deck["key"]):
+                # Built-in last-updated is sourced from the committed deck
+                # revision, never from a browser clock or Pages deploy date.
+                self.assertRegex(deck["updated_at"],r"^\\d{4}-\\d{2}-\\d{2}T")
                 self.assertEqual(deck["card_count"],100)
                 self.assertEqual(sum(e["qty"] for e in deck["cards"]),100)
                 self.assertIn(deck["commander_id"],datasets["cards"])
