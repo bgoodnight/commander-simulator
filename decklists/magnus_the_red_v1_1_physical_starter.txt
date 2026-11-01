@@ -1,0 +1,90 @@
+Commander
+1 Magnus the Red
+
+Library
+1 Consult the Star Charts
+1 Elementalist Adept
+1 Exalted Flamer of Tzeentch
+1 Firebrand Archer
+1 Harmonic Prodigy
+1 Heralds of Tzeentch
+1 Hexing Squelcher
+1 Lord of Change
+1 Mocking Sprite
+1 Molten-Core Maestro
+1 Mutalith Vortex Beast
+1 Passionate Archaeologist
+1 Pink Horror
+1 Reckless Scholar
+1 Saheeli Rai
+1 Stormsplitter
+1 The Lost and the Damned
+1 Thermo-Alchemist
+1 Ashnod's Altar
+1 Chromatic Lantern
+1 Izzet Signet
+1 Resonating Lute
+1 Springleaf Drum
+1 Talisman of Creativity
+1 Worn Powerstone
+1 Abrade
+1 Anticipate
+1 Brainstorm
+1 Brotherhood's End
+1 Burst Lightning
+1 Chase Inspiration
+1 Chaos Mutation
+1 Chaos Warp
+1 Deduce
+1 Disdainful Stroke
+1 Flow State
+1 Forbid
+1 Hard Evidence
+1 High Tide
+1 Impractical Joke
+1 Jeska's Will
+1 Let the Galaxy Burn
+1 Mana Sculpt
+1 Mathemagics
+1 Narset's Rebuke
+1 Ponder
+1 Preordain
+1 Prismari Charm
+1 Procrastinate
+1 Pyretic Ritual
+1 Quick Study
+1 Return the Favor
+1 Rewind
+1 Run Away Together
+1 Seize the Spoils
+1 Sleight of Hand
+1 Spell Pierce
+1 Spell Snare
+1 Think Twice
+1 Tome Blast
+1 Traumatic Critique
+1 Wisdom of Ages
+1 Command Tower
+1 Evolving Wilds
+1 Exotic Orchard
+1 Great Hall of the Biblioplex
+1 Hidden Grotto
+1 Path of Ancestry
+1 Shivan Reef
+1 Stormcarved Coast
+1 Swiftwater Cliffs
+1 Terramorphic Expanse
+1 Tyrite Sanctum
+15 Island
+11 Mountain
+
+Sideboard
+1 Abstract Paintmage
+1 Brush Off
+1 Diary of Dreams
+1 Divergent Equation
+1 Goblin Glasswright // Craft with Pride
+1 Lindblum, Industrial Regency // Mage Siege
+1 Sanar, Unfinished Genius // Wild Idea
+1 Tablet of Discovery
+1 Thirst for Identity
