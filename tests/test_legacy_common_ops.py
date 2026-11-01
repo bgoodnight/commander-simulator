@@ -7,6 +7,7 @@ from commander_sim.legacy_common_ops import (
     apply_draw_discard, apply_token_batch, apply_generic_discount,
     SacrificeRequirement, legal_sacrifice_victims, sacrifice_physical_object,
     ZoneTransfer,transfer_physical_object,spawn_repeated_tokens,
+    DamageEachOpponent,apply_each_opponent_damage,
 )
 
 
@@ -215,6 +216,37 @@ class ReusableTriggerAndRecursionTests(unittest.TestCase):
         obj.types=frozenset({"instant"})
         transfer_physical_object(table,0,12,effect)
         self.assertEqual(moved,[(12,"library")])
+
+
+class SharedDamageTests(unittest.TestCase):
+    def test_each_opponent_damage_uses_host_simultaneous_damage(self):
+        players=[NS(seat=i) for i in range(4)]
+        calls=[]
+        table=NS(players=players,rivals=lambda player:
+            [p for p in players if p.seat!=player.seat],
+            damage_many=lambda targets,source,reason:
+                calls.append((targets,source.seat,reason)))
+        result=apply_each_opponent_damage(
+            table,1,DamageEachOpponent(2,"reviewed_source"))
+        self.assertEqual(result,{0:2,2:2,3:2})
+        self.assertEqual(calls,[({0:2,2:2,3:2},1,"reviewed_source")])
+
+    def test_each_opponent_damage_rejects_invalid_config(self):
+        for amount in (0,-1,True):
+            with self.subTest(amount=amount),self.assertRaises(ValueError):
+                DamageEachOpponent(amount,"effect")
+        with self.assertRaises(ValueError):
+            DamageEachOpponent(1,"")
+
+    def test_each_opponent_damage_does_not_pretend_to_be_life_loss(self):
+        players=[NS(seat=0),NS(seat=1)]
+        events=[]
+        table=NS(players=players,rivals=lambda player:[players[1]],
+                 damage_many=lambda amounts,source,reason:
+                    events.append(("damage",amounts,reason)))
+        apply_each_opponent_damage(table,0,DamageEachOpponent(1,"mage_siege_wizard"))
+        self.assertEqual(events,[("damage",{1:1},"mage_siege_wizard")])
+
 
 if __name__=="__main__":
     unittest.main()
