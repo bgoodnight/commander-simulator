@@ -797,12 +797,86 @@ function physicalArchiveMetrics(runs){
   const lands=valid.map(r=>r.events[5].land_count).sort((a,b)=>a-b);
   return {
     n, third:pct(at(2,r=>r.land_count>=3)),
-    fourth:pct(at(3,r=>r.land_count>=4)),
+    fourth:pct(at(4,r=>r.land_count>=4)),
     median:(lands[Math.floor((n-1)/2)]+lands[Math.floor(n/2)])/2,
     creatures:pct(at(5,r=>r.creature_count>0)),
     rocks:pct(at(5,r=>r.mana_rock_count>0)),
     unsupported:(valid.reduce((sum,r)=>sum+r.events[5].unsupported_cards_in_hand.length,0)/n).toFixed(1)
   };
+}
+function physicalArchiveBreakdown(runs){
+  const valid=runs.filter(run=>Array.isArray(run.events)&&run.events.length>=6);
+  if(!valid.length)return null;
+  const n=valid.length, avg=fn=>(valid.reduce((sum,run)=>sum+fn(run),0)/n).toFixed(2);
+  const timeline=Array.from({length:6},(_,i)=>({
+    turn:i+1,
+    lands:avg(r=>r.events[i].land_count),
+    rocks:avg(r=>r.events[i].mana_rock_count),
+    creatures:avg(r=>r.events[i].creature_count),
+    hand:avg(r=>r.events[i].hand_size),
+    unsupported:avg(r=>r.events[i].unsupported_cards_in_hand.length)
+  }));
+  const resolved=new Map();
+  for(const run of valid)for(const row of run.events)for(const event of row.events){
+    if(!["artifact_resolved","creature_resolved","enchantment_resolved",
+           "reviewed_enter_resolved","reviewed_sacrifice_activated"].includes(event.type))continue;
+    resolved.set(event.type,(resolved.get(event.type)||0)+1);
+  }
+  const missing=new Map();
+  for(const run of valid)for(const name of new Set(run.events[5].unsupported_cards_in_hand))
+    missing.set(name,(missing.get(name)||0)+1);
+  return {
+    n,timeline,
+    resolved:[...resolved].sort((a,b)=>b[1]-a[1]||a[0].localeCompare(b[0])),
+    unsupported:[...missing].sort((a,b)=>b[1]-a[1]||a[0].localeCompare(b[0]))
+  };
+}
+function physicalArchiveBreakdownNode(runs){
+  const info=physicalArchiveBreakdown(runs);
+  if(!info)return el("p","The detailed physical archive has no usable run events.","small");
+  const area=el("details",null,"story-drilldown");
+  area.appendChild(el("summary","Six-turn averages · reviewed actions · unsupported cards"));
+  const content=el("div",null,"physical-archive-breakdown");
+  content.appendChild(el("h3","Development by turn"));
+  content.appendChild(el("p","Each value is an average of all "+info.n+" physical deck runs. Mana rocks count objects in play, not total mana producible.","micro"));
+  const table=el("table"),head=el("tr");
+  ["Turn","Lands","Mana rocks","Creatures","Hand","Unsupported in hand"].forEach(name=>head.appendChild(el("th",name)));
+  table.appendChild(head);
+  info.timeline.forEach(row=>{
+    const tr=el("tr");
+    [row.turn,row.lands,row.rocks,row.creatures,row.hand,row.unsupported]
+      .forEach(v=>tr.appendChild(el("td",String(v))));
+    table.appendChild(tr);
+  });
+  const scroll=el("div",null,"table-scroll");scroll.appendChild(table);content.appendChild(scroll);
+  content.appendChild(el("h3","Reviewed effects that actually resolved"));
+  if(info.resolved.length){
+    const resolved=el("div",null,"workshop-list");
+    for(const [kind,count] of info.resolved){
+      const line=el("div",null,"deck-row");
+      line.append(el("span",kind.replaceAll("_"," ")),el("strong",count));
+      resolved.appendChild(line);
+    }
+    content.appendChild(resolved);
+  }else content.appendChild(el("p","No reviewed effects resolved in this batch.","small"));
+  content.appendChild(el("h3","Unsupported cards in hand on turn six"));
+  content.appendChild(el("p","Number of runs where each named card was still in hand with an effect the engine cannot reliably resolve. This does not mean the card is bad or unplayable.","micro"));
+  const rows=el("div",null,"board-card-list");
+  for(const [name,count] of info.unsupported.slice(0,12)){
+    const card=cardInfo(name);
+    const line=el(card?"button":"div",null,"board-card-row");
+    if(card){
+      line.type="button";
+      line.addEventListener("click",()=>showCard(card.oracle_id));
+    }
+    line.append(el("span",name),el("strong",count+" / "+info.n));
+    rows.appendChild(line);
+  }
+  if(!info.unsupported.length)rows.appendChild(el("p","No unsupported cards were recorded in hands on turn six.","small"));
+  content.appendChild(rows);
+  content.appendChild(el("p","Unmodeled triggers, sacrifice payoffs, life changes, commander actions, multiplayer opponents and win conditions cannot be inferred from these counts.","micro"));
+  area.appendChild(content);
+  return area;
 }
 function showBoundedBatch(){
   const root=$("bounded-results");clear(root);
@@ -842,6 +916,7 @@ function showBoundedBatch(){
       for(const type of ["Creature","Artifact","Enchantment"])
         reports.appendChild(boardReport(archived,type));
       root.appendChild(reports);
+      root.appendChild(physicalArchiveBreakdownNode(archive.runs));
       root.appendChild(el("p","Unsupported abilities, opponents, combat, Mortarion casting, and wins are not modeled as resolved outcomes. No win-rate conclusion is justified.","micro"));
     }
   }
@@ -1587,7 +1662,9 @@ function renderQuietDiagnostic(){
     status.textContent="Action runs are unavailable for this edited deck.";return;
   }
   const batch=boundedBatches?.decks?.[deck.key];
-  const runs=quietRuns || (batch?.deck_sha256===deck.deck_sha256 ? batch.runs : null);
+  const physical=detailedArchives?.[deck.key];
+  const runs=quietRuns || (batch?.deck_sha256===deck.deck_sha256?batch.runs:null) ||
+    (physical?.deck_sha256===deck.deck_sha256?physical.runs:null);
   if(!runs?.length){status.textContent="No matching simulation batch for this deck.";return}
   try{quietPoints=window.DeckInsights.quietTurns(runs,deck.key,deck.deck_sha256)}
   catch(error){status.textContent="Loaded runs cannot be used: "+error.message;return}
