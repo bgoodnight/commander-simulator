@@ -17,7 +17,11 @@ const LABELS = {
 const MODE_NOTE = "Precomputed observation only · no spells, abilities, combat or win rates modeled.";
 let data=null, archives=null, allNames=[], selected=null, activeTab="overview";
 let cachedByName = new Map(),extraCards={},activeCounts=null,history=[],localVersions=[];
-let selectedSeed="0",soundEnabled=false,audio=null,lastRecord=null,autoTimer=null;
+const soundKey="commander-deck-lab-sound-v1";
+function readSoundPreference(){
+  try{return localStorage.getItem(soundKey)!=="off"}catch(e){return true}
+}
+let selectedSeed="0",soundEnabled=readSoundPreference(),audioUnlocked=false,audio=null,lastRecord=null,autoTimer=null;
 let selectedVersionId=null,preferredByCommander={},lastCommanderId=null;
 const pageName=location.pathname.endsWith("/results.html")?"results":
   location.pathname.endsWith("/editor.html")?"editor":"summary";
@@ -43,7 +47,7 @@ function note(msg,error=false){
   note._timeout=setTimeout(()=>status.hidden=true,4100);
 }
 function originalSound(kind="click"){
-  if(!soundEnabled)return;
+  if(!soundEnabled||!audioUnlocked)return;
   try{
     const Audio=window.AudioContext||window.webkitAudioContext;
     if(!Audio)return;
@@ -68,12 +72,18 @@ function originalSound(kind="click"){
       osc.connect(gain).connect(audio.destination);
       osc.start(now);osc.stop(now+duration+.015);
     }
-  }catch(e){soundEnabled=false;$("audio-toggle").textContent="♫ Sound unavailable";}
+  }catch(e){soundEnabled=false;syncSoundControl();$("audio-toggle").textContent="♫ Sound unavailable";}
+}
+function syncSoundControl(){
+  const button=$("audio-toggle");
+  button.setAttribute("aria-pressed",String(soundEnabled));
+  button.textContent=soundEnabled?"♫ Sound on":"♫ Sound off";
+  button.title=soundEnabled?"Mute sound effects":"Enable sound effects";
 }
 function enableSound(){
   soundEnabled=!soundEnabled;
-  $("audio-toggle").setAttribute("aria-pressed",String(soundEnabled));
-  $("audio-toggle").textContent=soundEnabled?"♫ Sound on":"♫ Sound off";
+  try{localStorage.setItem(soundKey,soundEnabled?"on":"off")}catch(e){}
+  syncSoundControl();
   if(soundEnabled)originalSound("success");
 }
 function safeText(value){return String(value??"");}
@@ -421,21 +431,21 @@ function showAggregate(){
   }
   $("results-sample").textContent=aggregate.n+" cached seeds · 6 turns";
   $("results-provenance").textContent="Derived from "+aggregate.n+
-    " fixed-seed, keep-seven observations—not independent full games or win-rate estimates.";
+    " fixed-seed, keep-seven observations. Only basic lands and Command Tower are modeled; no casts, combat or win rates.";
   const metrics=[
-    {label:"2–5 modeled lands in opening hand",value:aggregate.metrics.earlyLand.pct+"%",
-      detail:aggregate.metrics.earlyLand.count+" / "+aggregate.n+" archived hands",target:"opening"},
-    {label:"≥3 modeled sources by turn 3",value:aggregate.metrics.t3Sources.pct+"%",
-      detail:aggregate.metrics.t3Sources.count+" / "+aggregate.n+" archived runs",target:"resources"},
-    {label:"Any mana-value candidate on turn 4",value:aggregate.metrics.t4Candidate.pct+"%",
-      detail:aggregate.metrics.t4Candidate.count+" / "+aggregate.n+" archived runs",target:"candidates"}
+    {label:"2–5 modeled lands in opening hand",value:aggregate.metrics.earlyLand.count+" / "+aggregate.n,
+      detail:aggregate.metrics.earlyLand.pct+"% of archived hands",target:"opening"},
+    {label:"≥3 modeled sources by turn 3",value:aggregate.metrics.t3Sources.count+" / "+aggregate.n,
+      detail:aggregate.metrics.t3Sources.pct+"% of archived runs",target:"resources"},
+    {label:"Any mana-value candidate on turn 4",value:aggregate.metrics.t4Candidate.count+" / "+aggregate.n,
+      detail:aggregate.metrics.t4Candidate.pct+"% of archived runs",target:"candidates"}
   ];
   for(const m of metrics){
     const card=el("button",null,"result-stat");
     card.type="button";
     card.append(el("span",m.value,"result-stat-value"),
       el("span",m.label,"result-stat-label"),el("small",m.detail));
-    card.setAttribute("aria-label",m.label+": "+m.detail+". Scroll to examine evidence.");
+    card.setAttribute("aria-label",m.label+": "+m.value+", "+m.detail+". Scroll to examine evidence.");
     card.onclick=()=>{
       const target=document.querySelector('.story-step[data-chart="'+m.target+'"]');
       target?.scrollIntoView({behavior:window.matchMedia?.("(prefers-reduced-motion: reduce)").matches?
@@ -979,6 +989,9 @@ async function fetchCard(){
   }finally{$("fetch-card").disabled=false}
 }
 function registerEvents(){
+  syncSoundControl();
+  document.addEventListener("pointerdown",()=>{audioUnlocked=true},{once:true});
+  document.addEventListener("keydown",()=>{audioUnlocked=true},{once:true});
   $("audio-toggle").onclick=enableSound;
   $("commander-medallion").onclick=toggleCommanderPicker;
   document.addEventListener("click",e=>{

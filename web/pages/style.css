@@ -368,3 +368,53 @@ padding:12px;background:#131f1e}
 @media(prefers-reduced-motion:reduce){
  .result-stat,.interactive-bar{transition:none!important}
 }
+
+/* The Arcane Table: a compact field of obsidian, starlight and brass. */
+body{background-color:#101019;background-image:radial-gradient(ellipse at 50% -12%,#55396288,transparent 45%),radial-gradient(ellipse at 100% 30%,#183e4666,transparent 42%),linear-gradient(150deg,#11131a,#11191b 58%,#191323)}
+.topbar{margin-bottom:12px}
+.brand-mark{color:#f3d49b;filter:drop-shadow(0 0 9px #c59ae166)}
+.site-navigation{border-color:#8b755b;box-shadow:0 9px 28px #05040999,inset 0 1px #f6e1b532}
+.site-link[aria-current="page"],.site-link.active{box-shadow:inset 0 1px #f4dcac55,0 0 16px #b78bcd33}
+.compact-selection{min-height:92px;margin:10px auto 12px;padding:9px 17px;background:radial-gradient(ellipse at 85% 0,#6950794d,transparent 45%),linear-gradient(110deg,#302b35ee,#19282bee 65%,#24232eee);border-color:#a38a69;box-shadow:inset 0 1px #efcea350,0 9px 28px #08060988}
+.commander-medallion{width:70px;height:70px;box-shadow:0 0 0 4px #171820,0 0 0 5px #ac8d68,0 0 23px #a89be15c,inset 0 0 14px #000}
+.page-introduction{margin:12px auto 15px}
+.page-introduction h1{text-shadow:0 0 24px #cb9bce55}
+.panel{border-color:#786782;box-shadow:inset 0 1px #f4dbb129,0 12px 30px #06050a66}
+.results-head{background:radial-gradient(ellipse at 90% 0,#684c785c,transparent 45%),linear-gradient(145deg,#272630,#182425)}
+.result-stat{background:radial-gradient(circle at 85% 0,#866ca64d,transparent 62%),linear-gradient(145deg,#292532,#162527);border-color:#897292}
+.result-stat-value{color:#f5d99e;text-shadow:0 0 22px #d5ad7c55}
+.library-heading{display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap}
+.library-jump{color:#f3d59e;font-size:.8rem;font-weight:700;text-decoration:none;border:1px solid #9d825e;border-radius:8px;padding:9px 12px;background:#342c39}
+.library-jump:hover{border-color:#efd3a0;background:#47354c}
+@media(max-width:720px){
+  .wide-wrap{padding-top:10px}
+  .topbar{align-items:center;flex-wrap:nowrap;gap:8px;margin-bottom:9px}
+  .brand-mark{width:38px;height:38px;flex-shrink:0}
+  .brand-copy .overline{font-size:.55rem}
+  .brand-copy strong{font-size:.9rem}
+  .top-actions{gap:5px}
+  .top-actions .status-pill,.top-actions .little-button{display:none}
+  .top-actions .icon-button{white-space:nowrap;padding:8px;font-size:.7rem;min-height:44px}
+  .site-link{min-height:44px;display:flex;align-items:center;justify-content:center}
+  .compact-selection{min-height:72px;margin:8px auto 10px;padding:7px 10px;gap:11px}
+  .commander-medallion{width:56px;height:56px}
+  .selection-copy h2{margin:3px 0;font-size:.93rem}
+  .selection-copy .eyebrow{font-size:.58rem}
+  .selection-copy p{font-size:.65rem}
+  .selection-actions .selection-state{display:none}
+  .selection-actions .stone-button{min-height:44px;display:flex;align-items:center}
+  .page-introduction{margin:10px auto 12px}
+  .page-introduction h1{font-size:1.45rem;margin:4px 0}
+  .page-introduction p{font-size:.76rem}
+  .results-head{margin-bottom:16px}
+}
+@media(max-width:450px){
+  .compact-selection{flex-wrap:nowrap}
+  .selection-copy{flex:1 1 auto}
+  .selection-actions{width:auto;order:2;border:0;padding:0}
+  .selection-actions .stone-button{font-size:.6rem;padding:6px}
+}
+@media(prefers-reduced-motion:no-preference){
+  .commander-medallion{animation:arcane-breathe 5s ease-in-out infinite}
+  @keyframes arcane-breathe{50%{box-shadow:0 0 0 4px #171820,0 0 0 5px #d1ab79,0 0 27px #bb9be188,inset 0 0 14px #000}}
+}

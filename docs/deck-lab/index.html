@@ -25,7 +25,7 @@
     </div>
     <div class="top-actions">
       <span class="status-pill">Cached observations · no new games</span>
-      <button id="audio-toggle" class="icon-button" type="button" aria-pressed="false" title="Enable original UI sound effects">♫ Sound off</button>
+      <button id="audio-toggle" class="icon-button" type="button" aria-pressed="true" title="Mute sound effects">♫ Sound on</button>
       <a class="little-button" href="https://github.com/bgoodnight/commander-simulator" target="_blank" rel="noopener noreferrer">Source on GitHub</a>
     </div>
   </header>
@@ -48,7 +48,7 @@
       </div>
     </div>
     <div class="selection-copy">
-      <span class="eyebrow">Your commander's archive</span>
+      <span class="eyebrow">Tap portrait to change commander</span>
       <h2 id="active-commander">Select a commander</h2>
       <p id="active-deck-name">Open the rune to choose a deck.</p>
     </div>
@@ -85,7 +85,7 @@
     </div>
     <div class="tab-pane" id="pane-library" hidden>
       <section class="panel">
-        <h2 class="panel-title">Card Library <span id="library-count" class="micro"></span></h2>
+        <div class="library-heading"><h2 class="panel-title">Card Library <span id="library-count" class="micro"></span></h2><a class="library-jump" href="#pane-workshop">Edit deck ↓</a></div>
         <div class="filter-bar">
           <input id="library-search" aria-label="Search cards in this deck" placeholder="Search card name, type or rules text…">
           <select id="library-category" aria-label="Filter card types"><option value="all">All card types</option>
@@ -105,7 +105,7 @@
         <div class="results-heading-row">
           <div>
             <span class="eyebrow">What the archived runs show</span>
-            <h2 id="results-overview-heading" class="results-big-heading">Opening-turn performance at a glance</h2>
+            <h2 id="results-overview-heading" class="results-big-heading">Opening-hand and early-turn snapshots</h2>
             <p id="results-provenance" class="small">Calculating findings from the fixed cached runs.</p>
           </div>
           <span id="results-sample" class="sample-label"></span>
