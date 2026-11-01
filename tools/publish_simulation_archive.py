@@ -158,8 +158,10 @@ def publish_archives(source, destination, *, engine_commit, keys=None):
             if target.exists() and target.read_bytes() != data:
                 raise ValueError("Immutable archive path collision")
             target.write_bytes(data)
-    old["releases"].append(release)
-    old["releases"].sort(key=lambda entry: entry["id"])
+    # Newest published release first. The existing static Deck Lab reads
+    # releases[0], so insertion order is authoritative, not lexical SHA order.
+    # Preserve every older release unchanged for historical comparisons.
+    old["releases"].insert(0, release)
     index_path.write_bytes(json_bytes(old))
     return validate_index(root)
 
@@ -173,7 +175,7 @@ def main(argv=None):
     result = publish_archives(args.source, args.output,
                               engine_commit=args.engine_commit)
     print(json.dumps({"releases": len(result["releases"]),
-                      "latest": result["releases"][-1]["id"]}, indent=2))
+                      "latest": result["releases"][0]["id"]}, indent=2))
 
 
 if __name__ == "__main__":
