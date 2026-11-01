@@ -110,3 +110,46 @@ def retrieve_reviewed_graveyard_card(zones, seat, object_id, effect: GraveyardTo
         ZoneTransfer("graveyard","hand",
                      allowed_types_any=effect.permitted_types,
                      require_owner=True))
+
+
+@dataclass(frozen=True)
+class TargetedPermanentRemoval:
+    """Reviewed single-target spell effect, not mass removal/forced sacrifice."""
+    kind: str
+    permitted_types: frozenset[str]
+    opponent_only: bool = False
+
+    def __post_init__(self):
+        if (self.kind not in {"destroy","exile","bounce"}
+                or not isinstance(self.permitted_types,frozenset)
+                or not self.permitted_types
+                or any(not isinstance(x,str) or not x for x in self.permitted_types)
+                or type(self.opponent_only) is not bool):
+            raise ValueError("Invalid reviewed permanent removal")
+
+
+def remove_reviewed_permanent(kernel, actor, target_id, effect: TargetedPermanentRemoval):
+    """Resolve one validated target using existing kernel legality and SBA.
+
+    Commander replacements, mass non-targeting effects, protective
+    continuous rules beyond kernel.legal_target and opponent priority
+    require the caller's reviewed host and are not inferred.
+    """
+    if not isinstance(effect,TargetedPermanentRemoval):
+        raise TypeError("Expected typed permanent removal")
+    if type(actor) is not int or actor<0:
+        raise ValueError("Invalid source controller")
+    obj=kernel.objects.get(target_id)
+    if (obj is None or obj.zone!="battlefield"
+            or not (obj.types & effect.permitted_types)
+            or effect.opponent_only and obj.controller==actor):
+        raise ValueError("Illegal or unreviewed removal target")
+    if "commander" in obj.card.supertypes:
+        raise NotImplementedError("Commander replacement choice must be reviewed")
+    if not kernel.legal_target(actor,target_id,effect.permitted_types):
+        raise ValueError("Target restrictions prevent this removal")
+    if effect.kind=="destroy":
+        return kernel.destroy(target_id)
+    if effect.kind=="exile":
+        return kernel.exile(target_id)
+    return kernel.bounce(target_id)
