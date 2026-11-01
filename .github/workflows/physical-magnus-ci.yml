@@ -7,6 +7,8 @@ on:
       - "commander_sim/**"
       - "decklists/magnus_physical_legal_trial_v1_1.txt"
       - "tools/run_physical_magnus_trials.py"
+      - "tests/test_physical_magnus.py"
+      - "run_all_tests.py"
   workflow_dispatch:
 permissions:
   contents: write
@@ -25,7 +27,8 @@ jobs:
       - name: Run shared physical-kernel bounded trial
         run: |
           python tools/run_physical_magnus_trials.py --seeds 40 --turns 6 --output physical-magnus-trials.json
-          python -m unittest tests.test_physical_magnus -v
+          python -m unittest discover -s tests -p test_physical_magnus.py -v
+          python run_all_tests.py
       - uses: actions/upload-artifact@v4
         with:
           name: physical-magnus-trials
