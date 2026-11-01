@@ -28,6 +28,7 @@ from .reviewed_tutor_cast import (eligible_reviewed_tutor_targets,
                                   cast_and_resolve_reviewed_tutor)
 from .reviewed_token_spells import (reviewed_token_spell,
                                    cast_and_resolve_reviewed_token_spell)
+from .bounded_trigger_effects import resolve_reviewed_spell_triggers
 from .template_resources import TemplateManaService
 
 ROOT = Path(__file__).resolve().parents[1]
@@ -147,6 +148,20 @@ def run_bounded_early_game(deck_key, *, seed=0, turns=6, mulligan="one-free", pr
     for turn in range(1, turns + 1):
         mana_service.clear()
         events = []
+        def approved_spell_triggers(ticket):
+            """Execute only vetted cast triggers after an actual source cast."""
+            source = kernel.get(ticket.object_id)
+            effects = resolve_reviewed_spell_triggers(
+                zones, 0, raw_by_name, event="spell_cast",
+                spell_types=frozenset(source.types))
+            return [{"type":"reviewed_trigger_resolved",
+                     "source":effect.card_name,
+                     "source_object_id":effect.source_id,
+                     "ability_slot":effect.slot_id,
+                     "created_token_ids":list(effect.created_token_ids),
+                     "drawn_ids":list(effect.drawn_ids),
+                     "fidelity":"bounded_no_opponent_priority"}
+                    for effect in effects]
         for obj in kernel.objects.values():
             if obj.controller == 0 and obj.zone == "battlefield" and obj.tapped:
                 obj.tapped = False
@@ -204,15 +219,19 @@ def run_bounded_early_game(deck_key, *, seed=0, turns=6, mulligan="one-free", pr
                 break
             _, _, name, oid, kind, cost, target = min(options)
             if kind == "tutor":
+                triggered=[]
                 result = cast_and_resolve_reviewed_tutor(
                     zones, 0, oid, raw_by_name, colors, mana_service,
-                    target_id=target)
+                    target_id=target,
+                    on_cast=lambda ticket: triggered.extend(
+                        approved_spell_triggers(ticket)))
                 if result is None:
                     raise AssertionError("Tutor payment changed without an action")
                 events.append({"type": "tutor_cast", "card": name,
                                "stack_object_id": result.source_stack_id,
                                "source_object_ids": list(result.paid_source_ids),
                                "fidelity": "bounded_reviewed_search"})
+                events.extend(triggered)
                 events.append({"type": "tutor_resolved", "card": name,
                                "source_graveyard_id": result.source_graveyard_id,
                                "target_name": result.target_name,
@@ -221,14 +240,18 @@ def run_bounded_early_game(deck_key, *, seed=0, turns=6, mulligan="one-free", pr
                                "fidelity": "bounded_reviewed_search"})
                 continue
             if kind == "token_spell":
+                triggered=[]
                 result = cast_and_resolve_reviewed_token_spell(
-                    zones, 0, oid, raw_by_name, colors, mana_service)
+                    zones, 0, oid, raw_by_name, colors, mana_service,
+                    on_cast=lambda ticket: triggered.extend(
+                        approved_spell_triggers(ticket)))
                 if result is None:
                     raise AssertionError("Token spell payment changed without an action")
                 events.append({"type": "token_spell_cast", "card": name,
                                "stack_object_id": result.source_stack_id,
                                "source_object_ids": list(result.paid_source_ids),
                                "fidelity": "bounded_reviewed_token_effect"})
+                events.extend(triggered)
                 events.append({"type": "token_spell_resolved", "card": name,
                                "source_graveyard_id": result.source_graveyard_id,
                                "created_token_ids": list(result.token_ids),
