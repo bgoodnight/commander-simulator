@@ -15,10 +15,12 @@ ROOT = Path(__file__).resolve().parents[1]
 if str(ROOT) not in sys.path:
     sys.path.insert(0, str(ROOT))
 
-from commander_sim.deck_fixtures import FIXTURES
+from commander_sim.deck_fixtures import FIXTURES, EXPERIMENTAL_FIXTURES
 from commander_sim.early_game_runner import run_bounded_early_game
 
 DECK_KEYS = tuple(f.key for f in FIXTURES)
+PHYSICAL_UI_KEYS = tuple(f.key for f in EXPERIMENTAL_FIXTURES if f.key == "mortarion_physical_final")
+APPROVED_KEYS = DECK_KEYS + PHYSICAL_UI_KEYS
 FORMAT = "commander-bounded-archive-v1"
 
 
@@ -75,7 +77,7 @@ def compact_run(run):
 
 def generate(deck_key, *, seeds=100, turns=6, start_seed=0,
              runner=run_bounded_early_game):
-    if deck_key not in DECK_KEYS:
+    if deck_key not in APPROVED_KEYS:
         raise ValueError("Unknown pinned deck")
     if type(seeds) is not int or not 1 <= seeds <= 1000:
         raise ValueError("Seeds must be 1..1000")
@@ -127,7 +129,7 @@ def write_archive(directory, deck_key, *, seeds=100, turns=6, start_seed=0,
 
 def main(argv=None):
     parser = argparse.ArgumentParser(description=__doc__)
-    parser.add_argument("--deck", required=True, choices=DECK_KEYS)
+    parser.add_argument("--deck", required=True, choices=APPROVED_KEYS)
     parser.add_argument("--seeds", type=int, default=100)
     parser.add_argument("--turns", type=int, default=6)
     parser.add_argument("--start-seed", type=int, default=0)
