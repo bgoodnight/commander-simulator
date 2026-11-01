@@ -18,9 +18,9 @@ class StaticPagesTests(unittest.TestCase):
         with patch("urllib.request.urlopen", side_effect=AssertionError("No network")):
             return build(self.destination, **kwargs)
 
-    def test_six_verified_decks_and_fixed_seed_observations_are_exported(self):
+    def test_verified_and_owned_physical_decks_keep_separate_observation_evidence(self):
         manifest=self.run_build()
-        self.assertEqual(manifest["decks"],6)
+        self.assertEqual(manifest["decks"],9)
         self.assertGreater(manifest["cards"],80)
         self.assertGreater(manifest["names"],30000)
         self.assertEqual(manifest["seeds"],list(DEFAULT_SEEDS))
@@ -36,7 +36,17 @@ class StaticPagesTests(unittest.TestCase):
             self.assertEqual(len(runs),100)
             self.assertEqual({r["seed"] for r in runs},set(range(100)))
         self.assertEqual(datasets["data_mode"],"precomputed_observation_only")
-        self.assertEqual(len(datasets["decks"]),6)
+        self.assertEqual(len(datasets["decks"]),9)
+        self.assertTrue({"magnus_physical_owned","magnus_physical_trial","mortarion_physical_final"}.issubset(approved))
+        owned=next(d for d in datasets["decks"] if d["key"]=="magnus_physical_owned")
+        trial=next(d for d in datasets["decks"] if d["key"]=="magnus_physical_trial")
+        self.assertEqual(owned["unverified_cards"],["Narset's Rebuke"])
+        self.assertEqual(results["magnus_physical_owned"],{})
+        self.assertEqual(len(owned["sideboard"]),9)
+        self.assertEqual(next(c["qty"] for c in owned["cards"] if c["name"]=="Island"),15)
+        self.assertEqual(next(c["qty"] for c in trial["cards"] if c["name"]=="Island"),16)
+        self.assertIn("Narset's Rebuke",{c["name"] for c in owned["cards"]})
+        self.assertNotIn("Narset's Rebuke",{c["name"] for c in trial["cards"]})
         for deck in datasets["decks"]:
             with self.subTest(deck=deck["key"]):
                 # Built-in last-updated is sourced from the committed deck
@@ -46,6 +56,10 @@ class StaticPagesTests(unittest.TestCase):
                 self.assertEqual(sum(e["qty"] for e in deck["cards"]),100)
                 self.assertIn(deck["commander_id"],datasets["cards"])
                 self.assertTrue(set(deck["modeled_rocks"]).issubset({c["oracle_id"] for c in deck["cards"]}))
+                if deck["key"]=="magnus_physical_owned":
+                    self.assertEqual(results[deck["key"]],{})
+                    self.assertIsNone(deck["snapshot_sha256"])
+                    continue
                 self.assertEqual(set(results[deck["key"]]),set(map(str,DEFAULT_SEEDS)))
                 for seed,record in results[deck["key"]].items():
                     self.assertEqual(record["seed"],int(seed))
