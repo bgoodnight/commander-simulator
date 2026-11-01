@@ -13,6 +13,12 @@ class NamedCoverageTests(unittest.TestCase):
         self.assertEqual(report["deck_card_entries"],448)
         self.assertEqual(report["distinct_oracle_cards"],299)
         self.assertEqual(report["full_card_coverage_confirmed"],0)
+        self.assertEqual(sum(row["count"] for row in
+            report["unregistered_by_card_type"].values()),
+            report["without_registered_suboperations"])
+        self.assertEqual(sorted(name for row in
+            report["unregistered_by_card_type"].values()
+            for name in row["names"]),report["unregistered_names"])
         self.assertEqual(
             report["with_reviewed_suboperations"]+
             report["without_registered_suboperations"],299)
