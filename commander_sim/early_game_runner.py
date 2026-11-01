@@ -286,7 +286,7 @@ def run_bounded_early_game(deck_key, *, seed=0, turns=6, mulligan="one-free", pr
                 phase_enchantment = reviewed_phase_permanent(name, raw) or reviewed_breach(name, raw)
                 sacrifice_artifact = reviewed_sacrifice_artifact(name, raw)
                 entering = approved_enter_hand_cast(name)
-                ramp = reviewed_ramp(name,raw)
+                ramp = reviewed_ramp(name,raw) if "land" not in obj.types else None
                 ritual = reviewed_ritual(name,raw)
                 tutor = reviewed_tutor(name, raw)
                 eligible = (eligible_reviewed_tutor_targets(zones, 0, name, raw_by_name)
