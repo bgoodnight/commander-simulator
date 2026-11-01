@@ -95,10 +95,12 @@ def activate_land_ramp(zones, seat, source_id, catalog, mana_service):
         same_type=(obj.card.name == "Myriad Landscape"))
     if not targets:
         return None
-    payment = mana_service.plan(seat, rule.activation_cost)
+    payment = mana_service.plan(seat, rule.activation_cost,
+                                excluded_source_ids=(source_id,))
     if payment is None or source_id in payment.source_ids:
         return None
-    committed = mana_service.pay(seat, rule.activation_cost)
+    committed = mana_service.pay(seat, rule.activation_cost,
+                                 excluded_source_ids=(source_id,))
     if committed is None or source_id in committed.source_ids:
         raise AssertionError("Ramp activation payment changed")
     if rule.tap_source:
