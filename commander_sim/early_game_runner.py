@@ -333,7 +333,7 @@ def run_bounded_early_game(deck_key, *, seed=0, turns=6, mulligan="one-free", pr
                     kernel._dirty()
             events.append({"type": kind + "_resolved", "card": name,
                            "object_id": resolved_id, "fidelity": "limited_generic_resolution"})
-            if approved_enter_hand_cast(name):
+            if approved_enter_hand_cast(name) and not reviewed_enter_rule(name,raw_by_name[name]).only_from_graveyard:
                 rule = reviewed_enter_rule(name, raw_by_name[name])
                 # The pilot explicitly chooses the Servo fabricate mode.
                 choice = "servo" if rule.operation == "fabricate_one" else None
