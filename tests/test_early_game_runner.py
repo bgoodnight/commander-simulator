@@ -22,7 +22,7 @@ class BoundedEarlyGameTests(unittest.TestCase):
         self.assertEqual(len(result["state_snapshots"]), 6)
         self.assertTrue(all(state["source"] == "authoritative_game"
                             for state in result["state_snapshots"]))
-        self.assertIn("no modeled combat", result["limits"])
+        self.assertIn("combat, opponents", result["limits"])
 
     def test_creature_casts_have_actual_source_and_resolution_events(self):
         # Sweep reproducible random hands; a reviewed subset must actually cast.
