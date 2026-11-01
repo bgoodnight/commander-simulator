@@ -41,3 +41,21 @@ test('theme art and matching card names open the correct card details',()=>{
   assert.equal(link.tag,'button');link.handlers.click();
   assert.deepEqual(opened,['z','z']);
 });
+test('mana icons preserve hybrid symbols, missing costs, and offline fallback',()=>{
+  class Node {
+    constructor(tag){this.tag=tag;this.children=[];this.attrs={};this.classList={add(){}}}
+    appendChild(node){this.children.push(node);return node}
+    setAttribute(k,v){this.attrs[k]=v}
+    replaceWith(node){this.replacement=node}
+  }
+  const ctx={location:{pathname:'/index.html'},window:{},localStorage:{getItem:()=>null},document:{createElement:t=>new Node(t)}};
+  vm.createContext(ctx);vm.runInContext(code,ctx);
+  const row=vm.runInContext("manaSymbols('{2}{U}{W/P}{X}')",ctx);
+  assert.deepEqual(row.children.map(x=>x.alt),['{2}','{U}','{W/P}','{X}']);
+  assert.equal(row.children[2].src,'https://svgs.scryfall.io/card-symbols/WP.svg');
+  row.children[2].onerror();assert.equal(row.children[2].replacement.textContent,'{W/P}');
+  assert.equal(vm.runInContext("manaSymbols('')",ctx).children[0].textContent,'—');
+  const identity=vm.runInContext("commanderIdentity({color_identity:['R','U']})",ctx);
+  assert.equal(identity.children[1].attrs['aria-label'],'blue, red color identity');
+  assert.equal(vm.runInContext('commanderIdentity({color_identity:[]})',ctx).children[1].textContent,'Colorless');
+});

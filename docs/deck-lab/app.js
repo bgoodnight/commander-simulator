@@ -134,6 +134,41 @@ function imageNode(card,art=true,className=""){
   };
   return img;
 }
+// Use Scryfall's public symbol artwork; retain the exact printed text if offline.
+function manaSymbols(value){
+  const wrap=el("span",null,"mana-symbols"),text=String(value||"");
+  if(!text){wrap.appendChild(el("span","—","mana-empty"));return wrap}
+  const matches=[...text.matchAll(/\{([^{}]+)\}/g)];
+  if(!matches.length){wrap.appendChild(el("span",text));return wrap}
+  let end=0;
+  for(const match of matches){
+    if(match.index>end)wrap.appendChild(el("span",text.slice(end,match.index)));
+    const raw=match[0],token=match[1].toUpperCase();
+    if(/^[A-Z0-9/]{1,12}$/.test(token)){
+      const img=el("img",null,"mana-symbol");
+      img.src="https://svgs.scryfall.io/card-symbols/"+token.replace(/\//g,"")+".svg";
+      img.alt=raw;img.title=raw;img.loading="lazy";img.referrerPolicy="no-referrer";
+      img.onerror=()=>img.replaceWith(el("span",raw,"mana-symbol-fallback"));
+      wrap.appendChild(img);
+    }else wrap.appendChild(el("span",raw,"mana-symbol-fallback"));
+    end=match.index+raw.length;
+  }
+  if(end<text.length)wrap.appendChild(el("span",text.slice(end)));
+  return wrap;
+}
+function commanderIdentity(card){
+  const row=el("div",null,"commander-identity"),identity=card?.color_identity;
+  if(!Array.isArray(identity))return row;
+  const labels={W:"white",U:"blue",B:"black",R:"red",G:"green"};
+  const colors=[..."WUBRG"].filter(color=>identity.includes(color));
+  row.appendChild(el("span","Color identity","identity-label"));
+  if(colors.length){
+    const icons=manaSymbols(colors.map(color=>"{"+color+"}").join(""));
+    icons.setAttribute("aria-label",colors.map(color=>labels[color]).join(", ")+" color identity");
+    row.appendChild(icons);
+  }else row.appendChild(el("span","Colorless","identity-colorless"));
+  return row;
+}
 function selectedDeck(){return data.decks.find(d=>d.key===selected);}
 function commanderCard(deck){return cardForId(deck.commander_id);}
 function svg(tag,attrs={}){
@@ -356,6 +391,7 @@ function renderOverview(){
   portrait.setAttribute("aria-label","View "+deck.commander+" card details");
   portrait.appendChild(imageNode(c,true,"big-portrait"));
   portrait.addEventListener("click",()=>showCard(deck.commander_id));art.appendChild(portrait);
+  art.appendChild(commanderIdentity(c));
   const metrics=$("overview-metrics");clear(metrics);
   const cards=displayDeckCards();
   const facts=deckFacts();
@@ -450,7 +486,8 @@ function renderLibrary(){
     btn.type="button";btn.addEventListener("click",()=>showCard(item.oracle_id));
     col.appendChild(btn);
     tr.append(col,el("td",card?.type_line||"Unknown"));
-    tr.appendChild(el("td",card?.mana_cost||"—"));root.appendChild(tr);
+    const mana=el("td");mana.appendChild(manaSymbols(card?.mana_cost));
+    tr.appendChild(mana);root.appendChild(tr);
   }
   if(!rows.length){
     const tr=el("tr"),td=el("td","No matching cards.");td.colSpan=4;tr.appendChild(td);root.appendChild(tr);
@@ -462,8 +499,10 @@ function showCard(id){
   cardDialogReturnFocus=document.activeElement;
   const box=$("modal-art");clear(box);box.appendChild(imageNode(card,!card.image&&!!card.art));
   $("card-dialog-title").textContent=card.name;
-  $("modal-meta").textContent=[card.type_line,card.mana_cost?"Mana cost "+card.mana_cost:null,
-    "Mana value "+card.mana_value,card.power!=null&&card.toughness!=null?card.power+"/"+card.toughness:null].filter(Boolean).join(" · ");
+  $("modal-meta").textContent=[card.type_line,"Mana value "+card.mana_value,
+    card.power!=null&&card.toughness!=null?card.power+"/"+card.toughness:null].filter(Boolean).join(" · ");
+  const cost=$("modal-cost");clear(cost);
+  cost.append(el("span","Mana cost","modal-cost-label"),manaSymbols(card.mana_cost));
   $("modal-oracle").textContent=card.oracle_text||"No Oracle text in the saved record.";
   $("modal-scryfall").href=card.scryfall||"https://scryfall.com/";
   $("dialog-backdrop").hidden=false;$("modal-close").focus();
