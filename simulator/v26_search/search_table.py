@@ -8,6 +8,7 @@ from personal_tutor_table import PersonalTutorTable
 from medallion_table import COLORS
 from rules import Cost
 from simulation import Action
+from commander_sim.legacy_tutor_ops import resolve_historical_search
 
 MERCHANT='Merchant Scroll'
 SOLVE='Solve the Equation'
@@ -36,26 +37,6 @@ class SearchTable(PersonalTutorTable):
         return self.adjust_named_action_cost(action)
 
     def resolve_search(self,table,action):
-        seat=action.actor; ids=self.zones.ids(seat,'library')
-        if action.source==MERCHANT:
-            # An unknown printed color cannot safely be treated as nonblue.
-            candidates=[oid for oid in ids if 'instant' in self.rules.get(oid).types]
-            if any(self.rules.get(oid).card.name not in COLORS for oid in candidates):
-                raise NotImplementedError('Merchant Scroll requires known instant colors')
-            eligible=tuple(oid for oid in candidates if 'U' in COLORS[self.rules.get(oid).card.name])
-            request_kind='merchant_scroll'
-        elif action.source==SOLVE:
-            eligible=tuple(oid for oid in ids if self.rules.get(oid).types & {'instant','sorcery'})
-            request_kind='solve_equation'
-        else:raise ValueError('Unknown search spell')
-        request=self.selection.request(request_kind,seat,eligible)
-        ranked=sorted(request.cards,key=lambda c:-self.selection.score(seat,c))
-        default=ranked[0].object_id if ranked else None
-        policy=getattr(self,'tutor_policy',None)
-        chosen=policy(request) if policy else default
-        if chosen is not None and chosen not in eligible:raise ValueError('Search must choose an eligible card or fail to find')
-        name=self.rules.get(chosen).card.name if chosen is not None else None
-        new_id=self.zones.move(chosen,'hand') if chosen is not None else None
-        self.zones.shuffle(seat)
-        self.tutor_events.append((request_kind,seat,new_id,name))
-        self.note(f'    {action.source.upper()} P{seat}: revealed {name}, put into hand, then shuffled.')
+        keys={MERCHANT:'merchant_scroll', SOLVE:'solve_equation'}
+        if action.source not in keys:raise ValueError('Unknown search spell')
+        return resolve_historical_search(self,action.actor,keys[action.source],printed_colors=COLORS)
