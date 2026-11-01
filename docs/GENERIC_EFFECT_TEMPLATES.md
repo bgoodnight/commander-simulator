@@ -59,6 +59,8 @@ Merchant Scroll (blue instant -> hand), Solve the Equation (instant/sorcery ->
 hand), Fabricate (artifact -> hand), Step Through wizardcycling (Wizard subtype
 -> hand) and Spellseeker (instant/sorcery with MV <= 2 -> hand).
 
+Five of these tutor profiles now use the **same reviewed `TUTORS` registrations** as the new backend (Mystical Tutor, Merchant Scroll, Solve the Equation, Fabricate and Spellseeker): they do not maintain duplicate type, color, mana-value or destination configuration. Personal Tutor and wizardcycling retain historical-only declarations pending separate Oracle-verified promotion.
+
 The v17, v25, v26, v27, v28 and premium v31 table handlers now call this
 single implementation. They still own spell casting, timing, priority and
 Spellseeker/cycling triggers; the new resolver owns **only** eligibility,
