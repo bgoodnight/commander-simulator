@@ -129,7 +129,7 @@ class StaticPagesTests(unittest.TestCase):
         css=(self.destination/"style.css").read_text(encoding="utf-8")
         for needle in ('id="commander-medallion"', 'id="commander-picker"',
                        'id="active-commander"', 'id="active-deck-name"',
-                       'id="deck-version-select"', 'id="new-version-button"',
+                       'id="global-deck-select"', 'id="new-version-button"',
                        'id="save-local"', 'id="draft-title"'):
             self.assertIn(needle,html)
         for needle in ("latestSelectionForCommander", "loadDeckSelection",
@@ -138,6 +138,10 @@ class StaticPagesTests(unittest.TestCase):
                        "selectedVersionId", "versionById", "saveVersion"):
             self.assertIn(needle,script)
         self.assertIn("No cached simulations for",script)
+        self.assertIn('class="deck-selection-row"',html)
+        self.assertNotIn('id="deck-version-select"',html)
+        self.assertIn(".deck-selection-row .global-deck-select",css)
+        self.assertIn("deckselector-fix-20261101-2",html)
         self.assertIn(".compact-selection",css)
         self.assertIn(".commander-picker",css)
 
