@@ -170,3 +170,33 @@ Still pending: multi-card token-trigger **declaration registration** and
 stable ability-slot dispatcher, arbitrary graveyard-to-hand/battlefield
 recursion with actual cost/permission/replacement handling, complex delayed
 effects, and the first multi-deck cross-color turn-driver integration.
+
+## M2.10 — ability-slot composition core
+
+`commander_sim/ability_composition.py` adds reviewed immutable
+`AbilitySlot` / `AbilityHandler` / `ComposedCard` records and an
+exact-first fidelity selector. A card's Oracle identity and source text are
+pinned, but individual printed abilities have stable distinct IDs.
+Each slot's simplified implementation can be superseded by an exact
+operation **of the same typed effect family** with more accurate
+parameters; other slots remain untouched.
+
+The first production integration uses `inspected_search_card` to assemble
+the five registered reviewed tutor abilities. The historical
+`legacy_tutor_ops` registry retrieves each tutor's exact-supported
+**historical search suboperation** from the slot resolver. Original
+selection, physical card IDs, shuffle, stack and trigger ownership are
+unchanged. `inspected_rock_card` creates separate mana and unsupported
+sacrifice/draw slots for Mind Stone and Commander's Sphere, rather than
+pretending those cards' whole rules text is implemented. The historical
+and bounded mana adapters still execute their previously reviewed
+source-based activation logic.
+
+An `AbilityDispatcher` supplies an execution contract for future live
+kernel bindings and records provenance only after the host callback
+succeeds; `TriggerSubscriptions` suppresses duplicate registrations
+by physical source instance/slot/event hook, with cleanup on departure.
+These two components are tested but **not yet attached to all v35 turn
+events**. Generic triggers, replacement effects and new-card permissions
+must not be assumed executable. See
+[the progressive ability composition specification](ABILITY_COMPOSITION_ARCHITECTURE.md).
