@@ -25,8 +25,8 @@ class CommittedCreatureCast:
     unresolved_later_abilities: tuple[str, ...]
 
 
-def cast_reviewed_permanent(zones, seat, object_id, review, commander_colors, *,
-                            mana_service=None, permanent_type="creature"):
+def _cast_reviewed_card(zones, seat, object_id, review, commander_colors, *,
+                        mana_service=None, card_type="creature"):
     """Commit a reviewed creature or artifact's cost and cast into SAME zones.
 
     For legacy basic-only calls there is no floating mana. With the optional
@@ -34,8 +34,8 @@ def cast_reviewed_permanent(zones, seat, object_id, review, commander_colors, *,
     until that turn's main-phase boundary. No unreviewed printed abilities
     execute by entering the battlefield.
     """
-    if permanent_type not in {"creature", "artifact"}:
-        raise ValueError("Unreviewed permanent type")
+    if card_type not in {"creature", "artifact", "instant", "sorcery"}:
+        raise ValueError("Unreviewed spell/permanent type")
     if not isinstance(review, ReviewedCreatureCast) or not review.entry_and_cast_safe:
         raise ValueError("Missing reviewed entry/cast safety declaration")
     if not review.card_id or not review.mana_cost:
@@ -49,7 +49,7 @@ def cast_reviewed_permanent(zones, seat, object_id, review, commander_colors, *,
     card = obj.card
     if (obj.owner != seat or obj.controller != seat or obj.zone != "hand"
             or card.card_id != review.card_id or card.coverage == "unimplemented"
-            or card.types != frozenset({permanent_type})):
+            or card.types != frozenset({card_type})):
         raise ValueError("Not an approved reviewed permanent")
     parse_fixed_mana_cost(review.mana_cost)
     if mana_service is not None and mana_service.kernel is not kernel:
@@ -88,6 +88,30 @@ def cast_reviewed_permanent(zones, seat, object_id, review, commander_colors, *,
         raise
     return CommittedCreatureCast(ticket, source_ids,
                                  review.unresolved_later_abilities)
+
+
+def cast_reviewed_permanent(zones, seat, object_id, review, commander_colors, *,
+                            mana_service=None, permanent_type="creature"):
+    """Backward-compatible permanent cast: does not resolve printed abilities."""
+    if permanent_type not in {"creature", "artifact"}:
+        raise ValueError("Expected an approved permanent type")
+    return _cast_reviewed_card(
+        zones, seat, object_id, review, commander_colors,
+        mana_service=mana_service, card_type=permanent_type)
+
+
+def cast_reviewed_spell(zones, seat, object_id, review, commander_colors, *,
+                        mana_service=None, spell_type="sorcery"):
+    """Pay, tap real sources and put one reviewed instant/sorcery on stack.
+
+    Caller must still provide a separately reviewed effect when it resolves.
+    No spell casts are authorized from card name or raw Oracle text.
+    """
+    if spell_type not in {"instant", "sorcery"}:
+        raise ValueError("Expected instant or sorcery")
+    return _cast_reviewed_card(
+        zones, seat, object_id, review, commander_colors,
+        mana_service=mana_service, card_type=spell_type)
 
 
 def cast_reviewed_creature(zones, seat, object_id, review, commander_colors, *,
