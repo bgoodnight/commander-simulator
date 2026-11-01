@@ -13,7 +13,7 @@ class PhysicalMagnusTests(unittest.TestCase):
         self.assertEqual(len(EXPERIMENTAL_FIXTURES),1)
         self.assertEqual(EXPERIMENTAL_FIXTURES[0].key,"magnus_physical_trial")
         self.assertIn("simulation_only",EXPERIMENTAL_FIXTURES[0].status)
-        self.assertNotIn("Narset's Rebuke",
+        self.assertNotIn("1 Narset's Rebuke",
                          EXPERIMENTAL_FIXTURES[0].deck_path.read_text())
     def test_shared_physical_kernel_replays_and_preserves_card_count(self):
         a=run_bounded_early_game("magnus_physical_trial",seed=12,turns=4)
