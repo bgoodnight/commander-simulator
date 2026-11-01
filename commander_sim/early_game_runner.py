@@ -148,7 +148,7 @@ def run_bounded_early_game(deck_key, *, seed=0, turns=6, mulligan="one-free", pr
         for _ in range(quantity):
             zones.add(definition, 0, "command" if section == "Commander" else "library")
 
-    mana_service = TemplateManaService(kernel, raw_by_name, colors)
+    mana_service = TemplateManaService(kernel, raw_by_name, colors, zones=zones)
     life = KernelLife(kernel)
     phase_engine = ReviewedPhaseEngine(zones, life, raw_by_name)
     death_engine = ReviewedDeathEngine(zones, life, raw_by_name)
