@@ -52,6 +52,7 @@ from .reviewed_sacrifice_actions import (
     activate_reviewed_sacrifice)
 from .template_resources import TemplateManaService
 from .resource_development import assess_resources, choose_tutor_target
+from .resource_pilot import choose_token_mana_sacrifice
 from .reviewed_ramp import reviewed_ramp, reviewed_ritual, cast_ritual, activate_land_ramp, resolve_enter_ramp
 from .hand_cleanup import cleanup_hand
 from .reviewed_escape import (reviewed_breach, escape_candidates,
@@ -270,6 +271,41 @@ def run_bounded_early_game(deck_key, *, seed=0, turns=6, mulligan="one-free", pr
                            "entered_tapped":bool(kernel.get(new_id).tapped),
                            "unsupported_abilities":list(land_review.ignored) if land_review else []})
         resource_start = assess_resources(kernel, mana_service, 0).__dict__
+        # Main-phase resource policy: trade only expendable creature tokens for
+        # mana when a reviewed hand spell is blocked but plausibly reachable.
+        def supported_mana_payoff(obj):
+            name = obj.card.name
+            raw = raw_by_name.get(name)
+            return bool(raw and (
+                reviewed_creature(deck_key,name,raw)
+                or reviewed_rock(name,raw,colors) is not None
+                or reviewed_phase_permanent(name,raw)
+                or approved_enter_hand_cast(name)
+                or reviewed_ramp(name,raw) is not None))
+        for _ in range(4):
+            selected = choose_token_mana_sacrifice(
+                zones,0,raw_by_name,mana_service,
+                supported_spell=supported_mana_payoff,
+                max_sacrifices=4)
+            if selected is None:
+                break
+            source_id,victim_id = selected
+            source_name=kernel.get(source_id).card.name
+            mode=SACRIFICE_MODES[source_name]
+            outcome=activate_reviewed_sacrifice(
+                zones,life,source_id,victim_id,raw_by_name,
+                mana_service=mana_service,turn=turn,tap_ready=True,
+                death_engine=death_engine,
+                mana_color="B" if mode.action=="any_color_mana" else None)
+            if outcome is None:
+                break
+            events.append({"type":"reviewed_precast_mana_sacrifice",
+                           "card":outcome.source_name,
+                           "mana_added":list(outcome.mana_added),
+                           "death_trigger_count":outcome.death_trigger_count,
+                           "victim_object_id":victim_id,
+                           "fidelity":"bounded_resource_sequencing"})
+        resource_after_precast = assess_resources(kernel, mana_service, 0).__dict__
         copied_this_turn=set()
         # Reuse the same source-paid action for approved artifacts and creatures.
         # Prefer affordable ramp rocks before creatures: a limited pilot policy.
@@ -538,6 +574,8 @@ def run_bounded_early_game(deck_key, *, seed=0, turns=6, mulligan="one-free", pr
                     or source.card.name not in SACRIFICE_MODES):
                 continue
             mode=SACRIFICE_MODES[source.card.name]
+            if mode.action in {'colorless_mana','any_color_mana','black_mana_by_value'}:
+                continue  # no speculative late sacrifice after casting window
             if mode.tap and (source.tapped or
                 ("creature" in source.types
                  and entered_on_turn.get(source.object_id,0)>=turn
@@ -824,6 +862,7 @@ def run_bounded_early_game(deck_key, *, seed=0, turns=6, mulligan="one-free", pr
                                   for o in kernel.objects.values()),
             "floating_at_end_of_main": floating_end,
             "resource_start": resource_start,
+            "resource_after_precast": resource_after_precast,
             "resource_end": resource_end,
             "life_totals":dict(life.kernel.life_totals),
             "unsupported_cards_in_hand": sorted(
