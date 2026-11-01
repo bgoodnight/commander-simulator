@@ -25,6 +25,7 @@ from commander_sim.deck_lab_api import deck_detail
 from commander_sim.card_name_catalog import read_name_catalog, DEFAULT_NAME_CATALOG
 from commander_sim.observation import observe
 from commander_sim.reviewed_rocks import reviewed_rock
+from tools.publish_simulation_archive import validate_index
 
 DEFAULT_SEEDS = (0, 1, 2, 3, 4, 5, 7, 11, 21, 42, 99)
 
@@ -75,7 +76,7 @@ def card_record(card):
 
 
 def build(output, *, catalog_path=SHARED_CATALOG, name_catalog_path=DEFAULT_NAME_CATALOG,
-          seeds=DEFAULT_SEEDS):
+          seeds=DEFAULT_SEEDS, archive_source=None):
     output = Path(output)
     if output.resolve() in (ROOT.resolve(), (ROOT / "web").resolve()):
         raise ValueError("Build output must be a separate directory")
@@ -161,6 +162,23 @@ def build(output, *, catalog_path=SHARED_CATALOG, name_catalog_path=DEFAULT_NAME
     write_json("decks.json", dataset)
     write_json("observations.json", observations)
     write_json("names.json", names)
+    # Optional, separately versioned simulations. Never infer game results from
+    # observations or overwrite existing UI cache files with new run formats.
+    archive_source = (ROOT / "web/pages/data/simulation-archive"
+                      if archive_source is None else Path(archive_source))
+    archive_files = []
+    if (archive_source / "manifest.json").is_file():
+        index = validate_index(archive_source)
+        public_root = output / "simulation-data"
+        for release in index["releases"]:
+            for entry in release["decks"].values():
+                archive_files.extend((entry["manifest"], entry["runs"]))
+        archive_files = ["manifest.json", *sorted(set(archive_files))]
+        for relative in archive_files:
+            target = public_root / relative
+            target.parent.mkdir(parents=True, exist_ok=True)
+            shutil.copy2(archive_source / relative, target)
+        validate_index(public_root)
     # Results are precomputed separately and must match the exported deck revisions.
     batches = json.loads((static / "data" / "bounded-batches.json").read_text(encoding="utf-8"))
     for key, batch in batches["decks"].items():
@@ -186,7 +204,8 @@ def build(output, *, catalog_path=SHARED_CATALOG, name_catalog_path=DEFAULT_NAME
                          for name in ("decks.json", "observations.json", "names.json", "bounded-batches.json",
                                       "index.html", "summary.html", "results.html", "editor.html",
                                       "app.js", "results_insights.js", "style.css",
-                                      *(f"bounded-runs-{key}.json" for key in batches["decks"]))},
+                                      *(f"bounded-runs-{key}.json" for key in batches["decks"]),
+                                      *(f"simulation-data/{relative}" for relative in archive_files))},
         "note": "Published data includes only approved six canonical decks and fixed-seed observations.",
     }
     write_json("build-manifest.json", manifest)
