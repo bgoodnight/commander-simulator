@@ -3,7 +3,8 @@ import unittest
 from types import SimpleNamespace as NS
 
 from commander_sim.live_trigger_bridge import (
-    BARAL_LOOT, MAGECRAFT_DRAW, LiveTriggerBridge, TRIGGER_CARDS,
+    BARAL_LOOT, MAGECRAFT_DRAW, PYROMANCER_TOKEN, KILN_TREASURE,
+    TriggerToken, LiveTriggerBridge, TRIGGER_CARDS,
 )
 
 
@@ -21,7 +22,14 @@ class LiveTriggerBridgeTests(unittest.TestCase):
             (("optional_loot","spell_countered_by"),))
         self.mage=make_object(22,"named:Archmage Emeritus","Archmage Emeritus",
             (("draw","spell_cast"),("draw","spell_copied")))
-        self.kernel=NS(objects={11:self.baral,22:self.mage})
+        self.pyro=make_object(31,"named:Young Pyromancer","Young Pyromancer",
+            (("create_token","spell_cast"),))
+        self.kiln=make_object(41,"named:Storm-Kiln Artist","Storm-Kiln Artist",
+            (("create_token","spell_cast"),("create_token","spell_copied")))
+        for obj,token in ((self.pyro,"elemental_1_1"),(self.kiln,"treasure")):
+            obj.card.abilities=tuple(NS(kind=a.kind,op=a.op,event=a.event,
+                args=(("token_id",token),)) for a in obj.card.abilities)
+        self.kernel=NS(objects={11:self.baral,22:self.mage,31:self.pyro,41:self.kiln})
         self.bridge=LiveTriggerBridge(self.kernel)
 
     def test_reviewed_sources_have_pinned_ids_and_operations(self):
@@ -30,7 +38,8 @@ class LiveTriggerBridgeTests(unittest.TestCase):
         self.assertEqual(MAGECRAFT_DRAW.oracle_id,
                          "8305d576-21d8-4ce7-8eda-a7cd9793aca5")
         self.assertEqual(set(TRIGGER_CARDS),
-            {"named:Baral, Chief of Compliance","named:Archmage Emeritus"})
+            {"named:Baral, Chief of Compliance","named:Archmage Emeritus",
+             "named:Young Pyromancer","named:Storm-Kiln Artist"})
 
     def test_registration_is_idempotent_for_same_object_and_event(self):
         self.assertTrue(self.bridge.register(self.baral))
@@ -85,6 +94,47 @@ class LiveTriggerBridgeTests(unittest.TestCase):
             raise ValueError("Illegal discard")
         with self.assertRaises(ValueError):
             self.bridge.execute(item,rejected)
+        self.assertEqual(self.bridge.invocations,[])
+
+    def test_pinned_token_slots_and_two_kiln_hooks(self):
+        self.assertEqual(PYROMANCER_TOKEN.slots[0].declaration.token_id,"elemental_1_1")
+        self.assertEqual(KILN_TREASURE.slots[0].declaration.token_id,"treasure")
+        self.assertTrue(self.bridge.register(self.pyro))
+        self.assertTrue(self.bridge.register(self.kiln))
+        self.assertEqual(len([s for s in self.bridge.subscriptions._live if s[0]==31]),1)
+        self.assertEqual(len([s for s in self.bridge.subscriptions._live if s[0]==41]),2)
+
+    def test_token_trigger_rejects_mismatched_token_or_quantity(self):
+        self.bridge.register(self.pyro)
+        wrong=NS(source_id=31,op="create_token",
+                 args=(("token_id","treasure"),),quantity=1)
+        with self.assertRaises(ValueError):
+            self.bridge.execute(wrong,lambda _:None)
+        doubled=NS(source_id=31,op="create_token",
+                   args=(("token_id","elemental_1_1"),),quantity=2)
+        with self.assertRaises(ValueError):
+            self.bridge.execute(doubled,lambda _:None)
+        self.assertEqual(self.bridge.invocations,[])
+
+    def test_token_triggers_commit_each_stack_frame_and_provenance_once(self):
+        self.bridge.register(self.kiln)
+        item=NS(source_id=41,op="create_token",
+                args=(("token_id","treasure"),),quantity=1)
+        seen=[]
+        for _ in range(2):
+            self.assertTrue(self.bridge.execute(item,lambda x:seen.append(x.token_id)))
+        self.assertEqual(seen,["treasure","treasure"])
+        self.assertEqual(len(self.bridge.invocations),2)
+        self.assertEqual(len(self.bridge.subscriptions._live),2)
+
+    def test_unreviewed_token_source_cannot_claim_existing_registration(self):
+        fake=make_object(50,"named:Young Pyromancer","Young Pyromancer",
+            (("create_token","spell_cast"),))
+        fake.card.abilities=(NS(kind="triggered",op="create_token",
+                               event="spell_cast",args=(("token_id","treasure"),)),)
+        self.kernel.objects[50]=fake
+        self.assertFalse(self.bridge.register(fake))
+        self.assertFalse(self.bridge.queued(NS(source_id=50,op="create_token")))
         self.assertEqual(self.bridge.invocations,[])
 
     def test_unknown_or_wrong_card_identity_never_registers(self):
