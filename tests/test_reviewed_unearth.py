@@ -8,6 +8,7 @@ from commander_sim.reviewed_unearth import (
     UNEARTH,reviewed_unearth,activate_reviewed_unearth,
     expire_reviewed_unearth)
 from commander_sim.template_resources import TemplateManaService
+from commander_sim.kernel_life import KernelLife
 
 
 class ReviewedUnearthTests(unittest.TestCase):
@@ -92,6 +93,46 @@ class ReviewedUnearthTests(unittest.TestCase):
                 self.assertIn(old,self.zones.ids(0,"graveyard"))
                 self.assertEqual(self.mana.floating(),before)
                 self.assertFalse(self.kernel.unearth_pending)
+
+    def test_royal_warden_unearth_resolves_tapped_necron_etb_tokens(self):
+        self.swamp(4)
+        life=KernelLife(self.kernel)
+        old=self.add("Royal Warden","graveyard")
+        result=activate_reviewed_unearth(
+            self.zones,0,old,self.catalog,self.mana,
+            sorcery_window=True,life=life)
+        self.assertEqual(result.enter_result.operation,"necron_two")
+        self.assertEqual(len(result.enter_result.token_ids),2)
+        self.assertTrue(all(self.kernel.get(t).tapped
+            for t in result.enter_result.token_ids))
+        self.assertTrue(self.zones.assert_consistent())
+
+    def test_triarch_unearth_draws_two_and_loses_two(self):
+        self.swamp(5)
+        life=KernelLife(self.kernel)
+        self.add("One","library",types=("instant",))
+        self.add("Two","library",types=("instant",))
+        old=self.add("Triarch Praetorian","graveyard")
+        result=activate_reviewed_unearth(
+            self.zones,0,old,self.catalog,self.mana,
+            sorcery_window=True,life=life)
+        self.assertEqual(len(result.enter_result.drawn_ids),2)
+        self.assertEqual(life.total(0),38)
+        self.assertTrue(self.zones.assert_consistent())
+
+    def test_lokhust_self_sacrifice_after_unearth_is_exiled_by_replacement(self):
+        self.swamp(8)
+        life=KernelLife(self.kernel)
+        old=self.add("Lokhust Heavy Destroyer","graveyard")
+        result=activate_reviewed_unearth(
+            self.zones,0,old,self.catalog,self.mana,
+            sorcery_window=True,life=life,enter_choice={0:"source"})
+        self.assertEqual(result.enter_result.sacrificed_ids,
+                         (result.permanent_id,))
+        self.assertNotIn(result.permanent_id,self.kernel.objects)
+        self.assertEqual(self.zones.ids(0,"graveyard"),())
+        self.assertEqual(len(self.zones.ids(0,"exile")),1)
+        self.assertFalse(self.kernel.unearth_pending)
 
     def test_insufficient_mana_and_wrong_timing_preserve_graveyard(self):
         old=self.add("Chronomancer","graveyard")
