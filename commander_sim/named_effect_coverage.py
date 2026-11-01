@@ -60,6 +60,7 @@ def named_effect_coverage(fixtures=FIXTURES):
     requested=defaultdict(set)
     by_deck={}
     all_oracles={}
+    oracle_types={}
     for fixture in fixtures:
         data=json.loads(fixture.snapshot_path.read_text(encoding="utf-8"))
         if data.get("problems") or not isinstance(data.get("cards"),list):
@@ -72,6 +73,15 @@ def named_effect_coverage(fixtures=FIXTURES):
             if not oracle:
                 raise ValueError("Missing Oracle ID")
             all_oracles.setdefault(oracle,name)
+            # Printed type classification only; no inferred rules support.
+            type_line=row.get("type_line","")
+            if not type_line and row.get("card_faces"):
+                type_line=row["card_faces"][0].get("type_line","")
+            type_words=set(type_line.split(" — ",1)[0].lower().split())
+            category=next((kind for kind in (
+                "creature","instant","sorcery","artifact","enchantment","land")
+                if kind in type_words),"other")
+            oracle_types.setdefault(oracle,category)
             registered=tuple(sorted({kind for kind,source_id
                 in REGISTRATIONS.get(name,()) if source_id==oracle}))
             requested[oracle].update(registered)
@@ -89,6 +99,14 @@ def named_effect_coverage(fixtures=FIXTURES):
         }
     remaining={all_oracles[oracle]:oracle for oracle,operations in requested.items()
                if not operations}
+    unregistered_by_card_type={}
+    for oracle,operations in requested.items():
+        if not operations:
+            category=oracle_types[oracle]
+            unregistered_by_card_type.setdefault(category,[]).append(all_oracles[oracle])
+    unregistered_by_card_type={
+        kind:{"count":len(names),"names":sorted(names)}
+        for kind,names in sorted(unregistered_by_card_type.items())}
     by_operation={}
     for oracle,kinds in requested.items():
         for kind in kinds:
@@ -102,6 +120,7 @@ def named_effect_coverage(fixtures=FIXTURES):
         "full_card_coverage_confirmed":0,
         "reviewed_unique_cards_by_operation":dict(sorted(by_operation.items())),
         "unregistered_names":sorted(remaining),
+        "unregistered_by_card_type":unregistered_by_card_type,
         "decks":by_deck,
         "disclaimer":(
             "A registered effect family only proves an explicitly reviewed "
