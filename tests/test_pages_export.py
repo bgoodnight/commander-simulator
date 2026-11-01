@@ -39,6 +39,7 @@ class StaticPagesTests(unittest.TestCase):
                 self.assertEqual(deck["card_count"],100)
                 self.assertEqual(sum(e["qty"] for e in deck["cards"]),100)
                 self.assertIn(deck["commander_id"],datasets["cards"])
+                self.assertTrue(set(deck["modeled_rocks"]).issubset({c["oracle_id"] for c in deck["cards"]}))
                 self.assertEqual(set(results[deck["key"]]),set(map(str,DEFAULT_SEEDS)))
                 for seed,record in results[deck["key"]].items():
                     self.assertEqual(record["seed"],int(seed))

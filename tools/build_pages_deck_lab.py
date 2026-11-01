@@ -24,6 +24,7 @@ from commander_sim.deck_fixtures import FIXTURES, SHARED_CATALOG
 from commander_sim.deck_lab_api import deck_detail
 from commander_sim.card_name_catalog import read_name_catalog, DEFAULT_NAME_CATALOG
 from commander_sim.observation import observe
+from commander_sim.reviewed_rocks import reviewed_rock
 
 DEFAULT_SEEDS = (0, 1, 2, 3, 4, 5, 7, 11, 21, 42, 99)
 
@@ -101,12 +102,15 @@ def build(output, *, catalog_path=SHARED_CATALOG, name_catalog_path=DEFAULT_NAME
         commander = next((item for item in cards if item["zone"] == "Commander"), None)
         if commander is None:
             raise ValueError("Missing Commander: " + fixture.key)
+        commander_card = next(item["card"] for item in pinned if item["card"]["oracle_id"] == commander["oracle_id"])
+        modeled_rocks = [item["card"]["oracle_id"] for item in pinned
+                         if reviewed_rock(item["deck_name"], item["card"], commander_card.get("color_identity", [])) is not None]
         decks.append({
             "key": fixture.key, "commander": fixture.commander,
             "commander_id": commander["oracle_id"], "label": fixture.status,
             "deck_sha256": checked["deck_sha256"], "cards": cards,
             "types": checked["by_type"], "card_count": checked["physical_cards"],
-            "snapshot_sha256": checked["source_snapshot_sha256"],
+            "snapshot_sha256": checked["source_snapshot_sha256"], "modeled_rocks": modeled_rocks,
         })
         # A fixed, reproducible menu of cache-backed observations. No browser
         # button will or can generate a new seed; never imply otherwise.

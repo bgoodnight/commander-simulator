@@ -141,3 +141,37 @@ test('quiet diagnostic cycles through examples and opens their card details',()=
   example=out.children[out.children.length-1];assert.match(example.children[0].textContent,/seed 2/);
   example.children[4].children[0].handlers.click();assert.deepEqual(ctx.opened,['s']);
 });
+
+test('batch examples match the deck, the turn and the recorded card role',()=>{
+  const ctx={location:{pathname:'/results.html'},window:{},localStorage:{getItem:()=>null},document:{}};
+  vm.createContext(ctx);vm.runInContext(code,ctx);
+  vm.runInContext(`
+    data={cards:{l:{oracle_id:'l',name:'Island'},r:{oracle_id:'r',name:'Sol Ring'},a:{oracle_id:'a',name:'Other Artifact'},s:{oracle_id:'s',name:'Spell'},x:{oracle_id:'x',name:'Outside'}}};
+    for(const item of Object.values(data.cards))cachedByName.set(item.name.toLowerCase(),item);
+    deck={cards:[{oracle_id:'l'},{oracle_id:'r'},{oracle_id:'a'},{oracle_id:'s'}],modeled_rocks:['r']};
+    batch={runs:[
+      {events:[{events:[{type:'land_play',card:'Island'},{type:'artifact_resolved',card:'Other Artifact'}],unsupported_cards_in_hand:[]},
+       {events:[{type:'artifact_resolved',card:'Sol Ring'},{type:'land_play',card:'Outside'}],unsupported_cards_in_hand:['Spell','Spell']}]},
+      {events:[{events:[{type:'land_play',card:'Island'}],unsupported_cards_in_hand:[]},
+       {events:[],unsupported_cards_in_hand:['Spell']}]}
+    ]};
+  `,ctx);
+  assert.equal(vm.runInContext("batchExample(batch,deck,'land',1).count",ctx),2);
+  assert.equal(vm.runInContext("batchExample(batch,deck,'rock',2).card.name",ctx),'Sol Ring');
+  assert.equal(vm.runInContext("batchExample(batch,deck,'unsupported',2).count",ctx),2);
+  assert.equal(vm.runInContext("batchExample(batch,deck,'rock',1)",ctx),null);
+});
+
+test('batch card example opens card details with an explanatory count',()=>{
+  class Node {constructor(tag){this.tag=tag;this.children=[];this.attrs={};this.handlers={};this.classList={add(){}}}
+    append(...nodes){this.children.push(...nodes)} appendChild(node){this.children.push(node);return node}
+    setAttribute(k,v){this.attrs[k]=v} addEventListener(k,v){this.handlers[k]=v}}
+  const opened=[],ctx={location:{pathname:'/results.html'},window:{},localStorage:{getItem:()=>null},opened,
+    document:{createElement:t=>new Node(t)}};
+  vm.createContext(ctx);vm.runInContext(code,ctx);
+  vm.runInContext('showCard=id=>opened.push(id)',ctx);
+  const node=vm.runInContext("batchExampleNode({card:{name:'Sol Ring',oracle_id:'r',image:'https://example.test/card.jpg'},count:27},'rock',3,100)",ctx);
+  assert.equal(node.attrs['aria-label'],'View Sol Ring card details');
+  assert.match(node.children[1].children[1].textContent,/cast by turn 3 in 27 \/ 100 runs/);
+  node.handlers.click();assert.deepEqual(opened,['r']);
+});
