@@ -38,6 +38,7 @@ from .kernel_life import KernelLife
 from .reviewed_phase_effects import ReviewedPhaseEngine,reviewed_phase_permanent
 from .reviewed_death_effects import ReviewedDeathEngine
 from .reviewed_enter_effects import reviewed_enter_rule, execute_reviewed_enter
+from .reviewed_unearth import reviewed_unearth, activate_reviewed_unearth, expire_reviewed_unearth
 from .reviewed_sacrifice_actions import (
     SACRIFICE_MODES, reviewed_sacrifice_artifact,
     activate_reviewed_sacrifice)
@@ -89,7 +90,9 @@ def run_bounded_early_game(deck_key, *, seed=0, turns=6, mulligan="one-free", pr
     colors = registry.get(fixture.commander).color_identity
     raw_by_name = {entry["deck_name"]: entry["card"] for entry in pinned}
     # Pinned, source-verified ETB effects with safe bounded hand-cast paths.
-    enter_hand_casts = {"Bastion of Remembrance", "Grave Titan", "Marionette Apprentice"}
+    enter_hand_casts = {"Bastion of Remembrance", "Grave Titan",
+                        "Marionette Apprentice", "Royal Warden",
+                        "Triarch Praetorian", "Canoptek Tomb Sentinel"}
     def approved_enter_hand_cast(name):
         return name in enter_hand_casts and reviewed_enter_rule(name, raw_by_name[name]) is not None
     # Catalog is a per-deck immutable identity projection for the feature
@@ -398,7 +401,39 @@ def run_bounded_early_game(deck_key, *, seed=0, turns=6, mulligan="one-free", pr
                 "mana_added":list(resolved.mana_added),
                 "death_trigger_count":resolved.death_trigger_count,
                 "fidelity":"bounded_no_opponent_priority"})
-        death_count=sum(ev.name=="dies" for ev in
+        # One conservative, source-paid graveyard activation per turn.
+        # This uses the existing physical unearth replacement map, not a
+        # shadow battlefield. Opponent-choice Lokhust is deferred.
+        unearth_options=[]
+        for grave_id in zones.ids(0,"graveyard"):
+            source=kernel.get(grave_id)
+            review=reviewed_unearth(source.card.name,raw_by_name.get(source.card.name))
+            if review is None or source.card.name=="Lokhust Heavy Destroyer":
+                continue
+            if source.card.name=="Triarch Praetorian" and len(zones.ids(0,"library"))<2:
+                continue
+            if mana_service.plan(0,review.cost) is not None:
+                unearth_options.append((review.cost,source.card.name,grave_id))
+        if unearth_options:
+            _,_,grave_id=min(unearth_options)
+            result=activate_reviewed_unearth(
+                zones,0,grave_id,raw_by_name,mana_service,
+                sorcery_window=True,life=life,death_engine=death_engine,
+                turn=turn)
+            if result is None:
+                raise AssertionError("Unearth payment invalidated")
+            entered_on_turn[result.permanent_id]=turn
+            events.append({"type":"reviewed_unearth_resolved",
+                           "card":result.card_name,
+                           "source_graveyard_id":result.source_old_id,
+                           "object_id":result.permanent_id,
+                           "source_object_ids":list(result.paid_source_ids),
+                           "enter_operation":(result.enter_result.operation
+                                              if result.enter_result else None),
+                           "created_token_ids":(list(result.enter_result.token_ids)
+                                                if result.enter_result else []),
+                           "fidelity":"bounded_no_opponent_priority"})
+        death_count=sum(ev.name=="dies" for ev
                         kernel.events[turn_kernel_event_index:])
         for triggered in phase_engine.resolve(
                 phase="end_step",active_seat=0,round_id=turn,
@@ -411,6 +446,12 @@ def run_bounded_early_game(deck_key, *, seed=0, turns=6, mulligan="one-free", pr
                 "drawn_ids":list(triggered.drawn_ids),
                 "returned_object_id":triggered.returned_id,
                 "fidelity":"bounded_no_opponent_priority"})
+        # Unearthed cards remaining here leave at the next end step.
+        # Exits earlier in the turn were already replaced by the kernel.
+        for old_id,exiled_id in expire_reviewed_unearth(zones):
+            events.append({"type":"reviewed_unearth_expired",
+                           "object_id":old_id,"exiled_object_id":exiled_id,
+                           "fidelity":"bounded_no_opponent_priority"})
         floating_end = list(mana_service.floating())
         mana_service.clear()
         if (not zones.assert_consistent()
