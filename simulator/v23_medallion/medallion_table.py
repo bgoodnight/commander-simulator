@@ -7,6 +7,7 @@ sys.path.insert(0,str(Path(__file__).resolve().parents[1]/'v22_consider'))
 from consider_table import ConsiderTable
 from simulation import Action
 from rules import Cost
+from commander_sim.legacy_common_ops import GenericDiscount, apply_generic_discount
 
 COLORS=json.loads(Path(__file__).with_name('CARD_COLORS.json').read_text())['colors']
 
@@ -23,11 +24,8 @@ class MedallionTable(ConsiderTable):
 
     def adjust_named_action_cost(self,action):
         # Printed colors only; color-changing effects are outside this milestone.
-        if 'U' not in COLORS.get(action.source,()):return action
-        n=sum(o.card.name=='Sapphire Medallion' for o in self.rules.controlled(action.actor))
-        floor=action.parameters.get('U',0)+action.parameters.get('R',0)
-        action.cost=max(floor,action.cost-n)
-        return action
+        return apply_generic_discount(action,self.rules.controlled(action.actor),
+                                      GenericDiscount(1,'U','Sapphire Medallion'),COLORS)
 
     def action_for(self,player,card):
         if card.name=='Sapphire Medallion':
