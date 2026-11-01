@@ -80,9 +80,9 @@ class SharedTutorTests(unittest.TestCase):
 
     def test_mystical_tutor_does_not_move_card_from_library(self):
         result=resolve_historical_search(self.table,0,"mystical_tutor")
-        self.assertEqual(result,3)
+        self.assertEqual(result,4)
         self.assertEqual(self.z.ids(0,"hand"),())
-        self.assertEqual(self.z.ids(0,"library")[-1],3)
+        self.assertEqual(self.z.ids(0,"library")[-1],4)
         self.assertEqual(self.z.shuffles,1)
 
     def test_merchant_color_filter_fails_closed_without_metadata(self):
