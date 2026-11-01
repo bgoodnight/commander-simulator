@@ -199,3 +199,32 @@ def transfer_physical_object(table, seat, object_id, effect: ZoneTransfer):
     if effect.reason is None:
         return table.zones.move(object_id,effect.to_zone)
     return table.world.move(object_id,effect.to_zone,effect.reason)
+
+
+@dataclass(frozen=True)
+class DamageEachOpponent:
+    """Reviewed damage quantity and attribution for all current opponents."""
+    amount: int
+    reason: str
+
+    def __post_init__(self):
+        if (type(self.amount) is not int or self.amount <= 0
+                or not isinstance(self.reason,str) or not self.reason):
+            raise ValueError("Invalid each-opponent damage parameters")
+
+
+def apply_each_opponent_damage(table, controller, effect: DamageEachOpponent):
+    """Delegate simultaneous player damage to the existing game table.
+
+    Damage is NOT direct life loss. A life-loss effect must use its own
+    primitive so prevention/damage triggers are never misapplied.
+    """
+    if not isinstance(effect,DamageEachOpponent):
+        raise TypeError("Expected reviewed damage descriptor")
+    if type(controller) is not int or not 0<=controller<len(table.players):
+        raise ValueError("Invalid damage controller")
+    source=table.players[controller]
+    targets={p.seat:effect.amount for p in table.rivals(source)}
+    if targets:
+        table.damage_many(targets,source,effect.reason)
+    return targets
