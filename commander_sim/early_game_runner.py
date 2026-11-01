@@ -36,6 +36,10 @@ from .reviewed_token_spells import (reviewed_token_spell,
 from .bounded_trigger_effects import resolve_reviewed_spell_triggers
 from .kernel_life import KernelLife
 from .reviewed_phase_effects import ReviewedPhaseEngine,reviewed_phase_permanent
+from .reviewed_death_effects import ReviewedDeathEngine
+from .reviewed_sacrifice_actions import (
+    SACRIFICE_MODES, reviewed_sacrifice_artifact,
+    activate_reviewed_sacrifice)
 from .template_resources import TemplateManaService
 
 ROOT = Path(__file__).resolve().parents[1]
@@ -123,7 +127,8 @@ def run_bounded_early_game(deck_key, *, seed=0, turns=6, mulligan="one-free", pr
                     or (tutor_review is not None
                         and tutor_review[2] in {"instant", "sorcery"})
                     or reviewed_token_spell(name, raw_by_name[name]) is not None
-                    or reviewed_phase_permanent(name, raw_by_name[name]))
+                    or reviewed_phase_permanent(name, raw_by_name[name])
+                    or reviewed_sacrifice_artifact(name,raw_by_name[name]))
         definition = CardDefinition(
             identity.oracle_id, name, types, subtypes=subtypes,
             supertypes=frozenset({"commander"}) if section == "Commander" else frozenset(),
@@ -136,6 +141,8 @@ def run_bounded_early_game(deck_key, *, seed=0, turns=6, mulligan="one-free", pr
     mana_service = TemplateManaService(kernel, raw_by_name, colors)
     life = KernelLife(kernel)
     phase_engine = ReviewedPhaseEngine(zones, life, raw_by_name)
+    death_engine = ReviewedDeathEngine(zones, life, raw_by_name)
+    entered_on_turn = {}
     if len(kernel.objects) != 100:
         raise AssertionError("Pinned 100-card zone conservation failed at loading")
     zones.shuffle(0)
@@ -157,6 +164,7 @@ def run_bounded_early_game(deck_key, *, seed=0, turns=6, mulligan="one-free", pr
     states = []
     for turn in range(1, turns + 1):
         mana_service.clear()
+        turn_kernel_event_index=len(kernel.events)
         events = []
         def approved_spell_triggers(ticket):
             """Execute only vetted cast triggers after an actual source cast."""
@@ -214,16 +222,18 @@ def run_bounded_early_game(deck_key, *, seed=0, turns=6, mulligan="one-free", pr
                 rock = reviewed_rock(name, raw, colors)
                 token_spell = reviewed_token_spell(name, raw)
                 phase_enchantment = reviewed_phase_permanent(name, raw)
+                sacrifice_artifact = reviewed_sacrifice_artifact(name, raw)
                 tutor = reviewed_tutor(name, raw)
                 eligible = (eligible_reviewed_tutor_targets(zones, 0, name, raw_by_name)
                             if tutor and tutor[2] in {"instant", "sorcery"} else ())
                 if (not is_creature and rock is None and not eligible
-                        and token_spell is None and not phase_enchantment):
+                        and token_spell is None and not phase_enchantment
+                        and not sacrifice_artifact):
                     continue
                 cost = registry.get(name).primary_face().mana_cost
                 payment = mana_service.plan(0, cost)
                 if payment is not None:
-                    kind = ("artifact" if rock is not None else
+                    kind = ("artifact" if rock is not None or sacrifice_artifact else
                             "enchantment" if phase_enchantment else
                             "tutor" if eligible else
                             "token_spell" if token_spell is not None else "creature")
@@ -238,8 +248,11 @@ def run_bounded_early_game(deck_key, *, seed=0, turns=6, mulligan="one-free", pr
                         target_id)) if eligible else None)
                     # Reviewed trigger creatures precede spells so their
                     # shared effects may fire on subsequent actual casts.
-                    options.append((0 if rock is not None else 1 if is_creature else
-                                    2 if phase_enchantment else 3 if eligible else 4,
+                    options.append((0 if rock is not None else
+                                    1 if is_creature else
+                                    2 if sacrifice_artifact else
+                                    3 if phase_enchantment else
+                                    4 if eligible else 5,
                                     len(payment.source_ids), name, oid, kind, cost, target))
             if not options:
                 break
@@ -302,6 +315,7 @@ def run_bounded_early_game(deck_key, *, seed=0, turns=6, mulligan="one-free", pr
                 "unsupported_abilities": list(committed.unresolved_later_abilities),
             })
             resolved_id = zones.resolve(committed.ticket)
+            entered_on_turn[resolved_id]=turn
             if kind == "artifact":
                 rock = reviewed_rock(name, raw_by_name[name], colors)
                 if rock[0].enter_tapped:
@@ -309,8 +323,64 @@ def run_bounded_early_game(deck_key, *, seed=0, turns=6, mulligan="one-free", pr
                     kernel._dirty()
             events.append({"type": kind + "_resolved", "card": name,
                            "object_id": resolved_id, "fidelity": "limited_generic_resolution"})
+        # No-opponent, single-action-per-reviewed-source sacrifice policy.
+        # Sacrifices are costs paid from real battlefield objects; they can
+        # activate reviewed death triggers, never fabricated combo events.
+        used_sacrifice_sources=set()
+        for source in sorted(list(kernel.on_battlefield()),key=lambda x:x.object_id):
+            if (source.object_id in used_sacrifice_sources
+                    or source.object_id not in kernel.objects
+                    or source.controller!=0
+                    or source.card.name not in SACRIFICE_MODES):
+                continue
+            mode=SACRIFICE_MODES[source.card.name]
+            if mode.tap and (source.tapped or
+                ("creature" in source.types
+                 and entered_on_turn.get(source.object_id,0)>=turn
+                 and "haste" not in source.keywords)):
+                continue
+            victims=[obj for obj in kernel.on_battlefield()
+                if obj.controller==0 and "creature" in obj.types
+                and "commander" not in obj.card.supertypes
+                and (not mode.sacrifice_other or obj.object_id!=source.object_id)
+                and (not mode.victim_color or (
+                    obj.card.colors is not None
+                    and mode.victim_color in obj.card.colors))]
+            if not victims:
+                continue
+            # Sacrifice small expendable tokens first; don't choose a combo
+            # sacrifice across multiple iterations of the same ability.
+            victims.sort(key=lambda obj: (
+                0 if obj.token else 1,
+                0 if obj.object_id!=source.object_id else 2,
+                obj.power,obj.object_id))
+            victim=victims[0]
+            resolved=activate_reviewed_sacrifice(
+                zones,life,source.object_id,victim.object_id,raw_by_name,
+                mana_service=mana_service,turn=turn,
+                tap_ready=(not source.tapped and (
+                    "creature" not in source.types
+                    or entered_on_turn.get(source.object_id,0)<turn
+                    or "haste" in source.keywords)),
+                death_engine=death_engine,scry_to_bottom=False)
+            if resolved is None:
+                continue
+            used_sacrifice_sources.add(source.object_id)
+            events.append({
+                "type":"reviewed_sacrifice_activated","card":resolved.source_name,
+                "source_object_id":resolved.source_id,
+                "victim_object_id":resolved.victim_old_id,
+                "ability_operation":resolved.operation,
+                "created_token_ids":list(resolved.token_ids),
+                "drawn_ids":list(resolved.drawn_ids),
+                "mana_added":list(resolved.mana_added),
+                "death_trigger_count":resolved.death_trigger_count,
+                "fidelity":"bounded_no_opponent_priority"})
+        death_count=sum(ev.name=="dies" for ev in
+                        kernel.events[turn_kernel_event_index:])
         for triggered in phase_engine.resolve(
-                phase="end_step",active_seat=0,round_id=turn):
+                phase="end_step",active_seat=0,round_id=turn,
+                death_count=death_count):
             events.append({
                 "type":"reviewed_phase_resolved","phase":"end_step",
                 "source":triggered.source_name,"source_object_id":triggered.source_id,
@@ -353,6 +423,8 @@ def run_bounded_early_game(deck_key, *, seed=0, turns=6, mulligan="one-free", pr
                 and reviewed_token_spell(kernel.get(oid).card.name,
                     raw_by_name[kernel.get(oid).card.name]) is None
                 and not reviewed_phase_permanent(kernel.get(oid).card.name,
+                    raw_by_name[kernel.get(oid).card.name])
+                and not reviewed_sacrifice_artifact(kernel.get(oid).card.name,
                     raw_by_name[kernel.get(oid).card.name])
                 and not supported_land(oid)),
         })
