@@ -47,6 +47,20 @@ class PublishedSimulationTests(unittest.TestCase):
         write_archive(self.source, self.key, seeds=seeds, turns=3,
                       start_seed=start_seed, runner=fake_run)
 
+    def test_physical_mortarion_release_preserves_canonical_history(self):
+        self.prepare()
+        previous = publish_archives(self.source, self.destination,
+                                    engine_commit=ENGINE, keys=(self.key,))
+        write_archive(self.source, "mortarion_physical_final", seeds=2,
+                      turns=3, runner=fake_run)
+        physical = publish_archives(self.source, self.destination,
+                                    engine_commit="b"*40,
+                                    keys=("mortarion_physical_final",))
+        self.assertEqual(len(physical["releases"]), 2)
+        self.assertIn("mortarion_physical_final", physical["releases"][0]["decks"])
+        self.assertEqual(physical["releases"][1], previous["releases"][0])
+        self.assertEqual(validate_index(self.destination), physical)
+
     def test_published_index_preserves_immutable_verified_data(self):
         self.prepare()
         result = publish_archives(
