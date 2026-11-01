@@ -380,6 +380,30 @@ function renderOverview(){
   }
   const curveBox=$("mana-chart");clear(curveBox);
   curveBox.appendChild(makeBars(curve,{color:"#80bdb2"}));
+  renderThemes(cards,c);
+}
+function renderThemes(cards,commander){
+  const root=$("deck-themes");clear(root);
+  if(!window.DeckInsights?.themes){root.appendChild(el("p","Theme analysis is unavailable.","small"));return}
+  const records=isUnsimulatedVersion()?null:archives?.[selected];
+  const groups=window.DeckInsights.themes(cards,{...data.cards,...extraCards},records,commander);
+  if(!groups.length){root.appendChild(el("p","No recurring signals found in available card metadata.","small"));return}
+  for(const group of groups.slice(0,8)){
+    const box=el("article",null,"theme-card");
+    const heading=el("div",null,"theme-card-heading");
+    heading.append(el("h3",group.label),el("strong",group.copies+" cards"));box.appendChild(heading);
+    box.appendChild(el("p",group.kind+(group.commanderMatch?" · commander connection":""),"theme-kind"));
+    if(group.sample){
+      const row=el("div",null,"theme-draws");
+      for(const [value,label] of [[group.opening,"Opening"],[group.byTurn3,"By turn 3"],[group.byTurn6,"By turn 6"]]){
+        const cell=el("div");cell.append(el("strong",value+" / "+group.sample),el("span",label));row.appendChild(cell);
+      }
+      box.appendChild(row);
+    }else box.appendChild(el("p",isUnsimulatedVersion()?"No archived draws for this edited deck.":"No complete draw archive available.","theme-unavailable"));
+    const detail=el("details",null,"theme-details"),summary=el("summary","Matching cards");
+    detail.append(summary,el("p",group.cards.map(c=>(c.qty>1?c.qty+" × ":"")+c.name).join(" · ")));
+    box.appendChild(detail);root.appendChild(box);
+  }
 }
 function libraryRows(){
   const needle=$("library-search").value.trim().toLowerCase();

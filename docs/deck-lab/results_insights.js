@@ -109,5 +109,58 @@
     };
     return [intro,resources,choices];
   }
-  return {summarize,findings,pct,round,sources,candidateCount};
+  // Conservative, inspectable text signals; a mention is not an executable ability.
+  const signals=[
+    {id:"spells",label:"Instants & sorceries",kind:"Card type",matches:c=>/\b(Instant|Sorcery)\b/i.test(c.type_line||"")},
+    {id:"tokens",label:"Token creation",kind:"Rules-text pattern",matches:c=>/\bcreate\b[^.\n]*\btokens?\b/i.test(c.oracle_text||"")},
+    {id:"graveyard",label:"Graveyard",kind:"Rules-text mention",matches:c=>/\bgraveyards?\b/i.test(c.oracle_text||"")},
+    {id:"draw",label:"Card draw",kind:"Rules-text pattern",matches:c=>/\bdraws?\b[^.\n]*\bcards?\b/i.test(c.oracle_text||"")},
+    {id:"sacrifice",label:"Sacrifice",kind:"Rules-text mention",matches:c=>/\bsacrific(?:e|es|ed|ing)\b/i.test(c.oracle_text||"")},
+    {id:"search",label:"Library search",kind:"Rules-text pattern",matches:c=>/\bsearch\b[^.\n]*\blibrary\b/i.test(c.oracle_text||"")}
+  ];
+  function creatureSubtypes(card){
+    const types=new Set();
+    for(const face of (card.type_line||"").split(" // ")){
+      const parts=face.split(/\s[—–]\s/);
+      if(parts.length<2||!/\bCreature\b/i.test(parts[0]))continue;
+      for(const word of parts[1].match(/[A-Za-z][A-Za-z'-]*/g)||[])types.add(word);
+    }
+    return [...types];
+  }
+  function textMentionsSubtype(card,subtype){
+    const escaped=subtype.replace(/[.*+?^${}()|[\]\\]/g,"\\$&");
+    return new RegExp("\\b"+escaped+"s?\\b","i").test(card.oracle_text||"");
+  }
+  function themes(entries,cardById,records,commander){
+    const library=(entries||[]).filter(e=>e.zone!=="Commander"&&e.qty>0)
+      .map(e=>({entry:e,card:cardById[e.oracle_id]})).filter(x=>x.card);
+    const subtypes=new Set();
+    for(const x of library)for(const subtype of creatureSubtypes(x.card))subtypes.add(subtype);
+    if(commander)for(const subtype of creatureSubtypes(commander))subtypes.add(subtype);
+    const groups=[...signals,...[...subtypes].map(subtype=>({
+      id:"subtype:"+subtype.toLowerCase(),label:subtype,kind:"Creature subtype or rules-text mention",
+      matches:c=>creatureSubtypes(c).some(x=>x.toLowerCase()===subtype.toLowerCase())||textMentionsSubtype(c,subtype)
+    }))];
+    const validRuns=Object.values(records||{}).filter(r=>r&&r.mode==="observation"&&
+      Array.isArray(r.opening_hand)&&Array.isArray(r.trace)&&r.trace.length>=6&&
+      r.trace.slice(0,6).every((t,i)=>t&&t.turn===i+1&&Object.hasOwn(t,"drawn")&&
+        (typeof t.drawn==="string"||t.drawn===null)));
+    return groups.map(group=>{
+      const matches=library.filter(x=>group.matches(x.card));
+      const copies=matches.reduce((n,x)=>n+x.entry.qty,0);
+      const names=new Set(matches.map(x=>x.entry.name.toLowerCase()));
+      const first=validRuns.map(r=>{
+        if(r.opening_hand.some(n=>typeof n==="string"&&names.has(n.toLowerCase())))return 0;
+        const index=r.trace.slice(0,6).findIndex(t=>typeof t.drawn==="string"&&names.has(t.drawn.toLowerCase()));
+        return index<0?null:index+1;
+      });
+      return {id:group.id,label:group.label,kind:group.kind,copies,
+        cards:matches.map(x=>({name:x.entry.name,qty:x.entry.qty})),
+        commanderMatch:!!commander&&(group.matches(commander)||(group.id==="spells"&&/\binstant\b[^.\n]*\bsorcer(?:y|ies)\b/i.test(commander.oracle_text||""))),sample:validRuns.length,
+        opening:first.filter(t=>t===0).length,
+        byTurn3:first.filter(t=>t!==null&&t<=3).length,
+        byTurn6:first.filter(t=>t!==null&&t<=6).length};
+    }).filter(g=>g.copies>=3).sort((a,b)=>Number(b.commanderMatch)-Number(a.commanderMatch)||b.copies-a.copies||a.label.localeCompare(b.label));
+  }
+  return {summarize,findings,pct,round,sources,candidateCount,themes};
 });

@@ -70,3 +70,28 @@ test("different per-seed observations map to drilldown groups with exact seed ID
   assert.deepEqual(data.candidateGroups[3].absent,["4"]);
   assert.equal(data.metrics.t3Sources.pct,50);
 });
+
+test('discovers reusable subtype, rules-text and spell-type signals with cumulative draws',()=>{
+  const {themes}=require('../web/pages/results_insights.js');
+  const cards={z:{type_line:'Creature — Zombie',oracle_text:'A creature.'},
+    a:{type_line:'Enchantment',oracle_text:'Zombie creatures you control get +1/+1.'},
+    i:{type_line:'Instant',oracle_text:'Draw a card.'},
+    s:{type_line:'Sorcery',oracle_text:'Draw two cards.'}};
+  const entries=[{name:'Dead',oracle_id:'z',qty:2},{name:'Banner',oracle_id:'a',qty:1},
+    {name:'Spark',oracle_id:'i',qty:2},{name:'Burst',oracle_id:'s',qty:1}];
+  const run=(seed,opening,draws)=>({mode:'observation',seed,opening_hand:opening,
+    trace:draws.map((drawn,i)=>({turn:i+1,drawn}))});
+  const runs={1:run(1,['Dead'],['Spark','Other','Other','Other','Other','Other']),
+    2:run(2,['Other'],['Other','Other','Banner','Other','Other','Other']),
+    3:run(3,['Other'],['Other','Other','Other','Other','Other','Other'])};
+  const result=themes(entries,cards,runs,{type_line:'Creature — Human Wizard',oracle_text:'Create a Zombie creature token.'});
+  const zombie=result.find(g=>g.label==='Zombie');
+  assert.equal(zombie.copies,3);assert.equal(zombie.sample,3);assert.equal(zombie.commanderMatch,true);
+  assert.deepEqual([zombie.opening,zombie.byTurn3,zombie.byTurn6],[1,2,2]);
+  assert.deepEqual(zombie.cards.map(c=>c.name),['Dead','Banner']);
+  assert.equal(result.find(g=>g.id==='spells').copies,3);
+  assert.deepEqual([result.find(g=>g.id==='spells').opening,result.find(g=>g.id==='spells').byTurn3],[0,1]);
+  delete runs[3].trace[2].drawn;
+  assert.equal(themes(entries,cards,runs,null).find(g=>g.label==='Zombie').sample,2);
+  assert.equal(themes(entries,cards,null,null).find(g=>g.label==='Zombie').sample,0);
+});

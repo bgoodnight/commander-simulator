@@ -418,3 +418,19 @@ body{background-color:#101019;background-image:radial-gradient(ellipse at 50% -1
   .commander-medallion{animation:arcane-breathe 5s ease-in-out infinite}
   @keyframes arcane-breathe{50%{box-shadow:0 0 0 4px #171820,0 0 0 5px #d1ab79,0 0 27px #bb9be188,inset 0 0 14px #000}}
 }
+
+.themes-panel{margin-top:17px}
+.themes-heading .panel-title{margin:5px 0 8px}
+.theme-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,240px),1fr));gap:10px;margin:14px 0}
+.theme-card{min-width:0;padding:14px;border:1px solid #806e84;border-radius:11px;background:linear-gradient(145deg,#312938,#182728)}
+.theme-card-heading{display:flex;justify-content:space-between;gap:10px;align-items:baseline}
+.theme-card-heading h3{color:#f0d5a2;font-size:.9rem;margin:0}
+.theme-card-heading strong{color:#a8d8cb;white-space:nowrap;font-size:.72rem}
+.theme-kind,.theme-unavailable{font-size:.7rem;margin:7px 0 12px}
+.theme-draws{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:4px;border-top:1px solid #766987;padding-top:10px}
+.theme-draws strong,.theme-draws span{display:block}
+.theme-draws strong{font-family:Cinzel,Georgia,serif;color:#f4d69c;font-size:.95rem}
+.theme-draws span{color:#beb2a7;font-size:.62rem;margin-top:3px}
+.theme-details{margin-top:12px;font-size:.7rem;color:#d9c4a3}
+.theme-details summary{cursor:pointer;color:#d9c4a3}
+.theme-details p{font-size:.7rem;line-height:1.6;margin:8px 0 0}
