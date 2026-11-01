@@ -1306,7 +1306,7 @@ function saveVersion(){
   note("Saved “"+title+"” in this browser. Download the decklist to keep a durable copy.");
 }
 function renderDeckVersionSelector(){
-  const control=$("deck-version-select");clear(control);
+  const control=$("deck-version-select");if(!control)return;clear(control);
   for(const choice of allDeckChoices()){
     const option=el("option",deckChoiceLabel(choice));
     option.value=choice.id;control.appendChild(option);
@@ -1593,8 +1593,12 @@ function registerEvents(){
   document.addEventListener("keydown",e=>{
     if(e.key==="Escape")closeCommanderPicker();
   });
-  $("deck-version-select").onchange=e=>loadDeckSelection(e.target.value);
-  $("global-deck-select").onchange=e=>loadDeckSelection(e.target.value);
+  const deckVersionSelect=$("deck-version-select");
+  if(deckVersionSelect)deckVersionSelect.onchange=e=>loadDeckSelection(e.target.value);
+  const deckSelect=$("global-deck-select");
+  if(deckSelect)deckSelect.onchange=e=>loadDeckSelection(e.target.value);
+  const deckSelectionRow=document.querySelector(".deck-selection-row");
+  if(deckSelectionRow)deckSelectionRow.hidden=pageName!=="editor";
   $("new-version-button").onclick=newDeckVersion;
   // Navigation links lead to independent static pages (no client router).
   $("library-search").oninput=renderLibrary;
