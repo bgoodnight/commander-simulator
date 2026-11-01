@@ -47,6 +47,20 @@ class AbilityCompositionTests(unittest.TestCase):
         self.assertEqual(both.coverage("strict",frozenset()),
                          (("token","exact"),("draw","unsupported")))
 
+    def test_promotion_can_replace_bounded_operation_with_exact_parameters(self):
+        from commander_sim.effect_templates import EffectTemplate
+        broad=EffectTemplate("library_search",search_types=frozenset({"any"}))
+        narrow=replace(broad,search_types=frozenset({"instant","sorcery"}),
+                       max_mana_value=2)
+        slot=ability("search","triggered",broad,text="Trigger one.")
+        card=ComposedCard(OID,"Trigger one.",(slot,),(
+            AbilityHandler(slot.key,"simplified",broad,slot.source_revision,
+                           limitations=("Broader than real target set",)),
+            AbilityHandler(slot.key,"exact",narrow,slot.source_revision)))
+        self.assertEqual(card.resolve("search","hybrid",frozenset()).operation,narrow)
+        self.assertEqual(card.resolve("search","strict",frozenset()).operation,narrow)
+        self.assertEqual(card.coverage("hybrid",frozenset()),(("search","exact"),))
+
     def test_missing_prereqs_fail_closed(self):
         slot=ability("token",required=frozenset({"triggers","tokens"}))
         card=ComposedCard(OID,"Trigger one.",(slot,),
@@ -120,7 +134,7 @@ class AbilityCompositionTests(unittest.TestCase):
         bad=replace(handler(slot,"exact"),source_revision="different")
         with self.assertRaises(ValueError):
             ComposedCard(OID,"Trigger one.",(slot,),(bad,))
-        bad_op=replace(handler(slot,"exact"),operation="wrong")
+        bad_op=replace(handler(slot,"exact"),operation=123)
         with self.assertRaises(ValueError):
             ComposedCard(OID,"Trigger one.",(slot,),(bad_op,))
 
