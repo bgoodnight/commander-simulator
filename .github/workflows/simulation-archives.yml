@@ -1,0 +1,62 @@
+name: Generate bounded simulation archives (isolated)
+on:
+  workflow_dispatch:
+    inputs:
+      seeds:
+        description: "Seeds per deck (1–1000)"
+        required: true
+        default: "100"
+        type: string
+      turns:
+        description: "Turns (1–10)"
+        required: true
+        default: "6"
+        type: string
+
+permissions:
+  contents: read
+
+concurrency:
+  group: bounded-archive-${{ github.ref }}
+  cancel-in-progress: false
+
+jobs:
+  archive:
+    name: Archive ${{ matrix.deck }}
+    runs-on: ubuntu-latest
+    timeout-minutes: 90
+    strategy:
+      fail-fast: false
+      matrix:
+        deck:
+          - magnus_premium
+          - magnus_budget
+          - wretched_ranks
+          - mortarion_current
+          - mortarion_ideal
+          - necron_dynasties
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+      - name: Run independently tested archive contracts
+        run: python -m unittest tests.test_simulation_archive -v
+      - name: Generate the pinned bounded-action archive
+        env:
+          ARCHIVE_SEEDS: ${{ inputs.seeds }}
+          ARCHIVE_TURNS: ${{ inputs.turns }}
+          ARCHIVE_DECK: ${{ matrix.deck }}
+        run: |
+          python tools/build_simulation_archive.py \
+            --deck "$ARCHIVE_DECK" \
+            --seeds "$ARCHIVE_SEEDS" \
+            --turns "$ARCHIVE_TURNS" \
+            --output dist/simulation-archives
+      - name: Save immutable run outputs (no Pages write)
+        uses: actions/upload-artifact@v4
+        with:
+          name: bounded-${{ matrix.deck }}-${{ github.sha }}
+          path: dist/simulation-archives/*.json
+          if-no-files-found: error
+          retention-days: 90
