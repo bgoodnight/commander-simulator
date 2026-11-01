@@ -53,6 +53,7 @@ class BoundedEarlyGameTests(unittest.TestCase):
                     "artifact_cast", "artifact_resolved",
                     "tutor_cast", "tutor_resolved",
                     "token_spell_cast", "token_spell_resolved",
+                    "reviewed_trigger_resolved",
                 } for event in turn["events"]))
 
     def test_magnus_reviewed_tutors_pay_and_move_actual_cards(self):
@@ -115,6 +116,22 @@ class BoundedEarlyGameTests(unittest.TestCase):
                     turn["hand_size"]+turn["library_size"]+
                     len(state["battlefield"])+len(state["graveyard"])+1,100)
         self.assertGreater(len(created),0)
+
+    def test_bounded_spell_triggers_have_authoritative_sources_and_outputs(self):
+        for seed in range(12):
+            report=run_bounded_early_game("magnus_premium",seed=seed,turns=6)
+            for turn,state in zip(report["events"],report["state_snapshots"]):
+                for event in turn["events"]:
+                    if event["type"]!="reviewed_trigger_resolved":
+                        continue
+                    self.assertIn(event["source"],
+                        {"Young Pyromancer","Talrand, Sky Summoner",
+                         "Archmage Emeritus","Storm-Kiln Artist"})
+                    self.assertEqual(event["fidelity"],"bounded_no_opponent_priority")
+                    self.assertTrue(event["created_token_ids"] or event["drawn_ids"])
+                self.assertEqual(
+                    turn["hand_size"]+turn["library_size"]+
+                    len(state["battlefield"])+len(state["graveyard"])+1,100)
 
     def test_invalid_deck_or_horizon_fails_closed(self):
         for key, turns in (("unsupported_deck", 6), ("wretched_ranks", 0),
