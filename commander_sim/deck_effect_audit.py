@@ -76,7 +76,14 @@ def audit_snapshot(fixture):
         card=item.get("card") or {}
         name=item.get("deck_name")
         oracle_id=card.get("oracle_id")
+        # Scryfall stores Adventure and modal-DFC Oracle text per face.
+        # Treat the union of printed face text as a discovery signal only;
+        # executable face-specific permissions require separate review.
         oracle_text=card.get("oracle_text")
+        if oracle_text is None and isinstance(card.get("card_faces"),list):
+            face_texts=[face.get("oracle_text") for face in card["card_faces"]]
+            oracle_text="\\n".join(face_texts) if face_texts and all(
+                isinstance(text,str) for text in face_texts) else None
         if (not isinstance(name,str) or not name
                 or not isinstance(oracle_id,str) or not oracle_id
                 or not isinstance(oracle_text,str)
