@@ -254,7 +254,9 @@ function renderGlobalDeckSelector(){
   const control=$("global-deck-select");
   if(!control||!selected)return;
   clear(control);
-  for(const choice of allDeckChoices()){
+  const commanderId=selectedDeck().commander_id;
+  for(const choice of allDeckChoices().filter(choice=>
+      data.decks.some(deck=>deck.key===choice.key&&deck.commander_id===commanderId))){
     const option=el("option",deckChoiceLabel(choice));
     option.value=choice.id;
     control.appendChild(option);
@@ -1307,7 +1309,9 @@ function saveVersion(){
 }
 function renderDeckVersionSelector(){
   const control=$("deck-version-select");if(!control)return;clear(control);
-  for(const choice of allDeckChoices()){
+  const commanderId=selectedDeck().commander_id;
+  for(const choice of allDeckChoices().filter(choice=>
+      data.decks.some(deck=>deck.key===choice.key&&deck.commander_id===commanderId))){
     const option=el("option",deckChoiceLabel(choice));
     option.value=choice.id;control.appendChild(option);
   }
