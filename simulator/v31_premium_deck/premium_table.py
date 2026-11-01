@@ -13,6 +13,7 @@ from budget_table import BudgetPlayer,card_spec,load_deck as load_budget
 from verified_table import read_types
 from spellseeker_table import library_mana_value
 from medallion_table import COLORS
+from commander_sim.legacy_tutor_ops import resolve_historical_search
 from rules import Cost
 from resources import fixed,R
 import integrated as v6
@@ -94,10 +95,7 @@ class PremiumTable(AltarTable):
     def resolve_search(self,table,action):
         if action.source!='Merchant Scroll':return super().resolve_search(table,action)
         colors={**COLORS,**EXTRA_COLORS}
-        candidates=tuple(oid for oid in self.zones.ids(action.actor,'library') if 'instant' in self.rules.get(oid).types)
-        if any(self.rules.get(oid).card.name not in colors for oid in candidates):raise NotImplementedError('Merchant Scroll requires known instant colors')
-        eligible=tuple(oid for oid in candidates if 'U' in colors[self.rules.get(oid).card.name])
-        self.search_to_hand(action.actor,eligible,'merchant_scroll')
+        return resolve_historical_search(self,action.actor,'merchant_scroll',printed_colors=colors)
     def resolve_trigger(self,item):
         if item.op!='spellseeker_search':return super().resolve_trigger(item)
         policy=getattr(self,'spellseeker_search_policy',None)
@@ -106,6 +104,4 @@ class PremiumTable(AltarTable):
         if not take:
             self.tutor_events.append(('spellseeker_declined',item.controller,None,None));return
         def value(name):return EXTRA_VALUES[name] if name in EXTRA_VALUES else library_mana_value(name)
-        spells=tuple(oid for oid in self.zones.ids(item.controller,'library') if self.rules.get(oid).types & {'instant','sorcery'})
-        eligible=tuple(oid for oid in spells if value(self.rules.get(oid).card.name)<=2)
-        self.search_to_hand(item.controller,eligible,'spellseeker')
+        return resolve_historical_search(self,item.controller,'spellseeker',mana_value=value)
