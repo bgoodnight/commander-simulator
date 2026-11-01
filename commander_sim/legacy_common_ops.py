@@ -138,3 +138,45 @@ def sacrifice_physical_object(table, seat, source_id, victim_id, requirement):
     if victim_id not in legal_sacrifice_victims(table.rules, seat, source_id, requirement):
         raise ValueError("Sacrifice object is not eligible")
     return table.world.move(victim_id, "graveyard", "sacrifice")
+
+
+@dataclass(frozen=True)
+class ZoneTransfer:
+    """One reviewed physical-object move between authoritative zones."""
+    from_zone: str
+    to_zone: str
+    required_types: frozenset[str] = frozenset()
+    require_owner: bool = False
+    require_controller: bool = False
+    reason: str | None = None
+
+    def __post_init__(self):
+        valid=frozenset({"library","hand","graveyard","exile","battlefield","command","stack"})
+        if (self.from_zone not in valid or self.to_zone not in valid
+                or self.from_zone==self.to_zone
+                or not isinstance(self.required_types,frozenset)
+                or any(not isinstance(x,str) or not x for x in self.required_types)
+                or type(self.require_owner) is not bool
+                or type(self.require_controller) is not bool
+                or (self.reason is not None and (not isinstance(self.reason,str) or not self.reason))):
+            raise ValueError("Invalid zone-transfer descriptor")
+
+
+def transfer_physical_object(table, seat, object_id, effect: ZoneTransfer):
+    """Use existing authoritative zones/world; no cloned objects or inferred legality.
+
+    Caller retains stack timing, legal targeting and replacement-effect checks.
+    The descriptor is a reviewed restriction, not an authorization to target
+    arbitrary unknown objects in another player's zone.
+    """
+    if not isinstance(effect,ZoneTransfer):
+        raise TypeError("Expected ZoneTransfer")
+    obj=table.rules.objects.get(object_id)
+    if (obj is None or obj.zone!=effect.from_zone
+            or not effect.required_types<=obj.types
+            or (effect.require_owner and obj.owner!=seat)
+            or (effect.require_controller and obj.controller!=seat)):
+        raise ValueError("Object not eligible for reviewed zone move")
+    if effect.reason is None:
+        return table.zones.move(object_id,effect.to_zone)
+    return table.world.move(object_id,effect.to_zone,effect.reason)
