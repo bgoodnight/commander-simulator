@@ -5,7 +5,8 @@ from commander_sim.early_game_runner import _load_live_kernel
 from commander_sim.physical_common_effects import (
     CardQuantity, CounterPlacement, GraveyardToHand,
     draw_physical_cards, mill_physical_cards, put_reviewed_counters,
-    retrieve_reviewed_graveyard_card,
+    retrieve_reviewed_graveyard_card, TargetedPermanentRemoval,
+    remove_reviewed_permanent,
 )
 
 
@@ -74,6 +75,41 @@ class PhysicalCommonEffectTests(unittest.TestCase):
             retrieve_reviewed_graveyard_card(self.z,0,spell,effect)
         self.assertIn(spell,self.z.ids(0,"graveyard"))
         self.assertTrue(self.z.assert_consistent())
+
+    def test_reviewed_targeted_bounce_uses_one_physical_object(self):
+        target=self.card("Target","battlefield",{"creature"},seat=1)
+        transition=remove_reviewed_permanent(self.k,0,target,
+            TargetedPermanentRemoval("bounce",frozenset({"creature"}),True))
+        self.assertIsNotNone(transition)
+        self.assertNotIn(target,self.k.objects)
+        self.assertEqual(self.k.get(transition.new_object_id).zone,"hand")
+        self.assertEqual(self.k.get(transition.new_object_id).owner,1)
+        self.assertTrue(self.z.assert_consistent())
+
+    def test_reviewed_destroy_and_exile_use_native_kernel_moves(self):
+        to_destroy=self.card("Zombie","battlefield",{"creature"},seat=1)
+        to_exile=self.card("Artifact","battlefield",{"artifact"},seat=1)
+        killed=remove_reviewed_permanent(self.k,0,to_destroy,
+            TargetedPermanentRemoval("destroy",frozenset({"creature"})))
+        exiled=remove_reviewed_permanent(self.k,0,to_exile,
+            TargetedPermanentRemoval("exile",frozenset({"artifact"})))
+        self.assertEqual(self.k.get(killed.new_object_id).zone,"graveyard")
+        self.assertEqual(self.k.get(exiled.new_object_id).zone,"exile")
+        self.assertTrue(self.z.assert_consistent())
+
+    def test_illegal_removal_is_blocked_before_object_movement(self):
+        friendly=self.card("Friendly","battlefield",{"creature"},seat=0)
+        enemy=self.card("Enemy","battlefield",{"creature"},seat=1)
+        with self.assertRaises(ValueError):
+            remove_reviewed_permanent(self.k,0,friendly,
+                TargetedPermanentRemoval("destroy",frozenset({"creature"}),True))
+        with self.assertRaises(ValueError):
+            remove_reviewed_permanent(self.k,0,enemy,
+                TargetedPermanentRemoval("exile",frozenset({"artifact"})))
+        with self.assertRaises(ValueError):
+            TargetedPermanentRemoval("sacrifice",frozenset({"creature"}))
+        self.assertEqual(self.k.get(friendly).zone,"battlefield")
+        self.assertEqual(self.k.get(enemy).zone,"battlefield")
 
     def test_invalid_effect_specs_fail_before_any_mutation(self):
         with self.assertRaises(ValueError):
