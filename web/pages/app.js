@@ -654,7 +654,7 @@ function renderLibrary(){
     const col=el("td"),btn=el("button",item.name,"selectable-card");
     btn.type="button";btn.addEventListener("click",()=>showCard(item.oracle_id));
     col.appendChild(btn);
-    tr.append(col,el("td",card?.type_line||"Unknown"));
+    tr.append(col,el("td",card?.type_line||(selectedDeck()?.unverified_cards?.includes(item.name)?"Identity not verified":"Unknown")));
     const mana=el("td");mana.appendChild(manaSymbols(card?.mana_cost));
     tr.appendChild(mana);root.appendChild(tr);
   }
@@ -1657,7 +1657,7 @@ async function boot(){
   registerEvents();
   try{
     const response=await Promise.all([
-      fetch("./decks.json?v=20261101c"),fetch("./observations.json"),fetch("./names.json"),fetch("./bounded-batches.json?v=20261101b"),fetch("./game-changers.json?v=20261101bracket")
+      fetch("./decks.json?v=physical-decks-20261101-1"),fetch("./observations.json?v=physical-decks-20261101-1"),fetch("./names.json"),fetch("./bounded-batches.json?v=20261101b"),fetch("./game-changers.json?v=20261101bracket")
     ]);
     if(response.some(r=>!r.ok))throw Error("Site data could not be loaded. Check the Pages deployment.");
     [data,archives,allNames,boundedBatches,gameChangers]=await Promise.all(response.map(r=>r.json()));
