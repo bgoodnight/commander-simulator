@@ -194,3 +194,18 @@ test('board report connects the aggregate to matching run evidence and card deta
   const evidence=body.children[6];assert.match(evidence.children[0].textContent,/1/);
   assert.match(evidence.children[1].children[0].textContent,/seed 3/);
 });
+
+test('land report shows a selected distribution cohort and its evidence',()=>{
+  class Node {constructor(tag){this.tag=tag;this.children=[];this.attrs={};this.handlers={};this.style={};this.classList={add(){}}}
+    append(...nodes){this.children.push(...nodes)} appendChild(node){this.children.push(node);return node}
+    replaceChildren(){this.children=[]} setAttribute(k,v){this.attrs[k]=v} addEventListener(k,v){this.handlers[k]=v}}
+  const card={name:'Island',oracle_id:'i',type_line:'Basic Land — Island',image:'https://example.test/island.jpg'};
+  const run={seed:7,events:Array.from({length:6},(_,i)=>({turn:i+1,land_count:2,events:[]})),state_snapshots:Array.from({length:6},()=>({battlefield:['Island'],hand:[]}))};
+  const ctx={location:{pathname:'/results.html'},window:{DeckInsights:require('../web/pages/results_insights.js')},localStorage:{getItem:()=>null},document:{createElement:t=>new Node(t)},card,run};
+  vm.createContext(ctx);vm.runInContext(code,ctx);
+  vm.runInContext("cardInfo=n=>n==='Island'?card:null;selectedDeck=()=>({});batchExample=()=>({card});",ctx);
+  const node=vm.runInContext('landStory({runs:[run]})',ctx),body=node.children[1];
+  const chart=body.children[5],detail=body.children[6];chart.children[0].handlers.click();
+  assert.match(detail.children[0].textContent,/2 lands · 1 \/ 1 runs/);
+  const evidence=detail.children[3];assert.match(evidence.children[1].children[0].textContent,/seed 7/);
+});

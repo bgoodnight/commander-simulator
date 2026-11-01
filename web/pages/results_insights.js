@@ -253,5 +253,12 @@
     const unknown=valid.filter(r=>r.state_snapshots[turn-1].battlefield.some(n=>!lookup(n))).length;
     return {rows,cards:[...cards].sort((a,b)=>b[1]-a[1]||a[0].localeCompare(b[0])),examples,unknown,total:valid.length};
   }
-  return {summarize,findings,pct,round,sources,candidateCount,themes,sourceTimeline,themeTimelines,quietTurns,boardDevelopment};
+  function landDevelopment(runs,turn=6){
+    const valid=(runs||[]).filter(r=>Array.isArray(r.events)&&r.events.length>=turn && r.events.slice(0,turn).every((e,i)=>e.turn===i+1&&Number.isFinite(e.land_count))&&Array.isArray(r.state_snapshots)&&r.state_snapshots.length>=turn);
+    const quantile=(values,q)=>{const sorted=[...values].sort((a,b)=>a-b);if(!sorted.length)return null;const i=(sorted.length-1)*q,lo=Math.floor(i),hi=Math.ceil(i);return round(sorted[lo]+(sorted[hi]-sorted[lo])*(i-lo),2)};
+    const timeline=Array.from({length:turn},(_,i)=>{const v=valid.map(r=>r.events[i].land_count);return {turn:i+1,median:quantile(v,.5),q1:quantile(v,.25),q3:quantile(v,.75)}});
+    const groups=[...new Set(valid.map(r=>r.events[turn-1].land_count))].sort((a,b)=>a-b).map(count=>({count,runs:valid.filter(r=>r.events[turn-1].land_count===count)}));
+    return {total:valid.length,timeline,groups};
+  }
+  return {summarize,findings,pct,round,sources,candidateCount,themes,sourceTimeline,themeTimelines,quietTurns,boardDevelopment,landDevelopment};
 });

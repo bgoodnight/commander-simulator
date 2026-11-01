@@ -167,3 +167,12 @@ test('quiet detection counts enchantments, phase effects and sacrifices as recor
   assert.deepEqual(creature.examples.map(r=>r.seed),[1]);
   assert.equal(insights.boardDevelopment(runs,n=>cards[n]||null,'Artifact',1).rows[0].pct,50);
 }
+
+test('land development reports interpolated quartiles and exact matching cohorts',()=>{
+  const make=(seed,n)=>({seed,events:Array.from({length:6},(_,i)=>({turn:i+1,land_count:n})),state_snapshots:Array.from({length:6},()=>({battlefield:[],hand:[]}))});
+  const report=insights.landDevelopment([make(0,1),make(1,2),make(2,4),make(3,5)],6);
+  assert.equal(report.total,4);assert.equal(report.timeline[5].median,3);
+  assert.equal(report.timeline[5].q1,1.75);assert.equal(report.timeline[5].q3,4.25);
+  assert.deepEqual(report.groups.map(g=>[g.count,g.runs.map(r=>r.seed)]),[[1,[0]],[2,[1]],[4,[2]],[5,[3]]]);
+  assert.equal(insights.landDevelopment([{}],6).total,0);
+});

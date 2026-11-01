@@ -579,24 +579,35 @@ function boardReport(batch, type){
       item.appendChild(el("p","Turn "+row.turn+": "+(events.join(" · ")||"No recorded action"),"micro"))}evidence.appendChild(item)});
   body.appendChild(evidence);panel.appendChild(body);return panel;
 }
+function landStory(batch){
+  const result=window.DeckInsights.landDevelopment(batch.runs,6),end=result.timeline[5];
+  if(!result.total)return el("p","Land development is unavailable for these runs.","small");
+  const panel=document.createElement("details");panel.className="land-story";
+  const summary=el("summary",null,"land-story-summary"),copy=el("span",null,"land-story-copy");
+  copy.append(el("span","Mana development · land foundation","board-kicker"),el("strong",end.median+" lands"),
+    el("span","Median on the battlefield at the end of turn 6","small"),el("span","Explore development →","board-open"));summary.appendChild(copy);
+  const example=batchExample(batch,selectedDeck(),"land",3);if(example?.card){const art=imageNode(example.card,false,"land-story-card");art.alt="";summary.appendChild(art)}panel.appendChild(summary);
+  const body=el("div",null,"land-story-body");body.append(el("h3","How the land base develops"),el("p","Median lands by turn; the range below each value shows the middle 50% of runs (25th to 75th percentile).","small"));
+  const timeline=el("div",null,"land-timeline");result.timeline.forEach(row=>{const col=el("div",null,"land-timeline-point");col.append(el("span","Turn "+row.turn),el("strong",String(row.median)),el("span",row.q1+"–"+row.q3,"micro"));timeline.appendChild(col)});body.appendChild(timeline);
+  body.append(el("h3","How consistent is turn 6?"),el("p","Select a land count to see the matching runs and their recorded sources.","small"));
+  const chart=el("div",null,"land-distribution"),detail=el("div",null,"land-selection");
+  const select=group=>{clear(detail);detail.append(el("h4",group.count+" lands · "+group.runs.length+" / "+result.total+" runs"));
+    const names={};for(const run of group.runs)for(const name of new Set(run.state_snapshots[5].battlefield)){const card=cardInfo(name);if(card&&/\bLand\b/i.test((card.type_line||"").split("—")[0]))names[name]=(names[name]||0)+1}
+    const common=Object.entries(names).sort((a,b)=>b[1]-a[1]||a[0].localeCompare(b[0])).slice(0,5);
+    if(common.length)detail.append(el("p","Common lands in these runs","quiet-label"),quietCardList(common.map(x=>x[0])));
+    const evidence=document.createElement("details");evidence.className="story-drilldown";evidence.appendChild(el("summary","Inspect matching runs · "+group.runs.length));
+    for(const run of group.runs){const item=document.createElement("details");item.className="board-run";item.appendChild(el("summary","Simulation seed "+run.seed));item.append(el("p","Turn 6 battlefield","quiet-label"),quietCardList(run.state_snapshots[5].battlefield),el("p","Turn 6 hand","quiet-label"),quietCardList(run.state_snapshots[5].hand));for(const row of run.events)item.appendChild(el("p","Turn "+row.turn+": "+(row.events.map(e=>e.type.replaceAll("_"," ")+(e.card?": "+e.card:"")).join(" · ")||"No recorded action"),"micro"));evidence.appendChild(item)}detail.appendChild(evidence)};
+  result.groups.forEach(group=>{const button=el("button",null,"land-dist-bar");button.type="button";button.append(el("span",group.count+" lands"),el("strong",group.runs.length+" / "+result.total));const track=el("span",null,"land-dist-track"),fill=el("span",null,"land-dist-fill");fill.style.width=(100*group.runs.length/result.total)+"%";track.appendChild(fill);button.appendChild(track);button.addEventListener("click",()=>select(group));chart.appendChild(button)});body.append(chart,detail);
+  body.appendChild(el("p","Lands on the battlefield are not a measure of usable mana. Source-level production and commander casting are not recorded in this batch.","micro"));panel.appendChild(body);return panel;
+}
 function showBoundedBatch(){
   const root=$("bounded-results"); clear(root);
   const batch=boundedBatches?.decks?.[selected];
   if(isUnsimulatedVersion() || !batch || batch.deck_sha256!==selectedDeck().deck_sha256){
     root.appendChild(el("p","No matching reviewed-action batch is available for this deck version.")); return;
   }
-  const t3=batch.turns[2], t6=batch.turns[5];
   root.appendChild(el("p",batch.seed_count+" simulated runs · 6 turns · one free mulligan", "small"));
-  const cards=el("div",null,"results-kpis");
-  for(const [value,label,kind,turn] of [[t3.mean_lands_in_play,"Average lands on turn 3","land",3],
-      [t3.pct_with_reviewed_rock_in_play+"%","Have a mana rock on turn 3","rock",3],
-      [t6.mean_unsupported_hand_cards,"Average cards in hand not yet supported on turn 6","unsupported",6]]){
-    const card=el("div",null,"quiet-group batch-stat"),copy=el("div",null,"batch-stat-copy");
-    copy.append(el("strong",String(value)),el("p",label,"small"));card.appendChild(copy);
-    const example=batchExampleNode(batchExample(batch,selectedDeck(),kind,turn),kind,turn,batch.seed_count);
-    if(example)card.appendChild(example);cards.appendChild(card);
-  }
-  root.appendChild(cards);
+  if(batch.runs?.length)root.appendChild(landStory(batch));
   if(batch.runs?.length){
     root.append(el("h3","What reaches the battlefield?","board-heading"),el("p","Open a takeaway for its timeline, common cards, and matching runs.","small"));
     const reports=el("div",null,"board-grid");["Creature","Artifact","Enchantment"].forEach(type=>reports.appendChild(boardReport(batch,type)));root.appendChild(reports);
