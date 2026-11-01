@@ -26,6 +26,8 @@ from .reviewed_rocks import reviewed_rock
 from .reviewed_tutors import reviewed_tutor
 from .reviewed_tutor_cast import (eligible_reviewed_tutor_targets,
                                   cast_and_resolve_reviewed_tutor)
+from .reviewed_token_spells import (reviewed_token_spell,
+                                   cast_and_resolve_reviewed_token_spell)
 from .template_resources import TemplateManaService
 
 ROOT = Path(__file__).resolve().parents[1]
@@ -111,7 +113,8 @@ def run_bounded_early_game(deck_key, *, seed=0, turns=6, mulligan="one-free", pr
         reviewed = (reviewed_creature(deck_key, name, raw_by_name[name])
                     or reviewed_rock(name, raw_by_name[name], colors) is not None
                     or (tutor_review is not None
-                        and tutor_review[2] in {"instant", "sorcery"}))
+                        and tutor_review[2] in {"instant", "sorcery"})
+                    or reviewed_token_spell(name, raw_by_name[name]) is not None)
         definition = CardDefinition(
             identity.oracle_id, name, types, subtypes=subtypes,
             supertypes=frozenset({"commander"}) if section == "Commander" else frozenset(),
@@ -173,16 +176,18 @@ def run_bounded_early_game(deck_key, *, seed=0, turns=6, mulligan="one-free", pr
                 raw = raw_by_name[name]
                 is_creature = reviewed_creature(deck_key, name, raw)
                 rock = reviewed_rock(name, raw, colors)
+                token_spell = reviewed_token_spell(name, raw)
                 tutor = reviewed_tutor(name, raw)
                 eligible = (eligible_reviewed_tutor_targets(zones, 0, name, raw_by_name)
                             if tutor and tutor[2] in {"instant", "sorcery"} else ())
-                if not is_creature and rock is None and not eligible:
+                if not is_creature and rock is None and not eligible and token_spell is None:
                     continue
                 cost = registry.get(name).primary_face().mana_cost
                 payment = mana_service.plan(0, cost)
                 if payment is not None:
                     kind = ("artifact" if rock is not None else
-                            "tutor" if eligible else "creature")
+                            "tutor" if eligible else
+                            "token_spell" if token_spell is not None else "creature")
                     target = (min(eligible, key=lambda target_id: (
                         0 if kernel.get(target_id).card.name == "Sol Ring" else
                         1 if reviewed_rock(kernel.get(target_id).card.name,
@@ -192,7 +197,8 @@ def run_bounded_early_game(deck_key, *, seed=0, turns=6, mulligan="one-free", pr
                              kernel.get(target_id).card.name,
                              raw_by_name[kernel.get(target_id).card.name]) else 3,
                         target_id)) if eligible else None)
-                    options.append((0 if rock is not None else 1 if eligible else 2,
+                    options.append((0 if rock is not None else 1 if eligible else
+                                    2 if token_spell is not None else 3,
                                     len(payment.source_ids), name, oid, kind, cost, target))
             if not options:
                 break
@@ -213,6 +219,22 @@ def run_bounded_early_game(deck_key, *, seed=0, turns=6, mulligan="one-free", pr
                                "target_object_id": result.target_new_id,
                                "destination": result.target_destination,
                                "fidelity": "bounded_reviewed_search"})
+                continue
+            if kind == "token_spell":
+                result = cast_and_resolve_reviewed_token_spell(
+                    zones, 0, oid, raw_by_name, colors, mana_service)
+                if result is None:
+                    raise AssertionError("Token spell payment changed without an action")
+                events.append({"type": "token_spell_cast", "card": name,
+                               "stack_object_id": result.source_stack_id,
+                               "source_object_ids": list(result.paid_source_ids),
+                               "fidelity": "bounded_reviewed_token_effect"})
+                events.append({"type": "token_spell_resolved", "card": name,
+                               "source_graveyard_id": result.source_graveyard_id,
+                               "created_token_ids": list(result.token_ids),
+                               "created_token_count": len(result.token_ids),
+                               "unsupported_abilities": list(result.limitations),
+                               "fidelity": "bounded_reviewed_token_effect"})
                 continue
             review = ReviewedCreatureCast(
                 kernel.get(oid).card.card_id, cost, True,
@@ -240,8 +262,9 @@ def run_bounded_early_game(deck_key, *, seed=0, turns=6, mulligan="one-free", pr
                            "object_id": resolved_id, "fidelity": "limited_generic_resolution"})
         floating_end = list(mana_service.floating())
         mana_service.clear()
-        if not zones.assert_consistent() or len(kernel.objects) != 100:
-            raise AssertionError("Physical object conservation failed")
+        if (not zones.assert_consistent()
+                or sum(not obj.token for obj in kernel.objects.values()) != 100):
+            raise AssertionError("Physical non-token card conservation failed")
         state = project_kernel_turn(zones, 0, turn, catalog)
         states.append(state)
         actions_by_turn.append({
@@ -266,6 +289,8 @@ def run_bounded_early_game(deck_key, *, seed=0, turns=6, mulligan="one-free", pr
                          and reviewed_tutor(kernel.get(oid).card.name,
                                             raw_by_name[kernel.get(oid).card.name])[2]
                          in {"instant", "sorcery"})
+                and reviewed_token_spell(kernel.get(oid).card.name,
+                    raw_by_name[kernel.get(oid).card.name]) is None
                 and not supported_land(oid)),
         })
     analysis = analyze_authoritative_run(catalog, profile or {}, states)
