@@ -464,7 +464,7 @@ def run_bounded_early_game(deck_key, *, seed=0, turns=6, mulligan="one-free", pr
                            "created_token_ids":(list(result.enter_result.token_ids)
                                                 if result.enter_result else []),
                            "fidelity":"bounded_no_opponent_priority"})
-        death_count=sum(ev.name=="dies" for ev
+        death_count=sum(ev.name=="dies" for ev in
                         kernel.events[turn_kernel_event_index:])
         for triggered in phase_engine.resolve(
                 phase="end_step",active_seat=0,round_id=turn,
