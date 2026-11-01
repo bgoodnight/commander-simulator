@@ -21,6 +21,7 @@ class TokenBlueprint:
     count: int = 1
     tapped: bool = False
     limitations: tuple[str,...] = ()
+    keywords: frozenset[str] = frozenset()
 
     def __post_init__(self):
         if (not self.token_name or not self.types
@@ -31,7 +32,9 @@ class TokenBlueprint:
                 or type(self.power) is not int or type(self.toughness) is not int
                 or type(self.count) is not int or self.count<1
                 or type(self.tapped) is not bool
-                or not isinstance(self.limitations,tuple)):
+                or not isinstance(self.limitations,tuple)
+                or not isinstance(self.keywords,frozenset)
+                or any(not isinstance(k,str) or not k for k in self.keywords)):
             raise ValueError("Invalid reviewed token blueprint")
 
 
@@ -104,20 +107,26 @@ def reviewed_token_spell(name, card):
     return row
 
 
-def create_reviewed_tokens(zones, seat, review):
-    """Generate token objects through the same authoritative IndexedKernel."""
-    if not isinstance(review,TokenSpellReview):
-        raise TypeError("Expected pinned reviewed token spell")
+def create_reviewed_token_batches(zones, seat, batches):
+    """Shared reviewed token emitter for sorceries and triggered permanents.
+
+    All token characteristics are parameters; no card-name-specific code.
+    The existing kernel owns the resulting permanent IDs and zones.
+    """
     if type(seat) is not int or not 0<=seat<zones.seats:
         raise ValueError("Invalid seat")
+    if (not isinstance(batches,tuple) or
+            not all(isinstance(batch,TokenBlueprint) for batch in batches)):
+        raise TypeError("Expected immutable reviewed token batches")
     from .early_game_runner import _load_live_kernel
     _,_,CardDefinition=_load_live_kernel()
     tokens=[]
-    for batch in review.batches:
+    for batch in batches:
         definition=CardDefinition(
             "reviewed-token:"+batch.token_name,batch.token_name,batch.types,
             subtypes=batch.subtypes,base_power=batch.power,
             base_toughness=batch.toughness,colors=batch.colors,
+            keywords=batch.keywords,
             coverage="unimplemented" if batch.limitations else "approx")
         def add():
             oid=zones.add(definition,seat,"battlefield",token=True)
@@ -128,6 +137,12 @@ def create_reviewed_tokens(zones, seat, review):
         tokens.extend(spawn_repeated_tokens(add,batch.count))
     return tuple(tokens)
 
+
+def create_reviewed_tokens(zones, seat, review):
+    """Resolve registered spell token batches via the generic emitter."""
+    if not isinstance(review,TokenSpellReview):
+        raise TypeError("Expected pinned reviewed token spell")
+    return create_reviewed_token_batches(zones,seat,review.batches)
 
 @dataclass(frozen=True)
 class TokenSpellOutcome:
