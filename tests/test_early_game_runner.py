@@ -71,6 +71,8 @@ class BoundedEarlyGameTests(unittest.TestCase):
                     "reviewed_spell_copy_cast",
                     "reviewed_spell_copy_resolved",
                     "source_paid_candidate",
+                    "reviewed_draw_spell_cast",
+                    "reviewed_draw_spell_resolved",
                 } for event in turn["events"]))
                 for event in turn["events"]:
                     if event["type"]=="source_paid_candidate":
