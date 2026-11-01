@@ -62,8 +62,8 @@ ROCKS = {
 def reviewed_rock(name, card, commander_colors):
     """Return (template, printed_cost) only for a pinned reviewed artifact."""
     row = ROCKS.get(name)
-    if row is None or card.get("mana_cost") != row["printed_cost"]
-            or "Artifact" not in card.get("type_line", "").split(" — ", 1)[0]:
+    if (row is None or card.get("mana_cost") != row["printed_cost"]
+            or "Artifact" not in card.get("type_line", "").split(" — ", 1)[0]):
         return None
     descriptor = row["review"]
     base = admit_reviewed_effect(card, descriptor)
