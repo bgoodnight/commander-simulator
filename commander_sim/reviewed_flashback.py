@@ -96,7 +96,7 @@ def cast_reviewed_flashback(zones,seat,source_id,catalog,mana_service,*,
         raise TypeError("Discard choice must be a host policy")
     if review.operation=="draw_discard_two" and len(zones.ids(seat,"library"))<2:
         raise NotImplementedError("Empty-library draw loss requires full host")
-    plan=mana_service.plan(seat,review.alternate_cost)
+    plan=mana_service.plan_spell(seat,review.alternate_cost,source)
     if plan is None:
         return None
     slot=AbilitySlot(review.oracle_id,"front","flashback","keyword",
@@ -107,7 +107,7 @@ def cast_reviewed_flashback(zones,seat,source_id,catalog,mana_service,*,
                         slot.prereqs),))
     dispatcher=AbilityDispatcher(card,"strict",slot.prereqs)
     def apply(operation):
-        payment=mana_service.pay(seat,operation.alternate_cost)
+        payment=mana_service.pay_spell(seat,operation.alternate_cost,source)
         if payment is None:
             raise AssertionError("Flashback payment preview changed")
         ticket=zones.cast(seat,source_id,reviewed_origin="graveyard",
