@@ -114,7 +114,7 @@ class Selection:
             if type(shuffle) is not bool:raise ValueError('Ponder shuffle must be a boolean choice')
             if shuffle:self.t.zones.shuffle(seat)
             self.record('ponder_shuffle',seat,shuffle=shuffle);player.draw()
-        elif name=='Preordain':self.scry(seat,2);player.draw()
+        elif name=='Preordain':self.scry(seat,2);apply_draw_discard(self.t,seat,DrawDiscard(1))
         elif name in ('Telling Time','Impulse'):
             seen=self.look(seat,3 if name=='Telling Time' else 4)
             chosen=self.choose('look_to_hand',seat,seen,min(1,len(seen)))
@@ -127,7 +127,7 @@ class Selection:
             self.rearrange(seat,remaining,top,bottom)
             for oid in chosen:self.t.zones.move(oid,'hand')
         elif name=='Frantic Search':
-            player.draw(2);self.discard(seat,2,'frantic_discard')
+            apply_draw_discard(self.t,seat,DrawDiscard(2,2,'frantic_discard'),selection=self)
             lands=tuple(o.object_id for o in self.t.rules.on_battlefield() if 'land' in o.types)
             policy=getattr(self.t,'frantic_untap_policy',None)
             chosen=tuple(policy(seat,lands)) if policy else tuple(oid for oid in lands if self.t.rules.get(oid).controller==seat and self.t.rules.get(oid).tapped)[:3]
