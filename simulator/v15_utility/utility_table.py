@@ -8,6 +8,8 @@ from engine_table import EngineStack
 from priority import Choice
 from rules import Event,TriggerResult
 from utility_cards import ISLET,RIPTIDE,install
+sys.path.insert(0,str(Path(__file__).resolve().parents[2]))
+from commander_sim.legacy_common_ops import DrawDiscard,apply_draw_discard
 
 @dataclass(frozen=True)
 class SanctuaryChoice:
@@ -108,7 +110,7 @@ class UtilityTable(LandTable):
             self.world.move(frame.target_frame,'hand','bounce')
             self.utility_events.append(('riptide_return',frame.source_id,frame.target_frame))
         else:
-            self.players[frame.controller].draw()
+            apply_draw_discard(self,frame.controller,DrawDiscard(1))
             self.utility_events.append(('islet_draw',frame.source_id))
         self.rules.events.append(Event('ability_resolved',frame.controller,frame.source_id))
         self.emit('ability_resolved',controller=frame.controller,source_id=frame.source_id,ability=spec.key)
