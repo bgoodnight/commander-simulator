@@ -62,6 +62,7 @@ class BoundedEarlyGameTests(unittest.TestCase):
                     "cleanup_discard",
                     "reviewed_graveyard_creature_cast",
                     "reviewed_graveyard_creature_resolved",
+                    "reviewed_nonhand_cast_trigger",
                 } for event in turn["events"]))
 
     def test_magnus_reviewed_tutors_pay_and_move_actual_cards(self):
