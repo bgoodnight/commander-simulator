@@ -21,6 +21,7 @@ from .reviewed_flashback import FLASHBACK
 from .reviewed_enter_effects import ENTER_RULES
 from .reviewed_cost_reduction import REDUCERS
 from .reviewed_graveyard_creatures import GRAVEYARD_CREATURES
+from .reviewed_nonhand_cast_triggers import NONHAND_CAST_TRIGGERS
 
 
 def _named_sources():
@@ -38,6 +39,7 @@ def _named_sources():
         ("enter_trigger",ENTER_RULES),
         ("cost_reduction",REDUCERS),
         ("graveyard_creature_cast",GRAVEYARD_CREATURES),
+        ("nonhand_cast_trigger",NONHAND_CAST_TRIGGERS),
     ):
         for name,row in source.items():
             if kind in {"mana","search"}:
