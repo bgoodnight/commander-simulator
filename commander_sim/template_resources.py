@@ -1,0 +1,174 @@
+"""Six-color payment bridge for reviewed generic mana templates on physical IDs.
+
+Uses the existing kernel as the only authoritative battlefield and mana-pool
+owner. This is a small extension for the bounded early-game runner, not a new
+full MTG resource/priority engine. It shares FixedManaCost and typed reviewed
+mana modes; supports multi-pip rocks and funded Signets, with unused floating
+mana retained until the phase boundary. Damage/life/sacrifice modes are not
+activated until the host provides those rules.
+"""
+from dataclasses import dataclass
+from heapq import heappush, heappop
+from itertools import count
+
+from .effect_templates import ManaMode
+from .mana_costs import FixedManaCost, parse_fixed_mana_cost
+from .mana_kernel_bridge import _reviewed_modes
+from .reviewed_rocks import reviewed_rock
+
+ORDER = "WUBRGC"
+ZERO = (0, 0, 0, 0, 0, 0)
+
+
+def _add(pool, pips):
+    out = list(pool)
+    for pip in pips:
+        out[ORDER.index(pip)] += 1
+    return tuple(out)
+
+
+def _spend(pool, cost):
+    """All lawful residual pools after colored/true-C then generic spending."""
+    if not isinstance(cost, FixedManaCost):
+        raise TypeError("Expected fixed mana cost")
+    remaining = list(pool)
+    for pip in cost.colored:
+        i = ORDER.index(pip)
+        if not remaining[i]:
+            return ()
+        remaining[i] -= 1
+    if sum(remaining) < cost.generic:
+        return ()
+    results = []
+    # Prefer C for generic, preserving flexible colored mana when possible.
+    def spend_generic(index, left, state):
+        if index == len(ORDER):
+            if left == 0:
+                results.append(tuple(state))
+            return
+        for take in range(min(state[index], left), -1, -1):
+            new = list(state)
+            new[index] -= take
+            spend_generic(index + 1, left-take, new)
+    # Put C first to avoid bias toward spending W/U/B/R/G for generic.
+    indices = [5, 0, 1, 2, 3, 4]
+    def recurse(j, left, state):
+        if j == len(indices):
+            if left == 0:
+                results.append(tuple(state))
+            return
+        i = indices[j]
+        for take in range(min(state[i], left), -1, -1):
+            next_state = list(state)
+            next_state[i] -= take
+            recurse(j+1, left-take, next_state)
+    recurse(0, cost.generic, remaining)
+    return tuple(dict.fromkeys(results))
+
+
+@dataclass(frozen=True)
+class PlannedActivation:
+    object_id: int
+    mode: ManaMode
+
+
+@dataclass(frozen=True)
+class ResourcePayment:
+    source_ids: tuple[int, ...]
+    activations: tuple[PlannedActivation, ...]
+    floating_after: tuple[int, ...]
+    search_states: int
+
+
+class TemplateManaService:
+    """One source-ID payment planner for reviewed lands and mana-rock templates."""
+
+    def __init__(self, kernel, card_metadata, commander_colors, *, max_states=16000):
+        colors = frozenset(commander_colors)
+        if not colors or any(x not in "WUBRG" for x in colors):
+            raise ValueError("Invalid commander identity")
+        self.kernel = kernel
+        self.card_metadata = card_metadata
+        self.colors = colors
+        self.max_states = max_states
+        if not hasattr(kernel, "mana_pools"):
+            kernel.mana_pools = {seat: ZERO for seat in range(4)}
+
+    def floating(self, seat=0):
+        return self.kernel.mana_pools[seat]
+
+    def clear(self):
+        for seat in range(4):
+            self.kernel.mana_pools[seat] = ZERO
+        self.kernel._dirty()
+
+    def modes(self, obj):
+        if obj.zone != "battlefield":
+            return ()
+        name = obj.card.name
+        if "land" in obj.types:
+            return tuple(ManaMode((c,)) for c in sorted(_reviewed_modes(name, self.colors)))
+        if "artifact" in obj.types:
+            card = self.card_metadata.get(name)
+            if card is None:
+                return ()
+            reviewed = reviewed_rock(name, card, self.colors)
+            if reviewed is not None:
+                return tuple(mode for mode in reviewed[0].mana_modes
+                             if mode.tap and not (mode.life or mode.damage or mode.sacrifice))
+        return ()
+
+    def plan(self, seat, mana_cost):
+        cost = parse_fixed_mana_cost(mana_cost)
+        if type(seat) is not int or not 0 <= seat < 4:
+            raise ValueError("Invalid seat")
+        candidates = sorted((obj.object_id, self.modes(obj))
+                            for obj in self.kernel.objects.values()
+                            if obj.zone == "battlefield" and obj.controller == seat and not obj.tapped)
+        candidates = [(oid, modes) for oid, modes in candidates if modes]
+        initial = self.floating(seat)
+        serial = count()
+        heap = [(0, next(serial), 0, initial, ())]
+        visited = set()
+        states = 0
+        while heap:
+            depth, _, used, pool, actions = heappop(heap)
+            if (used, pool) in visited:
+                continue
+            visited.add((used, pool))
+            states += 1
+            if states > self.max_states:
+                raise ValueError("Bounded mana search exhausted; no action committed")
+            paid = _spend(pool, cost)
+            if paid:
+                return ResourcePayment(tuple(action.object_id for action in actions),
+                                       actions, paid[0], states)
+            for idx, (oid, modes) in enumerate(candidates):
+                if used & (1 << idx):
+                    continue
+                for mode in modes:
+                    activation_cost = FixedManaCost(mode.activation_generic,
+                                                    mode.activation_colors)
+                    for funded in _spend(pool, activation_cost):
+                        next_pool = _add(funded, mode.output)
+                        heappush(heap, (depth+1, next(serial),
+                                        used | (1 << idx), next_pool,
+                                        actions + (PlannedActivation(oid, mode),)))
+        return None
+
+    def pay(self, seat, mana_cost):
+        """Commit an affordable plan from authoritative physical source IDs."""
+        plan = self.plan(seat, mana_cost)
+        if plan is None:
+            return None
+        # No callback between planning and commit: one synchronous turn driver.
+        for action in plan.activations:
+            obj = self.kernel.get(action.object_id)
+            if (obj.zone != "battlefield" or obj.controller != seat or obj.tapped
+                    or action.mode not in self.modes(obj)):
+                raise ValueError("Stale source payment")
+        for action in plan.activations:
+            self.kernel.get(action.object_id).tapped = True
+        self.kernel.mana_pools[seat] = plan.floating_after
+        self.kernel._dirty()
+        return plan
