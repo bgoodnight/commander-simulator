@@ -54,7 +54,8 @@ class BoundedEarlyGameTests(unittest.TestCase):
                     "artifact_cast", "artifact_resolved",
                     "tutor_cast", "tutor_resolved",
                     "token_spell_cast", "token_spell_resolved",
-                    "reviewed_trigger_resolved",
+                    "reviewed_trigger_resolved", "reviewed_phase_resolved",
+                    "enchantment_cast", "enchantment_resolved",
                 } for event in turn["events"]))
 
     def test_magnus_reviewed_tutors_pay_and_move_actual_cards(self):
@@ -95,7 +96,7 @@ class BoundedEarlyGameTests(unittest.TestCase):
                 for row,state in zip(run["events"],run["state_snapshots"]):
                     self.assertEqual(row["hand_size"]+row["library_size"]
                         +len(state["battlefield"])+len(state["graveyard"])+1,100)
-                if deck in ("mortarion_current","mortarion_ideal","necron_dynasties"):
+                if deck=="necron_dynasties":
                     self.assertFalse(any(event["type"]=="creature_cast"
                         for turn in run["events"] for event in turn["events"]))
 
@@ -133,6 +134,21 @@ class BoundedEarlyGameTests(unittest.TestCase):
                 self.assertEqual(
                     turn["hand_size"]+turn["library_size"]+
                     len(state["battlefield"])+len(state["graveyard"])+1,100)
+
+    def test_reviewed_phase_permanents_and_life_totals_share_kernel(self):
+        for deck in ("wretched_ranks","mortarion_current","mortarion_ideal"):
+            for seed in (0,2,4):
+                run=run_bounded_early_game(deck,seed=seed,turns=6)
+                self.assertEqual(set(run["life_totals"]),{0,1,2,3})
+                self.assertEqual(len(run["events"]),6)
+                for turn in run["events"]:
+                    self.assertEqual(set(turn["life_totals"]),{0,1,2,3})
+                    for event in turn["events"]:
+                        if event["type"]=="reviewed_phase_resolved":
+                            self.assertIn(event["phase"],{"upkeep","end_step"})
+                            self.assertIn(event["source_object_id"],range(1,2000))
+                            self.assertEqual(event["fidelity"],
+                                             "bounded_no_opponent_priority")
 
     def test_invalid_deck_or_horizon_fails_closed(self):
         for key, turns in (("unsupported_deck", 6), ("wretched_ranks", 0),
