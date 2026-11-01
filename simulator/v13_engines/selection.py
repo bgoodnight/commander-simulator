@@ -4,6 +4,10 @@ Library storage is bottom-to-top; all policy orders are top-first. Policies see
 only the cards relevant to the choice and never receive an opportunity to act.
 """
 from dataclasses import dataclass
+from pathlib import Path
+import sys
+sys.path.insert(0,str(Path(__file__).resolve().parents[2]))
+from commander_sim.legacy_common_ops import DrawDiscard,apply_draw_discard
 
 
 @dataclass(frozen=True)
@@ -101,7 +105,7 @@ class Selection:
     def resolve(self,name,seat):
         player=self.t.players[seat]
         if name=='Brainstorm':
-            player.draw(3);self.put_back(seat,2)
+            apply_draw_discard(self.t,seat,DrawDiscard(3));self.put_back(seat,2)
         elif name=='Ponder':
             seen=self.look(seat,3);top=self.choose('ponder_order',seat,seen,len(seen))
             self.rearrange(seat,seen,top,())
