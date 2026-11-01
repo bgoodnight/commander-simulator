@@ -17,6 +17,7 @@ from .mana_kernel_bridge import _reviewed_modes
 from .reviewed_rocks import reviewed_rock
 from .reviewed_lands import reviewed_land
 from .reviewed_cost_reduction import reduced_fixed_cost, cost_symbols
+from .reviewed_alternative_costs import black_life_options, controls_reviewed_krrik
 
 ORDER = "WUBRGC"
 ZERO = (0, 0, 0, 0, 0, 0)
@@ -150,7 +151,8 @@ class TemplateManaService:
         This is a snapshot calculation, not an effect that grants casting
         permission. Unknown spell metadata cannot receive a reduction.
         """
-        original = parse_fixed_mana_cost(mana_cost)
+        normalized = mana_cost.replace('{B/P}', '{B}')
+        original = parse_fixed_mana_cost(normalized)
         if (source is None or not hasattr(source, "card")
                 or type(seat) is not int or not 0 <= seat < 4
                 or source.owner != seat):
@@ -165,17 +167,45 @@ class TemplateManaService:
         colors = frozenset(printed)
         spell_types = frozenset(source.types)
         cost, evidence = reduced_fixed_cost(
-            self.kernel, self.card_metadata, seat, mana_cost,
+            self.kernel, self.card_metadata, seat, normalized,
             spell_types=spell_types, spell_colors=colors)
         return cost_symbols(cost), evidence
 
-    def plan_spell(self, seat, mana_cost, source):
+    def _spell_payment_options(self, seat, mana_cost, source):
+        raw = self.card_metadata.get(source.card.name)
+        if "{B/P}" in mana_cost and (not isinstance(raw,dict)
+                or raw.get("oracle_id") != source.card.card_id
+                or raw.get("mana_cost") != mana_cost):
+            raise ValueError("Unreviewed printed Phyrexian symbol")
         payable, _ = self.spell_cost(seat, mana_cost, source)
-        return self.plan(seat, payable)
+        from .kernel_life import KernelLife
+        life = KernelLife(self.kernel).total(seat)
+        return black_life_options(
+            mana_cost, payable,
+            krrik_active=controls_reviewed_krrik(
+                self.kernel, self.card_metadata, seat),
+            available_life=life)
+
+    def plan_spell(self, seat, mana_cost, source):
+        for option in self._spell_payment_options(seat, mana_cost, source):
+            planned = self.plan(seat, option.mana_cost)
+            if planned is not None:
+                return planned
+        return None
 
     def pay_spell(self, seat, mana_cost, source):
-        payable, _ = self.spell_cost(seat, mana_cost, source)
-        return self.pay(seat, payable)
+        from .kernel_life import KernelLife
+        for option in self._spell_payment_options(seat, mana_cost, source):
+            if self.plan(seat, option.mana_cost) is None:
+                continue
+            paid = self.pay(seat, option.mana_cost)
+            if paid is None:
+                raise AssertionError("Reviewed alternative payment invalidated")
+            if option.life_cost:
+                KernelLife(self.kernel).lose(seat, option.life_cost,
+                                            source.object_id)
+            return paid
+        return None
 
     def plan(self, seat, mana_cost, *, excluded_source_ids=()):
         cost = parse_fixed_mana_cost(mana_cost)
