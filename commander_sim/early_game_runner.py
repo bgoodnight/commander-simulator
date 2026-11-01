@@ -88,6 +88,10 @@ def run_bounded_early_game(deck_key, *, seed=0, turns=6, mulligan="one-free", pr
     registry = CardRegistry(snapshot)
     colors = registry.get(fixture.commander).color_identity
     raw_by_name = {entry["deck_name"]: entry["card"] for entry in pinned}
+    # Pinned, source-verified ETB effects with safe bounded hand-cast paths.
+    enter_hand_casts = {"Bastion of Remembrance", "Grave Titan", "Marionette Apprentice"}
+    def approved_enter_hand_cast(name):
+        return name in enter_hand_casts and reviewed_enter_rule(name, raw_by_name[name]) is not None
     # Catalog is a per-deck immutable identity projection for the feature
     # tracker. It includes all imported cards, not just supported casts.
     catalog = {name: {"type_line": card.get("type_line") or " // ".join(
@@ -145,10 +149,6 @@ def run_bounded_early_game(deck_key, *, seed=0, turns=6, mulligan="one-free", pr
     phase_engine = ReviewedPhaseEngine(zones, life, raw_by_name)
     death_engine = ReviewedDeathEngine(zones, life, raw_by_name)
     entered_on_turn = {}
-    # Pinned, source-verified ETB effects with safe bounded hand-cast paths.
-    enter_hand_casts = {"Bastion of Remembrance", "Grave Titan", "Marionette Apprentice"}
-    def approved_enter_hand_cast(name):
-        return name in enter_hand_casts and reviewed_enter_rule(name, raw_by_name[name]) is not None
     if len(kernel.objects) != 100:
         raise AssertionError("Pinned 100-card zone conservation failed at loading")
     zones.shuffle(0)
