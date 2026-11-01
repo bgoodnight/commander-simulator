@@ -84,7 +84,7 @@ class EngineTable(CombatTable):
     def resolve_trigger(self,item):
         args=dict(item.args);player=self.players[item.controller]
         bridge=getattr(self,'live_ability_bridge',None)
-        if bridge is not None and item.op=='draw':
+        if bridge is not None and item.op in ('draw','create_token'):
             if bridge.execute(item,lambda effect:super(EngineTable,self).resolve_trigger(item)):
                 self._reconcile_ability_sources()
                 return
