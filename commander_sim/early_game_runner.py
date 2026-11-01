@@ -689,6 +689,8 @@ def run_bounded_early_game(deck_key, *, seed=0, turns=6, mulligan="one-free", pr
                 and not reviewed_sacrifice_artifact(kernel.get(oid).card.name,
                     raw_by_name[kernel.get(oid).card.name])
                 and not approved_enter_hand_cast(kernel.get(oid).card.name)
+                and reviewed_buyback(kernel.get(oid).card.name,
+                    raw_by_name[kernel.get(oid).card.name]) is None
                 and not supported_land(oid)),
         })
     analysis = analyze_authoritative_run(catalog, profile or {}, states)
