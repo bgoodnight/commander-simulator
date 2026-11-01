@@ -5,8 +5,9 @@ const fs=require('node:fs');
 const vm=require('node:vm');
 
 const code=fs.readFileSync('web/pages/app.js','utf8').replace(/boot\(\);\s*$/,'');
-function context(){
+function context(missingIds=[]){
   const nodes=new Map();
+  const missing=new Set(missingIds);
   class Node{
     constructor(tag){this.tag=tag;this.children=[];this.value='';this.disabled=false;this.classList={add(){}};}
     appendChild(child){this.children.push(child);return child;}
@@ -17,6 +18,7 @@ function context(){
     location:{pathname:'/index.html',search:''},
     window:{confirm:()=>true}, localStorage:{getItem:()=>null,setItem(){}},
     document:{getElementById:id=>{
+      if(missing.has(id))return null;
       if(!nodes.has(id))nodes.set(id,new Node('root'));
       return nodes.get(id);
     },createElement:t=>new Node(t)}
@@ -92,4 +94,10 @@ test('deck selection appears after commander header, above editor content',()=>{
   assert.match(html,/class="deck-selection-row"/);
   assert.doesNotMatch(html,/id="deck-version-select"/);
   assert.match(html,/Manage Decks/);
+});
+
+test('removed legacy deck selector does not interrupt deck rendering',()=>{
+  const {ctx,nodes}=context(['deck-version-select','change-deck-link']);
+  assert.doesNotThrow(()=>vm.runInContext('renderDeckVersionSelector();renderGlobalDeckSelector()',ctx));
+  assert.ok(nodes.get('global-deck-select').children.length>0);
 });
