@@ -379,7 +379,7 @@ def run_bounded_early_game(deck_key, *, seed=0, turns=6, mulligan="one-free", pr
             for oid in zones.ids(0,"hand"):
                 obj=kernel.get(oid)
                 rule=reviewed_buyback(obj.card.name,raw_by_name.get(obj.card.name))
-                if rule is None:
+                if rule is None or obj.card.coverage=="unimplemented":
                     continue
                 with_buyback=buyback_total_cost(rule,True)
                 if mana_service.plan_spell(0,with_buyback,obj) is not None:
