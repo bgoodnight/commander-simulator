@@ -396,7 +396,11 @@ def run_bounded_early_game(deck_key, *, seed=0, turns=6, mulligan="one-free", pr
                     "creature" not in source.types
                     or entered_on_turn.get(source.object_id,0)<turn
                     or "haste" in source.keywords)),
-                death_engine=death_engine,scry_to_bottom=False)
+                death_engine=death_engine,scry_to_bottom=False,
+                mana_color=("R" if "R" in colors else
+                            "B" if "B" in colors else
+                            next(iter(sorted(colors))))
+                            if mode.action=="any_color_mana" else None)
             if resolved is None:
                 continue
             used_sacrifice_sources.add(source.object_id)
