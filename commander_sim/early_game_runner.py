@@ -20,7 +20,7 @@ from pathlib import Path
 import sys
 
 from .card_cache import pinned_deck_entries
-from .deck_fixtures import FIXTURES, SHARED_CATALOG
+from .deck_fixtures import FIXTURES, EXPERIMENTAL_FIXTURES, SHARED_CATALOG
 from .generic_cast import ReviewedCreatureCast, cast_reviewed_permanent
 from .kernel_reporting import project_kernel_turn
 from .board_features import analyze_authoritative_run
@@ -85,7 +85,7 @@ def run_bounded_early_game(deck_key, *, seed=0, turns=6, mulligan="one-free", pr
         raise ValueError("Expected integer seed and 1..10 turns")
     if mulligan not in ("one-free", "keep"):
         raise ValueError("Unknown mulligan policy")
-    fixture = next((x for x in FIXTURES if x.key == deck_key), None)
+    fixture = next((x for x in (*FIXTURES, *EXPERIMENTAL_FIXTURES) if x.key == deck_key), None)
     if fixture is None:
         raise ValueError("Unknown pinned deck fixture")
     # Every fully pinned deck may exercise common reviewed lands and rocks.
@@ -777,7 +777,7 @@ def run_bounded_early_game(deck_key, *, seed=0, turns=6, mulligan="one-free", pr
 if __name__ == "__main__":
     import argparse
     parser = argparse.ArgumentParser(description=__doc__)
-    parser.add_argument("--deck", choices=sorted(f.key for f in FIXTURES), required=True)
+    parser.add_argument("--deck", choices=sorted(f.key for f in (*FIXTURES, *EXPERIMENTAL_FIXTURES)), required=True)
     parser.add_argument("--seed", type=int, default=0)
     parser.add_argument("--turns", type=int, default=6)
     parser.add_argument("--mulligan", choices=("one-free", "keep"), default="one-free")
