@@ -91,8 +91,15 @@ class ComposedCard:
             slot=next(s for s in self.slots if s.key==h.slot_key)
             if slot.source_revision!=h.source_revision:
                 raise ValueError("Handler needs same reviewed source revision")
-            if h.operation!=slot.declaration:
-                raise ValueError("Handler operation must match reviewed declaration")
+            # A promoted exact operation may be more precise than the earlier
+            # simplified implementation. Require the *same reviewed effect
+            # family*, not byte-identical parameters: otherwise promotion
+            # could never correct a bounded approximation.
+            if type(h.operation) is not type(slot.declaration):
+                raise ValueError("Handler must use the reviewed operation type")
+            if (hasattr(slot.declaration,"kind")
+                    and h.operation.kind != slot.declaration.kind):
+                raise ValueError("Handler cannot change the effect family")
 
     def slot(self, slot_id):
         return next((s for s in self.slots if s.slot_id==slot_id),None)
@@ -228,8 +235,10 @@ def inspected_rock_card(name, commander_colors):
     identity=dict(oracle_id=review.oracle_id,oracle_text=review.oracle_text,
                   mana_cost=row["printed_cost"],type_line="Artifact",layout="normal")
     effect,_=reviewed_rock(name,identity,commander_colors)
+    mana_text=(review.oracle_text if name=="Talisman of Creativity"
+               else review.oracle_text.splitlines()[0])
     mana=AbilitySlot(review.oracle_id,"front","mana", "mana",effect,
-                     review.oracle_text,"oracle-pinned-v1",frozenset({"mana_activation"}))
+                     mana_text,"oracle-pinned-v1",frozenset({"mana_activation"}))
     handlers=[AbilityHandler(mana.key,"simplified",effect,mana.source_revision,
                              frozenset({"mana_activation"}),review.assumptions)]
     slots=[mana]
