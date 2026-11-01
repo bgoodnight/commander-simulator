@@ -20,7 +20,8 @@ from pathlib import Path
 import sys
 
 from .card_cache import pinned_deck_entries
-from .deck_fixtures import FIXTURES, SHARED_CATALOG
+from .mana_costs import UnsupportedManaCost
+from .deck_fixtures import FIXTURES, EXPERIMENTAL_FIXTURES, SHARED_CATALOG
 from .generic_cast import ReviewedCreatureCast, cast_reviewed_permanent
 from .kernel_reporting import project_kernel_turn
 from .board_features import analyze_authoritative_run
@@ -28,9 +29,11 @@ from .reviewed_early_cards import REVIEWED_BY_DECK, LIMITATIONS, reviewed_creatu
 from .snapshots import validate_snapshot
 from .mana_kernel_bridge import _reviewed_modes
 from .reviewed_rocks import reviewed_rock
+from .reviewed_lands import reviewed_land
 from .reviewed_tutors import reviewed_tutor
 from .reviewed_tutor_cast import (eligible_reviewed_tutor_targets,
                                   cast_and_resolve_reviewed_tutor)
+from .reviewed_draw_spells import (reviewed_draw_spell, cast_and_resolve_reviewed_draw_spell)
 from .reviewed_token_spells import (reviewed_token_spell,
                                    cast_and_resolve_reviewed_token_spell)
 from .bounded_trigger_effects import resolve_reviewed_spell_triggers
@@ -85,7 +88,7 @@ def run_bounded_early_game(deck_key, *, seed=0, turns=6, mulligan="one-free", pr
         raise ValueError("Expected integer seed and 1..10 turns")
     if mulligan not in ("one-free", "keep"):
         raise ValueError("Unknown mulligan policy")
-    fixture = next((x for x in FIXTURES if x.key == deck_key), None)
+    fixture = next((x for x in (*FIXTURES, *EXPERIMENTAL_FIXTURES) if x.key == deck_key), None)
     if fixture is None:
         raise ValueError("Unknown pinned deck fixture")
     # Every fully pinned deck may exercise common reviewed lands and rocks.
@@ -142,9 +145,11 @@ def run_bounded_early_game(deck_key, *, seed=0, turns=6, mulligan="one-free", pr
         tutor_review = reviewed_tutor(name, raw_by_name[name])
         reviewed = (reviewed_creature(deck_key, name, raw_by_name[name])
                     or reviewed_rock(name, raw_by_name[name], colors) is not None
+                    or reviewed_land(name, raw_by_name[name], colors) is not None
                     or (tutor_review is not None
                         and tutor_review[2] in {"instant", "sorcery"})
                     or reviewed_token_spell(name, raw_by_name[name]) is not None
+                    or reviewed_draw_spell(name,raw_by_name[name]) is not None
                     # Graveyard flashback permission is independently reviewed,
                     # even if no ordinary hand-cast recipe exists (Looting).
                     or reviewed_flashback(name, raw_by_name[name]) is not None
@@ -174,9 +179,12 @@ def run_bounded_early_game(deck_key, *, seed=0, turns=6, mulligan="one-free", pr
     zones.shuffle(0)
     zones.draw(0, 7)
     initial_hand = list(zones.names(0, "hand"))
-    supported_land = lambda oid: bool(
-        "land" in kernel.get(oid).types
-        and _reviewed_modes(kernel.get(oid).card.name, colors))
+    def supported_land(oid):
+        obj=kernel.get(oid)
+        if "land" not in obj.types:
+            return False
+        return bool(_reviewed_modes(obj.card.name,colors)
+                    or reviewed_land(obj.card.name,raw_by_name[obj.card.name],colors))
     possible_lands = sum(supported_land(oid) for oid in zones.ids(0, "hand"))
     mulligan_taken = mulligan == "one-free" and not 2 <= possible_lands <= 5
     if mulligan_taken:
@@ -243,9 +251,18 @@ def run_bounded_early_game(deck_key, *, seed=0, turns=6, mulligan="one-free", pr
         if playable_lands:
             land_id = playable_lands[0]
             name = kernel.get(land_id).card.name
+            other_lands=sum("land" in obj.types and obj.zone=="battlefield"
+                            and obj.controller==0 for obj in kernel.objects.values())
+            land_review=reviewed_land(name,raw_by_name[name],colors)
             new_id = zones.play_land(0, land_id)
+            if land_review is not None and land_review.enters_tapped(other_lands):
+                kernel.get(new_id).tapped=True
+                kernel._dirty()
             events.append({"type": "land_play", "card": name,
-                           "from_object_id": land_id, "object_id": new_id})
+                           "from_object_id": land_id, "object_id": new_id,
+                           "fidelity":"reviewed_partial_land" if land_review else "reviewed_basic_land",
+                           "entered_tapped":bool(kernel.get(new_id).tapped),
+                           "unsupported_abilities":list(land_review.ignored) if land_review else []})
         copied_this_turn=set()
         # Reuse the same source-paid action for approved artifacts and creatures.
         # Prefer affordable ramp rocks before creatures: a limited pilot policy.
@@ -258,6 +275,7 @@ def run_bounded_early_game(deck_key, *, seed=0, turns=6, mulligan="one-free", pr
                 is_creature = reviewed_creature(deck_key, name, raw)
                 rock = reviewed_rock(name, raw, colors)
                 token_spell = reviewed_token_spell(name, raw)
+                draw_spell = reviewed_draw_spell(name,raw)
                 phase_enchantment = reviewed_phase_permanent(name, raw) or reviewed_breach(name, raw)
                 sacrifice_artifact = reviewed_sacrifice_artifact(name, raw)
                 entering = approved_enter_hand_cast(name)
@@ -265,7 +283,7 @@ def run_bounded_early_game(deck_key, *, seed=0, turns=6, mulligan="one-free", pr
                 eligible = (eligible_reviewed_tutor_targets(zones, 0, name, raw_by_name)
                             if tutor and tutor[2] in {"instant", "sorcery"} else ())
                 if (not is_creature and rock is None and not eligible
-                        and token_spell is None and not phase_enchantment
+                        and token_spell is None and draw_spell is None and not phase_enchantment
                         and not sacrifice_artifact and not entering):
                     continue
                 cost = registry.get(name).primary_face().mana_cost
@@ -274,6 +292,7 @@ def run_bounded_early_game(deck_key, *, seed=0, turns=6, mulligan="one-free", pr
                     kind = ("artifact" if rock is not None or sacrifice_artifact else
                             "enchantment" if phase_enchantment or (entering and "Enchantment" in raw.get("type_line","").split(" — ",1)[0]) else
                             "tutor" if eligible else
+                            "draw_spell" if draw_spell is not None else
                             "token_spell" if token_spell is not None else "creature")
                     target = (min(eligible, key=lambda target_id: (
                         0 if kernel.get(target_id).card.name == "Sol Ring" else
@@ -315,6 +334,27 @@ def run_bounded_early_game(deck_key, *, seed=0, turns=6, mulligan="one-free", pr
                                "target_object_id": result.target_new_id,
                                "destination": result.target_destination,
                                "fidelity": "bounded_reviewed_search"})
+                continue
+            if kind == "draw_spell":
+                triggered=[]
+                result=cast_and_resolve_reviewed_draw_spell(
+                    zones,0,oid,raw_by_name,colors,mana_service,
+                    on_cast=lambda ticket:triggered.extend(
+                        approved_spell_triggers(ticket)))
+                if result is None:
+                    raise AssertionError("Source-paid draw spell became unavailable")
+                events.append({"type":"reviewed_draw_spell_cast",
+                               "card":name,
+                               "stack_object_id":result.source_stack_id,
+                               "source_object_ids":list(result.mana_source_ids),
+                               "fidelity":"reviewed_physical_draw"})
+                events.extend(triggered)
+                events.append({"type":"reviewed_draw_spell_resolved",
+                               "card":name,
+                               "source_graveyard_id":result.source_graveyard_id,
+                               "drawn_ids":list(result.drawn_ids),
+                               "unsupported_abilities":list(result.limitations),
+                               "fidelity":"reviewed_physical_draw"})
                 continue
             if kind == "token_spell":
                 triggered=[]
@@ -675,6 +715,37 @@ def run_bounded_early_game(deck_key, *, seed=0, turns=6, mulligan="one-free", pr
                            "source_object_id":old_id,
                            "graveyard_object_id":new_id,
                            "fidelity":"bounded_no_opponent_priority"})
+        # Generic reusable *feasibility* fallback for every unreviewed card.
+        # This is a read-only source-paid preview over existing physical
+        # objects. It never invents a legal cast, effect, zone move, target,
+        # priority pass, or mana spent. Thus future imported cards remain
+        # useful in diagnostic traces without granting unknown abilities.
+        candidates_seen=set()
+        for oid in zones.ids(0, "hand"):
+            obj=kernel.get(oid)
+            name=obj.card.name
+            if name in candidates_seen or "land" in obj.types:
+                continue
+            candidates_seen.add(name)
+            if obj.card.coverage!="unimplemented":
+                continue
+            try:
+                printed=registry.get(name).primary_face().mana_cost
+                payment=mana_service.plan_spell(0,printed,obj)
+            except (NotImplementedError,UnsupportedManaCost):
+                continue
+            if payment is not None:
+                events.append({
+                    "type":"source_paid_candidate",
+                    "card":name,
+                    "object_id":oid,
+                    "source_object_ids":list(payment.source_ids),
+                    "fidelity":"payment_preview_only",
+                    "effect_status":"unsupported",
+                    "limitations":("Cost feasibility is not casting permission; "
+                                   "timing, targets, mandatory abilities, "
+                                   "priority and resolution were not assessed")
+                })
         # Cleanup follows all end-step abilities; use actual kernel movement.
         # The limited pilot already spent available main-phase mana and cast
         # supported spells before this point, avoiding excess hand cards when
@@ -687,6 +758,7 @@ def run_bounded_early_game(deck_key, *, seed=0, turns=6, mulligan="one-free", pr
                 or reviewed_creature(deck_key, name, raw)
                 or reviewed_rock(name, raw, colors) is not None
                 or reviewed_token_spell(name, raw) is not None
+                or reviewed_draw_spell(name,raw) is not None
                 or reviewed_tutor(name, raw) is not None
                 or reviewed_phase_permanent(name, raw)
                 or reviewed_sacrifice_artifact(name, raw)
@@ -743,6 +815,8 @@ def run_bounded_early_game(deck_key, *, seed=0, turns=6, mulligan="one-free", pr
                          in {"instant", "sorcery"})
                 and reviewed_token_spell(kernel.get(oid).card.name,
                     raw_by_name[kernel.get(oid).card.name]) is None
+                and reviewed_draw_spell(kernel.get(oid).card.name,
+                    raw_by_name[kernel.get(oid).card.name]) is None
                 and not reviewed_phase_permanent(kernel.get(oid).card.name,
                     raw_by_name[kernel.get(oid).card.name])
                 and not reviewed_sacrifice_artifact(kernel.get(oid).card.name,
@@ -777,7 +851,7 @@ def run_bounded_early_game(deck_key, *, seed=0, turns=6, mulligan="one-free", pr
 if __name__ == "__main__":
     import argparse
     parser = argparse.ArgumentParser(description=__doc__)
-    parser.add_argument("--deck", choices=sorted(f.key for f in FIXTURES), required=True)
+    parser.add_argument("--deck", choices=sorted(f.key for f in (*FIXTURES, *EXPERIMENTAL_FIXTURES)), required=True)
     parser.add_argument("--seed", type=int, default=0)
     parser.add_argument("--turns", type=int, default=6)
     parser.add_argument("--mulligan", choices=("one-free", "keep"), default="one-free")

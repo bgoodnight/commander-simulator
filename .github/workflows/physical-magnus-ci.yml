@@ -1,0 +1,50 @@
+name: Physical Magnus metadata and shared-engine smoke
+on:
+  push:
+    branches: [feature/generic-card-fallback-physical-magnus]
+    paths:
+      - ".github/workflows/physical-magnus-ci.yml"
+      - "commander_sim/**"
+      - "decklists/magnus_physical_legal_trial_v1_1.txt"
+      - "tools/run_physical_magnus_trials.py"
+      - "tests/test_physical_magnus.py"
+      - "tests/test_early_game_runner.py"
+      - "run_all_tests.py"
+  workflow_dispatch:
+permissions:
+  contents: write
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      - name: Explicit cache-first import, outside simulations
+        run: |
+          python tools/fetch_deck_identities.py decklists/magnus_physical_legal_trial_v1_1.txt simulator/card_data/magnus_physical_trial_m1_scryfall.json --catalog simulator/card_data/shared_scryfall_catalog.json
+      - name: Run shared physical-kernel bounded trial
+        run: |
+          python tools/run_physical_magnus_trials.py --seeds 40 --turns 6 --output physical-magnus-trials.json
+          python -m unittest discover -s tests -p test_physical_magnus.py -v
+          python run_all_tests.py
+      - uses: actions/upload-artifact@v4
+        with:
+          name: physical-magnus-trials
+          path: physical-magnus-trials.json
+          retention-days: 14
+      - name: Commit only new identity snapshot and appended shared catalog
+        run: |
+          git fetch origin main
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add simulator/card_data/shared_scryfall_catalog.json simulator/card_data/magnus_physical_trial_m1_scryfall.json simulator/card_data/magnus_physical_trial_m1_scryfall.manifest.json
+          if ! git diff --cached --quiet; then
+            git commit -m "Pin physical Magnus legal-trial Oracle identities"
+            if ! git push origin HEAD:feature/generic-card-fallback-physical-magnus; then
+              echo "Branch advanced; identity snapshot is available as artifact of this run only."
+              exit 1
+            fi
+          fi
