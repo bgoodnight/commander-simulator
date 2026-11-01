@@ -52,7 +52,8 @@ def _cast_reviewed_card(zones, seat, object_id, review, commander_colors, *,
             or (card.types != frozenset({card_type}) if card_type in {"instant", "sorcery"}
                 else card_type not in card.types or not card.types <= {"artifact", "creature", "enchantment"})):
         raise ValueError("Not an approved reviewed permanent")
-    parse_fixed_mana_cost(review.mana_cost)
+    # B/P alternatives are validated and paid only by the reviewed mana service.
+    parse_fixed_mana_cost(review.mana_cost.replace('{B/P}', '{B}'))
     if mana_service is not None and mana_service.kernel is not kernel:
         raise ValueError("Mana service must use SAME game kernel")
     if mana_service is None:
