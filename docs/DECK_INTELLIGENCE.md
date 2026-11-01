@@ -100,3 +100,26 @@ actions to that driver, then expand reviewed shared mana rocks, effect
 handlers, tutor predicates, and legal opposing responses. Keep the UI in
 Work mode on a separate branch; the backend module interface can be
 consumed later, but should not be represented as a complete game API.
+
+## Optional strategy profiles in bounded runs
+
+Profiles are JSON definitions stored apart from canonical decklists. Use
+`--profile` to track exact verified key-card names and named group membership
+in real kernel snapshots, and to aggregate per-seed access milestones:
+
+```sh
+python -m commander_sim.early_game_runner --deck wretched_ranks --seed 7 --turns 6 --profile docs/examples/wretched_ranks_early_profile.json
+python -m commander_sim.bounded_batch --deck wretched_ranks --seeds 20 --turns 6 --profile docs/examples/wretched_ranks_early_profile.json
+python -m commander_sim.bounded_batch --deck magnus_premium --seeds 20 --turns 6 --profile docs/examples/magnus_early_profile.json
+```
+
+These example profiles are optional strategic **labels**, not user-endorsed
+optimal plans or fully supported card abilities. Their combo lists are empty
+because no combo execution is verified in the bounded land/creature runner.
+The metrics distinguish ever-in-hand, on-board, and verified tutor access
+(which remains unavailable here). Full tutoring and operational combo
+rates must be driven by reviewed executable rules after the general turn
+engine supports them. The separate UI workstream can consume
+`deck_intelligence.strategy` and `curated_milestones` once it has a
+real-run import or API; browser-only observation results must not be
+rebranded as these gameplay metrics.
