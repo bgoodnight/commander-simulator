@@ -59,6 +59,7 @@ test('cross-commander built-in and saved variants load without filtering',()=>{
   const {ctx}=context();
   vm.runInContext(`
     var loaded=[];
+    validateCounts=()=>{};
     summon=(key,{versionId=null}={})=>loaded.push({key,versionId});
     loadDeckSelection('preset:beta');
     loadDeckSelection('saved:v-new');
