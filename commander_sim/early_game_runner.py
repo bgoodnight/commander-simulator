@@ -15,12 +15,14 @@ import sys
 
 from .card_cache import pinned_deck_entries
 from .deck_fixtures import FIXTURES, SHARED_CATALOG
-from .generic_cast import ReviewedCreatureCast, cast_reviewed_creature
+from .generic_cast import ReviewedCreatureCast, cast_reviewed_permanent
 from .kernel_reporting import project_kernel_turn
 from .board_features import analyze_authoritative_run
 from .reviewed_early_cards import REVIEWED_BY_DECK, LIMITATIONS, reviewed_creature
 from .snapshots import validate_snapshot
 from .mana_kernel_bridge import _reviewed_modes
+from .reviewed_rocks import reviewed_rock
+from .template_resources import TemplateManaService
 
 ROOT = Path(__file__).resolve().parents[1]
 
@@ -74,7 +76,6 @@ def run_bounded_early_game(deck_key, *, seed=0, turns=6, mulligan="one-free", pr
     IndexedKernel, LiveZones, CardDefinition = _load_live_kernel()
     kernel = IndexedKernel()
     zones = LiveZones(kernel, seed=seed)
-    review_for_id = {}
     for section, name, quantity in snapshot.deck.cards:
         identity = registry.get(name)
         try:
@@ -100,7 +101,8 @@ def run_bounded_early_game(deck_key, *, seed=0, turns=6, mulligan="one-free", pr
             power, toughness = face.power or 0, face.toughness or 0
             keywords = face.keywords or frozenset()
             colors_printed = face.colors
-        reviewed = reviewed_creature(deck_key, name, raw_by_name[name])
+        reviewed = (reviewed_creature(deck_key, name, raw_by_name[name])
+                    or reviewed_rock(name, raw_by_name[name], colors) is not None)
         definition = CardDefinition(
             identity.oracle_id, name, types, subtypes=subtypes,
             supertypes=frozenset({"commander"}) if section == "Commander" else frozenset(),
@@ -108,12 +110,9 @@ def run_bounded_early_game(deck_key, *, seed=0, turns=6, mulligan="one-free", pr
             keywords=keywords, colors=colors_printed,
             coverage="approx" if reviewed else "unimplemented")
         for _ in range(quantity):
-            oid = zones.add(definition, 0, "command" if section == "Commander" else "library")
-            if reviewed:
-                review_for_id[oid] = ReviewedCreatureCast(
-                    identity.oracle_id, face.mana_cost, True,
-                    ("Printed non-entry abilities are not executed in this bounded runner",))
+            zones.add(definition, 0, "command" if section == "Commander" else "library")
 
+    mana_service = TemplateManaService(kernel, raw_by_name, colors)
     if len(kernel.objects) != 100:
         raise AssertionError("Pinned 100-card zone conservation failed at loading")
     zones.shuffle(0)
@@ -134,6 +133,7 @@ def run_bounded_early_game(deck_key, *, seed=0, turns=6, mulligan="one-free", pr
     actions_by_turn = []
     states = []
     for turn in range(1, turns + 1):
+        mana_service.clear()
         events = []
         for obj in kernel.objects.values():
             if obj.controller == 0 and obj.zone == "battlefield" and obj.tapped:
@@ -154,44 +154,53 @@ def run_bounded_early_game(deck_key, *, seed=0, turns=6, mulligan="one-free", pr
             new_id = zones.play_land(0, land_id)
             events.append({"type": "land_play", "card": name,
                            "from_object_id": land_id, "object_id": new_id})
-        # Bounded fixed policy: choose the cheapest source-affordable reviewed
-        # creature and repeat until no such cast remains. This heuristic is NOT
-        # claimed to be strategically optimal or to implement Magic priority.
+        # Reuse the same source-paid action for approved artifacts and creatures.
+        # Prefer affordable ramp rocks before creatures: a limited pilot policy.
         while True:
             options = []
             for oid in zones.ids(0, "hand"):
                 obj = kernel.get(oid)
-                raw = raw_by_name[obj.card.name]
-                if not reviewed_creature(deck_key, obj.card.name, raw):
+                name = obj.card.name
+                raw = raw_by_name[name]
+                is_creature = reviewed_creature(deck_key, name, raw)
+                rock = reviewed_rock(name, raw, colors)
+                if not is_creature and rock is None:
                     continue
-                from .mana_kernel_bridge import plan_live_basic_payment
-                cost = registry.get(obj.card.name).primary_face().mana_cost
-                payment = plan_live_basic_payment(kernel, 0, cost, colors)
+                cost = registry.get(name).primary_face().mana_cost
+                payment = mana_service.plan(0, cost)
                 if payment is not None:
-                    options.append((len(payment.source_ids), obj.card.name, oid))
+                    kind = "creature" if is_creature else "artifact"
+                    options.append((0 if rock is not None else 1,
+                                    len(payment.source_ids), name, oid, kind, cost))
             if not options:
                 break
-            _, name, oid = min(options)
-            # Each instance can move zones and acquire a new object ID; only
-            # the exact Oracle+text-reviewed identity authorizes the action.
+            _, _, name, oid, kind, cost = min(options)
             review = ReviewedCreatureCast(
-                kernel.get(oid).card.card_id,
-                registry.get(name).primary_face().mana_cost,
-                True,
-                ("Non-entry printed abilities remain unimplemented",))
-            committed = cast_reviewed_creature(zones, 0, oid, review, colors)
+                kernel.get(oid).card.card_id, cost, True,
+                ("Other printed abilities remain unsupported",))
+            committed = cast_reviewed_permanent(
+                zones, 0, oid, review, colors, mana_service=mana_service,
+                permanent_type=kind)
             if committed is None:
                 raise AssertionError("Payment feasibility changed without an action")
             events.append({
-                "type": "creature_cast", "card": name,
+                "type": kind + "_cast", "card": name,
                 "stack_object_id": committed.ticket.object_id,
                 "source_object_ids": list(committed.paid_source_ids),
+                "floating_after_payment": list(mana_service.floating()),
                 "fidelity": "limited_generic_cast",
                 "unsupported_abilities": list(committed.unresolved_later_abilities),
             })
             resolved_id = zones.resolve(committed.ticket)
-            events.append({"type": "creature_resolved", "card": name,
+            if kind == "artifact":
+                rock = reviewed_rock(name, raw_by_name[name], colors)
+                if rock[0].enter_tapped:
+                    kernel.get(resolved_id).tapped = True
+                    kernel._dirty()
+            events.append({"type": kind + "_resolved", "card": name,
                            "object_id": resolved_id, "fidelity": "limited_generic_resolution"})
+        floating_end = list(mana_service.floating())
+        mana_service.clear()
         if not zones.assert_consistent() or len(kernel.objects) != 100:
             raise AssertionError("Physical object conservation failed")
         state = project_kernel_turn(zones, 0, turn, catalog)
@@ -203,10 +212,16 @@ def run_bounded_early_game(deck_key, *, seed=0, turns=6, mulligan="one-free", pr
                               for o in kernel.objects.values()),
             "creature_count": sum("creature" in o.types and o.zone == "battlefield"
                                   for o in kernel.objects.values()),
+            "mana_rock_count": sum("artifact" in o.types and o.zone == "battlefield"
+                                  and reviewed_rock(o.card.name, raw_by_name[o.card.name], colors) is not None
+                                  for o in kernel.objects.values()),
+            "floating_at_end_of_main": floating_end,
             "unsupported_cards_in_hand": sorted(
                 kernel.get(oid).card.name for oid in zones.ids(0, "hand")
                 if not reviewed_creature(deck_key, kernel.get(oid).card.name,
                                          raw_by_name[kernel.get(oid).card.name])
+                and reviewed_rock(kernel.get(oid).card.name,
+                                  raw_by_name[kernel.get(oid).card.name], colors) is None
                 and not supported_land(oid)),
         })
     analysis = analyze_authoritative_run(catalog, profile or {}, states)
