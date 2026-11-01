@@ -50,7 +50,7 @@ class PhaseRule:
 
 
 def _rule(oid,excerpt,phase,op,*,each=False):
-    return PhaseRule(oid,excerpt,phase,op,each)
+    return PhaseRule(oid,excerpt,phase,op,op,each)
 
 
 PHASE_RULES={
