@@ -576,3 +576,10 @@ body{background-color:#101019;background-image:radial-gradient(ellipse at 50% -1
 .bracket-trigger-action,.bracket-inline-link{color:var(--cyan);font-size:.73rem;text-decoration:underline;text-underline-offset:3px}
 .bracket-evidence-body{border-top:1px solid #6b5b42;margin-top:10px;padding-top:12px}
 .bracket-inline-link{display:inline-block;margin-top:2px}
+
+/* Deck selection lives below the commander header, only on the editor page. */
+.deck-selection-row:not([hidden]){display:flex;align-items:center;gap:12px;width:100%;margin:12px 0 18px;padding:14px 18px;border:1px solid #ad936b;border-radius:12px;background:#192625;box-sizing:border-box}
+.deck-selection-row label{white-space:nowrap;color:#e7d1aa;font-size:.82rem;font-weight:650}
+.deck-selection-row .global-deck-select{flex:1;min-width:0;width:100%;max-width:none}
+.deck-selection-row .selection-state{flex-shrink:0}
+@media(max-width:650px){.deck-selection-row:not([hidden]){flex-direction:column;align-items:stretch}.deck-selection-row .selection-state{text-align:left;max-width:none}}
