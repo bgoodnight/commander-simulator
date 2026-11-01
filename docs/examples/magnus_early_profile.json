@@ -1,0 +1,30 @@
+{
+  "key_cards": [
+    {
+      "id": "young_pyromancer",
+      "card": "Young Pyromancer",
+      "role": "spellslinger token engine; triggered ability unsupported here"
+    },
+    {
+      "id": "talrand",
+      "card": "Talrand, Sky Summoner",
+      "role": "spell token engine; triggered ability unsupported here"
+    },
+    {
+      "id": "spellseeker",
+      "card": "Spellseeker",
+      "role": "instant/sorcery tutor; enter ability unsupported here"
+    }
+  ],
+  "groups": [
+    {
+      "id": "spellslinger_engines",
+      "cards": [
+        "Young Pyromancer",
+        "Talrand, Sky Summoner",
+        "Archmage Emeritus"
+      ]
+    }
+  ],
+  "combos": []
+}
