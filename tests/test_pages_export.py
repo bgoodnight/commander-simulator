@@ -54,7 +54,7 @@ class StaticPagesTests(unittest.TestCase):
     def test_only_allowlisted_site_data_and_no_workspace_are_exported(self):
         self.run_build()
         permitted={"index.html","summary.html","results.html","editor.html",
-                   "app.js","results_insights.js","style.css","decks.json",
+                   "app.js","results_insights.js","brackets.js","style.css","game-changers.json","decks.json",
                    "observations.json","names.json","bounded-batches.json","build-manifest.json",".nojekyll"}
         published=json.loads((self.destination/"bounded-batches.json").read_text())
         permitted.update(f"bounded-runs-{key}.json" for key in published["decks"])
@@ -75,6 +75,12 @@ class StaticPagesTests(unittest.TestCase):
         self.assertIn("Simulation Results",page)
         self.assertIn("prefers-reduced-motion",(self.destination/"style.css").read_text())
         self.assertIn("observations.json",script)
+        self.assertIn("game-changers.json",script)
+        self.assertIn("bracket-assessment",page)
+        self.assertIn("brackets.js",page)
+        registry=json.loads((self.destination/"game-changers.json").read_text())
+        self.assertEqual(len(registry["names"]),53)
+        self.assertIn("Underworld Breach",registry["names"])
         self.assertIn("localStorage",script)
         self.assertNotIn("/api/observation",script)
         self.assertNotIn("eval(",script)
