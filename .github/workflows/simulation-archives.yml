@@ -1,5 +1,10 @@
 name: Generate bounded simulation archives (isolated)
 on:
+  pull_request:
+    paths:
+      - "tools/build_simulation_archive.py"
+      - "tests/test_simulation_archive.py"
+      - ".github/workflows/simulation-archives.yml"
   workflow_dispatch:
     inputs:
       seeds:
@@ -44,8 +49,8 @@ jobs:
         run: python -m unittest tests.test_simulation_archive -v
       - name: Generate the pinned bounded-action archive
         env:
-          ARCHIVE_SEEDS: ${{ inputs.seeds }}
-          ARCHIVE_TURNS: ${{ inputs.turns }}
+          ARCHIVE_SEEDS: ${{ github.event_name == 'pull_request' && '2' || inputs.seeds }}
+          ARCHIVE_TURNS: ${{ github.event_name == 'pull_request' && '3' || inputs.turns }}
           ARCHIVE_DECK: ${{ matrix.deck }}
         run: |
           python tools/build_simulation_archive.py \
