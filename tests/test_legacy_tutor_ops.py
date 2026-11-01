@@ -10,6 +10,8 @@ from types import SimpleNamespace as NS
 from commander_sim.legacy_tutor_ops import (
     HISTORICAL_SEARCHES, eligible_search_ids, resolve_historical_search,
 )
+from commander_sim.effect_templates import compose_effect
+from commander_sim.reviewed_tutors import TUTORS
 
 
 class FakeSelection:
@@ -70,6 +72,19 @@ class SharedTutorTests(unittest.TestCase):
         self.assertEqual(HISTORICAL_SEARCHES["personal_tutor"].effect.destination,
                          "library_top")
         self.assertEqual(HISTORICAL_SEARCHES["spellseeker"].effect.max_mana_value,2)
+
+    def test_shared_registered_tutor_configs_have_single_source_of_truth(self):
+        names = {
+            "mystical_tutor": "Mystical Tutor",
+            "merchant_scroll": "Merchant Scroll",
+            "solve_equation": "Solve the Equation",
+            "fabricate": "Fabricate",
+            "spellseeker": "Spellseeker",
+        }
+        for key, printed in names.items():
+            with self.subTest(card=printed):
+                self.assertEqual(HISTORICAL_SEARCHES[key].effect,
+                                 compose_effect(TUTORS[printed]["review"]))
 
     def test_fabricate_moves_one_exact_card_then_shuffles(self):
         result=resolve_historical_search(self.table,0,"fabricate")
