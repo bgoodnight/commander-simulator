@@ -153,3 +153,43 @@ def remove_reviewed_permanent(kernel, actor, target_id, effect: TargetedPermanen
     if effect.kind=="exile":
         return kernel.exile(target_id)
     return kernel.bounce(target_id)
+
+
+@dataclass(frozen=True)
+class ScryOutcome:
+    seen_ids: tuple[int,...]
+    bottomed_ids: tuple[int,...]
+    remaining_top_ids: tuple[int,...]
+
+
+def scry_physical_cards(zones, seat, count, *, bottom_ids=(), top_ids=None):
+    """Reorder *physical library IDs* without drawing or duplicating cards.
+
+    A host supplies the complete scry ordering choice. For N scryed cards,
+    bottom_ids choose ordered bottom placement; top_ids choose ordered top
+    placement (first is the highest card to draw). Without top_ids, the
+    untouched observed order is retained. This is an effect primitive and
+    DOES NOT authorize a particular card's activated ability.
+    """
+    if type(seat) is not int or not 0<=seat<zones.seats:
+        raise ValueError("Invalid scry controller")
+    if type(count) is not int or count<0:
+        raise ValueError("Invalid scry count")
+    order=zones.order[seat,"library"]
+    seen=tuple(reversed(order[-min(len(order),count):]))
+    bottoms=tuple(bottom_ids)
+    tops=(tuple(x for x in seen if x not in bottoms)
+          if top_ids is None else tuple(top_ids))
+    if (len(bottoms)!=len(set(bottoms))
+            or len(tops)!=len(set(tops))
+            or set(bottoms).intersection(tops)
+            or set(bottoms)|set(tops)!=set(seen)
+            or len(bottoms)+len(tops)!=len(seen)):
+        raise ValueError("Invalid physical scry ordering choice")
+    if not seen:
+        return ScryOutcome((),(),())
+    del order[-len(seen):]
+    order[:0]=list(bottoms)
+    order.extend(reversed(tops))
+    zones.kernel._dirty()
+    return ScryOutcome(seen,bottoms,tops)
