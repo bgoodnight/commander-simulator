@@ -31,6 +31,7 @@ def project_kernel_turn(zones, seat, turn, catalog, *,
         ),
         "hand": list(zones.ids(seat, "hand")),
         "graveyard": list(zones.ids(seat, "graveyard")),
+        "exile": list(zones.ids(seat, "exile")),
     }
     result = {}
     objects = {}
@@ -78,6 +79,7 @@ def project_kernel_turn(zones, seat, turn, catalog, *,
         "battlefield": result["battlefield"],
         "hand": result["hand"],
         "graveyard": result["graveyard"],
+        "exile": result["exile"],
         "object_views": objects,
         "untracked_tokens": skipped_tokens,
         "verified_tutor_access": access,
