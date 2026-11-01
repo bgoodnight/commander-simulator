@@ -56,6 +56,7 @@ class BoundedEarlyGameTests(unittest.TestCase):
                     "token_spell_cast", "token_spell_resolved",
                     "reviewed_trigger_resolved", "reviewed_phase_resolved",
                     "enchantment_cast", "enchantment_resolved",
+                    "reviewed_sacrifice_activated",
                 } for event in turn["events"]))
 
     def test_magnus_reviewed_tutors_pay_and_move_actual_cards(self):
@@ -96,9 +97,11 @@ class BoundedEarlyGameTests(unittest.TestCase):
                 for row,state in zip(run["events"],run["state_snapshots"]):
                     self.assertEqual(row["hand_size"]+row["library_size"]
                         +len(state["battlefield"])+len(state["graveyard"])+1,100)
-                if deck=="necron_dynasties":
-                    self.assertFalse(any(event["type"]=="creature_cast"
-                        for turn in run["events"] for event in turn["events"]))
+                # A named creature only casts when its whole entry/cast is
+                # independently reviewed, including the Necron Szeras slice.
+                self.assertTrue(all(event["card"]!="Unsupported Invented Card"
+                    for turn in run["events"] for event in turn["events"]
+                    if event["type"]=="creature_cast"))
 
     def test_reviewed_token_spells_create_physical_objects_not_false_mana(self):
         created=[]
