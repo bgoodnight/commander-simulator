@@ -212,8 +212,10 @@ def run_bounded_early_game(deck_key, *, seed=0, turns=6, mulligan="one-free", pr
                              kernel.get(target_id).card.name,
                              raw_by_name[kernel.get(target_id).card.name]) else 3,
                         target_id)) if eligible else None)
-                    options.append((0 if rock is not None else 1 if eligible else
-                                    2 if token_spell is not None else 3,
+                    # Reviewed trigger creatures precede spells so their
+                    # shared effects may fire on subsequent actual casts.
+                    options.append((0 if rock is not None else 1 if is_creature else
+                                    2 if eligible else 3,
                                     len(payment.source_ids), name, oid, kind, cost, target))
             if not options:
                 break
