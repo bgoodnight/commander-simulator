@@ -89,7 +89,7 @@ def run_bounded_early_game(deck_key, *, seed=0, turns=6, mulligan="one-free"):
                               if word.lower() in {"land", "creature", "artifact", "instant",
                                                   "sorcery", "enchantment", "planeswalker", "battle"})
             if not types:
-                types = frozenset({"artifact"}) if "Artifact" in raw["type_line"] else frozenset({"instant"})
+                raise ValueError("No verified printed card type for " + name)
             subtypes = frozenset()
             power = toughness = 0
             keywords = frozenset()
