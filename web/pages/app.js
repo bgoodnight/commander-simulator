@@ -401,9 +401,14 @@ function summon(key,{versionId=null,remember=true}={}){
   renderGlobalDeckSelector();
   showPage();syncPageNavigation();
 }
+function physicalArchive(){
+  if(selected!=="mortarion_physical_final"||isUnsimulatedVersion())return null;
+  const archive=detailedArchives?.[selected];
+  return archive?.deck_sha256===selectedDeck()?.deck_sha256?archive:null;
+}
 function showPage(){
   const enabled={
-    results:["records","insights"],
+    results:physicalArchive()?["records"]:["records","insights"],
     summary:["overview"],
     editor:["library","workshop"]
   }[pageName];
@@ -945,6 +950,26 @@ function showAggregate(){
   const result=$("results-kpis"),intro=$("results-takeaway");
   clear(result);clear(intro);
   aggregate=null;
+  const physical=physicalArchive();
+  if(physical){
+    const stats=physicalArchiveMetrics(physical.runs);
+    $("results-sample").textContent=stats.n+" runs · six turns";
+    $("results-provenance").textContent="Exact pinned Mortarion Physical Final deck · "+stats.n+" deterministic reviewed-action simulations. No opponent, combat, or verified win-rate model.";
+    const samples=[
+      [stats.third+"%","3+ lands by turn 3","land-story"],
+      [stats.fourth+"%","4+ lands by turn 4","land-story"],
+      [stats.creatures+"%","Reviewed creature by turn 6","board-grid"],
+      [stats.rocks+"%","Reviewed mana rock by turn 6","board-grid"]
+    ];
+    for(const [value,label] of samples){
+      const metric=el("div",null,"result-stat");
+      metric.append(el("span",value,"result-stat-value"),el("span",label,"result-stat-label"));
+      result.appendChild(metric);
+    }
+    intro.append(el("strong","Measured early development"),
+      el("p",stats.n+" simulations of the physical Mortarion deck. Open the detailed panels above for land development, opening hands, battlefield presence and unsupported cards. These are not multiplayer games."));
+    return;
+  }
   if(isUnsimulatedVersion()){
     $("results-sample").textContent="No matched archive";
     $("results-provenance").textContent="The saved deck has no pinned Python observations.";
@@ -1000,11 +1025,20 @@ function showAggregate(){
 }
 function renderRecords(){
   const seedSelect=$("seed-select");clear(seedSelect);
-  for(const seed of data.seeds){
+  const physical=physicalArchive();
+  const seedChoices=physical?physical.runs.map(run=>run.seed):data.seeds;
+  for(const seed of seedChoices){
     const option=el("option","Seed "+seed);option.value=String(seed);
     seedSelect.appendChild(option);
   }
   seedSelect.value=selectedSeed;
+  const archiveDisclosure=$("archive-observation-details");
+  if(archiveDisclosure){
+    const heading=archiveDisclosure.querySelector("summary");
+    if(heading)heading.textContent=physical?
+      "Inspect all "+physical.runs.length+" physical simulation seeds":
+      "Earlier opening-hand observations · "+data.seeds.length+" hands";
+  }
   const warning=$("results-current-warning");
   if(isUnsimulatedVersion()){
     const physical=selectedDeck()?.unverified_cards?.length;
@@ -1033,6 +1067,38 @@ function renderRecords(){
 }
 function displayRecord(){
   if(isUnsimulatedVersion()){renderRecords();return}
+  const physical=physicalArchive();
+  if(physical){
+    const run=physical.runs.find(r=>String(r.seed)===$("seed-select").value);
+    if(!run){note("No matching physical simulation seed.",true);return}
+    selectedSeed=String(run.seed);lastRecord=run;
+    const maxTurn=Math.min(Number($("turn-select").value)||6,run.events.length);
+    const info=$("record-info");clear(info);
+    info.append(el("strong","Physical Mortarion · simulation seed "+run.seed),
+      el("p","Opening hand: "+run.mulligan.opening_hand.join(" · "),"micro"));
+    const timeline=$("turn-timeline");clear(timeline);
+    for(let index=0;index<maxTurn;index++){
+      const row=run.events[index],state=run.state_snapshots[index];
+      const node=el("div",null,"turn"),body=el("div",null,"turn-body");
+      node.appendChild(el("div",row.turn,"number"));
+      body.append(el("strong","Turn "+row.turn),
+        el("p",row.land_count+" lands · "+row.mana_rock_count+" reviewed rocks · "+
+          row.creature_count+" creatures · "+row.hand_size+" cards in hand","small"));
+      const actions=row.events.filter(event=>event.type!=="untap");
+      for(const action of actions){
+        const preview=action.type==="source_paid_candidate";
+        body.appendChild(el("p",(preview?"Payment preview only: ":action.type.replaceAll("_"," ")+": ")+
+          (action.card||"No named card"),preview?"micro":"small"));
+      }
+      body.append(el("p","Battlefield","micro"),quietCardList(state.battlefield),
+        el("p","Hand","micro"),quietCardList(state.hand));
+      if(row.unsupported_cards_in_hand.length)
+        body.append(el("p","Unsupported in hand (not simulated as played)","micro"),
+          quietCardList(row.unsupported_cards_in_hand));
+      node.appendChild(body);timeline.appendChild(node);
+    }
+    return;
+  }
   const record=archives[selected]?.[$("seed-select").value];
   if(!record){note("No cached observation for that seed.",true);return}
   selectedSeed=String(record.seed);lastRecord=record;
@@ -1321,7 +1387,7 @@ function exportFile(filename,content,type="text/plain"){
 }
 function exportRecord(){
   if(!lastRecord)return;
-  exportFile(selected+"-seed-"+selectedSeed+"-cached-observation.json",
+  exportFile(selected+"-seed-"+selectedSeed+(physicalArchive()?"-reviewed-action-run.json":"-cached-observation.json"),
     JSON.stringify(lastRecord,null,2),"application/json");
   originalSound("click");
 }
