@@ -81,8 +81,23 @@ class BoundedEarlyGameTests(unittest.TestCase):
                     +len(state["graveyard"])+1,100)
             self.assertNotIn("win_rate",a)
 
+    def test_all_six_pinned_decks_share_reviewed_land_rock_runner(self):
+        for deck in ("magnus_premium","magnus_budget","wretched_ranks",
+                     "mortarion_current","mortarion_ideal","necron_dynasties"):
+            with self.subTest(deck=deck):
+                run=run_bounded_early_game(deck,seed=4,turns=4)
+                self.assertEqual(len(run["state_snapshots"]),4)
+                self.assertEqual(run["deck_key"],deck)
+                self.assertNotIn("win_rate",run)
+                for row,state in zip(run["events"],run["state_snapshots"]):
+                    self.assertEqual(row["hand_size"]+row["library_size"]
+                        +len(state["battlefield"])+len(state["graveyard"])+1,100)
+                if deck in ("mortarion_current","mortarion_ideal","necron_dynasties"):
+                    self.assertFalse(any(event["type"]=="creature_cast"
+                        for turn in run["events"] for event in turn["events"]))
+
     def test_invalid_deck_or_horizon_fails_closed(self):
-        for key, turns in (("necron_dynasties", 6), ("wretched_ranks", 0),
+        for key, turns in (("unsupported_deck", 6), ("wretched_ranks", 0),
                            ("wretched_ranks", 11)):
             with self.assertRaises(ValueError):
                 run_bounded_early_game(key, turns=turns)
