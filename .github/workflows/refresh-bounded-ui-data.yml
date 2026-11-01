@@ -1,0 +1,89 @@
+name: Refresh six-deck UI simulation datasets
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - "commander_sim/**"
+      - "simulator/card_data/**"
+      - "decklists/**"
+      - "tools/build_bounded_batches.py"
+      - ".github/workflows/refresh-bounded-ui-data.yml"
+  pull_request:
+    paths:
+      - "tools/build_bounded_batches.py"
+      - "tests/test_bounded_ui_data.py"
+      - "tests/test_pages_export.py"
+      - ".github/workflows/refresh-bounded-ui-data.yml"
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+concurrency:
+  group: six-deck-ui-refresh
+  cancel-in-progress: false
+
+jobs:
+  refresh:
+    name: Regenerate validated current-engine UI data
+    runs-on: ubuntu-latest
+    timeout-minutes: 35
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+      - name: Test generator contracts
+        run: python -m unittest tests.test_bounded_ui_data -v
+      - name: Generate current-engine batches
+        env:
+          SEEDS: ${{ github.event_name == 'pull_request' && '2' || '100' }}
+          OUTPUT: ${{ github.event_name == 'pull_request' && 'dist/ui-smoke' || 'web/pages/data' }}
+        run: python tools/build_bounded_batches.py --seeds "$SEEDS" --output "$OUTPUT"
+      - name: Validate generated datasets
+        env:
+          SEEDS: ${{ github.event_name == 'pull_request' && '2' || '100' }}
+          OUTPUT: ${{ github.event_name == 'pull_request' && 'dist/ui-smoke' || 'web/pages/data' }}
+        run: |
+          python - <<'PY'
+          import json, os
+          from pathlib import Path
+          from commander_sim.deck_fixtures import FIXTURES
+          root=Path(os.environ["OUTPUT"])
+          seeds=int(os.environ["SEEDS"])
+          summary=json.loads((root/"bounded-batches.json").read_text())
+          keys={fixture.key for fixture in FIXTURES}
+          assert set(summary["decks"])==keys and len(keys)==6
+          for key in keys:
+              batch=summary["decks"][key]
+              runs=json.loads((root/f"bounded-runs-{key}.json").read_text())
+              assert batch["seed_count"]==len(runs)==seeds
+              assert [r["seed"] for r in runs]==list(range(seeds))
+              assert len(batch["turns"])==6
+              assert all(r["deck_sha256"]==batch["deck_sha256"]
+                         and len(r["events"])==6 and len(r["state_snapshots"])==6
+                         for r in runs)
+          print("All six simulated dataset contracts verified")
+          PY
+      - name: Validate Pages output with the refreshed data
+        if: github.event_name != 'pull_request'
+        run: |
+          python tools/build_pages_deck_lab.py --output dist/pages-current
+          python -m unittest tests.test_pages_export -v
+          node --check dist/pages-current/app.js
+      - name: Commit only generated UI JSON to main
+        if: github.event_name != 'pull_request' && github.ref == 'refs/heads/main'
+        run: |
+          git fetch origin main
+          if [ "$(git rev-parse HEAD)" != "$(git rev-parse origin/main)" ]; then
+            echo "Main advanced during simulations. Refusing to publish stale UI data."
+            exit 1
+          fi
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add -A web/pages/data/bounded-batches.json web/pages/data/bounded-runs-*.json
+          if ! git diff --cached --quiet; then
+            git commit -m "Refresh six-deck 100-run UI datasets with current simulator"
+            git push origin HEAD:main
+          fi
