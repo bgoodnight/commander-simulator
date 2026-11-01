@@ -285,6 +285,45 @@ class EngineTests(unittest.TestCase):
         self.counter_with_baral();self.assertEqual(len(self.event('loot')),1)
         self.assertTrue(self.event('loot')[0][2])
 
+    def test_live_baral_trigger_uses_reviewed_ability_dispatcher(self):
+        self.counter_with_baral()
+        calls=[x for x in self.t.live_ability_bridge.invocations
+               if x.slot_key[2]=='optional_loot']
+        self.assertEqual(len(calls),1)
+        self.assertEqual(calls[0].fidelity,'exact')
+        self.assertEqual(len(self.event('loot')),1)
+
+    def test_live_doubled_baral_triggers_invoke_distinct_frames(self):
+        self.counter_with_baral(harmonic=True)
+        calls=[x for x in self.t.live_ability_bridge.invocations
+               if x.slot_key[2]=='optional_loot']
+        self.assertEqual(len(calls),2)
+        self.assertEqual(len(self.event('loot')),2)
+
+    def test_live_magecraft_dispatches_both_cast_and_copy_hooks(self):
+        mage=self.place('Archmage Emeritus')
+        for event in ('spell_cast','spell_copied'):
+            self.t._apply_pending(self.t.rules.triggers(
+                Event(event,0,spell_types=frozenset({'instant'}))))
+            self.t.spell_stack.resolve()
+        calls=[x for x in self.t.live_ability_bridge.invocations
+               if x.slot_key[2]=='draw']
+        self.assertEqual(len(calls),2)
+        self.assertTrue(all(x.source_object_id==mage.object_id for x in calls))
+        self.assertTrue(all(x.fidelity=='exact' for x in calls))
+        self.assertEqual(sum(1 for x in self.t.live_ability_bridge.subscriptions._live
+            if x[0]==mage.object_id),2)
+
+    def test_live_baral_pending_trigger_survives_source_departure(self):
+        b=self.place('Baral, Chief of Compliance')
+        self.t.emit('spell_countered_by',controller=0,countered_frame=999)
+        self.t.world.move(b.object_id,'hand','bounce')
+        self.t.spell_stack.resolve()
+        self.assertEqual(len(self.event('loot')),1)
+        self.assertEqual(len([x for x in self.t.live_ability_bridge.invocations
+            if x.source_object_id==b.object_id]),1)
+        self.assertNotIn(b.object_id,self.t.live_ability_bridge._sources)
+
     def test_baral_loot_is_optional(self):
         self.t.loot_policy=lambda *args:False;self.counter_with_baral()
         self.assertEqual(self.event('loot'),[('loot',0,False)])
