@@ -32,6 +32,7 @@ from .reviewed_rocks import reviewed_rock
 from .reviewed_tutors import reviewed_tutor
 from .reviewed_tutor_cast import (eligible_reviewed_tutor_targets,
                                   cast_and_resolve_reviewed_tutor)
+from .reviewed_draw_spells import (reviewed_draw_spell, cast_and_resolve_reviewed_draw_spell)
 from .reviewed_token_spells import (reviewed_token_spell,
                                    cast_and_resolve_reviewed_token_spell)
 from .bounded_trigger_effects import resolve_reviewed_spell_triggers
@@ -146,6 +147,7 @@ def run_bounded_early_game(deck_key, *, seed=0, turns=6, mulligan="one-free", pr
                     or (tutor_review is not None
                         and tutor_review[2] in {"instant", "sorcery"})
                     or reviewed_token_spell(name, raw_by_name[name]) is not None
+                    or reviewed_draw_spell(name,raw_by_name[name]) is not None
                     # Graveyard flashback permission is independently reviewed,
                     # even if no ordinary hand-cast recipe exists (Looting).
                     or reviewed_flashback(name, raw_by_name[name]) is not None
@@ -259,6 +261,7 @@ def run_bounded_early_game(deck_key, *, seed=0, turns=6, mulligan="one-free", pr
                 is_creature = reviewed_creature(deck_key, name, raw)
                 rock = reviewed_rock(name, raw, colors)
                 token_spell = reviewed_token_spell(name, raw)
+                draw_spell = reviewed_draw_spell(name,raw)
                 phase_enchantment = reviewed_phase_permanent(name, raw) or reviewed_breach(name, raw)
                 sacrifice_artifact = reviewed_sacrifice_artifact(name, raw)
                 entering = approved_enter_hand_cast(name)
@@ -266,7 +269,7 @@ def run_bounded_early_game(deck_key, *, seed=0, turns=6, mulligan="one-free", pr
                 eligible = (eligible_reviewed_tutor_targets(zones, 0, name, raw_by_name)
                             if tutor and tutor[2] in {"instant", "sorcery"} else ())
                 if (not is_creature and rock is None and not eligible
-                        and token_spell is None and not phase_enchantment
+                        and token_spell is None and draw_spell is None and not phase_enchantment
                         and not sacrifice_artifact and not entering):
                     continue
                 cost = registry.get(name).primary_face().mana_cost
@@ -275,6 +278,7 @@ def run_bounded_early_game(deck_key, *, seed=0, turns=6, mulligan="one-free", pr
                     kind = ("artifact" if rock is not None or sacrifice_artifact else
                             "enchantment" if phase_enchantment or (entering and "Enchantment" in raw.get("type_line","").split(" — ",1)[0]) else
                             "tutor" if eligible else
+                            "draw_spell" if draw_spell is not None else
                             "token_spell" if token_spell is not None else "creature")
                     target = (min(eligible, key=lambda target_id: (
                         0 if kernel.get(target_id).card.name == "Sol Ring" else
@@ -316,6 +320,27 @@ def run_bounded_early_game(deck_key, *, seed=0, turns=6, mulligan="one-free", pr
                                "target_object_id": result.target_new_id,
                                "destination": result.target_destination,
                                "fidelity": "bounded_reviewed_search"})
+                continue
+            if kind == "draw_spell":
+                triggered=[]
+                result=cast_and_resolve_reviewed_draw_spell(
+                    zones,0,oid,raw_by_name,colors,mana_service,
+                    on_cast=lambda ticket:triggered.extend(
+                        approved_spell_triggers(ticket)))
+                if result is None:
+                    raise AssertionError("Source-paid draw spell became unavailable")
+                events.append({"type":"reviewed_draw_spell_cast",
+                               "card":name,
+                               "stack_object_id":result.source_stack_id,
+                               "source_object_ids":list(result.mana_source_ids),
+                               "fidelity":"reviewed_physical_draw"})
+                events.extend(triggered)
+                events.append({"type":"reviewed_draw_spell_resolved",
+                               "card":name,
+                               "source_graveyard_id":result.source_graveyard_id,
+                               "drawn_ids":list(result.drawn_ids),
+                               "unsupported_abilities":list(result.limitations),
+                               "fidelity":"reviewed_physical_draw"})
                 continue
             if kind == "token_spell":
                 triggered=[]
@@ -719,6 +744,7 @@ def run_bounded_early_game(deck_key, *, seed=0, turns=6, mulligan="one-free", pr
                 or reviewed_creature(deck_key, name, raw)
                 or reviewed_rock(name, raw, colors) is not None
                 or reviewed_token_spell(name, raw) is not None
+                or reviewed_draw_spell(name,raw) is not None
                 or reviewed_tutor(name, raw) is not None
                 or reviewed_phase_permanent(name, raw)
                 or reviewed_sacrifice_artifact(name, raw)
@@ -774,6 +800,8 @@ def run_bounded_early_game(deck_key, *, seed=0, turns=6, mulligan="one-free", pr
                                             raw_by_name[kernel.get(oid).card.name])[2]
                          in {"instant", "sorcery"})
                 and reviewed_token_spell(kernel.get(oid).card.name,
+                    raw_by_name[kernel.get(oid).card.name]) is None
+                and reviewed_draw_spell(kernel.get(oid).card.name,
                     raw_by_name[kernel.get(oid).card.name]) is None
                 and not reviewed_phase_permanent(kernel.get(oid).card.name,
                     raw_by_name[kernel.get(oid).card.name])
