@@ -90,3 +90,41 @@ triggers. Prefer adding one typed reusable operation or an explicit parameter
 when a card exposes a new mechanic; maintain a custom handler only for
 genuinely irreducible behavior. Add original-versus-migrated replay fixtures
 before changing any of these older implementations.
+
+## M2.8: Common effect operations migrated from historical cards
+
+`commander_sim/legacy_common_ops.py` now holds **typed, card-independent
+effect parameters** and shared execution calls over the already-authoritative
+table services:
+
+| Operation | Parameters | Existing implementation sites migrated |
+|---|---|---|
+| `DrawDiscard` / `apply_draw_discard` | `draw`, `discard`, `discard_kind` | Consider draw, Preordain, Brainstorm draw, Frantic Search draw+discard, Baral optional loot, Fiery Islet draw |
+| `TokenBatch` / `apply_token_batch` | count, P/T, token name, verified definition | Ral's Reinforcements (two 1/1 U/R Elementals) |
+| `GenericDiscount` / `apply_generic_discount` | reduction amount, printed color filter, source name | Sapphire Medallion's generic-cost reduction |
+| `SacrificeRequirement` / `legal_sacrifice_victims` / `sacrifice_physical_object` | source/victim types, controller, token permission, source tap requirement | Phyrexian Altar's creature sacrifice as a source-backed mana ability |
+| `ZoneTransfer` / `transfer_physical_object` | source/destination zones, source types, owner/controller restrictions, historical move reason | Mystic Sanctuary's instant/sorcery graveyard return to library top, Riptide Laboratory Wizard bounce and Step Through creature bounce |
+
+These are **shared mechanics, not a newly-created state engine**. The
+historical table continues to own costs, priority, stack frames, event order,
+source references, choices, live zones and dependency validation. Any
+unimplemented spell/activated/triggered effect remains unimplemented; moving
+its description to a template does not authorize new unknown-card effects.
+
+Some old behavior requires **composed steps** rather than replacing the
+whole effect: Consider still surveils before drawing; Frantic Search still
+untaps lands after drawing and discarding; Baral's draw/discard remains
+conditional on the existing optional trigger; Mystic Sanctuary's target must
+be legally selected and survives its existing fizzle checks; Phyrexian Altar
+still uses the existing mana planning/commit code and correct event emission.
+As with all historical migrations, regression suite and deterministic
+fingerprints are the acceptance gate.
+
+**Next**: share token-creation configurations across spell and triggered
+providers; lift more of the static/dynamic reduction predicates into typed
+declarations; extend generic zone operations to graveyard-to-hand and
+graveyard-to-battlefield recursion with reviewed eligibility, timing and
+replacement-effect checks; extract copy-source targeting and delayed exile
+into reusable primitives. Avoid card-specific condition branches in the
+shared executor. Preserve the existing exact fidelity before promoting
+unknown cards to reviewed hybrids.
