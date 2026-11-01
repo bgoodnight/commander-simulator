@@ -171,5 +171,27 @@
           row.modeled_sources.map(source=>source.card).filter(name=>typeof name==="string"):[]};
       })}));
   }
-  return {summarize,findings,pct,round,sources,candidateCount,themes,sourceTimeline};
+  function themeTimelines(groups,records){
+    const runs=Object.values(records||{}).filter(r=>r&&r.mode==="observation"&&
+      Array.isArray(r.opening_hand)&&Array.isArray(r.trace)&&r.trace.length>=6&&
+      r.trace.slice(0,6).every((row,i)=>row&&row.turn===i+1&&
+        Object.prototype.hasOwnProperty.call(row,"drawn")&&
+        (typeof row.drawn==="string"||row.drawn===null)));
+    if(!runs.length)return [];
+    return (groups||[]).slice(0,3).map(group=>{
+      const names=new Set(group.cards.map(card=>card.name.toLowerCase()));
+      const first=runs.map(run=>{
+        const initial=run.opening_hand.find(name=>typeof name==="string"&&names.has(name.toLowerCase()));
+        if(initial)return {seed:String(run.seed),turn:0,card:initial};
+        const index=run.trace.slice(0,6).findIndex(row=>typeof row.drawn==="string"&&names.has(row.drawn.toLowerCase()));
+        return {seed:String(run.seed),turn:index<0?null:index+1,card:index<0?null:run.trace[index].drawn};
+      });
+      return {id:group.id,label:group.label,kind:group.kind,copies:group.copies,sample:runs.length,
+        points:Array.from({length:7},(_,turn)=>{
+          const matching=first.filter(item=>item.turn!==null&&item.turn<=turn);
+          return {turn,count:matching.length,pct:pct(matching.length,runs.length),matches:matching};
+        })};
+    });
+  }
+  return {summarize,findings,pct,round,sources,candidateCount,themes,sourceTimeline,themeTimelines};
 });

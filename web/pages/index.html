@@ -120,9 +120,10 @@
         <div class="story-heading">
           <span class="eyebrow">Explore the details</span>
           <h2 id="story-head">Explore the evidence</h2>
-          <p>Select a bar to see its count and supporting seeds.</p>
+          <p>Follow the deck's development, then select a turn to explore the details.</p>
         </div>
-        <article class="story-step reveal" data-chart="opening">
+        <details class="story-step reveal story-secondary" data-chart="opening">
+          <summary>Explore opening hands</summary>
           <div class="story-copy"><div class="story-num">I · Opening hands</div>
             <h3 id="story-title-opening">Opening land mix</h3>
             <p id="story-summary-opening"></p><p id="story-meaning-opening" class="finding-meaning"></p>
@@ -133,7 +134,7 @@
             <div id="scroll-sources"></div>
             <div class="chart-detail" id="detail-opening" role="status">Select a bar to inspect the recorded hands.</div>
           </div>
-        </article>
+        </details>
         <article class="story-step reveal" data-chart="resources">
           <div class="story-copy"><div class="story-num">II · Turn-three resources</div>
             <h3 id="story-title-resources"></h3>
@@ -145,13 +146,27 @@
             <p class="micro">Select a point to explore the runs behind the average.</p>
             <div id="source-curve"></div>
             <div id="source-curve-detail" class="curve-detail" aria-live="polite"></div>
-            <div class="arcane-line"></div>
-            <h3>Distribution on turn three</h3>
-            <div id="scroll-hand"></div>
-            <div class="chart-detail" id="detail-resources" role="status">Select a bar to inspect the source counts.</div>
+            <details class="story-drilldown"><summary>Explore turn-three distribution</summary>
+              <div id="scroll-hand"></div>
+              <div class="chart-detail" id="detail-resources" role="status">Select a bar to inspect the source counts.</div>
+            </details>
           </div>
         </article>
-        <article class="story-step reveal" data-chart="candidates">
+        <article class="story-step reveal" data-chart="themes">
+          <div class="story-copy"><div class="story-num">III · The deck takes shape</div>
+            <h3 id="story-title-themes">When do key themes appear?</h3>
+            <p id="story-summary-themes"></p>
+            <p class="micro">First appearance in the opening hand or draws. Groups may overlap.</p>
+          </div>
+          <div class="story-graphic panel">
+            <h3>Theme access over time</h3>
+            <p class="micro">Choose a theme and turn to inspect the matching cards and runs.</p>
+            <div id="theme-story-chart"></div>
+            <div id="theme-story-detail" class="curve-detail" aria-live="polite"></div>
+          </div>
+        </article>
+        <details class="story-step reveal story-secondary" data-chart="candidates">
+          <summary>Explore early card options</summary>
           <div class="story-copy"><div class="story-num">III · Early card options</div>
             <h3 id="story-title-candidates"></h3>
             <p id="story-summary-candidates"></p><p id="story-meaning-candidates" class="finding-meaning"></p>
@@ -162,7 +177,7 @@
             <div id="scroll-candidates"></div>
             <div class="chart-detail" id="detail-candidates" role="status">Select a turn to inspect the candidates.</div>
           </div>
-        </article>
+        </details>
       </section>
       <section class="panel archived-details" aria-labelledby="archived-details-heading">
         <h2 id="archived-details-heading" class="panel-title">Inspect a run</h2>

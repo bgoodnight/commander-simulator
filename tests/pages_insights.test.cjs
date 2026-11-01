@@ -108,3 +108,21 @@ test('source curve points preserve each seed and its turn-specific sources',()=>
   assert.deepEqual(timeline[2].runs[1].cards,['Command Tower']);
   assert.deepEqual(sourceTimeline(null),[]);
 });
+
+test('theme story compares cumulative first appearances across distinct themes',()=>{
+  const {themeTimelines}=require('../web/pages/results_insights.js');
+  const run=(seed,opening,draws)=>({mode:'observation',seed,opening_hand:opening,
+    trace:draws.map((drawn,i)=>({turn:i+1,drawn}))});
+  const records={1:run(1,['Zombie A'],['Other','Wizard A','Other','Other','Other','Other']),
+    2:run(2,['Other'],['Other','Other','Zombie A','Other','Other','Other']),
+    3:run(3,['Other'],['Other','Other','Other','Other','Other','Other'])};
+  const groups=[{id:'z',label:'Zombie',kind:'Subtype',copies:1,cards:[{name:'Zombie A'}]},
+    {id:'w',label:'Wizard',kind:'Subtype',copies:1,cards:[{name:'Wizard A'}]}];
+  const lines=themeTimelines(groups,records);
+  assert.equal(lines[0].points[0].count,1);assert.equal(lines[0].points[2].count,1);
+  assert.equal(lines[0].points[3].count,2);assert.equal(lines[0].points[3].pct,67);
+  assert.deepEqual(lines[0].points[3].matches.map(x=>[x.seed,x.turn,x.card]),[['1',0,'Zombie A'],['2',3,'Zombie A']]);
+  assert.equal(lines[1].points[1].count,0);assert.equal(lines[1].points[2].count,1);
+  delete records[3].trace[5].drawn;assert.equal(themeTimelines(groups,records)[0].sample,2);
+  assert.deepEqual(themeTimelines(groups,{}),[]);
+});

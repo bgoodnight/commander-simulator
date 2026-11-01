@@ -547,9 +547,12 @@ function showAggregate(){
       detail:aggregate.metrics.earlyLand.pct+"% of hands",target:"opening"},
     {label:"≥3 modeled sources by turn 3",value:aggregate.metrics.t3Sources.count+" / "+aggregate.n,
       detail:aggregate.metrics.t3Sources.pct+"% of runs",target:"resources"},
-    {label:"Any mana-value candidate on turn 4",value:aggregate.metrics.t4Candidate.count+" / "+aggregate.n,
-      detail:aggregate.metrics.t4Candidate.pct+"% of runs",target:"candidates"}
   ];
+  const themeGroups=window.DeckInsights.themes(displayDeckCards(),{...data.cards,...extraCards},archives[selected],commanderCard(selectedDeck()));
+  if(themeGroups.length){
+    const main=themeGroups[0];
+    metrics.push({label:main.label+" theme cards in deck",value:String(main.copies),detail:"Explore theme access",target:"themes"});
+  }
   for(const m of metrics){
     const card=el("button",null,"result-stat");
     card.type="button";
@@ -558,6 +561,7 @@ function showAggregate(){
     card.setAttribute("aria-label",m.label+": "+m.value+", "+m.detail+". Scroll to examine evidence.");
     card.onclick=()=>{
       const target=document.querySelector('.story-step[data-chart="'+m.target+'"]');
+      if(target?.tagName==="DETAILS")target.open=true;
       target?.scrollIntoView({behavior:window.matchMedia?.("(prefers-reduced-motion: reduce)").matches?
         "auto":"smooth",block:"center"});
       originalSound("page");
@@ -565,8 +569,11 @@ function showAggregate(){
     result.appendChild(card);
   }
   const parts=window.DeckInsights.findings(aggregate);
+  const mainTheme=window.DeckInsights.themeTimelines(themeGroups,archives[selected])[0];
+  const themeSummary=mainTheme?" "+mainTheme.points[3].count+" of "+mainTheme.sample+
+    " runs saw a "+mainTheme.label+" card by turn 3.":"";
   intro.appendChild(el("strong","At a glance"));
-  intro.appendChild(el("p",parts.map(p=>p.summary).join(" ")));
+  intro.appendChild(el("p",parts[1].summary+themeSummary));
 }
 function renderRecords(){
   const seedSelect=$("seed-select");clear(seedSelect);
@@ -757,6 +764,70 @@ function renderSourceCurve(summary){
   });
   root.append(chart,controls);detail.appendChild(el("p","Select a turn to see its observations.","micro"));
 }
+function renderThemeStory(){
+  const root=$("theme-story-chart"),detail=$("theme-story-detail");clear(root);clear(detail);
+  const groups=window.DeckInsights.themes(displayDeckCards(),{...data.cards,...extraCards},archives[selected],commanderCard(selectedDeck()));
+  const series=window.DeckInsights.themeTimelines(groups,archives[selected]);
+  if(!series.length){$("story-summary-themes").textContent="Theme draw details are unavailable for this deck.";return}
+  const main=series[0];
+  $("story-title-themes").textContent=main.label+" appears by turn 3 in "+main.points[3].count+" / "+main.sample+" runs";
+  $("story-summary-themes").textContent=main.copies+" cards match this deck signal. Compare the first three detected themes below.";
+  const colors=["#8ed5c5","#edc98a","#c6a8e6"],x=i=>40+i*75,y=v=>160-v*1.22;
+  const chart=svg("svg",{viewBox:"0 0 540 200",class:"source-curve",role:"group",
+    "aria-label":"First theme appearance by turn, as a percentage of observed runs."});
+  [0,50,100].forEach(value=>{
+    chart.appendChild(svg("line",{x1:40,x2:490,y1:y(value),y2:y(value),class:"curve-grid"}));
+    const text=svg("text",{x:32,y:y(value)+4,"text-anchor":"end",class:"curve-label"});text.textContent=value+"%";chart.appendChild(text);
+  });
+  for(let turn=0;turn<=6;turn++){
+    const label=svg("text",{x:x(turn),y:185,"text-anchor":"middle",class:"curve-label"});
+    label.textContent=turn===0?"Hand":"T"+turn;chart.appendChild(label);
+  }
+  const themeControls=el("div",null,"theme-story-controls"),turnControls=el("div",null,"theme-turn-controls");
+  const themeButtons=[],turnButtons=[];let activeTheme=0,activeTurn=3;
+  function select(themeIndex,turn){
+    activeTheme=themeIndex;activeTurn=turn;
+    const group=series[themeIndex],point=group.points[turn];clear(detail);
+    detail.append(el("strong",group.label+" · "+(turn===0?"opening hand":"by turn "+turn)),
+      el("p",point.count+" / "+group.sample+" runs · "+point.pct+"%","small"));
+    if(!point.matches.length)detail.appendChild(el("p","No matching cards appeared by this point.","micro"));
+    const list=el("div",null,"curve-run-list");
+    for(const match of point.matches){
+      const row=el("div",null,"curve-run"),seed=el("button","Seed "+match.seed,"curve-seed");
+      seed.type="button";seed.addEventListener("click",()=>inspectCurveRun(match.seed,Math.max(1,turn)));
+      row.append(seed,el("span",match.turn===0?"Opening hand":"Drawn turn "+match.turn,"curve-count"));
+      const card=cardInfo(match.card);
+      if(card){const name=el("button",match.card,"curve-card");name.type="button";name.addEventListener("click",()=>showCard(card.oracle_id));row.appendChild(name)}
+      else row.appendChild(el("span",match.card));
+      list.appendChild(row);
+    }
+    detail.appendChild(list);
+    themeButtons.forEach((button,i)=>button.setAttribute("aria-pressed",String(i===themeIndex)));
+    turnButtons.forEach((button,i)=>button.setAttribute("aria-pressed",String(i===turn)));
+    for(const path of chart.querySelectorAll(".theme-series"))path.style.opacity=Number(path.dataset.index)===themeIndex?"1":".35";
+  }
+  series.forEach((group,i)=>{
+    const line=svg("polyline",{points:group.points.map(point=>x(point.turn)+","+y(point.pct)).join(" "),class:"theme-series",stroke:colors[i]});
+    line.dataset.index=String(i);chart.appendChild(line);
+    group.points.forEach(point=>{
+      chart.appendChild(svg("circle",{cx:x(point.turn),cy:y(point.pct),r:3,fill:colors[i],"pointer-events":"none"}));
+      const hit=svg("circle",{cx:x(point.turn),cy:y(point.pct),r:13,class:"curve-point",role:"button",tabindex:"0",
+        "aria-label":group.label+" "+(point.turn===0?"in opening hand":"by turn "+point.turn)+": "+point.count+" of "+group.sample+" runs"});
+      hit.addEventListener("click",()=>select(i,point.turn));
+      hit.addEventListener("keydown",event=>{if(event.key==="Enter"||event.key===" "){event.preventDefault();select(i,point.turn)}});
+      chart.appendChild(hit);
+    });
+    const button=el("button",group.label,"theme-choice");button.type="button";
+    button.style.borderColor=colors[i];button.addEventListener("click",()=>select(i,activeTurn));
+    themeButtons.push(button);themeControls.appendChild(button);
+  });
+  for(let turn=0;turn<=6;turn++){
+    const button=el("button",turn===0?"Hand":"T"+turn,"curve-turn");button.type="button";
+    button.setAttribute("aria-label",turn===0?"View opening hand":"View by turn "+turn);
+    button.addEventListener("click",()=>select(activeTheme,turn));turnButtons.push(button);turnControls.appendChild(button);
+  }
+  root.append(themeControls,chart,turnControls);select(0,3);
+}
 function animateFinding(section,visible){
   section.classList.toggle("visible",visible);
   const bars=[...section.querySelectorAll("rect.bar[data-target-y]")];
@@ -796,7 +867,7 @@ function installScrollStory(){
 }
 function renderScrollStory(){
   if(!aggregate||isUnsimulatedVersion()){
-    for(const id of ["scroll-sources","scroll-hand","scroll-candidates","source-curve","source-curve-detail"])
+    for(const id of ["scroll-sources","scroll-hand","scroll-candidates","source-curve","source-curve-detail","theme-story-chart","theme-story-detail"])
       clear($(id));
     return;
   }
@@ -810,6 +881,7 @@ function renderScrollStory(){
   }
   renderInsightChart("opening",aggregate.openingGroups,"scroll-sources","detail-opening");
   renderSourceCurve(aggregate);
+  renderThemeStory();
   renderInsightChart("resources",aggregate.turn3Groups,"scroll-hand","detail-resources");
   renderInsightChart("candidates",aggregate.candidateGroups,"scroll-candidates","detail-candidates");
   installScrollStory();

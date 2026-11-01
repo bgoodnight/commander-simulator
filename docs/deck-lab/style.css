@@ -481,3 +481,14 @@ body{background-color:#101019;background-image:radial-gradient(ellipse at 50% -1
 /* Inline symbols retain the line breaks and spacing of printed rules text. */
 .oracle-text .mana-symbols{display:inline;white-space:pre-line}
 .modal .oracle-text .mana-symbol{width:1.1em;height:1.1em;vertical-align:-.16em}
+
+.story-secondary{display:block;min-height:0;border-top:1px solid #75697b;padding-top:15px}
+.story-secondary>summary,.story-drilldown>summary{cursor:pointer;color:#e6c996;font-family:Cinzel,Georgia,serif;font-size:.83rem;padding:10px 0}
+.story-secondary[open] .story-copy{margin:18px 0}
+.story-secondary[open] .story-graphic{margin-top:12px}
+.story-drilldown{border-top:1px solid #75697b;margin-top:15px;padding-top:5px}
+.theme-story-controls{display:flex;flex-wrap:wrap;gap:6px;margin:10px 0}
+.theme-choice{min-height:40px;border:1px solid;border-radius:24px;background:#162526;color:#eddfc4;padding:7px 11px;font-size:.72rem}
+.theme-choice[aria-pressed=true]{background:#4a4050;color:#fff4d9;box-shadow:0 0 10px #b89bc349}
+.theme-series{fill:none;stroke-width:3;stroke-linecap:round;stroke-linejoin:round}
+.theme-turn-controls{display:grid;grid-template-columns:repeat(7,minmax(0,1fr));gap:4px}

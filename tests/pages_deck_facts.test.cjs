@@ -95,3 +95,27 @@ test('rules text renders embedded mana symbols without losing surrounding text o
   assert.equal(rendered.children[1].src,'https://svgs.scryfall.io/card-symbols/1.svg');
   assert.equal(rendered.children[2].textContent,' or one mana.\nDraw two cards.');
 });
+test('theme story selects a turn and opens the matching card',()=>{
+  class Node {
+    constructor(tag){this.tag=tag;this.children=[];this.attrs={};this.handlers={};this.dataset={};this.style={};this.classList={add(){}}}
+    append(...nodes){this.children.push(...nodes)}
+    appendChild(node){this.children.push(node);return node}
+    replaceChildren(){this.children=[]}
+    setAttribute(k,v){this.attrs[k]=v}
+    addEventListener(k,v){this.handlers[k]=v}
+    querySelectorAll(selector){return this.children.filter(c=>selector==='.theme-series'&&c.attrs.class==='theme-series')}
+  }
+  const nodes={};for(const id of ['theme-story-chart','theme-story-detail','story-title-themes','story-summary-themes'])nodes[id]=new Node('div');
+  const card={name:'Zombie A',oracle_id:'z'};
+  const points=Array.from({length:7},(_,turn)=>({turn,count:1,pct:100,matches:[{seed:'7',turn:0,card:'Zombie A'}]}));
+  const group={id:'zombie',label:'Zombie',copies:5,sample:1,points};
+  const ctx={location:{pathname:'/results.html'},window:{DeckInsights:{themes:()=>[group],themeTimelines:()=>[group]}},
+    localStorage:{getItem:()=>null},document:{getElementById:id=>nodes[id],createElement:t=>new Node(t),createElementNS:(_,t)=>new Node(t)},card,opened:[]};
+  vm.createContext(ctx);vm.runInContext(code,ctx);
+  vm.runInContext("data={cards:{z:card}}; archives={test:{}};selected='test';displayDeckCards=()=>[];selectedDeck=()=>({commander_id:'z'});cardInfo=()=>card;showCard=id=>opened.push(id);renderThemeStory()",ctx);
+  assert.match(nodes['story-title-themes'].textContent,/Zombie appears by turn 3 in 1 \/ 1 runs/);
+  const chart=nodes['theme-story-chart'].children[1];
+  const point=chart.children.find(x=>x.attrs.role==='button');point.handlers.click();
+  const detail=nodes['theme-story-detail'],cardButton=detail.children[2].children[0].children[2];
+  cardButton.handlers.click();assert.deepEqual(ctx.opened,['z']);
+});
