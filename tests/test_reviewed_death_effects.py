@@ -112,7 +112,7 @@ class ReviewedDeathEffectsTests(unittest.TestCase):
         # but there is no surviving battlefield object to receive counters.
         other=self.add("Another",controller=1)
         result=self.kill(crawler,other)
-        self.assertEqual(sum(r.source_name=="Venomcrawler" for r in result),2)
+        self.assertEqual(sum(r.source_name=="Venomcrawler" for r in result),1)
         self.assertNotIn(crawler,self.kernel.objects)
 
     def test_yahenni_massacre_wurm_meathook_per_controller(self):
