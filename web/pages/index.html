@@ -53,6 +53,8 @@
       <p id="active-deck-name">Open the rune to choose a deck.</p>
     </div>
     <div class="selection-actions">
+      <label for="global-deck-select" class="micro">Loaded deck</label>
+      <select id="global-deck-select" class="global-deck-select" aria-label="Load a named deck"></select>
       <span id="active-deck-state" class="selection-state">Cached decks</span>
       <a href="./editor.html" id="change-deck-link" class="stone-button">Manage decks</a>
     </div>
@@ -262,7 +264,8 @@
             No new simulation results are produced for edited decks.</p>
         </section>
         <section class="panel">
-          <h2 class="panel-title">Versions &amp; Card Lookup</h2>
+          <h2 class="panel-title">Manage Decks</h2>
+          <p class="small">All named decks, newest updated first. Choose Load to open a deck; browser-saved versions remain on this device.</p>
           <div id="saved-versions"></div>
           <div class="arcane-line"></div>
           <h3>New card from Scryfall</h3>
