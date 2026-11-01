@@ -1,6 +1,47 @@
 # Architecture decision: progressive card definitions and ability-level fidelity
 
-**Status:** Adopted as the implementation contract; **design target, not implemented feature**. Last reviewed 2026-10-31. Authoritative plan: [ROADMAP.md](../ROADMAP.md); execution gates: [HYBRID_SIMULATION_WORKPLAN.md](HYBRID_SIMULATION_WORKPLAN.md) and [DEVELOPMENT_GUIDE.md](DEVELOPMENT_GUIDE.md).
+**Status:** Adopted architecture; **G1 per-ability composition core implemented (partial integration)**. Last reviewed 2026-10-31. Full per-event live dispatch, generalized trigger lifecycle, and multi-deck support remain pending. Authoritative plan: [ROADMAP.md](../ROADMAP.md); execution gates: [HYBRID_SIMULATION_WORKPLAN.md](HYBRID_SIMULATION_WORKPLAN.md) and [DEVELOPMENT_GUIDE.md](DEVELOPMENT_GUIDE.md).
+
+## Implemented G1 foundation (October 31, 2026)
+
+`commander_sim/ability_composition.py` now supplies immutable reviewed
+`AbilitySlot`, `AbilityHandler`, and `ComposedCard` types. Slots have stable
+(Oracle ID, face ID, ability ID) keys, pinned printed source text and revision,
+typed operation declarations, and required shared capabilities. They are
+constructed from **reviewed registrations**, never from guessed card roles
+or arbitrary Oracle prose. Each slot can have **at most one exact and one
+simplified implementation**. The `strict` policy only selects exact;
+`hybrid` prefers exact and selects simplified only when explicitly reviewed,
+while `observation` never executes an ability. Missing capabilities and
+unregistered slots fail closed. Only the selected slot is promoted;
+unrelated abilities remain present.
+
+`AbilityDispatcher` invokes a caller-provided, authoritative kernel operation
+for the selected ability and records source object ID, slot identity, fidelity,
+revision, outcome and omissions **only after the executor returns**.
+`TriggerSubscriptions` provides an object-instance/slot/event deduplication
+registry with explicit cleanup on zone departure. These are initially
+separate contracts, not yet hooked to every event in v35; no separate
+mutable game state or global trigger bus was created.
+
+`inspected_search_card` composes the five pinned tutors from
+`reviewed_tutors.TUTORS`; historical search handlers now retrieve their
+exact-reviewed **search suboperation** through the ability-slot resolver
+while retaining the existing timing, stack, triggers and zone movement.
+This precise historical search suboperation is **not** a blanket claim
+that the entire printed card is exactly simulated. `inspected_rock_card`
+composes known mana modes from the reviewed rocks catalog and declares
+Mind Stone/Commander's Sphere sacrifice-to-draw as **unsupported separate
+slots**, rather than accidentally treating a mana-only model as a fully
+implemented card.
+
+This milestone is gated by additional independent tests for slot identity,
+promotion/exact-first selection, multiple independent abilities, missing
+capabilities, observation-mode refusal, false-event suppression on rejected
+actions, trigger deduplication, unsupported rock side abilities and parity
+with the historical tutor registries. The v3–v35 and frozen replay suites
+must also remain green. Existing descriptive design sketches further below
+remain relevant to the remaining G2–G5 integration work.
 
 ## Decision in one sentence
 
