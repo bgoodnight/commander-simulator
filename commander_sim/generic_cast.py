@@ -34,7 +34,7 @@ def _cast_reviewed_card(zones, seat, object_id, review, commander_colors, *,
     until that turn's main-phase boundary. No unreviewed printed abilities
     execute by entering the battlefield.
     """
-    if card_type not in {"creature", "artifact", "instant", "sorcery"}:
+    if card_type not in {"creature", "artifact", "enchantment", "instant", "sorcery"}:
         raise ValueError("Unreviewed spell/permanent type")
     if not isinstance(review, ReviewedCreatureCast) or not review.entry_and_cast_safe:
         raise ValueError("Missing reviewed entry/cast safety declaration")
@@ -93,7 +93,7 @@ def _cast_reviewed_card(zones, seat, object_id, review, commander_colors, *,
 def cast_reviewed_permanent(zones, seat, object_id, review, commander_colors, *,
                             mana_service=None, permanent_type="creature"):
     """Backward-compatible permanent cast: does not resolve printed abilities."""
-    if permanent_type not in {"creature", "artifact"}:
+    if permanent_type not in {"creature", "artifact", "enchantment"}:
         raise ValueError("Expected an approved permanent type")
     return _cast_reviewed_card(
         zones, seat, object_id, review, commander_colors,
