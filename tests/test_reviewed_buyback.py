@@ -74,9 +74,9 @@ class BuybackTests(unittest.TestCase):
     def test_repeat_cast_requires_new_mana_not_free(self):
         oid=self.setup_spell()
         first=self.cast(oid,True)
+        self.add("Second draw","library")
         self.assertIsNone(self.cast(first.destination_id,False))
         self.add("Island","battlefield")
-        self.add("Second draw","library")
         again=self.cast(first.destination_id,False)
         self.assertEqual(again.destination,"graveyard")
         self.assertEqual(len(again.drawn_ids),1)
