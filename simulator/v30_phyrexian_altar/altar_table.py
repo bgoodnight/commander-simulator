@@ -8,8 +8,12 @@ from step_cycling import StepCyclingTable
 from resources import Resources,Ability,SourcePayment,U,R,spend
 from rules import Cost,Event
 from simulation import Action
+sys.path.insert(0,str(Path(__file__).resolve().parents[2]))
+from commander_sim.legacy_common_ops import (SacrificeRequirement,
+    legal_sacrifice_victims, sacrifice_physical_object)
 
 NAME='Phyrexian Altar'
+ALTAR_SACRIFICE=SacrificeRequirement(frozenset({'artifact'}),frozenset({'creature'}))
 
 @dataclass(frozen=True)
 class AltarAbility(Ability):
@@ -22,10 +26,11 @@ class AltarResources(Resources):
         altars=sorted(o.object_id for o in self.kernel.on_battlefield() if o.controller==seat and o.card.name==NAME and 'artifact' in o.types)
         if not altars:return tuple(base.items())
         altar=altars[0]
+        # A sacrificed Altar could invalidate later activations. Until the
+        # general planner tracks cross-source dependencies, omit all Altars.
+        eligible=set(legal_sacrifice_victims(self.kernel,seat,altar,ALTAR_SACRIFICE))-set(altars)
         for obj in sorted(self.kernel.on_battlefield(),key=lambda o:not o.token):
-            # A sacrificed Altar could invalidate later activations. Until the
-            # general planner tracks cross-source dependencies, omit it.
-            if obj.controller!=seat or 'creature' not in obj.types or obj.object_id in altars:continue
+            if obj.object_id not in eligible:continue
             modes=tuple(AltarAbility(output,sacrifice=True,altar_id=altar,token=obj.token) for output in (U,R))
             base[obj.object_id]=base.get(obj.object_id,())+modes
         return tuple(base.items())
@@ -34,14 +39,14 @@ class AltarResources(Resources):
         ability=activation.ability
         if not isinstance(ability,AltarAbility):return super().activate(seat,activation,defer_sba)
         victim=self.kernel.objects.get(activation.source_id);altar=self.kernel.objects.get(ability.altar_id)
-        if (not victim or victim.zone!='battlefield' or victim.controller!=seat or 'creature' not in victim.types
-            or not altar or altar.zone!='battlefield' or altar.controller!=seat or altar.card.name!=NAME or 'artifact' not in altar.types
-            or activation.source_id==ability.altar_id or ability.output not in (U,R) or ability.cost!=Cost()
+        eligible=legal_sacrifice_victims(self.kernel,seat,ability.altar_id,ALTAR_SACRIFICE)
+        if (victim is None or altar is None or altar.card.name!=NAME
+            or activation.source_id not in eligible or ability.output not in (U,R) or ability.cost!=Cost()
             or not ability.sacrifice or ability.life or ability.damage or self.table.players[seat].eliminated_round is not None
             or activation.remaining_before_output not in spend(self.pool(seat),ability.cost)):
             raise ValueError('Illegal Altar mana ability')
         victim_name=victim.card.name
-        self.table.world.move(victim.object_id,'graveyard','sacrifice')
+        sacrifice_physical_object(self.table,seat,ability.altar_id,victim.object_id,ALTAR_SACRIFICE)
         self.kernel.mana_pools[seat]=tuple(activation.remaining_before_output[i]+ability.output[i] for i in range(3))
         self.kernel._dirty();self.kernel.events.append(Event('mana_added',seat,ability.altar_id,amount=1))
         self.activations.append(dict(seat=seat,source_id=ability.altar_id,source=NAME,output=ability.output,
