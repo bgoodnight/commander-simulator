@@ -6,7 +6,7 @@
   <meta name="theme-color" content="#182428">
   <meta name="description" content="Commander Deck Lab: explore cached Commander decklists, card art and precomputed early-turn observations.">
   <title>Commander Deck Lab — The Arcane Table</title>
-  <link rel="stylesheet" href="./style.css?v=deckpicker-20261101">
+  <link rel="stylesheet" href="./style.css?v=deckpicker-20261101bb">
   <script src="https://cdn.jsdelivr.net/npm/d3@7/dist/d3.min.js" defer></script>
   <script src="./results_insights.js?v=20261101h1" defer></script>
   <script src="./brackets.js?v=20261101bracket" defer></script>
@@ -52,12 +52,11 @@
       <h2 id="active-commander">Select a commander</h2>
       <p id="active-deck-name">Open the rune to choose a deck.</p>
     </div>
-    <div class="selection-actions">
-      <label for="global-deck-select" class="micro">Loaded deck</label>
-      <select id="global-deck-select" class="global-deck-select" aria-label="Load a named deck"></select>
-      <span id="active-deck-state" class="selection-state">Cached decks</span>
-      <a href="./editor.html" id="change-deck-link" class="stone-button">Manage decks</a>
-    </div>
+  </section>
+  <section class="deck-selection-row" aria-label="Load a named deck" hidden>
+    <label for="global-deck-select">Loaded deck</label>
+    <select id="global-deck-select" class="global-deck-select" aria-label="Load a named deck"></select>
+    <span id="active-deck-state" class="selection-state">Cached decks</span>
   </section>
   <section id="app-content" hidden aria-live="off">
     <div id="page-introduction" class="page-introduction" aria-live="polite"></div>
@@ -230,8 +229,6 @@
         <section class="panel">
           <h2 class="panel-title">Edit Deck</h2>
           <div class="version-selector">
-            <label for="deck-version-select">Load a deck or saved version</label>
-            <select id="deck-version-select" aria-describedby="version-help"></select>
             <p class="micro" id="version-help">Choose a built-in deck or a saved browser version. Changes stay local until you save.</p>
             <button type="button" id="new-version-button" class="stone-button">Start a new version from this deck</button>
           </div>
