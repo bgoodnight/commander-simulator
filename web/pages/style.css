@@ -545,3 +545,15 @@ body{background-color:#101019;background-image:radial-gradient(ellipse at 50% -1
 .archive-art-card .mana-symbols{justify-content:center;font-size:.7rem;max-width:88px}.archive-art-card .mana-symbol{width:1.1em;height:1.1em}
 @media(max-width:720px){.commander-medallion{width:68px;height:68px}.archive-stories{grid-template-columns:1fr}.archive-stories .land-story[open]{grid-column:auto}.land-story-summary{min-height:135px}.land-story-body{grid-template-columns:1fr}.land-story-body>.land-distribution,.land-story-body>.land-selection{grid-column:1/-1}.land-story-card{width:44%}}
 @media(min-width:901px){.board-grid:has(.board-report[open]) .board-report[open]{grid-column:1/-1}.board-card-list{grid-template-columns:repeat(2,minmax(0,1fr))}}
+
+
+/* Commander bracket evidence: compact summary with progressive disclosure. */
+.bracket-assessment{margin-top:14px;padding:12px;border:1px solid #7a6b4c;border-radius:11px;background:#101c1dc9}
+.bracket-head{display:flex;gap:9px;align-items:center;justify-content:space-between;flex-wrap:wrap}
+.bracket-head strong{font-family:Cinzel,Georgia,serif;color:var(--gold);font-size:.92rem}
+.bracket-assessment .small{margin:7px 0;color:var(--soft)}
+.bracket-evidence{margin-top:9px;border-top:1px solid #6b5b42;padding-top:9px}
+.bracket-evidence summary{cursor:pointer;color:#e3c995;font-size:.8rem}
+.bracket-evidence-list{margin:10px 0;padding-left:19px;font-size:.8rem;line-height:1.7}
+.bracket-evidence .micro{line-height:1.55;margin:7px 0}
+.bracket-evidence a{font-size:.78rem}
