@@ -317,7 +317,7 @@ function updateSelectionBadge(){
   const link=$("change-deck-link"),url=new URL("./editor.html",location.href);
   url.searchParams.set("deck",selected);
   if(selectedVersionId)url.searchParams.set("version",selectedVersionId);
-  link.href=url.href;
+  if(link)link.href=url.href;
 }
 function buildDeckRail(){
   const rail=$("commander-rail");clear(rail);
