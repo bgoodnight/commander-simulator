@@ -30,8 +30,8 @@ def legal_search_targets(zones, seat, source_id, catalog):
     if (source.controller != seat or source.zone not in {"stack", "battlefield"}):
         raise ValueError("Search source has not resolved/cannot activate")
     card = catalog.get(source.card.name)
-    if card is None:
-        raise ValueError("Unreviewed tutor source")
+    if card is None or source.card.card_id != card.get("oracle_id"):
+        raise ValueError("Unreviewed tutor source identity")
     found = reviewed_tutor(source.card.name, card)
     if found is None:
         raise ValueError("Tutor effect not reviewed")
@@ -54,8 +54,8 @@ def execute_reviewed_search_to_hand(zones, seat, source_id, target_id, catalog):
     """
     source = zones.kernel.get(source_id)
     card = catalog.get(source.card.name)
-    if card is None:
-        raise ValueError("Unknown search source")
+    if card is None or source.card.card_id != card.get("oracle_id"):
+        raise ValueError("Unknown search source identity")
     found = reviewed_tutor(source.card.name, card)
     if found is None:
         raise ValueError("Unreviewed tutor")
