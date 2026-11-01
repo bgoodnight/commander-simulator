@@ -1,0 +1,46 @@
+/* Commander bracket evidence, independent of simulation execution.
+ * Rule-based estimate, not an official adjudication or simulated win-rate.
+ */
+(function(root,factory){
+  const api=factory();
+  if(typeof module==="object"&&module.exports)module.exports=api;
+  if(root)root.CommanderBrackets=api;
+})(typeof window!=="undefined"?window:null,function(){
+  "use strict";
+  function normalize(name){return String(name||"").normalize("NFKC").trim().toLowerCase();}
+  function assess(entries,cards,registry){
+    if(!Array.isArray(entries)||!registry||!Array.isArray(registry.names))
+      return {status:"unavailable",reason:"Card list or Game Changers reference is unavailable."};
+    const changers=new Set(registry.names.map(normalize));
+    const matches=[],unknown=[],tutors=[],extraTurns=[],landDenial=[];
+    let total=0;
+    for(const item of entries){
+      const qty=Number(item.qty??item.quantity);
+      if(!Number.isInteger(qty)||qty<1)continue;
+      total+=qty;
+      const card=cards[item.oracle_id]||null;
+      const name=item.name||card?.name||"Unknown card";
+      if(!card){unknown.push(name);continue;}
+      const aliases=[name,card.name,...(card.face_names||[])].map(normalize);
+      if(aliases.some(alias=>changers.has(alias)))matches.push({name,qty,oracle_id:item.oracle_id});
+      const rules=String(card.oracle_text||"");
+      if(/search your library for/i.test(rules)&&!/basic land card/i.test(rules))
+        tutors.push(name);
+      if(/take an extra turn|takes an extra turn/i.test(rules))extraTurns.push(name);
+      if(/destroy all lands|exile all lands|return all lands to their owners/i.test(rules))
+        landDenial.push(name);
+    }
+    const count=matches.reduce((sum,x)=>sum+x.qty,0);
+    const floor=count>3?4:count>0?3:2;
+    const estimate=landDenial.length?Math.max(4,floor):floor;
+    return {
+      status:total===100&&unknown.length===0?"provisional":"incomplete",
+      estimated_bracket:estimate,minimum_by_game_changers:floor,
+      count, matches, unknown, total, tutors:[...new Set(tutors)],
+      extraTurns:[...new Set(extraTurns)],landDenial:[...new Set(landDenial)],
+      source:registry.source,reference_updated:registry.updated,
+      caveat:"Provisional rules-text/decklist screening only: combinations, intentional strategies, actual win speed, playgroup expectations and cEDH intent require review. Neither simulations nor early-game win probabilities are inferred."
+    };
+  }
+  return {assess,normalize};
+});
