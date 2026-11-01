@@ -8,6 +8,8 @@ from stepped import StepStack
 from rules import Event,Modifier,TriggerResult
 from selection import Selection
 from engine_turns import EngineDriver
+sys.path.insert(0,str(Path(__file__).resolve().parents[2]))
+from commander_sim.legacy_common_ops import DrawDiscard,apply_draw_discard
 import engine_cards as engine_provider
 
 
@@ -82,7 +84,7 @@ class EngineTable(CombatTable):
             take=policy(item.controller,item.source_id) if policy else True
             if type(take) is not bool:raise ValueError('Loot choice must be boolean')
             if take:
-                player.draw();self.selection.discard(item.controller,1,'baral_discard')
+                apply_draw_discard(self,item.controller,DrawDiscard(1,1,'baral_discard'),selection=self.selection)
             self.engine_events.append(('loot',item.controller,take))
             self.note(f'    BARAL LOOT P{item.controller}: accepted={take}.')
         elif item.op=='copy_source_until_end':
