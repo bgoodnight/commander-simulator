@@ -47,3 +47,44 @@ The batch now separates **lands**, **approved rocks in play**, **creatures in pl
 ## Next extensions
 
 Use the same descriptors to support land-search ramp (`basic land` -> battlefield tapped), mana-rock alternative modes, cost reducers, conditional/power-limited tutors, and optional/discard/sacrifice side costs. Review the *differences from the default* rather than writing each card from scratch. Prioritize actually hooking mana rocks and generic search to a normal source-paid turn driver; add event-backed tutor reachability, ability fidelity and calibrated opponent interactions before win-rate estimates. UI Work can consume the Python outputs but should not reimplement their mechanics in JavaScript.
+
+## Migrating the older v17–v35 card implementations (first completed slice)
+
+The historical simulator formerly repeated library-search logic across separate
+card-specific table classes. The first migration replaces those routines
+with **one** `commander_sim/legacy_tutor_ops.py` resolver driven by the existing
+`EffectTemplate` data structure. Its declarative registrations cover Mystical
+Tutor (instant/sorcery -> library top), Personal Tutor (sorcery -> library top),
+Merchant Scroll (blue instant -> hand), Solve the Equation (instant/sorcery ->
+hand), Fabricate (artifact -> hand), Step Through wizardcycling (Wizard subtype
+-> hand) and Spellseeker (instant/sorcery with MV <= 2 -> hand).
+
+The v17, v25, v26, v27, v28 and premium v31 table handlers now call this
+single implementation. They still own spell casting, timing, priority and
+Spellseeker/cycling triggers; the new resolver owns **only** eligibility,
+ranked/policy selection, fail-to-find, exact physical card moves, shuffle,
+library-top ordering and logging. Unknown required target colors or mana
+values fail closed. Older verified cards are covered by fixed historical
+declarations; this layer does **not** automatically parse or authorize an
+arbitrary new tutor from card text. New cards can reuse a template by
+registering reviewed fields instead of adding another search algorithm.
+
+The original historical v9c+ mana provider also routes its **five previously
+supported rock definitions** (Sol Ring, Izzet Signet, Talisman of Creativity,
+Mind Stone, Arcane Signet) through `commander_sim/legacy_mana_adapter.py`,
+which converts the same pinned reviewed `ManaMode` declarations into the
+old U/R/colorless `Ability/Cost` API. It does **not** replace the old mana
+planner or grant newly unreviewed cards mana. Colored ability order is
+canonical WUBRG to preserve deterministic replay behavior.
+
+Regression gates include eight new search tests and seven new rock adapter
+tests, plus all prior versioned gameplay suites and the historical frozen
+reference fingerprints. The migration is complete only when the **whole**
+regression matrix passes; existing engine behavior is not supposed to change.
+
+**Remaining migrations:** generic draw/discard, counters, token creation,
+sacrifice, recursion, cost reductions, copy/target changes and conditional
+triggers. Prefer adding one typed reusable operation or an explicit parameter
+when a card exposes a new mechanic; maintain a custom handler only for
+genuinely irreducible behavior. Add original-versus-migrated replay fixtures
+before changing any of these older implementations.
