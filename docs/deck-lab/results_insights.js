@@ -193,5 +193,48 @@
         })};
     });
   }
-  return {summarize,findings,pct,round,sources,candidateCount,themes,sourceTimeline,themeTimelines};
+  const PROGRESS_EVENTS=new Set(["land_play","creature_resolved","artifact_resolved",
+    "tutor_resolved","token_spell_resolved","reviewed_trigger_resolved"]);
+  function quietTurns(runs,deckKey,deckHash){
+    if(!Array.isArray(runs)||!runs.length)throw Error("Select one or more individual run records.");
+    const seeds=new Set(),first=runs[0],horizon=first?.events?.length,policy=first?.mulligan?.policy;
+    if(!Number.isInteger(horizon)||horizon<2||horizon>10||!policy)throw Error("Runs need at least two turns and a mulligan policy.");
+    for(const run of runs){
+      if(run?.mode!=="bounded_authoritative_early_actions"||run.deck_key!==deckKey||run.deck_sha256!==deckHash)
+        throw Error("Every run must match the selected built-in deck and its exact version.");
+      if(!Number.isInteger(run.seed)||seeds.has(run.seed))throw Error("Each run needs a distinct integer seed.");
+      seeds.add(run.seed);
+      if(run.mulligan?.policy!==policy||!Array.isArray(run.events)||run.events.length!==horizon||
+          !Array.isArray(run.state_snapshots)||run.state_snapshots.length!==horizon)
+        throw Error("Runs must have the same turn count and mulligan policy, with complete snapshots.");
+      run.events.forEach((row,i)=>{
+        if(row?.turn!==i+1||!Array.isArray(row.events)||!Array.isArray(row.unsupported_cards_in_hand)||
+           !Number.isFinite(row.land_count)||!Number.isFinite(row.hand_size)||
+           run.state_snapshots[i]?.turn!==i+1||!Array.isArray(run.state_snapshots[i].hand)||
+           !Array.isArray(run.state_snapshots[i].battlefield))throw Error("A turn or snapshot is incomplete.");
+      });
+    }
+    return Array.from({length:horizon-1},(_,i)=>{
+      const turn=i+2;
+      const quiet=runs.filter(run=>[turn-2,turn-1].every(index=>
+        !run.events[index].events.some(event=>PROGRESS_EVENTS.has(event.type))));
+      const mean=(xs,fn)=>xs.length?xs.reduce((sum,x)=>sum+fn(x),0)/xs.length:0;
+      const unknown=r=>[...new Set(r.events.slice(turn-2,turn).flatMap(row=>row.unsupported_cards_in_hand))];
+      const lands=mean(quiet,r=>r.events[turn-1].land_count),
+        unsupported=mean(quiet,r=>unknown(r).length);
+      const examples=[...quiet].sort((a,b)=>{
+        const distance=r=>Math.abs(r.events[turn-1].land_count-lands)+
+          Math.abs(unknown(r).length-unsupported);
+        return distance(a)-distance(b)||a.seed-b.seed;
+      }).map(run=>({seed:run.seed,turn,landCount:run.events[turn-1].land_count,
+        hand:run.state_snapshots[turn-1].hand,battlefield:run.state_snapshots[turn-1].battlefield,
+        unsupported:unknown(run),
+        events:run.events.slice(turn-2,turn).map(row=>({turn:row.turn,events:row.events}))}));
+      return {turn,total:runs.length,count:quiet.length,pct:pct(quiet.length,runs.length),
+        uncertain:quiet.filter(r=>unknown(r).length>0).length,
+        nonquiet:runs.filter(run=>!quiet.includes(run)).map(run=>({seed:run.seed,hand:run.state_snapshots[turn-1].hand})),
+        examples};
+    });
+  }
+  return {summarize,findings,pct,round,sources,candidateCount,themes,sourceTimeline,themeTimelines,quietTurns};
 });

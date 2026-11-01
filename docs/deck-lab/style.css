@@ -492,3 +492,17 @@ body{background-color:#101019;background-image:radial-gradient(ellipse at 50% -1
 .theme-choice[aria-pressed=true]{background:#4a4050;color:#fff4d9;box-shadow:0 0 10px #b89bc349}
 .theme-series{fill:none;stroke-width:3;stroke-linecap:round;stroke-linejoin:round}
 .theme-turn-controls{display:grid;grid-template-columns:repeat(7,minmax(0,1fr));gap:4px}
+.diagnostic-panel{margin-top:26px}
+.diagnostic-import{display:block;font-size:.77rem;color:#ead5aa;margin:12px 0}
+.diagnostic-import input{display:block;width:100%;margin-top:8px;font-size:.72rem}
+.quiet-command{display:block;white-space:pre-wrap;overflow-wrap:anywhere;color:#cbd9d0;font-size:.67rem}
+.quiet-headline{color:#f0d49a;margin-top:20px}
+.quiet-turn-controls{display:grid;grid-template-columns:repeat(auto-fit,minmax(68px,1fr));gap:5px;margin:12px 0 20px}
+.quiet-comparison{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,220px),1fr));gap:9px;margin:12px 0}
+.quiet-group,.quiet-example{padding:13px;border:1px solid #716779;border-radius:10px;background:#152021}
+.quiet-group strong,.quiet-example strong{color:#eed4a0;font-size:.8rem}
+.quiet-group p{margin:8px 0 0}
+.quiet-example{margin-top:18px}
+.quiet-example-actions{display:flex;align-items:center;gap:9px;flex-wrap:wrap}
+.quiet-example-actions button{min-height:44px}
+.quiet-label{margin:13px 0 6px;color:#e4cc9d;font-weight:700;font-size:.72rem}

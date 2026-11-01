@@ -119,3 +119,25 @@ test('theme story selects a turn and opens the matching card',()=>{
   const detail=nodes['theme-story-detail'],cardButton=detail.children[2].children[0].children[2];
   cardButton.handlers.click();assert.deepEqual(ctx.opened,['z']);
 });
+test('quiet diagnostic cycles through examples and opens their card details',()=>{
+  class Node {
+    constructor(tag){this.tag=tag;this.children=[];this.attrs={};this.handlers={};this.dataset={};this.style={};this.classList={add(){}}}
+    append(...nodes){this.children.push(...nodes)}
+    appendChild(node){this.children.push(node);return node}
+    replaceChildren(){this.children=[]}
+    setAttribute(k,v){this.attrs[k]=v}
+    addEventListener(k,v){this.handlers[k]=v}
+  }
+  const nodes={};for(const id of ['quiet-output','quiet-status','quiet-command'])nodes[id]=new Node('div');
+  const sample=seed=>({seed,turn:2,landCount:1,hand:['Spell'],battlefield:[],unsupported:['Spell'],events:[]});
+  const points=[{turn:2,total:2,count:2,pct:100,uncertain:2,examples:[sample(1),sample(2)],nonquiet:[]}];
+  const ctx={location:{pathname:'/results.html'},window:{DeckInsights:{quietTurns:()=>points}},
+    localStorage:{getItem:()=>null},document:{getElementById:id=>nodes[id],createElement:t=>new Node(t)},opened:[]};
+  vm.createContext(ctx);vm.runInContext(code,ctx);
+  vm.runInContext("selectedDeck=()=>({key:'d',deck_sha256:'hash'});isUnsimulatedVersion=()=>false;cardInfo=()=>({oracle_id:'s',category:'Sorcery'});showCard=id=>opened.push(id);quietRuns=[{},{}];renderQuietDiagnostic()",ctx);
+  const out=nodes['quiet-output'];let example=out.children[out.children.length-1];
+  assert.match(example.children[0].textContent,/seed 1/);
+  example.children[2].children[1].handlers.click();
+  example=out.children[out.children.length-1];assert.match(example.children[0].textContent,/seed 2/);
+  example.children[4].children[0].handlers.click();assert.deepEqual(ctx.opened,['s']);
+});

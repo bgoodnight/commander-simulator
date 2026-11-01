@@ -126,3 +126,19 @@ test('theme story compares cumulative first appearances across distinct themes',
   delete records[3].trace[5].drawn;assert.equal(themeTimelines(groups,records)[0].sample,2);
   assert.deepEqual(themeTimelines(groups,{}),[]);
 });
+test('quiet-turn analysis uses consecutive recorded actions and exposes unsupported hands',()=>{
+  const {quietTurns}=require('../web/pages/results_insights.js');
+  function run(seed,events,unsupported){return {mode:'bounded_authoritative_early_actions',deck_key:'d',deck_sha256:'abc',seed,mulligan:{policy:'one-free'},
+    events:events.map((types,i)=>({turn:i+1,events:types.map(type=>({type})),unsupported_cards_in_hand:unsupported[i],land_count:1,hand_size:2})),
+    state_snapshots:events.map((_,i)=>({turn:i+1,hand:['Spell','Land'],battlefield:['Land']}))}}
+  const runs=[run(1,[['draw'],['draw'],['land_play']], [['Spell'],['Spell'],[]]),
+    run(2,[['land_play'],['tutor_resolved'],['draw']], [[],[],[]]),
+    run(3,[['draw'],['reviewed_trigger_resolved'],['draw']], [[],[],[]])];
+  const points=quietTurns(runs,'d','abc');
+  assert.equal(points[0].turn,2);assert.equal(points[0].count,1);assert.equal(points[0].uncertain,1);
+  assert.equal(points[0].examples[0].seed,1);assert.deepEqual(points[0].examples[0].hand,['Spell','Land']);
+  assert.equal(points[1].count,0);
+  assert.throws(()=>quietTurns(runs,'other','abc'),/match/);
+  assert.throws(()=>quietTurns([runs[0],runs[0]],'d','abc'),/distinct/);
+  assert.throws(()=>quietTurns([{mode:'observation'}],'d','abc'));
+});

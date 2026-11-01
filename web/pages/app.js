@@ -358,7 +358,7 @@ function showPage(){
   }
   renderPageIntro();
   document.title=PAGE_INFO[pageName]+" | Commander Deck Lab";
-  if(pageName==="results")renderScrollStory();
+  if(pageName==="results"){renderScrollStory();renderQuietDiagnostic()}
 }
 function deckFacts(){
   const cards=displayDeckCards();
@@ -1226,11 +1226,93 @@ async function fetchCard(){
     originalSound("error");
   }finally{$("fetch-card").disabled=false}
 }
+let quietRuns=null,quietPoints=[],quietTurn=0,quietExample=0;
+function quietCardList(names){
+  const list=el("div",null,"curve-sources");
+  if(!names.length)list.appendChild(el("span","None recorded"));
+  for(const name of names){
+    const card=cardInfo(name);
+    if(card){const button=el("button",name,"curve-card");button.type="button";
+      button.addEventListener("click",()=>showCard(card.oracle_id));list.appendChild(button)}
+    else list.appendChild(el("span",name));
+  }
+  return list;
+}
+function renderQuietDiagnostic(){
+  const output=$("quiet-output"),status=$("quiet-status");clear(output);
+  const deck=selectedDeck();if(!deck)return;
+  $("quiet-command").textContent="python -c 'import json; from commander_sim.early_game_runner import run_bounded_early_game as run; print(json.dumps([run(\""+deck.key+"\", seed=i, turns=6) for i in range(20)]))' > runs.json";
+  if(isUnsimulatedVersion()){
+    status.textContent="Action runs are unavailable for this edited deck.";return;
+  }
+  if(!quietRuns){status.textContent="No action runs loaded. Select run files from the Python simulator to explore this diagnostic.";return}
+  try{quietPoints=window.DeckInsights.quietTurns(quietRuns,deck.key,deck.deck_sha256)}
+  catch(error){status.textContent="Loaded runs cannot be used: "+error.message;return}
+  status.textContent=quietRuns.length+" runs · same deck and mulligan policy · results stay in this browser";
+  quietTurn=Math.min(quietTurn,quietPoints.length-1);const point=quietPoints[quietTurn];
+  const headline=el("h3",point.count+" / "+point.total+" runs had quiet turns "+(point.turn-1)+" and "+point.turn,"quiet-headline");
+  output.append(headline,el("p",point.uncertain+" of these runs had unsupported cards in hand during those turns; inspect before interpreting.","micro"));
+  const controls=el("div",null,"quiet-turn-controls");
+  quietPoints.forEach((item,index)=>{
+    const button=el("button","T"+item.turn+" · "+item.pct+"%","curve-turn");button.type="button";
+    button.setAttribute("aria-pressed",String(index===quietTurn));
+    button.addEventListener("click",()=>{quietTurn=index;quietExample=0;renderQuietDiagnostic()});controls.appendChild(button);
+  });output.appendChild(controls);
+  if(!point.count){output.appendChild(el("p","No runs met this definition on this turn.","small"));return}
+  const prevalence=el("div",null,"quiet-comparison");
+  const groupings=[{title:"Quiet turns",hands:point.examples.map(x=>x.hand)},
+    {title:"Other turns",hands:point.nonquiet.map(x=>x.hand)}];
+  for(const group of groupings){
+    const box=el("div",null,"quiet-group");box.appendChild(el("strong",group.title+" · "+group.hands.length+" runs"));
+    if(!group.hands.length){box.appendChild(el("p","No runs in this group.","micro"));prevalence.appendChild(box);continue}
+    const counts={};
+    for(const hand of group.hands){
+      const types=new Set(hand.map(name=>cardInfo(name)?.category||"Unknown"));
+      for(const type of types)counts[type]=(counts[type]||0)+1;
+    }
+    const rows=Object.entries(counts).sort((a,b)=>b[1]-a[1]||a[0].localeCompare(b[0]));
+    box.appendChild(el("p",rows.map(([name,n])=>name+" "+n+"/"+group.hands.length).join(" · "),"small"));
+    prevalence.appendChild(box);
+  }
+  output.append(el("h3","What was in hand?"),el("p","Runs with at least one card of each primary card type; groups can overlap.","micro"),prevalence);
+  quietExample=Math.min(quietExample,point.examples.length-1);
+  const example=point.examples[quietExample],section=el("div",null,"quiet-example");
+  section.append(el("strong",(quietExample===0?"Typical example":"Example")+" · seed "+example.seed),
+    el("p",example.landCount+" lands · "+example.hand.length+" cards in hand · "+example.unsupported.length+" unsupported cards across the two turns","small"));
+  const actions=el("div",null,"quiet-example-actions");
+  for(const [label,offset] of [["← Previous",-1],["Next →",1]]){
+    const button=el("button",label,"stone-button");button.type="button";
+    button.disabled=point.examples.length<2;
+    button.addEventListener("click",()=>{quietExample=(quietExample+offset+point.examples.length)%point.examples.length;renderQuietDiagnostic()});actions.appendChild(button);
+  }
+  actions.appendChild(el("span",(quietExample+1)+" / "+point.examples.length,"micro"));section.appendChild(actions);
+  section.append(el("p","Hand","quiet-label"),quietCardList(example.hand),el("p","Recorded battlefield","quiet-label"),quietCardList(example.battlefield));
+  if(example.unsupported.length)section.append(el("p","Unsupported cards in hand during the two turns","quiet-label"),quietCardList(example.unsupported));
+  for(const turn of example.events){
+    const eventSummary=turn.events.map(event=>event.type.replaceAll("_"," ")+(event.card?": "+event.card:"")).join(" · ");
+    section.appendChild(el("p","Turn "+turn.turn+": "+(eventSummary||"No recorded events"),"micro"));
+  }
+  section.appendChild(el("p","Example closest to the group's average lands and unsupported-card count is shown first.","micro"));
+  output.appendChild(section);
+}
+async function loadQuietFiles(event){
+  try{
+    if(isUnsimulatedVersion())throw Error("Select the original built-in deck to match these results.");
+    const files=[...event.target.files];if(!files.length)return;
+    if(files.length>200||files.some(file=>file.size>10*1024*1024))throw Error("Use at most 200 files of up to 10 MB each.");
+    const parsed=await Promise.all(files.map(async file=>JSON.parse(await file.text())));
+    const runs=parsed.flat();if(runs.length>1000)throw Error("At most 1,000 runs can be loaded at once.");
+    window.DeckInsights.quietTurns(runs,selectedDeck().key,selectedDeck().deck_sha256);
+    quietRuns=runs;quietTurn=0;quietExample=0;renderQuietDiagnostic();
+  }catch(error){quietRuns=null;clear($("quiet-output"));$("quiet-status").textContent="Could not load runs: "+error.message;}
+  finally{event.target.value=""}
+}
 function registerEvents(){
   syncSoundControl();
   document.addEventListener("pointerdown",()=>{audioUnlocked=true},{once:true});
   document.addEventListener("keydown",()=>{audioUnlocked=true},{once:true});
   $("audio-toggle").onclick=enableSound;
+  $("quiet-files").addEventListener("change",loadQuietFiles);
   $("commander-medallion").onclick=toggleCommanderPicker;
   document.addEventListener("click",e=>{
     if(!e.target.closest(".selector-anchor"))closeCommanderPicker();

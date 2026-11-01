@@ -179,6 +179,21 @@
           </div>
         </details>
       </section>
+      <section class="panel diagnostic-panel" aria-labelledby="quiet-title">
+        <span class="eyebrow">Development diagnostics</span>
+        <h2 id="quiet-title" class="panel-title">When does progress slow?</h2>
+        <p class="small">Explore consecutive turns without a recorded development or setup event.</p>
+        <label class="diagnostic-import">Load individual simulation run JSON files
+          <input id="quiet-files" type="file" accept="application/json,.json" multiple>
+        </label>
+        <p id="quiet-status" class="micro" role="status">No action runs loaded. Select run files from the Python simulator to explore this diagnostic.</p>
+        <div id="quiet-output" aria-live="polite"></div>
+        <details class="story-drilldown"><summary>How is this measured?</summary>
+          <p class="micro">Run files stay in this browser and must match the selected built-in deck. Generate runs together using the same simulator version. The command below creates an array from a repository checkout.</p>
+          <code id="quiet-command" class="quiet-command"></code>
+          <p class="micro">A flagged turn follows two consecutive turns without a recorded land play, reviewed permanent, tutor, token spell or reviewed trigger resolving. Unsupported cards and unmodeled decisions can create false positives. A flag is a prompt to inspect, not a proven deck problem.</p>
+        </details>
+      </section>
       <section class="panel archived-details" aria-labelledby="archived-details-heading">
         <h2 id="archived-details-heading" class="panel-title">Inspect a run</h2>
         <p class="small">Explore one observation.</p>
