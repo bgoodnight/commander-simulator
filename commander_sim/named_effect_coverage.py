@@ -22,6 +22,7 @@ from .reviewed_enter_effects import ENTER_RULES
 from .reviewed_cost_reduction import REDUCERS
 from .reviewed_graveyard_creatures import GRAVEYARD_CREATURES
 from .reviewed_nonhand_cast_triggers import NONHAND_CAST_TRIGGERS
+from .reviewed_escape import BREACH_REVIEWS
 
 
 def _named_sources():
@@ -40,6 +41,7 @@ def _named_sources():
         ("cost_reduction",REDUCERS),
         ("graveyard_creature_cast",GRAVEYARD_CREATURES),
         ("nonhand_cast_trigger",NONHAND_CAST_TRIGGERS),
+        ("escape_grant",BREACH_REVIEWS),
     ):
         for name,row in source.items():
             if kind in {"mana","search"}:

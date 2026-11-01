@@ -49,6 +49,8 @@ from .reviewed_sacrifice_actions import (
     activate_reviewed_sacrifice)
 from .template_resources import TemplateManaService
 from .hand_cleanup import cleanup_hand
+from .reviewed_escape import (reviewed_breach, escape_candidates,
+    cast_reviewed_escape_token_spell, sacrifice_breach_at_end_step)
 
 ROOT = Path(__file__).resolve().parents[1]
 
@@ -147,7 +149,8 @@ def run_bounded_early_game(deck_key, *, seed=0, turns=6, mulligan="one-free", pr
                     or reviewed_graveyard_creature(name, raw_by_name[name]) is not None
                     or reviewed_phase_permanent(name, raw_by_name[name])
                     or reviewed_sacrifice_artifact(name,raw_by_name[name])
-                    or approved_enter_hand_cast(name))
+                    or approved_enter_hand_cast(name)
+                    or reviewed_breach(name,raw_by_name[name]))
         definition = CardDefinition(
             identity.oracle_id, name, types, subtypes=subtypes,
             supertypes=frozenset({"commander"}) if section == "Commander" else frozenset(),
@@ -250,7 +253,7 @@ def run_bounded_early_game(deck_key, *, seed=0, turns=6, mulligan="one-free", pr
                 is_creature = reviewed_creature(deck_key, name, raw)
                 rock = reviewed_rock(name, raw, colors)
                 token_spell = reviewed_token_spell(name, raw)
-                phase_enchantment = reviewed_phase_permanent(name, raw)
+                phase_enchantment = reviewed_phase_permanent(name, raw) or reviewed_breach(name, raw)
                 sacrifice_artifact = reviewed_sacrifice_artifact(name, raw)
                 entering = approved_enter_hand_cast(name)
                 tutor = reviewed_tutor(name, raw)
@@ -489,6 +492,36 @@ def run_bounded_early_game(deck_key, *, seed=0, turns=6, mulligan="one-free", pr
                            "created_token_ids":list(result.created_token_ids),
                            "drawn_ids":list(result.drawn_ids),
                            "fidelity":"bounded_no_opponent_priority"})
+        # A genuine Breach grants a shared escape permission while present.
+        # The bounded pilot chooses at most one independently reviewed spell,
+        # paying its printed cost and exiling THREE other physical cards.
+        escape_options=[]
+        for grave_id in zones.ids(0,"graveyard"):
+            spell=kernel.get(grave_id)
+            if reviewed_token_spell(spell.card.name,raw_by_name.get(spell.card.name)) is None:
+                continue
+            fodder=escape_candidates(zones,0,grave_id,raw_by_name,mana_service)
+            if len(fodder)>=3:
+                escape_options.append((spell.card.name,grave_id,fodder))
+        if escape_options:
+            _,source_id,fodder=min(escape_options)
+            triggered=[]
+            result=cast_reviewed_escape_token_spell(
+                zones,0,source_id,raw_by_name,mana_service,
+                exile_ids=tuple(fodder[:3]),sorcery_window=True,
+                on_cast=lambda ticket:triggered.extend(
+                    approved_spell_triggers(ticket)))
+            events.append({"type":"reviewed_escape_cast","card":result.card_name,
+                           "source_graveyard_id":result.source_old_id,
+                           "source_object_ids":list(result.paid_source_ids),
+                           "exiled_other_object_ids":list(result.exiled_other_ids),
+                           "stack_object_id":result.stack_id,
+                           "fidelity":"bounded_physical_escape"})
+            events.extend(triggered)
+            events.append({"type":"reviewed_escape_resolved","card":result.card_name,
+                           "graveyard_object_id":result.graveyard_id,
+                           "created_token_ids":list(result.created_token_ids),
+                           "fidelity":"bounded_physical_escape"})
         # One conservative, source-paid graveyard activation per turn.
         # This uses the existing physical unearth replacement map, not a
         # shadow battlefield. Opponent-choice Lokhust is deferred.
@@ -540,6 +573,13 @@ def run_bounded_early_game(deck_key, *, seed=0, turns=6, mulligan="one-free", pr
             events.append({"type":"reviewed_unearth_expired",
                            "object_id":old_id,"exiled_object_id":exiled_id,
                            "fidelity":"bounded_no_opponent_priority"})
+        # Underworld Breach is sacrificed at the beginning of the end step.
+        # This bounded phase host resolves the trigger before cleanup.
+        for old_id,new_id in sacrifice_breach_at_end_step(zones,0,raw_by_name):
+            events.append({"type":"reviewed_breach_sacrificed",
+                           "source_object_id":old_id,
+                           "graveyard_object_id":new_id,
+                           "fidelity":"bounded_no_opponent_priority"})
         # Cleanup follows all end-step abilities; use actual kernel movement.
         # The limited pilot already spent available main-phase mana and cast
         # supported spells before this point, avoiding excess hand cards when
@@ -555,7 +595,8 @@ def run_bounded_early_game(deck_key, *, seed=0, turns=6, mulligan="one-free", pr
                 or reviewed_tutor(name, raw) is not None
                 or reviewed_phase_permanent(name, raw)
                 or reviewed_sacrifice_artifact(name, raw)
-                or approved_enter_hand_cast(name))
+                or approved_enter_hand_cast(name)
+                or reviewed_breach(name,raw))
         cleanup = cleanup_hand(
             zones, 0, raw_by_name, supported_action=hand_action_supported)
         for choice in cleanup.discarded:
