@@ -27,6 +27,10 @@ jobs:
       enabled: ${{ steps.pages-check.outputs.enabled }}
     steps:
       - uses: actions/checkout@v4
+        with:
+          # Deck 'last updated' comes from each pinned decklist commit,
+          # which cannot be resolved reliably from the default depth-1 clone.
+          fetch-depth: 0
       - uses: actions/setup-python@v5
         with:
           python-version: "3.11"
