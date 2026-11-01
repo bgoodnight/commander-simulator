@@ -54,9 +54,15 @@ class StaticPagesTests(unittest.TestCase):
                    "app.js","results_insights.js","style.css","decks.json",
                    "observations.json","names.json","bounded-batches.json","build-manifest.json",".nojekyll"}
         permitted.update(f"bounded-runs-{key}.json" for key in ("magnus_premium","wretched_ranks","mortarion_current","necron_dynasties"))
+        archive_dir=self.destination/"simulation-data"
+        if archive_dir.is_dir():
+            permitted.add("simulation-data")
+            from tools.publish_simulation_archive import validate_index
+            self.assertGreaterEqual(len(validate_index(archive_dir)["releases"]),1)
         self.assertEqual({p.name for p in self.destination.iterdir()},permitted)
         self.assertNotIn("shared_scryfall_catalog.json",permitted)
-        self.assertFalse(any(p.is_dir() for p in self.destination.iterdir()))
+        self.assertFalse(any(p.is_dir() and p.name!="simulation-data"
+                             for p in self.destination.iterdir()))
         page=(self.destination/"index.html").read_text()
         script=(self.destination/"app.js").read_text()
         self.assertIn("commander-rail",page)
