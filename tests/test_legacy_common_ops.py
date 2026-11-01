@@ -5,6 +5,7 @@ from types import SimpleNamespace as NS
 from commander_sim.legacy_common_ops import (
     DrawDiscard, TokenBatch, GenericDiscount,
     apply_draw_discard, apply_token_batch, apply_generic_discount,
+    SacrificeRequirement, legal_sacrifice_victims, sacrifice_physical_object,
 )
 
 
@@ -96,6 +97,50 @@ class CommonEffectOpsTests(unittest.TestCase):
         for amount in (-1,True):
             with self.subTest(amount=amount),self.assertRaises(ValueError):
                 GenericDiscount(amount,"U","Sapphire Medallion")
+
+
+
+class SacrificeOperationTests(unittest.TestCase):
+    def setUp(self):
+        self.source = NS(object_id=1, controller=0,zone="battlefield",
+                         types=frozenset({"artifact"}),token=False,tapped=False)
+        self.victim = NS(object_id=2, controller=0,zone="battlefield",
+                         types=frozenset({"creature"}),token=True,tapped=True)
+        self.opponent = NS(object_id=3, controller=1,zone="battlefield",
+                           types=frozenset({"creature"}),token=False,tapped=False)
+        self.k = NS(objects={1:self.source,2:self.victim,3:self.opponent},
+                    on_battlefield=lambda:(self.source,self.victim,self.opponent))
+        self.requirement = SacrificeRequirement(frozenset({"artifact"}),
+                                                 frozenset({"creature"}))
+        self.moves=[]
+        self.t = NS(rules=self.k,world=NS(move=lambda *a:self.moves.append(a)))
+
+    def test_controllable_tapped_token_valid_for_nontapping_sacrifice(self):
+        self.assertEqual(legal_sacrifice_victims(self.k,0,1,self.requirement),(2,))
+        sacrifice_physical_object(self.t,0,1,2,self.requirement)
+        self.assertEqual(self.moves,[(2,"graveyard","sacrifice")])
+
+    def test_opponent_victim_is_rejected_before_state_mutation(self):
+        with self.assertRaises(ValueError):
+            sacrifice_physical_object(self.t,0,1,3,self.requirement)
+        self.assertEqual(self.moves,[])
+
+    def test_token_exclusion_or_tapped_source_requirement(self):
+        strict=SacrificeRequirement(frozenset({"artifact"}),frozenset({"creature"}),
+                                   allow_token=False)
+        self.assertEqual(legal_sacrifice_victims(self.k,0,1,strict),())
+        self.source.tapped=True
+        tapped=SacrificeRequirement(frozenset({"artifact"}),frozenset({"creature"}),
+                                   tap_source=True)
+        self.assertEqual(legal_sacrifice_victims(self.k,0,1,tapped),())
+
+    def test_invalid_source_or_requirement_fails_closed(self):
+        self.source.zone="graveyard"
+        self.assertEqual(legal_sacrifice_victims(self.k,0,1,self.requirement),())
+        with self.assertRaises(ValueError):
+            sacrifice_physical_object(self.t,0,1,2,self.requirement)
+        with self.assertRaises(ValueError):
+            SacrificeRequirement(frozenset(),frozenset({"creature"}))
 
 
 if __name__=="__main__":
