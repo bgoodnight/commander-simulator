@@ -155,7 +155,7 @@ class StaticPagesTests(unittest.TestCase):
         self.assertIn('class="deck-selection-row"',html)
         self.assertNotIn('id="deck-version-select"',html)
         self.assertIn(".deck-selection-row .global-deck-select",css)
-        self.assertIn("deckselector-fix-20261101-2",html)
+        self.assertIn("physical-decks-20261101-1",html)
         self.assertIn(".compact-selection",css)
         self.assertIn(".commander-picker",css)
 
