@@ -75,7 +75,57 @@ They do not replace any of the original 100 non-token cards. Unreviewed
 Clue/Treasure activations, flashback, opposing priorities, other replacement
 rules and nonlinear token synergies remain explicitly unavailable.
 
+## M2.14–M2.15: reviewed named death, sacrifice, phase and graveyard abilities
+
+Run `python -m commander_sim.named_effect_coverage --summary` for the
+**exact source-identity** named registration census, and omit `--summary`
+for per-card, per-deck entries. Its `partial` status means **at least one
+reviewed executable suboperation**, not complete printed-card support.
+
+- **Death triggers:** `reviewed_death_effects.py` implements reviewed
+  physical battlefield→graveyard events for Headless Rider, Open the Graves,
+  Undead Augur, Vengeful Dead, Bastion of Remembrance, Pitiless Plunderer,
+  Morbid Opportunist, Venomcrawler, Yahenni, Massacre Wurm, The Meathook
+  Massacre and Marionette Apprentice. The same LKI/type/controller predicates
+  and token/draw/counter/life operations are reused.
+- **Sacrifice:** `reviewed_sacrifice_actions.py` implements source-checked
+  sacrifice costs for Ghoulcaller Gisa, Carrion Feeder, Ayara, Ashnod's
+  Altar, Viscera Seer, Woe Strider, Yawgmoth and Illuminor Szeras. Actual
+  cards move on the kernel; reviewed mana and life payments are required;
+  sacrifices can cause the same reviewed death triggers.
+- **Phase triggers:** `reviewed_phase_effects.py` has eight reviewed
+  upkeep/end-step card families, including dynamic Zombie counts, Snake and
+  decayed Zombie tokens, Great Unclean One's per-opponent loss, and
+  Cemetery's restricted graveyard return. The bounded runner has
+  independently reviewed safe enchantment/permanent casts and phase
+  transitions; it does not simulate opponents taking their own turns.
+- **Necron unearth:** `reviewed_unearth.py` pins eight named sources;
+  the physical kernel attaches haste and enforces replacement exile on
+  bounce/sacrifice/destroy or scheduled end-step departure. Royal Warden,
+  Triarch Praetorian, Canoptek Tomb Sentinel and Lokhust have additional
+  ETB rules requiring a reviewed host and/or choices.
+- **Flashback:** `reviewed_flashback.py` uses a shared physical
+  graveyard→stack cast/exile-on-exit path for Strike It Rich, Moan of the
+  Unhallowed, Army of the Damned and Faithless Looting. It does **not**
+  grant flashback to arbitrary spells, nor implement every extra cost
+  (e.g. Dread Return or Increasing Vengeance).
+- **Enter-the-battlefield:** `reviewed_enter_effects.py` composes
+  Royal Warden's tapped Necron tokens; Triarch's graveyard-entry draw/life;
+  Canoptek's optional nonland exile; Lokhust's mandatory per-player
+  sacrifice choices; Bastion's Soldier; Grave Titan's two Zombies; and
+  Marionette's fabricate choice, all on real physical IDs.
+
+Only admitted events run; no generic text parser invents abilities. The
+bounded controller remains a simplified decision policy, **not** an APNAP
+priority stack or four complete active player pilots. Some side effects can
+only be exercised by direct host-backed tests until main-turn integration
+and opponent choice/stack timing are available.
+
 ## Still incomplete — required for full-deck claims
+
+The next gate is to connect reviewed ETB and graveyard alternatives to all
+appropriate legal actions, then implement unregistered named abilities
+without weakening mandatory restrictions or historical replays.
 
 1. **Unified event subscriptions across all six deck implementations.**
    Historical v35 still runs the detailed Magnus-specific engine; the bounded
