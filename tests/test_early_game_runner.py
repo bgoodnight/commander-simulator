@@ -49,6 +49,7 @@ class BoundedEarlyGameTests(unittest.TestCase):
                 self.assertEqual(total, 100)
                 self.assertTrue(all(event["type"] in {
                     "draw", "untap", "land_play", "creature_cast", "creature_resolved",
+                    "artifact_cast", "artifact_resolved",
                 } for event in turn["events"]))
 
     def test_invalid_deck_or_horizon_fails_closed(self):
