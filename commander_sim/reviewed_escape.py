@@ -49,8 +49,8 @@ def escape_candidates(zones,seat,source_id,catalog,mana_service):
     source=zones.kernel.get(source_id)
     raw=catalog.get(source.card.name)
     if (source.owner!=seat or "land" in source.types
-            or source.card.card_id!=raw.get("oracle_id") if isinstance(raw,dict)
-            else True):
+            or not isinstance(raw,dict)
+            or source.card.card_id!=raw.get("oracle_id")):
         return ()
     fodder=tuple(i for i in zones.ids(seat,"graveyard") if i!=source_id)
     if len(fodder)<3:
