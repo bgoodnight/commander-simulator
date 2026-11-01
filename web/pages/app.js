@@ -1224,7 +1224,9 @@ function validateCounts(counts,{allowIncomplete=false}={}){
   return true;
 }
 function initializeDraft(){
-  activeCounts=isUnsimulatedVersion()?{...activeVersion().counts}:initialCounts();
+  // Only browser-saved versions have a saved count map. A published
+  // physical source list can lack simulations without being a saved version.
+  activeCounts=activeVersion()?{...activeVersion().counts}:initialCounts();
   history=[];
   $("add-name").value="";
   $("draft-title").value=activeVersion()?.title||"";
