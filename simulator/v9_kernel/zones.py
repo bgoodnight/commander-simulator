@@ -91,8 +91,17 @@ class KernelZones:
         ids=self.order[seat,'library']
         self.rng.shuffle(ids)
         self.operations.append(('shuffle',seat,len(ids)))
-    def cast(self,seat:int,oid:int):
-        if oid not in self.ids(seat,'hand') and oid not in self.ids(seat,'command'):
+    def cast(self,seat:int,oid:int,*,reviewed_origin=None):
+        # Physical zone kernel is not the permission engine. Only callers that
+        # have independently reviewed an ability may request a graveyard cast;
+        # the default remains legal hand/command only.
+        if reviewed_origin is None:
+            allowed=oid in self.ids(seat,'hand') or oid in self.ids(seat,'command')
+        elif reviewed_origin=='graveyard':
+            allowed=oid in self.ids(seat,'graveyard')
+        else:
+            raise ValueError('Unknown reviewed casting origin')
+        if not allowed:
             raise ValueError('Card not available to cast')
         card=self.kernel.get(oid).card
         if 'land' in card.types:raise ValueError('Land is played, not cast')
@@ -110,17 +119,21 @@ class KernelZones:
         self._pending.pop(ticket.object_id)
         self.kernel.events.append(Event('spell_countered',ticket.seat,ticket.object_id,spell_types=obj.types))
         return new
-    def resolve(self,ticket:CastTicket,effect=None):
+    def resolve(self,ticket:CastTicket,effect=None,*,spell_destination=None):
         self._require_ticket(ticket)
         obj=self.kernel.get(ticket.object_id)
         permanent=bool(obj.types.intersection({'creature','artifact','enchantment','planeswalker','battle'}))
+        if spell_destination is not None and (
+                permanent or spell_destination not in {'graveyard','exile'}):
+            raise ValueError('Invalid reviewed spell resolution destination')
         if not permanent and effect is None:
             # We cannot invent printed spell behavior. Keep the ticket and object
             # on stack until a registered/verified handler is available.
             raise NotImplementedError('Missing resolution effect for '+obj.card.name)
         if effect is not None:
             effect(self.kernel,ticket)
-        new=self.move(ticket.object_id,'battlefield' if permanent else 'graveyard')
+        new=self.move(ticket.object_id,
+                      'battlefield' if permanent else spell_destination or 'graveyard')
         self._pending.pop(ticket.object_id)
         self.kernel.events.append(Event('spell_resolved',ticket.seat,ticket.object_id,spell_types=obj.types))
         return new
