@@ -185,6 +185,32 @@ for _deck, _reviews in _ADDITIONAL_SACRIFICE_BODIES.items():
     REVIEWED_BY_DECK.setdefault(_deck, {}).update(_reviews)
 
 
+
+# Ordinary casting/entry only: every registration pins verified Oracle text
+# and reuses the same paid generic permanent path as the existing six decks.
+# Activated abilities and spell-cast triggers remain distinct unsupported slots
+# until independently reviewed; they are not silently granted or resolved.
+_PHYSICAL_MAGNUS_SAFE_BODIES = {
+  "Elementalist Adept": {
+    "oracle_id": "cf402270-ebc6-481b-b478-0e3acab7002a",
+    "oracle_text": "Flash (You may cast this spell any time you could cast an instant.)\\nProwess (Whenever you cast a noncreature spell, this creature gets +1/+1 until end of turn.)"
+  },
+  "Firebrand Archer": {
+    "oracle_id": "2e9289d6-dbc6-456d-88cf-d1f534e731d6",
+    "oracle_text": "Whenever you cast a noncreature spell, this creature deals 1 damage to each opponent."
+  },
+  "Reckless Scholar": {
+    "oracle_id": "604aded2-64c2-4474-b5b7-8c83e0e3fe76",
+    "oracle_text": "{T}: Target player draws a card, then discards a card."
+  },
+  "Thermo-Alchemist": {
+    "oracle_id": "228fbae1-423e-461d-b8c3-55786938a3cb",
+    "oracle_text": "Defender\\n{T}: This creature deals 1 damage to each opponent.\\nWhenever you cast an instant or sorcery spell, untap this creature."
+  }
+}
+REVIEWED_BY_DECK.setdefault("magnus_physical_trial", {}).update(
+    _PHYSICAL_MAGNUS_SAFE_BODIES)
+
 def reviewed_creature(deck_key, name, source_card):
     approved = REVIEWED_BY_DECK.get(deck_key, {}).get(name)
     return bool(approved and source_card.get("layout") == "normal"
