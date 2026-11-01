@@ -59,3 +59,26 @@ test('mana icons preserve hybrid symbols, missing costs, and offline fallback',(
   assert.equal(identity.children[1].attrs['aria-label'],'blue, red color identity');
   assert.equal(vm.runInContext('commanderIdentity({color_identity:[]})',ctx).children[1].textContent,'Colorless');
 });
+test('curve point reveals its runs and linked source cards',()=>{
+  class Node {
+    constructor(tag){this.tag=tag;this.children=[];this.attrs={};this.handlers={};this.dataset={};this.classList={add(){}}}
+    append(...nodes){this.children.push(...nodes)}
+    appendChild(node){this.children.push(node);return node}
+    replaceChildren(){this.children=[]}
+    setAttribute(k,v){this.attrs[k]=v}
+    addEventListener(k,v){this.handlers[k]=v}
+    querySelectorAll(selector){return this.children.filter(c=>selector==='.curve-point'&&c.attrs.class==='curve-point')}
+  }
+  const root=new Node('root'),detail=new Node('detail'),opened=[];
+  const record={name:'Swamp',oracle_id:'s'};
+  const points=[{turn:1,mean:1,runs:[{seed:'7',count:1,cards:['Swamp']}]}];
+  const ctx={location:{pathname:'/results.html'},window:{DeckInsights:{sourceTimeline:()=>points}},
+    localStorage:{getItem:()=>null},document:{getElementById:id=>id==='source-curve'?root:detail,
+      createElement:t=>new Node(t),createElementNS:(_,t)=>new Node(t)},record,opened};
+  vm.createContext(ctx);vm.runInContext(code,ctx);
+  vm.runInContext("cachedByName.set('swamp',record); showCard=id=>opened.push(id); renderSourceCurve({})",ctx);
+  const point=root.children[0].children.find(x=>x.attrs.class==='curve-point');
+  point.handlers.click();assert.equal(point.attrs['aria-pressed'],'true');
+  const row=detail.children[2].children[0],card=row.children[2].children[0];
+  card.handlers.click();assert.deepEqual(opened,['s']);
+});

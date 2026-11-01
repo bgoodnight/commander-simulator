@@ -701,6 +701,61 @@ function renderInsightChart(kind,groups,rootId,detailId){
     });
   });
 }
+function inspectCurveRun(seed,turn){
+  $("seed-select").value=seed;
+  $("turn-select").value=String(Math.max(3,turn));
+  displayRecord();
+  const transcript=document.querySelector(".run-transcript");if(transcript)transcript.open=true;
+  document.querySelector(".archived-details")?.scrollIntoView({
+    behavior:window.matchMedia?.("(prefers-reduced-motion: reduce)").matches?"auto":"smooth",block:"start"});
+}
+function renderSourceCurve(summary){
+  const root=$("source-curve"),detail=$("source-curve-detail");clear(root);clear(detail);
+  const points=window.DeckInsights.sourceTimeline(summary);if(!points.length)return;
+  const chart=svg("svg",{viewBox:"0 0 540 200",class:"source-curve",role:"group",
+    "aria-label":"Mean modeled sources by turn. Select a point for the underlying runs."});
+  const max=Math.max(1,...points.map(point=>point.mean)),x=i=>40+i*92,y=v=>155-(v/max)*120;
+  for(let i=0;i<4;i++)chart.appendChild(svg("line",{x1:40,x2:500,y1:35+i*40,y2:35+i*40,class:"curve-grid"}));
+  chart.appendChild(svg("polyline",{points:points.map((point,i)=>x(i)+","+y(point.mean)).join(" "),class:"curve-line"}));
+  const controls=el("div",null,"curve-turn-controls"),buttons=[];
+  function selectPoint(index){
+    const point=points[index];clear(detail);
+    detail.append(el("strong","Turn "+point.turn+" · "+point.mean+" average modeled sources"),
+      el("p",point.runs.length+" observations · select a seed or source to inspect it.","micro"));
+    const list=el("div",null,"curve-run-list");
+    for(const run of point.runs){
+      const row=el("div",null,"curve-run"),seed=el("button","Seed "+run.seed,"curve-seed");
+      seed.type="button";seed.addEventListener("click",()=>inspectCurveRun(run.seed,point.turn));
+      row.append(seed,el("span",run.count+" sources","curve-count"));
+      const sources=el("div",null,"curve-sources");
+      if(!run.cards.length)sources.appendChild(el("span",run.count?"Source names unavailable":"No modeled sources"));
+      for(const name of run.cards){
+        const card=cardInfo(name);
+        if(card){const button=el("button",name,"curve-card");button.type="button";
+          button.addEventListener("click",()=>showCard(card.oracle_id));sources.appendChild(button)}
+        else sources.appendChild(el("span",name));
+      }
+      row.appendChild(sources);list.appendChild(row);
+    }
+    detail.appendChild(list);
+    for(const circle of chart.querySelectorAll(".curve-point"))circle.setAttribute("aria-pressed",String(Number(circle.dataset.index)===index));
+    buttons.forEach((button,i)=>button.setAttribute("aria-pressed",String(i===index)));
+  }
+  points.forEach((point,i)=>{
+    const label=svg("text",{x:x(i),y:185,"text-anchor":"middle",class:"curve-label"});label.textContent="T"+point.turn;chart.appendChild(label);
+    const value=svg("text",{x:x(i),y:y(point.mean)-12,"text-anchor":"middle",class:"curve-value"});value.textContent=point.mean;chart.appendChild(value);
+    chart.appendChild(svg("circle",{cx:x(i),cy:y(point.mean),r:5,class:"curve-dot"}));
+    const hit=svg("circle",{cx:x(i),cy:y(point.mean),r:18,class:"curve-point",role:"button",tabindex:"0",
+      "aria-label":"Turn "+point.turn+": "+point.mean+" average modeled sources. View underlying observations.","aria-pressed":"false"});
+    hit.dataset.index=String(i);hit.addEventListener("click",()=>selectPoint(i));
+    hit.addEventListener("keydown",e=>{if(e.key==="Enter"||e.key===" "){e.preventDefault();selectPoint(i)}});
+    chart.appendChild(hit);
+    const button=el("button","T"+point.turn,"curve-turn");button.type="button";
+    button.setAttribute("aria-label","View turn "+point.turn+" observations");button.setAttribute("aria-pressed","false");
+    button.addEventListener("click",()=>selectPoint(i));buttons.push(button);controls.appendChild(button);
+  });
+  root.append(chart,controls);detail.appendChild(el("p","Select a turn to see its observations.","micro"));
+}
 function animateFinding(section,visible){
   section.classList.toggle("visible",visible);
   const bars=[...section.querySelectorAll("rect.bar[data-target-y]")];
@@ -740,7 +795,7 @@ function installScrollStory(){
 }
 function renderScrollStory(){
   if(!aggregate||isUnsimulatedVersion()){
-    for(const id of ["scroll-sources","scroll-hand","scroll-candidates"])
+    for(const id of ["scroll-sources","scroll-hand","scroll-candidates","source-curve","source-curve-detail"])
       clear($(id));
     return;
   }
@@ -753,6 +808,7 @@ function renderScrollStory(){
     $("story-caveat-"+kind).textContent=f.caveat;
   }
   renderInsightChart("opening",aggregate.openingGroups,"scroll-sources","detail-opening");
+  renderSourceCurve(aggregate);
   renderInsightChart("resources",aggregate.turn3Groups,"scroll-hand","detail-resources");
   renderInsightChart("candidates",aggregate.candidateGroups,"scroll-candidates","detail-candidates");
   installScrollStory();

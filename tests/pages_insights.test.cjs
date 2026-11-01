@@ -95,3 +95,16 @@ test('discovers reusable subtype, rules-text and spell-type signals with cumulat
   assert.equal(themes(entries,cards,runs,null).find(g=>g.label==='Zombie').sample,2);
   assert.equal(themes(entries,cards,null,null).find(g=>g.label==='Zombie').sample,0);
 });
+
+test('source curve points preserve each seed and its turn-specific sources',()=>{
+  const {sourceTimeline}=require('../web/pages/results_insights.js');
+  const a=record(4,{lands:[1,2,3,4,5,6]});
+  const b=record(7,{lands:[0,1,1,2,2,3]});
+  b.trace[2].modeled_sources=[{card:'Command Tower',colors:['B','U']}];
+  const timeline=sourceTimeline(summarize({4:a,7:b}));
+  assert.equal(timeline.length,6);
+  assert.equal(timeline[2].turn,3);assert.equal(timeline[2].mean,2);
+  assert.deepEqual(timeline[2].runs.map(x=>[x.seed,x.count]),[['4',3],['7',1]]);
+  assert.deepEqual(timeline[2].runs[1].cards,['Command Tower']);
+  assert.deepEqual(sourceTimeline(null),[]);
+});

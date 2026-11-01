@@ -162,5 +162,14 @@
         byTurn6:first.filter(t=>t!==null&&t<=6).length};
     }).filter(g=>g.copies>=3).sort((a,b)=>Number(b.commanderMatch)-Number(a.commanderMatch)||b.copies-a.copies||a.label.localeCompare(b.label));
   }
-  return {summarize,findings,pct,round,sources,candidateCount,themes};
+  function sourceTimeline(summary){
+    if(!summary)return [];
+    return summary.meanSources.map((mean,i)=>({turn:i+1,mean,
+      runs:summary.seeds.map(seed=>{
+        const row=summary.runsBySeed[seed].trace[i];
+        return {seed,count:sources(row),cards:Array.isArray(row.modeled_sources)?
+          row.modeled_sources.map(source=>source.card).filter(name=>typeof name==="string"):[]};
+      })}));
+  }
+  return {summarize,findings,pct,round,sources,candidateCount,themes,sourceTimeline};
 });

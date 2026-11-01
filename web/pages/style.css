@@ -455,3 +455,25 @@ body{background-color:#101019;background-image:radial-gradient(ellipse at 50% -1
 .commander-identity,.modal-cost{display:flex;align-items:center;gap:9px;flex-wrap:wrap;margin:10px 0;color:var(--soft)}
 .identity-label,.modal-cost-label{font-size:.7rem;letter-spacing:.06em;text-transform:uppercase}
 .identity-colorless{font-size:.8rem;color:#e4d4bb}
+
+.source-curve{display:block;width:100%;height:auto;overflow:visible}
+.curve-grid{stroke:#d3c6a72b;stroke-width:1}
+.curve-line{fill:none;stroke:#8ed5c5;stroke-width:3;stroke-linejoin:round;stroke-linecap:round}
+.curve-dot{fill:#f3d59b;stroke:#203d3b;stroke-width:2;pointer-events:none}
+.curve-point{fill:transparent;cursor:pointer;outline:none}
+.curve-point:hover,.curve-point:focus-visible,.curve-point[aria-pressed=true]{fill:#a9e1d333;stroke:#f3d59b;stroke-width:2}
+.curve-label,.curve-value{fill:#d3c8ad;font:12px Inter,system-ui,sans-serif}
+.curve-value{fill:#e9d6a9;font-weight:700}
+.curve-detail{margin-top:5px;font-size:.78rem}
+.curve-detail>strong{color:#efd5a2}
+.curve-detail>p{margin:8px 0}
+.curve-run-list{display:grid;gap:5px;max-height:310px;overflow:auto;margin-top:8px}
+.curve-run{display:flex;align-items:center;gap:8px;flex-wrap:wrap;padding:8px;border:1px solid #756c59;border-radius:8px;background:#121f20}
+.curve-seed,.curve-card{border:0;background:transparent;color:#ecd09a;cursor:pointer;text-align:left;text-decoration:underline;padding:4px;font-size:.72rem}
+.curve-count{font-size:.7rem;color:#b8d7c7;white-space:nowrap}
+.curve-sources{width:100%;display:flex;flex-wrap:wrap;gap:4px;color:#c8bfa8;font-size:.7rem}
+.curve-card{border:1px solid #71684e;border-radius:7px;text-decoration:none}
+.curve-card:hover,.curve-seed:hover{color:#fff3d6}
+.curve-turn-controls{display:grid;grid-template-columns:repeat(6,minmax(0,1fr));gap:4px}
+.curve-turn{min-height:44px;padding:5px;border:1px solid #796c5c;border-radius:7px;background:#182527;color:#ead7ae;font-size:.72rem}
+.curve-turn:hover,.curve-turn[aria-pressed=true]{border-color:#dfbe87;background:#3b3a3d}
