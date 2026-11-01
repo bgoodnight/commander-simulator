@@ -87,3 +87,8 @@ jobs:
             git commit -m "Refresh six-deck 100-run UI datasets with current simulator"
             git push origin HEAD:main
           fi
+      - name: Explicitly run Pages export after bot-generated data commit
+        if: github.event_name != 'pull_request' && github.ref == 'refs/heads/main'
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: gh workflow run deck-lab-pages.yml --ref main
