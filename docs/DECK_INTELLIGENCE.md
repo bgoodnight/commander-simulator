@@ -53,3 +53,50 @@ batch = summarize_strategy_runs([
 Do **not** populate `verified_tutor_access` until the actual rules layer has verified search eligibility, targets, costs, timing, and zone destination. Do **not** populate `engine_verified_combos` from a metadata match or a suggested synergy.
 
 **Still pending:** production M3 six-turn driver and independent deck loader, live decision/event verification, real tutor reachability, mechanic-specific ability coverage, cross-game opponent calibration, and UI integration. The tools above analyze **supplied game states**, but do not themselves generate games or validate win rates. Coordinate UI changes on its separate Work branch; these backend modules are independent of HTML/JS.
+
+## Bounded M3 real-action demonstration (October 31, 2026)
+
+A new **backend-only** implementation uses authentic, pinned 100-card lists
+directly in the existing physical-object `IndexedKernel`/`LiveZones`:
+
+```sh
+python -m commander_sim.early_game_runner --deck wretched_ranks --seed 7 --turns 6
+python -m commander_sim.early_game_runner --deck magnus_premium --seed 7 --turns 6
+python -m commander_sim.bounded_batch --deck wretched_ranks --seeds 20 --turns 6
+python -m commander_sim.bounded_batch --deck magnus_premium --seeds 20 --turns 6
+```
+
+`run_bounded_early_game` validates its pinned manifest/snapshot offline,
+instantiates all 100 physical cards in the authoritative library/command
+zones, shuffles and draws seven (optional one-free mulligan), draws each turn,
+plays one reviewed basic land/Command Tower, untaps physical land objects,
+and source-pays/casts/resolves a **small manually approved subset of ordinary
+creatures**. Each approved identity is pinned to an inspected Oracle ID and
+exact rules text in `commander_sim/reviewed_early_cards.py`; changing its
+text invalidates approval. No other card gains executable behavior from
+metadata. The runner calls `project_kernel_turn` to provide an immutable
+per-turn report, real cast/source IDs, and `analyze_authoritative_run`
+for descriptive board trends.
+
+`run_bounded_batch` repeats independent seeds and reports mean physical
+lands and **reviewed** creatures in play, hand size, unsupported hand cards,
+the fraction with a reviewed creature cast by turn N, and 95% seed-sampling
+intervals. These are deliberately **bounded real-action metrics**, not
+hypothetical mana-cost observations and **not a measure of full deck strength**.
+
+**Limits:** No modeled opponents, combat, commander casting, mana rocks,
+nonbasic land effects beyond Command Tower, instants/sorceries, full triggered
+or activated abilities, response priority, exhaustive color/cost restrictions,
+tutoring, search chains, combo execution, or win conditions. The creature
+casting whitelist is safe only for the runner's constrained scenario and
+does **not** grant exact printed-card fidelity elsewhere. Unsupported cards
+stay physically in hand/library/other zones. Bounded runs must never be
+reported as actual Commander wins or as an estimate of full-deck win rate.
+
+This harness is an integration step toward M3, **not** a replacement for
+the existing v35 live multiplayer turn driver. The next highest-value
+engineering work is to connect general deck loading and actual source-paid
+actions to that driver, then expand reviewed shared mana rocks, effect
+handlers, tutor predicates, and legal opposing responses. Keep the UI in
+Work mode on a separate branch; the backend module interface can be
+consumed later, but should not be represented as a complete game API.
