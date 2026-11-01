@@ -1,5 +1,6 @@
 """Poxwalkers nonhand spell triggers from real zone-backed cast events."""
 import unittest
+from types import SimpleNamespace
 
 from commander_sim.early_game_runner import _load_live_kernel
 from commander_sim.reviewed_nonhand_cast_triggers import (
@@ -100,7 +101,7 @@ class NonhandCastTriggerTests(unittest.TestCase):
         fake=self.add("Poxwalkers","graveyard")
         with self.assertRaises(ValueError):
             resolve_reviewed_nonhand_cast_triggers(
-                self.z,0,self.C("fake","Fake",frozenset({"sorcery"})),
+                self.z,0,SimpleNamespace(object_id=999999),
                 self.catalog)
         # Nonhand trigger must observe this cast immediately, not be retried.
         self.z.move(fake,"hand","resolve")
