@@ -25,21 +25,21 @@ class UnearthReview:
 
 
 UNEARTH={
-    "Chronomancer":UnearthReview("b7e9e455-423f-4102-b166-05cc766c1319",
+    "Chronomancer":UnearthReview("9833e3bd-6e7f-41b7-bf7e-ffb74ff17844",
         "{2}{B}","Unearth {2}{B}"),
-    "Lokhust Heavy Destroyer":UnearthReview("a4e097b8-8b9e-439b-bd98-a489bbcf3464",
+    "Lokhust Heavy Destroyer":UnearthReview("fd03f20a-d365-48fb-8b2a-ad4b502a0045",
         "{5}{B}{B}{B}","Unearth {5}{B}{B}{B}",True),
-    "Royal Warden":UnearthReview("feac0c4e-2ea8-457e-b86f-8e1164daaa33",
+    "Royal Warden":UnearthReview("0192ba05-6144-4fec-a803-462ecdf64195",
         "{3}{B}","Unearth {3}{B}",True),
-    "Skorpekh Lord":UnearthReview("d3f0ebf8-0620-431f-8a90-dd681cbe7eab",
+    "Skorpekh Lord":UnearthReview("c40e8d52-d4cc-4502-8b51-a5612dbe1ada",
         "{2}{B}","Unearth {2}{B}"),
-    "Tomb Blade":UnearthReview("4b9146c8-df52-4761-a46b-865a265eccb3",
+    "Tomb Blade":UnearthReview("c857de66-f4e0-4e97-ad01-fac623af8225",
         "{6}{B}{B}","Unearth {6}{B}{B}"),
-    "Canoptek Tomb Sentinel":UnearthReview("9ecc7928-bb41-4e38-ab81-6b7b58ce07ad",
+    "Canoptek Tomb Sentinel":UnearthReview("678b3fb5-aa9f-4268-9433-2a89dd37b927",
         "{7}","Unearth {7}",True),
-    "Hexmark Destroyer":UnearthReview("05c6d9e9-01ac-4a44-a43b-4f61d2df831d",
+    "Hexmark Destroyer":UnearthReview("b3329240-c812-45ea-a7f8-4d79cd4ed515",
         "{4}{B}{B}","Unearth {4}{B}{B}"),
-    "Triarch Praetorian":UnearthReview("ce949dbb-08ee-4c59-a48e-cdd5ce30b13d",
+    "Triarch Praetorian":UnearthReview("52aa5a79-db0e-4eaa-b2df-e41674c47794",
         "{4}{B}","Unearth {4}{B}",True),
 }
 
