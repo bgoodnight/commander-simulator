@@ -82,3 +82,16 @@ test('curve point reveals its runs and linked source cards',()=>{
   const row=detail.children[2].children[0],card=row.children[2].children[0];
   card.handlers.click();assert.deepEqual(opened,['s']);
 });
+test('rules text renders embedded mana symbols without losing surrounding text or line breaks',()=>{
+  class Node {
+    constructor(tag){this.tag=tag;this.children=[];this.classList={add(){}}}
+    appendChild(node){this.children.push(node);return node}
+  }
+  const ctx={location:{pathname:'/index.html'},window:{},localStorage:{getItem:()=>null},document:{createElement:t=>new Node(t)}};
+  vm.createContext(ctx);vm.runInContext(code,ctx);
+  const rendered=vm.runInContext("manaSymbols('Convoke pays for {1} or one mana.\\nDraw two cards.')",ctx);
+  assert.equal(rendered.children[0].textContent,'Convoke pays for ');
+  assert.equal(rendered.children[1].alt,'{1}');
+  assert.equal(rendered.children[1].src,'https://svgs.scryfall.io/card-symbols/1.svg');
+  assert.equal(rendered.children[2].textContent,' or one mana.\nDraw two cards.');
+});

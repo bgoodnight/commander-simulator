@@ -477,3 +477,7 @@ body{background-color:#101019;background-image:radial-gradient(ellipse at 50% -1
 .curve-turn-controls{display:grid;grid-template-columns:repeat(6,minmax(0,1fr));gap:4px}
 .curve-turn{min-height:44px;padding:5px;border:1px solid #796c5c;border-radius:7px;background:#182527;color:#ead7ae;font-size:.72rem}
 .curve-turn:hover,.curve-turn[aria-pressed=true]{border-color:#dfbe87;background:#3b3a3d}
+
+/* Inline symbols retain the line breaks and spacing of printed rules text. */
+.oracle-text .mana-symbols{display:inline;white-space:pre-line}
+.modal .oracle-text .mana-symbol{width:1.1em;height:1.1em;vertical-align:-.16em}

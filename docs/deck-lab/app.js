@@ -506,7 +506,8 @@ function showCard(id){
     card.power!=null&&card.toughness!=null?card.power+"/"+card.toughness:null].filter(Boolean).join(" · ");
   const cost=$("modal-cost");clear(cost);
   cost.append(el("span","Mana cost","modal-cost-label"),manaSymbols(card.mana_cost));
-  $("modal-oracle").textContent=card.oracle_text||"No Oracle text in the saved record.";
+  const oracle=$("modal-oracle");clear(oracle);
+  oracle.appendChild(manaSymbols(card.oracle_text||"No Oracle text in the saved record."));
   $("modal-scryfall").href=card.scryfall||"https://scryfall.com/";
   $("dialog-backdrop").hidden=false;$("modal-close").focus();
   originalSound("click");
