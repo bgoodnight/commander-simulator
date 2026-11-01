@@ -75,7 +75,7 @@ class UtilityTable(LandTable):
         take=policy(item.controller,item.source_id,target) if policy else True
         if type(take) is not bool:raise ValueError('Sanctuary return choice must be boolean')
         if take:transfer_physical_object(self,item.controller,target,
-            ZoneTransfer('graveyard','library',frozenset(),require_owner=True))
+            ZoneTransfer('graveyard','library',allowed_types_any=frozenset({'instant','sorcery'}),require_owner=True))
         self.utility_events.append(('sanctuary_resolved',item.source_id,target,take))
         self.note(f'    SANCTUARY: target #{target}; return to library top={take}.')
 
