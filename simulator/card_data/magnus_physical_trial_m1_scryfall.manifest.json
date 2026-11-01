@@ -1,0 +1,383 @@
+{
+  "schema_version": 1,
+  "deck_sha256": "f23a9777643482a5a5835260720f31babdb1235877206763795574386796b509",
+  "catalog_schema_version": 1,
+  "created_at": "2026-11-01T20:28:07.523114+00:00",
+  "cards": [
+    {
+      "deck_name": "Magnus the Red",
+      "oracle_id": "86c9b01e-18a2-4616-8e04-5343f97d2efe",
+      "revision": "2327821953f67b3c7c4f27a37d919f8b8d625b2b58829170552428041caf4e87"
+    },
+    {
+      "deck_name": "Consult the Star Charts",
+      "oracle_id": "e921839f-9d91-41a9-bc89-016af3c757aa",
+      "revision": "1954b04448c6695e896d6c045a0002f9a224b92244fbd69d594a42734b782ee9"
+    },
+    {
+      "deck_name": "Elementalist Adept",
+      "oracle_id": "cf402270-ebc6-481b-b478-0e3acab7002a",
+      "revision": "97d02efbd43386c9e33ee3076099d25ed124268f4e9e0f921df71e43ba64dbdd"
+    },
+    {
+      "deck_name": "Exalted Flamer of Tzeentch",
+      "oracle_id": "6591a589-deb4-462f-a4f1-f6261f3433c3",
+      "revision": "0228a2c190627ec54833b28bda4b640ea8193445c76cbf23b20d59f07dcef935"
+    },
+    {
+      "deck_name": "Firebrand Archer",
+      "oracle_id": "2e9289d6-dbc6-456d-88cf-d1f534e731d6",
+      "revision": "0f9fee912271d81a9742aa11ac5456d500a7cc375965953b363a5c905802fca2"
+    },
+    {
+      "deck_name": "Harmonic Prodigy",
+      "oracle_id": "2e2ace5b-4018-43af-8e72-ebafec1a7739",
+      "revision": "1fedae778a03f2e87911785081ec81c09bf5eae0c8d51e38e04563069bf66dd1"
+    },
+    {
+      "deck_name": "Heralds of Tzeentch",
+      "oracle_id": "c4ecfc13-a335-42bb-92db-133998b2af5d",
+      "revision": "18356ee939725414f8611fb31560b20fd7bf7640a748eb34273cb0a6b0470f2f"
+    },
+    {
+      "deck_name": "Hexing Squelcher",
+      "oracle_id": "96c2d71e-0fc9-42aa-bc6b-6d0ae3f66f8b",
+      "revision": "dccc93cc0994d3c01368e9bbeb308c644656cd822547b019794be628ace5cb80"
+    },
+    {
+      "deck_name": "Lord of Change",
+      "oracle_id": "b575fb16-c3c3-4cad-857f-122257a4b32f",
+      "revision": "198baa7a3eff4748f14be1b06445dfcaef27e971107f53a57ab9427399163a93"
+    },
+    {
+      "deck_name": "Mocking Sprite",
+      "oracle_id": "013ca531-1ff7-4efc-a280-4bc3ab574072",
+      "revision": "0e2e0da401dabf60b83b11df4a8394b2058291f1daf6ea1b6b26c0bd020a622e"
+    },
+    {
+      "deck_name": "Molten-Core Maestro",
+      "oracle_id": "485233bf-dc4b-4f31-8dfb-5054aee70c08",
+      "revision": "8bf2299d8720e0fd9e454beecca99521317850f5c56c108f15ebc1b0b643e97d"
+    },
+    {
+      "deck_name": "Mutalith Vortex Beast",
+      "oracle_id": "7e6ca948-a66d-46a9-9174-ac7b75d7b348",
+      "revision": "62a8d1405d0c59b632ba3fdfe8731b2c857d5c115807f4c2f16493a75a7acca1"
+    },
+    {
+      "deck_name": "Passionate Archaeologist",
+      "oracle_id": "6299d18e-a6a7-414c-85c0-d57a8e7d2627",
+      "revision": "b95b9e5b68eac3ecb6344807831245e92b332b2087320c5ef843925c84c81679"
+    },
+    {
+      "deck_name": "Pink Horror",
+      "oracle_id": "3aa4c374-b146-4890-a8e1-717f214d9741",
+      "revision": "dc447f1cd97de21cf6eabf1af71458964c6649d2a4a01e24ecd4758328febd85"
+    },
+    {
+      "deck_name": "Reckless Scholar",
+      "oracle_id": "604aded2-64c2-4474-b5b7-8c83e0e3fe76",
+      "revision": "0fbd4406e434f6f0db9f0a31911c268674d7f6b71238ce36a39fddd02309338f"
+    },
+    {
+      "deck_name": "Saheeli Rai",
+      "oracle_id": "5f3fe679-aff1-41b3-8d75-c78c2c0636f0",
+      "revision": "2e8c83bc0c39c48322464b6a268c41145b3ff92c17d266788e39d79ab4aee840"
+    },
+    {
+      "deck_name": "Stormsplitter",
+      "oracle_id": "4a9ae0d9-5ee7-4289-9333-ef0bcc3079ca",
+      "revision": "12b4ad819878f590d3a94f854e26923fbee6627b1ff1701ec193984ccaea169f"
+    },
+    {
+      "deck_name": "The Lost and the Damned",
+      "oracle_id": "22e70ad0-1a9c-4d9e-8cc1-ebea485282ca",
+      "revision": "249106226fe7f858b385deb52c783f50e96ff2730a31ade8ef6e3e0665aa6a99"
+    },
+    {
+      "deck_name": "Thermo-Alchemist",
+      "oracle_id": "228fbae1-423e-461d-b8c3-55786938a3cb",
+      "revision": "47a999ccf6b69654e94d9167a7ad740f725b37d9d4ea25027ac63374b7dacc2e"
+    },
+    {
+      "deck_name": "Ashnod's Altar",
+      "oracle_id": "4d18bcba-a346-445e-a182-6cc30b7e066d",
+      "revision": "827fd0864ef8b09a33a7cee1c24a8c303fd212f3062298fb4a763934aa186ba2"
+    },
+    {
+      "deck_name": "Chromatic Lantern",
+      "oracle_id": "539f5396-d99a-417d-a84c-dff7930b5900",
+      "revision": "a17908489eda3b0807d2558a846e9a998b38766f396456e28b6812d292d961ec"
+    },
+    {
+      "deck_name": "Izzet Signet",
+      "oracle_id": "2fda4fe7-8b0c-489c-a000-6d358e614e34",
+      "revision": "945cfb18c0efac041441fa71da8f3339630423c34e76cdcec55550fefb821165"
+    },
+    {
+      "deck_name": "Resonating Lute",
+      "oracle_id": "9263287d-f782-4318-9ab8-e2e5f8107f5e",
+      "revision": "f5140b3fc7e8684a5a12c94c1201d11550d6ad00568c6769151a6875a9b18060"
+    },
+    {
+      "deck_name": "Springleaf Drum",
+      "oracle_id": "bdeb440d-a714-40e8-9038-f651e6ae45fb",
+      "revision": "5b648e3443b3a3302f49eb5ad362f9fe4947b04740d6443531086d15b8d25140"
+    },
+    {
+      "deck_name": "Talisman of Creativity",
+      "oracle_id": "14d2979d-5728-42d7-a027-0eb1f754655d",
+      "revision": "c58c19b0bec039dc28b565bcfeca524551f608da19fd16129619267c0282bc49"
+    },
+    {
+      "deck_name": "Worn Powerstone",
+      "oracle_id": "b166b670-febc-4821-855e-f8d465644c03",
+      "revision": "56921f1235480740be24cfa35e3b94e37bc0c005d444ea00ba9f4ca1259a3e1d"
+    },
+    {
+      "deck_name": "Abrade",
+      "oracle_id": "f9db72dc-9a5b-48a4-a86e-7464d9a2166a",
+      "revision": "fae9cfaf52944e8fb422810fbb4cef1c1b7a56ec2346b41152351a1e987a3ce3"
+    },
+    {
+      "deck_name": "Anticipate",
+      "oracle_id": "a97da5a9-17fc-4367-81e1-17ff81601a63",
+      "revision": "a42c6b2d12f77aefd12d406ca49c98c2912ba3067abe7013a8bdf19868d3d5aa"
+    },
+    {
+      "deck_name": "Brainstorm",
+      "oracle_id": "36cd2364-d113-47d1-b2c4-b088d9eb88dd",
+      "revision": "e7eecc010154888a5b2cfad4b828ada2f8ca4a886fcde5f6bed823eeb8781122"
+    },
+    {
+      "deck_name": "Brotherhood's End",
+      "oracle_id": "fe7bf8ca-88ae-4c6d-8d71-ef170a87c0d0",
+      "revision": "a03efbe3f184323e19d7a668c0f6a17305226949ed7b62f31c4e21bc5c93d8e6"
+    },
+    {
+      "deck_name": "Burst Lightning",
+      "oracle_id": "ac2086fe-98ee-4280-9c7c-c5c2d6548a8b",
+      "revision": "cccda1c30b5d121330f5c5e2f82e908d802db28e12d19d667c2579e3d4cd74bd"
+    },
+    {
+      "deck_name": "Chase Inspiration",
+      "oracle_id": "9c055ef0-1164-4a9f-80de-23405423aed5",
+      "revision": "2bc3e41f25712a3f5a1f5ff7c469d9da9873c0db9f61aa070f996c3ae2a386d2"
+    },
+    {
+      "deck_name": "Chaos Mutation",
+      "oracle_id": "1a240953-26e0-429f-9663-dcfe5bc2c1c7",
+      "revision": "1a6330694db25d56ce095c6cc94114403a9a3c31ad623432ac5a0855c8418775"
+    },
+    {
+      "deck_name": "Chaos Warp",
+      "oracle_id": "07a0cba9-8768-4fd9-a3d5-b0f83b4bf8e8",
+      "revision": "67551c84e9de837a4e34c32e575ed409f59ca2cc95b8ce093d867a96a3a1a768"
+    },
+    {
+      "deck_name": "Deduce",
+      "oracle_id": "eeae4161-9f35-45df-8b3c-c55e37f49cd1",
+      "revision": "7d7767d48a872b5dcc367ff29e9273da749a8dfcc84f621cd04feca19af5fa22"
+    },
+    {
+      "deck_name": "Disdainful Stroke",
+      "oracle_id": "11e02134-7b1a-46a4-a89e-7539dd1efada",
+      "revision": "13f74d5d3302453eb5f67ed7079e511c4dba276b0dbaf4a345079e025b983fcc"
+    },
+    {
+      "deck_name": "Flow State",
+      "oracle_id": "e7194bca-0cf4-4a86-8b84-d2f9219a08b3",
+      "revision": "687e096097ce09973463c2837f37485e933736bef2b8d71c93abc17cd4ff1b84"
+    },
+    {
+      "deck_name": "Forbid",
+      "oracle_id": "6e26a525-2584-490d-b106-621c1a30e1fd",
+      "revision": "8f241d070034f48b4b30703d3a0c91f1b11805aecd04cb26e2f332bed173eeed"
+    },
+    {
+      "deck_name": "Hard Evidence",
+      "oracle_id": "0728b195-2dfe-4d73-91ae-e658a97b0b9a",
+      "revision": "259b88adbfc897f18023f2ff4fe0c3023bac259488aeb32c291a513917722673"
+    },
+    {
+      "deck_name": "High Tide",
+      "oracle_id": "dc671205-f2fa-454f-9957-921a6069ad53",
+      "revision": "968f699fd8d97931bab3a7bfb8849e7cda6e0f3a6ebeb1485124f1a2b9be878b"
+    },
+    {
+      "deck_name": "Impractical Joke",
+      "oracle_id": "c8da73ed-2834-4094-8723-a4ad75660290",
+      "revision": "99690ff3e1b5830c9d76404bd8054737cc5ff724020b0049290956091516e5d8"
+    },
+    {
+      "deck_name": "Jeska's Will",
+      "oracle_id": "0fd114c4-092b-4e28-b0dc-ef529f3bc73e",
+      "revision": "1b2918424e789be6f38d2f307b0152171a1410a2f5c76b4148fd025dec88b272"
+    },
+    {
+      "deck_name": "Let the Galaxy Burn",
+      "oracle_id": "8c70980b-3c38-4624-8f19-5e29d271acf5",
+      "revision": "cad75e671b0ff963448fa85b4e6a755bcb817dd2743eb306f6c86027df5c54f2"
+    },
+    {
+      "deck_name": "Mana Sculpt",
+      "oracle_id": "35e2f82e-7ca3-4a92-9134-b7999eef5337",
+      "revision": "473882cd3661fc69d641536142fc6759bdc00e82549fe9f99f6c038800160ab7"
+    },
+    {
+      "deck_name": "Mathemagics",
+      "oracle_id": "5f56a303-b3da-41df-a959-7823a87ee60c",
+      "revision": "c47b4a56339c49982c803ad6024218c582cf43958319aef94d8081453787d739"
+    },
+    {
+      "deck_name": "Ponder",
+      "oracle_id": "02090581-61aa-4348-ad57-451be8ee91c2",
+      "revision": "ed8193f3769ae7737a2b0fe9ca51e3646a7fbb348b5f8159ed66083a62446e9a"
+    },
+    {
+      "deck_name": "Preordain",
+      "oracle_id": "ac641490-ca14-48d7-8cc4-b69ce984befa",
+      "revision": "c1d15f5f10710e3f76d557a7a1a4f2706327aa66373fd210e87daa20a15b69c0"
+    },
+    {
+      "deck_name": "Prismari Charm",
+      "oracle_id": "c3c25a2c-f71c-4cb7-9117-0bcda9248bfd",
+      "revision": "87e91bab1c1d76873b3654f4c3f8078b3b95c720811b8a1a62038b8fba842da7"
+    },
+    {
+      "deck_name": "Procrastinate",
+      "oracle_id": "6f8fa68e-e961-4ae1-b27d-22d87e90f26b",
+      "revision": "f256b542a1e104ee819e3d0554a26911c6b9412463e75e90f61f27ac5f5e455e"
+    },
+    {
+      "deck_name": "Pyretic Ritual",
+      "oracle_id": "86ef6474-613f-41fb-931c-d4279b03ed99",
+      "revision": "6eaa22e3d0c9bf92e06b0b67e31119e67ccbb90377d7ac00339ead5b81623733"
+    },
+    {
+      "deck_name": "Quick Study",
+      "oracle_id": "7bff8d4a-1c7d-48b8-b3e3-737dd6f01823",
+      "revision": "22e92c68e788d982aae8a265f7c0c7f24eae5ad76dff07a1ac68d56f0c850476"
+    },
+    {
+      "deck_name": "Return the Favor",
+      "oracle_id": "30377bd5-99ab-4888-9ea7-e5a069b527e8",
+      "revision": "ca855112b774a99dc2ecbdba08d700a384864b64ba669843bd8eae107c202f87"
+    },
+    {
+      "deck_name": "Rewind",
+      "oracle_id": "bb27bfdf-fe8d-45bd-ad62-8118dce06eda",
+      "revision": "21aa17b25e19f0997ff641f64b3830bd01f2670f8fd603d9443e2ad726e7f7a9"
+    },
+    {
+      "deck_name": "Run Away Together",
+      "oracle_id": "290faa28-450e-4797-9a8f-642d8af3f82a",
+      "revision": "6fc0e59a42e79a0a67013f0031e0acdc252c27568f31ecf9e34a6a3dae6eeabe"
+    },
+    {
+      "deck_name": "Seize the Spoils",
+      "oracle_id": "58f83528-9110-4895-b5ea-51b90af30a8d",
+      "revision": "27577e517a0469aac57e79ed3279b9f428a2f163f73c6d53cd3e3966ff3bb1d2"
+    },
+    {
+      "deck_name": "Sleight of Hand",
+      "oracle_id": "05a039ad-1689-4d13-b393-6c1219583b5d",
+      "revision": "04facd4250144bce1d1adc05fe2aee965ccb33ed43983dd9528a912724f7a823"
+    },
+    {
+      "deck_name": "Spell Pierce",
+      "oracle_id": "d64b0848-0193-4025-ba62-63ecd8fb9f50",
+      "revision": "439d26690a3ae50d1fc2d4f377fc11b9a22423675cfd574baba8c773b4651953"
+    },
+    {
+      "deck_name": "Spell Snare",
+      "oracle_id": "38877c68-b69b-4ee1-8e8f-5137a184a8f7",
+      "revision": "27bd69cdc3a5b60125f74a7d164636f6c41c8782171c1f391eba35ba567b147c"
+    },
+    {
+      "deck_name": "Think Twice",
+      "oracle_id": "fa85c5a2-8e83-4624-a35a-a0bbf17ecbb4",
+      "revision": "7360a84a1c56c8a62d4c72ef824b59002999dba4033923b25e1d8ed445ca708c"
+    },
+    {
+      "deck_name": "Tome Blast",
+      "oracle_id": "f0163420-2f91-493c-bad4-2cd33e9856bf",
+      "revision": "5001f9d667d0a87226063ca3b3196de1600de9710bf7798fced81b33ebc3b97b"
+    },
+    {
+      "deck_name": "Traumatic Critique",
+      "oracle_id": "06c1f8a4-4948-435b-ae98-b1276b57e958",
+      "revision": "aba4bc664a60da81ebd2136068ec2d93150ec3e081fe1846857425a005306a98"
+    },
+    {
+      "deck_name": "Wisdom of Ages",
+      "oracle_id": "d9722ec3-aa5e-4c69-8ff0-cef1b1839fa4",
+      "revision": "ad9a3d066039da95ccb6854995c9fe3889626653a00be5888b7d1f6fc751b21d"
+    },
+    {
+      "deck_name": "Command Tower",
+      "oracle_id": "0895c9b7-ae7d-4bb3-af17-3b75deb50a25",
+      "revision": "11d1e9838b610a30e86999e926d2c4524176ae38b43d847b68b4b56cb3a29aba"
+    },
+    {
+      "deck_name": "Evolving Wilds",
+      "oracle_id": "a75445d3-1303-4bb5-89ad-26ea93fecd48",
+      "revision": "29a095ec0e1d8564919e3dcf1e4fe833ccb977298985a64fe13858a51b64e651"
+    },
+    {
+      "deck_name": "Exotic Orchard",
+      "oracle_id": "27b047e3-0d41-45e2-98e9-9391d7923a1e",
+      "revision": "37656bbdf91ebcfb027369a9a7f6a57b69d82d2a4f1a67c7ccfba3ae23525915"
+    },
+    {
+      "deck_name": "Great Hall of the Biblioplex",
+      "oracle_id": "a8c70dab-1e27-4a9c-bd2d-910d5720d02d",
+      "revision": "11988b484507a9f8d5940c37cab10f5218d9d5a4892547c12c307a62df54a2a2"
+    },
+    {
+      "deck_name": "Hidden Grotto",
+      "oracle_id": "382d18a2-438e-4ae7-a83f-1658ef1f9b07",
+      "revision": "6e46efb834b5ede8e2884b83c48eff75b83c022cb7612c63fc4e0ad6d939c15f"
+    },
+    {
+      "deck_name": "Path of Ancestry",
+      "oracle_id": "b473e293-59e3-4e04-acf2-622604aeb25f",
+      "revision": "c197e7432d52724cb7524f7b466736526fe40f007b4bce9c8ef7a9d5c04e4129"
+    },
+    {
+      "deck_name": "Shivan Reef",
+      "oracle_id": "0fe16212-66c3-4e45-a641-7391e9b2e304",
+      "revision": "fa45f99eab02fb0636e6926ae03ceb788b9be1f05cd4f9bc31ec4fe8a9494653"
+    },
+    {
+      "deck_name": "Stormcarved Coast",
+      "oracle_id": "4722105b-0085-4bb8-bca1-9de0d3eb5600",
+      "revision": "121e73c303c0a1d99126ef4839fc77d50b7786747cde7b40eadc58c4c5522f9c"
+    },
+    {
+      "deck_name": "Swiftwater Cliffs",
+      "oracle_id": "2f4ad084-2062-44c0-9975-15f100204531",
+      "revision": "9b213944dc0eaa4081d028cec2f456547c00a4e30e16891e6dc6095f2df7e310"
+    },
+    {
+      "deck_name": "Terramorphic Expanse",
+      "oracle_id": "1bd3e453-aa21-4ee6-95c2-d6d920ee8e7a",
+      "revision": "f5f60cf0f2326d521886e43a8d7a11e11fde3bcc6c1fbe4141e82aa5065b23ab"
+    },
+    {
+      "deck_name": "Tyrite Sanctum",
+      "oracle_id": "38c83332-2d21-450c-ae97-34109b565f59",
+      "revision": "b2d9384244fa1a36be1efbc128fe70e7428fcafaa1004b9d3698a0e51ed12039"
+    },
+    {
+      "deck_name": "Island",
+      "oracle_id": "b2c6aa39-2d2a-459c-a555-fb48ba993373",
+      "revision": "f2d45bab767d23707edab46400f15909c953ffbb67100964ee29e29b9b265248"
+    },
+    {
+      "deck_name": "Mountain",
+      "oracle_id": "a3fb7228-e76b-4e96-a40e-20b5fed75685",
+      "revision": "e8e8beb95f90cebf949f06b5278bb2fbdf0c3d2b0765cdeac542859ef63b1ba8"
+    }
+  ]
+}
