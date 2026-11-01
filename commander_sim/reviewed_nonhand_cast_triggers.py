@@ -5,6 +5,15 @@ card: Poxwalkers. A verified nonhand cast returns the real graveyard card tapped
 No inferred combos, phantom permanents, or Oracle-text parsing.
 """
 
+from dataclasses import dataclass
+
+
+@dataclass(frozen=True)
+class NonhandCastReview:
+    oracle_id: str
+    oracle_text: str
+
+
 POXWALKERS_ORACLE = "e4275202-4960-4cde-b941-27be8163ad6e"
 POXWALKERS_TEXT = (
     "Deathtouch\nCurse of the Walking Pox — Whenever you cast a spell "
@@ -13,7 +22,7 @@ POXWALKERS_TEXT = (
 )
 
 NONHAND_CAST_TRIGGERS = {
-    "Poxwalkers": (POXWALKERS_ORACLE, POXWALKERS_TEXT),
+    "Poxwalkers": NonhandCastReview(POXWALKERS_ORACLE, POXWALKERS_TEXT),
 }
 
 
@@ -50,9 +59,9 @@ def resolve_reviewed_nonhand_cast_triggers(zones, seat, ticket, catalog):
         rule = NONHAND_CAST_TRIGGERS.get(obj.card.name)
         raw = catalog.get(obj.card.name)
         if (rule is None or not isinstance(raw, dict)
-                or raw.get("oracle_id") != rule[0]
-                or raw.get("oracle_text") != rule[1]
-                or obj.card.card_id != rule[0]
+                or raw.get("oracle_id") != rule.oracle_id
+                or raw.get("oracle_text") != rule.oracle_text
+                or obj.card.card_id != rule.oracle_id
                 or "creature" not in obj.types
                 or obj.owner != seat):
             continue
