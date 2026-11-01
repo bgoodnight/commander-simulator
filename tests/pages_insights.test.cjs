@@ -176,3 +176,10 @@ test('land development reports interpolated quartiles and exact matching cohorts
   assert.deepEqual(report.groups.map(g=>[g.count,g.runs.map(r=>r.seed)]),[[1,[0]],[2,[1]],[4,[2]],[5,[3]]]);
   assert.equal(insights.landDevelopment([{}],6).total,0);
 });
+
+test('opening and hand reports keep denominators and unknown cards separate',()=>{
+ const cards={Island:{type_line:'Basic Land — Island'},Spell:{type_line:'Instant'}};
+ const run=(seed,initial,kept,taken,n)=>({seed,mulligan:{initial_hand:initial,opening_hand:kept,taken},events:Array.from({length:6},(_,i)=>({turn:i+1,hand_size:n})),state_snapshots:Array.from({length:6},()=>({hand:[],battlefield:[]}))});
+ const r=insights.openingAndHand([run(1,['Island','Spell'],['Island','Island'],true,6),run(2,['Mystery'],['Island'],false,8)],n=>cards[n]);
+ assert.equal(r.total,2);assert.equal(r.openingTotal,1);assert.equal(r.mulligans,1);assert.equal(r.initial[0].value,1);assert.equal(r.kept[0].value,2);assert.equal(r.hands[5].median,7);assert.deepEqual(r.end.map(g=>g.value),[6,8]);
+});

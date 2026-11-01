@@ -260,5 +260,14 @@
     const groups=[...new Set(valid.map(r=>r.events[turn-1].land_count))].sort((a,b)=>a-b).map(count=>({count,runs:valid.filter(r=>r.events[turn-1].land_count===count)}));
     return {total:valid.length,timeline,groups};
   }
-  return {summarize,findings,pct,round,sources,candidateCount,themes,sourceTimeline,themeTimelines,quietTurns,boardDevelopment,landDevelopment};
+  function openingAndHand(runs,lookup){
+    const landCount=hand=>{let n=0;for(const name of hand){const c=lookup(name);if(!c||!c.type_line)return null;if(/\bLand\b/i.test(c.type_line.split("—")[0]))n++;}return n};
+    const valid=(runs||[]).filter(r=>Array.isArray(r.mulligan?.initial_hand)&&Array.isArray(r.mulligan?.opening_hand)&&typeof r.mulligan?.taken==="boolean"&&Array.isArray(r.events)&&r.events.length>=6&&r.events.slice(0,6).every((e,i)=>e.turn===i+1&&Number.isFinite(e.hand_size))&&r.state_snapshots?.length>=6&&r.state_snapshots.slice(0,6).every(x=>Array.isArray(x.hand)&&Array.isArray(x.battlefield)));
+    const eligible=valid.filter(r=>landCount(r.mulligan.initial_hand)!==null&&landCount(r.mulligan.opening_hand)!==null);
+    const groups=(hand)=>[0,1,2,3,4,5,6,7].map(n=>({value:n,runs:eligible.filter(r=>landCount(r.mulligan[hand])===n)})).filter(g=>g.runs.length);
+    const hands=Array.from({length:6},(_,i)=>{const vals=valid.map(r=>r.events[i].hand_size).sort((a,b)=>a-b);const q=x=>{if(!vals.length)return null;const j=(vals.length-1)*x,l=Math.floor(j),h=Math.ceil(j);return round(vals[l]+(vals[h]-vals[l])*(j-l),2)};return {turn:i+1,median:q(.5),q1:q(.25),q3:q(.75)}});
+    const end=[...new Set(valid.map(r=>r.events[5].hand_size))].sort((a,b)=>a-b).map(n=>({value:n,runs:valid.filter(r=>r.events[5].hand_size===n)}));
+    return {total:valid.length,openingTotal:eligible.length,initial:groups("initial_hand"),kept:groups("opening_hand"),mulligans:valid.filter(r=>r.mulligan.taken===true).length,hands,end};
+  }
+  return {summarize,findings,pct,round,sources,candidateCount,themes,sourceTimeline,themeTimelines,quietTurns,boardDevelopment,landDevelopment,openingAndHand};
 });

@@ -209,3 +209,17 @@ test('land report shows a selected distribution cohort and its evidence',()=>{
   assert.match(detail.children[0].textContent,/2 lands · 1 \/ 1 runs/);
   const evidence=detail.children[3];assert.match(evidence.children[1].children[0].textContent,/seed 7/);
 });
+
+test('detailed archive opening cohort links common art to card details and evidence',()=>{
+  class Node {constructor(tag){this.tag=tag;this.children=[];this.attrs={};this.handlers={};this.style={};this.classList={add(){}}}
+    append(...nodes){this.children.push(...nodes)} appendChild(node){this.children.push(node);return node} replaceChildren(){this.children=[]} setAttribute(k,v){this.attrs[k]=v} addEventListener(k,v){this.handlers[k]=v}}
+  const card={name:'Island',oracle_id:'i',type_line:'Basic Land — Island',image:'https://example.test/island.jpg'};
+  const run={seed:7,mulligan:{initial_hand:['Island'],opening_hand:['Island'],taken:false},events:Array.from({length:6},(_,i)=>({turn:i+1,hand_size:1,events:[]})),state_snapshots:Array.from({length:6},()=>({battlefield:['Island'],hand:['Island']}))};
+  const ctx={location:{pathname:'/results.html'},window:{DeckInsights:require('../web/pages/results_insights.js')},localStorage:{getItem:()=>null},document:{createElement:t=>new Node(t)},card,run,opened:[]};
+  vm.createContext(ctx);vm.runInContext(code,ctx);vm.runInContext("cardInfo=n=>n==='Island'?card:null;showCard=id=>opened.push(id)",ctx);
+  const root=vm.runInContext("archiveStories({runs:[run],release:'123456789'})",ctx);
+  const body=root.children[2].children[1],chart=body.children[2],detail=body.children[3];chart.children[0].handlers.click();
+  assert.match(detail.children[0].textContent,/1 lands in initial hand/);
+  detail.children[2].children[0].handlers.click();assert.deepEqual(ctx.opened,['i']);
+  assert.match(detail.children[3].children[1].children[0].textContent,/seed 7/);
+});
