@@ -52,6 +52,7 @@ class BoundedEarlyGameTests(unittest.TestCase):
                     "draw", "untap", "land_play", "creature_cast", "creature_resolved",
                     "artifact_cast", "artifact_resolved",
                     "tutor_cast", "tutor_resolved",
+                    "token_spell_cast", "token_spell_resolved",
                 } for event in turn["events"]))
 
     def test_magnus_reviewed_tutors_pay_and_move_actual_cards(self):
@@ -95,6 +96,25 @@ class BoundedEarlyGameTests(unittest.TestCase):
                 if deck in ("mortarion_current","mortarion_ideal","necron_dynasties"):
                     self.assertFalse(any(event["type"]=="creature_cast"
                         for turn in run["events"] for event in turn["events"]))
+
+    def test_reviewed_token_spells_create_physical_objects_not_false_mana(self):
+        created=[]
+        for seed in range(16):
+            report=run_bounded_early_game("magnus_premium",seed=seed,turns=6)
+            for turn,state in zip(report["events"],report["state_snapshots"]):
+                casts=[x for x in turn["events"] if x["type"]=="token_spell_cast"]
+                resolved=[x for x in turn["events"] if x["type"]=="token_spell_resolved"]
+                self.assertEqual(len(casts),len(resolved))
+                for event in resolved:
+                    self.assertEqual(event["created_token_count"],
+                                     len(event["created_token_ids"]))
+                    self.assertGreater(event["created_token_count"],0)
+                    self.assertEqual(event["fidelity"],"bounded_reviewed_token_effect")
+                created.extend(resolved)
+                self.assertEqual(
+                    turn["hand_size"]+turn["library_size"]+
+                    len(state["battlefield"])+len(state["graveyard"])+1,100)
+        self.assertGreater(len(created),0)
 
     def test_invalid_deck_or_horizon_fails_closed(self):
         for key, turns in (("unsupported_deck", 6), ("wretched_ranks", 0),
