@@ -215,7 +215,7 @@ REVIEWED_BY_DECK.setdefault("magnus_physical_trial", {}).update(
 # service separately reviews his life-for-black-mana static ability.
 REVIEWED_BY_DECK["mortarion_current"]["K'rrik, Son of Yawgmoth"] = {
     "oracle_id": "cbe3a4e7-5dbe-4f58-8ee6-a1762b65acfd",
-    "oracle_text": "({B/P} can be paid with either {B} or 2 life.)\\nLifelink\\nFor each {B} in a cost, you may pay 2 life rather than pay that mana.\\nWhenever you cast a black spell, put a +1/+1 counter on K'rrik.",
+    "oracle_text": "({B/P} can be paid with either {B} or 2 life.)\nLifelink\nFor each {B} in a cost, you may pay 2 life rather than pay that mana.\nWhenever you cast a black spell, put a +1/+1 counter on K'rrik.",
 }
 
 # Physical Mortarion is a deck fixture, not a separate ruleset. Reuse the
