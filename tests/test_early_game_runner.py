@@ -56,7 +56,7 @@ class BoundedEarlyGameTests(unittest.TestCase):
                     "token_spell_cast", "token_spell_resolved",
                     "reviewed_trigger_resolved", "reviewed_phase_resolved",
                     "enchantment_cast", "enchantment_resolved",
-                    "reviewed_sacrifice_activated",
+                    "reviewed_sacrifice_activated", "reviewed_enter_resolved",
                 } for event in turn["events"]))
 
     def test_magnus_reviewed_tutors_pay_and_move_actual_cards(self):
@@ -99,6 +99,15 @@ class BoundedEarlyGameTests(unittest.TestCase):
                         +len(state["battlefield"])+len(state["graveyard"])+1,100)
                 # A named creature only casts when its whole entry/cast is
                 # independently reviewed, including the Necron Szeras slice.
+                for turn in run["events"]:
+                    for event in turn["events"]:
+                        if event["type"] == "reviewed_enter_resolved":
+                            self.assertIn(event["card"], {
+                                "Bastion of Remembrance", "Grave Titan",
+                                "Marionette Apprentice"})
+                            self.assertEqual(event["fidelity"],
+                                             "bounded_no_opponent_priority")
+                            self.assertGreater(len(event["created_token_ids"]), 0)
                 self.assertTrue(all(event["card"]!="Unsupported Invented Card"
                     for turn in run["events"] for event in turn["events"]
                     if event["type"]=="creature_cast"))
