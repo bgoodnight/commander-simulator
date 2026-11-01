@@ -91,7 +91,7 @@ def activate_reviewed_unearth(zones,seat,old_id,catalog,mana_service,*,
         if source.card.name=="Triarch Praetorian" and len(zones.ids(seat,"library"))<2:
             raise NotImplementedError("Triarch mandatory draw needs loss/SBA host")
         if source.card.name=="Lokhust Heavy Destroyer":
-            if not isinstance(enter_choice,dict) or 0 not in enter_choice:
+            if not isinstance(enter_choice,dict) or seat not in enter_choice:
                 raise ValueError("Lokhust mandatory per-player choices are required")
         if source.card.name=="Canoptek Tomb Sentinel" and enter_choice is not None:
             target=zones.kernel.objects.get(enter_choice)
