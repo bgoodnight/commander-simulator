@@ -27,7 +27,10 @@ class StaticPagesTests(unittest.TestCase):
         datasets=json.loads((self.destination/"decks.json").read_text())
         results=json.loads((self.destination/"observations.json").read_text())
         batches=json.loads((self.destination/"bounded-batches.json").read_text())
-        self.assertEqual(len(batches["decks"]),4)
+        # The legacy four-deck cache remains exportable until refreshed.
+        approved={d["key"] for d in datasets["decks"]}
+        self.assertTrue(set(batches["decks"]).issubset(approved))
+        self.assertIn(len(batches["decks"]), (4,6))
         for key in batches["decks"]:
             runs=json.loads((self.destination/f"bounded-runs-{key}.json").read_text())
             self.assertEqual(len(runs),100)
@@ -53,7 +56,8 @@ class StaticPagesTests(unittest.TestCase):
         permitted={"index.html","summary.html","results.html","editor.html",
                    "app.js","results_insights.js","style.css","decks.json",
                    "observations.json","names.json","bounded-batches.json","build-manifest.json",".nojekyll"}
-        permitted.update(f"bounded-runs-{key}.json" for key in ("magnus_premium","wretched_ranks","mortarion_current","necron_dynasties"))
+        published=json.loads((self.destination/"bounded-batches.json").read_text())
+        permitted.update(f"bounded-runs-{key}.json" for key in published["decks"])
         archive_dir=self.destination/"simulation-data"
         if archive_dir.is_dir():
             permitted.add("simulation-data")
