@@ -318,7 +318,7 @@ def run_bounded_early_game(deck_key, *, seed=0, turns=6, mulligan="one-free", pr
             entered_on_turn[resolved_id]=turn
             if kind == "artifact":
                 rock = reviewed_rock(name, raw_by_name[name], colors)
-                if rock[0].enter_tapped:
+                if rock is not None and rock[0].enter_tapped:
                     kernel.get(resolved_id).tapped = True
                     kernel._dirty()
             events.append({"type": kind + "_resolved", "card": name,
