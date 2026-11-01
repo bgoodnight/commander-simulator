@@ -64,6 +64,42 @@ class TreasureManaTests(unittest.TestCase):
         without_host = TemplateManaService(self.kernel, {}, {"U", "R"})
         self.assertIsNone(without_host.plan(1, "{U}"))
 
+    def test_treasure_funds_real_spell_resolution(self):
+        from commander_sim.reviewed_token_spells import (
+            TOKEN_SPELLS, cast_and_resolve_reviewed_token_spell)
+        raw = {}
+        for name in ("Strike It Rich", "Hard Evidence"):
+            recipe = TOKEN_SPELLS[name]
+            raw[name] = {"oracle_id": recipe.oracle_id,
+                         "oracle_text": recipe.oracle_text,
+                         "mana_cost": recipe.mana_cost,
+                         "type_line": "Sorcery", "layout": "normal"}
+        raw["Mountain"] = {"type_line": "Basic Land — Mountain"}
+        mountain = self.zones.add(self.Card(
+            "test:mountain", "Mountain", frozenset({"land"})),
+            0, "battlefield")
+        service = TemplateManaService(
+            self.kernel, raw, {"U", "R"}, zones=self.zones)
+        strike = self.zones.add(self.Card(
+            TOKEN_SPELLS["Strike It Rich"].oracle_id, "Strike It Rich",
+            frozenset({"sorcery"}), coverage="approx"), 0, "hand")
+        first = cast_and_resolve_reviewed_token_spell(
+            self.zones, 0, strike, raw, {"U", "R"}, service)
+        self.assertEqual(len(first.token_ids), 1)
+        treasure_id = first.token_ids[0]
+        self.assertTrue(self.kernel.get(mountain).tapped)
+        # The Mountain is still tapped; only the genuine Treasure can pay U.
+        evidence = self.zones.add(self.Card(
+            TOKEN_SPELLS["Hard Evidence"].oracle_id, "Hard Evidence",
+            frozenset({"sorcery"}), coverage="approx"), 0, "hand")
+        second = cast_and_resolve_reviewed_token_spell(
+            self.zones, 0, evidence, raw, {"U", "R"}, service)
+        self.assertEqual(second.paid_source_ids, (treasure_id,))
+        self.assertEqual([self.kernel.get(i).card.name
+                          for i in second.token_ids], ["Crab", "Clue"])
+        self.assertNotIn(treasure_id, self.kernel.objects)
+        self.assertTrue(self.zones.assert_consistent())
+
     def test_preview_is_pure_and_rejects_tapped_token(self):
         token = self.token()
         before = tuple(self.zones.ids(0, "battlefield"))
