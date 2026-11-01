@@ -153,7 +153,8 @@ def activate_reviewed_sacrifice(
     if type(scry_to_bottom) is not bool:
         raise ValueError("Scry choice must be explicit Boolean")
     if mode.action=="any_color_mana":
-        if type(mana_color) is not str or mana_color not in "WUBRG":
+        if (type(mana_color) is not str or len(mana_color)!=1
+                or mana_color not in "WUBRG"):
             raise ValueError("Phyrexian mana activation needs an explicit color")
     elif mana_color is not None:
         raise ValueError("Unexpected color choice for reviewed sacrifice mode")
