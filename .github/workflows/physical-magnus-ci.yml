@@ -8,6 +8,7 @@ on:
       - "decklists/magnus_physical_legal_trial_v1_1.txt"
       - "tools/run_physical_magnus_trials.py"
       - "tests/test_physical_magnus.py"
+      - "tests/test_early_game_runner.py"
       - "run_all_tests.py"
   workflow_dispatch:
 permissions:
