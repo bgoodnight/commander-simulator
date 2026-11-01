@@ -550,6 +550,38 @@ function batchExampleNode(example,kind,turn,total){
   caption.append(el("strong",card.name),el("span","Example · "+action+" in "+count+" / "+total+" runs"));
   button.appendChild(caption);button.addEventListener("click",()=>showCard(card.oracle_id));return button;
 }
+function boardReport(batch, type){
+  const report=window.DeckInsights.boardDevelopment(batch.runs,cardInfo,type,6), end=report.rows[5];
+  const panel=document.createElement("details");panel.className="board-report";
+  const summary=el("summary",null,"board-summary");
+  const copy=el("span",null,"board-summary-copy");
+  copy.append(el("span",type+" development","board-kicker"),el("strong",end.pct+"%"),
+    el("span","of runs have a known "+type.toLowerCase()+" on the battlefield at the end of turn 6","board-description"),
+    el("span","Explore the report →","board-open"));
+  summary.appendChild(copy);
+  const top=report.cards[0],card=top&&cardInfo(top[0]);
+  if(card){const art=imageNode(card,true,"board-cover");art.alt="";summary.appendChild(art)}
+  panel.appendChild(summary);
+  const body=el("div",null,"board-body");
+  body.append(el("h3","Battlefield presence by turn"),el("p","Share of runs with at least one known "+type.toLowerCase()+" at the end of each turn.","small"));
+  const chart=el("div",null,"board-timeline");
+  report.rows.forEach(row=>{const column=el("div",null,"board-column"),track=el("div",null,"board-track"),fill=el("div",null,"board-fill");
+    fill.style.height=row.pct+"%";track.appendChild(fill);column.append(el("strong",row.pct+"%"),track,el("span","T"+row.turn));chart.appendChild(column)});
+  body.appendChild(chart);
+  body.append(el("h3","Most common on turn 6"),el("p","Each card is counted once per run; card types can overlap.","small"));
+  if(report.cards.length){const list=el("div",null,"board-card-list");report.cards.slice(0,5).forEach(([name,count])=>{
+    const c=cardInfo(name),button=el("button",null,"board-card-row");button.type="button";
+    button.append(el("span",name),el("strong",count+" / "+report.total));button.addEventListener("click",()=>showCard(c.oracle_id));list.appendChild(button)});body.appendChild(list)}
+  else body.appendChild(el("p","No known "+type.toLowerCase()+" cards were recorded on turn 6.","small"));
+  if(report.unknown)body.appendChild(el("p",report.unknown+" runs include an unclassified battlefield name; those objects are excluded from type counts.","micro"));
+  const evidence=document.createElement("details");evidence.className="story-drilldown";evidence.appendChild(el("summary","Inspect matching runs · "+report.examples.length));
+  if(!report.examples.length)evidence.appendChild(el("p","No matching runs for this finding.","small"));
+  report.examples.forEach(run=>{const item=document.createElement("details");item.className="board-run";item.appendChild(el("summary","Simulation seed "+run.seed));
+    item.append(el("p","Turn 6 battlefield","quiet-label"),quietCardList(run.state_snapshots[5].battlefield),el("p","Turn 6 hand","quiet-label"),quietCardList(run.state_snapshots[5].hand));
+    for(const row of run.events){const events=row.events.map(e=>e.type.replaceAll("_"," ")+(e.card?": "+e.card:""));
+      item.appendChild(el("p","Turn "+row.turn+": "+(events.join(" · ")||"No recorded action"),"micro"))}evidence.appendChild(item)});
+  body.appendChild(evidence);panel.appendChild(body);return panel;
+}
 function showBoundedBatch(){
   const root=$("bounded-results"); clear(root);
   const batch=boundedBatches?.decks?.[selected];
@@ -567,6 +599,10 @@ function showBoundedBatch(){
     if(example)card.appendChild(example);cards.appendChild(card);
   }
   root.appendChild(cards);
+  if(batch.runs?.length){
+    root.append(el("h3","What reaches the battlefield?","board-heading"),el("p","Open a takeaway for its timeline, common cards, and matching runs.","small"));
+    const reports=el("div",null,"board-grid");["Creature","Artifact","Enchantment"].forEach(type=>reports.appendChild(boardReport(batch,type)));root.appendChild(reports);
+  }
   const details=document.createElement("details");details.className="story-drilldown";
   details.appendChild(el("summary","View turn-by-turn averages"));
   const table=el("table"), head=el("tr");
