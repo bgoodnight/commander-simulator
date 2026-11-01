@@ -51,6 +51,7 @@ from .template_resources import TemplateManaService
 from .hand_cleanup import cleanup_hand
 from .reviewed_escape import (reviewed_breach, escape_candidates,
     cast_reviewed_escape_token_spell, sacrifice_breach_at_end_step)
+from .reviewed_buyback import reviewed_buyback, buyback_total_cost, cast_reviewed_buyback
 
 ROOT = Path(__file__).resolve().parents[1]
 
@@ -150,7 +151,8 @@ def run_bounded_early_game(deck_key, *, seed=0, turns=6, mulligan="one-free", pr
                     or reviewed_phase_permanent(name, raw_by_name[name])
                     or reviewed_sacrifice_artifact(name,raw_by_name[name])
                     or approved_enter_hand_cast(name)
-                    or reviewed_breach(name,raw_by_name[name]))
+                    or reviewed_breach(name,raw_by_name[name])
+                    or reviewed_buyback(name,raw_by_name[name]) is not None)
         definition = CardDefinition(
             identity.oracle_id, name, types, subtypes=subtypes,
             supertypes=frozenset({"commander"}) if section == "Commander" else frozenset(),
@@ -371,6 +373,40 @@ def run_bounded_early_game(deck_key, *, seed=0, turns=6, mulligan="one-free", pr
                                "created_token_ids":list(entered.token_ids),
                                "drawn_ids":list(entered.drawn_ids),
                                "fidelity":"bounded_no_opponent_priority"})
+        # One reviewed instant spell per turn in the verified main-phase
+        # window. Optional buyback is preferred only when fully payable.
+        buyback_options=[]
+        if zones.ids(0,"library"):
+            for oid in zones.ids(0,"hand"):
+                obj=kernel.get(oid)
+                rule=reviewed_buyback(obj.card.name,raw_by_name.get(obj.card.name))
+                if rule is None or obj.card.coverage=="unimplemented":
+                    continue
+                with_buyback=buyback_total_cost(rule,True)
+                if mana_service.plan_spell(0,with_buyback,obj) is not None:
+                    buyback_options.append((obj.card.name,oid,True))
+                elif mana_service.plan_spell(0,rule.mana_cost,obj) is not None:
+                    buyback_options.append((obj.card.name,oid,False))
+        if buyback_options:
+            _,oid,use_buyback=min(buyback_options)
+            triggered=[]
+            cast=cast_reviewed_buyback(
+                zones,0,oid,raw_by_name,mana_service,
+                buyback=use_buyback,casting_window=True,
+                on_cast=lambda ticket:triggered.extend(approved_spell_triggers(ticket)))
+            if cast is None:
+                raise AssertionError("Reviewed buyback plan invalidated")
+            events.append({"type":"reviewed_buyback_cast","card":cast.card_name,
+                           "source_object_id":cast.source_old_id,
+                           "paid_buyback":cast.bought_back,
+                           "source_object_ids":list(cast.paid_source_ids),
+                           "fidelity":"bounded_reviewed_buyback"})
+            events.extend(triggered)
+            events.append({"type":"reviewed_buyback_resolved","card":cast.card_name,
+                           "destination":cast.destination,
+                           "destination_object_id":cast.destination_id,
+                           "drawn_ids":list(cast.drawn_ids),
+                           "fidelity":"bounded_reviewed_buyback"})
         # No-opponent, single-action-per-reviewed-source sacrifice policy.
         # Sacrifices are costs paid from real battlefield objects; they can
         # activate reviewed death triggers, never fabricated combo events.
@@ -596,7 +632,8 @@ def run_bounded_early_game(deck_key, *, seed=0, turns=6, mulligan="one-free", pr
                 or reviewed_phase_permanent(name, raw)
                 or reviewed_sacrifice_artifact(name, raw)
                 or approved_enter_hand_cast(name)
-                or reviewed_breach(name,raw))
+                or reviewed_breach(name,raw)
+                or reviewed_buyback(name,raw))
         cleanup = cleanup_hand(
             zones, 0, raw_by_name, supported_action=hand_action_supported)
         for choice in cleanup.discarded:
@@ -652,6 +689,8 @@ def run_bounded_early_game(deck_key, *, seed=0, turns=6, mulligan="one-free", pr
                 and not reviewed_sacrifice_artifact(kernel.get(oid).card.name,
                     raw_by_name[kernel.get(oid).card.name])
                 and not approved_enter_hand_cast(kernel.get(oid).card.name)
+                and reviewed_buyback(kernel.get(oid).card.name,
+                    raw_by_name[kernel.get(oid).card.name]) is None
                 and not supported_land(oid)),
         })
     analysis = analyze_authoritative_run(catalog, profile or {}, states)

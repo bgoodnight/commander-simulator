@@ -66,6 +66,8 @@ class BoundedEarlyGameTests(unittest.TestCase):
                     "reviewed_escape_cast",
                     "reviewed_escape_resolved",
                     "reviewed_breach_sacrificed",
+                    "reviewed_buyback_cast",
+                    "reviewed_buyback_resolved",
                 } for event in turn["events"]))
 
     def test_magnus_reviewed_tutors_pay_and_move_actual_cards(self):

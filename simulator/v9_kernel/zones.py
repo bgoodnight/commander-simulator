@@ -135,7 +135,7 @@ class KernelZones:
         obj=self.kernel.get(ticket.object_id)
         permanent=bool(obj.types.intersection({'creature','artifact','enchantment','planeswalker','battle'}))
         if spell_destination is not None and (
-                permanent or spell_destination not in {'graveyard','exile'}):
+                permanent or spell_destination not in {'graveyard','exile','hand'}):
             raise ValueError('Invalid reviewed spell resolution destination')
         if not permanent and effect is None:
             # We cannot invent printed spell behavior. Keep the ticket and object
@@ -143,6 +143,9 @@ class KernelZones:
             raise NotImplementedError('Missing resolution effect for '+obj.card.name)
         if effect is not None:
             effect(self.kernel,ticket)
+        # A reviewed additional buyback cost may direct a resolving spell to
+        # its owner's hand. The spell remains a physical card; it is not
+        # duplicated, and flashback exile replacement still wins on exit.
         new=self.move(ticket.object_id,
                       'battlefield' if permanent else spell_destination or 'graveyard')
         self._pending.pop(ticket.object_id)
