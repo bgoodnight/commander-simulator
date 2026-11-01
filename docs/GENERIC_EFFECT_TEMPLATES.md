@@ -200,3 +200,51 @@ These two components are tested but **not yet attached to all v35 turn
 events**. Generic triggers, replacement effects and new-card permissions
 must not be assumed executable. See
 [the progressive ability composition specification](ABILITY_COMPOSITION_ARCHITECTURE.md).
+
+## M2.12–M2.13: six pinned decks and executable common-effect subsets
+
+The new [six-deck coverage ledger](DECK_COMMON_EFFECT_COVERAGE.md)
+distinguishes 448 pinned deck-name entries / 299 distinct cards from
+actually executed ability suboperations. `deck_effect_audit.py` provides a
+deterministic offline inventory without equating Oracle-pattern hits with
+working gameplay rules.
+
+`reviewed_tutor_cast.py` and `generic_cast.cast_reviewed_spell` now use
+one real payment and hand→stack→graveyard path for reviewed
+instant/sorcery library searches. The same checked
+`template_search.execute_reviewed_search_to_destination` handles
+library→hand and shuffle-then-place-on-top targets, with exact live object
+identity and pre-payment legality screening. Tutor timing/choices remain
+bounded: a full priority/stack host is not provided here.
+
+`reviewed_token_spells.py` stores reviewed **token blueprints** rather than
+individual effect handlers. One physical token emitter creates approved
+batches with configured count, colors, types, creature P/T, keywords and
+tapped entry. Verified hand-cast sorceries include Ral's Reinforcements,
+Hard Evidence, Strike It Rich, Moan of the Unhallowed and Army of the Damned.
+Unsupported secondary operations remain explicit: flashback and Clue/Treasure
+activations are **not** implemented simply because their tokens exist.
+
+`bounded_trigger_effects.py` consumes only approved spell-cast/spell-copy
+events supplied by a real host and uses the same blueprint/draw primitives
+for Young Pyromancer, Talrand, Archmage Emeritus and Storm-Kiln Artist.
+It requires pinned Oracle identity, a live battlefield source and an exact
+reviewed source ability; the bounded runner invokes it only during supported
+source-paid tutor or token-sorcery casts. This is not generalized event
+registration or simulation of all printed card triggers.
+
+`physical_common_effects.py` contains typed reusable physical-kernel
+operations for drawing, milling, counters, type-restricted graveyard return
+to hand, and targeted destroy/exile/bounce. The historical live table uses
+`legacy_common_ops.apply_each_opponent_damage` for Mage Siege's
+source-attributed simultaneous damage. A generic operation is **not** a
+permission to cast a card or resolve unknown Oracle text: host timing,
+target selection, cost/payment, protection and replacement-effect rules
+must separately authorize the operation.
+
+All six pinned decks can enter the no-opponent bounded physical turn runner
+for reviewed land/mana operations; only registered cards gain further
+ability support. Until simultaneous death/sacrifice triggers, broader
+recursion permissions, full priority, combat and multiplayer opponent
+interactions are integrated and tested, full-card coverage and win rates
+remain unverified.
