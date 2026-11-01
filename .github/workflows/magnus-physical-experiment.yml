@@ -80,3 +80,56 @@ jobs:
               except subprocess.TimeoutExpired:
                   print("ENGINE_TRIAL",json.dumps({"seed":seed,"status":"timeout"}),flush=True)
           PY
+
+      - name: Validate full identities via explicit import and smoke legacy multiplayer driver
+        run: |
+          python - <<'PY'
+          import json, shutil, sys, tempfile
+          from pathlib import Path
+          from functools import partial
+          from commander_sim.card_cache import CardCatalog
+          from tools.fetch_deck_identities import fetch
+          from commander_sim.decks import DeckProvider
+          deckpath=Path("decklists/magnus_the_red_v1_1_physical_simulation.txt")
+          with tempfile.TemporaryDirectory() as tmp:
+              cache=Path(tmp)/"catalog.json"
+              shutil.copyfile("simulator/card_data/shared_scryfall_catalog.json",cache)
+              output=Path(tmp)/"physical_snapshot.json"
+              try:
+                  result=fetch(deckpath,output,catalog_path=cache)
+                  print("PHYSICAL_IMPORT",json.dumps({"cache_hits":result["cache_hits"],"fetched":result["fetched"]}),flush=True)
+              except Exception as exc:
+                  print("PHYSICAL_IMPORT_ERROR",repr(exc),flush=True)
+                  sys.exit(0)
+              data=json.loads(output.read_text())
+              records=[]
+              for entry in data["cards"]:
+                  card=entry["card"]
+                  records.append({
+                    "name":entry["deck_name"],"oracle_id":card["oracle_id"],
+                    "color_identity":card["color_identity"],
+                    "type_line":card["type_line"],
+                    "commander_legality":card.get("legalities",{}).get("commander","unknown"),
+                    "status":"valid"
+                  })
+              provider=DeckProvider(records)
+              try:
+                  deck=provider.load(deckpath)
+                  print("PHYSICAL_DECK_VALIDATION",json.dumps({"count":deck.count,"identity_count":len(records)}),flush=True)
+              except Exception as exc:
+                  print("PHYSICAL_DECK_VALIDATION_ERROR",repr(exc),flush=True)
+                  sys.exit(0)
+              sys.path.insert(0,str(Path("simulator/v35_copy_targets").resolve()))
+              from copy_table import CopyTable
+              from premium_table import PremiumPlayer
+              outcomes=[]
+              for seed in range(20):
+                  try:
+                      table=CopyTable(seed=seed,detailed_factory=partial(PremiumPlayer,deck=deck)).run(8)
+                      table.assert_consistent()
+                      outcomes.append({"seed":seed,"safety_stop":table.safety_stop,"life":[p.life for p in table.players]})
+                  except Exception as exc:
+                      outcomes.append({"seed":seed,"error":repr(exc)})
+              print("PHYSICAL_MULTIPLAYER_SMOKE",json.dumps(outcomes),flush=True)
+              print("PHYSICAL_MULTIPLAYER_LIMITATIONS","Historical v35 driver uses incomplete named effects and heuristic opponent pilots; life totals are not win-rate or calibrated bracket evidence.",flush=True)
+          PY
