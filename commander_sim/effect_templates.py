@@ -51,6 +51,8 @@ class EffectTemplate:
     kind: str
     mana_modes: tuple[ManaMode, ...] = ()
     search_types: frozenset[str] = frozenset()
+    search_subtypes: frozenset[str] = frozenset()
+    search_colors: frozenset[str] = frozenset()
     max_mana_value: int | None = None
     destination: str = "hand"
     enter_tapped: bool = False
@@ -65,13 +67,17 @@ class EffectTemplate:
         if self.kind == "mana_source":
             if not self.mana_modes or not all(isinstance(x, ManaMode) for x in self.mana_modes):
                 raise ValueError("Mana source needs typed activation modes")
-            if self.search_types or self.max_mana_value is not None:
+            if self.search_types or self.search_subtypes or self.search_colors or self.max_mana_value is not None:
                 raise ValueError("Mana source cannot also search")
         else:
             if self.mana_modes or not self.search_types or not self.search_types <= SEARCH_KINDS:
                 raise ValueError("Search requires reviewed card types")
             if self.destination not in DESTINATIONS:
                 raise ValueError("Unknown tutor destination")
+            if any(not isinstance(x, str) or not x for x in self.search_subtypes):
+                raise ValueError("Invalid tutor subtype")
+            if any(type(x) is not str or x not in "WUBRG" for x in self.search_colors):
+                raise ValueError("Invalid tutor color")
             if self.max_mana_value is not None and (type(self.max_mana_value) is not int or self.max_mana_value < 0):
                 raise ValueError("Invalid tutor mana-value threshold")
 
@@ -122,7 +128,7 @@ def compose_effect(review: ReviewedEffect, *, templates=TEMPLATES):
         raise ValueError("Unknown effect template")
     base = templates[review.template]
     permitted = ({"mana_modes", "enter_tapped"} if base.kind == "mana_source"
-                 else {"search_types", "max_mana_value", "destination", "reveal", "shuffle"})
+                 else {"search_types", "search_subtypes", "search_colors", "max_mana_value", "destination", "reveal", "shuffle"})
     overrides = dict(review.overrides)
     if not overrides.keys() <= permitted:
         raise ValueError("Invalid override for this effect category")
@@ -149,6 +155,15 @@ def tutor_matches(template: EffectTemplate, identity: Mapping):
     if "any" not in template.search_types:
         head = identity["type_line"].split(" — ", 1)[0].lower().split()
         if not any(kind in head for kind in template.search_types):
+            return False
+    if template.search_subtypes:
+        line = identity["type_line"]
+        printed_subtypes = frozenset(line.split(" — ", 1)[1].split()) if " — " in line else frozenset()
+        if not template.search_subtypes <= printed_subtypes:
+            return False
+    if template.search_colors:
+        printed_colors = identity.get("colors")
+        if not isinstance(printed_colors, list) or not template.search_colors <= frozenset(printed_colors):
             return False
     if template.max_mana_value is not None:
         mv = identity.get("cmc")
