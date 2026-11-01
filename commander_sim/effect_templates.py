@@ -130,6 +130,8 @@ def compose_effect(review: ReviewedEffect, *, templates=TEMPLATES):
     permitted = ({"mana_modes", "enter_tapped"} if base.kind == "mana_source"
                  else {"search_types", "search_subtypes", "search_colors", "max_mana_value", "destination", "reveal", "shuffle"})
     overrides = dict(review.overrides)
+    if review.template == "rock_commander_identity" and "mana_modes" not in overrides:
+        raise ValueError("Commander-identity rock requires explicit verified color modes")
     if not overrides.keys() <= permitted:
         raise ValueError("Invalid override for this effect category")
     return replace(base, **overrides)
