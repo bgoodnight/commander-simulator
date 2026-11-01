@@ -2,7 +2,8 @@
 from pathlib import Path as _TemplatePath
 import sys as _template_sys
 _template_sys.path.insert(0,str(_TemplatePath(__file__).resolve().parents[2]))
-from commander_sim.legacy_common_ops import TokenBatch,apply_token_batch
+from commander_sim.legacy_common_ops import (TokenBatch,apply_token_batch,
+    DamageEachOpponent,apply_each_opponent_damage)
 from dataclasses import replace
 from pathlib import Path
 import sys
@@ -93,9 +94,8 @@ class AdventureTable(ReiterateTable):
   self.note('    MAGE SIEGE: create a 0/1 black Wizard token.')
  def resolve_trigger(self,item):
   if item.op!='mage_siege_damage':return super().resolve_trigger(item)
-  actor=self.players[item.controller]
-  targets={p.seat:1 for p in self.rivals(actor)}
-  self.damage_many(targets,actor,'mage_siege_wizard')
+  apply_each_opponent_damage(self,item.controller,
+    DamageEachOpponent(1,'mage_siege_wizard'))
  def emit(self,name,action=None,**payload):
   if action is not None and id(action) in getattr(self,'adventure_tickets',{}) and name in ('spell_resolved','spell_countered'):
    original=self.adventure_tickets.pop(id(action));ticket=self._spells.get(id(action))
