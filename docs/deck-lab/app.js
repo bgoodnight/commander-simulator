@@ -522,6 +522,7 @@ function closeCard(){
  */
 let aggregate=null;
 let boundedBatches=null;
+let detailedArchives={};
 function batchExample(batch,deck,kind,turn){
   if(!Array.isArray(batch.runs))return null;
   const deckIds=new Set(deck.cards.filter(x=>x.zone!=="Commander").map(x=>x.oracle_id));
@@ -600,11 +601,32 @@ function landStory(batch){
   result.groups.forEach(group=>{const button=el("button",null,"land-dist-bar");button.type="button";button.append(el("span",group.count+" lands"),el("strong",group.runs.length+" / "+result.total));const track=el("span",null,"land-dist-track"),fill=el("span",null,"land-dist-fill");fill.style.width=(100*group.runs.length/result.total)+"%";track.appendChild(fill);button.appendChild(track);button.addEventListener("click",()=>select(group));chart.appendChild(button)});body.append(chart,detail);
   body.appendChild(el("p","Lands on the battlefield are not a measure of usable mana. Source-level production and commander casting are not recorded in this batch.","micro"));panel.appendChild(body);return panel;
 }
+function detailedRunEvidence(runs,turn=6){
+  const evidence=document.createElement("details");evidence.className="story-drilldown";evidence.appendChild(el("summary","Explore matching runs · "+runs.length));
+  for(const run of runs){const item=document.createElement("details");item.className="board-run";item.appendChild(el("summary","Simulation seed "+run.seed));
+    item.append(el("p","Initial hand","quiet-label"),quietCardList(run.mulligan.initial_hand),el("p","Kept hand","quiet-label"),quietCardList(run.mulligan.opening_hand),el("p","Turn "+turn+" battlefield","quiet-label"),quietCardList(run.state_snapshots[turn-1].battlefield),el("p","Turn "+turn+" hand","quiet-label"),quietCardList(run.state_snapshots[turn-1].hand));
+    for(const row of run.events.slice(0,turn))item.appendChild(el("p","Turn "+row.turn+": "+(row.events.map(e=>e.type.replaceAll("_"," ")+(e.card?": "+e.card:"" )).join(" · ")||"No recorded action"),"micro"));evidence.appendChild(item)}return evidence;
+}
+function archiveStories(archive){
+  const model=window.DeckInsights.openingAndHand(archive.runs,cardInfo);if(!model.total)return null;
+  const root=el("section",null,"archive-stories");root.append(el("h3","Opening & cards","board-heading"),el("p",model.total+" runs · six turns · detailed archive "+archive.release.slice(0,7)+" · separate from the 100-run batch below","small"));
+  function panel(title,value,description,artName){const wrap=document.createElement("details");wrap.className="land-story";const summary=el("summary",null,"land-story-summary"),copy=el("span",null,"land-story-copy");copy.append(el("span",title,"board-kicker"),el("strong",value),el("span",description,"small"),el("span","Explore the report →","board-open"));summary.appendChild(copy);const c=cardInfo(artName);if(c){const img=imageNode(c,false,"land-story-card");img.alt="";summary.appendChild(img)}wrap.appendChild(summary);const body=el("div",null,"land-story-body");wrap.appendChild(body);return {wrap,body}}
+  function distribution(body,groups,total,describe,handForRun){const chart=el("div",null,"land-distribution"),detail=el("div",null,"land-selection");for(const g of groups){const button=el("button",null,"land-dist-bar");button.type="button";button.append(el("span",describe(g.value)),el("strong",g.runs.length+" / "+total));const track=el("span",null,"land-dist-track"),fill=el("span",null,"land-dist-fill");fill.style.width=(100*g.runs.length/total)+"%";track.appendChild(fill);button.appendChild(track);button.addEventListener("click",()=>{clear(detail);detail.appendChild(el("h4",describe(g.value)+" · "+g.runs.length+" runs"));const counts=new Map();for(const run of g.runs)for(const name of new Set(handForRun(run)))counts.set(name,(counts.get(name)||0)+1);const top=[...counts].filter(([name])=>cardInfo(name)).sort((a,b)=>b[1]-a[1]||a[0].localeCompare(b[0])).slice(0,3);if(top.length){detail.appendChild(el("p","Common cards in these hands","quiet-label"));const strip=el("div",null,"archive-art-strip");for(const [name,count] of top){const card=cardInfo(name),button=el("button",null,"archive-art-card");button.type="button";button.setAttribute("aria-label","View "+name+" card details; present in "+count+" runs");button.append(imageNode(card,false,"archive-card-image"),el("span",count+" / "+g.runs.length,"micro"));button.addEventListener("click",()=>showCard(card.oracle_id));strip.appendChild(button)}detail.appendChild(strip)}detail.appendChild(detailedRunEvidence(g.runs))});chart.appendChild(button)}body.append(chart,detail)}
+  const first=archive.runs[0]?.mulligan?.opening_hand?.find(name=>cardInfo(name));
+  const opening=panel("Opening hands",Math.round(100*model.mulligans/model.total)+"% mulliganed","One free mulligan under the simulator’s current policy",first);
+  opening.body.append(el("h3","Initial hands"),el("p","Select a land count to inspect matching hands and how they developed.","small"));distribution(opening.body,model.initial,model.openingTotal,n=>n+" lands in initial hand",r=>r.mulligan.initial_hand);
+  opening.body.append(el("h3","Kept hands"),el("p","Land counts after the free mulligan decision.","small"));distribution(opening.body,model.kept,model.openingTotal,n=>n+" lands in kept hand",r=>r.mulligan.opening_hand);
+  if(model.openingTotal<model.total)opening.body.appendChild(el("p",(model.total-model.openingTotal)+" hands had unclassified cards and are excluded from both land distributions.","micro"));root.appendChild(opening.wrap);
+  const hand=panel("Cards & options",model.hands[5].median+" cards","Median hand size at the end of turn 6",first);
+  hand.body.append(el("h3","Hand size by turn"),el("p","Median, with the middle 50% shown below each value.","small"));const timeline=el("div",null,"land-timeline");model.hands.forEach(row=>{const col=el("div",null,"land-timeline-point");col.append(el("span","Turn "+row.turn),el("strong",String(row.median)),el("span",row.q1+"–"+row.q3,"micro"));timeline.appendChild(col)});hand.body.appendChild(timeline);
+  hand.body.append(el("h3","Turn 6 hand distribution"),el("p","Select a group to inspect the cards and recorded actions.","small"));distribution(hand.body,model.end,model.total,n=>n+" cards in hand",r=>r.state_snapshots[5].hand);root.appendChild(hand.wrap);return root;
+}
 function showBoundedBatch(){
   const root=$("bounded-results"); clear(root);
-  const batch=boundedBatches?.decks?.[selected];
+  const batch=boundedBatches?.decks?.[selected],archive=detailedArchives[selected];
+  if(!isUnsimulatedVersion() && archive?.deck_sha256===selectedDeck().deck_sha256){const stories=archiveStories(archive);if(stories)root.appendChild(stories)}
   if(isUnsimulatedVersion() || !batch || batch.deck_sha256!==selectedDeck().deck_sha256){
-    root.appendChild(el("p","No matching reviewed-action batch is available for this deck version.")); return;
+    root.appendChild(el("p","No matching 100-run reviewed-action batch is available for this deck version.")); return;
   }
   root.appendChild(el("p",batch.seed_count+" simulated runs · 6 turns · one free mulligan", "small"));
   if(batch.runs?.length)root.appendChild(landStory(batch));
@@ -1481,6 +1503,9 @@ async function boot(){
     if(runResponses.some(r=>!r.ok))throw Error("Simulation run data could not be loaded.");
     const runSets=await Promise.all(runResponses.map(r=>r.json()));
     batchKeys.forEach((key,i)=>{boundedBatches.decks[key].runs=runSets[i]});
+    // Detailed archives are optional and separate from the existing 100-run batch.
+    try{const response=await fetch("./simulation-data/manifest.json");if(response.ok){const index=await response.json();const release=index.releases?.[0];if(release?.decks&&typeof release.engine_commit==="string"){await Promise.all(Object.entries(release.decks).map(async ([key,entry])=>{const res=await fetch("./simulation-data/"+entry.runs);if(!res.ok)return;const runs=await res.json();if(Array.isArray(runs)&&runs.length===release.seed_count&&runs.every(r=>r.deck_key===key&&r.deck_sha256===entry.deck_sha256&&r.mode===release.mode))detailedArchives[key]={runs,deck_sha256:entry.deck_sha256,release:release.engine_commit}}))}}}catch(error){console.warn("Detailed simulation archive unavailable",error)}
+
     if(data.format!=="commander-deck-lab-static-v1"||!data.decks.length)
       throw Error("Unexpected static dataset format.");
     allNames.sort((a,b)=>a.localeCompare(b));
