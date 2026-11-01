@@ -300,6 +300,7 @@ def run_bounded_early_game(deck_key, *, seed=0, turns=6, mulligan="one-free", pr
             "creature_count": sum("creature" in o.types and o.zone == "battlefield"
                                   for o in kernel.objects.values()),
             "mana_rock_count": sum("artifact" in o.types and o.zone == "battlefield"
+                                  and not o.token and o.card.name in raw_by_name
                                   and reviewed_rock(o.card.name, raw_by_name[o.card.name], colors) is not None
                                   for o in kernel.objects.values()),
             "floating_at_end_of_main": floating_end,
