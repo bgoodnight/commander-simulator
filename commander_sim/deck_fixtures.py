@@ -61,4 +61,7 @@ EXPERIMENTAL_FIXTURES = (
     DeckFixture("magnus_physical_trial", "Magnus the Red",
                 "decklists/magnus_physical_legal_trial_v1_1.txt",
                 "simulation_only_substitution"),
+    DeckFixture("mortarion_physical_final", "Mortarion, Daemon Primarch",
+                "decklists/mortarion_physical_final_v1_0_2026_11_01.txt",
+                "physical_locked_metadata_pending"),
 )
