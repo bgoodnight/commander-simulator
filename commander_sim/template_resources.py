@@ -83,11 +83,15 @@ class ResourcePayment:
 class TemplateManaService:
     """One source-ID payment planner for reviewed lands and mana-rock templates."""
 
-    def __init__(self, kernel, card_metadata, commander_colors, *, max_states=16000):
+    def __init__(self, kernel, card_metadata, commander_colors, *, max_states=16000,
+                 zones=None):
         colors = frozenset(commander_colors)
         if not colors or any(x not in "WUBRG" for x in colors):
             raise ValueError("Invalid commander identity")
+        if zones is not None and zones.kernel is not kernel:
+            raise ValueError("Mana zones must share the authoritative kernel")
         self.kernel = kernel
+        self.zones = zones
         self.card_metadata = card_metadata
         self.colors = colors
         self.max_states = max_states
@@ -106,6 +110,14 @@ class TemplateManaService:
         if obj.zone != "battlefield":
             return ()
         name = obj.card.name
+        # This is the *reviewed token blueprint identity*, not a name match:
+        # a printed card or arbitrary token named Treasure is not admitted.
+        if (self.zones is not None and obj.token
+                and obj.card.card_id == "reviewed-token:Treasure"
+                and name == "Treasure"
+                and "artifact" in obj.types and "Treasure" in obj.subtypes):
+            return tuple(ManaMode((color,), tap=True, sacrifice=True)
+                         for color in "WUBRG")
         if "land" in obj.types:
             return tuple(ManaMode((c,)) for c in sorted(_reviewed_modes(name, self.colors)))
         if "artifact" in obj.types:
@@ -168,7 +180,12 @@ class TemplateManaService:
                     or action.mode not in self.modes(obj)):
                 raise ValueError("Stale source payment")
         for action in plan.activations:
-            self.kernel.get(action.object_id).tapped = True
+            if action.mode.sacrifice:
+                if self.zones is None:
+                    raise ValueError("Sacrifice mode requires matching physical zones")
+                self.zones.move(action.object_id, "graveyard", "sacrifice")
+            else:
+                self.kernel.get(action.object_id).tapped = True
         self.kernel.mana_pools[seat] = plan.floating_after
         self.kernel._dirty()
         return plan
