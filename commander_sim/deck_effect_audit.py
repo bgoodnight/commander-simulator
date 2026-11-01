@@ -82,7 +82,7 @@ def audit_snapshot(fixture):
         oracle_text=card.get("oracle_text")
         if oracle_text is None and isinstance(card.get("card_faces"),list):
             face_texts=[face.get("oracle_text") for face in card["card_faces"]]
-            oracle_text="\\n".join(face_texts) if face_texts and all(
+            oracle_text="\n".join(face_texts) if face_texts and all(
                 isinstance(text,str) for text in face_texts) else None
         if (not isinstance(name,str) or not name
                 or not isinstance(oracle_id,str) or not oracle_id
