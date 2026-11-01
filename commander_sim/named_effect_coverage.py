@@ -20,6 +20,7 @@ from .reviewed_unearth import UNEARTH
 from .reviewed_flashback import FLASHBACK
 from .reviewed_enter_effects import ENTER_RULES
 from .reviewed_cost_reduction import REDUCERS
+from .reviewed_graveyard_creatures import GRAVEYARD_CREATURES
 
 
 def _named_sources():
@@ -36,6 +37,7 @@ def _named_sources():
         ("flashback",FLASHBACK),
         ("enter_trigger",ENTER_RULES),
         ("cost_reduction",REDUCERS),
+        ("graveyard_creature_cast",GRAVEYARD_CREATURES),
     ):
         for name,row in source.items():
             if kind in {"mana","search"}:

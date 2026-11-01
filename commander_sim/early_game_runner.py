@@ -40,6 +40,9 @@ from .reviewed_death_effects import ReviewedDeathEngine
 from .reviewed_enter_effects import reviewed_enter_rule, execute_reviewed_enter
 from .reviewed_unearth import reviewed_unearth, activate_reviewed_unearth, expire_reviewed_unearth
 from .reviewed_flashback import reviewed_flashback, cast_reviewed_flashback
+from .reviewed_graveyard_creatures import (
+    reviewed_graveyard_creature, graveyard_creature_cast_ready,
+    cast_reviewed_graveyard_creature)
 from .reviewed_sacrifice_actions import (
     SACRIFICE_MODES, reviewed_sacrifice_artifact,
     activate_reviewed_sacrifice)
@@ -140,6 +143,7 @@ def run_bounded_early_game(deck_key, *, seed=0, turns=6, mulligan="one-free", pr
                     # Graveyard flashback permission is independently reviewed,
                     # even if no ordinary hand-cast recipe exists (Looting).
                     or reviewed_flashback(name, raw_by_name[name]) is not None
+                    or reviewed_graveyard_creature(name, raw_by_name[name]) is not None
                     or reviewed_phase_permanent(name, raw_by_name[name])
                     or reviewed_sacrifice_artifact(name,raw_by_name[name])
                     or approved_enter_hand_cast(name))
@@ -406,6 +410,39 @@ def run_bounded_early_game(deck_key, *, seed=0, turns=6, mulligan="one-free", pr
                 "mana_added":list(resolved.mana_added),
                 "death_trigger_count":resolved.death_trigger_count,
                 "fidelity":"bounded_no_opponent_priority"})
+        # One verified conditional graveyard creature cast per turn. Do not
+        # create a synthetic loop: recursion must draw on real mana and a
+        # currently controlled creature of the required subtype. The bounded
+        # pilot caps discretionary choices, while the primitive is reusable.
+        gy_creature_options=[]
+        for grave_id in zones.ids(0,"graveyard"):
+            source=kernel.get(grave_id)
+            rule=graveyard_creature_cast_ready(
+                zones,0,grave_id,raw_by_name)
+            if (rule is not None
+                    and mana_service.plan_spell(
+                        0,rule.printed_cost,source) is not None):
+                gy_creature_options.append((source.card.name,grave_id))
+        if gy_creature_options:
+            _,grave_id=min(gy_creature_options)
+            result=cast_reviewed_graveyard_creature(
+                zones,0,grave_id,raw_by_name,mana_service,
+                sorcery_window=True)
+            if result is None:
+                raise AssertionError("Reviewed graveyard cast payment invalidated")
+            entered_on_turn[result.permanent_id]=turn
+            events.append({
+                "type":"reviewed_graveyard_creature_cast",
+                "card":result.card_name,
+                "source_graveyard_id":result.source_old_id,
+                "stack_object_id":result.stack_id,
+                "source_object_ids":list(result.paid_source_ids),
+                "fidelity":"bounded_reviewed_graveyard_cast"})
+            events.append({
+                "type":"reviewed_graveyard_creature_resolved",
+                "card":result.card_name,
+                "object_id":result.permanent_id,
+                "fidelity":"bounded_reviewed_graveyard_cast"})
         # Reuse the reviewed paid graveyard spell path, with cast triggers
         # tied to the real stack ticket and exile on resolution.
         flashback_options=[]
