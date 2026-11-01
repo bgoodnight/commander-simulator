@@ -43,6 +43,7 @@ from .reviewed_flashback import reviewed_flashback, cast_reviewed_flashback
 from .reviewed_graveyard_creatures import (
     reviewed_graveyard_creature, graveyard_creature_cast_ready,
     cast_reviewed_graveyard_creature)
+from .reviewed_nonhand_cast_triggers import resolve_reviewed_nonhand_cast_triggers
 from .reviewed_sacrifice_actions import (
     SACRIFICE_MODES, reviewed_sacrifice_artifact,
     activate_reviewed_sacrifice)
@@ -187,6 +188,8 @@ def run_bounded_early_game(deck_key, *, seed=0, turns=6, mulligan="one-free", pr
         def approved_spell_triggers(ticket):
             """Execute only vetted cast triggers after an actual source cast."""
             source = kernel.get(ticket.object_id)
+            nonhand = resolve_reviewed_nonhand_cast_triggers(
+                zones, 0, ticket, raw_by_name)
             effects = resolve_reviewed_spell_triggers(
                 zones, 0, raw_by_name, event="spell_cast",
                 spell_types=frozenset(source.types))
@@ -197,7 +200,15 @@ def run_bounded_early_game(deck_key, *, seed=0, turns=6, mulligan="one-free", pr
                      "created_token_ids":list(effect.created_token_ids),
                      "drawn_ids":list(effect.drawn_ids),
                      "fidelity":"bounded_no_opponent_priority"}
-                    for effect in effects]
+                    for effect in effects] + [
+                {"type":"reviewed_nonhand_cast_trigger",
+                 "source":trigger["card"],
+                 "source_graveyard_id":trigger["source_graveyard_id"],
+                 "object_id":trigger["object_id"],
+                 "triggered_by_stack_id":trigger["triggered_by_stack_id"],
+                 "origin":trigger["origin"],
+                 "fidelity":"bounded_no_opponent_priority"}
+                for trigger in nonhand]
         for obj in kernel.objects.values():
             if obj.controller == 0 and obj.zone == "battlefield" and obj.tapped:
                 obj.tapped = False
@@ -431,7 +442,8 @@ def run_bounded_early_game(deck_key, *, seed=0, turns=6, mulligan="one-free", pr
             _,grave_id=min(gy_creature_options)
             result=cast_reviewed_graveyard_creature(
                 zones,0,grave_id,raw_by_name,mana_service,
-                sorcery_window=True)
+                sorcery_window=True,
+                on_cast=lambda ticket:events.extend(approved_spell_triggers(ticket)))
             if result is None:
                 raise AssertionError("Reviewed graveyard cast payment invalidated")
             entered_on_turn[result.permanent_id]=turn
