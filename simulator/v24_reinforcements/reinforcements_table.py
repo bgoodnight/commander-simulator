@@ -7,6 +7,7 @@ sys.path.insert(0,str(Path(__file__).resolve().parents[1]/'v23_medallion'))
 from medallion_table import MedallionTable
 from rules import Cost,CardDefinition
 from simulation import Action
+from commander_sim.legacy_common_ops import TokenBatch, apply_token_batch
 
 NAME="Ral's Reinforcements"
 RAL_TOKEN=CardDefinition('ral_elemental_1_1','Elemental',frozenset({'creature'}),frozenset({'Elemental'}),
@@ -31,6 +32,5 @@ class ReinforcementTable(MedallionTable):
         return self.adjust_named_action_cost(action)
 
     def resolve_reinforcements(self,table,action):
-        player=self.players[action.actor]
-        for _ in range(2):self.add_creature(player,1,1,'Elemental',token=True,definition=RAL_TOKEN)
+        apply_token_batch(self,action.actor,TokenBatch(2,1,1,'Elemental',definition=RAL_TOKEN))
         self.note(f'    REINFORCEMENTS P{action.actor}: two blue/red Elementals created.')
