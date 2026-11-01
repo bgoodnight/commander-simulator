@@ -62,10 +62,24 @@
       median_finish_turn:median,early_wins:early,
       note:"Complete modeled four-player games, matched to this exact deck revision. Performance depends on opponent selection and pilot fidelity."};
   }
-  function combineEvidence(cardResult,runs,deckSha){
+  function boundedSignals(batch,deckSha){
+    if(!batch||batch.deck_sha256!==deckSha||!Array.isArray(batch.turns)||
+      batch.mode!=="bounded_real_action_batch")return null;
+    const last=batch.turns[batch.turns.length-1];
+    if(!last||!Number.isFinite(last.mean_land_plus_rock_objects))return null;
+    return {
+      sample:Number(batch.seed_count)||0,
+      turn:last.turn,
+      average_sources:Number(last.mean_land_plus_rock_objects),
+      unsupported_hand_average:Number(last.mean_unsupported_hand_cards)||0,
+      limitation:"Six-turn reviewed-action simulations are incomplete: unsupported cards, full win conditions and opponents are not modeled. These signals do not change the bracket estimate."
+    };
+  }
+  function combineEvidence(cardResult,runs,deckSha,boundedBatch=null){
     if(!cardResult||cardResult.status==="unavailable")return cardResult;
     const performance=performanceEvidence(runs,deckSha);
-    if(!performance)return {...cardResult,evidence_mode:"cards_only",performance:null};
+    const development=boundedSignals(boundedBatch,deckSha);
+    if(!performance)return {...cardResult,evidence_mode:"cards_only",performance:null,development};
     // A completed-game dataset supplies additional evidence, but game speed
     // alone cannot override Wizards' intent/strategy requirements or determine
     // an official bracket. Preserve hard Game Changer minimum.
@@ -73,7 +87,7 @@
     if(performance.early_wins/performance.sample>=0.20)
       suggested=Math.max(suggested,4);
     return {...cardResult,estimated_bracket:suggested,
-      evidence_mode:"cards_and_games",performance};
+      evidence_mode:"cards_and_games",performance,development};
   }
-  return {assess,normalize,performanceEvidence,combineEvidence};
+  return {assess,normalize,performanceEvidence,boundedSignals,combineEvidence};
 });
