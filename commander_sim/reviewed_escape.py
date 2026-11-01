@@ -17,6 +17,15 @@ BREACH_TEXT=(
 )
 
 
+@dataclass(frozen=True)
+class BreachReview:
+    oracle_id:str
+    oracle_text:str
+
+
+BREACH_REVIEWS={"Underworld Breach":BreachReview(BREACH_ORACLE,BREACH_TEXT)}
+
+
 def reviewed_breach(name,raw):
     """Exact pinned permission; only a verified normal enchantment may supply it."""
     return bool(name=="Underworld Breach" and isinstance(raw,dict)
