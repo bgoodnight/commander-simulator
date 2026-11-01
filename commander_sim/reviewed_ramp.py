@@ -146,9 +146,9 @@ def cast_ritual(zones, seat, source_id, catalog, commander_colors, mana_service)
                                     spell_type="instant")
     if committed is None:
         return None
-    end_id = zones.resolve(committed.ticket)
-    pool = list(mana_service.floating(seat))
-    pool[2] += 3  # WUBRGC: black index 2
-    zones.kernel.mana_pools[seat] = tuple(pool)
-    zones.kernel._dirty()
-    return end_id
+    def apply(kernel, ticket):
+        pool = list(mana_service.floating(seat))
+        pool[2] += 3  # WUBRGC: black index 2
+        kernel.mana_pools[seat] = tuple(pool)
+        kernel._dirty()
+    return zones.resolve(committed.ticket, effect=apply)
