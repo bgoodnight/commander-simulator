@@ -6,11 +6,11 @@
   <meta name="theme-color" content="#182428">
   <meta name="description" content="Commander Deck Lab: explore cached Commander decklists, card art and precomputed early-turn observations.">
   <title>Commander Deck Lab — The Arcane Table</title>
-  <link rel="stylesheet" href="./style.css?v=deckselector-fix-20261101-2">
+  <link rel="stylesheet" href="./style.css?v=physical-decks-20261101-1">
   <script src="https://cdn.jsdelivr.net/npm/d3@7/dist/d3.min.js" defer></script>
   <script src="./results_insights.js?v=20261101h1" defer></script>
   <script src="./brackets.js?v=20261101bracket" defer></script>
-  <script src="./app.js?v=deckselector-fix-20261101-2" defer></script>
+  <script src="./app.js?v=physical-decks-20261101-1" defer></script>
 </head>
 <body>
 <main class="wide-wrap" id="app">
@@ -102,6 +102,7 @@
           <thead><tr><th>Count</th><th>Card</th><th>Printed type</th><th>Mana</th></tr></thead>
           <tbody id="library-rows"></tbody>
         </table></div>
+        <div id="library-extra" class="library-extra"></div>
       </section>
     </div>
     <div class="tab-pane" id="pane-records" hidden>
