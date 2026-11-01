@@ -10,6 +10,7 @@ from selection import Selection
 from engine_turns import EngineDriver
 sys.path.insert(0,str(Path(__file__).resolve().parents[2]))
 from commander_sim.legacy_common_ops import DrawDiscard,apply_draw_discard
+from commander_sim.live_trigger_bridge import LiveTriggerBridge
 import engine_cards as engine_provider
 
 
@@ -37,6 +38,11 @@ class EngineTable(CombatTable):
         super().__init__(*args,**kwargs)
         engine_provider.install(self)
         self.spell_stack=EngineStack(self);self.selection=Selection(self)
+        # Register only source-verified trigger slots; the existing kernel
+        # still creates, orders, doubles, counters and resolves stack frames.
+        self.live_ability_bridge=LiveTriggerBridge(self.rules)
+        for obj in self.rules.on_battlefield():
+            self.live_ability_bridge.register(obj)
 
     def run(self,max_rounds=8):return EngineDriver(self).run(max_rounds)
 
@@ -46,10 +52,15 @@ class EngineTable(CombatTable):
             obj=self.rules.get(creature.id)
             obj.card=replace(self.upgraded_definitions[creature.name],card_id=obj.card.card_id)
             self.rules._dirty()
+        if creature and getattr(self,'live_ability_bridge',None):
+            self.live_ability_bridge.register(self.rules.get(creature.id))
         return creature
 
     def _apply_pending(self,pending):
         for item in pending:
+            bridge=getattr(self,'live_ability_bridge',None)
+            if bridge is not None:
+                bridge.queued(item)
             if item.op=='copy_source_until_end':
                 obj=self.rules.objects.get(item.source_id)
                 if obj:item=replace(item,args=item.args+(('copiable',obj.card),))
@@ -72,6 +83,11 @@ class EngineTable(CombatTable):
 
     def resolve_trigger(self,item):
         args=dict(item.args);player=self.players[item.controller]
+        bridge=getattr(self,'live_ability_bridge',None)
+        if bridge is not None and item.op=='draw':
+            if bridge.execute(item,lambda effect:super(EngineTable,self).resolve_trigger(item)):
+                self._reconcile_ability_sources()
+                return
         if item.op=='pump_self':
             obj=self.rules.objects.get(item.source_id)
             if obj and obj.zone=='battlefield':
@@ -80,13 +96,19 @@ class EngineTable(CombatTable):
                 self.engine_events.append(('prowess',obj.object_id,obj.power,obj.toughness))
                 self.note(f'    PROWESS #{obj.object_id}: now {obj.power}/{obj.toughness} until cleanup.')
         elif item.op=='optional_loot':
-            policy=getattr(self,'loot_policy',None)
-            take=policy(item.controller,item.source_id) if policy else True
-            if type(take) is not bool:raise ValueError('Loot choice must be boolean')
-            if take:
-                apply_draw_discard(self,item.controller,DrawDiscard(1,1,'baral_discard'),selection=self.selection)
-            self.engine_events.append(('loot',item.controller,take))
-            self.note(f'    BARAL LOOT P{item.controller}: accepted={take}.')
+            def resolve_optional_loot(operation):
+                policy=getattr(self,'loot_policy',None)
+                take=policy(item.controller,item.source_id) if policy else True
+                if type(take) is not bool:raise ValueError('Loot choice must be boolean')
+                if take:
+                    apply_draw_discard(self,item.controller,operation,selection=self.selection)
+                self.engine_events.append(('loot',item.controller,take))
+                self.note(f'    BARAL LOOT P{item.controller}: accepted={take}.')
+            if bridge is None or not bridge.execute(item,resolve_optional_loot):
+                # Preserve legacy direct TriggerResult tests for unregistered
+                # synthetic IDs without granting them a reviewed ability slot.
+                resolve_optional_loot(DrawDiscard(1,1,'baral_discard'))
+            self._reconcile_ability_sources()
         elif item.op=='copy_source_until_end':
             obj=self.rules.objects.get(item.source_id)
             definition=obj.card if obj and obj.zone=='battlefield' else args.get('copiable')
@@ -104,6 +126,15 @@ class EngineTable(CombatTable):
             self.engine_events.append(('delayed_exile',oid))
             self.note(f'    DELAYED EXILE #{oid}: completed (departed objects are ignored).')
         else:return super().resolve_trigger(item)
+
+    def _reconcile_ability_sources(self):
+        bridge=getattr(self,'live_ability_bridge',None)
+        if bridge is None:return
+        stack=getattr(self,'spell_stack',None)
+        outstanding=tuple(f.source_id for f in
+            (tuple(stack.frames)+tuple(stack.pending) if stack else ())
+            if f.kind=='triggered')
+        bridge.reconcile(outstanding)
 
     def begin_end_step(self):
         self.end_step_serial+=1;due=[d for d in self.delayed_exiles if d.due_end<=self.end_step_serial]
