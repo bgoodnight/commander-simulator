@@ -57,6 +57,7 @@ class BoundedEarlyGameTests(unittest.TestCase):
                     "reviewed_trigger_resolved", "reviewed_phase_resolved",
                     "enchantment_cast", "enchantment_resolved",
                     "reviewed_sacrifice_activated", "reviewed_enter_resolved",
+                    "reviewed_unearth_resolved", "reviewed_unearth_expired",
                 } for event in turn["events"]))
 
     def test_magnus_reviewed_tutors_pay_and_move_actual_cards(self):
@@ -97,6 +98,17 @@ class BoundedEarlyGameTests(unittest.TestCase):
                 for row,state in zip(run["events"],run["state_snapshots"]):
                     self.assertEqual(row["hand_size"]+row["library_size"]
                         +len(state["battlefield"])+len(state["graveyard"])+1,100)
+                for turn in run["events"]:
+                    for event in turn["events"]:
+                        if event["type"] == "reviewed_unearth_resolved":
+                            self.assertIn(event["card"], {
+                                "Chronomancer", "Skorpekh Lord", "Tomb Blade",
+                                "Hexmark Destroyer", "Royal Warden",
+                                "Canoptek Tomb Sentinel", "Triarch Praetorian"})
+                            self.assertTrue(event["source_object_ids"])
+                        if event["type"] == "reviewed_unearth_expired":
+                            self.assertNotEqual(event["object_id"],
+                                                event["exiled_object_id"])
                 # A named creature only casts when its whole entry/cast is
                 # independently reviewed, including the Necron Szeras slice.
                 for turn in run["events"]:
@@ -104,7 +116,7 @@ class BoundedEarlyGameTests(unittest.TestCase):
                         if event["type"] == "reviewed_enter_resolved":
                             self.assertIn(event["card"], {
                                 "Bastion of Remembrance", "Grave Titan",
-                                "Marionette Apprentice"})
+                                "Marionette Apprentice", "Royal Warden"})
                             self.assertEqual(event["fidelity"],
                                              "bounded_no_opponent_priority")
                             self.assertGreater(len(event["created_token_ids"]), 0)
