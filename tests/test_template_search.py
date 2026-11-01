@@ -2,7 +2,8 @@
 import unittest
 
 from commander_sim.early_game_runner import _load_live_kernel
-from commander_sim.template_search import legal_search_targets, execute_reviewed_search_to_hand
+from commander_sim.template_search import (legal_search_targets, execute_reviewed_search_to_hand,
+    execute_reviewed_search_to_destination)
 
 FABRICATE = {
     "oracle_id": "422e1869-134f-463d-9fa1-86b66a998b3e",
@@ -92,6 +93,18 @@ class TutorTemplateTests(unittest.TestCase):
             execute_reviewed_search_to_hand(self.z, 0, source, wrong, self.catalog)
         self.assertEqual(set(self.k.objects), before)
         self.assertEqual(self.k.get(wrong).zone, "library")
+
+    def test_reviewed_library_top_search_preserves_selected_id(self):
+        source = self.tutor_on_stack("Mystical Tutor")
+        target = self.add("Blue Instant", "library")
+        other = self.add("Red Instant", "library")
+        result=execute_reviewed_search_to_destination(
+            self.z,0,source,target,self.catalog)
+        self.assertEqual(result.destination,"library_top")
+        self.assertEqual(result.target_new_id,target)
+        self.assertEqual(self.z.ids(0,"library")[-1],target)
+        self.assertIn(other,self.z.ids(0,"library"))
+        self.assertTrue(self.z.assert_consistent())
 
     def test_unimplemented_library_top_destination_fails_without_mutation(self):
         source = self.tutor_on_stack("Mystical Tutor")
