@@ -15,6 +15,7 @@ from .effect_templates import ManaMode
 from .mana_costs import FixedManaCost, parse_fixed_mana_cost
 from .mana_kernel_bridge import _reviewed_modes
 from .reviewed_rocks import reviewed_rock
+from .reviewed_lands import reviewed_land
 from .reviewed_cost_reduction import reduced_fixed_cost, cost_symbols
 
 ORDER = "WUBRGC"
@@ -120,7 +121,12 @@ class TemplateManaService:
             return tuple(ManaMode((color,), tap=True, sacrifice=True)
                          for color in "WUBRG")
         if "land" in obj.types:
-            return tuple(ManaMode((c,)) for c in sorted(_reviewed_modes(name, self.colors)))
+            basic=tuple(ManaMode((c,)) for c in sorted(_reviewed_modes(name, self.colors)))
+            if basic:
+                return basic
+            raw=self.card_metadata.get(name)
+            reviewed=reviewed_land(name,raw,self.colors)
+            return reviewed.modes(self.colors) if reviewed is not None else ()
         if "artifact" in obj.types:
             card = self.card_metadata.get(name)
             if card is None:
