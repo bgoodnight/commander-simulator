@@ -219,6 +219,52 @@ function latestSelectionForCommander(commanderId){
   if(saved)return {key:saved.baseKey,version:saved.id};
   return {key:sameCommanderDecks(commanderId)[0]?.key,version:null};
 }
+// A single catalog for built-in and locally saved deck variants. Dates are
+// source revision timestamps for built-ins and edit timestamps for local saves.
+function allDeckChoices(){
+  if(!data)return [];
+  const choices=data.decks.map(deck=>({
+    id:"preset:"+deck.key,key:deck.key,version:null,
+    title:LABELS[deck.key]||deck.key,
+    commander:deck.commander,updated:deck.updated_at||"",
+    source:"Built-in · simulated"
+  }));
+  for(const version of localVersions){
+    const deck=data.decks.find(d=>d.key===version.baseKey);
+    if(!deck)continue;
+    choices.push({
+      id:"saved:"+version.id,key:version.baseKey,version:version.id,
+      title:version.title,commander:deck.commander,
+      updated:version.updated||version.created||"",
+      source:"Saved in this browser · not simulated"
+    });
+  }
+  return choices.sort((a,b)=>String(b.updated).localeCompare(String(a.updated))||
+    a.title.localeCompare(b.title)||a.id.localeCompare(b.id));
+}
+function latestDeckChoice(){return allDeckChoices()[0]||null;}
+function currentDeckChoiceId(){
+  return selectedVersionId?"saved:"+selectedVersionId:"preset:"+selected;
+}
+function deckChoiceLabel(choice){
+  const date=choice.updated?String(choice.updated).slice(0,10):"date unavailable";
+  return choice.title+" · "+choice.commander+" · "+date+" · "+choice.source;
+}
+function renderGlobalDeckSelector(){
+  const control=$("global-deck-select");
+  if(!control||!selected)return;
+  clear(control);
+  for(const choice of allDeckChoices()){
+    const option=el("option",deckChoiceLabel(choice));
+    option.value=choice.id;
+    control.appendChild(option);
+  }
+  if(hasUnsavedChanges()){
+    const draft=el("option","● Unsaved changes · "+activeDeckTitle());
+    draft.value="unsaved";control.appendChild(draft);
+    control.value="unsaved";
+  }else control.value=currentDeckChoiceId();
+}
 function versionById(id){
   return localVersions.find(v=>v.id===id&&v.baseKey===selected)||null;
 }
@@ -342,6 +388,7 @@ function summon(key,{versionId=null,remember=true}={}){
   void $("app-content").offsetWidth;$("app-content").style.animation="";
   selectedSeed=String(data.seeds[0]);
   renderOverview();renderLibrary();renderRecords();initializeDraft();
+  renderGlobalDeckSelector();
   showPage();syncPageNavigation();
 }
 function showPage(){
@@ -1193,6 +1240,7 @@ function renderDraft(){
   $("save-local").disabled=total!==100;
   $("export-deck").disabled=total!==100;
   renderDeckVersionSelector();
+  renderGlobalDeckSelector();
 }
 function changeDraftQuantity(action){
   if(!activeCounts)return;
@@ -1259,30 +1307,15 @@ function saveVersion(){
 }
 function renderDeckVersionSelector(){
   const control=$("deck-version-select");clear(control);
-  const commanderId=selectedDeck().commander_id;
-  const presets=el("optgroup");presets.label="Built-in decks · cached results";
-  for(const deck of sameCommanderDecks(commanderId)){
-    const option=el("option",LABELS[deck.key]||deck.key);
-    option.value="preset:"+deck.key;presets.appendChild(option);
-  }
-  control.appendChild(presets);
-  const versions=deckVersionsForCommander(commanderId);
-  if(versions.length){
-    const saved=el("optgroup");saved.label="Your saved browser decks · not simulated";
-    for(const version of versions){
-      const option=el("option",version.title+" · saved "+String(version.updated||version.created||"").slice(0,10));
-      option.value="saved:"+version.id;saved.appendChild(option);
-    }
-    control.appendChild(saved);
+  for(const choice of allDeckChoices()){
+    const option=el("option",deckChoiceLabel(choice));
+    option.value=choice.id;control.appendChild(option);
   }
   if(hasUnsavedChanges()){
     const draft=el("option","● Unsaved changes to "+activeDeckTitle());
-    draft.value="unsaved";
-    control.appendChild(draft);
+    draft.value="unsaved";control.appendChild(draft);
     control.value="unsaved";
-  }else{
-    control.value=selectedVersionId?"saved:"+selectedVersionId:"preset:"+selected;
-  }
+  }else control.value=currentDeckChoiceId();
 }
 function loadDeckSelection(value){
   if(value==="unsaved")return;
@@ -1292,14 +1325,12 @@ function loadDeckSelection(value){
   }
   if(value.startsWith("preset:")){
     const deck=data.decks.find(d=>d.key===value.slice(7));
-    if(deck&&deck.commander_id===selectedDeck().commander_id)
-      summon(deck.key);
+    if(deck)summon(deck.key);
     return;
   }
   if(value.startsWith("saved:")){
     const version=localVersions.find(v=>v.id===value.slice(6));
-    if(!version||!sameCommanderDecks(selectedDeck().commander_id)
-      .some(d=>d.key===version.baseKey))return;
+    if(!version||!data.decks.some(d=>d.key===version.baseKey))return;
     const previous=selected;
     selected=version.baseKey;
     try{validateCounts(version.counts)}
@@ -1311,34 +1342,36 @@ function loadDeckSelection(value){
 }
 function renderVersions(){
   const root=$("saved-versions");clear(root);
-  const versions=deckVersionsForCommander(selectedDeck().commander_id);
-  if(!versions.length){
-    root.appendChild(el("p","No named browser decks saved for this commander.","small"));
-    return;
-  }
-  for(const version of versions){
+  const choices=allDeckChoices();
+  for(const choice of choices){
     const row=el("div",null,"saved-row");
-    if(version.id===selectedVersionId)row.classList.add("selected-version");
+    if(choice.id===currentDeckChoiceId())row.classList.add("selected-version");
     const label=el("div");
-    label.appendChild(el("strong",version.title));
-    label.appendChild(el("div",
-      (LABELS[version.baseKey]||version.baseKey)+" · "+
-      String(version.updated||version.created||"").slice(0,10)+" · browser only",
-      "micro"));
+    label.appendChild(el("strong",choice.title));
+    label.appendChild(el("div",choice.commander+" · Updated "+
+      (choice.updated?String(choice.updated).slice(0,10):"unknown")+" · "+choice.source,"micro"));
     const actions=el("div",null,"control-row");
-    const load=el("button","Load","glyph-button");
-    load.onclick=()=>loadDeckSelection("saved:"+version.id);
-    const del=el("button","Delete","glyph-button");
-    del.onclick=()=>{
-      localVersions=localVersions.filter(v=>v.id!==version.id);
-      if(selectedVersionId===version.id){
-        summon(version.baseKey);
-      }else{
-        persist();renderVersions();renderDeckVersionSelector();
-      }
-      originalSound("click");
-    };
-    actions.append(load,del);row.append(label,actions);root.append(row);
+    const load=el("button",choice.id===currentDeckChoiceId()?"Loaded":"Load","glyph-button");
+    load.type="button";load.disabled=choice.id===currentDeckChoiceId();
+    load.onclick=()=>loadDeckSelection(choice.id);
+    actions.appendChild(load);
+    if(choice.version){
+      const del=el("button","Delete","glyph-button");
+      del.type="button";
+      del.onclick=()=>{
+        if(!window.confirm("Delete the browser-saved deck “"+choice.title+"”?"))return;
+        localVersions=localVersions.filter(v=>v.id!==choice.version);
+        if(selectedVersionId===choice.version){
+          const fallback=latestDeckChoice();
+          if(fallback)summon(fallback.key,{versionId:fallback.version});
+        }else{
+          persist();renderVersions();renderDeckVersionSelector();renderGlobalDeckSelector();
+        }
+        originalSound("click");
+      };
+      actions.appendChild(del);
+    }
+    row.append(label,actions);root.append(row);
   }
 }
 function newDeckVersion(){
@@ -1561,6 +1594,7 @@ function registerEvents(){
     if(e.key==="Escape")closeCommanderPicker();
   });
   $("deck-version-select").onchange=e=>loadDeckSelection(e.target.value);
+  $("global-deck-select").onchange=e=>loadDeckSelection(e.target.value);
   $("new-version-button").onclick=newDeckVersion;
   // Navigation links lead to independent static pages (no client router).
   $("library-search").oninput=renderLibrary;
@@ -1611,11 +1645,11 @@ async function boot(){
       const validVersion=localVersions.some(v=>v.id===requestedVersion&&v.baseKey===key)?
         requestedVersion:null;
       choice={key,version:validVersion};
-    }else if(lastCommanderId&&sameCommanderDecks(lastCommanderId).length){
-      choice=latestSelectionForCommander(lastCommanderId);
     }else{
-      const first=data.decks.find(d=>d.key==="magnus_premium")||data.decks[0];
-      choice=latestSelectionForCommander(first.commander_id);
+      // Only an explicit, valid deep link overrides latest-modified default.
+      // A previously viewed deck is not necessarily the newest revision.
+      const latest=latestDeckChoice();
+      choice={key:latest.key,version:latest.version};
     }
     summon(choice.key,{versionId:choice.version});
   }catch(err){

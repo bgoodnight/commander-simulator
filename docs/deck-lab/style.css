@@ -281,6 +281,14 @@ margin:4px 0 6px;color:#edd5a6;line-height:1.2}
 .selection-copy p{font-size:.78rem;margin:0;color:#d2be95}
 .selection-actions{display:flex;align-items:center;gap:11px;flex-wrap:wrap}
 .selection-actions .stone-button{font-size:.7rem;text-decoration:none;padding:9px 10px}
+.selection-actions{min-width:260px;max-width:min(100%,420px);justify-content:flex-end}
+.selection-actions label{font-size:.66rem;color:#d8c6a7}
+.global-deck-select{max-width:100%;width:min(100%,340px);min-width:180px;
+  border:1px solid #ad936b;border-radius:9px;background:#151e1e;color:#f4e9cf;
+  font-size:.76rem;padding:10px 12px;font-weight:600;cursor:pointer}
+.global-deck-select:focus-visible{outline:2px solid #79d1c2;outline-offset:3px}
+.saved-row>div:first-child{min-width:0;overflow-wrap:anywhere}
+.saved-row .control-row{flex-shrink:0}
 .selection-state{font-size:.67rem;color:#afcfc3;max-width:180px;text-align:right}
 .page-introduction{margin:17px auto 18px}
 .page-introduction h1{font-size:clamp(1.55rem,2.6vw,2.25rem)}
@@ -306,7 +314,7 @@ border-radius:10px;margin-bottom:19px;display:grid;gap:8px}
   .compact-selection{flex-wrap:wrap}
   .selector-anchor{order:0}
   .selection-copy{order:1;flex:1 1 calc(100% - 96px)}
-  .selection-actions{order:2;width:100%;justify-content:space-between;
+  .selection-actions{order:2;width:100%;max-width:100%;justify-content:space-between;
     border-top:1px solid #6d654f;padding-top:8px}
   .selection-state{text-align:left}
 }
