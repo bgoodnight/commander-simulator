@@ -8,7 +8,8 @@ declares its restrictions using the same EffectTemplate as the M3 backend.
 No Oracle text interpretation, custom card-name branches, or new zone state.
 """
 from dataclasses import dataclass
-from .effect_templates import EffectTemplate
+from .effect_templates import EffectTemplate, compose_effect
+from .reviewed_tutors import TUTORS
 
 
 @dataclass(frozen=True)
@@ -30,25 +31,27 @@ def _search(types, *, subtype=(), colors=(), maximum=None, destination="hand"):
                           destination=destination, reveal=True, shuffle=True)
 
 
-# Card-specific information is declarative, and may be validated against the
-# reviewed Oracle snapshots when new source adapters are promoted.
+# Five shared tutor declarations are *identical objects* across the old
+# v17-v35 path and the new reviewed tutor backend. Adding or correcting a
+# parameter in the reviewed registry changes both without duplicate config.
+# Personal Tutor and Step Through's wizardcycling still have only historical
+# reviewed declarations and are explicit exceptions until their source
+# records are promoted into the same pinned registry.
+def _registered(key, printed_name):
+    return HistoricalSearch(key, compose_effect(TUTORS[printed_name]["review"]), key)
+
+
 HISTORICAL_SEARCHES = {
-    "mystical_tutor": HistoricalSearch("mystical_tutor",
-        _search(("instant", "sorcery"), destination="library_top"), "mystical_tutor"),
+    "mystical_tutor": _registered("mystical_tutor", "Mystical Tutor"),
     "personal_tutor": HistoricalSearch("personal_tutor",
         _search(("sorcery",), destination="library_top"), "personal_tutor"),
-    "merchant_scroll": HistoricalSearch("merchant_scroll",
-        _search(("instant",), colors=("U",)), "merchant_scroll"),
-    "solve_equation": HistoricalSearch("solve_equation",
-        _search(("instant", "sorcery")), "solve_equation"),
-    "fabricate": HistoricalSearch("fabricate",
-        _search(("artifact",)), "fabricate"),
+    "merchant_scroll": _registered("merchant_scroll", "Merchant Scroll"),
+    "solve_equation": _registered("solve_equation", "Solve the Equation"),
+    "fabricate": _registered("fabricate", "Fabricate"),
     "wizardcycling": HistoricalSearch("wizardcycling",
         _search(("any",), subtype=("Wizard",)), "wizardcycling"),
-    "spellseeker": HistoricalSearch("spellseeker",
-        _search(("instant", "sorcery"), maximum=2), "spellseeker"),
+    "spellseeker": _registered("spellseeker", "Spellseeker"),
 }
-
 
 def eligible_search_ids(table, seat, effect, *, printed_colors=None, mana_value=None):
     """Evaluate reviewed restrictions on authoritative library objects.
