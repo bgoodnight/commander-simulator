@@ -47,7 +47,7 @@ class BoundedEarlyGameTests(unittest.TestCase):
             for turn, state in zip(report["events"], report["state_snapshots"]):
                 total = (turn["library_size"] + turn["hand_size"]
                          + len(state["battlefield"])
-                         + len(state["graveyard"]) + 1)  # commander
+                         + len(state["graveyard"]) + len(state["exile"]) + 1)  # commander
                 self.assertEqual(total, 100)
                 self.assertTrue(all(event["type"] in {
                     "draw", "untap", "land_play", "creature_cast", "creature_resolved",
@@ -85,7 +85,7 @@ class BoundedEarlyGameTests(unittest.TestCase):
             for turn,state in zip(a["events"],a["state_snapshots"]):
                 self.assertEqual(
                     turn["library_size"]+turn["hand_size"]+len(state["battlefield"])
-                    +len(state["graveyard"])+1,100)
+                    +len(state["graveyard"])+len(state["exile"])+1,100)
             self.assertNotIn("win_rate",a)
 
     def test_all_six_pinned_decks_share_reviewed_land_rock_runner(self):
@@ -98,7 +98,7 @@ class BoundedEarlyGameTests(unittest.TestCase):
                 self.assertNotIn("win_rate",run)
                 for row,state in zip(run["events"],run["state_snapshots"]):
                     self.assertEqual(row["hand_size"]+row["library_size"]
-                        +len(state["battlefield"])+len(state["graveyard"])+1,100)
+                        +len(state["battlefield"])+len(state["graveyard"])+len(state["exile"])+1,100)
                 for turn in run["events"]:
                     for event in turn["events"]:
                         if event["type"] == "reviewed_flashback_resolved":
@@ -146,7 +146,7 @@ class BoundedEarlyGameTests(unittest.TestCase):
                 created.extend(resolved)
                 self.assertEqual(
                     turn["hand_size"]+turn["library_size"]+
-                    len(state["battlefield"])+len(state["graveyard"])+1,100)
+                    len(state["battlefield"])+len(state["graveyard"])+len(state["exile"])+1,100)
         self.assertGreater(len(created),0)
 
     def test_bounded_spell_triggers_have_authoritative_sources_and_outputs(self):
@@ -163,7 +163,7 @@ class BoundedEarlyGameTests(unittest.TestCase):
                     self.assertTrue(event["created_token_ids"] or event["drawn_ids"])
                 self.assertEqual(
                     turn["hand_size"]+turn["library_size"]+
-                    len(state["battlefield"])+len(state["graveyard"])+1,100)
+                    len(state["battlefield"])+len(state["graveyard"])+len(state["exile"])+1,100)
 
     def test_reviewed_phase_permanents_and_life_totals_share_kernel(self):
         for deck in ("wretched_ranks","mortarion_current","mortarion_ideal"):
