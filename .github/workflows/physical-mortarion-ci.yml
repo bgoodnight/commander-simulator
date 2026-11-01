@@ -1,0 +1,39 @@
+name: Mortarion physical deck pinned-import and simulation smoke
+on:
+  push:
+    branches: [feature/load-mortarion-physical-v1]
+  workflow_dispatch:
+permissions:
+  contents: write
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      - name: Import pinned Mortarion identities outside gameplay
+        run: |
+          python tools/fetch_deck_identities.py decklists/mortarion_physical_final_v1_0_2026_11_01.txt simulator/card_data/mortarion_physical_final_m1_scryfall.json --catalog simulator/card_data/shared_scryfall_catalog.json
+          python -m commander_sim.snapshots decklists/mortarion_physical_final_v1_0_2026_11_01.txt simulator/card_data/mortarion_physical_final_m1_scryfall.json --commander 'Mortarion, Daemon Primarch'
+      - name: Run physical-zone simulations and compatibility checks
+        run: |
+          python tools/run_physical_deck_trials.py --deck mortarion_physical_final --seeds 40 --turns 6 --output mortarion-physical-trials.json
+          python -m unittest discover -s tests -p test_physical_magnus.py -v
+          python run_all_tests.py
+      - uses: actions/upload-artifact@v4
+        with:
+          name: mortarion-physical-trials
+          path: mortarion-physical-trials.json
+          retention-days: 14
+      - name: Commit only imported snapshot, manifest and shared identity cache
+        run: |
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add simulator/card_data/mortarion_physical_final_m1_scryfall.json simulator/card_data/mortarion_physical_final_m1_scryfall.manifest.json simulator/card_data/shared_scryfall_catalog.json
+          if ! git diff --cached --quiet; then
+            git commit -m 'Pin physical Mortarion Oracle identity snapshot'
+            git push origin HEAD:feature/load-mortarion-physical-v1
+          fi

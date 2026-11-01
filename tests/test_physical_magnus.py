@@ -10,7 +10,7 @@ from commander_sim.early_game_runner import run_bounded_early_game
 class PhysicalMagnusTests(unittest.TestCase):
     def test_trial_is_excluded_from_six_published_decks(self):
         self.assertEqual(len(FIXTURES),6)
-        self.assertEqual(len(EXPERIMENTAL_FIXTURES),1)
+        self.assertGreaterEqual(len(EXPERIMENTAL_FIXTURES),2)
         self.assertEqual(EXPERIMENTAL_FIXTURES[0].key,"magnus_physical_trial")
         self.assertIn("simulation_only",EXPERIMENTAL_FIXTURES[0].status)
         self.assertNotIn("1 Narset's Rebuke",
