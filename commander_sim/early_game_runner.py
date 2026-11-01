@@ -41,7 +41,7 @@ def _load_live_kernel():
     return IndexedKernel, LiveZones, CardDefinition
 
 
-def run_bounded_early_game(deck_key, *, seed=0, turns=6, mulligan="one-free"):
+def run_bounded_early_game(deck_key, *, seed=0, turns=6, mulligan="one-free", profile=None):
     """Play reviewed actual actions for one pinned deck for 1..10 turns.
 
     A deterministic, conservative fixed pilot draws, plays one supported land,
@@ -209,7 +209,7 @@ def run_bounded_early_game(deck_key, *, seed=0, turns=6, mulligan="one-free"):
                                          raw_by_name[kernel.get(oid).card.name])
                 and not supported_land(oid)),
         })
-    analysis = analyze_authoritative_run(catalog, {}, states)
+    analysis = analyze_authoritative_run(catalog, profile or {}, states)
     return {
         "mode": "bounded_authoritative_early_actions",
         "deck_key": deck_key,
@@ -234,6 +234,8 @@ if __name__ == "__main__":
     parser.add_argument("--seed", type=int, default=0)
     parser.add_argument("--turns", type=int, default=6)
     parser.add_argument("--mulligan", choices=("one-free", "keep"), default="one-free")
+    parser.add_argument("--profile", type=Path, help="Optional curated strategy JSON file")
     args = parser.parse_args()
+    profile = json.loads(args.profile.read_text(encoding="utf-8")) if args.profile else None
     print(json.dumps(run_bounded_early_game(args.deck, seed=args.seed, turns=args.turns,
-                                             mulligan=args.mulligan), indent=2))
+                                             mulligan=args.mulligan, profile=profile), indent=2))
