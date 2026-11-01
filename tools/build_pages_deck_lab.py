@@ -151,7 +151,7 @@ def build(output, *, catalog_path=SHARED_CATALOG, name_catalog_path=DEFAULT_NAME
             continue
         if not line or line.startswith("#"):
             continue
-        match = re.fullmatch(r"(\\d+)\\s+(.+)", line)
+        match = re.fullmatch(r"(\d+)\s+(.+)", line)
         if not match or section is None:
             raise ValueError("Unexpected physical starter row: " + line)
         sections[section].append((match.group(2), int(match.group(1))))
