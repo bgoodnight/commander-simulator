@@ -259,6 +259,11 @@ def run_bounded_early_game(deck_key, *, seed=0, turns=6, mulligan="one-free", pr
                                          raw_by_name[kernel.get(oid).card.name])
                 and reviewed_rock(kernel.get(oid).card.name,
                                   raw_by_name[kernel.get(oid).card.name], colors) is None
+                and not (reviewed_tutor(kernel.get(oid).card.name,
+                                        raw_by_name[kernel.get(oid).card.name])
+                         and reviewed_tutor(kernel.get(oid).card.name,
+                                            raw_by_name[kernel.get(oid).card.name])[2]
+                         in {"instant", "sorcery"})
                 and not supported_land(oid)),
         })
     analysis = analyze_authoritative_run(catalog, profile or {}, states)
@@ -274,7 +279,8 @@ def run_bounded_early_game(deck_key, *, seed=0, turns=6, mulligan="one-free", pr
         "events": actions_by_turn,
         "state_snapshots": states,
         "deck_intelligence": analysis,
-        "first_unmodeled_choice": "turn 1: full land, spell, tutor and opponent decisions unavailable",
+        "first_unmodeled_choice": ("turn 1: opponent priority, other spells, and " 
+                                 "strategic tutor decisions remain unavailable"),
         "limits": LIMITATIONS,
     }
 
