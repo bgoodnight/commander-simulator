@@ -37,6 +37,7 @@ from .bounded_trigger_effects import resolve_reviewed_spell_triggers
 from .kernel_life import KernelLife
 from .reviewed_phase_effects import ReviewedPhaseEngine,reviewed_phase_permanent
 from .reviewed_death_effects import ReviewedDeathEngine
+from .reviewed_enter_effects import reviewed_enter_rule, execute_reviewed_enter
 from .reviewed_sacrifice_actions import (
     SACRIFICE_MODES, reviewed_sacrifice_artifact,
     activate_reviewed_sacrifice)
@@ -128,7 +129,8 @@ def run_bounded_early_game(deck_key, *, seed=0, turns=6, mulligan="one-free", pr
                         and tutor_review[2] in {"instant", "sorcery"})
                     or reviewed_token_spell(name, raw_by_name[name]) is not None
                     or reviewed_phase_permanent(name, raw_by_name[name])
-                    or reviewed_sacrifice_artifact(name,raw_by_name[name]))
+                    or reviewed_sacrifice_artifact(name,raw_by_name[name])
+                    or approved_enter_hand_cast(name))
         definition = CardDefinition(
             identity.oracle_id, name, types, subtypes=subtypes,
             supertypes=frozenset({"commander"}) if section == "Commander" else frozenset(),
@@ -143,6 +145,10 @@ def run_bounded_early_game(deck_key, *, seed=0, turns=6, mulligan="one-free", pr
     phase_engine = ReviewedPhaseEngine(zones, life, raw_by_name)
     death_engine = ReviewedDeathEngine(zones, life, raw_by_name)
     entered_on_turn = {}
+    # Pinned, source-verified ETB effects with safe bounded hand-cast paths.
+    enter_hand_casts = {"Bastion of Remembrance", "Grave Titan", "Marionette Apprentice"}
+    def approved_enter_hand_cast(name):
+        return name in enter_hand_casts and reviewed_enter_rule(name, raw_by_name[name]) is not None
     if len(kernel.objects) != 100:
         raise AssertionError("Pinned 100-card zone conservation failed at loading")
     zones.shuffle(0)
@@ -223,18 +229,19 @@ def run_bounded_early_game(deck_key, *, seed=0, turns=6, mulligan="one-free", pr
                 token_spell = reviewed_token_spell(name, raw)
                 phase_enchantment = reviewed_phase_permanent(name, raw)
                 sacrifice_artifact = reviewed_sacrifice_artifact(name, raw)
+                entering = approved_enter_hand_cast(name)
                 tutor = reviewed_tutor(name, raw)
                 eligible = (eligible_reviewed_tutor_targets(zones, 0, name, raw_by_name)
                             if tutor and tutor[2] in {"instant", "sorcery"} else ())
                 if (not is_creature and rock is None and not eligible
                         and token_spell is None and not phase_enchantment
-                        and not sacrifice_artifact):
+                        and not sacrifice_artifact and not entering):
                     continue
                 cost = registry.get(name).primary_face().mana_cost
                 payment = mana_service.plan(0, cost)
                 if payment is not None:
                     kind = ("artifact" if rock is not None or sacrifice_artifact else
-                            "enchantment" if phase_enchantment else
+                            "enchantment" if phase_enchantment or (entering and "Enchantment" in raw.get("type_line","").split(" — ",1)[0]) else
                             "tutor" if eligible else
                             "token_spell" if token_spell is not None else "creature")
                     target = (min(eligible, key=lambda target_id: (
@@ -251,7 +258,7 @@ def run_bounded_early_game(deck_key, *, seed=0, turns=6, mulligan="one-free", pr
                     options.append((0 if rock is not None else
                                     1 if is_creature else
                                     2 if sacrifice_artifact else
-                                    3 if phase_enchantment else
+                                    3 if phase_enchantment or entering else
                                     4 if eligible else 5,
                                     len(payment.source_ids), name, oid, kind, cost, target))
             if not options:
@@ -323,6 +330,21 @@ def run_bounded_early_game(deck_key, *, seed=0, turns=6, mulligan="one-free", pr
                     kernel._dirty()
             events.append({"type": kind + "_resolved", "card": name,
                            "object_id": resolved_id, "fidelity": "limited_generic_resolution"})
+            if approved_enter_hand_cast(name):
+                rule = reviewed_enter_rule(name, raw_by_name[name])
+                # The pilot explicitly chooses the Servo fabricate mode.
+                choice = "servo" if rule.operation == "fabricate_one" else None
+                entered = execute_reviewed_enter(
+                    zones, life, resolved_id, raw_by_name, choice=choice,
+                    death_engine=death_engine, turn=turn)
+                if entered is None:
+                    raise AssertionError("Reviewed ETB was not executed")
+                events.append({"type":"reviewed_enter_resolved",
+                               "card":name,"source_object_id":resolved_id,
+                               "ability_operation":entered.operation,
+                               "created_token_ids":list(entered.token_ids),
+                               "drawn_ids":list(entered.drawn_ids),
+                               "fidelity":"bounded_no_opponent_priority"})
         # No-opponent, single-action-per-reviewed-source sacrifice policy.
         # Sacrifices are costs paid from real battlefield objects; they can
         # activate reviewed death triggers, never fabricated combo events.
@@ -426,6 +448,7 @@ def run_bounded_early_game(deck_key, *, seed=0, turns=6, mulligan="one-free", pr
                     raw_by_name[kernel.get(oid).card.name])
                 and not reviewed_sacrifice_artifact(kernel.get(oid).card.name,
                     raw_by_name[kernel.get(oid).card.name])
+                and not approved_enter_hand_cast(kernel.get(oid).card.name)
                 and not supported_land(oid)),
         })
     analysis = analyze_authoritative_run(catalog, profile or {}, states)
