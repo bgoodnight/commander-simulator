@@ -375,6 +375,27 @@ function deckFacts(){
   }
   return {total,lands,averageMana:manaCards?(manaTotal/manaCards).toFixed(1):"—"};
 }
+function currentBracketResult(){
+  const deck=selectedDeck();
+  if(!deck||!window.CommanderBrackets)return null;
+  const cardResult=window.CommanderBrackets.assess(displayDeckCards(),{...data.cards,...extraCards},gameChangers);
+  // Match only verified, completed-game records for this exact deck revision.
+  // Current six-turn early-game traces must not change the estimated bracket.
+  const qualifying=isUnsimulatedVersion()?null:detailedArchives?.[selected]?.runs;
+  return window.CommanderBrackets.combineEvidence(cardResult,qualifying,
+    isUnsimulatedVersion()?null:deck.deck_sha256);
+}
+function bracketName(result){
+  return result&&result.status!=="unavailable"?"Bracket "+result.estimated_bracket+
+    " · "+({2:"Core",3:"Upgraded",4:"Optimized"}[result.estimated_bracket]||"Review needed"):"Bracket unavailable";
+}
+function bracketLink(){
+  const url=new URL("./index.html",location.href);
+  url.searchParams.set("deck",selected);
+  if(selectedVersionId)url.searchParams.set("version",selectedVersionId);
+  url.hash="bracket-assessment";
+  return url.href;
+}
 function renderPageIntro(){
   const intro=$("page-introduction");clear(intro);
   const facts=deckFacts();
@@ -384,6 +405,13 @@ function renderPageIntro(){
       (boundedBatches?.decks?.[selected]?.runs?.length ? boundedBatches.decks[selected].runs.length+" simulated runs · 6 turns" : "No matching simulation batch");
   }
   intro.append(el("h1",PAGE_INFO[pageName]),el("p",detail));
+  if(pageName==="results"){
+    const result=currentBracketResult();
+    const link=el("a",bracketName(result)+" · View why","bracket-inline-link");
+    link.href=bracketLink();
+    link.setAttribute("aria-label","Open bracket evidence on the deck summary page");
+    intro.appendChild(link);
+  }
 }
 function renderOverview(){
   const deck=selectedDeck(),c=commanderCard(deck);
@@ -420,41 +448,61 @@ function renderOverview(){
   const curveBox=$("mana-chart");clear(curveBox);
   curveBox.appendChild(makeBars(curve,{color:"#80bdb2"}));
   renderThemes(cards,c);
-  renderBracketAssessment(cards);
+  renderBracketAssessment();
 }
 
-function renderBracketAssessment(cards){
+function renderBracketAssessment(){
   const root=$("bracket-assessment");if(!root)return;clear(root);
-  const result=window.CommanderBrackets?.assess(cards,{...data.cards,...extraCards},gameChangers);
+  const result=currentBracketResult();
   if(!result||result.status==="unavailable"){
-    root.appendChild(el("p","Bracket evidence unavailable; Game Changers snapshot could not be loaded.","micro"));return;
+    root.appendChild(el("p","Bracket evidence unavailable; Game Changers reference could not be loaded.","micro"));return;
   }
-  const heading=el("div",null,"bracket-head");
-  heading.append(el("strong","Estimated Bracket "+result.estimated_bracket+" · "+
-    ({2:"Core",3:"Upgraded",4:"Optimized"}[result.estimated_bracket]||"Review needed")),
-    el("span",result.status==="incomplete"?"Incomplete card identity":"Provisional screening","chip"));
-  root.appendChild(heading);
-  root.appendChild(el("p",result.count+" Game Changer"+(result.count===1?"":"s")+
+  // Keep the main deck-info surface compact. All explanations live behind
+  // one explicit click instead of repeating 'estimated bracket' labels.
+  const details=el("details",null,"bracket-evidence");
+  const summary=el("summary",null,"bracket-trigger");
+  summary.append(
+    el("strong",bracketName(result)),
+    el("span","Why this bracket?","bracket-trigger-action"));
+  details.appendChild(summary);
+  const body=el("div",null,"bracket-evidence-body");
+  body.appendChild(el("p","Estimated classification · "+(result.evidence_mode==="cards_and_games"?
+    "Card content and qualifying simulation evidence":"Card content only"),"small"));
+  body.appendChild(el("p",result.count+" Game Changer"+(result.count===1?"":"s")+
     " · "+result.total+" cards checked · minimum Bracket "+result.minimum_by_game_changers+
     " from Game Changer limits.","small"));
-  const details=el("details",null,"bracket-evidence"),summary=el("summary","Show evidence & limitations");
-  details.appendChild(summary);
   const list=el("ul",null,"bracket-evidence-list");
   for(const card of result.matches){
-    const li=el("li");const button=el("button",card.name,"selectable-card");
-    button.type="button";button.addEventListener("click",()=>showCard(card.oracle_id));li.appendChild(button);list.appendChild(li);
+    const li=el("li"),button=el("button",card.name,"selectable-card");
+    button.type="button";button.addEventListener("click",()=>showCard(card.oracle_id));
+    li.appendChild(button);list.appendChild(li);
   }
   if(!result.matches.length)list.appendChild(el("li","No Game Changers found in identified cards."));
-  details.appendChild(list);
-  for(const [items,label] of [[result.tutors,"Nonland library-search signals"],[result.extraTurns,"Extra-turn text signals"],[result.landDenial,"Mass-land-denial text signals"]]){
-    details.appendChild(el("p",label+": "+(items.length?items.join(", "):"none detected"),"micro"));
+  body.appendChild(list);
+  for(const [items,label] of [[result.tutors,"Nonland library-search signals"],
+      [result.extraTurns,"Extra-turn text signals"],[result.landDenial,"Mass-land-denial text signals"]]){
+    body.appendChild(el("p",label+": "+(items.length?items.join(", "):"none detected"),"micro"));
   }
-  if(result.unknown.length)details.appendChild(el("p","Unidentified cards: "+result.unknown.join(", "),"micro"));
-  details.appendChild(el("p",result.caveat,"micro"));
+  if(result.performance){
+    const p=result.performance;
+    body.appendChild(el("p","Complete multiplayer simulations: "+p.sample+
+      " games · "+p.win_rate+"% simulated wins · median game finish turn "+p.median_finish_turn+
+      " · "+p.early_wins+" wins by turn 5.","small"));
+    body.appendChild(el("p",p.note,"micro"));
+  }else{
+    body.appendChild(el("p","Simulation-based bracket adjustment unavailable. Current six-turn"+
+      " runs show early development but do not model complete multiplayer wins; "+
+      "the displayed bracket is based on card content alone.","micro"));
+  }
+  if(result.status==="incomplete")
+    body.appendChild(el("p","Incomplete identities or deck size: "+result.unknown.join(", "),"micro"));
+  body.appendChild(el("p",result.caveat,"micro"));
   const source=el("a","Wizards' Commander bracket guidelines");source.href=result.source;
-  source.target="_blank";source.rel="noopener noreferrer";details.appendChild(source);
-  details.appendChild(el("p","Game Changers reference updated "+result.reference_updated+". Re-evaluate after rules updates.","micro"));
-  root.appendChild(details);
+  source.target="_blank";source.rel="noopener noreferrer";body.appendChild(source);
+  body.appendChild(el("p","Game Changers reference updated "+result.reference_updated+".","micro"));
+  details.appendChild(body);root.appendChild(details);
+  // Support direct linking from the simulation results page.
+  if(location.hash==="#bracket-assessment")details.open=true;
 }
 
 function renderThemes(cards,commander){
