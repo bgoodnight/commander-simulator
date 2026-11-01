@@ -1,6 +1,7 @@
 "use strict";
 const assert=require("node:assert/strict");
 const test=require("node:test");
+const insights=require("../web/pages/results_insights.js");
 const {summarize,findings}=require("../web/pages/results_insights.js");
 
 function record(seed,{lands=[1,2,3,4,5,6],candidateTurns=[4,5,6],
@@ -152,3 +153,17 @@ test('quiet detection counts enchantments, phase effects and sacrifices as recor
   const points=quietTurns(['enchantment_resolved','reviewed_phase_resolved','reviewed_sacrifice_activated','draw'].map((t,i)=>run(i,t)),'d','h');
   assert.equal(points[0].count,1);assert.equal(points[0].examples[0].seed,3);
 });
+
+// Battlefield prevalence counts runs, retains overlapping types, and never guesses unknown objects.
+{
+  const cards={Golem:{type_line:'Artifact Creature — Golem'}, Island:{type_line:'Basic Land — Island'}};
+  const mk=(seed,board)=>({seed,state_snapshots:[{turn:1,battlefield:board}]});
+  const runs=[mk(1,['Golem','Golem','Mystery']),mk(2,['Island'])];
+  const creature=insights.boardDevelopment(runs,n=>cards[n]||null,'Creature',1);
+  assert.equal(creature.rows[0].pct,50);
+  assert.equal(creature.rows[0].mean,1);
+  assert.deepEqual(creature.cards,[['Golem',1]]);
+  assert.equal(creature.unknown,1);
+  assert.deepEqual(creature.examples.map(r=>r.seed),[1]);
+  assert.equal(insights.boardDevelopment(runs,n=>cards[n]||null,'Artifact',1).rows[0].pct,50);
+}

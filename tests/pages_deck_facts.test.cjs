@@ -175,3 +175,21 @@ test('batch card example opens card details with an explanatory count',()=>{
   assert.match(node.children[1].children[1].textContent,/cast by turn 3 in 27 \/ 100 runs/);
   node.handlers.click();assert.deepEqual(opened,['r']);
 });
+
+test('board report connects the aggregate to matching run evidence and card details',()=>{
+  class Node {constructor(tag){this.tag=tag;this.children=[];this.attrs={};this.handlers={};this.style={};this.classList={add(){}}}
+    append(...nodes){this.children.push(...nodes)} appendChild(node){this.children.push(node);return node}
+    setAttribute(k,v){this.attrs[k]=v} addEventListener(k,v){this.handlers[k]=v}}
+  const card={name:'Golem',oracle_id:'g',type_line:'Artifact Creature — Golem',art:'https://example.test/art.jpg'};
+  const snapshots=Array.from({length:6},(_,i)=>({turn:i+1,battlefield:['Golem'],hand:[]}));
+  const run={seed:3,state_snapshots:snapshots,events:snapshots.map(x=>({turn:x.turn,events:[]}))};
+  const ctx={location:{pathname:'/results.html'},window:{DeckInsights:require('../web/pages/results_insights.js')},localStorage:{getItem:()=>null},document:{createElement:t=>new Node(t)},card,run,opened:[]};
+  vm.createContext(ctx);vm.runInContext(code,ctx);
+  vm.runInContext('cardInfo=n=>n===card.name?card:null;showCard=id=>opened.push(id)',ctx);
+  const report=vm.runInContext("boardReport({runs:[run]},'Creature')",ctx);
+  assert.match(report.children[0].children[0].children[1].textContent,/100%/);
+  const body=report.children[1];
+  body.children[5].children[0].handlers.click();assert.deepEqual(ctx.opened,['g']);
+  const evidence=body.children[6];assert.match(evidence.children[0].textContent,/1/);
+  assert.match(evidence.children[1].children[0].textContent,/seed 3/);
+});

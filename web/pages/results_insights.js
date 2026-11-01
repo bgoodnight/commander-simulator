@@ -237,5 +237,21 @@
         examples};
     });
   }
-  return {summarize,findings,pct,round,sources,candidateCount,themes,sourceTimeline,themeTimelines,quietTurns};
+  // Count each run once for prevalence; multi-type cards belong to each printed type.
+  // Unknown snapshot names are retained as unclassified, never guessed to be tokens.
+  function boardDevelopment(runs, lookup, type, turn) {
+    const valid=(runs||[]).filter(r=>Array.isArray(r.state_snapshots)&&r.state_snapshots.length>=turn);
+    const matches=(name)=>{const c=lookup(name);return !!c && new RegExp("\\b"+type+"\\b","i").test((c.type_line||"").split("—")[0]);};
+    const rows=Array.from({length:turn},(_,i)=>{
+      const counts=valid.map(r=>r.state_snapshots[i].battlefield.filter(matches).length);
+      return {turn:i+1,count:counts.filter(n=>n>0).length,total:valid.length,
+        pct:pct(counts.filter(n=>n>0).length,valid.length),mean:round(average(counts),2)};
+    });
+    const cards=new Map();
+    for(const r of valid)for(const name of new Set(r.state_snapshots[turn-1].battlefield.filter(matches)))cards.set(name,(cards.get(name)||0)+1);
+    const examples=valid.filter(r=>r.state_snapshots[turn-1].battlefield.some(matches));
+    const unknown=valid.filter(r=>r.state_snapshots[turn-1].battlefield.some(n=>!lookup(n))).length;
+    return {rows,cards:[...cards].sort((a,b)=>b[1]-a[1]||a[0].localeCompare(b[0])),examples,unknown,total:valid.length};
+  }
+  return {summarize,findings,pct,round,sources,candidateCount,themes,sourceTimeline,themeTimelines,quietTurns,boardDevelopment};
 });
