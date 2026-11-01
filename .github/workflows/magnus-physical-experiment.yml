@@ -119,9 +119,9 @@ jobs:
               # each off-color singleton with a basic Island in temporary text.
               candidate_text=deckpath.read_text()
               for name in invalid:
-                  candidate_text=candidate_text.replace("1 "+name+"\\n","1 Island\\n")
+                  candidate_text=candidate_text.replace("1 "+name+"\n","1 Island\n")
               # Merge repeated basic Islands under the existing entry.
-              candidate_text=candidate_text.replace("1 Island\\n","")
+              candidate_text=candidate_text.replace("1 Island\n","")
               candidate_text=candidate_text.replace("15 Island",""+str(15+len(invalid))+" Island")
               try:
                   deck=provider.parse(candidate_text)
