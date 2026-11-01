@@ -9,13 +9,13 @@ from collections import Counter
 from pathlib import Path
 
 from .card_cache import card_aliases, pinned_deck_entries
-from .deck_fixtures import FIXTURES, SHARED_CATALOG
+from .deck_fixtures import FIXTURES, EXPERIMENTAL_FIXTURES, SHARED_CATALOG
 from .fixture_inventory import inventory, fixture_observation
 from .snapshots import validate_snapshot
 
 
 def _get_fixture(key):
-    fixture = next((f for f in FIXTURES if f.key == key), None)
+    fixture = next((f for f in (*FIXTURES, *EXPERIMENTAL_FIXTURES) if f.key == key), None)
     if fixture is None:
         raise ValueError("Unknown deck fixture: " + str(key))
     return fixture
