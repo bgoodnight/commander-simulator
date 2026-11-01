@@ -111,6 +111,42 @@ class ReviewedSacrificeActionTests(unittest.TestCase):
         self.assertEqual(self.mana.floating(0)[5],2)
         self.assertTrue(self.zones.assert_consistent())
 
+    def test_phyrexian_altar_pays_sacrifice_for_exact_chosen_color(self):
+        altar=self.add("Phyrexian Altar",types=("artifact",))
+        victim=self.add("Victim")
+        out=self.activate(altar,victim,mana_color="R")
+        self.assertEqual(out.operation,"any_color_mana")
+        self.assertEqual(out.mana_added,("R",))
+        self.assertNotIn(victim,self.kernel.objects)
+        self.assertEqual(self.mana.floating(0)[3],1)
+        self.assertIsNotNone(self.mana.plan(0,"{R}"))
+        self.assertIsNone(self.mana.plan(0,"{R}{R}"))
+        self.assertTrue(self.zones.assert_consistent())
+
+    def test_phyrexian_altar_rejects_missing_invalid_and_unneeded_color(self):
+        altar=self.add("Phyrexian Altar",types=("artifact",))
+        victim=self.add("Victim")
+        for color in (None,"C","UR","",3):
+            with self.subTest(color=color),self.assertRaises(ValueError):
+                self.activate(altar,victim,mana_color=color)
+            self.assertIn(victim,self.kernel.objects)
+        ashnod=self.add("Ashnod's Altar",types=("artifact",))
+        with self.assertRaises(ValueError):
+            self.activate(ashnod,victim,mana_color="R")
+        self.assertIn(victim,self.kernel.objects)
+
+    def test_phyrexian_altar_causes_reviewed_creature_death_triggers(self):
+        altar=self.add("Phyrexian Altar",types=("artifact",))
+        self.add("Pitiless Plunderer")
+        victim=self.add("Victim")
+        out=self.activate(altar,victim,mana_color="B")
+        self.assertEqual(out.mana_added,("B",))
+        self.assertEqual(out.death_trigger_count,1)
+        self.assertEqual(self.mana.floating(0)[2],1)
+        self.assertEqual(sum(o.token and o.card.name=="Treasure"
+                             for o in self.kernel.on_battlefield()),1)
+        self.assertTrue(self.zones.assert_consistent())
+
     def test_szeras_floats_black_equal_to_mana_value(self):
         source=self.add("Illuminor Szeras",types=("artifact","creature"))
         victim=self.add("Ghoulcaller Gisa",power=4)
@@ -170,8 +206,8 @@ class ReviewedSacrificeActionTests(unittest.TestCase):
             self.activate(gisa,gisa,tap_ready=True)
         self.assertIn(gisa,self.kernel.objects)
 
-    def test_all_eight_named_modes_have_reviewed_oracle_sources(self):
-        self.assertEqual(len(SACRIFICE_MODES),8)
+    def test_all_nine_named_modes_have_reviewed_oracle_sources(self):
+        self.assertEqual(len(SACRIFICE_MODES),9)
         for name,mode in SACRIFICE_MODES.items():
             with self.subTest(name=name):
                 row=self.catalog[name]
