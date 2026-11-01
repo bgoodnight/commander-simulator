@@ -16,11 +16,12 @@ ROOT = Path(__file__).resolve().parents[1]
 if str(ROOT) not in sys.path:
     sys.path.insert(0, str(ROOT))
 
-from commander_sim.deck_fixtures import FIXTURES
+from commander_sim.deck_fixtures import FIXTURES, EXPERIMENTAL_FIXTURES
 from tools.build_simulation_archive import FORMAT
 
 PUBLIC_FORMAT = "commander-simulation-library-v1"
-KEYS = frozenset(f.key for f in FIXTURES)
+CANONICAL_KEYS = frozenset(f.key for f in FIXTURES)
+KEYS = CANONICAL_KEYS | frozenset(f.key for f in EXPERIMENTAL_FIXTURES if f.key == "mortarion_physical_final")
 
 
 def json_bytes(value):
@@ -112,7 +113,7 @@ def publish_archives(source, destination, *, engine_commit, keys=None):
     if (not isinstance(engine_commit, str) or len(engine_commit) != 40
             or any(x not in "0123456789abcdef" for x in engine_commit)):
         raise ValueError("Expected full lowercase engine commit SHA")
-    keys = tuple(sorted(KEYS if keys is None else keys))
+    keys = tuple(sorted(CANONICAL_KEYS if keys is None else keys))
     if not keys or len(keys) != len(set(keys)) or set(keys) - KEYS:
         raise ValueError("Invalid archive deck selection")
     checked = {key: read_archive(source, key) for key in keys}
@@ -171,9 +172,11 @@ def main(argv=None):
     parser.add_argument("--source", type=Path, required=True)
     parser.add_argument("--output", type=Path, required=True)
     parser.add_argument("--engine-commit", required=True)
+    parser.add_argument("--deck", action="append", choices=sorted(KEYS),
+                        help="Publish selected verified deck(s); omit for six canonical fixtures")
     args = parser.parse_args(argv)
     result = publish_archives(args.source, args.output,
-                              engine_commit=args.engine_commit)
+                              engine_commit=args.engine_commit, keys=args.deck)
     print(json.dumps({"releases": len(result["releases"]),
                       "latest": result["releases"][0]["id"]}, indent=2))
 
