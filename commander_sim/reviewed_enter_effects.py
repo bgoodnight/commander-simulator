@@ -118,7 +118,7 @@ def execute_reviewed_enter(zones,life:KernelLife,source_id,catalog,*,
     if rule.operation=="optional_exile_nonland" and choice is not None:
         other=kernel.objects.get(choice)
         if (other is None or other.zone!="battlefield"
-                or "land" in other.types or choice==source_id
+                or "land" in other.types
                 or not kernel.legal_target(source.controller,choice,
                          frozenset({"creature","artifact","enchantment",
                                     "planeswalker","battle"}))):
