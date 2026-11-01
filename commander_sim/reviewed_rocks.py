@@ -80,5 +80,5 @@ def reviewed_rock(name, card, commander_colors):
                 (ManaMode(("C",)), ManaMode(("U",), damage=1),
                  ManaMode(("R",), damage=1))),),
             assumptions=descriptor.assumptions)
-        base = admit_reviewed_effect(card, descriptor)
-    return base, row["printed_cost"]
+    # Admit exactly once, after all card-specific overrides have been applied.
+    return admit_reviewed_effect(card, descriptor), row["printed_cost"]
