@@ -522,6 +522,34 @@ function closeCard(){
  */
 let aggregate=null;
 let boundedBatches=null;
+function batchExample(batch,deck,kind,turn){
+  if(!Array.isArray(batch.runs))return null;
+  const deckIds=new Set(deck.cards.filter(x=>x.zone!=="Commander").map(x=>x.oracle_id));
+  const rockIds=new Set(deck.modeled_rocks||[]),counts=new Map();
+  for(const run of batch.runs){
+    const names=kind==="unsupported" ? run.events[turn-1]?.unsupported_cards_in_hand||[] :
+      run.events.slice(0,turn).flatMap(row=>row.events.filter(e=>e.type===(kind==="land"?"land_play":"artifact_resolved")).map(e=>e.card));
+    const seen=new Set();
+    for(const name of names){
+      const card=typeof name==="string"?cardInfo(name):null;
+      if(!card||!deckIds.has(card.oracle_id)||seen.has(card.oracle_id)||
+         (kind==="rock"&&!rockIds.has(card.oracle_id)))continue;
+      seen.add(card.oracle_id);counts.set(card.oracle_id,(counts.get(card.oracle_id)||0)+1);
+    }
+  }
+  const first=[...counts].sort((a,b)=>b[1]-a[1]||a[0].localeCompare(b[0]))[0];
+  return first?{card:cardForId(first[0]),count:first[1]}:null;
+}
+function batchExampleNode(example,kind,turn,total){
+  if(!example?.card)return null;
+  const {card,count}=example,button=el("button",null,"batch-card-example");button.type="button";
+  button.setAttribute("aria-label","View "+card.name+" card details");
+  button.appendChild(imageNode(card, !card.image&&!!card.art,"batch-card-image"));
+  const action=kind==="land"?"played by turn "+turn:kind==="rock"?"cast by turn "+turn:"unsupported in hand on turn "+turn;
+  const caption=el("span",null,"batch-card-caption");
+  caption.append(el("strong",card.name),el("span","Example · "+action+" in "+count+" / "+total+" runs"));
+  button.appendChild(caption);button.addEventListener("click",()=>showCard(card.oracle_id));return button;
+}
 function showBoundedBatch(){
   const root=$("bounded-results"); clear(root);
   const batch=boundedBatches?.decks?.[selected];
@@ -531,10 +559,12 @@ function showBoundedBatch(){
   const t3=batch.turns[2], t6=batch.turns[5];
   root.appendChild(el("p",batch.seed_count+" simulated runs · 6 turns · one free mulligan", "small"));
   const cards=el("div",null,"results-kpis");
-  for(const [value,label] of [[t3.mean_lands_in_play,"Average lands on turn 3"],
-      [t3.pct_with_reviewed_rock_in_play+"%","Have a mana rock on turn 3"],
-      [t6.mean_unsupported_hand_cards,"Average cards in hand not yet supported on turn 6"]]){
-    const card=el("div",null,"quiet-group");card.append(el("strong",String(value)),el("p",label,"small"));cards.appendChild(card);
+  for(const [value,label,kind,turn] of [[t3.mean_lands_in_play,"Average lands on turn 3","land",3],
+      [t3.pct_with_reviewed_rock_in_play+"%","Have a mana rock on turn 3","rock",3],
+      [t6.mean_unsupported_hand_cards,"Average cards in hand not yet supported on turn 6","unsupported",6]]){
+    const card=el("div",null,"quiet-group batch-stat");card.append(el("strong",String(value)),el("p",label,"small"));
+    const example=batchExampleNode(batchExample(batch,selectedDeck(),kind,turn),kind,turn,batch.seed_count);
+    if(example)card.appendChild(example);cards.appendChild(card);
   }
   root.appendChild(cards);
   const details=document.createElement("details");details.className="story-drilldown";
@@ -1397,7 +1427,7 @@ async function boot(){
   registerEvents();
   try{
     const response=await Promise.all([
-      fetch("./decks.json"),fetch("./observations.json"),fetch("./names.json"),fetch("./bounded-batches.json?v=20261101b")
+      fetch("./decks.json?v=20261101c"),fetch("./observations.json"),fetch("./names.json"),fetch("./bounded-batches.json?v=20261101b")
     ]);
     if(response.some(r=>!r.ok))throw Error("Site data could not be loaded. Check the Pages deployment.");
     [data,archives,allNames,boundedBatches]=await Promise.all(response.map(r=>r.json()));

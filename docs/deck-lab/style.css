@@ -511,3 +511,11 @@ body{background-color:#101019;background-image:radial-gradient(ellipse at 50% -1
 .quiet-bar[aria-pressed=true]{border-color:#edcb80;background:#2b332c}
 .quiet-bar-track{grid-column:1 / -1;display:block;height:8px;border-radius:5px;background:#424849;overflow:hidden}
 .quiet-bar-fill{display:block;height:100%;background:#d9b66d;border-radius:5px}
+/* Deck-specific card examples stay compact and support touch and keyboard. */
+.batch-stat{display:flex;flex-direction:column;align-items:stretch;gap:4px}
+.batch-card-example{display:flex;align-items:center;gap:10px;margin-top:8px;padding:6px;text-align:left;border:1px solid #766f5e;border-radius:10px;background:#10191c;color:inherit;cursor:pointer}
+.batch-card-example:hover,.batch-card-example:focus-visible{border-color:#e6ca92;outline-offset:3px}
+.batch-card-image{display:block;width:76px;aspect-ratio:63/88;object-fit:contain;border-radius:6px;flex:none}
+.batch-card-caption{display:flex;flex-direction:column;gap:5px;font-size:.67rem;line-height:1.4;color:#c7d2c8}
+.batch-card-caption strong{font-size:.75rem;color:#eed4a0}
+@media(max-width:450px){.batch-card-image{width:64px}.batch-card-example{gap:9px}}
