@@ -28,7 +28,8 @@ class NamedCoverageTests(unittest.TestCase):
         kinds=report["reviewed_unique_cards_by_operation"]
         for kind in ("mana","search","fixed_token_spell","cast_trigger",
                      "death_trigger","sacrifice_activation",
-                     "phase_trigger","unearth","flashback","enter_trigger"):
+                     "phase_trigger","unearth","flashback","enter_trigger",
+                     "cost_reduction"):
             self.assertIn(kind,kinds)
             self.assertGreater(kinds[kind],0)
         self.assertGreaterEqual(report["with_reviewed_suboperations"],30)

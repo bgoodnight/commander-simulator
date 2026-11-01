@@ -15,6 +15,7 @@ from .effect_templates import ManaMode
 from .mana_costs import FixedManaCost, parse_fixed_mana_cost
 from .mana_kernel_bridge import _reviewed_modes
 from .reviewed_rocks import reviewed_rock
+from .reviewed_cost_reduction import reduced_fixed_cost, cost_symbols
 
 ORDER = "WUBRGC"
 ZERO = (0, 0, 0, 0, 0, 0)
@@ -129,6 +130,39 @@ class TemplateManaService:
                 return tuple(mode for mode in reviewed[0].mana_modes
                              if mode.tap and not (mode.life or mode.damage or mode.sacrifice))
         return ()
+
+    def spell_cost(self, seat, mana_cost, source):
+        """Cost of a verified spell given live, independently reviewed reducers.
+
+        This is a snapshot calculation, not an effect that grants casting
+        permission. Unknown spell metadata cannot receive a reduction.
+        """
+        original = parse_fixed_mana_cost(mana_cost)
+        if (source is None or not hasattr(source, "card")
+                or type(seat) is not int or not 0 <= seat < 4
+                or source.owner != seat):
+            raise ValueError("Invalid physical spell source")
+        raw = self.card_metadata.get(source.card.name)
+        if (not isinstance(raw, dict)
+                or raw.get("oracle_id") != source.card.card_id):
+            return cost_symbols(original), ()
+        printed = raw.get("colors")
+        if not isinstance(printed, list):
+            printed = list(source.card.colors or ())
+        colors = frozenset(printed)
+        spell_types = frozenset(source.types)
+        cost, evidence = reduced_fixed_cost(
+            self.kernel, self.card_metadata, seat, mana_cost,
+            spell_types=spell_types, spell_colors=colors)
+        return cost_symbols(cost), evidence
+
+    def plan_spell(self, seat, mana_cost, source):
+        payable, _ = self.spell_cost(seat, mana_cost, source)
+        return self.plan(seat, payable)
+
+    def pay_spell(self, seat, mana_cost, source):
+        payable, _ = self.spell_cost(seat, mana_cost, source)
+        return self.pay(seat, payable)
 
     def plan(self, seat, mana_cost):
         cost = parse_fixed_mana_cost(mana_cost)

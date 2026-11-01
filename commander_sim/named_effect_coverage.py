@@ -19,6 +19,7 @@ from .reviewed_phase_effects import PHASE_RULES
 from .reviewed_unearth import UNEARTH
 from .reviewed_flashback import FLASHBACK
 from .reviewed_enter_effects import ENTER_RULES
+from .reviewed_cost_reduction import REDUCERS
 
 
 def _named_sources():
@@ -34,6 +35,7 @@ def _named_sources():
         ("unearth",UNEARTH),
         ("flashback",FLASHBACK),
         ("enter_trigger",ENTER_RULES),
+        ("cost_reduction",REDUCERS),
     ):
         for name,row in source.items():
             if kind in {"mana","search"}:

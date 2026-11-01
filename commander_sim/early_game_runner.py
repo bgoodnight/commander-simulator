@@ -242,7 +242,7 @@ def run_bounded_early_game(deck_key, *, seed=0, turns=6, mulligan="one-free", pr
                         and not sacrifice_artifact and not entering):
                     continue
                 cost = registry.get(name).primary_face().mana_cost
-                payment = mana_service.plan(0, cost)
+                payment = mana_service.plan_spell(0, cost, obj)
                 if payment is not None:
                     kind = ("artifact" if rock is not None or sacrifice_artifact else
                             "enchantment" if phase_enchantment or (entering and "Enchantment" in raw.get("type_line","").split(" — ",1)[0]) else
@@ -408,7 +408,7 @@ def run_bounded_early_game(deck_key, *, seed=0, turns=6, mulligan="one-free", pr
         for grave_id in zones.ids(0,"graveyard"):
             spell=kernel.get(grave_id)
             review=reviewed_flashback(spell.card.name,raw_by_name.get(spell.card.name))
-            if review and mana_service.plan(0,review.alternate_cost) is not None:
+            if review and mana_service.plan_spell(0,review.alternate_cost,spell) is not None:
                 if (review.operation!="draw_discard_two"
                         or len(zones.ids(0,"library"))>=2):
                     flashback_options.append((review.alternate_cost,spell.card.name,grave_id))

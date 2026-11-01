@@ -70,11 +70,11 @@ def _cast_reviewed_card(zones, seat, object_id, review, commander_colors, *,
         kernel._dirty()
         old_pool = None
     else:
-        previous = mana_service.plan(seat, review.mana_cost)
+        previous = mana_service.plan_spell(seat, review.mana_cost, obj)
         if previous is None:
             return None
         old_pool = mana_service.floating(seat)
-        paid = mana_service.pay(seat, review.mana_cost)
+        paid = mana_service.pay_spell(seat, review.mana_cost, obj)
         source_ids = paid.source_ids
     try:
         ticket = zones.cast(seat, object_id)
@@ -82,7 +82,8 @@ def _cast_reviewed_card(zones, seat, object_id, review, commander_colors, *,
         # Any unexpected cast rejection must leave land taps and mana pool as
         # before the attempted spell (single-threaded synchronous host).
         for oid in source_ids:
-            kernel.get(oid).tapped = False
+            if oid in kernel.objects:
+                kernel.get(oid).tapped = False
         if mana_service is not None:
             kernel.mana_pools[seat] = old_pool
         kernel._dirty()
