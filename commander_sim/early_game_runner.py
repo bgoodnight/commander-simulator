@@ -34,6 +34,8 @@ from .reviewed_tutor_cast import (eligible_reviewed_tutor_targets,
 from .reviewed_token_spells import (reviewed_token_spell,
                                    cast_and_resolve_reviewed_token_spell)
 from .bounded_trigger_effects import resolve_reviewed_spell_triggers
+from .kernel_life import KernelLife
+from .reviewed_phase_effects import ReviewedPhaseEngine,reviewed_phase_permanent
 from .template_resources import TemplateManaService
 
 ROOT = Path(__file__).resolve().parents[1]
@@ -120,7 +122,8 @@ def run_bounded_early_game(deck_key, *, seed=0, turns=6, mulligan="one-free", pr
                     or reviewed_rock(name, raw_by_name[name], colors) is not None
                     or (tutor_review is not None
                         and tutor_review[2] in {"instant", "sorcery"})
-                    or reviewed_token_spell(name, raw_by_name[name]) is not None)
+                    or reviewed_token_spell(name, raw_by_name[name]) is not None
+                    or reviewed_phase_permanent(name, raw_by_name[name]))
         definition = CardDefinition(
             identity.oracle_id, name, types, subtypes=subtypes,
             supertypes=frozenset({"commander"}) if section == "Commander" else frozenset(),
@@ -131,6 +134,8 @@ def run_bounded_early_game(deck_key, *, seed=0, turns=6, mulligan="one-free", pr
             zones.add(definition, 0, "command" if section == "Commander" else "library")
 
     mana_service = TemplateManaService(kernel, raw_by_name, colors)
+    life = KernelLife(kernel)
+    phase_engine = ReviewedPhaseEngine(zones, life, raw_by_name)
     if len(kernel.objects) != 100:
         raise AssertionError("Pinned 100-card zone conservation failed at loading")
     zones.shuffle(0)
@@ -174,6 +179,17 @@ def run_bounded_early_game(deck_key, *, seed=0, turns=6, mulligan="one-free", pr
                                "card": obj.card.name})
         if events:
             kernel._dirty()
+        # Upkeep happens after untap but before the ordinary draw.
+        for triggered in phase_engine.resolve(
+                phase="upkeep",active_seat=0,round_id=turn):
+            events.append({
+                "type":"reviewed_phase_resolved","phase":"upkeep",
+                "source":triggered.source_name,"source_object_id":triggered.source_id,
+                "ability_slot":triggered.slot_id,
+                "created_token_ids":list(triggered.created_token_ids),
+                "drawn_ids":list(triggered.drawn_ids),
+                "returned_object_id":triggered.returned_id,
+                "fidelity":"bounded_no_opponent_priority"})
         drawn, okay = zones.draw(0, 1)  # Seat is explicitly not the starting seat.
         if not okay:
             raise ValueError("Library depleted before supported turn horizon")
@@ -197,15 +213,18 @@ def run_bounded_early_game(deck_key, *, seed=0, turns=6, mulligan="one-free", pr
                 is_creature = reviewed_creature(deck_key, name, raw)
                 rock = reviewed_rock(name, raw, colors)
                 token_spell = reviewed_token_spell(name, raw)
+                phase_enchantment = reviewed_phase_permanent(name, raw)
                 tutor = reviewed_tutor(name, raw)
                 eligible = (eligible_reviewed_tutor_targets(zones, 0, name, raw_by_name)
                             if tutor and tutor[2] in {"instant", "sorcery"} else ())
-                if not is_creature and rock is None and not eligible and token_spell is None:
+                if (not is_creature and rock is None and not eligible
+                        and token_spell is None and not phase_enchantment):
                     continue
                 cost = registry.get(name).primary_face().mana_cost
                 payment = mana_service.plan(0, cost)
                 if payment is not None:
                     kind = ("artifact" if rock is not None else
+                            "enchantment" if phase_enchantment else
                             "tutor" if eligible else
                             "token_spell" if token_spell is not None else "creature")
                     target = (min(eligible, key=lambda target_id: (
@@ -220,7 +239,7 @@ def run_bounded_early_game(deck_key, *, seed=0, turns=6, mulligan="one-free", pr
                     # Reviewed trigger creatures precede spells so their
                     # shared effects may fire on subsequent actual casts.
                     options.append((0 if rock is not None else 1 if is_creature else
-                                    2 if eligible else 3,
+                                    2 if phase_enchantment else 3 if eligible else 4,
                                     len(payment.source_ids), name, oid, kind, cost, target))
             if not options:
                 break
@@ -290,6 +309,16 @@ def run_bounded_early_game(deck_key, *, seed=0, turns=6, mulligan="one-free", pr
                     kernel._dirty()
             events.append({"type": kind + "_resolved", "card": name,
                            "object_id": resolved_id, "fidelity": "limited_generic_resolution"})
+        for triggered in phase_engine.resolve(
+                phase="end_step",active_seat=0,round_id=turn):
+            events.append({
+                "type":"reviewed_phase_resolved","phase":"end_step",
+                "source":triggered.source_name,"source_object_id":triggered.source_id,
+                "ability_slot":triggered.slot_id,
+                "created_token_ids":list(triggered.created_token_ids),
+                "drawn_ids":list(triggered.drawn_ids),
+                "returned_object_id":triggered.returned_id,
+                "fidelity":"bounded_no_opponent_priority"})
         floating_end = list(mana_service.floating())
         mana_service.clear()
         if (not zones.assert_consistent()
@@ -309,6 +338,7 @@ def run_bounded_early_game(deck_key, *, seed=0, turns=6, mulligan="one-free", pr
                                   and reviewed_rock(o.card.name, raw_by_name[o.card.name], colors) is not None
                                   for o in kernel.objects.values()),
             "floating_at_end_of_main": floating_end,
+            "life_totals":dict(life.kernel.life_totals),
             "unsupported_cards_in_hand": sorted(
                 kernel.get(oid).card.name for oid in zones.ids(0, "hand")
                 if not reviewed_creature(deck_key, kernel.get(oid).card.name,
@@ -322,6 +352,8 @@ def run_bounded_early_game(deck_key, *, seed=0, turns=6, mulligan="one-free", pr
                          in {"instant", "sorcery"})
                 and reviewed_token_spell(kernel.get(oid).card.name,
                     raw_by_name[kernel.get(oid).card.name]) is None
+                and not reviewed_phase_permanent(kernel.get(oid).card.name,
+                    raw_by_name[kernel.get(oid).card.name])
                 and not supported_land(oid)),
         })
     analysis = analyze_authoritative_run(catalog, profile or {}, states)
@@ -335,6 +367,7 @@ def run_bounded_early_game(deck_key, *, seed=0, turns=6, mulligan="one-free", pr
         "mulligan": {"policy": mulligan, "taken": mulligan_taken,
                      "initial_hand": initial_hand, "opening_hand": opening_hand},
         "events": actions_by_turn,
+        "life_totals":dict(life.kernel.life_totals),
         "state_snapshots": states,
         "deck_intelligence": analysis,
         "first_unmodeled_choice": ("turn 1: opponent priority, other spells, and " 
