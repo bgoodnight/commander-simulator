@@ -19,3 +19,5 @@ jobs:
         run: python run_all_tests.py
       - name: Test Commander bracket evaluator
         run: node --test tests/pages_brackets.test.cjs
+      - name: Test named deck selection and cross-commander navigation
+        run: node --test tests/pages_deck_selection.test.cjs
