@@ -47,13 +47,14 @@ test('newest deck is default candidate across every commander and both sources',
                /The Latest Build.*Beta Commander.*2026-11-01.*Saved in this browser/);
 });
 
-test('single full-width editor deck selector exposes all named decks',()=>{
+test('single full-width editor deck selector filters to selected commander',()=>{
   const {ctx,nodes}=context();
   vm.runInContext('renderGlobalDeckSelector();renderDeckVersionSelector()',ctx);
   const values=node=>node.children.map(x=>x.value);
-  const expected=['saved:v-new','saved:v-one','preset:beta','preset:alpha'];
-  assert.deepEqual(values(nodes.get('global-deck-select')),expected);
-  assert.equal(nodes.get('global-deck-select').value,'preset:alpha');
+  assert.deepEqual(values(nodes.get('global-deck-select')),['saved:v-one','preset:alpha']);
+  vm.runInContext("selected='beta';renderGlobalDeckSelector()",ctx);
+  assert.deepEqual(values(nodes.get('global-deck-select')),['saved:v-new','preset:beta']);
+  assert.equal(nodes.get('global-deck-select').value,'preset:beta');
 });
 
 test('cross-commander built-in and saved variants load without filtering',()=>{
