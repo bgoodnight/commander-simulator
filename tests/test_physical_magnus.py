@@ -66,3 +66,33 @@ class PhysicalMagnusTests(unittest.TestCase):
                 other=dict(data[name],oracle_id="incorrect")
                 self.assertFalse(reviewed_creature(fixture.key,name,other))
         self.assertFalse(reviewed_creature(fixture.key,"Harmonic Prodigy",data["Harmonic Prodigy"]))
+
+    def test_reusable_draw_spells_are_oracle_pinned(self):
+        from commander_sim.card_cache import pinned_deck_entries
+        from commander_sim.deck_fixtures import SHARED_CATALOG
+        from commander_sim.reviewed_draw_spells import reviewed_draw_spell
+        fixture=EXPERIMENTAL_FIXTURES[0]
+        data={e["deck_name"]:e["card"] for e in pinned_deck_entries(
+            fixture.deck_path,fixture.manifest_path,SHARED_CATALOG)}
+        for name,count in (("Quick Study",2),("Think Twice",1),("Ponder",1),("Preordain",1)):
+            with self.subTest(card=name):
+                review=reviewed_draw_spell(name,data[name])
+                self.assertIsNotNone(review)
+                self.assertEqual(review.draw_count,count)
+                tampered=dict(data[name],oracle_text="Draw forty cards.")
+                self.assertIsNone(reviewed_draw_spell(name,tampered))
+        self.assertIsNone(reviewed_draw_spell("Brainstorm",data["Brainstorm"]))
+
+    def test_reviewed_draws_move_real_cards_and_preserve_replay(self):
+        seen=0
+        for seed in range(20):
+            run=run_bounded_early_game("magnus_physical_trial",seed=seed,turns=6)
+            for row in run["events"]:
+                starts=[e for e in row["events"] if e["type"]=="reviewed_draw_spell_cast"]
+                finishes=[e for e in row["events"] if e["type"]=="reviewed_draw_spell_resolved"]
+                self.assertEqual(len(starts),len(finishes))
+                for done in finishes:
+                    seen+=1
+                    self.assertGreaterEqual(len(done["drawn_ids"]),1)
+                    self.assertEqual(done["fidelity"],"reviewed_physical_draw")
+        self.assertGreater(seen,0)
