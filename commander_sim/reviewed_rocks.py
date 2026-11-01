@@ -67,7 +67,7 @@ def reviewed_rock(name, card, commander_colors):
         return None
     descriptor = row["review"]
     if name in ("Arcane Signet", "Commander\'s Sphere"):
-        colors = tuple(sorted(set(commander_colors)))
+        colors = tuple(symbol for symbol in "WUBRG" if symbol in set(commander_colors))
         if not colors or any(c not in "WUBRG" for c in colors):
             raise ValueError("Commander color identity is required")
         descriptor = ReviewedEffect(descriptor.oracle_id, descriptor.oracle_text,
