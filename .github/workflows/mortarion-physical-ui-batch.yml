@@ -1,0 +1,64 @@
+name: Publish Mortarion Physical 100-Seed UI Batch
+on:
+  push:
+    branches: [main]
+    paths:
+      - ".github/workflows/mortarion-physical-ui-batch.yml"
+  workflow_dispatch:
+permissions:
+  contents: write
+  actions: write
+concurrency:
+  group: mortarion-physical-ui-batch
+  cancel-in-progress: false
+jobs:
+  build-and-publish:
+    runs-on: ubuntu-latest
+    timeout-minutes: 75
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+      - name: Verify archive and pinned physical deck contracts
+        run: |
+          python -m unittest tests.test_simulation_archive tests.test_simulation_publishing tests.test_pages_export -v
+          python -m commander_sim.snapshots decklists/mortarion_physical_final_v1_0_2026_11_01.txt simulator/card_data/mortarion_physical_final_m1_scryfall.json --commander 'Mortarion, Daemon Primarch'
+      - name: Simulate 100 deterministic six-turn Mortarion trials
+        run: |
+          python tools/build_simulation_archive.py --deck mortarion_physical_final --seeds 100 --turns 6 --output dist/mortarion
+      - name: Preserve full run evidence as an artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: mortarion-physical-reviewed-100-seeds
+          path: dist/mortarion/*.json
+          if-no-files-found: error
+          retention-days: 90
+      - name: Publish checked run archive while preserving earlier releases
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          for attempt in 1 2 3; do
+            git fetch origin main
+            git reset --hard origin/main
+            python tools/publish_simulation_archive.py --source dist/mortarion --output web/pages/data/simulation-archive --engine-commit "${{ github.sha }}" --deck mortarion_physical_final
+            python tools/build_pages_deck_lab.py --output dist/validated-pages
+            git add -A web/pages/data/simulation-archive/
+            if git diff --cached --quiet; then
+              echo "Archive already published"
+              break
+            fi
+            git commit -m "Publish Mortarion physical 100-seed reviewed-action archive"
+            if git push origin HEAD:main; then
+              echo "Published verified physical archive"
+              break
+            fi
+            if [ "$attempt" -eq 3 ]; then
+              echo "Concurrent updates prevented safe archive publication" >&2
+              exit 1
+            fi
+          done
+      - name: Rebuild GitHub Pages from published archive
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: gh workflow run deck-lab-pages.yml --ref main
