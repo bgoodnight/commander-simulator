@@ -39,6 +39,15 @@ class SimulationArchiveTests(unittest.TestCase):
         self.assertEqual(len(DECK_KEYS), 6)
         self.assertEqual(len(set(DECK_KEYS)), 6)
 
+    def test_physical_mortarion_is_explicitly_eligible(self):
+        from tools.build_simulation_archive import APPROVED_KEYS
+        self.assertEqual(len(DECK_KEYS), 6)
+        self.assertEqual(len(APPROVED_KEYS), 7)
+        self.assertIn("mortarion_physical_final", APPROVED_KEYS)
+        meta, runs = generate("mortarion_physical_final", seeds=4, turns=6, runner=fake_run)
+        self.assertEqual(meta["deck_key"], "mortarion_physical_final")
+        self.assertEqual(len(runs), 4)
+
     def test_archives_reproducible_and_reconcile_with_runs(self):
         a, runs = generate(DECK_KEYS[0], seeds=3, turns=2, runner=fake_run)
         b, other = generate(DECK_KEYS[0], seeds=3, turns=2, runner=fake_run)
