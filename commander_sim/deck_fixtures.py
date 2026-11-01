@@ -54,3 +54,11 @@ LEGACY_SEEDS = (
     ("decklists/mortarion_purchase_reconciled_candidate_2026_10_27.txt",
      "simulator/card_data/mortarion_scryfall.json"),
 )
+
+# Exploratory imported fixtures are intentionally excluded from the six
+# published canonical fixtures and their pinned historical output gates.
+EXPERIMENTAL_FIXTURES = (
+    DeckFixture("magnus_physical_trial", "Magnus the Red",
+                "decklists/magnus_physical_legal_trial_v1_1.txt",
+                "simulation_only_substitution"),
+)
