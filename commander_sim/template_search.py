@@ -59,7 +59,10 @@ def execute_reviewed_search_to_hand(zones, seat, source_id, target_id, catalog):
     found = reviewed_tutor(source.card.name, card)
     if found is None:
         raise ValueError("Unreviewed tutor")
-    template, _, _ = found
+    template, _, kind = found
+    if (source.zone != "stack" or kind not in {"instant", "sorcery"}
+            or source_id not in zones._pending):
+        raise ValueError("An unresolved reviewed spell cast is required; ETB/activated tutors remain gated")
     if template.destination != "hand" or not template.shuffle:
         raise NotImplementedError("This tutor needs a different destination/ordering handler")
     eligible = legal_search_targets(zones, seat, source_id, catalog)
