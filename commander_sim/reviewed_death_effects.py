@@ -13,8 +13,8 @@ from types import MappingProxyType
 from .ability_composition import (
     AbilitySlot, AbilityHandler, ComposedCard, AbilityDispatcher)
 from .kernel_life import KernelLife
-from .physical_common_effects import CardQuantity, draw_physical_cards, (
-    CounterPlacement), put_reviewed_counters
+from .physical_common_effects import (
+    CardQuantity, draw_physical_cards, CounterPlacement, put_reviewed_counters)
 from .reviewed_token_spells import TokenBlueprint, create_reviewed_token_batches
 
 
