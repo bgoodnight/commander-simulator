@@ -6,7 +6,7 @@ from commander_sim.legacy_common_ops import (
     DrawDiscard, TokenBatch, GenericDiscount,
     apply_draw_discard, apply_token_batch, apply_generic_discount,
     SacrificeRequirement, legal_sacrifice_victims, sacrifice_physical_object,
-    ZoneTransfer,transfer_physical_object,
+    ZoneTransfer,transfer_physical_object,spawn_repeated_tokens,
 )
 
 
@@ -182,6 +182,39 @@ class ZoneTransferTests(unittest.TestCase):
             transfer_physical_object(self.table,0,999,ZoneTransfer("graveyard","hand"))
         self.assertEqual(self.moves,[])
 
+
+
+class ReusableTriggerAndRecursionTests(unittest.TestCase):
+    def test_repeated_token_creation_uses_one_authoritative_callback(self):
+        created = []
+        tokens = spawn_repeated_tokens(lambda: created.append(len(created)+1) or created[-1], 3)
+        self.assertEqual(tokens,(1,2,3))
+        self.assertEqual(created,[1,2,3])
+
+    def test_zero_token_count_and_invalid_counts(self):
+        seen=[]
+        self.assertEqual(spawn_repeated_tokens(lambda:seen.append(1),0),())
+        self.assertEqual(seen,[])
+        for invalid in (-1,True):
+            with self.subTest(count=invalid),self.assertRaises(ValueError):
+                spawn_repeated_tokens(lambda:None,invalid)
+
+    def test_recursion_disjunctive_type_filter_prevents_illegal_return(self):
+        obj=NS(object_id=12,zone="graveyard",owner=0,controller=0,
+               types=frozenset({"creature"}))
+        moved=[]
+        table=NS(rules=NS(objects={12:obj}),
+                 zones=NS(move=lambda *args:moved.append(args)),
+                 world=NS(move=lambda *args:moved.append(args)))
+        effect=ZoneTransfer("graveyard","library",
+            allowed_types_any=frozenset({"instant","sorcery"}),
+            require_owner=True)
+        with self.assertRaises(ValueError):
+            transfer_physical_object(table,0,12,effect)
+        self.assertEqual(moved,[])
+        obj.types=frozenset({"instant"})
+        transfer_physical_object(table,0,12,effect)
+        self.assertEqual(moved,[(12,"library")])
 
 if __name__=="__main__":
     unittest.main()
