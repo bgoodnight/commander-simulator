@@ -10,6 +10,9 @@ const BASIC = new Set(["Plains","Island","Swamp","Mountain","Forest","Wastes",
   "Snow-Covered Mountain","Snow-Covered Forest"]);
 const LABELS = {
   magnus_premium:"Magnus · Premium",magnus_budget:"Magnus · Budget",
+  magnus_physical_owned:"Magnus · Physical (Sleeved v1.1)",
+  magnus_physical_trial:"Magnus · Physical (Legal simulation trial)",
+  mortarion_physical_final:"Mortarion · Physical Final v1.0",
   wretched_ranks:"Wretched Ranks · Gisa",
   mortarion_current:"Mortarion · Current",mortarion_ideal:"Mortarion · Ideal",
   necron_dynasties:"Necron Dynasties"
@@ -227,7 +230,9 @@ function allDeckChoices(){
     id:"preset:"+deck.key,key:deck.key,version:null,
     title:LABELS[deck.key]||deck.key,
     commander:deck.commander,updated:deck.updated_at||"",
-    source:"Built-in · simulated"
+    source:deck.unverified_cards?.length?"Physical source · one card unverified":
+      deck.label==="simulation_only_substitution"?"Legal trial · one card substituted":
+      "Built-in · cached observations"
   }));
   for(const version of localVersions){
     const deck=data.decks.find(d=>d.key===version.baseKey);
@@ -278,6 +283,7 @@ function hasUnsavedChanges(){
     .some(name=>(reference[name]||0)!==(activeCounts[name]||0));
 }
 function isUnsimulatedVersion(){
+  if(selectedDeck()?.unverified_cards?.length)return true;
   if(activeVersion())return true;
   if(!selected||!activeCounts)return false;
   const original=initialCounts(),names=new Set([
@@ -302,6 +308,7 @@ function displayDeckCards(){
   return result;
 }
 function activeDeckTitle(){
+  if(selectedDeck()?.unverified_cards?.length&&!activeVersion())return LABELS[selected]||selected;
   return activeVersion()?.title||
     (isUnsimulatedVersion()?"Unsaved deck draft · "+(LABELS[selected]||selected):
       LABELS[selected]||selectedDeck()?.commander||"");
@@ -315,7 +322,8 @@ function updateSelectionBadge(){
   $("active-deck-name").textContent=activeDeckTitle();
   const state=$("active-deck-state");
   state.hidden=!isUnsimulatedVersion();
-  state.textContent="Edited deck · no results";
+  state.textContent=deck.unverified_cards?.length?"Physical list · unverified card":
+    "Edited deck · no results";
   const link=$("change-deck-link"),url=new URL("./editor.html",location.href);
   url.searchParams.set("deck",selected);
   if(selectedVersionId)url.searchParams.set("version",selectedVersionId);
@@ -480,7 +488,8 @@ function renderOverview(){
     x.appendChild(el("strong",value));x.appendChild(el("span",label));metrics.appendChild(x);
   }
   const tags=$("overview-tags");clear(tags);
-  if(isUnsimulatedVersion())tags.appendChild(el("span","Edited deck · no results","chip"));
+  if(deck.unverified_cards?.length)tags.appendChild(el("span","Physical card list · no verified results","chip"));
+  else if(isUnsimulatedVersion())tags.appendChild(el("span","Edited deck · no results","chip"));
   const typeCounts={};
   for(const item of cards){
     const kind=cardForId(item.oracle_id)?.category||"Other";
@@ -565,7 +574,9 @@ function renderBracketAssessment(){
 function renderThemes(cards,commander){
   const root=$("deck-themes"),status=$("theme-status");clear(root);
   status.hidden=!isUnsimulatedVersion();
-  status.textContent="Draw results are unavailable for this edited deck.";
+  status.textContent=selectedDeck()?.unverified_cards?.length?
+    "This exact physical list has an unverified card and no simulations.":
+    "Draw results are unavailable for this edited deck.";
   if(!window.DeckInsights?.themes){root.appendChild(el("p","Theme analysis is unavailable.","small"));return}
   const records=isUnsimulatedVersion()?null:archives?.[selected];
   const groups=window.DeckInsights.themes(cards,{...data.cards,...extraCards},records,commander);
@@ -623,6 +634,18 @@ function libraryRows(){
 }
 function renderLibrary(){
   const root=$("library-rows");clear(root);
+  const extras=$("library-extra");if(extras)clear(extras);
+  const selectedSource=selectedDeck();
+  if(extras&&selectedSource.unverified_cards?.length){
+    extras.appendChild(el("p","Exact physical source list. Narset’s Rebuke has unverified metadata and may not be legal in this commander’s color identity. The legal simulation trial replaces it with one Island.","warning"));
+  }
+  if(extras&&selectedSource.sideboard?.length){
+    const reserve=el("details",null,"reserve-list"),title=el("summary","Reserve cards · "+selectedSource.sideboard.reduce((n,c)=>n+c.qty,0)+" (not in the 100-card main deck)");
+    reserve.appendChild(title);
+    const list=el("ul");
+    selectedSource.sideboard.forEach(item=>list.appendChild(el("li",item.qty+" × "+item.name)));
+    reserve.appendChild(list);extras.appendChild(reserve);
+  }
   const rows=libraryRows();
   $("library-count").textContent=" · "+rows.reduce((n,x)=>n+x.qty,0)+" cards";
   for(const item of rows){
@@ -794,7 +817,9 @@ function showAggregate(){
   if(isUnsimulatedVersion()){
     $("results-sample").textContent="No matched archive";
     $("results-provenance").textContent="The saved deck has no pinned Python observations.";
-    intro.appendChild(el("p","This modified deck must be exported and run through Python before its performance can be assessed."));
+    intro.appendChild(el("p",selectedDeck()?.unverified_cards?.length?
+      "This exact physical list includes one card without verified Commander identity. Its legal simulation trial substitutes one Island for Narset’s Rebuke.":
+      "This modified deck must be exported and run through Python before its performance can be assessed."));
     return;
   }
   if(!window.DeckInsights){
@@ -851,13 +876,16 @@ function renderRecords(){
   seedSelect.value=selectedSeed;
   const warning=$("results-current-warning");
   if(isUnsimulatedVersion()){
+    const physical=selectedDeck()?.unverified_cards?.length;
     warning.hidden=pageName!=="results";
     clear(warning);
     warning.appendChild(el("strong","No cached simulations for “"+activeDeckTitle()+"”. "));
-    warning.appendChild(document.createTextNode(
+    warning.appendChild(document.createTextNode(physical?
+      "This is the exact sleeved list, including Narset’s Rebuke. Its color identity has not been verified for this Commander, and no simulated results are assigned to it. ":
       "This is a browser-edited deck. Its original's results do not describe this version. "));
-    const baseline=el("button","View built-in deck's cached records","stone-button");
-    baseline.type="button";baseline.onclick=()=>summon(selected);
+    const baseline=el("button",physical?"View Magnus legal simulation trial":
+      "View built-in deck's cached records","stone-button");
+    baseline.type="button";baseline.onclick=()=>summon(physical?"magnus_physical_trial":selected);
     warning.appendChild(baseline);
     $("show-record").disabled=true;$("export-record").disabled=true;
     clear($("record-info"));clear($("turn-timeline"));
