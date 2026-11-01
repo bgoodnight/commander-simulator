@@ -3,7 +3,7 @@ const assert=require("node:assert/strict");
 const fs=require("node:fs");
 const path=require("node:path");
 const {test}=require("node:test");
-const {assess}=require("../web/pages/brackets.js");
+const {assess,performanceEvidence,combineEvidence}=require("../web/pages/brackets.js");
 const registry=JSON.parse(fs.readFileSync(path.join(__dirname,"../web/pages/game-changers.json"),"utf8"));
 const fixtures=(names)=>({
   entries:names.map((name,i)=>({name,qty:1,oracle_id:"card-"+i})).concat([{name:"Island",qty:100-names.length,oracle_id:"basic"}]),
@@ -40,4 +40,38 @@ test("cautious signals do not mistake all library searches for game changers",()
   cards["card-0"].oracle_text="Search your library for an artifact card, reveal it, put it into your hand, then shuffle.";
   const result=assess(entries,cards,registry);
   assert.equal(result.count,0);assert.deepEqual(result.tutors,["Fabricate"]);
+});
+
+test("bounded six-turn simulations cannot change a bracket estimate",()=>{
+  const {entries,cards}=fixtures(["Arcane Signet"]);
+  const base=assess(entries,cards,registry);
+  const bounded=Array.from({length:100},()=>({
+    deck_sha256:"deck-1",mode:"bounded_authoritative_early_actions",
+    game_complete:true,opponents_modeled:true,win_conditions_modeled:true,winning_turn:3,won:true
+  }));
+  const combined=combineEvidence(base,bounded,"deck-1");
+  assert.equal(combined.evidence_mode,"cards_only");
+  assert.equal(combined.estimated_bracket,2);
+});
+test("complete matched multiplayer runs can add qualifying evidence",()=>{
+  const {entries,cards}=fixtures(["Arcane Signet"]);
+  const base=assess(entries,cards,registry);
+  const runs=Array.from({length:40},(_,i)=>({
+    deck_sha256:"deck-1",mode:"complete_multiplayer_game",game_complete:true,
+    opponents_modeled:true,win_conditions_modeled:true,winning_turn:i<12?5:10,won:i<12
+  }));
+  assert.equal(performanceEvidence(runs,"different revision"),null);
+  const combined=combineEvidence(base,runs,"deck-1");
+  assert.equal(combined.evidence_mode,"cards_and_games");
+  assert.equal(combined.performance.sample,40);
+  assert.equal(combined.estimated_bracket,4);
+});
+test("insufficient complete games preserve card-only assessment",()=>{
+  const {entries,cards}=fixtures(["Underworld Breach"]);
+  const base=assess(entries,cards,registry);
+  const runs=Array.from({length:5},()=>({
+    deck_sha256:"deck-1",mode:"complete_multiplayer_game",game_complete:true,
+    opponents_modeled:true,win_conditions_modeled:true,winning_turn:5,won:true
+  }));
+  assert.equal(combineEvidence(base,runs,"deck-1").evidence_mode,"cards_only");
 });
