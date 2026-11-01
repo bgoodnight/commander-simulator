@@ -171,9 +171,7 @@ _ADDITIONAL_SACRIFICE_BODIES = {
   "mortarion_ideal": {
     "Yawgmoth, Thran Physician": {
       "oracle_id": "a1e232c0-dc38-47be-a5a0-f68bc1d86a29",
-      "oracle_text": "Protection from Humans
-Pay 1 life, Sacrifice another creature: Put a -1/-1 counter on up to one target creature and draw a card.
-{B}{B}, Discard a card: Proliferate. (Choose any number of permanents and/or players, then give each another counter of each kind already there.)"
+      "oracle_text": "Protection from Humans\nPay 1 life, Sacrifice another creature: Put a -1/-1 counter on up to one target creature and draw a card.\n{B}{B}, Discard a card: Proliferate. (Choose any number of permanents and/or players, then give each another counter of each kind already there.)"
     }
   },
   "necron_dynasties": {
