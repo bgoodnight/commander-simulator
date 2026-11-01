@@ -162,7 +162,7 @@ test('batch examples match the deck, the turn and the recorded card role',()=>{
   assert.equal(vm.runInContext("batchExample(batch,deck,'rock',1)",ctx),null);
 });
 
-test('batch card example opens card details with an explanatory count',()=>{
+test('compact batch card example opens card details without a caption',()=>{
   class Node {constructor(tag){this.tag=tag;this.children=[];this.attrs={};this.handlers={};this.classList={add(){}}}
     append(...nodes){this.children.push(...nodes)} appendChild(node){this.children.push(node);return node}
     setAttribute(k,v){this.attrs[k]=v} addEventListener(k,v){this.handlers[k]=v}}
@@ -172,7 +172,8 @@ test('batch card example opens card details with an explanatory count',()=>{
   vm.runInContext('showCard=id=>opened.push(id)',ctx);
   const node=vm.runInContext("batchExampleNode({card:{name:'Sol Ring',oracle_id:'r',image:'https://example.test/card.jpg'},count:27},'rock',3,100)",ctx);
   assert.equal(node.attrs['aria-label'],'View Sol Ring card details');
-  assert.match(node.children[1].children[1].textContent,/cast by turn 3 in 27 \/ 100 runs/);
+  assert.equal(node.children.length,1);
+  assert.equal(node.children[0].src,'https://example.test/card.jpg');
   node.handlers.click();assert.deepEqual(opened,['r']);
 });
 
