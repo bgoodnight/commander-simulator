@@ -21,7 +21,7 @@ _MAGE_TEXT = "Magecraft — Whenever you cast or copy an instant or sorcery spel
 _PYRO_ID = "5fac139a-07d3-4e6c-98e3-d98b199f7a6f"
 _PYRO_TEXT = "Whenever you cast an instant or sorcery spell, create a 1/1 red Elemental creature token."
 _KILN_ID = "a145ff8c-5812-4bcb-bd16-9839dc25121d"
-_KILN_TEXT = ("This creature gets +1/+0 for each artifact you control.\\n"
+_KILN_TEXT = ("This creature gets +1/+0 for each artifact you control.\n"
               "Magecraft — Whenever you cast or copy an instant or sorcery spell, create a Treasure token. "
               '(It\'s an artifact with "{T}, Sacrifice this token: Add one mana of any color.")')
 _CAPABILITIES = frozenset({"historical_trigger_stack", "draw", "discard", "selection", "token_creation"})
