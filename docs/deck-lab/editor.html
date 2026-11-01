@@ -107,6 +107,22 @@
         <h2 id="bounded-heading">Six-turn simulation batches</h2>
         <div id="bounded-results" aria-live="polite"></div>
       </section>
+      <section class="panel diagnostic-panel" aria-labelledby="quiet-title">
+        <span class="eyebrow">Development diagnostics</span>
+        <h2 id="quiet-title" class="panel-title">When does progress slow?</h2>
+        <p class="small">Explore consecutive turns without a recorded development or setup event.</p>
+        <details class="story-drilldown"><summary>Load a different batch</summary><label class="diagnostic-import">Load individual simulation run JSON files
+          <input id="quiet-files" type="file" accept="application/json,.json" multiple>
+        </label></details>
+        <p id="quiet-status" class="micro" role="status">No action runs loaded. Select run files from the Python simulator to explore this diagnostic.</p>
+        <div id="quiet-output" aria-live="polite"></div>
+        <details class="story-drilldown"><summary>How is this measured?</summary>
+          <p class="micro">Run files stay in this browser and must match the selected built-in deck. Generate runs together using the same simulator version. The command below creates an array from a repository checkout.</p>
+          <code id="quiet-command" class="quiet-command"></code>
+          <p class="micro">A flagged turn follows two consecutive turns without a recorded land play, reviewed permanent, tutor, token spell, trigger, phase effect or sacrifice action. The first example is selected by its proximity to the group’s average lands and unsupported cards in hand.</p>
+        </details>
+      </section>
+      <details class="panel story-drilldown"><summary>Earlier opening-hand observations · 11 hands</summary>
       <section class="results-head panel" aria-labelledby="results-overview-heading">
         <div class="results-heading-row">
           <div>
@@ -119,8 +135,10 @@
         <div class="results-kpis" id="results-kpis"></div>
         <div id="results-takeaway" class="results-takeaway" aria-live="polite"></div>
       </section>
+      </details>
     </div>
     <div class="tab-pane" id="pane-insights" hidden>
+      <details class="panel story-drilldown"><summary>Explore the earlier observation archive</summary>
       <section class="scroll-story" aria-labelledby="story-head">
         <div class="story-heading">
           <span class="eyebrow">Explore the details</span>
@@ -184,21 +202,6 @@
           </div>
         </details>
       </section>
-      <section class="panel diagnostic-panel" aria-labelledby="quiet-title">
-        <span class="eyebrow">Development diagnostics</span>
-        <h2 id="quiet-title" class="panel-title">When does progress slow?</h2>
-        <p class="small">Explore consecutive turns without a recorded development or setup event.</p>
-        <label class="diagnostic-import">Load individual simulation run JSON files
-          <input id="quiet-files" type="file" accept="application/json,.json" multiple>
-        </label>
-        <p id="quiet-status" class="micro" role="status">No action runs loaded. Select run files from the Python simulator to explore this diagnostic.</p>
-        <div id="quiet-output" aria-live="polite"></div>
-        <details class="story-drilldown"><summary>How is this measured?</summary>
-          <p class="micro">Run files stay in this browser and must match the selected built-in deck. Generate runs together using the same simulator version. The command below creates an array from a repository checkout.</p>
-          <code id="quiet-command" class="quiet-command"></code>
-          <p class="micro">A flagged turn follows two consecutive turns without a recorded land play, reviewed permanent, tutor, token spell or reviewed trigger resolving. Unsupported cards and unmodeled decisions can create false positives. A flag is a prompt to inspect, not a proven deck problem.</p>
-        </details>
-      </section>
       <section class="panel archived-details" aria-labelledby="archived-details-heading">
         <h2 id="archived-details-heading" class="panel-title">Inspect a run</h2>
         <p class="small">Explore one observation.</p>
@@ -216,6 +219,7 @@
           <div id="turn-timeline" class="timeline"></div>
         </details>
       </section>
+      </details>
     </div>
     <div class="tab-pane" id="pane-workshop" hidden>
       <div class="two-col">

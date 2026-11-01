@@ -194,7 +194,8 @@
     });
   }
   const PROGRESS_EVENTS=new Set(["land_play","creature_resolved","artifact_resolved",
-    "tutor_resolved","token_spell_resolved","reviewed_trigger_resolved"]);
+    "enchantment_resolved","tutor_resolved","token_spell_resolved","reviewed_trigger_resolved",
+    "reviewed_phase_resolved","reviewed_sacrifice_activated"]);
   function quietTurns(runs,deckKey,deckHash){
     if(!Array.isArray(runs)||!runs.length)throw Error("Select one or more individual run records.");
     const seeds=new Set(),first=runs[0],horizon=first?.events?.length,policy=first?.mulligan?.policy;
