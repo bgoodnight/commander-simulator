@@ -70,7 +70,13 @@ class BoundedEarlyGameTests(unittest.TestCase):
                     "reviewed_buyback_resolved",
                     "reviewed_spell_copy_cast",
                     "reviewed_spell_copy_resolved",
+                    "source_paid_candidate",
                 } for event in turn["events"]))
+                for event in turn["events"]:
+                    if event["type"]=="source_paid_candidate":
+                        self.assertEqual(event["fidelity"],"payment_preview_only")
+                        self.assertEqual(event["effect_status"],"unsupported")
+                        self.assertNotIn("stack_object_id",event)
 
     def test_magnus_reviewed_tutors_pay_and_move_actual_cards(self):
         seen=[]
