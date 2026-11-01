@@ -29,6 +29,7 @@ from .reviewed_early_cards import REVIEWED_BY_DECK, LIMITATIONS, reviewed_creatu
 from .snapshots import validate_snapshot
 from .mana_kernel_bridge import _reviewed_modes
 from .reviewed_rocks import reviewed_rock
+from .reviewed_lands import reviewed_land
 from .reviewed_tutors import reviewed_tutor
 from .reviewed_tutor_cast import (eligible_reviewed_tutor_targets,
                                   cast_and_resolve_reviewed_tutor)
@@ -144,6 +145,7 @@ def run_bounded_early_game(deck_key, *, seed=0, turns=6, mulligan="one-free", pr
         tutor_review = reviewed_tutor(name, raw_by_name[name])
         reviewed = (reviewed_creature(deck_key, name, raw_by_name[name])
                     or reviewed_rock(name, raw_by_name[name], colors) is not None
+                    or reviewed_land(name, raw_by_name[name], colors) is not None
                     or (tutor_review is not None
                         and tutor_review[2] in {"instant", "sorcery"})
                     or reviewed_token_spell(name, raw_by_name[name]) is not None
@@ -177,9 +179,12 @@ def run_bounded_early_game(deck_key, *, seed=0, turns=6, mulligan="one-free", pr
     zones.shuffle(0)
     zones.draw(0, 7)
     initial_hand = list(zones.names(0, "hand"))
-    supported_land = lambda oid: bool(
-        "land" in kernel.get(oid).types
-        and _reviewed_modes(kernel.get(oid).card.name, colors))
+    def supported_land(oid):
+        obj=kernel.get(oid)
+        if "land" not in obj.types:
+            return False
+        return bool(_reviewed_modes(obj.card.name,colors)
+                    or reviewed_land(obj.card.name,raw_by_name[obj.card.name],colors))
     possible_lands = sum(supported_land(oid) for oid in zones.ids(0, "hand"))
     mulligan_taken = mulligan == "one-free" and not 2 <= possible_lands <= 5
     if mulligan_taken:
@@ -246,9 +251,18 @@ def run_bounded_early_game(deck_key, *, seed=0, turns=6, mulligan="one-free", pr
         if playable_lands:
             land_id = playable_lands[0]
             name = kernel.get(land_id).card.name
+            other_lands=sum("land" in obj.types and obj.zone=="battlefield"
+                            and obj.controller==0 for obj in kernel.objects.values())
+            land_review=reviewed_land(name,raw_by_name[name],colors)
             new_id = zones.play_land(0, land_id)
+            if land_review is not None and land_review.enters_tapped(other_lands):
+                kernel.get(new_id).tapped=True
+                kernel._dirty()
             events.append({"type": "land_play", "card": name,
-                           "from_object_id": land_id, "object_id": new_id})
+                           "from_object_id": land_id, "object_id": new_id,
+                           "fidelity":"reviewed_partial_land" if land_review else "reviewed_basic_land",
+                           "entered_tapped":bool(kernel.get(new_id).tapped),
+                           "unsupported_abilities":list(land_review.ignored) if land_review else []})
         copied_this_turn=set()
         # Reuse the same source-paid action for approved artifacts and creatures.
         # Prefer affordable ramp rocks before creatures: a limited pilot policy.
