@@ -2,7 +2,7 @@
 
 This is a deliberately limited *real-action slice*, NOT the v35 full multiplayer
 turn driver. Cards never get executable behavior from printed metadata alone.
-Only reviewed basic/Command Tower land plays, mana-rock casts and a small
+Only reviewed basic/Command Tower land plays, mana-rock casts, source-paid\nreviewed tutor search casts, and a small
 exact Oracle/text-reviewed creature subset are permitted; unsupported card
 effects remain blocked. No combat, opponent turns, tutor casting, priority,
 general triggers, arbitrary activated abilities, or win rates.
@@ -23,6 +23,9 @@ from .reviewed_early_cards import REVIEWED_BY_DECK, LIMITATIONS, reviewed_creatu
 from .snapshots import validate_snapshot
 from .mana_kernel_bridge import _reviewed_modes
 from .reviewed_rocks import reviewed_rock
+from .reviewed_tutors import reviewed_tutor
+from .reviewed_tutor_cast import (eligible_reviewed_tutor_targets,
+                                  cast_and_resolve_reviewed_tutor)
 from .template_resources import TemplateManaService
 
 ROOT = Path(__file__).resolve().parents[1]
@@ -102,8 +105,11 @@ def run_bounded_early_game(deck_key, *, seed=0, turns=6, mulligan="one-free", pr
             power, toughness = face.power or 0, face.toughness or 0
             keywords = face.keywords or frozenset()
             colors_printed = face.colors
+        tutor_review = reviewed_tutor(name, raw_by_name[name])
         reviewed = (reviewed_creature(deck_key, name, raw_by_name[name])
-                    or reviewed_rock(name, raw_by_name[name], colors) is not None)
+                    or reviewed_rock(name, raw_by_name[name], colors) is not None
+                    or (tutor_review is not None
+                        and tutor_review[2] in {"instant", "sorcery"}))
         definition = CardDefinition(
             identity.oracle_id, name, types, subtypes=subtypes,
             supertypes=frozenset({"commander"}) if section == "Commander" else frozenset(),
@@ -165,17 +171,47 @@ def run_bounded_early_game(deck_key, *, seed=0, turns=6, mulligan="one-free", pr
                 raw = raw_by_name[name]
                 is_creature = reviewed_creature(deck_key, name, raw)
                 rock = reviewed_rock(name, raw, colors)
-                if not is_creature and rock is None:
+                tutor = reviewed_tutor(name, raw)
+                eligible = (eligible_reviewed_tutor_targets(zones, 0, name, raw_by_name)
+                            if tutor and tutor[2] in {"instant", "sorcery"} else ())
+                if not is_creature and rock is None and not eligible:
                     continue
                 cost = registry.get(name).primary_face().mana_cost
                 payment = mana_service.plan(0, cost)
                 if payment is not None:
-                    kind = "creature" if is_creature else "artifact"
-                    options.append((0 if rock is not None else 1,
-                                    len(payment.source_ids), name, oid, kind, cost))
+                    kind = ("artifact" if rock is not None else
+                            "tutor" if eligible else "creature")
+                    target = (min(eligible, key=lambda target_id: (
+                        0 if kernel.get(target_id).card.name == "Sol Ring" else
+                        1 if reviewed_rock(kernel.get(target_id).card.name,
+                                            raw_by_name[kernel.get(target_id).card.name],
+                                            colors) is not None else
+                        2 if reviewed_creature(deck_key,
+                             kernel.get(target_id).card.name,
+                             raw_by_name[kernel.get(target_id).card.name]) else 3,
+                        target_id)) if eligible else None)
+                    options.append((0 if rock is not None else 1 if eligible else 2,
+                                    len(payment.source_ids), name, oid, kind, cost, target))
             if not options:
                 break
-            _, _, name, oid, kind, cost = min(options)
+            _, _, name, oid, kind, cost, target = min(options)
+            if kind == "tutor":
+                result = cast_and_resolve_reviewed_tutor(
+                    zones, 0, oid, raw_by_name, colors, mana_service,
+                    target_id=target)
+                if result is None:
+                    raise AssertionError("Tutor payment changed without an action")
+                events.append({"type": "tutor_cast", "card": name,
+                               "stack_object_id": result.source_stack_id,
+                               "source_object_ids": list(result.paid_source_ids),
+                               "fidelity": "bounded_reviewed_search"})
+                events.append({"type": "tutor_resolved", "card": name,
+                               "source_graveyard_id": result.source_graveyard_id,
+                               "target_name": result.target_name,
+                               "target_object_id": result.target_new_id,
+                               "destination": result.target_destination,
+                               "fidelity": "bounded_reviewed_search"})
+                continue
             review = ReviewedCreatureCast(
                 kernel.get(oid).card.card_id, cost, True,
                 ("Other printed abilities remain unsupported",))
