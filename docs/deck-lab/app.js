@@ -540,15 +540,12 @@ function batchExample(batch,deck,kind,turn){
   const first=[...counts].sort((a,b)=>b[1]-a[1]||a[0].localeCompare(b[0]))[0];
   return first?{card:cardForId(first[0]),count:first[1]}:null;
 }
-function batchExampleNode(example,kind,turn,total){
+function batchExampleNode(example){
   if(!example?.card)return null;
-  const {card,count}=example,button=el("button",null,"batch-card-example");button.type="button";
+  const {card}=example,button=el("button",null,"batch-card-example");button.type="button";
   button.setAttribute("aria-label","View "+card.name+" card details");
   button.appendChild(imageNode(card, !card.image&&!!card.art,"batch-card-image"));
-  const action=kind==="land"?"played by turn "+turn:kind==="rock"?"cast by turn "+turn:"unsupported in hand on turn "+turn;
-  const caption=el("span",null,"batch-card-caption");
-  caption.append(el("strong",card.name),el("span","Example · "+action+" in "+count+" / "+total+" runs"));
-  button.appendChild(caption);button.addEventListener("click",()=>showCard(card.oracle_id));return button;
+  button.addEventListener("click",()=>showCard(card.oracle_id));return button;
 }
 function boardReport(batch, type){
   const report=window.DeckInsights.boardDevelopment(batch.runs,cardInfo,type,6), end=report.rows[5];
@@ -594,7 +591,8 @@ function showBoundedBatch(){
   for(const [value,label,kind,turn] of [[t3.mean_lands_in_play,"Average lands on turn 3","land",3],
       [t3.pct_with_reviewed_rock_in_play+"%","Have a mana rock on turn 3","rock",3],
       [t6.mean_unsupported_hand_cards,"Average cards in hand not yet supported on turn 6","unsupported",6]]){
-    const card=el("div",null,"quiet-group batch-stat");card.append(el("strong",String(value)),el("p",label,"small"));
+    const card=el("div",null,"quiet-group batch-stat"),copy=el("div",null,"batch-stat-copy");
+    copy.append(el("strong",String(value)),el("p",label,"small"));card.appendChild(copy);
     const example=batchExampleNode(batchExample(batch,selectedDeck(),kind,turn),kind,turn,batch.seed_count);
     if(example)card.appendChild(example);cards.appendChild(card);
   }
