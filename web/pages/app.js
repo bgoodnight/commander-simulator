@@ -14,6 +14,7 @@ const LABELS = {
   mortarion_current:"Mortarion · Current",mortarion_ideal:"Mortarion · Ideal",
   necron_dynasties:"Necron Dynasties"
 };
+let gameChangers=null;
 let data=null, archives=null, allNames=[], selected=null, activeTab="overview";
 let cachedByName = new Map(),extraCards={},activeCounts=null,history=[],localVersions=[];
 const soundKey="commander-deck-lab-sound-v1";
@@ -419,7 +420,43 @@ function renderOverview(){
   const curveBox=$("mana-chart");clear(curveBox);
   curveBox.appendChild(makeBars(curve,{color:"#80bdb2"}));
   renderThemes(cards,c);
+  renderBracketAssessment(cards);
 }
+
+function renderBracketAssessment(cards){
+  const root=$("bracket-assessment");if(!root)return;clear(root);
+  const result=window.CommanderBrackets?.assess(cards,{...data.cards,...extraCards},gameChangers);
+  if(!result||result.status==="unavailable"){
+    root.appendChild(el("p","Bracket evidence unavailable; Game Changers snapshot could not be loaded.","micro"));return;
+  }
+  const heading=el("div",null,"bracket-head");
+  heading.append(el("strong","Estimated Bracket "+result.estimated_bracket+" · "+
+    ({2:"Core",3:"Upgraded",4:"Optimized"}[result.estimated_bracket]||"Review needed")),
+    el("span",result.status==="incomplete"?"Incomplete card identity":"Provisional screening","chip"));
+  root.appendChild(heading);
+  root.appendChild(el("p",result.count+" Game Changer"+(result.count===1?"":"s")+
+    " · "+result.total+" cards checked · minimum Bracket "+result.minimum_by_game_changers+
+    " from Game Changer limits.","small"));
+  const details=el("details",null,"bracket-evidence"),summary=el("summary","Show evidence & limitations");
+  details.appendChild(summary);
+  const list=el("ul",null,"bracket-evidence-list");
+  for(const card of result.matches){
+    const li=el("li");const button=el("button",card.name,"selectable-card");
+    button.type="button";button.addEventListener("click",()=>showCard(card.oracle_id));li.appendChild(button);list.appendChild(li);
+  }
+  if(!result.matches.length)list.appendChild(el("li","No Game Changers found in identified cards."));
+  details.appendChild(list);
+  for(const [items,label] of [[result.tutors,"Nonland library-search signals"],[result.extraTurns,"Extra-turn text signals"],[result.landDenial,"Mass-land-denial text signals"]]){
+    details.appendChild(el("p",label+": "+(items.length?items.join(", "):"none detected"),"micro"));
+  }
+  if(result.unknown.length)details.appendChild(el("p","Unidentified cards: "+result.unknown.join(", "),"micro"));
+  details.appendChild(el("p",result.caveat,"micro"));
+  const source=el("a","Wizards' Commander bracket guidelines");source.href=result.source;
+  source.target="_blank";source.rel="noopener noreferrer";details.appendChild(source);
+  details.appendChild(el("p","Game Changers reference updated "+result.reference_updated+". Re-evaluate after rules updates.","micro"));
+  root.appendChild(details);
+}
+
 function renderThemes(cards,commander){
   const root=$("deck-themes"),status=$("theme-status");clear(root);
   status.hidden=!isUnsimulatedVersion();
@@ -1494,10 +1531,10 @@ async function boot(){
   registerEvents();
   try{
     const response=await Promise.all([
-      fetch("./decks.json?v=20261101c"),fetch("./observations.json"),fetch("./names.json"),fetch("./bounded-batches.json?v=20261101b")
+      fetch("./decks.json?v=20261101c"),fetch("./observations.json"),fetch("./names.json"),fetch("./bounded-batches.json?v=20261101b"),fetch("./game-changers.json?v=20261101bracket")
     ]);
     if(response.some(r=>!r.ok))throw Error("Site data could not be loaded. Check the Pages deployment.");
-    [data,archives,allNames,boundedBatches]=await Promise.all(response.map(r=>r.json()));
+    [data,archives,allNames,boundedBatches,gameChangers]=await Promise.all(response.map(r=>r.json()));
     const batchKeys=Object.keys(boundedBatches.decks);
     const runResponses=await Promise.all(batchKeys.map(key=>fetch("./bounded-runs-"+key+".json?v=20261101b")));
     if(runResponses.some(r=>!r.ok))throw Error("Simulation run data could not be loaded.");
