@@ -46,6 +46,39 @@ with the historical tutor registries. The v3–v35 and frozen replay suites
 must also remain green. Existing descriptive design sketches further below
 remain relevant to the remaining G2–G5 integration work.
 
+## First live trigger integration — M2.11 (narrow, regression-gated)
+
+`commander_sim/live_trigger_bridge.py` now binds two **pinned** historical
+triggered abilities to the previously implemented per-slot dispatcher:
+
+- **Baral, Chief of Compliance**: the optional draw-one, discard-one
+  trigger after a controlled spell/ability counters a spell; its cost
+  reduction remains in the historical static-cost engine.
+- **Archmage Emeritus**: its Magecraft draw-one effect, with both
+  spell-cast and spell-copy trigger hooks mapped to the **same slot**.
+
+The existing v13–v35 `GameKernel.triggers` still determines eligibility,
+Harmonic Prodigy trigger multiplicity and controller. The existing priority
+stack creates independent frames, handles responses/counters and calls the
+same historical effect resolution code. Only the approved trigger **effect
+dispatch** is routed through `AbilityDispatcher`; its provenance is recorded
+after the host callback succeeds, not when the event is merely queued.
+The bridge's `TriggerSubscriptions` registers by object ID + slot + hook
+without suppressing distinct trigger events, and keeps a departed source's
+registration while its pending triggered frames await resolution. It prunes
+registrations after their stack work has resolved. Direct old synthetic
+`TriggerResult` tests for unregistered objects retain their previous
+behavior but acquire **no false reviewed provenance**.
+
+This is not a replacement for the whole event/priority subsystem or a
+generic Oracle-text trigger interpreter. Expansion should first move more
+previously-tested abilities into pinned declarations, then replace the
+historical card-name registration boundary only when authoritative
+object identity, ability-slot lifecycle and legal target/permission layers
+are available. The new core never subscribes unknown card roles.
+See `tests/test_live_trigger_bridge.py` and v13 real-game tests for
+doubling, Archmage copied-spell triggers, source departure and provenance.
+
 ## Decision in one sentence
 
 **A card always retains one immutable, verified identity; it acquires reusable rules and explicitly registered behaviors; later exact implementations replace only their matching simplified behavior while preserving unrelated abilities and universal interactions.** No card-specific game-engine subclass. One authoritative game state and action lifecycle.
