@@ -81,6 +81,15 @@ SACRIFICE_MODES={
 }
 
 
+def reviewed_sacrifice_artifact(name,raw):
+    """Reviewed no-ETB artifacts eligible for one generic physical cast."""
+    return bool(name=="Ashnod's Altar"
+        and raw.get("layout")=="normal"
+        and raw.get("type_line")=="Artifact"
+        and raw.get("oracle_id")==SACRIFICE_MODES[name].oracle_id
+        and raw.get("oracle_text")==SACRIFICE_MODES[name].excerpt)
+
+
 @dataclass(frozen=True)
 class SacrificeResult:
     source_id: int
