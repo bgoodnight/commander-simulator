@@ -66,7 +66,6 @@ def reviewed_rock(name, card, commander_colors):
             or "Artifact" not in card.get("type_line", "").split(" — ", 1)[0]):
         return None
     descriptor = row["review"]
-    base = admit_reviewed_effect(card, descriptor)
     if name in ("Arcane Signet", "Commander\'s Sphere"):
         colors = tuple(sorted(set(commander_colors)))
         if not colors or any(c not in "WUBRG" for c in colors):
@@ -75,7 +74,6 @@ def reviewed_rock(name, card, commander_colors):
             descriptor.template, overrides=(("mana_modes",
                 tuple(ManaMode((c,)) for c in colors)),),
             assumptions=descriptor.assumptions)
-        base = admit_reviewed_effect(card, descriptor)
     if name == "Talisman of Creativity":
         descriptor = ReviewedEffect(descriptor.oracle_id, descriptor.oracle_text,
             descriptor.template, overrides=(("mana_modes",
