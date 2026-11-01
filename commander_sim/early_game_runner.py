@@ -2,9 +2,10 @@
 
 This is a deliberately limited *real-action slice*, NOT the v35 full multiplayer
 turn driver. Cards never get executable behavior from printed metadata alone.
-Only basics / Command Tower and explicitly text/Oracle-reviewed creature casts
-are permitted; all other choices are omitted. No combat, opponent turns,
-priority interaction, triggers, activated abilities, mana rocks, or win rates.
+Only reviewed basic/Command Tower land plays, mana-rock casts and a small
+exact Oracle/text-reviewed creature subset are permitted; unsupported card
+effects remain blocked. No combat, opponent turns, tutor casting, priority,
+general triggers, arbitrary activated abilities, or win rates.
 """
 from __future__ import annotations
 
@@ -44,10 +45,10 @@ def _load_live_kernel():
 
 
 def run_bounded_early_game(deck_key, *, seed=0, turns=6, mulligan="one-free", profile=None):
-    """Play reviewed actual actions for one pinned deck for 1..10 turns.
+    """Play a small reviewed set of actual land, rock and creature actions.
 
     A deterministic, conservative fixed pilot draws, plays one supported land,
-    and casts affordable reviewed ordinary creatures from hand without
+    and casts affordable reviewed rocks/ordinary creatures from hand without
     pretending to implement printed abilities. All 100 physical cards occupy
     the same kernel; no observation-mode synthetic battlefield exists.
     """
