@@ -1397,12 +1397,12 @@ async function boot(){
   registerEvents();
   try{
     const response=await Promise.all([
-      fetch("./decks.json"),fetch("./observations.json"),fetch("./names.json"),fetch("./bounded-batches.json")
+      fetch("./decks.json"),fetch("./observations.json"),fetch("./names.json"),fetch("./bounded-batches.json?v=20261101b")
     ]);
     if(response.some(r=>!r.ok))throw Error("Site data could not be loaded. Check the Pages deployment.");
     [data,archives,allNames,boundedBatches]=await Promise.all(response.map(r=>r.json()));
     const batchKeys=Object.keys(boundedBatches.decks);
-    const runResponses=await Promise.all(batchKeys.map(key=>fetch("./bounded-runs-"+key+".json")));
+    const runResponses=await Promise.all(batchKeys.map(key=>fetch("./bounded-runs-"+key+".json?v=20261101b")));
     if(runResponses.some(r=>!r.ok))throw Error("Simulation run data could not be loaded.");
     const runSets=await Promise.all(runResponses.map(r=>r.json()));
     batchKeys.forEach((key,i)=>{boundedBatches.decks[key].runs=runSets[i]});
