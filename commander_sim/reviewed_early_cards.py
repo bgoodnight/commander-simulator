@@ -160,6 +160,33 @@ _ADDITIONAL_SAFE_BODIES = {
 for _deck, _reviews in _ADDITIONAL_SAFE_BODIES.items():
     REVIEWED_BY_DECK.setdefault(_deck, {}).update(_reviews)
 
+# Additional reviewed sacrifice sources without mandatory unresolved ETB.
+_ADDITIONAL_SACRIFICE_BODIES = {
+  "mortarion_current": {
+    "Viscera Seer": {
+      "oracle_id": "f82a4e85-526d-4456-b700-7760043a31be",
+      "oracle_text": "Sacrifice a creature: Scry 1. (Look at the top card of your library. You may put that card on the bottom.)"
+    }
+  },
+  "mortarion_ideal": {
+    "Yawgmoth, Thran Physician": {
+      "oracle_id": "a1e232c0-dc38-47be-a5a0-f68bc1d86a29",
+      "oracle_text": "Protection from Humans
+Pay 1 life, Sacrifice another creature: Put a -1/-1 counter on up to one target creature and draw a card.
+{B}{B}, Discard a card: Proliferate. (Choose any number of permanents and/or players, then give each another counter of each kind already there.)"
+    }
+  },
+  "necron_dynasties": {
+    "Illuminor Szeras": {
+      "oracle_id": "10f274f9-9044-447b-81c9-d4906ad9e6be",
+      "oracle_text": "Secrets of the Soul — {T}, Sacrifice another creature: Add an amount of {B} equal to the sacrificed creature's mana value."
+    }
+  }
+}
+for _deck, _reviews in _ADDITIONAL_SACRIFICE_BODIES.items():
+    REVIEWED_BY_DECK.setdefault(_deck, {}).update(_reviews)
+
+
 def reviewed_creature(deck_key, name, source_card):
     approved = REVIEWED_BY_DECK.get(deck_key, {}).get(name)
     return bool(approved and source_card.get("layout") == "normal"
