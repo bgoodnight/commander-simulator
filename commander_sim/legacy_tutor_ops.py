@@ -8,8 +8,8 @@ declares its restrictions using the same EffectTemplate as the M3 backend.
 No Oracle text interpretation, custom card-name branches, or new zone state.
 """
 from dataclasses import dataclass
-from .effect_templates import EffectTemplate, compose_effect
-from .reviewed_tutors import TUTORS
+from .effect_templates import EffectTemplate
+from .ability_composition import inspected_search_card
 
 
 @dataclass(frozen=True)
@@ -38,7 +38,12 @@ def _search(types, *, subtype=(), colors=(), maximum=None, destination="hand"):
 # reviewed declarations and are explicit exceptions until their source
 # records are promoted into the same pinned registry.
 def _registered(key, printed_name):
-    return HistoricalSearch(key, compose_effect(TUTORS[printed_name]["review"]), key)
+    card=inspected_search_card(printed_name,include_historical_exact=True)
+    handler=card.resolve("search","strict",
+                         frozenset({"library_search","historical_search"}))
+    if handler is None:
+        raise ValueError("Historical tutor has no reviewed executable search slot")
+    return HistoricalSearch(key,handler.operation,key)
 
 
 HISTORICAL_SEARCHES = {
