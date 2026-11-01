@@ -66,10 +66,9 @@ def execute_reviewed_search_to_hand(zones, seat, source_id, target_id, catalog):
     if type(target_id) is not int or target_id not in eligible:
         raise ValueError("Target is not a legal library card")
     target_name = zones.kernel.get(target_id).card.name
-    # Search_to_hand already owns the authoritative zone move and shuffle.
-    new_id = zones.search_to_hand(seat, lambda definition:
-                                  definition.name == target_name)
-    if new_id is None:
-        raise AssertionError("Verified tutor target vanished before resolution")
+    # Move the *selected physical object ID*; matching only by name would
+    # silently fetch the wrong copy of a repeated basic land.
+    new_id = zones.move(target_id, "hand", "resolve")
+    zones.shuffle(seat)
     return SearchResult(source_id, target_id, new_id, target_name,
                         template.destination, template.reveal, template.shuffle)
