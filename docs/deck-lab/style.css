@@ -557,3 +557,14 @@ body{background-color:#101019;background-image:radial-gradient(ellipse at 50% -1
 .bracket-evidence-list{margin:10px 0;padding-left:19px;font-size:.8rem;line-height:1.7}
 .bracket-evidence .micro{line-height:1.55;margin:7px 0}
 .bracket-evidence a{font-size:.78rem}
+
+
+/* Compact bracket entry point; explanations expand only on request. */
+.bracket-assessment{margin-top:12px}
+.bracket-assessment .bracket-evidence{border:0;padding:0;margin:0}
+.bracket-trigger{display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap;list-style:none;cursor:pointer}
+.bracket-trigger::-webkit-details-marker{display:none}
+.bracket-trigger strong{color:var(--gold);font-family:Cinzel,Georgia,serif;font-size:.88rem}
+.bracket-trigger-action,.bracket-inline-link{color:var(--cyan);font-size:.73rem;text-decoration:underline;text-underline-offset:3px}
+.bracket-evidence-body{border-top:1px solid #6b5b42;margin-top:10px;padding-top:12px}
+.bracket-inline-link{display:inline-block;margin-top:2px}
