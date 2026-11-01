@@ -583,3 +583,11 @@ body{background-color:#101019;background-image:radial-gradient(ellipse at 50% -1
 .deck-selection-row .global-deck-select{flex:1;min-width:0;width:100%;max-width:none}
 .deck-selection-row .selection-state{flex-shrink:0}
 @media(max-width:650px){.deck-selection-row:not([hidden]){flex-direction:column;align-items:stretch}.deck-selection-row .selection-state{text-align:left;max-width:none}}
+
+/* Reserve cards remain outside the Commander 100-card main deck. */
+.library-extra{margin-top:14px}
+.library-extra .warning{border-left:3px solid #bb9d69;padding:10px 12px;margin:0 0 12px;background:#292625;color:#f0ddbd;border-radius:5px}
+.reserve-list{padding:10px 14px;border:1px solid #80745f;border-radius:8px}
+.reserve-list summary{cursor:pointer;font-weight:600}
+.reserve-list ul{margin:10px 0 2px;padding-left:20px;columns:2}
+@media(max-width:600px){.reserve-list ul{columns:1}}
