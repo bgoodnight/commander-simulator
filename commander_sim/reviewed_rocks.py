@@ -50,6 +50,26 @@ ROCKS = {
             assumptions=("Generic activation funding required before U/R output",),
             ),
     },
+    "Worn Powerstone": {
+        "printed_cost": "{3}",
+        "review": ReviewedEffect(
+            "b166b670-febc-4821-855e-f8d465644c03",
+            "This artifact enters tapped.\n{T}: Add {C}{C}.",
+            "rock_colorless_two",
+            overrides=(("enter_tapped", True),),
+            assumptions=("Two colorless mana and enters-tapped behavior reviewed",),
+        ),
+    },
+    "Chromatic Lantern": {
+        "printed_cost": "{3}",
+        "review": ReviewedEffect(
+            "539f5396-d99a-417d-a84c-dff7930b5900",
+            'Lands you control have "{T}: Add one mana of any color."\n{T}: Add one mana of any color.',
+            "rock_commander_identity",
+            assumptions=("Lantern's own mana mode only; its land-granting static ability is unsupported",),
+            ignored_abilities=("Lands you control gain any-color mana abilities",),
+        ),
+    },
     "Talisman of Creativity": {
         "printed_cost": "{2}",
         "review": ReviewedEffect("14d2979d-5728-42d7-a027-0eb1f754655d", "{T}: Add {C}.\n{T}: Add {U} or {R}. This artifact deals 1 damage to you.",
@@ -66,7 +86,7 @@ def reviewed_rock(name, card, commander_colors):
             or "Artifact" not in card.get("type_line", "").split(" — ", 1)[0]):
         return None
     descriptor = row["review"]
-    if name in ("Arcane Signet", "Commander\'s Sphere"):
+    if name in ("Arcane Signet", "Commander\'s Sphere", "Chromatic Lantern"):
         colors = tuple(symbol for symbol in "WUBRG" if symbol in set(commander_colors))
         if not colors or any(c not in "WUBRG" for c in colors):
             raise ValueError("Commander color identity is required")
