@@ -24,6 +24,7 @@ from .reviewed_graveyard_creatures import GRAVEYARD_CREATURES
 from .reviewed_nonhand_cast_triggers import NONHAND_CAST_TRIGGERS
 from .reviewed_escape import BREACH_REVIEWS
 from .reviewed_buyback import BUYBACK
+from .reviewed_spell_copy import REVIEWED_COPY_SPELLS
 
 
 def _named_sources():
@@ -44,6 +45,7 @@ def _named_sources():
         ("nonhand_cast_trigger",NONHAND_CAST_TRIGGERS),
         ("escape_grant",BREACH_REVIEWS),
         ("buyback",BUYBACK),
+        ("spell_copy",REVIEWED_COPY_SPELLS),
     ):
         for name,row in source.items():
             if kind in {"mana","search"}:
