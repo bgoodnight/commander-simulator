@@ -6,7 +6,7 @@ from commander_sim.physical_common_effects import (
     CardQuantity, CounterPlacement, GraveyardToHand,
     draw_physical_cards, mill_physical_cards, put_reviewed_counters,
     retrieve_reviewed_graveyard_card, TargetedPermanentRemoval,
-    remove_reviewed_permanent,
+    remove_reviewed_permanent, scry_physical_cards,
 )
 
 
@@ -110,6 +110,23 @@ class PhysicalCommonEffectTests(unittest.TestCase):
             TargetedPermanentRemoval("sacrifice",frozenset({"creature"}))
         self.assertEqual(self.k.get(friendly).zone,"battlefield")
         self.assertEqual(self.k.get(enemy).zone,"battlefield")
+
+    def test_shared_scry_moves_exact_library_id_to_bottom(self):
+        first=self.card("First","library",{"instant"})
+        second=self.card("Second","library",{"instant"})
+        third=self.card("Third","library",{"instant"})
+        result=scry_physical_cards(self.z,0,1,bottom_ids=(third,))
+        self.assertEqual(result.seen_ids,(third,))
+        self.assertEqual(self.z.ids(0,"library"),(third,first,second))
+        self.assertTrue(self.z.assert_consistent())
+
+    def test_shared_scry_rejects_duplicate_or_unseen_ids(self):
+        first=self.card("First","library",{"instant"})
+        second=self.card("Second","library",{"instant"})
+        with self.assertRaises(ValueError):
+            scry_physical_cards(self.z,0,1,bottom_ids=(first,))
+        self.assertEqual(self.z.ids(0,"library"),(first,second))
+        self.assertTrue(self.z.assert_consistent())
 
     def test_invalid_effect_specs_fail_before_any_mutation(self):
         with self.assertRaises(ValueError):
