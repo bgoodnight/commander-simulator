@@ -35,7 +35,7 @@ class SacrificeMode:
     def __post_init__(self):
         if (not self.oracle_id or not self.excerpt or
             self.action not in {"zombies_by_power","self_counter",
-                "draw","colorless_mana","black_mana_by_value","scry",
+                "draw","colorless_mana","any_color_mana","black_mana_by_value","scry",
                 "wither_draw"} or
             type(self.sacrifice_other) is not bool or
             type(self.tap) is not bool or
@@ -62,6 +62,10 @@ SACRIFICE_MODES={
         "4d18bcba-a346-445e-a182-6cc30b7e066d",
         "Sacrifice a creature: Add {C}{C}.",
         "colorless_mana"),
+    "Phyrexian Altar":SacrificeMode(
+        "8d02b297-97c4-4379-9862-0a462400f66f",
+        "Sacrifice a creature: Add one mana of any color.",
+        "any_color_mana"),
     "Viscera Seer":SacrificeMode(
         "f82a4e85-526d-4456-b700-7760043a31be",
         "Sacrifice a creature: Scry 1.",
@@ -83,7 +87,7 @@ SACRIFICE_MODES={
 
 def reviewed_sacrifice_artifact(name,raw):
     """Reviewed no-ETB artifacts eligible for one generic physical cast."""
-    return bool(name=="Ashnod's Altar"
+    return bool(name in {"Ashnod's Altar","Phyrexian Altar"}
         and raw.get("layout")=="normal"
         and raw.get("type_line")=="Artifact"
         and raw.get("oracle_id")==SACRIFICE_MODES[name].oracle_id
@@ -107,7 +111,7 @@ class SacrificeResult:
 def activate_reviewed_sacrifice(
     zones, life:KernelLife, source_id, victim_id, catalog, *,
     mana_service=None, turn=1, tap_ready=False, target_id=None,
-    scry_to_bottom=False, death_engine=None):
+    scry_to_bottom=False, death_engine=None, mana_color=None):
     """Apply an already-authorized named activated ability to physical cards.
 
     The host must supply tap_ready=True only when the source has controlled
@@ -148,6 +152,11 @@ def activate_reviewed_sacrifice(
             raise ValueError("Illegal target for -1/-1 counter")
     if type(scry_to_bottom) is not bool:
         raise ValueError("Scry choice must be explicit Boolean")
+    if mode.action=="any_color_mana":
+        if type(mana_color) is not str or mana_color not in "WUBRG":
+            raise ValueError("Phyrexian mana activation needs an explicit color")
+    elif mana_color is not None:
+        raise ValueError("Unexpected color choice for reviewed sacrifice mode")
     if mode.action in {"draw","wither_draw"} and not zones.ids(source.controller,"library"):
         raise NotImplementedError("Empty-library draw needs full state-based loss handling")
     if mode.life_cost and life.total(source.controller)<mode.life_cost:
@@ -161,7 +170,8 @@ def activate_reviewed_sacrifice(
         mana_value=int(mana_value)
     else:
         mana_value=0
-    if mode.action in {"colorless_mana","black_mana_by_value"} or mode.black_cost:
+    if mode.action in {"colorless_mana","any_color_mana",
+                       "black_mana_by_value"} or mode.black_cost:
         if mana_service is None or mana_service.kernel is not kernel:
             raise ValueError("Matching authoritative mana service required")
     paid=None
@@ -219,9 +229,10 @@ def activate_reviewed_sacrifice(
             answer=scry_physical_cards(
                 zones,source.controller,1,bottom_ids=bottom)
             bottomed=answer.bottomed_ids
-        elif operation.action in {"colorless_mana","black_mana_by_value"}:
-            added=("C","C") if operation.action=="colorless_mana" else (
-                ("B",)*mana_value)
+        elif operation.action in {"colorless_mana","any_color_mana","black_mana_by_value"}:
+            added=(("C","C") if operation.action=="colorless_mana" else
+                   (mana_color,) if operation.action=="any_color_mana" else
+                   ("B",)*mana_value)
             pool=list(mana_service.floating(source.controller))
             colors="WUBRGC"
             for color in added:
