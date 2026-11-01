@@ -82,6 +82,23 @@ PHASE_RULES={
 }
 
 
+def reviewed_phase_permanent(name,raw):
+    """Approve only printed normal enchantment phase engines for generic cast.
+
+    These reviewed cards have no mandatory ETB effects. Other enchantments,
+    creatures and artifact effects need separate hand-cast safety review.
+    """
+    if name not in {"Phyrexian Arena","Endless Ranks of the Dead",
+                    "Oversold Cemetery"}:
+        return False
+    if (not isinstance(raw,dict) or raw.get("layout")!="normal"
+            or raw.get("type_line")!="Enchantment"):
+        return False
+    return any(raw.get("oracle_id")==rule.oracle_id
+               and rule.excerpt in raw.get("oracle_text","")
+               for rule in PHASE_RULES[name])
+
+
 @dataclass(frozen=True)
 class PhaseResolution:
     source_id: int
