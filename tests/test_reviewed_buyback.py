@@ -76,6 +76,7 @@ class BuybackTests(unittest.TestCase):
         first=self.cast(oid,True)
         self.assertIsNone(self.cast(first.destination_id,False))
         self.add("Island","battlefield")
+        self.add("Second draw","library")
         again=self.cast(first.destination_id,False)
         self.assertEqual(again.destination,"graveyard")
         self.assertEqual(len(again.drawn_ids),1)
