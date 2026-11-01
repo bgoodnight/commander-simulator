@@ -63,15 +63,45 @@ def execute_reviewed_search_to_hand(zones, seat, source_id, target_id, catalog):
     if (source.zone != "stack" or kind not in {"instant", "sorcery"}
             or source_id not in zones._pending):
         raise ValueError("An unresolved reviewed spell cast is required; ETB/activated tutors remain gated")
-    if template.destination != "hand" or not template.shuffle:
+    if template.destination != "hand":
         raise NotImplementedError("This tutor needs a different destination/ordering handler")
+    return execute_reviewed_search_to_destination(
+        zones, seat, source_id, target_id, catalog)
+
+
+def execute_reviewed_search_to_destination(zones, seat, source_id, target_id, catalog):
+    """Resolve exact reviewed to-hand or shuffle-then-top search on real zones.
+
+    An authoritative pending stack ticket is required. Top-of-library effects
+    reorder the *selected existing ID* after shuffling; they never create a
+    phantom duplicate. Caller retains priority/timing and target choices.
+    """
+    source = zones.kernel.get(source_id)
+    card = catalog.get(source.card.name)
+    if card is None or source.card.card_id != card.get("oracle_id"):
+        raise ValueError("Unknown search source identity")
+    found = reviewed_tutor(source.card.name, card)
+    if found is None:
+        raise ValueError("Unreviewed search source")
+    template, _, kind = found
+    if (source.zone != "stack" or kind not in {"instant", "sorcery"}
+            or source_id not in zones._pending):
+        raise ValueError("Unresolved reviewed spell cast required")
+    if template.destination not in {"hand", "library_top"} or not template.shuffle:
+        raise NotImplementedError("Unreviewed search placement operation")
     eligible = legal_search_targets(zones, seat, source_id, catalog)
     if type(target_id) is not int or target_id not in eligible:
-        raise ValueError("Target is not a legal library card")
+        raise ValueError("Search target is not a legal library object")
     target_name = zones.kernel.get(target_id).card.name
-    # Move the *selected physical object ID*; matching only by name would
-    # silently fetch the wrong copy of a repeated basic land.
-    new_id = zones.move(target_id, "hand", "resolve")
-    zones.shuffle(seat)
+    if template.destination == "hand":
+        new_id = zones.move(target_id, "hand", "resolve")
+        zones.shuffle(seat)
+    else:
+        zones.shuffle(seat)
+        order = zones.order[seat, "library"]
+        order.remove(target_id)
+        order.append(target_id)
+        zones.kernel._dirty()
+        new_id = target_id
     return SearchResult(source_id, target_id, new_id, target_name,
                         template.destination, template.reveal, template.shuffle)
