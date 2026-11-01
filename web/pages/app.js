@@ -1321,7 +1321,7 @@ function loadDeckSelection(value){
   if(value==="unsaved")return;
   if(hasUnsavedChanges()&&!window.confirm(
       "Discard unsaved deck changes? Save as a named deck first to keep them.")){
-    renderDeckVersionSelector();return;
+    renderDeckVersionSelector();renderGlobalDeckSelector();return;
   }
   if(value.startsWith("preset:")){
     const deck=data.decks.find(d=>d.key===value.slice(7));
