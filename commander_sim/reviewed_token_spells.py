@@ -155,7 +155,8 @@ class TokenSpellOutcome:
 
 
 def cast_and_resolve_reviewed_token_spell(zones, seat, source_id, catalog,
-                                          commander_colors, mana_service):
+                                          commander_colors, mana_service, *,
+                                          on_cast=None):
     """Hand-cast a reviewed token sorcery and resolve verified token batches.
 
     The outer turn driver owns timing; not a permission to cast from graveyard.
@@ -171,6 +172,8 @@ def cast_and_resolve_reviewed_token_spell(zones, seat, source_id, catalog,
         raise ValueError("Token sorcery identity or text not reviewed")
     if mana_service is None or mana_service.kernel is not zones.kernel:
         raise ValueError("Physical mana service is required")
+    if on_cast is not None and not callable(on_cast):
+        raise TypeError("Reviewed cast-event hook must be callable")
     permitted=ReviewedCreatureCast(review.oracle_id,review.mana_cost,True,
                                    review.unmodeled_permissions)
     committed=cast_reviewed_spell(
@@ -178,6 +181,8 @@ def cast_and_resolve_reviewed_token_spell(zones, seat, source_id, catalog,
         mana_service=mana_service,spell_type="sorcery")
     if committed is None:
         return None
+    if on_cast is not None:
+        on_cast(committed.ticket)
     created=[]
     def resolve(kernel,ticket):
         created.extend(create_reviewed_tokens(zones,seat,review))
