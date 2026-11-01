@@ -6,6 +6,7 @@ from commander_sim.legacy_common_ops import (
     DrawDiscard, TokenBatch, GenericDiscount,
     apply_draw_discard, apply_token_batch, apply_generic_discount,
     SacrificeRequirement, legal_sacrifice_victims, sacrifice_physical_object,
+    ZoneTransfer,transfer_physical_object,
 )
 
 
@@ -141,6 +142,45 @@ class SacrificeOperationTests(unittest.TestCase):
             sacrifice_physical_object(self.t,0,1,2,self.requirement)
         with self.assertRaises(ValueError):
             SacrificeRequirement(frozenset(),frozenset({"creature"}))
+
+
+
+class ZoneTransferTests(unittest.TestCase):
+    def setUp(self):
+        self.obj=NS(object_id=10,zone="graveyard",owner=0,controller=0,
+                    types=frozenset({"instant"}))
+        self.moves=[]
+        self.table=NS(rules=NS(objects={10:self.obj}),
+            zones=NS(move=lambda *args:self.moves.append(("zones",args))),
+            world=NS(move=lambda *args:self.moves.append(("world",args))))
+
+    def test_graveyard_to_library_returns_owned_object(self):
+        spec=ZoneTransfer("graveyard","library",require_owner=True)
+        transfer_physical_object(self.table,0,10,spec)
+        self.assertEqual(self.moves,[("zones",(10,"library"))])
+
+    def test_bounce_uses_existing_world_zone_reason(self):
+        self.obj.zone="battlefield"
+        spec=ZoneTransfer("battlefield","hand",frozenset({"instant"}),reason="bounce")
+        transfer_physical_object(self.table,0,10,spec)
+        self.assertEqual(self.moves,[("world",(10,"hand","bounce"))])
+
+    def test_owner_and_type_requirements_are_checked_before_move(self):
+        self.obj.owner=1
+        with self.assertRaises(ValueError):
+            transfer_physical_object(self.table,0,10,
+                ZoneTransfer("graveyard","library",require_owner=True))
+        with self.assertRaises(ValueError):
+            transfer_physical_object(self.table,0,10,
+                ZoneTransfer("graveyard","library",frozenset({"creature"})))
+        self.assertEqual(self.moves,[])
+
+    def test_invalid_destination_or_missing_object_fails_closed(self):
+        with self.assertRaises(ValueError):
+            ZoneTransfer("graveyard","graveyard")
+        with self.assertRaises(ValueError):
+            transfer_physical_object(self.table,0,999,ZoneTransfer("graveyard","hand"))
+        self.assertEqual(self.moves,[])
 
 
 if __name__=="__main__":
