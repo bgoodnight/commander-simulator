@@ -137,6 +137,9 @@ def run_bounded_early_game(deck_key, *, seed=0, turns=6, mulligan="one-free", pr
                     or (tutor_review is not None
                         and tutor_review[2] in {"instant", "sorcery"})
                     or reviewed_token_spell(name, raw_by_name[name]) is not None
+                    # Graveyard flashback permission is independently reviewed,
+                    # even if no ordinary hand-cast recipe exists (Looting).
+                    or reviewed_flashback(name, raw_by_name[name]) is not None
                     or reviewed_phase_permanent(name, raw_by_name[name])
                     or reviewed_sacrifice_artifact(name,raw_by_name[name])
                     or approved_enter_hand_cast(name))
