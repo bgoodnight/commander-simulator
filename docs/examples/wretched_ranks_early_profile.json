@@ -1,0 +1,31 @@
+{
+  "key_cards": [
+    {
+      "id": "cryptbreaker",
+      "card": "Cryptbreaker",
+      "role": "activated Zombie token/draw engine; ability currently unsupported"
+    },
+    {
+      "id": "undead_augur",
+      "card": "Undead Augur",
+      "role": "conditional Zombie death draw; trigger currently unsupported"
+    },
+    {
+      "id": "carrion_feeder",
+      "card": "Carrion Feeder",
+      "role": "sacrifice outlet; activation currently unsupported"
+    }
+  ],
+  "groups": [
+    {
+      "id": "reviewed_zombies",
+      "cards": [
+        "Cryptbreaker",
+        "Undead Augur",
+        "Carrion Feeder",
+        "Headless Rider"
+      ]
+    }
+  ],
+  "combos": []
+}
