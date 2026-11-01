@@ -102,3 +102,32 @@ test('removed legacy deck selector does not interrupt deck rendering',()=>{
   assert.doesNotThrow(()=>vm.runInContext('renderDeckVersionSelector();renderGlobalDeckSelector()',ctx));
   assert.ok(nodes.get('global-deck-select').children.length>0);
 });
+
+test('physical Mortarion UI uses the verified 100-run archive rather than legacy observations',()=>{
+  const {ctx}=context();
+  vm.runInContext(`
+    data.decks.push({key:'mortarion_physical_final',commander:'Mortarion, Daemon Primarch',
+      commander_id:'mortarion-id',deck_sha256:'pinned-hash',cards:[]});
+    selected='mortarion_physical_final';selectedVersionId=null;activeCounts=null;
+    const turn=(i,lands)=>({turn:i,land_count:lands,mana_rock_count:i===6?1:0,
+      creature_count:i===6?1:0,hand_size:7,
+      unsupported_cards_in_hand:['Blood Artist'],
+      events:[{type:'draw',card:'Swamp'}]});
+    var run=(seed,third)=>({seed,deck_key:'mortarion_physical_final',deck_sha256:'pinned-hash',
+      mode:'bounded_authoritative_early_actions',mulligan:{policy:'one-free'},
+      events:[turn(1,1),turn(2,2),turn(3,third),turn(4,4),turn(5,4),turn(6,4)],
+      state_snapshots:Array.from({length:6},(_,i)=>({turn:i+1,hand:[],battlefield:[]}))});
+    var physicalRuns=[run(0,3),run(1,2)];
+    detailedArchives={mortarion_physical_final:{
+      runs:physicalRuns,deck_sha256:'pinned-hash',release:'simulated-commit'}};
+  `,ctx);
+  assert.equal(vm.runInContext('physicalArchive()?.runs.length',ctx),2);
+  assert.equal(vm.runInContext('physicalArchiveMetrics(physicalArchive().runs).third',ctx),50);
+  assert.equal(vm.runInContext('physicalArchiveMetrics(physicalArchive().runs).fourth',ctx),100);
+  assert.equal(vm.runInContext('physicalArchiveBreakdown(physicalArchive().runs).timeline[5].unsupported',ctx),'1.00');
+  assert.equal(vm.runInContext("detailedArchives.mortarion_physical_final.deck_sha256='stale';physicalArchive()",ctx),null);
+  const html=fs.readFileSync('web/pages/index.html','utf8');
+  assert.match(html,/id="archive-observation-details"/);
+  assert.match(code,/const seedChoices=physical\?physical.runs.map\(run=>run.seed\):data.seeds/);
+  assert.match(code,/const physical=detailedArchives\?\.\[deck.key\]/);
+});
