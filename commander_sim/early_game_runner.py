@@ -62,8 +62,9 @@ def run_bounded_early_game(deck_key, *, seed=0, turns=6, mulligan="one-free", pr
     fixture = next((x for x in FIXTURES if x.key == deck_key), None)
     if fixture is None:
         raise ValueError("Unknown pinned deck fixture")
-    if deck_key not in REVIEWED_BY_DECK:
-        raise ValueError("Deck has no individually reviewed creature-cast slice")
+    # Every fully pinned deck may exercise common reviewed lands and rocks.
+    # Decks without a verified creature subset retain *zero* creature casts;
+    # they are not granted behavior merely by being in this fixture catalog.
 
     pinned = pinned_deck_entries(fixture.deck_path, fixture.manifest_path, SHARED_CATALOG)
     snapshot = validate_snapshot(fixture.deck_path, fixture.snapshot_path,
@@ -74,8 +75,9 @@ def run_bounded_early_game(deck_key, *, seed=0, turns=6, mulligan="one-free", pr
     raw_by_name = {entry["deck_name"]: entry["card"] for entry in pinned}
     # Catalog is a per-deck immutable identity projection for the feature
     # tracker. It includes all imported cards, not just supported casts.
-    catalog = {name: {"type_line": card["type_line"],
-                      "keywords": list(card["keywords"])}
+    catalog = {name: {"type_line": card.get("type_line") or " // ".join(
+                          face.get("type_line", "") for face in card.get("card_faces", [])),
+                      "keywords": list(card.get("keywords", []))}
                for name, card in raw_by_name.items()}
     IndexedKernel, LiveZones, CardDefinition = _load_live_kernel()
     kernel = IndexedKernel()
@@ -288,7 +290,7 @@ def run_bounded_early_game(deck_key, *, seed=0, turns=6, mulligan="one-free", pr
 if __name__ == "__main__":
     import argparse
     parser = argparse.ArgumentParser(description=__doc__)
-    parser.add_argument("--deck", choices=sorted(REVIEWED_BY_DECK), required=True)
+    parser.add_argument("--deck", choices=sorted(f.key for f in FIXTURES), required=True)
     parser.add_argument("--seed", type=int, default=0)
     parser.add_argument("--turns", type=int, default=6)
     parser.add_argument("--mulligan", choices=("one-free", "keep"), default="one-free")
