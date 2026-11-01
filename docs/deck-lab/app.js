@@ -14,7 +14,6 @@ const LABELS = {
   mortarion_current:"Mortarion · Current",mortarion_ideal:"Mortarion · Ideal",
   necron_dynasties:"Necron Dynasties"
 };
-const MODE_NOTE = "Precomputed observation only · no spells, abilities, combat or win rates modeled.";
 let data=null, archives=null, allNames=[], selected=null, activeTab="overview";
 let cachedByName = new Map(),extraCards={},activeCounts=null,history=[],localVersions=[];
 const soundKey="commander-deck-lab-sound-v1";
@@ -265,8 +264,9 @@ function updateSelectionBadge(){
   $("commander-medallion").setAttribute("aria-label","Change commander from "+deck.commander);
   $("active-commander").textContent=deck.commander;
   $("active-deck-name").textContent=activeDeckTitle();
-  $("active-deck-state").textContent=isUnsimulatedVersion()?
-    "Edited deck · no cached results":"Cached results available";
+  const state=$("active-deck-state");
+  state.hidden=!isUnsimulatedVersion();
+  state.textContent="Edited deck · no results";
   const link=$("change-deck-link"),url=new URL("./editor.html",location.href);
   url.searchParams.set("deck",selected);
   if(selectedVersionId)url.searchParams.set("version",selectedVersionId);
@@ -379,7 +379,7 @@ function renderPageIntro(){
   let detail=facts.total+" cards · "+facts.lands+" lands";
   if(pageName==="results"){
     detail=isUnsimulatedVersion()?"No archived observations for this version":
-      (aggregate?aggregate.n+" archived hands · 6 turns":"Archived observations");
+      (aggregate?aggregate.n+" hands · 6 turns":"Observations");
   }
   intro.append(el("h1",PAGE_INFO[pageName]),el("p",detail));
 }
@@ -400,9 +400,7 @@ function renderOverview(){
     x.appendChild(el("strong",value));x.appendChild(el("span",label));metrics.appendChild(x);
   }
   const tags=$("overview-tags");clear(tags);
-  for(const txt of [isUnsimulatedVersion()?"Edited deck · no archived results":"Archived observations available"]){
-    tags.appendChild(el("span",txt,"chip"));
-  }
+  if(isUnsimulatedVersion())tags.appendChild(el("span","Edited deck · no results","chip"));
   const typeCounts={};
   for(const item of cards){
     const kind=cardForId(item.oracle_id)?.category||"Other";
@@ -422,10 +420,15 @@ function renderOverview(){
   renderThemes(cards,c);
 }
 function renderThemes(cards,commander){
-  const root=$("deck-themes");clear(root);
+  const root=$("deck-themes"),status=$("theme-status");clear(root);
+  status.hidden=!isUnsimulatedVersion();
+  status.textContent="Draw results are unavailable for this edited deck.";
   if(!window.DeckInsights?.themes){root.appendChild(el("p","Theme analysis is unavailable.","small"));return}
   const records=isUnsimulatedVersion()?null:archives?.[selected];
   const groups=window.DeckInsights.themes(cards,{...data.cards,...extraCards},records,commander);
+  if(!isUnsimulatedVersion()&&groups.length&&!groups.some(group=>group.sample)){
+    status.hidden=false;status.textContent="Draw results are unavailable for this deck.";
+  }
   if(!groups.length){root.appendChild(el("p","No recurring signals found in available card metadata.","small"));return}
   for(const group of groups.slice(0,8)){
     const box=el("article",null,"theme-card");
@@ -448,7 +451,7 @@ function renderThemes(cards,commander){
         const cell=el("div");cell.append(el("strong",value+" / "+group.sample),el("span",label));row.appendChild(cell);
       }
       box.appendChild(row);
-    }else box.appendChild(el("p",isUnsimulatedVersion()?"No archived draws for this edited deck.":"No complete draw archive available.","theme-unavailable"));
+    }
     const detail=el("details",null,"theme-details"),summary=el("summary","Matching cards");
     detail.appendChild(summary);
     const list=el("ul",null,"theme-card-list");
@@ -535,16 +538,16 @@ function showAggregate(){
     intro.appendChild(el("p","No verified cached observations are available."));
     return;
   }
-  $("results-sample").textContent=aggregate.n+" cached seeds · 6 turns";
+  $("results-sample").textContent=aggregate.n+" seeds · 6 turns";
   $("results-provenance").textContent="Derived from "+aggregate.n+
-    " fixed-seed, keep-seven observations. Only basic lands and Command Tower are modeled; no casts, combat or win rates.";
+    " fixed-seed observations. Only basic lands and Command Tower are modeled; spell costs are screens, not casts.";
   const metrics=[
     {label:"2–5 modeled lands in opening hand",value:aggregate.metrics.earlyLand.count+" / "+aggregate.n,
-      detail:aggregate.metrics.earlyLand.pct+"% of archived hands",target:"opening"},
+      detail:aggregate.metrics.earlyLand.pct+"% of hands",target:"opening"},
     {label:"≥3 modeled sources by turn 3",value:aggregate.metrics.t3Sources.count+" / "+aggregate.n,
-      detail:aggregate.metrics.t3Sources.pct+"% of archived runs",target:"resources"},
+      detail:aggregate.metrics.t3Sources.pct+"% of runs",target:"resources"},
     {label:"Any mana-value candidate on turn 4",value:aggregate.metrics.t4Candidate.count+" / "+aggregate.n,
-      detail:aggregate.metrics.t4Candidate.pct+"% of archived runs",target:"candidates"}
+      detail:aggregate.metrics.t4Candidate.pct+"% of runs",target:"candidates"}
   ];
   for(const m of metrics){
     const card=el("button",null,"result-stat");
@@ -561,9 +564,8 @@ function showAggregate(){
     result.appendChild(card);
   }
   const parts=window.DeckInsights.findings(aggregate);
-  intro.appendChild(el("strong","What to take from these observations"));
+  intro.appendChild(el("strong","At a glance"));
   intro.appendChild(el("p",parts.map(p=>p.summary).join(" ")));
-  intro.appendChild(el("p","This is a small, selected set of archived draws. These metrics describe opening land and mana-value screens—not actual casting, board development, victory or deck strength.","micro"));
 }
 function renderRecords(){
   const seedSelect=$("seed-select");clear(seedSelect);
@@ -837,8 +839,8 @@ function renderDraft(){
   const total=sumCounts(activeCounts);
   $("workshop-message").textContent=changes.length?
     changes.length+" card quantities modified · "+total+" / 100 cards including commander. "+
-      (total===100?"Ready for legality validation and Save As.":"Add or remove cards to return to 100 before saving.")+
-      " "+MODE_NOTE:
+      (total===100?"Ready for legality validation and Save As.":"Add or remove cards to return to 100 before saving."):
+
     "Choose cards to add, remove or swap. The saved source deck remains unchanged.";
   $("workshop-message").classList.toggle("error",total!==100);
   $("save-local").disabled=total!==100;

@@ -24,7 +24,6 @@
       <div class="brand-copy"><div class="overline">The Arcane Table</div><strong>Commander Deck Lab</strong></div>
     </div>
     <div class="top-actions">
-      <span class="status-pill">Cached observations · no new games</span>
       <button id="audio-toggle" class="icon-button" type="button" aria-pressed="true" title="Mute sound effects">♫ Sound on</button>
       <a class="little-button" href="https://github.com/bgoodnight/commander-simulator" target="_blank" rel="noopener noreferrer">Source on GitHub</a>
     </div>
@@ -67,11 +66,6 @@
           <div id="overview-art"></div>
           <div class="metrics" id="overview-metrics"></div>
           <div id="overview-tags" class="chips"></div>
-          <div class="arcane-line"></div>
-          <div class="warning">
-            <strong>Archive mode</strong> — results were generated previously by Python.
-            They are total-mana/land observations, not legal casts, combat or win rates.
-          </div>
         </section>
         <section class="panel">
           <h2 class="panel-title">Card Types</h2>
@@ -85,8 +79,9 @@
       <section class="panel themes-panel" aria-labelledby="themes-heading">
         <div class="themes-heading"><div><span class="eyebrow">Deck signals</span><h2 id="themes-heading" class="panel-title">Themes &amp; first draws</h2></div></div>
         <p class="small">Recurring card types, creature subtypes and rules-text patterns in your deck.</p>
+        <p id="theme-status" class="micro" hidden></p>
         <div id="deck-themes" class="theme-grid"></div>
-        <p class="micro">Draw counts show when at least one matching card was seen in the archived opening hand or subsequent draws. The fixed-seed sample is small; patterns can overlap and are not proof of synergy, casting or resolved effects.</p>
+        <p class="micro">Draw counts show when at least one matching card appeared in the opening hand or draws. The sample is small, and patterns can overlap.</p>
       </section>
     </div>
     <div class="tab-pane" id="pane-library" hidden>
@@ -110,7 +105,7 @@
       <section class="results-head panel" aria-labelledby="results-overview-heading">
         <div class="results-heading-row">
           <div>
-            <span class="eyebrow">What the archived runs show</span>
+            <span class="eyebrow">Early-turn findings</span>
             <h2 id="results-overview-heading" class="results-big-heading">Opening-hand and early-turn snapshots</h2>
             <p id="results-provenance" class="small">Calculating findings from the fixed cached runs.</p>
           </div>
@@ -123,7 +118,7 @@
     <div class="tab-pane" id="pane-insights" hidden>
       <section class="scroll-story" aria-labelledby="story-head">
         <div class="story-heading">
-          <span class="eyebrow">Three discoveries from your cached runs</span>
+          <span class="eyebrow">Explore the details</span>
           <h2 id="story-head">Explore the evidence</h2>
           <p>Select a bar to see its count and supporting seeds.</p>
         </div>
@@ -160,15 +155,15 @@
           <div class="story-graphic panel">
             <h3>Runs with any mana-value candidate by turn</h3>
             <div id="scroll-candidates"></div>
-            <div class="chart-detail" id="detail-candidates" role="status">Select a turn to inspect the cached candidate list.</div>
+            <div class="chart-detail" id="detail-candidates" role="status">Select a turn to inspect the candidates.</div>
           </div>
         </article>
       </section>
       <section class="panel archived-details" aria-labelledby="archived-details-heading">
-        <h2 id="archived-details-heading" class="panel-title">Inspect a specific cached run</h2>
-        <p class="small">Inspect a single archived observation.</p>
+        <h2 id="archived-details-heading" class="panel-title">Inspect a run</h2>
+        <p class="small">Explore one observation.</p>
         <div class="control-row">
-          <div class="control"><label for="seed-select">Archived seed</label><select id="seed-select"></select></div>
+          <div class="control"><label for="seed-select">Seed</label><select id="seed-select"></select></div>
           <div class="control"><label for="turn-select">Show through turn</label>
             <select id="turn-select"><option value="3">Turn 3</option><option value="4">Turn 4</option>
               <option value="5">Turn 5</option><option value="6" selected>Turn 6</option></select></div>
@@ -180,7 +175,6 @@
           <summary>Expand turn-by-turn trace</summary>
           <div id="turn-timeline" class="timeline"></div>
         </details>
-        <div class="warning">These are <strong>fixed-seed observations</strong>, not simulated games or win-rate estimates. Land modeling covers basics and Command Tower only. Mana-value candidates are not necessarily legal or castable spells.</div>
       </section>
     </div>
     <div class="tab-pane" id="pane-workshop" hidden>
@@ -233,9 +227,7 @@
           </div>
           <div id="fetch-status" class="small" role="status"></div>
           <div class="arcane-line"></div>
-          <h3>Prepared record availability</h3>
-          <div class="warning">Cached results are attached to the <strong>original deck hash</strong>. A modified deck requires the Python simulator
-            to generate fresh results. The website will never present old records as results for a changed deck.</div>
+          <p class="micro">Edited decks need new results from the Python simulator.</p>
         </section>
       </div>
     </div>
@@ -258,7 +250,7 @@
   </div>
   <footer>Commander Deck Lab · An original fantasy-tabletop interface · Magic card images &amp; card information via <a href="https://scryfall.com/" target="_blank" rel="noopener noreferrer">Scryfall</a>.
     Magic: The Gathering and related artwork belong to their respective owners. Not affiliated with Wizards of the Coast or Hearthstone.
-    <div>Static build · precomputed observations only · card edits stored locally · <a href="https://github.com/bgoodnight/commander-simulator" target="_blank" rel="noopener noreferrer">source and full simulator</a></div>
+    <div>Card edits stored locally · <a href="https://github.com/bgoodnight/commander-simulator" target="_blank" rel="noopener noreferrer">source and full simulator</a></div>
   </footer>
 </main>
 </body>
