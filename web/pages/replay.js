@@ -229,12 +229,15 @@
     },{dealt:0,taken:0,blocks:0,defended:0});
   }
   function cardSpotlight(round,lookup){
-    const picked=round.actions.find(a=>a.type==="reviewed_commander_cast"&&a.card_name)||
-      round.actions.find(a=>a.card_name&&["reviewed_removal_resolved",
+    // Only a card the selected pilot actually played may represent this row.
+    // Named opposing cards, when future schemas include them, belong in details.
+    const pilotActions=round.actions.filter(a=>a.actor_seat===0);
+    const picked=pilotActions.find(a=>a.type==="reviewed_commander_cast"&&a.card_name)||
+      pilotActions.find(a=>a.card_name&&["reviewed_removal_resolved",
         "reviewed_common_spell_resolved","reviewed_zone_spell_resolved",
         "reviewed_composed_activated"].includes(a.type))||
-      round.actions.find(a=>a.card_name&&a.type!=="land_play")||
-      round.actions.find(a=>a.card_name&&a.type==="land_play");
+      pilotActions.find(a=>a.card_name&&a.type!=="land_play")||
+      pilotActions.find(a=>a.card_name&&a.type==="land_play");
     const card=picked?.card_name&&typeof lookup==="function"?lookup(picked.card_name):null;
     return {action:picked||null,card:validateCard(card)?card:null};
   }
