@@ -16,6 +16,24 @@ Each batch identifies deck_key, deck_sha256, scenario, requested_rounds, opponen
 
 Runs within a deck revision, scenario and horizon can be compared. Repeated imports of the same seed into that group replace the older observation instead of double-counting it.
 
+## Match pilot styles and rules settings
+
+The outcome exporter now records `pilot_style` and `provisional_mode`.
+The dashboard keeps each recorded pilot style (adaptive, balanced, engine,
+tempo, conservative), approximation setting, deck revision, scenario and
+round horizon in its own result cohort. An older batch that lacks a setting
+is marked `unrecorded` rather than guessed to be adaptive. Importing the
+same seed twice into the *same* cohort replaces the earlier record, but a
+matching seed from a different pilot setting remains a separate experiment.
+
+Opponent-group comparisons may span different scenarios at the same
+round horizon, but only when deck revision, pilot style and provisional
+rules mode agree. "Highest" and "lowest" refer only to the fraction of
+**modeled** wins among recorded games; tied fractions are not ranked.
+Unresolved games remain in the denominator, and small samples do not
+establish actual Commander win probabilities. A style selector in the
+static UI only chooses imported data; it does not run a new simulation.
+
 ## Future opposing Commander deck support
 
 The UI also accepts an optional opponent_decks array either on the batch or each run, with one object per opposing seat (1, 2, 3). Each object should contain seat, deck_key, commander_name and deck_sha256 for the actual opposing list. When those are present, the dashboard can compare observed outcomes for tables containing those decks instead of abstract scenario roles. Because each result is a four-player result, a deck's presence in a winning or losing pod is only an association, not a head-to-head win rate or proof of impact.
