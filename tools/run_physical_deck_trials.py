@@ -57,8 +57,8 @@ def run(deck_key,*,seeds=40,turns=6):
         "unsupported_hand_mentions":dict(unsupported.most_common()),
         "sample_runs":samples,
         "caveat":"Only reviewed physical actions resolve; all remaining card abilities, "
-                 "opponent interactions, targeting, full commander casting, win conditions, "
-                 "combat and calibrated win rates remain unimplemented."
+                 "opponent priority and full targeting, exhaustive commander effects, "
+                 "combat and calibrated multiplayer win rates remain unimplemented."
     }
 
 if __name__=="__main__":
@@ -73,6 +73,6 @@ if __name__=="__main__":
         args.output.write_text(json.dumps(data,indent=2)+"\n",encoding="utf-8")
     print("PHYSICAL_DECK_REPORT",json.dumps({
         "key":data["deck_key"],"deck_sha256":data["deck_sha256"],
-        "n":data["seed_count"],"turn_6":data["batch"]["turns"][-1],
+        "n":data["seed_count"],"last_turn":data["batch"]["turns"][-1],
         "events":data["events"],"unsupported":data["unsupported_hand_mentions"]
     },sort_keys=True),flush=True)
