@@ -796,3 +796,9 @@ button.replay-zone-card:hover,button.replay-zone-card:focus-visible{border-color
 .replay-zone-qty{position:absolute;top:7px;right:7px;background:#111e22ed;border:1px solid #d3bd97;border-radius:4px;padding:3px 5px;font-size:.65rem;font-weight:700}
 .replay-mana-credits{display:grid;gap:4px;padding:8px 11px;border-radius:7px;background:rgba(31,49,46,.67)}
 @media(max-width:560px){.replay-zone-gallery{grid-template-columns:repeat(auto-fill,minmax(80px,1fr));gap:7px}.replay-zone-art,.replay-zone-unpictured{height:99px}}
+
+
+.replay-mana-credit{display:flex;align-items:center;flex-wrap:wrap;gap:4px 7px;min-height:24px}
+.replay-mana-output{display:inline-flex;gap:3px;align-items:center;vertical-align:middle}
+.replay-mana-output .mana-symbol{width:1.15em;height:1.15em}
+.replay-fields dd .replay-mana-output{display:inline-flex}
