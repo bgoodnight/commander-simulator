@@ -6,6 +6,9 @@ invented. Mandatory ETB actions execute even when they affect empty zones.
 """
 from dataclasses import dataclass
 
+from .library_actions import LibraryAction, resolve_library_actions
+from .reviewed_lands import LANDS
+
 @dataclass(frozen=True)
 class LandEntry:
     oracle_id: str
@@ -16,7 +19,7 @@ class LandEntry:
         if (not self.oracle_id or not self.excerpt or
                 self.operation not in {"exile_target_graveyard",
                                        "graveyard_creature_to_library_top",
-                                       "gain_one_life"}):
+                                       "gain_one_life","surveil_one"}):
             raise ValueError("Unregistered land entry operation")
 
 RULES={
@@ -28,6 +31,10 @@ RULES={
         "1b3fb20a-e090-4286-9c03-6b71c27c45be",
         "When this land enters, you may put target creature card from your graveyard on top of your library.",
         "graveyard_creature_to_library_top",True),
+    "Hidden Grotto":LandEntry(
+        "382d18a2-438e-4ae7-a83f-1658ef1f9b07",
+        "When this land enters, surveil 1.",
+        "surveil_one"),
     "Swiftwater Cliffs":LandEntry(
         "2f4ad084-2062-44c0-9975-15f100204531",
         "When this land enters, you gain 1 life.",
@@ -39,7 +46,9 @@ def reviewed_land_entry(name,raw):
     rule=RULES.get(name)
     if (rule is None or not isinstance(raw,dict)
             or raw.get("oracle_id")!=rule.oracle_id
-            or rule.excerpt not in raw.get("oracle_text","")):
+            or rule.excerpt not in raw.get("oracle_text","")
+            or (name=="Hidden Grotto"
+                and raw.get("oracle_text")!=LANDS["Hidden Grotto"].oracle_text)):
         return None
     return rule
 
@@ -50,6 +59,7 @@ class LandEntryResult:
     operation: str
     moved_ids: tuple[int,...] = ()
     target_seat: int | None = None
+    library_steps: tuple[dict,...] = ()
 
 
 def resolve_land_entry(zones, life, source_id, catalog, *,
@@ -65,6 +75,7 @@ def resolve_land_entry(zones, life, source_id, catalog, *,
         raise ValueError("Unreviewed land entry source")
     seat=obj.controller
     moved=[]
+    library_outcome=None
     if rule.operation=="exile_target_graveyard":
         if target_seat is None:
             target_seat=next(s for s in sorted(life.kernel.life_totals) if s!=seat)
@@ -82,4 +93,10 @@ def resolve_land_entry(zones, life, source_id, catalog, *,
             moved.append(zones.move(target_creature_id,"library","resolve"))
     elif rule.operation=="gain_one_life":
         life.gain(seat,1,source_id)
-    return LandEntryResult(source_id,rule.operation,tuple(moved),target_seat)
+    elif rule.operation=="surveil_one":
+        library_outcome=resolve_library_actions(
+            zones,seat,(LibraryAction("surveil",1),))
+        moved.extend(library_outcome.milled_ids)
+    return LandEntryResult(
+        source_id,rule.operation,tuple(moved),target_seat,
+        library_outcome.steps if library_outcome else ())
