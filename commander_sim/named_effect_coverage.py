@@ -25,6 +25,18 @@ from .reviewed_nonhand_cast_triggers import NONHAND_CAST_TRIGGERS
 from .reviewed_escape import BREACH_REVIEWS
 from .reviewed_buyback import BUYBACK
 from .reviewed_spell_copy import REVIEWED_COPY_SPELLS
+from .reviewed_draw_spells import DRAW_SPELLS
+from .reviewed_common_spells import RECIPES as COMMON_SPELLS
+from .reviewed_removal_spells import RULES as REMOVAL_SPELLS
+from .reviewed_lands import LANDS
+from .reviewed_land_entry import RULES as LAND_ENTRIES
+from .reviewed_zone_spells import RULES as ZONE_SPELLS
+from .reviewed_graveyard_spells import RULES as GRAVEYARD_SPELLS
+from .reviewed_attachments import RULES as ATTACHMENTS
+from .reviewed_utility_activations import RULES as UTILITY_ACTIVATIONS
+from .reviewed_activated_utilities import RULES as ACTIVATED_UTILITIES
+from .reviewed_reactive_triggers import RULES as REACTIVE_TRIGGERS
+from .reviewed_attack_triggers import RULES as ATTACK_TRIGGERS
 
 
 def _named_sources():
@@ -46,6 +58,20 @@ def _named_sources():
         ("escape_grant",BREACH_REVIEWS),
         ("buyback",BUYBACK),
         ("spell_copy",REVIEWED_COPY_SPELLS),
+        # Maintain named audit parity with the physical turn driver's other
+        # exact source-reviewed handlers. This is suboperation coverage only.
+        ("draw_spell",DRAW_SPELLS),
+        ("common_spell",COMMON_SPELLS),
+        ("removal_spell",REMOVAL_SPELLS),
+        ("land_mana",LANDS),
+        ("land_entry",LAND_ENTRIES),
+        ("zone_spell",ZONE_SPELLS),
+        ("graveyard_spell",GRAVEYARD_SPELLS),
+        ("attachment",ATTACHMENTS),
+        ("utility_activation",UTILITY_ACTIVATIONS),
+        ("activated_utility",ACTIVATED_UTILITIES),
+        ("reactive_trigger",REACTIVE_TRIGGERS),
+        ("attack_trigger",ATTACK_TRIGGERS),
     ):
         for name,row in source.items():
             if kind in {"mana","search"}:
