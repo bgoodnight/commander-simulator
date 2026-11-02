@@ -18,7 +18,7 @@ class CastReaction:
 
 RULES={
     "K'rrik, Son of Yawgmoth":CastReaction(
-        "ef5437c8-c64c-458f-90e5-aad9d97401e8",
+        "cbe3a4e7-5dbe-4f58-8ee6-a1762b65acfd",
         "Whenever you cast a black spell, put a +1/+1 counter on K'rrik.",
         "black_spell","self_counter")
 }
