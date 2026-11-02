@@ -39,7 +39,8 @@ class OpponentPressureTests(unittest.TestCase):
         result=adversary.advance(1)
         self.assertTrue(any(x.operation=="abstract_creature" for x in result))
         self.assertTrue(self.zones.assert_consistent())
-        self.assertTrue(all(o.token for o in self.kernel.objects.values()))
+        self.assertTrue(any(o.owner in {1,2,3} and not o.token
+                            and o.zone=="library" for o in self.kernel.objects.values()))
 
     def test_opponent_upkeeps_trigger_real_reviewed_ophiomancer(self):
         raw=self.catalog["Ophiomancer"]
@@ -78,8 +79,10 @@ class OpponentPressureTests(unittest.TestCase):
             0,"battlefield")
         adv=self.stress("aggressive",seed=7)
         # A prior-turn creature can attack; newly spawned ones cannot.
-        adv._spawn(1,0,"aggro")
-        attacker=adv.events[-1].object_id
+        attacker=self.zones.add(self.C("test:attacker","Attacker",
+            frozenset({"creature"}),base_power=2,base_toughness=2,
+            coverage="approx"),1,"battlefield",token=True)
+        adv._born[attacker]=0
         before=self.life.total(0)
         adv._combat(1,"aggro",turn=1,defender=0)
         self.assertEqual(self.life.total(0),before)
@@ -106,6 +109,7 @@ class OpponentPressureTests(unittest.TestCase):
         # In symmetric worlds every non-actor seat must be targetable.
         picked={0:0,2:0,3:0}
         for seed in range(90):
+            self.setUp()  # independent board; do not accumulate fake libraries
             a=self.stress("balanced",seed=seed)
             actor=1
             for _ in range(4):
