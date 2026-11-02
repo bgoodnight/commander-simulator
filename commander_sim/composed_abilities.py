@@ -101,6 +101,23 @@ ABILITIES = {
 }
 
 
+def reviewed_composed_permanent(name, raw):
+    """Authorize an ordinary enchantment body with reviewed later abilities.
+
+    All mandatory entry effects must be absent; actual activated/triggered
+    slots are independently admitted by ComposedAbilityEngine.
+    """
+    if not isinstance(raw,dict) or raw.get("layout")!="normal":
+        return False
+    if raw.get("type_line","").split(" — ",1)[0]!="Enchantment":
+        return False
+    profiles=ABILITIES.get(name,())
+    return bool(profiles and all(
+        rule.oracle_id==raw.get("oracle_id") and
+        rule.oracle_excerpt in raw.get("oracle_text","")
+        for rule in profiles))
+
+
 @dataclass(frozen=True)
 class Execution:
     source_id: int
