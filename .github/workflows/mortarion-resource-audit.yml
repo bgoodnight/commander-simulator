@@ -1,5 +1,5 @@
 name: Audit Mortarion resource-engine and pilot choices
-# Repeat 160-seed 10-turn diagnostic with bounded preview exhaustion handled.
+# Repeat 160-seed 10-turn quality diagnostic with speculative planning fail-closed.
 on:
   workflow_dispatch:
   push:
