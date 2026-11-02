@@ -73,7 +73,7 @@ class EnterRule:
 
 ENTER_RULES={
     "Lord of Change":EnterRule(
-        "f26fbd53-3c26-4b0a-9182-fc50dd35d0db",
+        "b575fb16-c3c3-4cad-857f-122257a4b32f",
         "Architect of Deception — When this creature enters, draw three cards.",
         "library_recipe",library_actions=(LibraryAction("draw",3),)),
     "Technomancer":EnterRule(
