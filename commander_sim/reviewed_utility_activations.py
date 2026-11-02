@@ -8,6 +8,7 @@ It does not infer arbitrary Oracle abilities from names or type lines.
 from dataclasses import dataclass
 from .physical_common_effects import CardQuantity, draw_physical_cards
 from .reviewed_death_effects import capture_battlefield
+from .graveyard_recipes import GraveyardRecipe, resolve_graveyard_recipe
 
 @dataclass(frozen=True)
 class UtilityRule:
@@ -136,11 +137,15 @@ def activate_utility(zones,life,seat,source_id,catalog,mana_service,colors,
     elif rule.operation=="drain_opponents":
         life.each_opponent_loses(seat,1,source_id)
     elif rule.operation=="creature_to_hand":
-        moved.append(zones.move(target_id,"hand","resolve"))
+        restored=resolve_graveyard_recipe(
+            zones,seat,(target_id,),
+            GraveyardRecipe("hand","own",frozenset({"creature"})))
+        moved.extend(item.new_id for item in restored)
     elif rule.operation=="self_to_battlefield_tapped":
-        new_id=zones.move(source_id,"battlefield","resolve")
-        kernel.get(new_id).tapped=True
-        kernel._dirty()
-        moved.append(new_id)
+        restored=resolve_graveyard_recipe(
+            zones,seat,(source_id,),
+            GraveyardRecipe("battlefield","own",frozenset({"creature"}),
+                            enter_tapped=True))
+        moved.extend(item.new_id for item in restored)
     return UtilityOutcome(source.card.name,rule.operation,tuple(moved),
                           life_cost,tuple(paid.source_ids))
