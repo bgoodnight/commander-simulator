@@ -1,0 +1,59 @@
+name: Preview 20-round life and outcome records
+
+on:
+  pull_request:
+    paths:
+      - .github/workflows/game-outcome-preview.yml
+      - commander_sim/**
+      - tools/build_game_outcomes.py
+      - tests/test_game_outcome_reporting.py
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  sample-modeled-endgames:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      - name: Generate 20-round abstract-opponent sample
+        run: |
+          mkdir -p outcome-preview
+          python tools/build_game_outcomes.py \
+            --deck mortarion_physical_final \
+            --scenario mixed --rounds 20 --seeds 2 \
+            --examples 1 \
+            --output outcome-preview/mortarion-20-rounds.json
+      - name: Validate output structure and outcome provenance
+        run: |
+          python - <<'PY'
+          import json
+          from pathlib import Path
+          p=Path('outcome-preview/mortarion-20-rounds.json')
+          data=json.loads(p.read_text())
+          assert data['format']=='commander-modeled-outcomes-v1'
+          assert data['requested_rounds']==20
+          assert data['seed_count']==2
+          assert data['opponent_fidelity']=='abstract_opponent_pressure_not_card_exact'
+          assert data['outcomes_are_competitive_win_rates'] is False
+          assert len(data['runs'])==2
+          for run in data['runs']:
+              assert 1<=run['completed_rounds']<=20
+              assert len(run['life_history'])==run['completed_rounds']+1
+              for row in run['life_history']:
+                  assert len(row['life_totals'])==4
+              assert run['outcome']['status'] in {
+                  'win','loss','draw','unresolved'}
+          print('Validated sample records for both seeds')
+          PY
+      - uses: actions/upload-artifact@v4
+        with:
+          name: life-outcome-mortarion-20-rounds
+          path: outcome-preview/mortarion-20-rounds.json
+          if-no-files-found: error
+          retention-days: 30
