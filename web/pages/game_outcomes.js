@@ -176,11 +176,15 @@
       for(const run of group.runs){
         const opponents=opponentDecks(run,run.batch);
         const names=opponents.length?
-          opponents.map(d=>({id:"deck:"+d.id+":"+d.version,label:d.name+" · present in pod",kind:"named"})):
-          [{id:"scenario:"+group.id,label:group.label,kind:"abstract"}];
+          opponents.map(d=>({id:"deck:"+d.id+":"+d.version,label:d.name+" · present in pod",
+            title:d.name,kind:"named",portraitName:d.name})):
+          [{id:"scenario:"+group.id,label:group.label,kind:"abstract",
+            title:group.scenario[0].toUpperCase()+group.scenario.slice(1)+" pod",
+            archetype:group.scenario}];
         for(const named of names){
           if(!buckets.has(named.id))buckets.set(named.id,{
-            id:named.id,label:named.label,kind:named.kind,
+            id:named.id,label:named.label,title:named.title,kind:named.kind,
+            portraitName:named.portraitName||null,archetype:named.archetype||null,
             counts:Object.fromEntries(STATES.map(x=>[x,0])),games:0,runs:[]
           });
           const row=buckets.get(named.id);
@@ -189,10 +193,50 @@
         }
       }
     }
-    return [...buckets.values()].sort((a,b)=>{
-      const ar=a.counts.win/a.games,br=b.counts.win/b.games;
-      return br-ar||b.games-a.games||a.label.localeCompare(b.label);
-    });
+    return [...buckets.values()].sort((a,b)=>
+      b.counts.win-a.counts.win||
+      b.counts.win/b.games-a.counts.win/a.games||
+      b.games-a.games||a.label.localeCompare(b.label));
+  }
+  function knockoutRound(run,seat){
+    for(let i=1;i<run.life_history.length;i++){
+      const row=run.life_history[i],before=run.life_history[i-1];
+      if(row.new_eliminations.some(e=>Number(e.seat)===seat)||
+         (lifeAt(before,seat)>0&&lifeAt(row,seat)<=0))
+        return row.round;
+    }
+    return null;
+  }
+  function matchupMetrics(bucket){
+    const terminal=bucket.runs.map(x=>x.run).filter(r=>
+      r.outcome.complete&&["win","loss","draw"].includes(r.outcome.status));
+    const won=terminal.filter(r=>r.outcome.status==="win");
+    const losses=bucket.runs.map(x=>x.run).filter(r=>r.outcome.status==="loss");
+    const pilotKnockouts=losses.map(r=>knockoutRound(r,0))
+      .filter(Number.isFinite);
+    const opposingKnockouts=bucket.runs.map(({run})=>
+      [1,2,3].map(seat=>knockoutRound(run,seat))
+        .filter(Number.isFinite).sort((a,b)=>a-b)[0])
+      .filter(Number.isFinite);
+    const lastLife=bucket.runs.map(({run})=>
+      lifeAt(run.life_history.at(-1),0)).filter(Number.isFinite);
+    const median=values=>quantile(values,.5);
+    return {
+      games:bucket.games,
+      wins:bucket.counts.win,losses:bucket.counts.loss,
+      draws:bucket.counts.draw,unresolved:bucket.counts.unresolved,
+      notEvaluated:bucket.counts.not_evaluated,
+      winShare:bucket.games?bucket.counts.win/bucket.games:0,
+      medianFinishRound:median(terminal.map(r=>r.completed_rounds)),
+      finishedGames:terminal.length,
+      medianPilotKnockoutRound:median(pilotKnockouts),
+      pilotKnockouts:pilotKnockouts.length,
+      medianVictoryRound:median(won.map(r=>r.completed_rounds)),
+      victoryGames:won.length,
+      medianFirstOpponentKnockoutRound:median(opposingKnockouts),
+      gamesWithOpponentKnockout:opposingKnockouts.length,
+      medianLastPilotLife:median(lastLife)
+    };
   }
   function textButton(label,cls,onclick){
     const b=create("button",cls,label);
@@ -212,6 +256,182 @@
     childBuilder(body);
     panel.appendChild(body);
     return panel;
+  }
+  function limitationsDisclosure(){
+    const details=create("details","game-outcome-limits");
+    const trigger=create("summary",null,"ⓘ");
+    trigger.setAttribute("aria-label","Model limitations and what improves accuracy");
+    trigger.title="Early modeled results · limitations";
+    const content=create("div","game-outcome-limits-content");
+    content.append(
+      create("strong",null,"Early model · interpret with care"),
+      create("p",null,"Small samples, unfinished games, incomplete rules and automated pilot choices can change these results."),
+      create("p",null,"The current opposing seats are abstract policies, not complete Commander decks. Archetype portraits are illustrative unless a real opposing commander was recorded."),
+      create("p",null,"Next improvements: more matched seeds, fuller card rules, improved piloting, and validated opposing deck simulations."));
+    details.append(trigger,content);
+    return details;
+  }
+  function outcomeCard(group,options,childBuilder){
+    const wrapper=create("div","game-outcome-hero-frame");
+    const panel=create("details","board-report game-outcome-card game-outcome-hero");
+    const summary=create("summary","game-outcome-summary game-outcome-hero-summary");
+    if(typeof options.commanderArt==="string"&&options.commanderArt){
+      const art=create("img","game-outcome-hero-art");
+      art.src=options.commanderArt;
+      art.alt="";
+      art.loading="lazy";
+      art.referrerPolicy="no-referrer";
+      summary.appendChild(art);
+    }
+    const copy=create("div","game-outcome-hero-copy");
+    copy.append(create("span","board-kicker","Long-game outcomes"),
+      create("strong","game-outcome-title","Game Outcomes"));
+    const numbers=create("div","game-outcome-hero-stats");
+    const short=[["win","Wins"],["loss","Losses"],["unresolved","Unresolved"]];
+    for(const [state,label] of short){
+      const metric=create("div","game-outcome-hero-stat is-"+state);
+      const share=(100*group.counts[state]/group.total);
+      metric.append(create("strong",null,Number(share.toFixed(1))+"%"),
+        create("span",null,label+" · "+group.counts[state]+"/"+group.total));
+      numbers.appendChild(metric);
+    }
+    copy.appendChild(numbers);
+    const bar=create("div","game-outcome-stacked-bar");
+    bar.setAttribute("role","img");
+    bar.setAttribute("aria-label",STATES.map(state=>
+      stateLabel(state)+" "+group.counts[state]+" of "+group.total).join(", "));
+    for(const state of STATES){
+      if(!group.counts[state])continue;
+      const segment=create("span","is-"+state);
+      segment.style.width=(100*group.counts[state]/group.total)+"%";
+      bar.appendChild(segment);
+    }
+    copy.append(bar,create("span","board-open",
+      group.total+" modeled games · Explore opponent results →"));
+    summary.appendChild(copy);
+    panel.appendChild(summary);
+    const body=create("div","game-outcome-body");
+    childBuilder(body);
+    panel.appendChild(body);
+    // The icon is a sibling so it remains operable while the game card is closed.
+    wrapper.append(panel,limitationsDisclosure());
+    return wrapper;
+  }
+  function metricTile(label,value,detail){
+    const item=create("div","game-outcome-insight-metric");
+    item.append(create("span",null,label),
+      create("strong",null,value===null||value===undefined?"—":
+        typeof value==="string"?value:nfmt(value)),
+      create("small",null,detail));
+    return item;
+  }
+  function matchupExplorer(parent,groups,options={}){
+    const title=create("div","game-outcome-explorer-intro");
+    title.append(create("strong",null,"Opponent types · most wins → fewest"),
+      create("span","micro","Select or scroll through ranked opponent groups"));
+    parent.appendChild(title);
+    if(!groups.length){
+      parent.appendChild(create("p","micro","No recorded opposing groups yet."));
+      return;
+    }
+    if(groups.length===1)parent.appendChild(create("p","micro",
+      "Only one opponent group has been sampled. Other types appear when matching simulations are loaded."));
+    const layout=create("div","game-outcome-explorer");
+    const portrait=create("div","game-outcome-opponent-portrait");
+    const rankSide=create("div","game-outcome-ranking-side");
+    const nav=create("div","game-outcome-rank-nav");
+    const previous=textButton("← Previous","game-outcome-rank-prev",()=>pick(selected-1,true));
+    const next=textButton("Next →","game-outcome-rank-next",()=>pick(selected+1,true));
+    const position=create("span","micro");
+    nav.append(previous,position,next);
+    const ranking=create("div","game-outcome-ranking");
+    ranking.setAttribute("role","group");
+    ranking.setAttribute("aria-label","Opponent groups sorted by observed modeled wins");
+    const rows=groups.map((bucket,i)=>{
+      const button=textButton("","game-outcome-rank-row",()=>pick(i,true));
+      const header=create("div","game-outcome-rank-label");
+      header.append(create("strong",null,bucket.title||bucket.label),
+        create("span",null,bucket.counts.win+" win"+(bucket.counts.win===1?"":"s")+
+          " · "+bucket.games+" games · "+Math.round(100*bucket.counts.win/bucket.games)+"%"));
+      const track=create("div","game-outcome-rank-track");
+      const fill=create("span","game-outcome-rank-fill");
+      fill.style.width=(100*bucket.counts.win/bucket.games)+"%";
+      track.appendChild(fill);
+      button.append(header,track);
+      button.setAttribute("aria-label",
+        (bucket.title||bucket.label)+": "+bucket.counts.win+
+        " wins in "+bucket.games+" modeled games");
+      ranking.appendChild(button);
+      return button;
+    });
+    rankSide.append(nav,ranking);
+    layout.append(portrait,rankSide);
+    parent.appendChild(layout);
+    const metrics=create("div","game-outcome-insight-grid");
+    const seeds=create("div","game-outcome-seeds");
+    const evidence=create("div","game-outcome-evidence");
+    parent.append(metrics,
+      create("strong",null,"Example games"),seeds,evidence);
+    let selected=0;
+    function pick(index,scroll=false){
+      if(index<0||index>=groups.length)return;
+      selected=index;
+      const bucket=groups[index],values=matchupMetrics(bucket);
+      position.textContent=(index+1)+" / "+groups.length;
+      previous.disabled=index===0;
+      next.disabled=index===groups.length-1;
+      rows.forEach((row,i)=>row.setAttribute("aria-pressed",String(i===index)));
+      if(scroll&&rows[index].scrollIntoView)
+        rows[index].scrollIntoView({block:"nearest"});
+      portrait.replaceChildren();
+      const art=typeof options.portraitFor==="function"?options.portraitFor(bucket):null;
+      if(art?.art){
+        const img=create("img","game-outcome-opponent-art");
+        img.src=art.art;img.alt=art.name+" card illustration";
+        img.loading="lazy";img.referrerPolicy="no-referrer";
+        portrait.appendChild(img);
+      }else{
+        portrait.appendChild(create("div","game-outcome-art-missing","✧"));
+      }
+      const caption=create("div","game-outcome-portrait-label");
+      caption.append(create("strong",null,bucket.title||bucket.label),
+        create("small",null,art?.name?
+          art.name+(bucket.kind==="named"?" · recorded opposing commander":
+            " · illustrative archetype portrait"):
+          "No cached commander art"));
+      portrait.appendChild(caption);
+      const groupsTogether=create("p","micro",
+        bucket.kind==="named"?
+          "Named commander appeared in a four-player pod. The outcome is not a one-on-one result.":
+          "Result against a modeled opponent-policy pod, not the pictured commander's deck.");
+      caption.appendChild(groupsTogether);
+      metrics.replaceChildren(
+        metricTile("Games",values.games,"Recorded in matching simulations"),
+        metricTile("Win share",Math.round(values.winShare*100)+"%",
+          values.wins+" win · "+values.losses+" loss · "+values.unresolved+" unresolved"+
+          (values.draws?" · "+values.draws+" draw":"")),
+        metricTile("Median finished round",values.medianFinishRound,
+          values.finishedGames+" finished game(s), excluding unresolved"),
+        metricTile("Median our knockout round",values.medianPilotKnockoutRound,
+          values.pilotKnockouts+" recorded knockout(s)"),
+        metricTile("Median victory round",values.medianVictoryRound,
+          values.victoryGames+" modeled win(s)"),
+        metricTile("First opponent knockout",values.medianFirstOpponentKnockoutRound,
+          values.gamesWithOpponentKnockout+" game(s) with a recorded opponent elimination"),
+        metricTile("Median last life",values.medianLastPilotLife,
+          "Your life at each game's last observed round")
+      );
+      seeds.replaceChildren();evidence.replaceChildren();
+      for(const {run,group} of bucket.runs){
+        const button=textButton("Seed "+run.seed+" · "+stateLabel(run.outcome.status)+
+          " · "+roundLabel(run),"game-outcome-seed",()=>runDetails(evidence,run,{
+            example:group.exampleBySeed.get(run.seed),
+            onShowRecordedActions:options.onShowRecordedActions
+          }));
+        seeds.appendChild(button);
+      }
+    }
+    pick(0);
   }
   function stateLabel(status){
     return ({win:"Win",loss:"Loss",draw:"Draw",unresolved:"Unresolved",
@@ -403,46 +623,52 @@
         g.provisionalMode===group.provisionalMode&&
         g.requestedRounds===group.requestedRounds);
       const matchup=matchupRows(peers);
-      info.textContent=group.total+" modeled games · "+group.requestedRounds+
-        "-round horizon · "+group.scenario+
+      const outcomeGames=peers.flatMap(source=>
+        source.runs.map(run=>({run,source})));
+      const outcomeGroup={
+        total:outcomeGames.length,
+        counts:Object.fromEntries(STATES.map(state=>[state,
+          peers.reduce((n,g)=>n+g.counts[state],0)])),
+        terminal:peers.reduce((n,g)=>n+g.terminal,0),
+        terminalRounds:peers.flatMap(g=>g.terminalRounds)
+      };
+      info.textContent=outcomeGroup.total+" modeled games · "+group.requestedRounds+
+        "-round horizon · "+peers.length+" opposing group(s)"+
         " · pilot "+group.pilotStyle+" · provisional "+group.provisionalMode+
         " · abstract opponent policies, not competitive multiplayer win rates";
-      // Outcome tile: no denominator changes due to right-censoring.
-      cards.appendChild(card("Modeled results","Long-game outcome",
-        group.counts.win+" / "+group.total+" wins",
-        group.counts.unresolved+" unresolved · "+group.terminal+" finished",
-        body=>{
-          body.appendChild(create("p","micro",
-            "These are life-zero modeled finishes, not verified Commander win rates. "+
-            "Unresolved games have reached their time limit; they are not losses."));
-          const evidence=create("div","game-outcome-evidence");
-          const examples=create("div","game-outcome-seeds");
-          let picked=null;
-          function showSeeds(status){
-            examples.replaceChildren();evidence.replaceChildren();
-            const found=group.runs.filter(r=>!status||r.outcome.status===status);
-            for(const run of found){
-              const button=textButton("Seed "+run.seed+" · "+stateLabel(run.outcome.status)+
-                " · "+roundLabel(run),"game-outcome-seed",()=>{
-                picked=run.seed;showSeeds(status);
-                runDetails(evidence,run,{example:group.exampleBySeed.get(run.seed),
-                  onShowRecordedActions:options.onShowRecordedActions});
-              });
-              button.setAttribute("aria-pressed",String(run.seed===picked));
-              examples.appendChild(button);
-            }
-            if(!found.length)examples.appendChild(create("p","micro",
-              "No recorded games for this result."));
+      // Headline combines matching opponent scenarios, but never mismatched
+      // pilot, approximation, deck revision or simulation horizon.
+      cards.appendChild(outcomeCard(outcomeGroup,options,body=>{
+        const evidence=create("div","game-outcome-evidence");
+        const examples=create("div","game-outcome-seeds");
+        let picked=null;
+        function showSeeds(status){
+          examples.replaceChildren();evidence.replaceChildren();
+          const found=outcomeGames.filter(({run})=>
+            !status||run.outcome.status===status);
+          for(const {run,source} of found){
+            const key=source.id+":"+run.seed;
+            const button=textButton(source.scenario+" · seed "+run.seed+
+              " · "+stateLabel(run.outcome.status)+" · "+roundLabel(run),
+              "game-outcome-seed",()=>{
+              picked=key;showSeeds(status);
+              runDetails(evidence,run,{example:source.exampleBySeed.get(run.seed),
+                onShowRecordedActions:options.onShowRecordedActions});
+            });
+            button.setAttribute("aria-pressed",String(key===picked));
+            examples.appendChild(button);
           }
-          countsChart(body,group,showSeeds);
-          const median=quantile(group.terminalRounds,.5);
-          body.appendChild(create("p","micro",
-            "Median completed round (finished games only): "+
-            (median===null?"not yet observed":nfmt(median))+
-            ". Finished "+group.terminal+" / "+group.total+
-            "; unresolved "+group.counts.unresolved+" / "+group.total+"."));
-          body.append(examples,evidence);showSeeds(null);
-        }));
+          if(!found.length)examples.appendChild(create("p","micro",
+            "No recorded games for this outcome."));
+        }
+        countsChart(body,outcomeGroup,showSeeds);
+        const median=quantile(outcomeGroup.terminalRounds,.5);
+        body.appendChild(create("p","micro",
+          "Median finished round: "+(median===null?"—":nfmt(median))+
+          " · "+outcomeGroup.terminal+" finished / "+outcomeGroup.total+
+          " modeled games."));
+        body.append(examples,evidence);showSeeds(null);
+      }));
       cards.appendChild(card("Life progression","Four-seat life history",
         group.life.at(-1)?.seats[0]?.median?.toFixed(1).replace(/\.0$/,"")||"—",
         "Your median life at last observed round · "+group.life.length+" observed rounds",
@@ -467,63 +693,21 @@
           slider.addEventListener("input",displayRound);
           body.append(slider,detail);displayRound();
         }));
-      cards.appendChild(card("Opposing tables","Matchup comparisons",
-        matchup.length+" groups",
-        matchup.some(x=>x.kind==="named")?
-          "Named opposing deck appearances":"Scenarios and opponent roles only",
-        body=>{
-          body.appendChild(create("p","micro",
-            matchup.some(x=>x.kind==="named")?
-              "Results grouped by named opposing deck presence in a four-player pod. "+
-              "These are associations, not 1v1 matchups or proof of which deck caused an outcome.":
-              "The current simulator exports opponent policies and scenarios, "+
-              "not named enemy Commander decks. Specific deck comparisons will appear "+
-              "here when opponent_decks identities are exported."));
-          const groups=matchup.filter(x=>x.kind===
-            (matchup.some(x=>x.kind==="named")?"named":"abstract"));
-          if(groups.length>=2){
-            const best=groups[0],worst=groups.at(-1);
-            const share=b=>Math.round(100*b.counts.win/b.games)+"%";
-            const tied=best.counts.win*worst.games===worst.counts.win*best.games;
-            body.appendChild(create("p","micro",
-              tied?
-                "Recorded opponent groups have the same observed modeled win share ("+
-                  share(best)+"); there is no meaningful best/worst ranking yet.":
-                "Highest observed modeled win share: "+best.label+
-                  " ("+best.counts.win+"/"+best.games+"; "+share(best)+
-                  "). Lowest: "+worst.label+" ("+worst.counts.win+"/"+
-                  worst.games+"; "+share(worst)+"). "+
-                  "These small, censored samples do not predict future performance."));
-          }else{
-            body.appendChild(create("p","micro",
-              "Only one opponent group is recorded for this pilot, rules mode and horizon; "+
-              "best/worst comparisons require at least two opposing groups."));
-          }
-          const list=create("div","game-outcome-matchups");
-          for(const bucket of groups){
-            const row=create("details","game-outcome-matchup");
-            row.appendChild(create("summary",null,
-              bucket.label+" · "+bucket.counts.win+"/"+bucket.games+
-              " modeled wins · "+bucket.counts.loss+" losses · "+
-              bucket.counts.unresolved+" unresolved"));
-            const seedList=create("div","game-outcome-seeds");
-            const detail=create("div","game-outcome-evidence");
-            for(const {run,group:source} of bucket.runs){
-              seedList.appendChild(textButton(
-                source.scenario+" · seed "+run.seed+" · "+stateLabel(run.outcome.status),
-                "game-outcome-seed",()=>runDetails(detail,run,{
-                  example:source.exampleBySeed.get(run.seed),
-                  onShowRecordedActions:options.onShowRecordedActions
-                })));
-            }
-            row.append(seedList,detail);list.appendChild(row);
-          }
-          body.appendChild(list);
+      const opponents=matchup.filter(x=>x.kind===
+        (matchup.some(x=>x.kind==="named")?"named":"abstract"));
+      const leader=opponents[0]||null;
+      cards.appendChild(card("Opponent types","Matchup explorer",
+        leader?leader.counts.win+"/"+leader.games+" wins":"No results",
+        leader?"Most observed wins · "+(leader.title||leader.label):
+          "Load additional scenarios to compare",body=>{
+          matchupExplorer(body,opponents,options);
         }));
+
     }
     choice.onchange=()=>{active=Number(choice.value);showGroup()};
     showGroup();
     return report;
   }
-  return {FORMAT,STATES,validate,model,lifeTrend,matchupRows,opponentDecks,render};
+  return {FORMAT,STATES,validate,model,lifeTrend,matchupRows,matchupMetrics,
+    knockoutRound,opponentDecks,render};
 });

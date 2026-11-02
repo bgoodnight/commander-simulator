@@ -432,6 +432,28 @@ function showPage(){
  */
 const longGameBatches=[];
 let longGameSourceNote="No published long-game batches yet.";
+function outcomeOpponentPortrait(bucket){
+  if(bucket.kind==="named"){
+    // Real opposing names are used only when the batch actually records them.
+    const card=cardInfo(bucket.portraitName||"");
+    return card?.art?{name:card.name,art:card.art}:null;
+  }
+  // Illustration only: an existing pinned commander stands in for a
+  // generic opponent policy, NOT a simulated opposing Commander deck.
+  const representative={
+    aggressive:["wretched_ranks"],
+    aggro:["wretched_ranks"],
+    control:["mortarion_current","mortarion_physical_final","mortarion_ideal"],
+    combo:["magnus_premium","magnus_budget"],
+    balanced:["necron_dynasties"],
+    value:["necron_dynasties"],
+    mixed:["necron_dynasties"]
+  };
+  const keys=representative[String(bucket.archetype||"").toLowerCase()]||["necron_dynasties"];
+  const deck=keys.map(key=>data.decks.find(d=>d.key===key)).find(Boolean);
+  const card=deck&&commanderCard(deck);
+  return card?.art?{name:card.name,art:card.art}:null;
+}
 function renderLongGamePanel(){
   const root=$("game-outcome-results"),status=$("game-outcome-status");
   if(!root||!status||!data||!selectedDeck())return;
@@ -453,6 +475,8 @@ function renderLongGamePanel(){
     longGameSourceNote;
   window.DeckGameOutcomes.render(root,exact,{
     deckKey:selected,deckHash:selectedDeck().deck_sha256,
+    commanderArt:commanderCard(selectedDeck())?.art||null,
+    portraitFor:outcomeOpponentPortrait,
     onShowRecordedActions:(target,example,run)=>{
       try{
         if(!window.CommanderReplay?.renderBoundedEvidence)

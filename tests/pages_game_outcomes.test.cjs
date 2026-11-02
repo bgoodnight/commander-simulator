@@ -132,6 +132,36 @@ test('pilot personalities and provisional modes preserve independent seed cohort
   assert.equal(duplicate.duplicates,1);
   assert.equal(duplicate.totalGames,1);
 });
+test('opponent rankings count wins and medians use observed terminal / elimination rounds',()=>{
+  const won=runWon(),lost=runLost(),unfinished=runUnresolved();
+  const combined=batch([won,lost,unfinished],'aggressive');
+  const result=Outcomes.model([combined],'necron_dynasties','a'.repeat(64));
+  const rows=Outcomes.matchupRows(result.groups);
+  assert.equal(rows.length,1);
+  const metrics=Outcomes.matchupMetrics(rows[0]);
+  assert.equal(metrics.games,3);
+  assert.equal(metrics.wins,1);
+  assert.equal(metrics.losses,1);
+  assert.equal(metrics.unresolved,1);
+  assert.equal(metrics.medianFinishRound,2);
+  assert.equal(metrics.finishedGames,2);
+  assert.equal(metrics.medianPilotKnockoutRound,2);
+  assert.equal(metrics.pilotKnockouts,1);
+  assert.equal(metrics.medianVictoryRound,2);
+  assert.equal(metrics.gamesWithOpponentKnockout,1);
+  assert.equal(metrics.medianLastPilotLife,18);
+  assert.equal(Outcomes.knockoutRound(unfinished,0),null);
+  const noFinish=Outcomes.matchupMetrics(Outcomes.matchupRows(
+    Outcomes.model([batch([unfinished])],'necron_dynasties','a'.repeat(64)).groups)[0]);
+  assert.equal(noFinish.medianFinishRound,null);
+  assert.equal(noFinish.medianPilotKnockoutRound,null);
+  const lots=batch([won,run(3,'win',[[40,40,40,40],[40,0,0,0]])],'balanced');
+  const few=batch([lost,unfinished],'control');
+  const ranked=Outcomes.matchupRows(Outcomes.model([lots,few],
+    'necron_dynasties','a'.repeat(64)).groups);
+  assert.equal(ranked[0].title,'Balanced pod');
+  assert.equal(ranked[0].counts.win,2);
+});
 test('modeled panels expose distinct outcome, life and matchup disclosures with clickable seeds',()=>{
   class Node{
     constructor(tag){
@@ -155,10 +185,16 @@ test('modeled panels expose distinct outcome, life and matchup disclosures with 
     const walk=n=>[n,...n.children.flatMap(walk)];
     let nodes=walk(root);
     assert.equal(report.totalGames,2);
-    assert.equal(nodes.filter(n=>n.className==='board-report game-outcome-card').length,3);
+    assert.equal(nodes.filter(n=>String(n.className).includes('game-outcome-card')).length,3);
     assert.ok(nodes.some(n=>n.tag==='svg'&&n.attributes.role==='img'));
-    assert.ok(nodes.some(n=>n.textContent==='1 / 2 wins'));
+    assert.ok(nodes.some(n=>n.textContent==='Wins · 1/2'));
+    assert.ok(nodes.some(n=>n.textContent==='50%'));
+    assert.ok(nodes.some(n=>n.textContent==='Game Outcomes'));
     assert.ok(nodes.some(n=>String(n.textContent).includes('Only one opponent group')));
+    const rank=nodes.find(n=>n.tag==='button'&&n.className==='game-outcome-rank-row');
+    assert.ok(rank);
+    assert.equal(rank.attributes['aria-pressed'],'true');
+    assert.ok(nodes.some(n=>n.className==='game-outcome-insight-metric'));
     const seed=nodes.find(n=>n.tag==='button'&&n.className==='game-outcome-seed');
     assert.ok(seed);seed.onclick();
     nodes=walk(root);
@@ -171,9 +207,59 @@ test('modeled panels expose distinct outcome, life and matchup disclosures with 
     nodes=walk(root);
     assert.ok(nodes.some(n=>String(n.textContent).includes('pilot engine')));
     assert.ok(nodes.some(n=>String(n.textContent).includes(
-      'Only one opponent group is recorded for this pilot')));
+      'Only one opponent group has been sampled')));
     assert.ok(!nodes.some(n=>String(n.textContent).includes(
       'Highest observed modeled win share')));
+  }finally{global.document=before}
+});
+test('selecting an opponent scroll entry changes the one shown art card and per-opponent metrics',()=>{
+  class Node{
+    constructor(tag){this.tag=tag;this.className='';this.textContent='';
+      this.children=[];this.style={};this.attributes={};}
+    append(...a){this.children.push(...a)}
+    appendChild(a){this.children.push(a);return a}
+    replaceChildren(...a){this.children=a}
+    setAttribute(k,v){this.attributes[k]=String(v)}
+    addEventListener(){}
+    get lastChild(){return this.children.at(-1)}
+  }
+  const before=global.document;
+  global.document={createElement:t=>new Node(t),createElementNS:(_,t)=>new Node(t)};
+  try{
+    const root=new Node('main');
+    Outcomes.render(root,[
+      batch([runWon()],'aggressive',{pilot_style:'adaptive',provisional_mode:'safe'}),
+      batch([runLost()],'control',{pilot_style:'adaptive',provisional_mode:'safe'})
+    ],{deckKey:'necron_dynasties',deckHash:'a'.repeat(64),
+      commanderArt:'https://example.com/pilot.jpg',
+      portraitFor:bucket=>({name:bucket.title,art:'https://example.com/'+bucket.archetype+'.jpg'})
+    });
+    const walk=n=>[n,...n.children.flatMap(walk)];
+    let nodes=walk(root);
+    assert.ok(nodes.some(n=>n.className==='game-outcome-hero-art'&&
+      n.src==='https://example.com/pilot.jpg'));
+    // The headline pools both scenarios under the same pilot/rules/horizon,
+    // not only the first active scenario.
+    assert.ok(nodes.some(n=>n.textContent==='Wins · 1/2'));
+    assert.ok(nodes.some(n=>n.textContent==='Losses · 1/2'));
+    assert.ok(nodes.some(n=>n.className==='game-outcome-limits'));
+    const rank=nodes.filter(n=>n.className==='game-outcome-rank-row');
+    assert.equal(rank.length,2);
+    assert.equal(rank[0].attributes['aria-pressed'],'true');
+    assert.ok(nodes.some(n=>n.className==='game-outcome-opponent-art'&&
+      n.src.endsWith('/aggressive.jpg')));
+    rank[1].onclick();
+    nodes=walk(root);
+    assert.equal(rank[1].attributes['aria-pressed'],'true');
+    assert.equal(rank[0].attributes['aria-pressed'],'false');
+    assert.ok(nodes.some(n=>n.className==='game-outcome-opponent-art'&&
+      n.src.endsWith('/control.jpg')));
+    const labels=nodes.filter(n=>n.className==='game-outcome-insight-metric')
+      .flatMap(walk).map(n=>n.textContent);
+    assert.ok(labels.includes('Median our knockout round'));
+    assert.ok(labels.includes('2'));
+    assert.ok(labels.includes('0%'));
+    assert.equal(nodes.filter(n=>n.className==='game-outcome-opponent-art').length,1);
   }finally{global.document=before}
 });
 test('results page and exporter wire a future published manifest and local JSON',()=>{
