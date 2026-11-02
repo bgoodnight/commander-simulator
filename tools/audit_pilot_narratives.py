@@ -73,6 +73,7 @@ def summarize_run(run,*,turn_examples=12):
                 "lands":item["land_count"],
                 "unsupported_in_hand":list(item["unsupported_cards_in_hand"]),
                 "pilot_choices":list(choices),
+                "pilot_combat":item.get("pilot_combat"),
                 "events":[{"type":e["type"],
                            **({"card":e["card"]} if "card" in e else {}),
                            **({"target_seat":e["target_seat"]}
@@ -98,6 +99,9 @@ def summarize_run(run,*,turn_examples=12):
         "event_counts":dict(sorted(action_counts.items())),
         "turns_without_main_actions":sum(
             not x.get("pilot_decisions") for x in run["events"]),
+        "attackers_committed":sum(
+            (x.get("pilot_combat") or {}).get("selected_attackers",0)
+            for x in run["events"]),
         "frequently_unmodeled_hand_cards":[
             {"card":name,"turns_seen":count}
             for name,count in unmodeled.most_common(12)],
