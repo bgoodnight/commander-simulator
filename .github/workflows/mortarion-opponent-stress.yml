@@ -1,5 +1,5 @@
 name: Mortarion physical opponent stress and narrative audit
-# Repeat final opponent story audit after zero-mana tap ability bugfix.
+# Re-run after physical source-reviewed Plague Drone life replacement.
 on:
   workflow_dispatch:
   push:
