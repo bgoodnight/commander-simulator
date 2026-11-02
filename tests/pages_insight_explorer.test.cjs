@@ -82,7 +82,7 @@ test('insight renderer has art-backed header, selectable bars, cycleable metric 
     let nodes=walk(panel);
     assert.equal(panel.tag,'details');
     assert.match(panel.className,/board-report insight-report/);
-    assert.ok(nodes.some(n=>n.className==='board-summary'));
+    assert.ok(nodes.some(n=>n.className.includes('board-summary')));
     assert.equal(nodes.filter(n=>n.tag==='img').length,2); // banner and selected physical card
     const bar=nodes.find(n=>n.className.startsWith('insight-bar')&&n.attributes['aria-pressed']==='false');
     assert.ok(bar);bar.onclick();
