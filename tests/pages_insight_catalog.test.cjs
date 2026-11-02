@@ -57,17 +57,98 @@ function hands(){
 test('held hand residence is separate from source-paid cost preview and discarded cards',()=>{
  const m=Catalog.heldInHand(hands(),lookup);
  assert.equal(m.id,'held-in-hand');
- assert.deepEqual(m.views.map(x=>x.id),['held','payable']);
+ assert.deepEqual(m.views.map(x=>x.id),['mean','median','held','adjusted','payable']);
  const a=m.contenders.find(x=>x.name==='Mana Geyser');
  const b=m.contenders.find(x=>x.name==='Bad Spell');
- assert.equal(a.score,6);
+ assert.equal(a.score,3);
+ assert.equal(a.viewScores.median,3);
+ assert.equal(a.viewScores.mean,3);
+ assert.equal(a.viewScores.held,6);
+ assert.equal(a.viewScores.adjusted,0.5);
+ assert.equal(a.observedRuns,2);
  assert.equal(a.viewScores.payable,3);
+ assert.equal(b.viewScores.median,2);
  assert.equal(b.viewScores.payable,0);
+ assert.equal(m.title,'Median turns held');
+ assert.equal(m.chartLabel,'Mean end-of-turn hand rounds per observed game');
+ assert.match(m.headlineDetail,/3 median rounds held · 2 games seen/);
+ assert.equal(a.metrics.find(x=>x.id==='played').value,'0');
+ assert.equal(a.metrics.find(x=>x.id==='drawn').value,'0 / 4');
+ assert.equal(a.metrics.find(x=>x.id==='held').examples.length,6);
+ assert.match(m.views[3].formula,/Games seen \+ 10/);
  assert.equal(a.metrics.find(x=>x.id==='payable').examples[0].focusTopic,'hand');
- assert.match(a.metrics.find(x=>x.id==='payable').explanation,/not evidence of legal timing/i);
+ assert.match(a.metrics.find(x=>x.id==='payable').explanation,/does not establish legal timing/i);
  const without=hands().map(r=>({...r,events:r.events.map(t=>({
   ...t,events:t.events.filter(e=>e.type!=='source_paid_candidate')}))}));
- assert.equal(Catalog.heldInHand(without,lookup).views.length,1);
+ assert.deepEqual(Catalog.heldInHand(without,lookup).views.map(v=>v.id),
+  ['mean','median','held','adjusted']);
+});
+test('median includes immediately played opening-hand cards as zero held rounds',()=>{
+ const opening=['Mana Geyser','Bad Spell'];
+ const runs=[
+  run(0,[{hand:['Bad Spell'],events:[event('reviewed_ritual_cast','Mana Geyser')]},
+         {hand:['Bad Spell']}],opening),
+  run(1,[{hand:['Bad Spell','Mana Geyser']},
+         {hand:['Bad Spell','Mana Geyser']}],opening),
+  run(2,[{hand:['Bad Spell','Mana Geyser']},
+         {hand:['Bad Spell','Mana Geyser']}],opening),
+  run(3,[{hand:['Bad Spell'],events:[event('reviewed_ritual_cast','Mana Geyser')]},
+         {hand:['Bad Spell']}],opening)
+ ];
+ const result=Catalog.heldInHand(runs,lookup);
+ const geyser=result.contenders.find(c=>c.name==='Mana Geyser');
+ assert.ok(geyser,'a card held in two runs still qualifies for drilldown');
+ assert.equal(geyser.observedRuns,4);
+ assert.equal(geyser.score,1); // median [0,2,2,0], not 2 conditioned on holds
+ assert.equal(geyser.metrics.find(x=>x.id==='drawn').value,'4 / 4');
+ assert.equal(geyser.metrics.find(x=>x.id==='played').value,'2');
+ assert.equal(geyser.metrics.find(x=>x.id==='held').value,'4');
+ assert.equal(geyser.metrics.find(x=>x.id==='held').examples.length,4);
+ const played=geyser.metrics.find(x=>x.id==='played').examples;
+ assert.deepEqual(played.map(x=>x.seed),[0,3]);
+ const openingExample=geyser.metrics.find(x=>x.id==='drawn').examples[0];
+ assert.equal(openingExample.description,'In the kept opening hand');
+ assert.equal(openingExample.turn,1);
+ assert.equal(openingExample.eventIndex,null);
+ assert.equal(geyser.metrics.find(x=>x.id==='adjusted').value,'0.29');
+ assert.match(geyser.metrics.find(x=>x.id==='median').explanation,/Includes zero/);
+});
+test('recorded draws get exact seed/turn examples, distinct from retained snapshots',()=>{
+ const runs=[
+  run(0,[{hand:[],events:[event('draw','Mana Geyser'),
+    event('reviewed_ritual_cast','Mana Geyser')]},
+    {hand:['Bad Spell']}],['Bad Spell']),
+  run(1,[{hand:['Mana Geyser','Bad Spell'],events:[event('draw','Mana Geyser')]},
+    {hand:['Mana Geyser','Bad Spell']}],['Bad Spell']),
+  run(2,[{hand:['Mana Geyser','Bad Spell'],events:[event('draw','Mana Geyser')]},
+    {hand:['Mana Geyser','Bad Spell']}],['Bad Spell'])
+ ];
+ const m=Catalog.heldInHand(runs,lookup);
+ const c=m.contenders.find(c=>c.name==='Mana Geyser');
+ assert.equal(c.observedRuns,3);
+ assert.equal(c.metrics.find(x=>x.id==='drawn').value,'3 / 3');
+ assert.deepEqual(c.metrics.find(x=>x.id==='drawn').examples
+  .map(x=>[x.seed,x.turn,x.eventIndex]),[[0,1,0],[1,1,0],[2,1,0]]);
+ assert.equal(c.metrics.find(x=>x.id==='played').value,'1');
+ assert.equal(c.score,4/3);
+ assert.equal(c.medianRounds,2);
+});
+test('mean graph separates equal medians while featured number remains median',()=>{
+ const countsA=[1,2,3,4],countsB=[1,2,3,5];
+ const runs=countsA.map((_,i)=>run(i,Array.from({length:5},(_,t)=>({
+   hand:[...(t<countsA[i]?['Mana Geyser']:[]),
+     ...(t<countsB[i]?['Bad Spell']:[])]
+ })),['Mana Geyser','Bad Spell']));
+ const m=Catalog.heldInHand(runs,lookup);
+ assert.ok(m);
+ assert.equal(m.contenders[0].name,'Bad Spell');
+ assert.equal(m.contenders[0].score,2.75);
+ assert.equal(m.contenders[1].score,2.5);
+ assert.deepEqual(m.contenders.map(c=>c.medianRounds),[2.5,2.5]);
+ assert.equal(m.value,'2.5 turns');
+ assert.equal(m.views[0].id,'mean');
+ assert.equal(m.contenders[0].metrics.find(x=>x.id==='average').value,'2.75');
+ assert.equal(m.contenders[1].metrics.find(x=>x.id==='average').value,'2.50');
 });
 test('unused only means no observed play within bounded horizon',()=>{
  const runs=Array.from({length:4},(_,i)=>run(i,[
@@ -142,11 +223,22 @@ test('rank-mode graph toggles payable only when measurements exist',()=>{
   const walk=n=>[n,...n.children.flatMap(walk)];
   let items=walk(ui);
   const modes=items.filter(n=>n.tag==='button'&&n.className.startsWith('insight-ranking-view'));
-  assert.equal(modes.length,2);modes[1].onclick();
+  assert.equal(modes.length,5);
+  assert.equal(modes[0].textContent,'Mean rounds');
+  assert.match(modes[3].textContent,/Adjusted score/);
+  modes[3].onclick();
+  items=walk(ui);
+  assert.ok(items.some(n=>n.className==='insight-ranking-formula'&&
+    n.textContent.includes('(Games seen + 10)')));
+  assert.ok(items.some(n=>n.className==='insight-ranking-method'));
+  items=walk(ui);
+  const paymode=items.find(n=>n.tag==='button'&&n.className.startsWith('insight-ranking-view')&&
+    n.textContent==='Cost-payable');
+  paymode.onclick();
   items=walk(ui);
   assert.ok(items.some(n=>n.className==='insight-card-name'&&n.textContent==='Mana Geyser'));
   const metric=items.find(n=>n.tag==='button'&&n.className.startsWith('insight-metric')&&
-   n.children[1]?.textContent==='Cost-payable turns');
+   n.children[1]?.textContent==='Cost-payable previews');
   metric.onclick();
   assert.deepEqual(opened,[[0,2]]);
  }finally{global.document=old}
