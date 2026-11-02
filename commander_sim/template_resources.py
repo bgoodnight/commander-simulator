@@ -138,7 +138,7 @@ class TemplateManaService:
                 row=provisional_profile(raw)
                 if (row is not None and row.kind=="land_mana"
                         and obj.card.card_id==row.oracle_id):
-                    return row.mana_modes
+                    return self._provisional_mana_modes(row)
             # Shared review: Myriad Landscape's ordinary colorless tap mode.
             if name == "Myriad Landscape":
                 from .reviewed_ramp import reviewed_ramp
@@ -158,8 +158,21 @@ class TemplateManaService:
                 row=provisional_profile(card)
                 if (row is not None and row.kind=="artifact_mana"
                         and obj.card.card_id==row.oracle_id):
-                    return row.mana_modes
+                    return self._provisional_mana_modes(row)
         return ()
+
+    def _provisional_mana_modes(self, profile):
+        """Resolve any commander-identity mana against this game's deck colors.
+
+        The import classifier has no permission to infer identity from a card
+        name. All options use typed ManaMode and the ordinary source-paid
+        planner; no new mana pool or unreviewed activation pathway exists.
+        """
+        modes = list(profile.mana_modes)
+        if profile.commander_identity_mana:
+            modes.extend(ManaMode((color,)) for color in "WUBRG"
+                         if color in self.colors)
+        return tuple(dict.fromkeys(modes))
 
     def spell_cost(self, seat, mana_cost, source):
         """Cost of a verified spell given live, independently reviewed reducers.

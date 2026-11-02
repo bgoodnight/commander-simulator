@@ -86,6 +86,102 @@ class ProvisionalImportTests(unittest.TestCase):
         p2=provisional_profile(restricted2)
         self.assertTrue(p2 is None or p2.kind!="land_mana")
 
+    def test_existing_mana_forms_extend_to_new_imports(self):
+        # Current decks contain these exact printed families. The importer
+        # recognizes the grammar, not the name of an existing reviewed card.
+        signet=self.snapshots["magnus_premium"]["Izzet Signet"]
+        signet_profile=provisional_profile(signet)
+        self.assertEqual(signet_profile.kind,"artifact_mana")
+        self.assertEqual(signet_profile.mana_modes[0].output,("U","R"))
+        self.assertEqual(signet_profile.mana_modes[0].activation_generic,1)
+        tower=self.snapshots["magnus_premium"]["Command Tower"]
+        tower_profile=provisional_profile(tower)
+        self.assertEqual(tower_profile.kind,"land_mana")
+        self.assertTrue(tower_profile.commander_identity_mana)
+        self.assertEqual(tower_profile.mana_modes,())
+        arcane=self.snapshots["magnus_premium"]["Arcane Signet"]
+        self.assertTrue(provisional_profile(arcane).commander_identity_mana)
+
+    def test_choice_and_any_color_modes_are_typed_not_combined(self):
+        dual=card(name="Imported Dual",types="Land",mana="",
+                  text="This land enters tapped.\n{T}: Add {U} or {R}.")
+        profile=provisional_profile(dual)
+        self.assertEqual(profile.kind,"land_mana")
+        self.assertTrue(profile.enter_tapped)
+        self.assertEqual([m.output for m in profile.mana_modes],[("U",),("R",)])
+        any_rock=card(name="Imported Rainbow",types="Artifact",mana="{2}",
+                      text="{T}: Add one mana of any color.")
+        rainbow=provisional_profile(any_rock)
+        self.assertEqual(rainbow.kind,"artifact_mana")
+        self.assertEqual([m.output for m in rainbow.mana_modes],
+                         [(c,) for c in "WUBRG"])
+        self.assertFalse(rainbow.commander_identity_mana)
+
+    def test_mana_grammar_rejects_conditions_and_unmodeled_costs(self):
+        for oracle in (
+            "{T}: Add {U} or {R} only if you control an Island.",
+            "{T}: Add one mana of any color. Spend this mana only to cast Wizards.",
+            "{T}: Add one mana of any color if you control a creature.",
+            "{2}, {T}, Sacrifice this artifact: Add {B}{B}{B}.",
+            "{T}, Pay 1 life: Add one mana of any color.",
+            "{1}, {T}: Add {U}{R}. Activate only as a sorcery.",
+            "{T}: Add {B}.\nSpend this mana only to cast Wizard spells.",
+            "{T}: Add {B}.\nActivate only if you control two creatures.",
+        ):
+            with self.subTest(oracle=oracle):
+                profile=provisional_profile(
+                    card(name="Unsafe",types="Artifact",mana="{2}",text=oracle))
+                # An inert artifact body remains safe to cast; an unpaid,
+                # conditional or restricted mana activation is never granted.
+                self.assertTrue(profile is None or
+                                profile.kind!="artifact_mana")
+
+    def test_funded_mana_and_commander_identity_pay_through_real_sources(self):
+        K,Z,C=_load_live_kernel()
+        k=K()
+        z=Z(k,seed=73)
+        clone=card(name="Imported Signet",types="Artifact",mana="{2}",
+                   text="{1}, {T}: Add {U}{R}.")
+        restricted=card(name="Imported Commander Rock",types="Artifact",
+                        mana="{2}",text="{T}: Add one mana of any color in "
+                         "your commander's color identity.")
+        rainbow=card(name="Imported Rainbow Rock",types="Artifact",mana="{2}",
+                     text="{T}: Add one mana of any color.")
+        meta={v["name"]:v for v in (clone,restricted,rainbow)}
+        signet_id=z.add(C(clone["oracle_id"],clone["name"],
+                          frozenset({"artifact"}),coverage="approx"),
+                        0,"battlefield")
+        restricted_id=z.add(C(restricted["oracle_id"],restricted["name"],
+                             frozenset({"artifact"}),coverage="approx"),
+                            0,"battlefield")
+        rainbow_id=z.add(C(rainbow["oracle_id"],rainbow["name"],
+                          frozenset({"artifact"}),coverage="approx"),
+                         0,"battlefield")
+        swamp_ids=[z.add(C("test:swamp:"+str(i),"Swamp",frozenset({"land"}),
+                           coverage="approx"),0,"battlefield")
+                   for i in range(2)]
+        off=TemplateManaService(k,meta,frozenset({"B"}),zones=z)
+        safe=TemplateManaService(k,meta,frozenset({"B"}),zones=z,
+                                 provisional_mode="safe")
+        self.assertFalse(off.modes(k.get(signet_id)))
+        self.assertEqual([m.output for m in safe.modes(k.get(restricted_id))],
+                         [("B",)])
+        self.assertEqual(len(safe.modes(k.get(rainbow_id))),5)
+        self.assertIsNotNone(safe.plan(0,"{U}{R}"))
+        paid=safe.pay(0,"{U}{R}")
+        self.assertIsNotNone(paid)
+        self.assertIn(signet_id,paid.source_ids)
+        self.assertEqual(len(paid.source_ids),2)
+        self.assertTrue(k.get(signet_id).tapped)
+        # The generic planner may use either a Swamp OR another real rock
+        # to fund the activation; the Signet cannot pay its own {1}.
+        self.assertTrue(all(k.get(i).tapped for i in paid.source_ids))
+        self.assertEqual(len(set(paid.source_ids)),2)
+        self.assertTrue(any(i!=signet_id for i in paid.source_ids))
+        k.get(rainbow_id).card=C("wrong-id",rainbow["name"],
+                                frozenset({"artifact"}),coverage="approx")
+        self.assertEqual(safe.modes(k.get(rainbow_id)),())
+
     def test_import_report_marks_unrecognized_source_as_unimplemented(self):
         rows=[{"deck_name":"Simple","card":card(name="Simple")},
               {"deck_name":"Complex","card":card(name="Complex",
