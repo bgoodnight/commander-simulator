@@ -33,6 +33,13 @@ _DRAW = re.compile(
     r"^(?:You )?[Dd]raw (a|one|two|three|four|five|six|seven|\d+) cards?\.$")
 _GAIN = re.compile(r"^You gain (\d+) life\.$")
 _DRAIN = re.compile(r"^Each opponent loses (\d+) life\.$")
+_CREATURE_TOKENS = re.compile(
+    r"^Create (a|one|two|three|four|five|six|seven|\d+) "
+    r"(tapped )?(\d+)/(\d+) "
+    r"(white|blue|black|red|green|colorless) "
+    r"([A-Z][A-Za-z'-]+) creature tokens?\.$")
+_COLOR_CODES={"white":"W","blue":"U","black":"B","red":"R",
+              "green":"G","colorless":""}
 _TYPES = frozenset({"land","creature","artifact","enchantment","instant","sorcery"})
 
 
@@ -47,6 +54,11 @@ class ProvisionalProfile:
     life_amount: int = 0
     mana_modes: tuple[ManaMode,...] = ()
     enter_tapped: bool = False
+    token_power: int = 0
+    token_toughness: int = 0
+    token_color: str = ""
+    token_subtype: str = ""
+    token_tapped: bool = False
     omissions: tuple[str,...] = ()
     fidelity: str = "provisional_partial"
     def __post_init__(self):
@@ -54,7 +66,10 @@ class ProvisionalProfile:
                 or self.kind not in {"creature_body","artifact_body",
                                     "land_mana","artifact_mana","simple_spell"}
                 or self.fidelity!="provisional_partial"
-                or self.amount<0 or self.life_amount<0):
+                or self.amount<0 or self.life_amount<0
+                or self.token_power<0 or self.token_toughness<0
+                or self.token_color not in {"","W","U","B","R","G"}
+                or type(self.token_tapped) is not bool):
             raise ValueError("Invalid provisional source descriptor")
 
 
@@ -95,6 +110,19 @@ def provisional_profile(raw):
             if 1<=amount<=7:
                 return ProvisionalProfile(raw["oracle_id"],raw["oracle_text"],
                     mana,"simple_spell","draw",amount,
+                    omissions=("No opposing priority or counterspell response",))
+        if match:=_CREATURE_TOKENS.fullmatch(text):
+            count=_WORDS.get(match.group(1).lower())
+            if count is None:count=int(match.group(1))
+            power,toughness=int(match.group(3)),int(match.group(4))
+            if 1<=count<=20 and 0<=power<=15 and 0<=toughness<=15:
+                return ProvisionalProfile(
+                    raw["oracle_id"],raw["oracle_text"],mana,
+                    "simple_spell","create_creature_tokens",count,
+                    token_power=power,token_toughness=toughness,
+                    token_color=_COLOR_CODES[match.group(5)],
+                    token_subtype=match.group(6),
+                    token_tapped=bool(match.group(2)),
                     omissions=("No opposing priority or counterspell response",))
         if match:=_GAIN.fullmatch(text):
             amount=int(match.group(1))
