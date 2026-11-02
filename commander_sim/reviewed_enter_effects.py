@@ -72,6 +72,10 @@ class EnterRule:
 
 
 ENTER_RULES={
+    "Lord of Change":EnterRule(
+        "f26fbd53-3c26-4b0a-9182-fc50dd35d0db",
+        "Architect of Deception — When this creature enters, draw three cards.",
+        "library_recipe",library_actions=(LibraryAction("draw",3),)),
     "Technomancer":EnterRule(
         "3f97541e-34f3-4f7f-8ac2-7167b2ec9b33",
         "When this creature enters, mill three cards, then return any number of artifact creature cards with total mana value 6 or less from your graveyard to the battlefield.",
