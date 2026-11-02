@@ -424,9 +424,10 @@ class BoundedOpponentPressure:
             # Seeded physical hand turnover permits realistic discard triggers.
             if turn>=3 and self.rng.random()<(0.25 if role=="value" else 0.12):
                 if self.zones.ids(seat,"library"):
-                    old=self.zones.ids(seat,"library")[-1]
-                    hand=self.zones.move(old,"hand","draw")
-                    discarded=self.zones.discard(seat,hand)
+                    hand_ids,complete=self.zones.draw(seat,1)
+                    if not complete:
+                        raise AssertionError("Reviewed opponent draw preview invalidated")
+                    discarded=self.zones.discard(seat,hand_ids[0])
                     self.events.append(OpponentEvent(
                         turn,seat,role,"abstract_discard",discarded,1,seat))
             should_exile=(
