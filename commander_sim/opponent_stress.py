@@ -51,6 +51,11 @@ class BoundedOpponentPressure:
         self.events = []
         self._defeated = False
         self._born = {}
+        # Opponent exile events consume a finite abstract interaction budget,
+        # rather than pretending an unlimited stream of free removal spells.
+        self._removal_budget = {
+            seat: (2 if role=="control" else 1 if role=="value" else 0)
+            for seat,role in self.roles.items()}
 
     def _board(self, seat):
         return sorted(
@@ -79,7 +84,7 @@ class BoundedOpponentPressure:
             and kernel.legal_target(seat,o.object_id,
                                     frozenset({"creature","enchantment","artifact"}))]
         if not candidates:
-            return
+            return False
         # Target a consequential engine or commander over an expendable token.
         def score(o):
             raw=self.catalog.get(o.card.name,{})
@@ -97,6 +102,7 @@ class BoundedOpponentPressure:
             self.death_engine.resolve_deaths(before,move_index=moves,turn=turn)
         self.events.append(OpponentEvent(turn,seat,role,"abstract_exile",
                                          target.object_id))
+        return True
 
     def _combat(self,seat,role,turn):
         """Resolve bounded combat using real blocker legality and damage/SBA.
@@ -202,10 +208,14 @@ class BoundedOpponentPressure:
                 role=="combo" and turn % 3 == 0)
             if spawn and len(on_board)<5:
                 self._spawn(seat,turn,role)
-            if role=="control" and turn in {4,7,9} and self.rng.random()<0.78:
-                self._exile_one(seat,turn,role)
-            elif role=="value" and turn in {6,9} and self.rng.random()<0.28:
-                self._exile_one(seat,turn,role)
+            should_exile=(
+                role=="control" and turn in {4,7,9}
+                and self.rng.random()<0.74 or
+                role=="value" and turn in {6,9}
+                and self.rng.random()<0.28)
+            if should_exile and self._removal_budget[seat]>0:
+                if self._exile_one(seat,turn,role):
+                    self._removal_budget[seat]-=1
             # Attack with actual non-summoning-sick abstract opponent
             # creatures. Legal defender blockers, creature damage, and LKI
             # death triggers run on the existing authoritative battlefield.
