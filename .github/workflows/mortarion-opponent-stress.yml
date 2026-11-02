@@ -1,5 +1,5 @@
 name: Mortarion physical opponent stress and narrative audit
-# Re-test reviewed instant resolution, actor type, and seat-neutral targets.
+# Verify creature kind and defensive response after seeded targeting corrections.
 on:
   workflow_dispatch:
   push:
