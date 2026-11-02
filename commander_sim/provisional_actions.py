@@ -7,6 +7,7 @@ from dataclasses import dataclass
 
 from .generic_cast import ReviewedCreatureCast, cast_reviewed_spell
 from .physical_common_effects import CardQuantity, draw_physical_cards
+from .reviewed_token_spells import TokenBlueprint,create_reviewed_token_batches
 from .provisional_import import provisional_profile
 
 
@@ -16,6 +17,7 @@ class ProvisionalSpellOutcome:
     operation: str
     count: int
     drawn_ids: tuple[int,...]
+    created_token_ids: tuple[int,...]
     paid_source_ids: tuple[int,...]
     resolved_zone_id: int
     fidelity: str = "provisional_partial"
@@ -56,6 +58,7 @@ def cast_provisional_spell(zones, life, seat, object_id, catalog, colors,
     if on_cast is not None:
         on_cast(commit.ticket)
     drawn=[]
+    created=[]
     def apply_effect(kernel,ticket):
         if profile.mode in {"draw","draw_lose"}:
             outcome=draw_physical_cards(
@@ -65,6 +68,14 @@ def cast_provisional_spell(zones, life, seat, object_id, catalog, colors,
             drawn.extend(outcome.drawn_ids)
         if profile.mode=="draw_lose":
             life.lose(seat,profile.life_amount,object_id)
+        elif profile.mode=="create_creature_tokens":
+            tokens=TokenBlueprint(
+                profile.token_subtype,frozenset({"creature"}),
+                frozenset({profile.token_subtype}),
+                frozenset({profile.token_color}) if profile.token_color else frozenset(),
+                profile.token_power,profile.token_toughness,
+                profile.amount,profile.token_tapped)
+            created.extend(create_reviewed_token_batches(zones,seat,(tokens,)))
         elif profile.mode=="gain_life":
             life.gain(seat,profile.amount,object_id)
         elif profile.mode=="opponent_loss":
@@ -72,4 +83,4 @@ def cast_provisional_spell(zones, life, seat, object_id, catalog, colors,
     resolved=zones.resolve(commit.ticket,effect=apply_effect)
     return ProvisionalSpellOutcome(
         obj.card.name,profile.mode,profile.amount,tuple(drawn),
-        tuple(commit.paid_source_ids),resolved)
+        tuple(created),tuple(commit.paid_source_ids),resolved)
