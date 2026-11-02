@@ -1,0 +1,58 @@
+name: Pilot narrative and deck coverage audit
+
+on:
+  pull_request:
+    paths:
+      - .github/workflows/pilot-narrative-audit.yml
+      - commander_sim/**
+      - tools/audit_pilot_narratives.py
+      - tests/test_pilot_policy.py
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  audited-replays:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      - name: Run actual 12-round seeded narrative games across all deck snapshots
+        run: |
+          mkdir -p pilot-audit
+          python tools/audit_pilot_narratives.py \
+            --deck all --seeds 2 --rounds 12 --scenario mixed \
+            --pilot-style adaptive --provisional-mode safe \
+            --output pilot-audit/narratives-adaptive.json
+      - name: Validate repeatability and source provenance
+        run: |
+          python - <<'PY'
+          import json
+          from pathlib import Path
+          data=json.loads(Path('pilot-audit/narratives-adaptive.json').read_text())
+          assert data['format']=='commander-pilot-narrative-audit-v1'
+          assert len(data['deck_summaries'])==8
+          assert len(data['runs'])==16
+          for game in data['runs']:
+              assert game['pilot_style']=='adaptive'
+              assert game['provisional_mode']=='safe'
+              assert game['completed_rounds']<=12
+              assert game['pilot_signals']['nonland_cards']>0
+              for turn in game['sample_timeline']:
+                  assert len(turn['life_totals'])==4
+                  for choice in turn['pilot_choices']:
+                      assert choice['candidate_count']>=1
+                      assert choice['personality']=='adaptive'
+                      assert choice['fidelity']=='ordering_only_verified_legal_candidates'
+          print('All eight deck variants produced reviewed decision narratives')
+          PY
+      - uses: actions/upload-artifact@v4
+        with:
+          name: pilot-narratives-eight-decks
+          path: pilot-audit/narratives-adaptive.json
+          if-no-files-found: error
+          retention-days: 30
