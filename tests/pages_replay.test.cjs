@@ -225,7 +225,31 @@ test('exact pilot hand, creatures and committed mana sources render only where r
     const l=flatten(lands);
     assert.ok(l.some(x=>x.textContent==='Swamp'));
     assert.ok(l.some(x=>x.textContent==='Sol Ring'));
-    assert.ok(l.some(x=>String(x.textContent).includes('output C, C')));
+    assert.ok(l.some(x=>String(x.textContent).includes('output')));
+    const creditIcons=l.filter(x=>x.tag==='img'&&x.src?.includes('/card-symbols/'));
+    assert.equal(creditIcons.filter(x=>x.src.endsWith('/C.svg')).length,2);
+    assert.deepEqual(creditIcons.filter(x=>x.src.endsWith('/C.svg')).map(x=>x.alt),['{C}','{C}']);
     assert.equal(Replay.zoneInspector(fixture().scenarios.balanced.games[0].rounds[0],'hand',lookup,()=>{}),null);
   }finally{global.document=old}
+});
+
+test('replay mana glyphs use existing Scryfall symbol artwork and safe readable fallbacks',()=>{
+  class Node{
+    constructor(tag){this.tag=tag;this.children=[];this.className='';this.textContent='';}
+    appendChild(value){this.children.push(value);return value}
+  }
+  const original=global.document;global.document={createElement:tag=>new Node(tag)};
+  try{
+    const glyphs=Replay.manaOutputSymbols(['B','C','C','W/U','?']);
+    assert.equal(glyphs.className,'mana-symbols replay-mana-output');
+    assert.deepEqual(glyphs.children.slice(0,4).map(x=>x.src),[
+      'https://svgs.scryfall.io/card-symbols/B.svg',
+      'https://svgs.scryfall.io/card-symbols/C.svg',
+      'https://svgs.scryfall.io/card-symbols/C.svg',
+      'https://svgs.scryfall.io/card-symbols/WU.svg']);
+    assert.equal(glyphs.children[4].textContent,'?');
+    assert.deepEqual(glyphs.children.slice(0,4).map(x=>x.alt),
+      ['{B}','{C}','{C}','{W/U}']);
+    assert.equal(Replay.manaOutputSymbols([]).children[0].textContent,'Unreported');
+  }finally{global.document=original}
 });
