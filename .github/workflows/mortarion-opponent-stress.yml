@@ -1,5 +1,5 @@
 name: Mortarion physical opponent stress and narrative audit
-# Validate physical attack keyword grants, global death damage and fair stochastic targeting.
+# Rerun representative game narratives with bounded source-payment previews.
 on:
   workflow_dispatch:
   push:
