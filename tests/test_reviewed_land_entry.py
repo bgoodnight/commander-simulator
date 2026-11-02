@@ -49,10 +49,10 @@ class MortarionLandTests(unittest.TestCase):
         self.assertEqual(len(out.moved_ids),1)
         self.assertEqual(self.zones.ids(0,"library")[-1],out.moved_ids[0])
         self.assertTrue(self.zones.assert_consistent())
-    def test_necron_hidden_grotto_surveille_uses_shared_library_action(self):
-        from commander_sim.deck_fixtures import FIXTURES
+    def test_magnus_hidden_grotto_surveille_uses_shared_library_action(self):
         from commander_sim.reviewed_land_entry import reviewed_land_entry
-        deck=next(f for f in FIXTURES if f.key=="necron_dynasties")
+        deck=next(f for f in EXPERIMENTAL_FIXTURES
+                  if f.key=="magnus_physical_trial")
         card=next(item["card"] for item in
                   json.loads(deck.snapshot_path.read_text())["cards"]
                   if item["deck_name"]=="Hidden Grotto")
