@@ -152,3 +152,71 @@ test('simulation layout preserves prior reports and adds accessible takeaway and
   assert.match(css,/#pane-records\[hidden\]\{display:none!important\}/);
   assert.match(app,/development\.open=!eligible/);
 });
+
+
+test('chronological turn summary includes recorded draws, plays and responses but not duplicate resolves',()=>{
+  const round={round:3,actions:[
+    {type:'draw',actor_seat:0,card_name:'Sol Ring'},
+    {type:'land_play',actor_seat:0,card_name:'Swamp'},
+    {type:'artifact_cast',actor_seat:0,card_name:'Sol Ring'},
+    {type:'artifact_resolved',actor_seat:0,card_name:'Sol Ring'},
+    {type:'reviewed_instant_response',actor_seat:0,card_name:'Undying Malice'},
+    {type:'opponent_abstract_destroy',actor_seat:1,target_seat:0},
+    {type:'cleanup_discard',actor_seat:0,card_name:'Pestilence'}
+  ]};
+  assert.deepEqual(Replay.pilotTurnActivity(round),[
+    'drew Sol Ring','played Swamp','cast Sol Ring',
+    'responded with Undying Malice','discarded Pestilence'
+  ]);
+  assert.deepEqual(Replay.pilotTurnActivity({actions:[
+    {type:'opponent_abstract_creature',actor_seat:2}] }),[]);
+});
+
+test('exact pilot hand, creatures and committed mana sources render only where recorded',()=>{
+  class Node{
+    constructor(tag){this.tag=tag;this.children=[];this.className='';this.textContent='';this.attributes={};}
+    append(...nodes){this.children.push(...nodes)}
+    appendChild(node){this.children.push(node);return node}
+    setAttribute(name,value){this.attributes[name]=value}
+  }
+  const old=global.document;global.document={createElement:tag=>new Node(tag)};
+  const opened=[];
+  const lookup=name=>{
+    const types={'Swamp':'Basic Land — Swamp','Sol Ring':'Artifact',
+      'Mortarion, Daemon Primarch':'Legendary Creature — Daemon Primarch',
+      'Blood Artist':'Creature — Vampire','Treasure':'Token Artifact'};
+    return types[name]?{name,oracle_id:name+'-id',type_line:types[name],
+      art:'https://example.invalid/'+encodeURIComponent(name)+'.jpg'}:null;
+  };
+  const round={round:4,
+    snapshots:{'0':{hand_size:2,life:34,lands:1,creatures:1,zones:{
+      hand:[{name:'Blood Artist',object_id:4},{name:'Sol Ring',object_id:9}],
+      battlefield:[{name:'Swamp',object_id:1},
+        {name:'Mortarion, Daemon Primarch',object_id:3},
+        {name:'Treasure',object_id:23,token:true}],
+      graveyard:[],exile:[],untracked_tokens:[]}}},
+    mana_activations:[
+      {source_name:'Swamp',mana_output:['B']},
+      {source_name:'Sol Ring',mana_output:['C','C']}],
+    actions:[]};
+  const flatten=x=>[x,...(x.children||[]).flatMap(flatten)];
+  try{
+    const hand=Replay.zoneInspector(round,'hand',lookup,id=>opened.push(id));
+    const all=flatten(hand);
+    assert.ok(all.some(x=>x.textContent==='Blood Artist'));
+    assert.ok(all.some(x=>x.textContent==='Sol Ring'));
+    const button=all.find(x=>x.className==='replay-zone-card');
+    assert.equal(typeof button.onclick,'function');
+    button.onclick();assert.equal(opened.length,1);
+    const creatures=Replay.zoneInspector(round,'creatures',lookup,()=>{});
+    const c=flatten(creatures);
+    assert.ok(c.some(x=>x.textContent==='Mortarion, Daemon Primarch'));
+    assert.ok(c.some(x=>x.textContent==='Treasure'));
+    const lands=Replay.zoneInspector(round,'lands',lookup,()=>{});
+    const l=flatten(lands);
+    assert.ok(l.some(x=>x.textContent==='Swamp'));
+    assert.ok(l.some(x=>x.textContent==='Sol Ring'));
+    assert.ok(l.some(x=>String(x.textContent).includes('output C, C')));
+    assert.equal(Replay.zoneInspector(fixture().scenarios.balanced.games[0].rounds[0],'hand',lookup,()=>{}),null);
+  }finally{global.document=old}
+});
