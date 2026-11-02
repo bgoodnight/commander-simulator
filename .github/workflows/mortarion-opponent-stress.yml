@@ -1,5 +1,5 @@
 name: Mortarion physical opponent stress and narrative audit
-# Rerun narrative audit after deathtouch blocking and printed-body test fixes.
+# Rerun narrated matchup diagnostics with bounded opponent removal resources.
 on:
   workflow_dispatch:
   push:
