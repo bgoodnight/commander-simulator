@@ -31,6 +31,7 @@ from .mana_kernel_bridge import _reviewed_modes
 from .reviewed_rocks import reviewed_rock
 from .reviewed_lands import reviewed_land
 from .reviewed_land_entry import reviewed_land_entry, resolve_land_entry
+from .reviewed_utility_activations import reviewed_utility, activate_utility
 from .reviewed_tutors import reviewed_tutor
 from .reviewed_tutor_cast import (eligible_reviewed_tutor_targets,
                                   cast_and_resolve_reviewed_tutor)
@@ -58,7 +59,8 @@ from .template_resources import TemplateManaService
 from .resource_development import assess_resources, choose_tutor_target
 from .resource_pilot import (choose_token_mana_sacrifice, plan_common_spell,
                              ritual_enables_spell, choose_composed_activation,
-                             choose_variable_end_step_payments)
+                             choose_variable_end_step_payments,
+                             choose_utility_activation)
 from .reviewed_common_spells import reviewed_common_spell, cast_common_spell
 from .reviewed_ramp import reviewed_ramp, reviewed_ritual, cast_ritual, activate_land_ramp, resolve_enter_ramp
 from .hand_cleanup import cleanup_hand
@@ -170,6 +172,9 @@ def run_bounded_early_game(deck_key, *, seed=0, turns=6, mulligan="one-free", pr
                     or reviewed_graveyard_creature(name, raw_by_name[name]) is not None
                     or reviewed_phase_permanent(name, raw_by_name[name])
                     or reviewed_composed_permanent(name,raw_by_name[name])
+                    or (reviewed_utility(name,raw_by_name[name]) is not None
+                        and reviewed_utility(name,raw_by_name[name]).source_zone=="battlefield"
+                        and "enchantment" in types)
                     or reviewed_sacrifice_artifact(name,raw_by_name[name])
                     or reviewed_ramp(name,raw_by_name[name]) is not None
                     or reviewed_ritual(name,raw_by_name[name])
@@ -389,7 +394,10 @@ def run_bounded_early_game(deck_key, *, seed=0, turns=6, mulligan="one-free", pr
                 draw_spell = reviewed_draw_spell(name,raw)
                 phase_enchantment = (reviewed_phase_permanent(name, raw)
                                      or reviewed_breach(name, raw)
-                                     or reviewed_composed_permanent(name,raw))
+                                     or reviewed_composed_permanent(name,raw)
+                                     or (reviewed_utility(name,raw) is not None
+                                         and reviewed_utility(name,raw).source_zone=="battlefield"
+                                         and "enchantment" in obj.types))
                 sacrifice_artifact = reviewed_sacrifice_artifact(name, raw)
                 entering = approved_enter_hand_cast(name)
                 ramp = reviewed_ramp(name,raw) if "land" not in obj.types else None
@@ -641,6 +649,25 @@ def run_bounded_early_game(deck_key, *, seed=0, turns=6, mulligan="one-free", pr
                 if moved:
                     events.append({"type":"reviewed_land_ramp","card":source.card.name,
                                    "land_ids":list(moved),"fidelity":"reviewed_shared_basic_search"})
+        # Generic paid utility abilities may convert spare mana into a real
+        # creature recursion, a draw, or a legal black permanent drain.
+        action=choose_utility_activation(
+            zones,0,life,mana_service,raw_by_name,
+            hand_cast_reviewed=lambda obj: reviewed_creature(
+                deck_key,obj.card.name,raw_by_name[obj.card.name]))
+        if action is not None:
+            source_id,target_id=action
+            utility=activate_utility(zones,life,0,source_id,raw_by_name,
+                mana_service,colors,target_id=target_id,
+                death_engine=death_engine,turn=turn)
+            if utility is not None:
+                events.append({"type":"reviewed_utility_activated",
+                    "card":utility.source_name,
+                    "operation":utility.operation,
+                    "moved_ids":list(utility.new_object_ids),
+                    "paid_source_ids":list(utility.paid_source_ids),
+                    "life_paid":utility.life_paid,
+                    "fidelity":"bounded_utility_policy"})
         # Generic composed-ability policy is separate from the rule executor.
         # A single conservative paid activation may generate useful life loss.
         activation=choose_composed_activation(
@@ -963,6 +990,7 @@ def run_bounded_early_game(deck_key, *, seed=0, turns=6, mulligan="one-free", pr
                 or reviewed_tutor(name, raw) is not None
                 or reviewed_phase_permanent(name, raw)
                 or reviewed_composed_permanent(name,raw)
+                or reviewed_utility(name,raw) is not None
                 or reviewed_sacrifice_artifact(name, raw)
                 or reviewed_ramp(name,raw) is not None
                 or reviewed_ritual(name,raw)
@@ -1034,6 +1062,8 @@ def run_bounded_early_game(deck_key, *, seed=0, turns=6, mulligan="one-free", pr
                 and not reviewed_composed_permanent(kernel.get(oid).card.name,
                     raw_by_name[kernel.get(oid).card.name])
                 and reviewed_common_spell(kernel.get(oid).card.name,
+                    raw_by_name[kernel.get(oid).card.name]) is None
+                and reviewed_utility(kernel.get(oid).card.name,
                     raw_by_name[kernel.get(oid).card.name]) is None
                 and not reviewed_sacrifice_artifact(kernel.get(oid).card.name,
                     raw_by_name[kernel.get(oid).card.name])
