@@ -228,6 +228,44 @@ class StaticPagesTests(unittest.TestCase):
             self.assertTrue(image.startswith("https://cards.scryfall.io/art_crop/front/"))
         self.assertIsNone(card_image({"id":"not-a-real-id"}))
 
+    def test_optional_long_game_data_needs_exact_deck_revision(self):
+        source=Path(self.temp.name)/"outcome-data"
+        source.mkdir()
+        key="mortarion_current"
+        pinned=json.loads((Path(__file__).resolve().parents[1]/
+            "web/pages/data/bounded-batches.json").read_text())
+        sha=pinned["decks"][key]["deck_sha256"]
+        round0={"round":0,"life_totals":{"0":40,"1":40,"2":40,"3":40},
+                "alive_seats":[0,1,2,3],"life_changes":[],"new_eliminations":[]}
+        round1={"round":1,"life_totals":{"0":39,"1":40,"2":40,"3":40},
+                "alive_seats":[0,1,2,3],
+                "life_changes":[{"seat":0,"delta":-1,"amount":1,"kind":"loss"}],
+                "new_eliminations":[]}
+        payload={
+            "format":"commander-modeled-outcomes-v1","schema_version":1,
+            "deck_key":key,"deck_sha256":sha,"requested_rounds":2,
+            "scenario":"mixed",
+            "opponent_fidelity":"abstract_opponent_pressure_not_card_exact",
+            "outcomes_are_competitive_win_rates":False,
+            "runs":[{"seed":7,"completed_rounds":1,
+                     "life_history":[round0,round1],
+                     "outcome":{"status":"unresolved","requested_rounds":2}}]
+        }
+        index={"format":"commander-modeled-outcomes-library-v1",
+               "files":["pilot.json"]}
+        (source/"manifest.json").write_text(json.dumps(index))
+        (source/"pilot.json").write_text(json.dumps(payload))
+        published=self.run_build(outcome_source=source)
+        self.assertIn("game-outcomes/manifest.json",published["asset_sha256"])
+        self.assertIn("game-outcomes/pilot.json",published["asset_sha256"])
+        self.assertEqual(
+            json.loads((self.destination/"game-outcomes/pilot.json").read_text())
+            ["outcomes_are_competitive_win_rates"],False)
+        payload["deck_sha256"]="wrong-hash"
+        (source/"pilot.json").write_text(json.dumps(payload))
+        with self.assertRaisesRegex(ValueError,"long-game export"):
+            self.run_build(outcome_source=source)
+
     def test_build_refuses_duplicate_seeds(self):
         with self.assertRaisesRegex(ValueError,"distinct"):
             self.run_build(seeds=(1,1))
