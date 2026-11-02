@@ -279,6 +279,29 @@ def run_bounded_early_game(deck_key, *, seed=0, turns=6, mulligan="one-free", pr
                     (target.power+target.toughness<4
                      and "commander" not in target.card.supertypes)):
                 return
+            # Prefer reusable zero-mana protection of this exact source
+            # to spending a hand card; the sacrificed creature is a real cost.
+            rule=reviewed_activation(target.card.name,
+                                     raw_by_name.get(target.card.name))
+            if rule is not None and rule.operation=="keyword_self_until_end":
+                victims=[o for o in kernel.on_battlefield()
+                         if o.controller==0 and o.object_id!=target_id
+                         and "creature" in o.types]
+                if victims:
+                    victim=min(victims,key=lambda o:(
+                        0 if o.token else 1,
+                        o.power+o.toughness,o.object_id))
+                    saved=activate_reviewed(
+                        zones,life,mana_service,death_engine,raw_by_name,
+                        target_id,sacrifice_id=victim.object_id,
+                        turn=pressure_turn)
+                    if saved is not None:
+                        events.append({"type":"reviewed_activated_response",
+                            "source_object_id":target_id,
+                            "sacrificed_object_id":victim.object_id,
+                            "operation":saved.operation,
+                            "against_seat":opponent_seat})
+                        return
             for spell_id in tuple(zones.ids(0,"hand")):
                 spell=kernel.get(spell_id)
                 review=reviewed_zone_spell(
