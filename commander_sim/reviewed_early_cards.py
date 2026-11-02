@@ -249,6 +249,8 @@ _PHYSICAL_MORTARION_SAFE_BODIES = {
         "oracle_text": "Flying\n{B}: This creature deals 1 damage to each creature and each player."},
     "Thrashing Wumpus": {"oracle_id": "ef220824-fab4-4d8e-9ba4-65ff5ba1db66",
         "oracle_text": "{B}: This creature deals 1 damage to each creature and each player."},
+    "Plague Spitter": {"oracle_id": "5feedfb0-30e6-400d-9e28-d541ea1aa14e",
+        "oracle_text": "At the beginning of your upkeep, this creature deals 1 damage to each creature and each player.\\nWhen this creature dies, it deals 1 damage to each creature and each player."},
     "Crypt Rats": {"oracle_id": "104095ed-55e3-408e-bf70-4fe06bb16d2f",
         "oracle_text": "{X}: This creature deals X damage to each creature and each player. Spend only black mana on X."},
     "Darksteel Myr": {"oracle_id": "f90fe86c-5cca-483b-93c2-6e856fa01c88",
