@@ -1064,7 +1064,8 @@ body:has(#pane-records:not([hidden])) .page-introduction a{font-size:.72rem}
 
 /* Outcome hero and art-backed, scrollable opposing archetype explorer. */
 .game-outcome-grid{grid-template-columns:repeat(2,minmax(0,1fr))}
-.game-outcome-hero{grid-column:1/-1;position:relative;isolation:isolate}
+.game-outcome-hero-frame{grid-column:1/-1;position:relative;isolation:isolate;min-width:0}
+.game-outcome-hero{position:relative;isolation:isolate}
 .game-outcome-hero-summary{position:relative;overflow:hidden;min-height:172px;
   background:linear-gradient(110deg,#132b2b,#20242c)}
 .game-outcome-hero-summary:before{content:"";position:absolute;inset:0;z-index:1;
@@ -1146,7 +1147,7 @@ body:has(#pane-records:not([hidden])) .page-introduction a{font-size:.72rem}
 .game-outcome-insight-metric small{font-size:.64rem;color:#cdd2c8}
 @media(max-width:720px){
   .game-outcome-grid{grid-template-columns:1fr}
-  .game-outcome-hero{grid-column:1}
+  .game-outcome-hero-frame{grid-column:1}
   .game-outcome-hero-summary{min-height:160px}
   .game-outcome-hero-copy{padding:12px 42px 12px 12px}
   .game-outcome-hero-art{width:74%;object-position:center}
