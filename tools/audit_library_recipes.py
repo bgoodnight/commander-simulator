@@ -27,11 +27,21 @@ def audit_snapshot(snapshot_path, label=None):
     if snapshot.get("problems") or not isinstance(snapshot.get("cards"), list):
         raise ValueError("Requires a complete pinned card-data snapshot")
     rows = []
+    excluded_multiface = []
     for entry in snapshot["cards"]:
         raw = entry["card"]
         name = entry["deck_name"]
-        if not raw.get("oracle_id") or not raw.get("oracle_text"):
-            raise ValueError("Missing pinned oracle identity or printed text")
+        if not raw.get("oracle_id"):
+            raise ValueError("Missing pinned Oracle identity")
+        if not raw.get("oracle_text"):
+            # Scryfall stores many split, Adventure and DFC texts per face.
+            # Provisional rules deliberately reject those layouts; do not
+            # pretend they have a single executable Oracle spell recipe.
+            if (raw.get("layout") != "normal"
+                    and isinstance(raw.get("card_faces"), list)):
+                excluded_multiface.append(name)
+                continue
+            raise ValueError("Incomplete pinned single-face Oracle text")
         reviewed = reviewed_draw_spell(name, raw)
         provisional = provisional_profile(raw)
         flashback = reviewed_flashback(name, raw)
@@ -76,6 +86,7 @@ def audit_snapshot(snapshot_path, label=None):
         "deck": label or Path(snapshot_path).stem,
         "recipe_uses": len(rows),
         "cards_with_recipes": len({row["oracle_id"] for row in rows}),
+        "multiface_manual_review": sorted(excluded_multiface),
         "by_source": dict(sorted(Counter(row["source"] for row in rows).items())),
         "cards": rows,
         "warning": "Registration/admission counts, not actual casting frequency, "
