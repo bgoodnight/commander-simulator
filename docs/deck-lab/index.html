@@ -10,7 +10,8 @@
   <script src="https://cdn.jsdelivr.net/npm/d3@7/dist/d3.min.js" defer></script>
   <script src="./results_insights.js?v=20261101h1" defer></script>
   <script src="./brackets.js?v=20261101bracket" defer></script>
-  <script src="./app.js?v=mortarion-physical-full-archive-20261101" defer></script>
+  <script src="./replay.js?v=replay-v1-20261102" defer></script>
+  <script src="./app.js?v=replay-integration-v1-20261102" defer></script>
 </head>
 <body>
 <main class="wide-wrap" id="app">
@@ -110,6 +111,12 @@
         <span class="eyebrow">Reviewed-action simulation</span>
         <h2 id="bounded-heading">Six-turn simulation batches</h2>
         <div id="bounded-results" aria-live="polite"></div>
+      </section>
+      <section class="panel replay-panel" id="opponent-replay-panel" aria-labelledby="opponent-replay-heading" hidden>
+        <span class="eyebrow">Four-seat stress-test narrative</span>
+        <h2 id="opponent-replay-heading" class="panel-title">Explore opponent-pressure games</h2>
+        <p class="small">Aggregate scenarios, example games and recorded actions. The available archive contains abbreviated rounds, not full priority or opponent-board snapshots.</p>
+        <div class="replay-root" id="opponent-replay-root" aria-live="polite"></div>
       </section>
       <section class="panel diagnostic-panel" aria-labelledby="quiet-title">
         <span class="eyebrow">Development diagnostics</span>

@@ -422,7 +422,47 @@ function showPage(){
   }
   renderPageIntro();
   document.title=PAGE_INFO[pageName]+" | Commander Deck Lab";
-  if(pageName==="results"){renderScrollStory();renderQuietDiagnostic()}
+  if(pageName==="results"){renderScrollStory();renderQuietDiagnostic();renderReplay()}
+}
+/* Optional, versioned replay assets. All gameplay generation stays in Python.
+ * New deck types only need an entry in this registry and replay-v1 data.
+ */
+const REPLAY_ASSETS=Object.freeze({
+  mortarion_physical_final:"mortarion-opponent-pressure.v1.json"
+});
+const replayDownloads=new Map();
+function renderReplay(){
+  const panel=$("opponent-replay-panel"),root=$("opponent-replay-root");
+  if(!panel||!root||pageName!=="results")return;
+  const deck=selectedDeck(),file=REPLAY_ASSETS[selected];
+  const eligible=!!file&&!isUnsimulatedVersion();
+  panel.hidden=!eligible;
+  if(!eligible)return;
+  const key=selected,hash=deck.deck_sha256;
+  if(!window.CommanderReplay){
+    root.textContent="Replay viewer unavailable; the rest of the simulation page remains usable.";
+    return;
+  }
+  root.textContent="Loading recorded opponent-pressure narratives…";
+  if(!replayDownloads.has(file)){
+    const loading=fetch("./replay-data/"+file+"?v=source-run-41444353902")
+      .then(response=>{
+        if(!response.ok)throw Error("Published replay data is not available yet ("+response.status+").");
+        return response.json();
+      });
+    replayDownloads.set(file,loading);
+    loading.catch(()=>{if(replayDownloads.get(file)===loading)replayDownloads.delete(file)});
+  }
+  replayDownloads.get(file).then(payload=>{
+    if(selected!==key||selectedDeck()?.deck_sha256!==hash)return;
+    window.CommanderReplay.render(root,payload,{
+      deckKey:key,deckHash:hash,lookup:cardInfo,openCard:showCard
+    });
+  }).catch(error=>{
+    if(selected!==key||selectedDeck()?.deck_sha256!==hash)return;
+    root.textContent="Replay archive could not be displayed: "+error.message+
+      " The previous six-turn analysis is unchanged.";
+  });
 }
 function deckFacts(){
   const cards=displayDeckCards();
