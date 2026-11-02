@@ -26,14 +26,10 @@ def summarize(runs, turns):
     for r in runs:
         ev=[e for phase in r["events"] for e in phase["events"]]
         counts.update(e["type"] for e in ev)
-        for phase in r["events"]:
-            for e in phase["events"]:
-                if e["type"]=="reviewed_commander_cast" and not first["x"]:
-                    pass
         played=next((phase["turn"] for phase in r["events"] if
                      any(e["type"]=="reviewed_commander_cast"
                          for e in phase["events"])),None)
-        first[played if played is not None else "never"]+=1
+        first[str(played) if played is not None else "never"]+=1
         finished.append(r["completed_turns"])
         life.append(r["life_totals"][0])
     return {
