@@ -132,6 +132,10 @@ def choose_discretionary_sacrifice(
             triggers=[]
             draws={}
             for permanent in kernel.on_battlefield():
+                # Only our own validated triggers are payoffs. Opponent
+                # death triggers are not strategic benefits.
+                if permanent.controller!=seat:
+                    continue
                 live=BattlefieldFact.of(permanent)
                 raw_trigger=catalog.get(live.name,{})
                 if raw_trigger.get("oracle_id")!=live.oracle_id:
