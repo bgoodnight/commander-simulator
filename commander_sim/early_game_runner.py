@@ -89,6 +89,23 @@ def _live_types(face):
     return frozenset(face.types)
 
 
+def _printed_supertypes(type_line, *, commander=False):
+    """Preserve official supertypes on verified physical card definitions.
+
+    The identity loader historically projected types and subtypes but not the
+    printed Legendary supertype. A graveyard's 'all legendary creature cards'
+    requirement must use the actual printed characteristic, never a card
+    name or deck-specific list.
+    """
+    if not isinstance(type_line,str):
+        raise TypeError("Printed type line must be verified text")
+    supertype_words=frozenset({"basic","legendary","snow","world","ongoing"})
+    printed=frozenset(word.lower()
+                      for word in type_line.split(" — ",1)[0].split()
+                      if word.lower() in supertype_words)
+    return printed | (frozenset({"commander"}) if commander else frozenset())
+
+
 def _load_live_kernel():
     # Historical version modules aren't packaged; use the established isolated
     # v9b physical-zone kernel. This is NOT another state/zone implementation.
@@ -207,7 +224,9 @@ def run_bounded_early_game(deck_key, *, seed=0, turns=6, mulligan="one-free", pr
                     or provisional_by_name.get(name) is not None)
         definition = CardDefinition(
             identity.oracle_id, name, types, subtypes=subtypes,
-            supertypes=frozenset({"commander"}) if section == "Commander" else frozenset(),
+            supertypes=_printed_supertypes(
+                face.type_line if face is not None else raw_by_name[name].get("type_line",""),
+                commander=(section=="Commander")),
             base_power=power, base_toughness=toughness,
             keywords=keywords, colors=colors_printed,
             coverage="approx" if reviewed else "unimplemented")
