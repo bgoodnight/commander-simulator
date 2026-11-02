@@ -935,3 +935,24 @@ body:has(#pane-records:not([hidden])) .page-introduction a{font-size:.72rem}
   .insight-head-stat{font-size:.68rem}
   .insight-inline-replay{padding:7px}
 }
+
+
+/* Source-evidence insight families. Compare end-of-turn residence with the
+ * separate, narrower printed-cost payment preview without implying legality. */
+.insight-ranking-views{display:flex;flex-wrap:wrap;gap:5px;margin:6px 0 9px}
+.insight-ranking-view{cursor:pointer;border:1px solid #64746a;border-radius:6px;
+  padding:6px 8px;background:#213331;color:#e3dccd;font-size:.72rem;font-weight:600}
+.insight-ranking-view:hover,.insight-ranking-view:focus-visible{border-color:#f2c989}
+.insight-ranking-view.is-active{background:#494637;color:#fbe2aa;border-color:#d4b87e}
+.insight-head-title{line-height:1.2}
+.insight-report .insight-head-stat{max-width:35ch}
+.insight-metrics:has(.insight-metric:nth-child(4)){grid-template-columns:repeat(auto-fit,minmax(115px,1fr))}
+.insight-metric:disabled{cursor:not-allowed;opacity:.53}
+.insight-evidence-heading .micro{white-space:nowrap}
+.insight-example p{overflow-wrap:anywhere}
+@media(max-width:720px){
+  .insight-ranking-views{display:grid;grid-template-columns:repeat(2,minmax(0,1fr))}
+  .insight-ranking-view{padding:5px;font-size:.63rem}
+  .insight-metrics:has(.insight-metric:nth-child(4)){grid-template-columns:repeat(2,minmax(0,1fr))}
+  .insight-inline-replay .replay-round{max-width:100%}
+}
