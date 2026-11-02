@@ -1522,7 +1522,9 @@ def run_bounded_early_game(deck_key, *, seed=0, turns=6, mulligan="one-free", pr
                                   for o in kernel.objects.values()),
             "mana_rock_count": sum("artifact" in o.types and o.zone == "battlefield"
                                   and not o.token and o.card.name in raw_by_name
-                                  and reviewed_rock(o.card.name, raw_by_name[o.card.name], colors) is not None
+                                  and (reviewed_rock(o.card.name, raw_by_name[o.card.name], colors) is not None
+                                       or (provisional_by_name.get(o.card.name) is not None
+                                           and provisional_by_name[o.card.name].kind=="artifact_mana"))
                                   for o in kernel.objects.values()),
             "floating_at_end_of_main": floating_end,
             "resource_start": resource_start,
