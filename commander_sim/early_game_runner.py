@@ -939,6 +939,7 @@ def run_bounded_early_game(deck_key, *, seed=0, turns=6, mulligan="one-free", pr
                                "card":name,
                                "source_graveyard_id":result.source_graveyard_id,
                                "drawn_ids":list(result.drawn_ids),
+                               "created_token_ids":list(result.created_token_ids),
                                "library_actions":list(result.library_steps),
                                "discarded_ids":list(result.discarded_ids),
                                "surveilled_ids":list(result.surveilled_ids),
