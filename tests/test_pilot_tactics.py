@@ -1,6 +1,9 @@
 """Generic optional sacrifice choices from physical reviewed action evidence."""
 import unittest
 from types import SimpleNamespace
+from unittest.mock import patch
+from commander_sim.resource_pilot import choose_composed_activation
+from commander_sim.composed_abilities import ABILITIES
 
 from commander_sim.pilot_tactics import choose_discretionary_sacrifice
 from commander_sim.reviewed_sacrifice_actions import SACRIFICE_MODES
@@ -82,6 +85,56 @@ class TacticalSacrificeTests(unittest.TestCase):
         self.token.power=5
         self.assertIsNone(self.choose())
 
+
+
+class GlobalDamageChoiceTests(unittest.TestCase):
+    def setUp(self):
+        rule=ABILITIES["Pestilence"][0]
+        self.source=permanent(1,"Pestilence",rule.oracle_id,
+                              types=("enchantment",))
+        self.source.damage_marked=0
+        self.source.toughness=0
+        self.objects=[self.source]
+        self.catalog={"Pestilence":{"oracle_id":rule.oracle_id,
+                                    "oracle_text":rule.oracle_excerpt}}
+        self.kernel=SimpleNamespace(on_battlefield=lambda:tuple(self.objects))
+        self.zones=SimpleNamespace(kernel=self.kernel)
+        self.life=SimpleNamespace(total=lambda seat:40)
+        self.mana=SimpleNamespace(plan=lambda seat,cost:object())
+
+    def body(self,oid,seat,power=1,toughness=1):
+        b=permanent(oid,"Generic Body "+str(oid),
+                    "test:"+str(oid),power=power)
+        b.controller=seat
+        b.toughness=toughness
+        b.damage_marked=0
+        self.objects.append(b)
+        return b
+
+    def choice(self,available=4):
+        with patch("commander_sim.resource_pilot.assess_resources",
+                   return_value=SimpleNamespace(
+                       available_fixed_mana=available)):
+            return choose_composed_activation(
+                self.zones,0,self.life,self.mana,self.catalog)
+
+    def test_declines_global_damage_that_only_trades_our_creature(self):
+        self.body(2,0)
+        self.body(3,1)
+        self.assertIsNone(self.choice())
+        self.body(4,2)
+        self.assertEqual(self.choice(),self.source.object_id)
+
+    def test_life_loss_engine_requires_mana_and_no_friendly_casualties(self):
+        end=next(rule for rule in ABILITIES["Mortarion, Daemon Primarch"]
+                 if rule.event=="end_step")
+        commander=self.body(2,0,power=7,toughness=7)
+        commander.card.name="Mortarion, Daemon Primarch"
+        commander.card.card_id=end.oracle_id
+        self.catalog[commander.card.name]={
+            "oracle_id":end.oracle_id,"oracle_text":end.oracle_excerpt}
+        self.assertIsNone(self.choice(available=2))
+        self.assertEqual(self.choice(available=3),self.source.object_id)
 
 if __name__=="__main__":
     unittest.main()
