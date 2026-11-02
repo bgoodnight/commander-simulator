@@ -121,6 +121,32 @@ priority stack or four complete active player pilots. Some side effects can
 only be exercised by direct host-backed tests until main-turn integration
 and opponent choice/stack timing are available.
 
+## Source-conservative library entry sequences (November 2026)
+
+The safe provisional importer can now compose two **complete standalone** creature
+entry sentences using the existing physical library kernel:
+
+- `When this creature enters, mill N cards, then draw M cards.`
+- `When this creature enters, draw N cards, then discard M cards.`
+  (The importer conservatively requires `M <= N`.)
+
+Both are partial source-identified ability imports, **not** whole-card
+implementations. Their physical move IDs, ordered library steps, and omissions
+appear in per-turn replay exports. Compound text with unreviewed targeting,
+extra mandatory costs, additional effects or changed wording still fails
+closed. The historical reviewed ability paths retain their exact Oracle pins.
+
+The common `required_library_cards_for_draws` preflight now respects the
+printed order of milling and drawing. A mill-only effect can resolve even
+from an empty library, as Magic rules allow; milling *before* a mandatory
+draw requires enough cards for both. Milling *after* the final draw does not
+block a legal cast. This narrowly fixes false card rejections without
+pretending the simulator implements losing to an empty-library draw.
+
+The pilot narrative audit now retains physical library-step evidence and
+flags impossible recorded mandatory draw/mill counts. These are diagnostic
+assertions only; an absence of flags does not certify full card fidelity.
+
 ## Still incomplete — required for full-deck claims
 
 The next gate is to connect reviewed ETB and graveyard alternatives to all
