@@ -61,8 +61,10 @@ from .resource_development import assess_resources, choose_tutor_target
 from .resource_pilot import (choose_token_mana_sacrifice, plan_common_spell,
                              ritual_enables_spell, choose_composed_activation,
                              choose_variable_end_step_payments,
-                             choose_utility_activation, choose_end_step_token_mana)
+                             choose_utility_activation, choose_end_step_token_mana,
+                             choose_reviewed_removal)
 from .reviewed_common_spells import reviewed_common_spell, cast_common_spell
+from .reviewed_removal_spells import reviewed_removal, cast_removal
 from .reviewed_ramp import reviewed_ramp, reviewed_ritual, cast_ritual, activate_land_ramp, resolve_enter_ramp
 from .hand_cleanup import cleanup_hand
 from .reviewed_escape import (reviewed_breach, escape_candidates,
@@ -408,6 +410,9 @@ def run_bounded_early_game(deck_key, *, seed=0, turns=6, mulligan="one-free", pr
                 ramp = reviewed_ramp(name,raw) if "land" not in obj.types else None
                 ritual = reviewed_ritual(name,raw)
                 common = reviewed_common_spell(name,raw)
+                removal = reviewed_removal(name,raw)
+                removal_plan = (choose_reviewed_removal(
+                    zones,0,life,removal,turn=turn) if removal is not None else None)
                 common_plan = (plan_common_spell(zones,0,obj,common,raw_by_name,mana_service,life)
                                if common is not None else None)
                 if ritual and not ritual_enables_spell(zones,0,obj,raw_by_name,mana_service):
@@ -418,24 +423,27 @@ def run_bounded_early_game(deck_key, *, seed=0, turns=6, mulligan="one-free", pr
                 if (not is_creature and rock is None and not eligible
                         and token_spell is None and draw_spell is None and not phase_enchantment
                         and not sacrifice_artifact and not entering and not ramp and not ritual
-                        and not common_plan):
+                        and not common_plan and removal_plan is None):
                     continue
                 cost = common_plan[0] if common_plan else registry.get(name).primary_face().mana_cost
                 payment = mana_service.plan_spell(0, cost, obj)
                 if payment is not None:
-                    kind = ("common_spell" if common_plan else
+                    kind = ("removal_spell" if removal_plan is not None else
+                            "common_spell" if common_plan else
                             "ritual" if ritual else
                             "artifact" if rock is not None or sacrifice_artifact or (ramp and name == "Wayfarer\u0027s Bauble") else
                             "enchantment" if phase_enchantment or (entering and "Enchantment" in raw.get("type_line","").split(" — ",1)[0]) else
                             "tutor" if eligible else
                             "draw_spell" if draw_spell is not None else
                             "token_spell" if token_spell is not None else "creature")
-                    target = (common_plan[1:] if common_plan else
+                    target = (removal_plan if removal_plan is not None else
+                              common_plan[1:] if common_plan else
                               choose_tutor_target(zones, 0, eligible, raw_by_name, colors) if eligible else None)
                     # Reviewed trigger creatures precede spells so their
                     # shared effects may fire on subsequent actual casts.
                     options.append((0 if rock is not None or ritual else
                                     1 if is_creature else
+                                    2 if removal_plan is not None and life.total(0)<=18 else
                                     2 if sacrifice_artifact else
                                     3 if phase_enchantment or entering else
                                     4 if eligible else 5,
@@ -457,6 +465,27 @@ def run_bounded_early_game(deck_key, *, seed=0, turns=6, mulligan="one-free", pr
                     "paid_source_ids":list(outcome.paid_source_ids),
                     "commander_tax":outcome.commander_tax,
                     "fidelity":"reviewed_command_zone"})
+                continue
+            if kind == "removal_spell":
+                target_id,x=target
+                triggered=[]
+                outcome=cast_removal(
+                    zones,life,0,oid,raw_by_name,colors,mana_service,
+                    target_id=target_id,x=x,death_engine=death_engine,
+                    turn=turn,
+                    on_cast=lambda ticket:triggered.extend(
+                        approved_spell_triggers(ticket)))
+                if outcome is None:
+                    raise AssertionError("Reviewed removal payment changed")
+                events.extend(triggered)
+                events.append({
+                    "type":"reviewed_removal_resolved",
+                    "card":outcome.card_name,
+                    "target_object_id":target_id,
+                    "x_life_paid":outcome.x_life_paid,
+                    "affected_object_ids":list(outcome.affected_ids),
+                    "destroyed_count":outcome.destroyed_count,
+                    "fidelity":"bounded_reviewed_removal_no_priority"})
                 continue
             if kind == "common_spell":
                 x, victims = target
