@@ -37,7 +37,7 @@ class SharedMillRecipesTests(unittest.TestCase):
         return self.z.add(self.C(identity or "test:"+name,name,
                            frozenset(types),coverage="approx"),owner,zone)
 
-    def tested_entry(self,name,*,library_count=5):
+    def _tested_entry(self,name,*,library_count=5):
         row=self.cards[name]
         source=self.add(name,"hand",identity=row["oracle_id"])
         created=self.z.move(source,"battlefield","resolve")
@@ -73,7 +73,7 @@ class SharedMillRecipesTests(unittest.TestCase):
         self.assertFalse(self.z.ids(0,"graveyard"))
 
     def test_flayed_one_mills_three_as_shared_entry_recipe(self):
-        out,originals,source=self.tested_entry("Flayed One")
+        out,originals,source=self._tested_entry("Flayed One")
         self.assertEqual(out.operation,"library_recipe")
         self.assertEqual(len(out.milled_ids),3)
         self.assertEqual(out.library_steps[0]["count"],3)
@@ -82,14 +82,14 @@ class SharedMillRecipesTests(unittest.TestCase):
         self.assertTrue(self.z.assert_consistent())
 
     def test_mire_triton_mills_two_and_gains_two_life(self):
-        out,originals,source=self.tested_entry("Mire Triton")
+        out,originals,source=self._tested_entry("Mire Triton")
         self.assertEqual(len(out.milled_ids),2)
         self.assertEqual(self.life.total(0),42)
         self.assertEqual(len(self.z.ids(0,"library")),3)
         self.assertTrue(self.z.assert_consistent())
 
     def test_undead_butler_mills_three_without_inventing_death_target(self):
-        out,_,source=self.tested_entry("Undead Butler")
+        out,_,source=self._tested_entry("Undead Butler")
         self.assertEqual(len(out.milled_ids),3)
         self.assertEqual(len(out.library_steps),1)
         self.assertEqual(out.token_ids,())
