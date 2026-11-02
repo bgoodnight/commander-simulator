@@ -1,6 +1,6 @@
 name: Stage and review 500 Mortarion modeled games
 
-# Starts on merge into main; future repeats require manual dispatch unless workflow changes.
+# Re-run after the signed-power combat damage correction; next repeats require dispatch.
 on:
   push:
     branches: [main]
