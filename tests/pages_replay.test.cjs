@@ -12,7 +12,7 @@ function fixture(){
     scenarios:{
       balanced:{summary:{seeds:24,survived_by_horizon:24},
         games:[{id:'balanced:0',seed:0,scenario:'balanced',
-          seats:[{seat:0,role:'pilot'},{seat:1,role:'aggro'},{seat:2,role:'control'},{seat:3,role:'value'}],
+          seats:[{seat:0,label:'Mortarion',role:'pilot'},{seat:1,label:'Seat 1',role:'aggro'},{seat:2,label:'Seat 2',role:'control'},{seat:3,label:'Seat 3',role:'value'}],
           rounds:[{round:1,snapshots:{'0':{life:40,lands:1,creatures:0,hand_size:7}},
             actions:[
               {type:'land_play',actor_seat:0,target_seat:null,card_name:'Swamp',fields:{type:'land_play',card:'Swamp'}},
