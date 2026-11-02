@@ -1,5 +1,5 @@
 name: Audit Mortarion resource-engine and pilot choices
-# Rerun after generic small-X and low-life spell sequencing regression fix.
+# Fresh 120-seed 12-turn physical Mortarion quality diagnostic.
 on:
   workflow_dispatch:
   push:
@@ -20,9 +20,9 @@ jobs:
       - name: Verify shared physical effect contracts
         run: |
           python -m unittest tests.test_mortarion_death_extensions tests.test_reviewed_common_spells tests.test_reviewed_reactive_triggers tests.test_reviewed_commander_cast -v
-      - name: Run pinned 100-seed 10-turn Mortarion batch
+      - name: Run pinned 120-seed 12-turn Mortarion batch
         run: |
-          python tools/run_physical_deck_trials.py --deck mortarion_physical_final --seeds 100 --turns 10 --output mortarion-audit.json
+          python tools/run_physical_deck_trials.py --deck mortarion_physical_final --seeds 120 --turns 12 --output mortarion-audit.json
       - name: Summarize behavior and identify pilot red flags
         run: |
           python - <<'PY'
@@ -33,6 +33,12 @@ jobs:
           print("SIMULATION_AUDIT_SUMMARY",json.dumps({
             "deck":r["deck_key"],"seeds":r["seed_count"],"turns":r["turns"],
             "last_turn":r["batch"]["turns"][-1],
+            "turn_4":r["batch"]["turns"][3],
+            "turn_6":r["batch"]["turns"][5],
+            "turn_8":r["batch"]["turns"][7],
+            "turn_10":r["batch"]["turns"][9],
+            "event_counts":dict(counts),
+            "candidate_cards":r["candidate_cards"],
             "commander_casts":counts["reviewed_commander_cast"],
             "damage_activations":counts["reviewed_composed_activated"],
             "x_token_end_steps":counts["reviewed_composed_end_step"],
@@ -46,6 +52,6 @@ jobs:
           PY
       - uses: actions/upload-artifact@v4
         with:
-          name: mortarion-resource-audit-100-seeds-10-turns
+          name: mortarion-resource-audit-120-seeds-12-turns
           path: mortarion-audit.json
           retention-days: 30
