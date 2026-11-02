@@ -680,12 +680,14 @@
         round:row.turn,
         actions:(row.events||[]).map((event,index)=>({
           id:"bounded:"+run.seed+":t"+row.turn+":a"+index,
-          type:event.type,actor_seat:0,target_seat:null,
+          type:event.type,actor_seat:Number.isInteger(event.seat)?event.seat:0,
+          target_seat:Number.isInteger(event.target_seat)?event.target_seat:null,
           card_name:typeof event.card==="string"?event.card:null,
           fields:{...event},fidelity:event.fidelity||"reviewed"
         })),
         snapshots:{"0":{
-          life:Number.isFinite(row.life)?row.life:null,
+          life:Number.isFinite(row.life)?row.life:
+            Number.isFinite(row.life_totals?.["0"])?row.life_totals["0"]:null,
           lands:Number.isFinite(row.land_count)?row.land_count:countType("Land"),
           creatures:Number.isFinite(row.creature_count)?row.creature_count:countType("Creature"),
           hand_size:snapshot.hand.length,
@@ -697,16 +699,27 @@
   function renderBoundedEvidence(root,run,options={}){
     const rounds=boundedRounds(run,options.lookup);
     root.replaceChildren();
-    root.appendChild(panelHeading("Recorded single-pilot seed "+run.seed,
-      "Turn-by-turn evidence"));
+    root.appendChild(panelHeading(
+      (options.abstractOpponents?"Recorded modeled multiplayer":"Recorded single-pilot")+
+        " seed "+run.seed,"Turn-by-turn evidence"));
     root.appendChild(el("p","micro",
-      "These are six-turn reviewed-action snapshots from the pinned bounded simulator. "+
-      "There are no modeled opponents, full priority windows or verified wins. "+
-      "Hand and battlefield are end-of-turn snapshots; mana shown only if source actions record it."));
+      options.abstractOpponents?
+        "This "+rounds.length+"-round example includes abstract opponent stress behavior, "+
+        "not real opposing decks. Recorded actions preserve source/seat fidelity, "+
+        "but do not implement complete Commander priority or combat rules.":
+        "These are "+rounds.length+"-turn reviewed-action snapshots from the pinned bounded simulator. "+
+        "There are no modeled opponents, full priority windows or verified wins. "+
+        "Hand and battlefield are end-of-turn snapshots; mana shown only if source actions record it."));
     const context=el("p","replay-legend","Focused card: "+
       (options.cardName||"not selected")+" · Turn "+(options.turn||"not selected"));
     root.appendChild(context);
-    const seats=[{seat:0,label:options.commanderName||"Your commander",role:"single-pilot"}];
+    const seats=[{seat:0,label:options.commanderName||"Your commander",role:"pilot"}];
+    if(options.abstractOpponents){
+      for(const seat of [1,2,3]){
+        seats.push({seat,label:"Seat "+(seat+1),
+          role:String(run.opponent_roles?.[String(seat)]||"abstract")});
+      }
+    }
     const timeline=el("div","replay-timeline");
     rounds.forEach((round,i)=>{
       const focus=round.round===options.turn?
