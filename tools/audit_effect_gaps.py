@@ -10,6 +10,11 @@ from collections import Counter, defaultdict
 import json
 from pathlib import Path
 import re
+import sys
+
+ROOT=Path(__file__).resolve().parents[1]
+if str(ROOT) not in sys.path:
+    sys.path.insert(0,str(ROOT))
 
 from commander_sim.deck_fixtures import FIXTURES, EXPERIMENTAL_FIXTURES
 from commander_sim.named_effect_coverage import named_effect_coverage
