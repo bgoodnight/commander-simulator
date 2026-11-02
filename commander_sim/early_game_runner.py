@@ -71,6 +71,8 @@ from .reviewed_sacrifice_actions import (
     activate_reviewed_sacrifice)
 from .template_resources import TemplateManaService
 from .resource_development import assess_resources, choose_tutor_target
+from .pilot_policy import (STYLES,PilotContext,infer_deck_signals,
+                            choose_legal_option)
 from .resource_pilot import (choose_token_mana_sacrifice, plan_common_spell,
                              ritual_enables_spell, choose_composed_activation,
                              choose_variable_end_step_payments,
@@ -122,7 +124,7 @@ def _load_live_kernel():
     return IndexedKernel, LiveZones, CardDefinition
 
 
-def run_bounded_early_game(deck_key, *, seed=0, turns=6, mulligan="one-free", profile=None, opponent_scenario=None, provisional_mode="off"):
+def run_bounded_early_game(deck_key, *, seed=0, turns=6, mulligan="one-free", profile=None, opponent_scenario=None, provisional_mode="off",pilot_style="adaptive"):
     """Play a small reviewed set of actual land, rock and creature actions.
 
     A deterministic, conservative fixed pilot draws, plays one supported land,
@@ -134,6 +136,8 @@ def run_bounded_early_game(deck_key, *, seed=0, turns=6, mulligan="one-free", pr
         raise ValueError("Expected integer seed and 1..30 rounds")
     if mulligan not in ("one-free", "keep"):
         raise ValueError("Unknown mulligan policy")
+    if pilot_style not in STYLES:
+        raise ValueError("Unknown deterministic pilot personality")
     fixture = next((x for x in (*FIXTURES, *EXPERIMENTAL_FIXTURES) if x.key == deck_key), None)
     if fixture is None:
         raise ValueError("Unknown pinned deck fixture")
@@ -148,6 +152,7 @@ def run_bounded_early_game(deck_key, *, seed=0, turns=6, mulligan="one-free", pr
     registry = CardRegistry(snapshot)
     colors = registry.get(fixture.commander).color_identity
     raw_by_name = {entry["deck_name"]: entry["card"] for entry in pinned}
+    pilot_signals=infer_deck_signals(snapshot.deck.cards,raw_by_name)
     if provisional_mode not in {'off','safe'}:
         raise ValueError('Unknown provisional mode')
     provisional_by_name = ({name: provisional_profile(raw) for name,raw in raw_by_name.items()}
@@ -566,6 +571,7 @@ def run_bounded_early_game(deck_key, *, seed=0, turns=6, mulligan="one-free", pr
                            "victim_object_id":victim_id,
                            "fidelity":"bounded_resource_sequencing"})
         resource_after_precast = assess_resources(kernel, mana_service, 0).__dict__
+        pilot_decisions=[]
         copied_this_turn=set()
         # Reuse the same source-paid action for approved artifacts and creatures.
         # Prefer affordable ramp rocks before creatures: a limited pilot policy.
@@ -727,7 +733,28 @@ def run_bounded_early_game(deck_key, *, seed=0, turns=6, mulligan="one-free", pr
                                     len(payment.source_ids), name, oid, kind, cost, target))
             if not options:
                 break
-            _, _, name, oid, kind, cost, target = min(options)
+            context=PilotContext(
+                round=turn,life=life.total(0),
+                hand_size=len(zones.ids(0,"hand")),
+                lands=sum("land" in obj.types and obj.controller==0
+                          for obj in kernel.on_battlefield()),
+                mana_sources=assess_resources(kernel,mana_service,0).available_fixed_mana,
+                graveyard_creatures=sum("creature" in kernel.get(gy).types
+                    for gy in zones.ids(0,"graveyard")),
+                friendly_creatures=sum("creature" in obj.types and obj.controller==0
+                    for obj in kernel.on_battlefield()),
+                opposing_creatures=sum("creature" in obj.types and obj.controller!=0
+                    and life.total(obj.controller)>0
+                    for obj in kernel.on_battlefield()))
+            selected,rank=choose_legal_option(
+                options,context,pilot_signals,raw_by_name,style=pilot_style)
+            _, _, name, oid, kind, cost, target = selected
+            pilot_decisions.append({
+                "round":turn,"kind":kind,"card":name,
+                "source_object_id":oid,"candidate_count":len(options),
+                "score":rank.score,"role":rank.category,
+                "factors":list(rank.factors),"personality":pilot_style,
+                "fidelity":"ordering_only_verified_legal_candidates"})
             if kind == "commander":
                 triggered=[]
                 outcome=cast_commander(zones,0,oid,raw_by_name,mana_service,
@@ -1673,6 +1700,7 @@ def run_bounded_early_game(deck_key, *, seed=0, turns=6, mulligan="one-free", pr
             "resource_end": resource_end,
             "mana_payment_events": list(mana_service.mana_events[mana_ledger_start:]),
             "life_totals":dict(life.kernel.life_totals),
+            "pilot_decisions":list(pilot_decisions),
             "life_totals_start":dict(outcome_recorder.history[-2]["life_totals"]),
             "life_changes":list(round_life["life_changes"]),
             "eliminations":list(round_life["new_eliminations"]),
@@ -1728,6 +1756,8 @@ def run_bounded_early_game(deck_key, *, seed=0, turns=6, mulligan="one-free", pr
         "life_history":list(outcome_recorder.history),
         "outcome":outcome_recorder.outcome(requested_rounds=turns),
         "deck_key": deck_key,
+        "pilot_style":pilot_style,
+        "pilot_signals":pilot_signals.as_dict(),
         "provisional_mode":provisional_mode,
         "provisional_import_report":(
             provisional_report(pinned) if provisional_mode=="safe" else []),
@@ -1757,8 +1787,11 @@ if __name__ == "__main__":
     parser.add_argument("--profile", type=Path, help="Optional curated strategy JSON file")
     parser.add_argument("--provisional-mode",choices=("off","safe"),default="off",
                         help="Enable safe import-derived, explicitly partial card actions")
+    parser.add_argument("--pilot-style",choices=STYLES,default="adaptive",
+                        help="Deterministic deck-derived legal-action personality")
     args = parser.parse_args()
     profile = json.loads(args.profile.read_text(encoding="utf-8")) if args.profile else None
     print(json.dumps(run_bounded_early_game(args.deck, seed=args.seed, turns=args.turns,
                                              mulligan=args.mulligan, profile=profile,
-                                             provisional_mode=args.provisional_mode), indent=2))
+                                             provisional_mode=args.provisional_mode,
+                                             pilot_style=args.pilot_style), indent=2))
