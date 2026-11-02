@@ -622,42 +622,34 @@
         "-round horizon · "+group.scenario+
         " · pilot "+group.pilotStyle+" · provisional "+group.provisionalMode+
         " · abstract opponent policies, not competitive multiplayer win rates";
-      // Outcome tile: no denominator changes due to right-censoring.
-      cards.appendChild(card("Modeled results","Long-game outcome",
-        group.counts.win+" / "+group.total+" wins",
-        group.counts.unresolved+" unresolved · "+group.terminal+" finished",
-        body=>{
-          body.appendChild(create("p","micro",
-            "These are life-zero modeled finishes, not verified Commander win rates. "+
-            "Unresolved games have reached their time limit; they are not losses."));
-          const evidence=create("div","game-outcome-evidence");
-          const examples=create("div","game-outcome-seeds");
-          let picked=null;
-          function showSeeds(status){
-            examples.replaceChildren();evidence.replaceChildren();
-            const found=group.runs.filter(r=>!status||r.outcome.status===status);
-            for(const run of found){
-              const button=textButton("Seed "+run.seed+" · "+stateLabel(run.outcome.status)+
-                " · "+roundLabel(run),"game-outcome-seed",()=>{
-                picked=run.seed;showSeeds(status);
-                runDetails(evidence,run,{example:group.exampleBySeed.get(run.seed),
-                  onShowRecordedActions:options.onShowRecordedActions});
-              });
-              button.setAttribute("aria-pressed",String(run.seed===picked));
-              examples.appendChild(button);
-            }
-            if(!found.length)examples.appendChild(create("p","micro",
-              "No recorded games for this result."));
+      // Compact, art-backed outcome summary; outcome counts include unresolved.
+      cards.appendChild(outcomeCard(group,options,body=>{
+        const evidence=create("div","game-outcome-evidence");
+        const examples=create("div","game-outcome-seeds");
+        let picked=null;
+        function showSeeds(status){
+          examples.replaceChildren();evidence.replaceChildren();
+          const found=group.runs.filter(r=>!status||r.outcome.status===status);
+          for(const run of found){
+            const button=textButton("Seed "+run.seed+" · "+stateLabel(run.outcome.status)+
+              " · "+roundLabel(run),"game-outcome-seed",()=>{
+              picked=run.seed;showSeeds(status);
+              runDetails(evidence,run,{example:group.exampleBySeed.get(run.seed),
+                onShowRecordedActions:options.onShowRecordedActions});
+            });
+            button.setAttribute("aria-pressed",String(run.seed===picked));
+            examples.appendChild(button);
           }
-          countsChart(body,group,showSeeds);
-          const median=quantile(group.terminalRounds,.5);
-          body.appendChild(create("p","micro",
-            "Median completed round (finished games only): "+
-            (median===null?"not yet observed":nfmt(median))+
-            ". Finished "+group.terminal+" / "+group.total+
-            "; unresolved "+group.counts.unresolved+" / "+group.total+"."));
-          body.append(examples,evidence);showSeeds(null);
-        }));
+          if(!found.length)examples.appendChild(create("p","micro",
+            "No recorded games for this outcome."));
+        }
+        countsChart(body,group,showSeeds);
+        const median=quantile(group.terminalRounds,.5);
+        body.appendChild(create("p","micro",
+          "Median finished round: "+(median===null?"—":nfmt(median))+
+          " · "+group.terminal+" finished / "+group.total+" modeled games."));
+        body.append(examples,evidence);showSeeds(null);
+      }));
       cards.appendChild(card("Life progression","Four-seat life history",
         group.life.at(-1)?.seats[0]?.median?.toFixed(1).replace(/\.0$/,"")||"—",
         "Your median life at last observed round · "+group.life.length+" observed rounds",
@@ -682,59 +674,16 @@
           slider.addEventListener("input",displayRound);
           body.append(slider,detail);displayRound();
         }));
-      cards.appendChild(card("Opposing tables","Matchup comparisons",
-        matchup.length+" groups",
-        matchup.some(x=>x.kind==="named")?
-          "Named opposing deck appearances":"Scenarios and opponent roles only",
-        body=>{
-          body.appendChild(create("p","micro",
-            matchup.some(x=>x.kind==="named")?
-              "Results grouped by named opposing deck presence in a four-player pod. "+
-              "These are associations, not 1v1 matchups or proof of which deck caused an outcome.":
-              "The current simulator exports opponent policies and scenarios, "+
-              "not named enemy Commander decks. Specific deck comparisons will appear "+
-              "here when opponent_decks identities are exported."));
-          const groups=matchup.filter(x=>x.kind===
-            (matchup.some(x=>x.kind==="named")?"named":"abstract"));
-          if(groups.length>=2){
-            const best=groups[0],worst=groups.at(-1);
-            const share=b=>Math.round(100*b.counts.win/b.games)+"%";
-            const tied=best.counts.win*worst.games===worst.counts.win*best.games;
-            body.appendChild(create("p","micro",
-              tied?
-                "Recorded opponent groups have the same observed modeled win share ("+
-                  share(best)+"); there is no meaningful best/worst ranking yet.":
-                "Highest observed modeled win share: "+best.label+
-                  " ("+best.counts.win+"/"+best.games+"; "+share(best)+
-                  "). Lowest: "+worst.label+" ("+worst.counts.win+"/"+
-                  worst.games+"; "+share(worst)+"). "+
-                  "These small, censored samples do not predict future performance."));
-          }else{
-            body.appendChild(create("p","micro",
-              "Only one opponent group is recorded for this pilot, rules mode and horizon; "+
-              "best/worst comparisons require at least two opposing groups."));
-          }
-          const list=create("div","game-outcome-matchups");
-          for(const bucket of groups){
-            const row=create("details","game-outcome-matchup");
-            row.appendChild(create("summary",null,
-              bucket.label+" · "+bucket.counts.win+"/"+bucket.games+
-              " modeled wins · "+bucket.counts.loss+" losses · "+
-              bucket.counts.unresolved+" unresolved"));
-            const seedList=create("div","game-outcome-seeds");
-            const detail=create("div","game-outcome-evidence");
-            for(const {run,group:source} of bucket.runs){
-              seedList.appendChild(textButton(
-                source.scenario+" · seed "+run.seed+" · "+stateLabel(run.outcome.status),
-                "game-outcome-seed",()=>runDetails(detail,run,{
-                  example:source.exampleBySeed.get(run.seed),
-                  onShowRecordedActions:options.onShowRecordedActions
-                })));
-            }
-            row.append(seedList,detail);list.appendChild(row);
-          }
-          body.appendChild(list);
+      const opponents=matchup.filter(x=>x.kind===
+        (matchup.some(x=>x.kind==="named")?"named":"abstract"));
+      const leader=opponents[0]||null;
+      cards.appendChild(card("Opponent types","Matchup explorer",
+        leader?leader.counts.win+"/"+leader.games+" wins":"No results",
+        leader?"Most observed wins · "+(leader.title||leader.label):
+          "Load additional scenarios to compare",body=>{
+          matchupExplorer(body,opponents,options);
         }));
+
     }
     choice.onchange=()=>{active=Number(choice.value);showGroup()};
     showGroup();
