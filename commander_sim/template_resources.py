@@ -215,19 +215,22 @@ class TemplateManaService:
                 self.kernel, self.card_metadata, seat),
             available_life=life)
 
-    def plan_spell(self, seat, mana_cost, source):
+    def plan_spell(self, seat, mana_cost, source, *, excluded_source_ids=()):
         for option in self._spell_payment_options(seat, mana_cost, source):
-            planned = self.plan(seat, option.mana_cost)
+            planned = self.plan(seat, option.mana_cost,
+                                excluded_source_ids=excluded_source_ids)
             if planned is not None:
                 return planned
         return None
 
-    def pay_spell(self, seat, mana_cost, source):
+    def pay_spell(self, seat, mana_cost, source, *, excluded_source_ids=()):
         from .kernel_life import KernelLife
         for option in self._spell_payment_options(seat, mana_cost, source):
-            if self.plan(seat, option.mana_cost) is None:
+            if self.plan(seat, option.mana_cost,
+                         excluded_source_ids=excluded_source_ids) is None:
                 continue
-            paid = self.pay(seat, option.mana_cost)
+            paid = self.pay(seat, option.mana_cost,
+                            excluded_source_ids=excluded_source_ids)
             if paid is None:
                 raise AssertionError("Reviewed alternative payment invalidated")
             if option.life_cost:
