@@ -821,6 +821,8 @@ def run_bounded_early_game(deck_key, *, seed=0, turns=6, mulligan="one-free", pr
                 or reviewed_tutor(name, raw) is not None
                 or reviewed_phase_permanent(name, raw)
                 or reviewed_sacrifice_artifact(name, raw)
+                or reviewed_ramp(name,raw) is not None
+                or reviewed_ritual(name,raw)
                 or approved_enter_hand_cast(name)
                 or reviewed_breach(name,raw)
                 or reviewed_buyback(name,raw))
@@ -883,6 +885,10 @@ def run_bounded_early_game(deck_key, *, seed=0, turns=6, mulligan="one-free", pr
                 and not reviewed_phase_permanent(kernel.get(oid).card.name,
                     raw_by_name[kernel.get(oid).card.name])
                 and not reviewed_sacrifice_artifact(kernel.get(oid).card.name,
+                    raw_by_name[kernel.get(oid).card.name])
+                and reviewed_ramp(kernel.get(oid).card.name,
+                    raw_by_name[kernel.get(oid).card.name]) is None
+                and not reviewed_ritual(kernel.get(oid).card.name,
                     raw_by_name[kernel.get(oid).card.name])
                 and not approved_enter_hand_cast(kernel.get(oid).card.name)
                 and reviewed_buyback(kernel.get(oid).card.name,
