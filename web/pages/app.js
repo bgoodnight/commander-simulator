@@ -424,6 +424,7 @@ function showPage(){
   document.title=PAGE_INFO[pageName]+" | Commander Deck Lab";
   if(pageName==="results"){
     renderScrollStory();renderQuietDiagnostic();renderReplay();renderLongGamePanel();
+    void loadPublishedLongGame();
   }
 }
 
@@ -431,7 +432,11 @@ function showPage(){
  * observations. Local file imports are in memory only, never uploaded.
  */
 const longGameBatches=[];
-let longGameSourceNote="No published long-game batches yet.";
+const publishedOutcomeBatches=new Map();
+const publishedOutcomeRequests=new Map();
+let outcomeManifestPromise=null;
+let outcomeManifest=null;
+let longGameSourceNote="Checking the published simulation library…";
 function outcomeOpponentPortrait(bucket){
   if(bucket.kind==="named"){
     // Real opposing names are used only when the batch actually records them.
@@ -466,12 +471,15 @@ function renderLongGamePanel(){
     root.textContent="Long-game report renderer unavailable.";
     return;
   }
-  const exact=longGameBatches.filter(b=>
+  const exact=[...publishedOutcomeBatches.values(),...longGameBatches].filter(b=>
     window.DeckGameOutcomes.validate(b)&&
     b.deck_key===selected&&b.deck_sha256===selectedDeck().deck_sha256);
   status.textContent=exact.length?
-    exact.length+" long-game batch"+(exact.length===1?"":"es")+
-      " loaded for this deck · modeled, not competitive win rates.":
+    exact.length+" modeled batch"+(exact.length===1?"":"es")+
+      " for this deck"+
+      (outcomeManifest?.engine_commit?
+        " · simulator "+outcomeManifest.engine_commit.slice(0,8):"")+
+      " · select a scenario or opponent type to explore.":
     longGameSourceNote;
   window.DeckGameOutcomes.render(root,exact,{
     deckKey:selected,deckHash:selectedDeck().deck_sha256,
@@ -512,37 +520,107 @@ async function loadLongGameFiles(event){
   }
   event.target.value="";
 }
-let gameOutcomeIndexRequested=false;
+/* All long-game data remains precomputed on GitHub Actions and pinned to
+ * the selected deck hash. The website fetches only that deck's scenario files.
+ * Reloading the page (or pressing Refresh) sees the latest published release.
+ */
+function validatePublishedOutcomeIndex(index){
+  if(!index||index.format!=="commander-modeled-outcomes-library-v1"||
+     !Array.isArray(index.files)||index.files.length<1||index.files.length>64||
+     new Set(index.files).size!==index.files.length||
+     !index.files.every(n=>typeof n==="string"&&
+       /^[a-zA-Z0-9_.-]+\.json$/.test(n)&&n!=="manifest.json"))
+    throw Error("Invalid published outcome index.");
+  const deckKeys=new Set(data.decks.map(d=>d.key));
+  if(index.by_deck!==undefined){
+    if(!index.by_deck||typeof index.by_deck!=="object"||
+       Array.isArray(index.by_deck))throw Error("Invalid published deck index.");
+    const grouped=Object.entries(index.by_deck);
+    const names=grouped.flatMap(([key,files])=>{
+      if(!deckKeys.has(key)||!Array.isArray(files))throw Error("Unknown published deck.");
+      return files;
+    });
+    if(names.length!==index.files.length||
+       new Set(names).size!==names.length||
+       !names.every(name=>index.files.includes(name)))
+      throw Error("Published deck index does not match listed files.");
+  }
+  if(index.sha256!==undefined){
+    if(!index.sha256||typeof index.sha256!=="object"||
+       Array.isArray(index.sha256)||
+       Object.keys(index.sha256).length!==index.files.length||
+       !index.files.every(name=>/^[a-f0-9]{64}$/.test(index.sha256[name]||"")))
+      throw Error("Invalid published outcome checksums.");
+  }
+  if(index.engine_commit!==undefined&&
+     !/^[a-f0-9]{40}$/.test(index.engine_commit))
+    throw Error("Invalid published simulator revision.");
+  return index;
+}
+function publishedOutcomeIndex(){
+  if(!outcomeManifestPromise){
+    outcomeManifestPromise=fetch("./game-outcomes/manifest.json",{cache:"no-store"})
+      .then(async response=>{
+        if(response.status===404)return null;
+        if(!response.ok)throw Error("Outcome library returned "+response.status);
+        return validatePublishedOutcomeIndex(await response.json());
+      }).catch(error=>{outcomeManifestPromise=null;throw error});
+  }
+  return outcomeManifestPromise;
+}
 async function loadPublishedLongGame(){
-  if(gameOutcomeIndexRequested||pageName!=="results")return;
-  gameOutcomeIndexRequested=true;
+  if(pageName!=="results"||!data||!selectedDeck()||isUnsimulatedVersion())return;
+  const deckKey=selected,deckHash=selectedDeck().deck_sha256;
   try{
-    const response=await fetch("./game-outcomes/manifest.json?v=modeled-v1");
-    if(!response.ok){
-      if(response.status!==404)throw Error("Index returned "+response.status);
-      longGameSourceNote="No published long-game batches yet. Load a local outcome JSON file to preview.";
+    const index=await publishedOutcomeIndex();
+    outcomeManifest=index;
+    if(!index){
+      longGameSourceNote="No published long-game simulations yet.";
       renderLongGamePanel();return;
     }
-    const index=await response.json();
-    if(index?.format!=="commander-modeled-outcomes-library-v1"||
-       !Array.isArray(index.files)||index.files.length>24||
-       !index.files.every(n=>typeof n==="string"&&
-         /^[a-zA-Z0-9_.-]+\.json$/.test(n)&&n!=="manifest.json"))
-      throw Error("Invalid long-game index.");
-    const batches=await Promise.all(index.files.map(async file=>{
-      const resource=await fetch("./game-outcomes/"+file);
-      if(!resource.ok)throw Error("Missing "+file);
-      const data=await resource.json();
-      if(!window.DeckGameOutcomes.validate(data))
-        throw Error("Invalid published export "+file);
-      return data;
+    const files=index.by_deck?index.by_deck[deckKey]||[]:index.files;
+    if(!files.length){
+      longGameSourceNote="No published game outcomes for this deck revision yet.";
+      renderLongGamePanel();return;
+    }
+    await Promise.all(files.map(file=>{
+      if(!publishedOutcomeRequests.has(file)){
+        const request=fetch("./game-outcomes/"+file+
+            (index.engine_commit?"?rev="+index.engine_commit:""),{cache:"no-store"})
+          .then(async response=>{
+            if(!response.ok)throw Error("Missing published data "+file);
+            const batch=await response.json();
+            if(!window.DeckGameOutcomes?.validate(batch)||
+               (index.by_deck&&batch.deck_key!==deckKey))
+              throw Error("Invalid published outcome batch "+file);
+            publishedOutcomeBatches.set(file,batch);
+            return batch;
+          }).catch(error=>{publishedOutcomeRequests.delete(file);throw error});
+        publishedOutcomeRequests.set(file,request);
+      }
+      return publishedOutcomeRequests.get(file);
     }));
-    longGameBatches.push(...batches);
-    longGameSourceNote="Published long-game datasets loaded.";
-  }catch(e){
-    longGameSourceNote="Published long-game data unavailable: "+e.message;
+    if(deckKey===selected&&deckHash===selectedDeck()?.deck_sha256){
+      const loaded=[...publishedOutcomeBatches.values()].filter(batch=>
+        batch.deck_key===deckKey&&batch.deck_sha256===deckHash).length;
+      longGameSourceNote=loaded?
+        "Published modeled outcome batches loaded automatically.":
+        "Published files do not match this exact deck revision.";
+    }
+  }catch(error){
+    if(deckKey===selected)
+      longGameSourceNote="Could not load published results: "+error.message;
   }
+  if(deckKey===selected)renderLongGamePanel();
+}
+function refreshPublishedLongGame(){
+  outcomeManifestPromise=null;
+  outcomeManifest=null;
+  publishedOutcomeRequests.clear();
+  publishedOutcomeBatches.clear();
+  longGameSourceNote="Refreshing published results…";
   renderLongGamePanel();
+  void loadPublishedLongGame();
 }
 
 /* Optional, versioned replay assets. All gameplay generation stays in Python.
@@ -2070,6 +2148,8 @@ function registerEvents(){
   $("quiet-files").addEventListener("change",loadQuietFiles);
   const outcomeFiles=$("game-outcome-files");
   if(outcomeFiles)outcomeFiles.addEventListener("change",loadLongGameFiles);
+  const outcomeRefresh=$("game-outcome-refresh");
+  if(outcomeRefresh)outcomeRefresh.onclick=refreshPublishedLongGame;
   $("commander-medallion").onclick=toggleCommanderPicker;
   document.addEventListener("click",e=>{
     if(!e.target.closest(".selector-anchor"))closeCommanderPicker();
