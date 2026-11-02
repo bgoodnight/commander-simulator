@@ -438,7 +438,7 @@ function renderReplay(){
   const eligible=!!file&&!isUnsimulatedVersion();
   panel.hidden=!eligible;
   const development=$("development-panel");
-  if(development)development.open=!eligible;
+  if(development)development.open=true;
   if(!eligible)return;
   const key=selected,hash=deck.deck_sha256;
   if(!window.CommanderReplay){
@@ -796,6 +796,37 @@ function boardReport(batch, type){
       item.appendChild(el("p","Turn "+row.turn+": "+(events.join(" · ")||"No recorded action"),"micro"))}evidence.appendChild(item)});
   body.appendChild(evidence);panel.appendChild(body);return panel;
 }
+
+/* Reusable insight pilot: one model, one container, exact source-paid events.
+ * Future categories should supply a model rather than building another UI.
+ */
+function creatureInsightReport(runs){
+  if(!window.DeckInsightExplorer)return null;
+  const model=window.DeckInsightExplorer.creaturePlays(runs,cardInfo);
+  if(!model)return null;
+  return window.DeckInsightExplorer.render(model,{
+    onOpenCard:id=>showCard(id),
+    onOpenEvidence:openCreatureInsightEvidence
+  });
+}
+function openCreatureInsightEvidence(example,card){
+  const panel=$("insight-turn-viewer"),root=$("insight-turn-root");
+  const deck=selectedDeck();
+  if(!panel||!root||!deck||!window.CommanderReplay)return;
+  if(isUnsimulatedVersion()||example.run.deck_key!==selected||
+     example.run.deck_sha256!==deck.deck_sha256)return;
+  panel.hidden=false;panel.open=true;
+  try{
+    window.CommanderReplay.renderBoundedEvidence(root,example.run,{
+      turn:example.turn,eventIndex:example.eventIndex,cardName:card.name,
+      commanderName:deck.commander,lookup:cardInfo,openCard:showCard
+    });
+    panel.scrollIntoView?.({behavior:"smooth",block:"start"});
+  }catch(error){
+    root.textContent="This run could not be opened: "+error.message;
+  }
+}
+
 function landStory(batch){
   const result=window.DeckInsights.landDevelopment(batch.runs,6),end=result.timeline[5];
   if(!result.total)return el("p","Land development is unavailable for these runs.","small");
@@ -928,6 +959,8 @@ function physicalArchiveBreakdownNode(runs){
 }
 function showBoundedBatch(){
   const root=$("bounded-results");clear(root);
+  const insightViewer=$("insight-turn-viewer");
+  if(insightViewer){insightViewer.hidden=true;insightViewer.open=false;clear($("insight-turn-root"))}
   const batch=boundedBatches?.decks?.[selected],archive=detailedArchives[selected];
   const exact=!isUnsimulatedVersion()&&archive?.deck_sha256===selectedDeck().deck_sha256;
   if(exact){
@@ -962,7 +995,7 @@ function showBoundedBatch(){
       root.appendChild(landStory(archived));
       const reports=el("div",null,"board-grid");
       for(const type of ["Creature","Artifact","Enchantment"])
-        reports.appendChild(boardReport(archived,type));
+        reports.appendChild(type==="Creature"?(creatureInsightReport(archive.runs)||boardReport(archived,type)):boardReport(archived,type));
       root.appendChild(reports);
       root.appendChild(physicalArchiveBreakdownNode(archive.runs));
       root.appendChild(el("p","Unsupported abilities, opponents, combat, Mortarion casting, and wins are not modeled as resolved outcomes. No win-rate conclusion is justified.","micro"));
@@ -976,7 +1009,8 @@ function showBoundedBatch(){
   if(batch.runs?.length)root.appendChild(landStory(batch));
   if(batch.runs?.length){
     root.append(el("h3","What reaches the battlefield?","board-heading"),el("p","Open a takeaway for its timeline, common cards, and matching runs.","small"));
-    const reports=el("div",null,"board-grid");["Creature","Artifact","Enchantment"].forEach(type=>reports.appendChild(boardReport(batch,type)));root.appendChild(reports);
+    const reports=el("div",null,"board-grid");["Creature","Artifact","Enchantment"].forEach(type=>reports.appendChild(
+      type==="Creature"?(creatureInsightReport(batch.runs)||boardReport(batch,type)):boardReport(batch,type)));root.appendChild(reports);
   }
   const details=document.createElement("details");details.className="story-drilldown";
   details.appendChild(el("summary","View turn-by-turn averages"));

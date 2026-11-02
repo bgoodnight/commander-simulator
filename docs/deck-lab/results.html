@@ -6,12 +6,13 @@
   <meta name="theme-color" content="#182428">
   <meta name="description" content="Commander Deck Lab: explore cached Commander decklists, card art and precomputed early-turn observations.">
   <title>Commander Deck Lab — The Arcane Table</title>
-  <link rel="stylesheet" href="./style.css?v=mortarion-mana-glyphs-20261102">
+  <link rel="stylesheet" href="./style.css?v=insight-pilot-20261102">
   <script src="https://cdn.jsdelivr.net/npm/d3@7/dist/d3.min.js" defer></script>
   <script src="./results_insights.js?v=20261101h1" defer></script>
   <script src="./brackets.js?v=20261101bracket" defer></script>
-  <script src="./replay.js?v=mortarion-mana-glyphs-20261102" defer></script>
-  <script src="./app.js?v=mortarion-mana-glyphs-20261102" defer></script>
+  <script src="./replay.js?v=bounded-evidence-pilot-20261102" defer></script>
+  <script src="./insight_explorer.js?v=creature-pilot-20261102" defer></script>
+  <script src="./app.js?v=insight-pilot-20261102" defer></script>
 </head>
 <body>
 <main class="wide-wrap" id="app">
@@ -116,15 +117,7 @@
         </summary>
         <div id="bounded-results" aria-live="polite"></div>
       </details>
-      <details class="panel replay-panel result-takeaway" id="opponent-replay-panel" aria-labelledby="opponent-replay-heading" open hidden>
-        <summary class="result-takeaway-summary">
-          <span class="eyebrow">Pressure &amp; example games</span>
-          <h2 id="opponent-replay-heading" class="result-takeaway-heading">How did a game unfold?</h2>
-          <span class="result-takeaway-description">Compare pressure, choose a game, and follow turn-by-turn highlights</span>
-          <span class="result-takeaway-open">Explore replay</span>
-        </summary>
-        <div class="replay-root" id="opponent-replay-root" aria-live="polite"></div>
-      </details>
+
       <details class="panel diagnostic-panel result-takeaway" aria-labelledby="quiet-title">
         <summary class="result-takeaway-summary">
           <span class="eyebrow">Development diagnostics</span>
@@ -157,6 +150,25 @@
         <div class="results-kpis" id="results-kpis"></div>
         <div id="results-takeaway" class="results-takeaway" aria-live="polite"></div>
       </section>
+      </details>
+      <!-- Deep-dive viewers live at the end of results; insight metrics open an exact seed. -->
+      <details class="panel replay-panel result-takeaway" id="insight-turn-viewer" hidden>
+        <summary class="result-takeaway-summary">
+          <span class="eyebrow">Evidence · selected seed</span>
+          <h2 class="result-takeaway-heading">Full turn-by-turn viewer</h2>
+          <span class="result-takeaway-description">The recorded actions behind the selected card and metric</span>
+          <span class="result-takeaway-open">Explore selected run</span>
+        </summary>
+        <div class="replay-root" id="insight-turn-root" aria-live="polite"></div>
+      </details>
+      <details class="panel replay-panel result-takeaway" id="opponent-replay-panel" aria-labelledby="opponent-replay-heading" hidden>
+        <summary class="result-takeaway-summary">
+          <span class="eyebrow">Pressure &amp; example games</span>
+          <h2 id="opponent-replay-heading" class="result-takeaway-heading">How did a game unfold?</h2>
+          <span class="result-takeaway-description">Compare pressure, choose a game, and follow turn-by-turn highlights</span>
+          <span class="result-takeaway-open">Explore replay</span>
+        </summary>
+        <div class="replay-root" id="opponent-replay-root" aria-live="polite"></div>
       </details>
     </div>
     <div class="tab-pane" id="pane-insights" hidden>
