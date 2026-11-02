@@ -306,7 +306,10 @@
       SEATS.map(s=>row.seats[s].p75||0)),1);
     const yCeiling=Math.ceil(maxLife/10)*10;
     const x=r=>left+r/maxRound*plotW;
-    const y=n=>top+plotH-(n/yCeiling)*plotH;
+    // Life can fall below zero on lethal damage. Keep the line on the
+    // chart's zero baseline, while retaining the exact negative total in
+    // selected-round statistics and life-change evidence.
+    const y=n=>top+plotH-(Math.max(0,n)/yCeiling)*plotH;
     for(const tick of [0,.25,.5,.75,1]){
       const value=Math.round(tick*yCeiling);
       svg.appendChild(svgNode("line",{x1:left,y1:y(value),x2:width-right,
