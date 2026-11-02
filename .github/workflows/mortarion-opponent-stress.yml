@@ -1,5 +1,5 @@
 name: Mortarion physical opponent stress and narrative audit
-# Replay with physical opponent-graveyard theft and provenance reporting.
+# Replay shared two-way combat and reviewed active utility effects.
 on:
   workflow_dispatch:
   push:
@@ -19,7 +19,7 @@ jobs:
           python-version: '3.11'
       - name: Test shared opponent pressure on authoritative zones
         run: |
-          python -m unittest tests.test_opponent_stress tests.test_reviewed_removal_spells tests.test_reviewed_attachments tests.test_reviewed_zone_spells -v
+          python -m unittest tests.test_opponent_stress tests.test_reviewed_removal_spells tests.test_reviewed_attachments tests.test_reviewed_zone_spells tests.test_reviewed_activated_utilities -v
       - name: Execute seeded baseline and four opponent pressure archetypes
         run: |
           python tools/run_mortarion_opponent_stress.py --seeds 24 --turns 10 --output mortarion-opponent-stress.json
