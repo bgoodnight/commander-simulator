@@ -33,7 +33,8 @@ class BoundedOpponentPressure:
     """Simulate between-turn pressure, not an unsupported multiplayer priority stack."""
 
     def __init__(self, zones, life, catalog, death_engine, phase_engine,
-                 card_definition, *, seed=0, scenario="balanced"):
+                 card_definition, *, seed=0, scenario="balanced",
+                 attachment_engine=None):
         if scenario not in SCENARIOS:
             raise ValueError("Unknown opponent stress scenario")
         if zones.kernel is not life.kernel:
@@ -45,6 +46,7 @@ class BoundedOpponentPressure:
         self.phase_engine = phase_engine
         self.definition = card_definition
         self.scenario = scenario
+        self.attachments = attachment_engine
         self.rng = Random(seed * 1009 + 617)
         roles = list(SCENARIOS[scenario])
         self.rng.shuffle(roles)
@@ -144,6 +146,8 @@ class BoundedOpponentPressure:
         self.zones.move(target.object_id,"exile","exile",commander_choice=True)
         if self.death_engine is not None:
             self.death_engine.resolve_deaths(before,move_index=moves,turn=turn)
+        if self.attachments is not None:
+            self.attachments.sync(turn=turn)
         self.events.append(OpponentEvent(turn,seat,role,"abstract_exile",
                                          target.object_id,0,target_seat))
         return True
@@ -224,6 +228,8 @@ class BoundedOpponentPressure:
             if self.death_engine is not None:
                 self.death_engine.resolve_deaths(
                     before,move_index=first_move,turn=turn)
+            if self.attachments is not None:
+                self.attachments.sync(turn=turn)
             self.events.append(OpponentEvent(
                 turn,seat,role,"abstract_blocked_combat",
                 attacker.object_id,attacker.power,defender))
@@ -247,6 +253,8 @@ class BoundedOpponentPressure:
                 if permanent.controller==seat and permanent.tapped:
                     permanent.tapped=False
                     self.zones.kernel._dirty()
+            if self.attachments is not None:
+                self.attachments.sync(turn=turn)
             # Unlike goldfish mode, 'each upkeep' triggers have all four
             # upkeeps. These are resolved with existing reviewed phase logic.
             if self.phase_engine:
@@ -287,6 +295,8 @@ class BoundedOpponentPressure:
             # duration expiration before the next player's turn begins.
             kernel=self.zones.kernel
             kernel.cleanup()
+            if self.attachments is not None:
+                self.attachments.sync(turn=turn)
             if self.life.total(0)<=0 and not self._defeated:
                 self._defeated=True
                 self.events.append(OpponentEvent(turn,seat,role,"life_zero"))
