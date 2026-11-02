@@ -75,53 +75,92 @@ def summarize(runs, turns):
     }
 
 
+# Keep a bounded narrative rather than serializing every transient kernel state.
+# The order within each round matches the engine's emitted event sequence.
+_NARRATIVE_EVENT_TYPES = frozenset({
+    "draw", "land_play", "artifact_cast", "creature_cast",
+    "enchantment_cast", "reviewed_commander_cast",
+    "reviewed_common_spell_resolved", "reviewed_removal_resolved",
+    "reviewed_composed_activated", "reviewed_composed_end_step",
+    "reviewed_precast_mana_sacrifice", "reviewed_sacrifice_activated",
+    "reviewed_utility_activated", "reviewed_zone_spell_resolved",
+    "reviewed_instant_response", "reviewed_attachment_equipped",
+    "reviewed_attachment_reanimated", "reviewed_aura_attached",
+    "reviewed_attachment_upkeep", "reviewed_generic_activated",
+    "reviewed_cast_reaction", "reviewed_reactive_trigger",
+    "reviewed_composed_tap_activation", "reviewed_composed_upkeep",
+    "reviewed_enter_resolved", "reviewed_trigger_resolved",
+    "reviewed_phase_resolved", "reviewed_nonhand_cast_trigger",
+    "reviewed_draw_spell_cast", "reviewed_draw_spell_resolved",
+    "reviewed_flashback_cast", "reviewed_flashback_resolved",
+    "reviewed_escape_cast", "reviewed_escape_resolved",
+    "reviewed_buyback_cast", "reviewed_buyback_resolved",
+    "reviewed_unearth_resolved", "reviewed_ritual_cast",
+    "reviewed_land_ramp", "reviewed_land_entry", "reviewed_enter_ramp",
+    "tutor_cast", "tutor_resolved", "token_spell_cast",
+    "token_spell_resolved", "provisional_spell_resolved",
+    "cleanup_discard", "player_abstract_blocked_combat",
+    "player_abstract_unblocked_damage", "opponent_abstract_discard",
+    "opponent_abstract_destroy", "opponent_abstract_creature",
+    "opponent_abstract_exile", "opponent_abstract_blocked_combat",
+    "opponent_abstract_unblocked_damage", "opponent_abstract_combo_loss",
+    "opponent_life_zero", "opponent_reviewed_opponent_upkeep"
+})
+_NARRATIVE_EVENT_FIELDS = (
+    "type", "card", "source", "seat", "role", "amount",
+    "target_object_id", "target_seat", "destroyed_count",
+    "operation", "phase", "life_lost", "quantity",
+    "created_token_ids", "drawn_ids",
+)
+
+
 def narrative(r):
+    """Select exact recorded pilot zones and noteworthy actions for sample runs.
+
+    The simulation kernel has already produced all snapshots and mana ledgers.
+    This adapter does not infer hand contents, opponent cards, or zone changes.
+    """
+    if len(r["events"]) != len(r["state_snapshots"]):
+        raise ValueError("Narrative phases and authoritative snapshots diverged")
+    turns = []
+    for phase, snapshot in zip(r["events"], r["state_snapshots"]):
+        if phase["turn"] != snapshot["turn"] or snapshot["seat"] != 0:
+            raise ValueError("Narrative snapshot does not match the phase")
+        views = snapshot["object_views"]
+        pilot_zones = {
+            zone: [
+                {key: item[key] for key in ("object_id", "name", "owner", "token")}
+                for item in views[zone]
+            ] for zone in ("hand", "battlefield", "graveyard", "exile")
+        }
+        pilot_zones["untracked_tokens"] = list(snapshot["untracked_tokens"])
+        activations = [
+            {key: event[key] for key in ("source_id", "source_name",
+                                         "mana_output", "sacrificed")
+             if key in event}
+            for event in phase["mana_payment_events"]
+            if event["kind"] == "mana_source_activation"
+        ]
+        turns.append({
+            "turn": phase["turn"],
+            "life": phase["life_totals"].get(0),
+            "lands": phase["land_count"],
+            "creatures": phase["creature_count"],
+            "hand_size": phase["hand_size"],
+            "pilot_zones": pilot_zones,
+            "mana_activations": activations,
+            "events": [
+                {key: event[key] for key in _NARRATIVE_EVENT_FIELDS if key in event}
+                for event in phase["events"]
+                if event["type"] in _NARRATIVE_EVENT_TYPES
+            ],
+        })
     return {
-        "seed":r["seed"],"scenario":r["opponent_scenario"],
-        "seat_roles":r["opponent_roles"],
-        "eliminated":r["seat_zero_defeated"],
-        "turns":[{
-            "turn":phase["turn"],
-            "life":phase["life_totals"].get(0),
-            "lands":phase["land_count"],
-            "creatures":phase["creature_count"],
-            "hand_size":phase["hand_size"],
-            "events":[
-                {k:e[k] for k in ("type","card","seat","role","amount",
-                                    "target_object_id","target_seat","destroyed_count")
-                 if k in e}
-                for e in phase["events"]
-                if e["type"] in {
-                    "land_play","reviewed_commander_cast",
-                    "reviewed_common_spell_resolved",
-                    "reviewed_removal_resolved",
-                    "reviewed_composed_activated",
-                    "reviewed_composed_end_step",
-                    "reviewed_precast_mana_sacrifice",
-                    "reviewed_sacrifice_activated",
-                    "reviewed_utility_activated",
-                    "reviewed_zone_spell_resolved",
-                    "reviewed_instant_response",
-                    "reviewed_attachment_equipped",
-                    "reviewed_attachment_reanimated",
-                    "reviewed_aura_attached",
-                    "reviewed_attachment_upkeep",
-                    "reviewed_generic_activated",
-                    "reviewed_cast_reaction",
-                    "reviewed_reactive_trigger",
-                    "reviewed_composed_tap_activation",
-                    "player_abstract_blocked_combat",
-                    "player_abstract_unblocked_damage",
-                    "opponent_abstract_discard",
-                    "opponent_abstract_destroy",
-                    "opponent_abstract_creature","opponent_abstract_exile",
-                    "opponent_abstract_blocked_combat",
-                    "opponent_abstract_unblocked_damage",
-                    "reviewed_composed_upkeep",
-                    "reviewed_enter_resolved",
-                    "opponent_abstract_combo_loss","opponent_life_zero",
-                    "opponent_reviewed_opponent_upkeep"}]
-        } for phase in r["events"]]
+        "seed": r["seed"], "scenario": r["opponent_scenario"],
+        "seat_roles": r["opponent_roles"],
+        "eliminated": r["seat_zero_defeated"],
+        "opening_hand": list(r["mulligan"]["opening_hand"]),
+        "turns": turns,
     }
 
 
