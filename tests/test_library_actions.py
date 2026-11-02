@@ -2,7 +2,7 @@
 import json
 import unittest
 
-from commander_sim.deck_fixtures import FIXTURES
+from commander_sim.deck_fixtures import FIXTURES, EXPERIMENTAL_FIXTURES
 from commander_sim.early_game_runner import _load_live_kernel
 from commander_sim.kernel_life import KernelLife
 from commander_sim.library_actions import (
@@ -37,7 +37,7 @@ class LibraryActionTests(unittest.TestCase):
     @classmethod
     def setUpClass(cls):
         cls.cards = {}
-        for fixture_item in FIXTURES:
+        for fixture_item in (*FIXTURES,*EXPERIMENTAL_FIXTURES):
             data = json.loads(fixture_item.snapshot_path.read_text())
             cls.cards.update({entry["deck_name"]: entry["card"]
                               for entry in data["cards"]})
@@ -166,6 +166,51 @@ class LibraryActionTests(unittest.TestCase):
                 self.assertEqual(tuple(x.kind for x in review.library_actions()), kinds)
                 mismatched = dict(card, oracle_text=card["oracle_text"]+" Additional text.")
                 self.assertIsNone(reviewed_draw_spell(name, mismatched))
+
+    def test_meeting_of_minds_casts_using_normal_paid_mana_without_convoke(self):
+        card=self.cards["Meeting of Minds"]
+        rule=reviewed_draw_spell("Meeting of Minds",card)
+        self.assertIsNotNone(rule)
+        self.assertEqual(rule.draw_count,2)
+        self.assertIn("convoke",rule.limitations[0].lower())
+        k,z,C=fixture()
+        source=add(z,C,"Meeting of Minds","hand",types=("instant",),
+                   card_id=card["oracle_id"])
+        for _ in range(4):
+            add(z,C,"Island","battlefield",types=("land",))
+        for i in range(3):
+            add(z,C,"Filler"+str(i),"library")
+        mana=TemplateManaService(k,{"Meeting of Minds":card},
+                                 frozenset({"U"}),zones=z)
+        result=cast_and_resolve_reviewed_draw_spell(
+            z,0,source,{"Meeting of Minds":card},frozenset({"U"}),mana)
+        self.assertEqual(len(result.drawn_ids),2)
+        self.assertEqual(len(result.mana_source_ids),4)
+        self.assertFalse(result.created_token_ids)
+        self.assertTrue(z.assert_consistent())
+        self.assertIsNone(reviewed_draw_spell("Meeting of Minds",
+            dict(card,oracle_text=card["oracle_text"]+" Altered")))
+
+    def test_deduce_composes_paid_draw_and_physical_clue_token(self):
+        card=self.cards["Deduce"]
+        self.assertIsNotNone(reviewed_draw_spell("Deduce",card))
+        k,z,C=fixture()
+        source=add(z,C,"Deduce","hand",types=("instant",),
+                   card_id=card["oracle_id"])
+        for _ in range(2):
+            add(z,C,"Island","battlefield",types=("land",))
+        add(z,C,"Filler","library")
+        mana=TemplateManaService(k,{"Deduce":card},frozenset({"U"}),zones=z)
+        result=cast_and_resolve_reviewed_draw_spell(
+            z,0,source,{"Deduce":card},frozenset({"U"}),mana)
+        self.assertEqual(len(result.drawn_ids),1)
+        self.assertEqual(len(result.created_token_ids),1)
+        token=k.get(result.created_token_ids[0])
+        self.assertTrue(token.token)
+        self.assertEqual(token.subtypes,frozenset({"Clue"}))
+        self.assertEqual(token.types,frozenset({"artifact"}))
+        self.assertIn("Clue activated",result.limitations[0])
+        self.assertTrue(z.assert_consistent())
 
     def test_new_import_parses_only_complete_simple_sequences(self):
         candidates = {

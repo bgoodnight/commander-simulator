@@ -6,6 +6,7 @@ from commander_sim.early_game_runner import _load_live_kernel
 from commander_sim.kernel_life import KernelLife
 from commander_sim.reviewed_lands import reviewed_land
 from commander_sim.reviewed_land_entry import resolve_land_entry
+from commander_sim.physical_graveyard_exile import exile_physical_graveyard
 
 class MortarionLandTests(unittest.TestCase):
     @classmethod
@@ -41,6 +42,21 @@ class MortarionLandTests(unittest.TestCase):
         self.assertEqual(len(self.zones.ids(1,"graveyard")),0)
         self.assertEqual(len(self.zones.ids(1,"exile")),1)
         self.assertTrue(self.zones.assert_consistent())
+    def test_reusable_exile_counts_artifact_or_land_once_per_card(self):
+        self.add("Artifact",zone="graveyard",seat=1,types=("artifact",))
+        self.add("Land",zone="graveyard",seat=1,types=("land",))
+        self.add("Artifact land",zone="graveyard",seat=1,
+                 types=("artifact","land"))
+        self.add("Other",zone="graveyard",seat=1,types=("creature",))
+        with self.assertRaises(ValueError):
+            exile_physical_graveyard(self.zones,True)
+        answer=exile_physical_graveyard(
+            self.zones,1,count_types_any=frozenset({"artifact","land"}))
+        self.assertEqual(answer.matched_count,3)
+        self.assertEqual(len(answer.exiled_ids),4)
+        self.assertFalse(self.zones.ids(1,"graveyard"))
+        self.assertTrue(self.zones.assert_consistent())
+
     def test_mortuary_mire_puts_creature_on_top_of_library(self):
         mire=self.add("Mortuary Mire")
         creature=self.add("Grave creature",zone="graveyard")

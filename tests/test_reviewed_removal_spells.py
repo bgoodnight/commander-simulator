@@ -69,6 +69,27 @@ class ReviewedRemovalTests(unittest.TestCase):
             self.cast("Feed the Swarm",own)
         self.assertIsNone(reviewed_removal("Feed the Swarm",
                         dict(self.catalog["Feed the Swarm"],oracle_text="Invalid")))
+    def test_go_for_the_throat_excludes_artifact_creatures_for_all_players(self):
+        self.lands(2)
+        artifact=self.add("Artifact attacker",("artifact","creature"),seat=1)
+        ordinary=self.add("Normal attacker",("creature",),seat=1,power=4)
+        self.add("Friendly nonartifact",("creature",),seat=0)
+        rule=reviewed_removal("Go for the Throat",self.catalog["Go for the Throat"])
+        self.assertIsNotNone(rule)
+        self.assertFalse(valid_removal_target(self.zones,0,rule,artifact))
+        self.assertTrue(valid_removal_target(self.zones,0,rule,ordinary))
+        self.assertEqual(choose_reviewed_removal(
+            self.zones,0,self.life,rule),(ordinary,0))
+        with self.assertRaises(ValueError):
+            self.cast("Go for the Throat",artifact)
+        result=self.cast("Go for the Throat",ordinary)
+        self.assertEqual(result.destroyed_count,1)
+        self.assertIn(artifact,self.kernel.objects)
+        self.assertNotIn(ordinary,self.kernel.objects)
+        self.assertTrue(self.zones.assert_consistent())
+        self.assertIsNone(reviewed_removal("Go for the Throat",
+            dict(self.catalog["Go for the Throat"],oracle_text="Wrong")))
+
     def test_withering_torment_targets_enchantment_and_loses_two_life(self):
         self.lands(3)
         target=self.add("Opponent Aura",("enchantment",),seat=1)

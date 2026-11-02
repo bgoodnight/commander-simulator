@@ -65,6 +65,41 @@ class ReviewedEnterEffectTests(unittest.TestCase):
         self.assertEqual(self.life.total(0),38)
         self.assertTrue(self.zones.assert_consistent())
 
+    def test_scarab_swarm_exiles_full_target_graveyard_and_counts_type_union(self):
+        source=self.enter("Canoptek Scarab Swarm",types=("artifact","creature"))
+        self.add("Opponent artifact",zone="graveyard",seat=1,types=("artifact",))
+        self.add("Opponent land",zone="graveyard",seat=1,types=("land",))
+        self.add("Artifact land",zone="graveyard",seat=1,types=("artifact","land"))
+        self.add("Opponent sorcery",zone="graveyard",seat=1,types=("sorcery",))
+        self.add("Own artifact",zone="graveyard",seat=0,types=("artifact",))
+        result=self.resolve(source,choice=1)
+        self.assertEqual(result.operation,"exile_graveyard_tokens")
+        self.assertEqual(result.target_seat,1)
+        self.assertEqual(len(result.exiled_ids),4)
+        self.assertEqual(len(result.token_ids),3)
+        for oid in result.token_ids:
+            token=self.kernel.get(oid)
+            self.assertTrue(token.token)
+            self.assertEqual(token.types,frozenset({"artifact","creature"}))
+            self.assertEqual(token.subtypes,frozenset({"Insect"}))
+            self.assertIn("flying",token.keywords)
+            self.assertEqual((token.power,token.toughness),(1,1))
+        self.assertEqual(len(self.zones.ids(1,"graveyard")),0)
+        self.assertEqual(len(self.zones.ids(1,"exile")),4)
+        self.assertEqual(len(self.zones.ids(0,"graveyard")),1)
+        self.assertTrue(self.zones.assert_consistent())
+
+    def test_scarab_swarm_empty_graveyard_and_invalid_choice(self):
+        source=self.enter("Canoptek Scarab Swarm",types=("artifact","creature"))
+        for choice in (None,True,-1,99,"1"):
+            with self.subTest(choice=choice),self.assertRaises(ValueError):
+                self.resolve(source,choice=choice)
+        result=self.resolve(source,choice=1)
+        self.assertEqual(result.token_ids,())
+        self.assertEqual(result.exiled_ids,())
+        self.assertEqual(result.target_seat,1)
+        self.assertTrue(self.zones.assert_consistent())
+
     def test_canoptek_optional_exile_nonland_target_keeps_land(self):
         target=self.add("Enemy",seat=1)
         land=self.add("Enemy land",seat=1,types=("land",))
@@ -176,7 +211,7 @@ class ReviewedEnterEffectTests(unittest.TestCase):
         self.assertEqual(len(self.zones.ids(0,"battlefield")),1)
 
     def test_seven_oracle_reviewed_etb_registration_records_present(self):
-        self.assertEqual(len(ENTER_RULES),14)
+        self.assertEqual(len(ENTER_RULES),15)
         self.assertTrue({"Flayed One","Mire Triton","Undead Butler"} <=
                         set(ENTER_RULES))
         for name,entry in ENTER_RULES.items():

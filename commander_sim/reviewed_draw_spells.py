@@ -7,6 +7,7 @@ from dataclasses import dataclass
 
 from .generic_cast import ReviewedCreatureCast, cast_reviewed_spell
 from .library_actions import LibraryAction, required_draws, resolve_library_actions
+from .reviewed_token_spells import TokenBlueprint, create_reviewed_token_batches
 
 
 @dataclass(frozen=True)
@@ -18,6 +19,7 @@ class DrawSpellReview:
     draw_count: int
     limitations: tuple[str, ...] = ()
     actions: tuple[LibraryAction, ...] = ()
+    token_batches: tuple[TokenBlueprint, ...] = ()
 
     def __post_init__(self):
         if not self.oracle_id or not self.oracle_text or not self.mana_cost:
@@ -27,6 +29,9 @@ class DrawSpellReview:
             raise ValueError("Invalid reusable draw-spell template")
         if self.actions and required_draws(self.actions) != self.draw_count:
             raise ValueError("Draw count and library recipe disagree")
+        if not isinstance(self.token_batches,tuple) or any(
+                not isinstance(batch,TokenBlueprint) for batch in self.token_batches):
+            raise ValueError("Draw spell token batches must be physical blueprints")
 
     def library_actions(self):
         return self.actions or (LibraryAction("draw", self.draw_count),)
@@ -36,6 +41,20 @@ class DrawSpellReview:
 # the SAME action executor with different typed parameters. The historical
 # flashback permission for Faithless Looting remains separately source-gated.
 DRAW_SPELLS = {
+    "Meeting of Minds": DrawSpellReview(
+        "3b91dc3e-46ef-4a68-829f-ef7d79598cf7",
+        "Convoke (Your creatures can help cast this spell. Each creature you tap while casting this spell pays for {1} or one mana of that creature's color.)\nDraw two cards.",
+        "{3}{U}", "instant", 2,
+        ("Optional convoke payment not yet used; only normal mana sources",)),
+    "Deduce": DrawSpellReview(
+        "eeae4161-9f35-45df-8b3c-c55e37f49cd1",
+        'Draw a card. Investigate. (Create a Clue token. It\'s an artifact with "{2}, Sacrifice this token: Draw a card.")',
+        "{1}{U}", "instant", 1,
+        ("Clue activated sacrifice-and-draw not yet implemented",),
+        token_batches=(TokenBlueprint(
+            "Clue",frozenset({"artifact"}),frozenset({"Clue"}),
+            frozenset(),0,0,1,limitations=(
+                "Clue activated sacrifice-and-draw not yet implemented",)),)),
     "Quick Study": DrawSpellReview(
         "7bff8d4a-1c7d-48b8-b3e3-737dd6f01823",
         "Draw two cards.", "{2}{U}", "instant", 2),
@@ -104,6 +123,7 @@ class DrawSpellOutcome:
     surveilled_ids: tuple[int, ...] = ()
     bottomed_ids: tuple[int, ...] = ()
     returned_ids: tuple[int, ...] = ()
+    created_token_ids: tuple[int, ...] = ()
 
 
 def cast_and_resolve_reviewed_draw_spell(
@@ -133,10 +153,14 @@ def cast_and_resolve_reviewed_draw_spell(
     if on_cast is not None:
         on_cast(committed.ticket)
     outcomes = []
+    created_tokens=[]
 
     def effect(kernel, ticket):
         outcomes.append(resolve_library_actions(
             zones, seat, rule.library_actions(), select=select))
+        if rule.token_batches:
+            created_tokens.extend(create_reviewed_token_batches(
+                zones,seat,rule.token_batches))
 
     graveyard_id = zones.resolve(committed.ticket, effect=effect)
     outcome = outcomes[0]
@@ -144,4 +168,4 @@ def cast_and_resolve_reviewed_draw_spell(
         obj.card.name, committed.ticket.object_id, graveyard_id,
         tuple(committed.paid_source_ids), outcome.drawn_ids, rule.limitations,
         outcome.steps, outcome.discarded_ids, outcome.milled_ids,
-        outcome.bottomed_ids, outcome.returned_ids)
+        outcome.bottomed_ids, outcome.returned_ids,tuple(created_tokens))

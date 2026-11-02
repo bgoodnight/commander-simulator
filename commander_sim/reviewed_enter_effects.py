@@ -5,7 +5,7 @@ physical battlefield object and its immediately preceding zone transition,
 then composes approved effects without manufacturing an ETB or bypassing
 printed choices. It is a no-priority suboperation, not a full triggered stack.
 """
-from dataclasses import dataclass
+from dataclasses import dataclass, replace
 
 from .ability_composition import (
     AbilitySlot,AbilityHandler,ComposedCard,AbilityDispatcher)
@@ -17,6 +17,7 @@ from .reviewed_token_spells import TokenBlueprint,create_reviewed_token_batches
 from .reviewed_death_effects import capture_battlefield
 from .physical_common_effects import TemporaryCreatureChange, change_reviewed_creature_stats
 from .library_actions import LibraryAction, resolve_library_actions
+from .physical_graveyard_exile import exile_physical_graveyard
 from .graveyard_recipes import (GraveyardRecipe,resolve_graveyard_recipe,
                                 select_bounded_graveyard_batch)
 
@@ -32,6 +33,8 @@ _SERVO=TokenBlueprint("Servo",frozenset({"artifact","creature"}),
     frozenset({"Servo"}),frozenset(),1,1)
 _GOAT=TokenBlueprint("Goat",frozenset({"creature"}),
     frozenset({"Goat"}),frozenset({"W"}),0,1)
+_FLYING_INSECT=TokenBlueprint("Insect",frozenset({"artifact","creature"}),
+    frozenset({"Insect"}),frozenset(),1,1,keywords=frozenset({"flying"}))
 
 
 @dataclass(frozen=True)
@@ -45,6 +48,8 @@ class EnterRule:
     life_gain: int = 0
     reanimate: GraveyardRecipe | None = None
     total_mana_value_max: int = 0
+    count_types_any: frozenset[str] = frozenset()
+    token_per_match: TokenBlueprint | None = None
 
     def __post_init__(self):
         if (not self.oracle_id or not self.excerpt
@@ -53,7 +58,7 @@ class EnterRule:
                     "draw_lose_two","optional_exile_nonland",
                     "each_player_sacrifice","fabricate_one",
                     "debuff_opponent_creatures","library_recipe",
-                    "mill_then_reanimate"}
+                    "mill_then_reanimate","exile_graveyard_tokens"}
                 or type(self.amount) is not int or self.amount<0
                 or type(self.life_gain) is not int or self.life_gain<0
                 or not isinstance(self.library_actions,tuple)
@@ -68,12 +73,26 @@ class EnterRule:
                 or (self.reanimate is not None and
                     (not isinstance(self.reanimate,GraveyardRecipe)
                      or self.reanimate.destination!="battlefield"
-                     or not self.total_mana_value_max))):
+                     or not self.total_mana_value_max))
+                or (self.operation=="exile_graveyard_tokens") != bool(
+                    self.count_types_any and self.token_per_match is not None)
+                or (self.token_per_match is not None and
+                    (not isinstance(self.token_per_match,TokenBlueprint)
+                     or self.token_per_match.count!=1))
+                or not isinstance(self.count_types_any,frozenset)
+                or any(t not in {"artifact","land","creature","enchantment",
+                                  "instant","sorcery","planeswalker","battle"}
+                       for t in self.count_types_any)): 
 
             raise ValueError("Invalid reviewed enter trigger")
 
 
 ENTER_RULES={
+    "Canoptek Scarab Swarm":EnterRule(
+        "5b7f6cc3-8d4e-42e5-a908-7ebe3bccaf1e",
+        "Feeder Mandibles — When this creature enters, exile target player's graveyard. For each artifact or land card exiled this way, create a 1/1 colorless Insect artifact creature token with flying.",
+        "exile_graveyard_tokens",count_types_any=frozenset({"artifact","land"}),
+        token_per_match=_FLYING_INSECT),
     "Woe Strider":EnterRule(
         "3adbd963-e85d-4569-963a-4472594f06f9",
         "When this creature enters, create a 0/1 white Goat creature token.",
@@ -143,6 +162,8 @@ class EnterResult:
     milled_ids: tuple[int,...] = ()
     library_steps: tuple[dict,...] = ()
     reanimated_ids: tuple[int,...] = ()
+    exiled_ids: tuple[int,...] = ()
+    target_seat: int | None = None
 
 
 def reviewed_enter_rule(name,raw):
@@ -177,6 +198,9 @@ def execute_reviewed_enter(zones,life:KernelLife,source_id,catalog,*,
         return None
     if life.kernel is not kernel:
         raise ValueError("Life host is not authoritative kernel")
+    if (rule.operation=="exile_graveyard_tokens"
+            and (type(choice) is not int or choice not in life.kernel.life_totals)):
+        raise ValueError("Mandatory graveyard exile requires a legal targeted player")
     if rule.operation=="fabricate_one" and choice not in {"counter","servo"}:
         raise ValueError("Mandatory fabricate choice not provided")
     if rule.operation=="optional_exile_nonland" and choice is not None:
@@ -219,7 +243,16 @@ def execute_reviewed_enter(zones,life:KernelLife,source_id,catalog,*,
         milled=()
         library_steps=()
         reanimated=()
-        if effect.operation=="mill_then_reanimate":
+        exiled_ids=()
+        if effect.operation=="exile_graveyard_tokens":
+            moved=exile_physical_graveyard(
+                zones,choice,count_types_any=effect.count_types_any)
+            exiled_ids=moved.exiled_ids
+            if moved.matched_count:
+                tokens=create_reviewed_token_batches(
+                    zones,source.controller,
+                    (replace(effect.token_per_match,count=moved.matched_count),))
+        elif effect.operation=="mill_then_reanimate":
             result=resolve_library_actions(
                 zones,source.controller,effect.library_actions)
             milled=result.milled_ids
@@ -283,9 +316,11 @@ def execute_reviewed_enter(zones,life:KernelLife,source_id,catalog,*,
         else:
             raise NotImplementedError("Unknown reviewed enter effect")
         return (tokens,tuple(drawn),exiled,sacrificed,tuple(milled),
-                tuple(library_steps),tuple(reanimated))
-    created,drawn,exiled,sacrificed,milled,steps,reanimated=dispatcher.invoke(
+                tuple(library_steps),tuple(reanimated),tuple(exiled_ids))
+    created,drawn,exiled,sacrificed,milled,steps,reanimated,exiled_ids=dispatcher.invoke(
         slot.slot_id,source_id,apply)
     return EnterResult(source_id,source.card.name,move.old_zone,
                        rule.operation,tuple(created),tuple(drawn),
-                       exiled,tuple(sacrificed),milled,steps,reanimated)
+                       exiled,tuple(sacrificed),milled,steps,reanimated,
+                       exiled_ids,
+                       choice if rule.operation=="exile_graveyard_tokens" else None)

@@ -1,0 +1,48 @@
+name: Eight-deck source-reviewed effect gap audit
+
+on:
+  pull_request:
+    paths:
+      - commander_sim/**
+      - tools/audit_effect_gaps.py
+      - tests/test_effect_gap_audit.py
+      - .github/workflows/effect-gap-audit.yml
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  inventory:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      - name: Audit all canonical and physical trial fixtures
+        run: |
+          mkdir -p effect-audit
+          python tools/audit_effect_gaps.py --output effect-audit/cross-deck-effect-gaps.json
+          python -m unittest tests.test_effect_gap_audit -v
+      - name: Validate source and candidate provenance
+        run: |
+          python - <<'PY'
+          import json
+          from pathlib import Path
+          result=json.loads(Path("effect-audit/cross-deck-effect-gaps.json").read_text())
+          assert result["format"]=="commander-effect-gap-audit-v1"
+          assert result["deck_variants"]==8
+          assert result["unique_pinned_oracle_cards"]>=299
+          assert all(sum(x["status_counts"].values())>0 for x in result["by_deck"].values())
+          print("Unregistered candidate family occurrences:", result["no_recipe_candidate_family_occurrences"])
+          for key,row in sorted(result["by_deck"].items()):
+              print(key, row["status_counts"])
+          PY
+      - uses: actions/upload-artifact@v4
+        with:
+          name: cross-deck-source-effect-gap-audit
+          path: effect-audit/cross-deck-effect-gaps.json
+          if-no-files-found: error
+          retention-days: 30

@@ -24,10 +24,10 @@ class EntryChainTests(unittest.TestCase):
         self.C=C
         self.life=KernelLife(self.k)
 
-    def add(self,name,zone,*,types=("creature",),card_id=None):
+    def add(self,name,zone,*,types=("creature",),card_id=None,seat=0):
         raw=self.catalog.get(name,{})
         return self.z.add(self.C(card_id or raw.get("oracle_id","test:"+name),
-                   name,frozenset(types),coverage="approx"),0,zone)
+                   name,frozenset(types),coverage="approx"),seat,zone)
 
     def reanimate(self,name,*,types=("creature",)):
         source=self.add(name,"graveyard",types=types)
@@ -36,6 +36,21 @@ class EntryChainTests(unittest.TestCase):
     def entry(self,ids,*,budget=12):
         return resolve_reviewed_entry_chain(
             self.z,self.life,ids,self.catalog,max_triggers=budget)
+
+    def test_scarab_reanimation_chain_uses_shared_target_policy_and_real_tokens(self):
+        source=self.reanimate("Canoptek Scarab Swarm",types=("artifact","creature"))
+        self.add("Own artifact","graveyard",types=("artifact",))
+        self.add("Enemy artifact","graveyard",types=("artifact",),seat=2)
+        self.add("Enemy land","graveyard",types=("land",),seat=2)
+        answer=self.entry((source,))
+        self.assertTrue(answer.complete)
+        self.assertEqual(len(answer.resolved),1)
+        result=answer.resolved[0]
+        self.assertEqual(result.target_seat,2)
+        self.assertEqual(len(result.exiled_ids),2)
+        self.assertEqual(len(result.token_ids),2)
+        self.assertEqual(len(self.z.ids(0,"graveyard")),1)
+        self.assertTrue(self.z.assert_consistent())
 
     def test_grave_titan_reanimation_triggers_reviewed_token_creation(self):
         source=self.reanimate("Grave Titan")

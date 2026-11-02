@@ -59,7 +59,7 @@ from .reviewed_cast_reactions import resolve_cast_reactions
 from .opponent_stress import BoundedOpponentPressure
 from .reviewed_death_effects import ReviewedDeathEngine
 from .reviewed_enter_effects import reviewed_enter_rule, execute_reviewed_enter
-from .reviewed_entry_chains import resolve_reviewed_entry_chain
+from .reviewed_entry_chains import resolve_reviewed_entry_chain, bounded_entry_choice
 from .reviewed_unearth import reviewed_unearth, activate_reviewed_unearth, expire_reviewed_unearth
 from .reviewed_flashback import reviewed_flashback, cast_reviewed_flashback
 from .reviewed_graveyard_creatures import (
@@ -161,6 +161,7 @@ def run_bounded_early_game(deck_key, *, seed=0, turns=6, mulligan="one-free", pr
     enter_hand_casts = {"Bastion of Remembrance", "Grave Titan", "Massacre Wurm",
                         "Flayed One", "Mire Triton", "Undead Butler",
                         "Technomancer", "Lord of Change", "Woe Strider",
+                        "Canoptek Scarab Swarm",
                         "Marionette Apprentice", "Royal Warden",
                         "Triarch Praetorian", "Canoptek Tomb Sentinel"}
     def approved_enter_hand_cast(name):
@@ -333,6 +334,8 @@ def run_bounded_early_game(deck_key, *, seed=0, turns=6, mulligan="one-free", pr
                     "drawn_ids":list(entry.drawn_ids),
                     "milled_ids":list(entry.milled_ids),
                     "reanimated_ids":list(entry.reanimated_ids),
+                    "exiled_ids":list(entry.exiled_ids),
+                    "target_seat":entry.target_seat,
                     "library_actions":list(entry.library_steps),
                     "fidelity":"bounded_reviewed_etb_queue_no_priority"})
             if chain.deferred_ids:
@@ -936,6 +939,7 @@ def run_bounded_early_game(deck_key, *, seed=0, turns=6, mulligan="one-free", pr
                                "card":name,
                                "source_graveyard_id":result.source_graveyard_id,
                                "drawn_ids":list(result.drawn_ids),
+                               "created_token_ids":list(result.created_token_ids),
                                "library_actions":list(result.library_steps),
                                "discarded_ids":list(result.discarded_ids),
                                "surveilled_ids":list(result.surveilled_ids),
@@ -1104,8 +1108,8 @@ def run_bounded_early_game(deck_key, *, seed=0, turns=6, mulligan="one-free", pr
                                "land_ids":list(moved or ()),"fidelity":"reviewed_shared_basic_search"})
             if approved_enter_hand_cast(name) and not reviewed_enter_rule(name,raw_by_name[name]).only_from_graveyard:
                 rule = reviewed_enter_rule(name, raw_by_name[name])
-                # The pilot explicitly chooses the Servo fabricate mode.
-                choice = "servo" if rule.operation == "fabricate_one" else None
+                # Shared policy chooses among reviewed legal ETB options.
+                choice = bounded_entry_choice(rule,kernel.get(resolved_id),zones,life)
                 entered = execute_reviewed_enter(
                     zones, life, resolved_id, raw_by_name, choice=choice,
                     death_engine=death_engine, turn=turn)
@@ -1119,6 +1123,8 @@ def run_bounded_early_game(deck_key, *, seed=0, turns=6, mulligan="one-free", pr
                                "milled_ids":list(entered.milled_ids),
                                "library_actions":list(entered.library_steps),
                                "reanimated_ids":list(entered.reanimated_ids),
+                               "exiled_ids":list(entered.exiled_ids),
+                               "target_seat":entered.target_seat,
                                "fidelity":"bounded_no_opponent_priority"})
                 append_reanimation_entry_chain(entered.reanimated_ids)
         attachment_engine.sync(turn=turn)
