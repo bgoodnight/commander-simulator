@@ -527,7 +527,7 @@ def run_bounded_early_game(deck_key, *, seed=0, turns=6, mulligan="one-free", pr
                             "common_spell" if common_plan else
                             "ritual" if ritual else
                             "artifact" if rock is not None or sacrifice_artifact or (attachment_rule is not None and "artifact" in obj.types) or (ramp and name == "Wayfarer\u0027s Bauble") else
-                            "enchantment" if phase_enchantment or (attachment_rule is not None and "enchantment" in obj.types) or (entering and "Enchantment" in raw.get("type_line","").split(" — ",1)[0]) else
+                            "enchantment" if "enchantment" in obj.types and (phase_enchantment or attachment_rule is not None or entering) else
                             "tutor" if eligible else
                             "draw_spell" if draw_spell is not None else
                             "token_spell" if token_spell is not None else "creature")
