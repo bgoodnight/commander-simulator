@@ -272,6 +272,7 @@
     return details;
   }
   function outcomeCard(group,options,childBuilder){
+    const wrapper=create("div","game-outcome-hero-frame");
     const panel=create("details","board-report game-outcome-card game-outcome-hero");
     const summary=create("summary","game-outcome-summary game-outcome-hero-summary");
     if(typeof options.commanderArt==="string"&&options.commanderArt){
@@ -308,11 +309,13 @@
     copy.append(bar,create("span","board-open",
       group.total+" modeled games · Explore opponent results →"));
     summary.appendChild(copy);
-    panel.append(summary,limitationsDisclosure());
+    panel.appendChild(summary);
     const body=create("div","game-outcome-body");
     childBuilder(body);
     panel.appendChild(body);
-    return panel;
+    // The icon is a sibling so it remains operable while the game card is closed.
+    wrapper.append(panel,limitationsDisclosure());
+    return wrapper;
   }
   function metricTile(label,value,detail){
     const item=create("div","game-outcome-insight-metric");
@@ -620,36 +623,50 @@
         g.provisionalMode===group.provisionalMode&&
         g.requestedRounds===group.requestedRounds);
       const matchup=matchupRows(peers);
-      info.textContent=group.total+" modeled games · "+group.requestedRounds+
-        "-round horizon · "+group.scenario+
+      const outcomeGames=peers.flatMap(source=>
+        source.runs.map(run=>({run,source})));
+      const outcomeGroup={
+        total:outcomeGames.length,
+        counts:Object.fromEntries(STATES.map(state=>[state,
+          peers.reduce((n,g)=>n+g.counts[state],0)])),
+        terminal:peers.reduce((n,g)=>n+g.terminal,0),
+        terminalRounds:peers.flatMap(g=>g.terminalRounds)
+      };
+      info.textContent=outcomeGroup.total+" modeled games · "+group.requestedRounds+
+        "-round horizon · "+peers.length+" opposing group(s)"+
         " · pilot "+group.pilotStyle+" · provisional "+group.provisionalMode+
         " · abstract opponent policies, not competitive multiplayer win rates";
-      // Compact, art-backed outcome summary; outcome counts include unresolved.
-      cards.appendChild(outcomeCard(group,options,body=>{
+      // Headline combines matching opponent scenarios, but never mismatched
+      // pilot, approximation, deck revision or simulation horizon.
+      cards.appendChild(outcomeCard(outcomeGroup,options,body=>{
         const evidence=create("div","game-outcome-evidence");
         const examples=create("div","game-outcome-seeds");
         let picked=null;
         function showSeeds(status){
           examples.replaceChildren();evidence.replaceChildren();
-          const found=group.runs.filter(r=>!status||r.outcome.status===status);
-          for(const run of found){
-            const button=textButton("Seed "+run.seed+" · "+stateLabel(run.outcome.status)+
-              " · "+roundLabel(run),"game-outcome-seed",()=>{
-              picked=run.seed;showSeeds(status);
-              runDetails(evidence,run,{example:group.exampleBySeed.get(run.seed),
+          const found=outcomeGames.filter(({run})=>
+            !status||run.outcome.status===status);
+          for(const {run,source} of found){
+            const key=source.id+":"+run.seed;
+            const button=textButton(source.scenario+" · seed "+run.seed+
+              " · "+stateLabel(run.outcome.status)+" · "+roundLabel(run),
+              "game-outcome-seed",()=>{
+              picked=key;showSeeds(status);
+              runDetails(evidence,run,{example:source.exampleBySeed.get(run.seed),
                 onShowRecordedActions:options.onShowRecordedActions});
             });
-            button.setAttribute("aria-pressed",String(run.seed===picked));
+            button.setAttribute("aria-pressed",String(key===picked));
             examples.appendChild(button);
           }
           if(!found.length)examples.appendChild(create("p","micro",
             "No recorded games for this outcome."));
         }
-        countsChart(body,group,showSeeds);
-        const median=quantile(group.terminalRounds,.5);
+        countsChart(body,outcomeGroup,showSeeds);
+        const median=quantile(outcomeGroup.terminalRounds,.5);
         body.appendChild(create("p","micro",
           "Median finished round: "+(median===null?"—":nfmt(median))+
-          " · "+group.terminal+" finished / "+group.total+" modeled games."));
+          " · "+outcomeGroup.terminal+" finished / "+outcomeGroup.total+
+          " modeled games."));
         body.append(examples,evidence);showSeeds(null);
       }));
       cards.appendChild(card("Life progression","Four-seat life history",
