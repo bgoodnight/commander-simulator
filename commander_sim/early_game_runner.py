@@ -30,6 +30,7 @@ from .snapshots import validate_snapshot
 from .mana_kernel_bridge import _reviewed_modes
 from .reviewed_rocks import reviewed_rock
 from .reviewed_lands import reviewed_land
+from .reviewed_land_entry import reviewed_land_entry, resolve_land_entry
 from .reviewed_tutors import reviewed_tutor
 from .reviewed_tutor_cast import (eligible_reviewed_tutor_targets,
                                   cast_and_resolve_reviewed_tutor)
@@ -282,6 +283,15 @@ def run_bounded_early_game(deck_key, *, seed=0, turns=6, mulligan="one-free", pr
         events.append({"type": "draw", "card": kernel.get(drawn[0]).card.name,
                        "object_id": drawn[0]})
         playable_lands = [oid for oid in zones.ids(0, "hand") if supported_land(oid)]
+        other_lands_now=sum("land" in obj.types and obj.zone=="battlefield"
+                            and obj.controller==0 for obj in kernel.objects.values())
+        playable_lands.sort(key=lambda oid: (
+            bool(reviewed_land(kernel.get(oid).card.name,
+                               raw_by_name[kernel.get(oid).card.name],colors)
+                 and reviewed_land(kernel.get(oid).card.name,
+                                   raw_by_name[kernel.get(oid).card.name],colors).enters_tapped(other_lands_now))
+            or kernel.get(oid).card.name=="Myriad Landscape",
+            oid))
         if playable_lands:
             land_id = playable_lands[0]
             name = kernel.get(land_id).card.name
@@ -298,6 +308,24 @@ def run_bounded_early_game(deck_key, *, seed=0, turns=6, mulligan="one-free", pr
                            "fidelity":"reviewed_partial_land" if land_review else "reviewed_basic_land",
                            "entered_tapped":bool(kernel.get(new_id).tapped),
                            "unsupported_abilities":list(land_review.ignored) if land_review else []})
+            entry_rule=reviewed_land_entry(name,raw_by_name[name])
+            if entry_rule is not None:
+                recycle=None
+                if entry_rule.operation=="graveyard_creature_to_library_top":
+                    choices=[oid for oid in zones.ids(0,"graveyard")
+                             if "creature" in kernel.get(oid).types]
+                    usable=[oid for oid in choices if reviewed_creature(
+                        deck_key,kernel.get(oid).card.name,
+                        raw_by_name[kernel.get(oid).card.name])]
+                    if usable:
+                        recycle=max(usable,key=lambda oid: (
+                            raw_by_name[kernel.get(oid).card.name].get("cmc",0),-oid))
+                etb=resolve_land_entry(zones,life,new_id,raw_by_name,
+                                       target_creature_id=recycle)
+                events.append({"type":"reviewed_land_entry",
+                               "card":name,"operation":etb.operation,
+                               "moved_ids":list(etb.moved_ids),
+                               "fidelity":"bounded_shared_land_entry"})
         resource_start = assess_resources(kernel, mana_service, 0).__dict__
         # Main-phase resource policy: trade only expendable creature tokens for
         # mana when a reviewed hand spell is blocked but plausibly reachable.
