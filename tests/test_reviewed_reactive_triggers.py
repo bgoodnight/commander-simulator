@@ -47,8 +47,27 @@ class ReactiveTests(unittest.TestCase):
         self.life.gain(0,4)
         out=self.events.resolve()
         self.assertEqual(len(out),1)
-        self.assertEqual((self.life.total(0),self.life.total(1)),(44,36))
+        self.assertEqual(self.life.total(0),44)
+        self.assertEqual(sorted(self.life.total(i) for i in (1,2,3)),
+                         [36,40,40])
         self.assertEqual(self.events.resolve(),())
+    def test_vito_targeting_varies_across_opponents_without_seat_bias(self):
+        picked={1:0,2:0,3:0}
+        for i in range(45):
+            self.setUp()
+            self.creature("Vito, Thorn of the Dusk Rose")
+            # Distinct events on the same physical source exercise the
+            # stochastic policy without any target-seat special casing.
+            for _ in range(3):
+                before={seat:self.life.total(seat) for seat in picked}
+                self.life.gain(0,1)
+                self.events.resolve()
+                hit=[seat for seat in picked
+                     if self.life.total(seat)<before[seat]]
+                self.assertEqual(len(hit),1)
+                picked[hit[0]]+=1
+        self.assertTrue(all(n>0 for n in picked.values()),picked)
+
     def test_invalid_source_identity_not_registered(self):
         fake=self.C("bad-oracle","Mirkwood Bats",frozenset({"creature"}),
                     coverage="approx")
