@@ -216,3 +216,72 @@ def choose_variable_end_step_payments(zones, seat, life, mana_service,
                     choices[source.object_id]=x
                     break
     return choices
+
+
+def choose_utility_activation(zones,seat,life,mana_service,catalog,
+                              *,hand_cast_reviewed):
+    """Select at most one value-positive utility activation at this boundary.
+
+    This is an explicit policy over registered UtilityRule parameters, not
+    hard-coded behavior attached to names. Repeated activations are legal in
+    the shared executor; a bounded pilot may choose fewer.
+    """
+    from .reviewed_utility_activations import reviewed_utility
+    from .reviewed_sacrifice_actions import SACRIFICE_MODES
+    hand_size=len(zones.ids(seat,"hand"))
+    land_count=sum("land" in o.types and o.controller==seat
+                   for o in zones.kernel.on_battlefield())
+    sources=[]
+    for source in zones.kernel.objects.values():
+        if source.controller!=seat:
+            continue
+        raw=catalog.get(source.card.name)
+        rule=reviewed_utility(source.card.name,raw)
+        if (rule is None or source.card.card_id!=rule.oracle_id
+                or source.zone!=rule.source_zone
+                or rule.tap and source.tapped):
+            continue
+        if life.total(seat)<12 and (rule.life or rule.life_by_commander_colors):
+            continue
+        excluded=(source.object_id,) if rule.tap else ()
+        if mana_service.plan(seat,rule.mana,excluded_source_ids=excluded) is None:
+            continue
+        target=None
+        if rule.operation=="creature_to_hand":
+            if hand_size>=4:
+                continue
+            target_choices=[oid for oid in zones.ids(seat,"graveyard")
+                if "creature" in zones.kernel.get(oid).types
+                and hand_cast_reviewed(zones.kernel.get(oid))]
+            if not target_choices:
+                continue
+            target=max(target_choices,key=lambda oid: (
+                catalog.get(zones.kernel.get(oid).card.name,{}).get("cmc",0),-oid))
+        elif rule.operation=="self_to_battlefield_tapped":
+            has_outlet=any(o.controller==seat and o.zone=="battlefield"
+                           and o.card.name in SACRIFICE_MODES
+                           for o in zones.kernel.objects.values())
+            if not has_outlet:
+                continue
+        elif rule.operation=="draw":
+            if rule.discard:
+                if land_count<4:
+                    continue
+            elif rule.sacrifice:
+                if hand_size>0 or land_count<5:
+                    continue
+            elif hand_size>=4:
+                continue
+        elif rule.operation=="drain_opponents":
+            black=sum("B" in (o.card.colors or ())
+                      for o in zones.kernel.on_battlefield()
+                      if o.controller==seat)
+            if black<2:
+                continue
+        priority={"creature_to_hand":0,"self_to_battlefield_tapped":1,
+                  "draw":2,"drain_opponents":3}[rule.operation]
+        sources.append((priority,source.object_id,target))
+    if not sources:
+        return None
+    _,source_id,target=min(sources)
+    return source_id,target
