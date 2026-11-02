@@ -1,5 +1,5 @@
 name: Mortarion physical opponent stress and narrative audit
-# Re-run after distinguishing per-upkeep resolution from Snake creation.
+# Re-run after enabling source-reviewed removal card casting in physical stress.
 on:
   workflow_dispatch:
   push:
