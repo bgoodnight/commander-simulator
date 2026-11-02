@@ -7,7 +7,7 @@ on:
   workflow_dispatch:
 permissions:
   contents: write
-  actions: read
+  actions: write
 concurrency:
   group: publish-mortarion-replay-v1
   cancel-in-progress: false
