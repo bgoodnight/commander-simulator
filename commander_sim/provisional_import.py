@@ -68,9 +68,9 @@ _DRAW_DISCARD = re.compile(
     r"discard (a|one|two|three|four|five|\d+) cards?\.$", re.I)
 _SCRY_ONLY = re.compile(r"^Scry ([1-3])\.$", re.I)
 _SURVEIL_ONLY = re.compile(r"^Surveil ([1-3])\.$", re.I)
-_MILL_ONLY = re.compile(r"^(?:You )?[Mm]ill (a|one|two|three|four|five|six|seven|\\d+) cards?\\.$")
+_MILL_ONLY = re.compile(r"^(?:You )?[Mm]ill (a|one|two|three|four|five|six|seven|\d+) cards?\.$")
 _ENTRY_MILL = re.compile(
-    r"^When this creature enters, mill (a|one|two|three|four|five|six|seven|\\d+) cards?\\.$")
+    r"^When this creature enters, mill (a|one|two|three|four|five|six|seven|\d+) cards?\.$")
 
 
 def _quantity(word):
@@ -264,7 +264,7 @@ def provisional_profile(raw):
             count=_quantity(match.group(1))
             if 1<=count<=7:
                 entry_actions=(LibraryAction("mill",count),)
-                remainder="\\n".join(lines[:index]+lines[index+1:]).strip()
+                remainder="\n".join(lines[:index]+lines[index+1:]).strip()
     if _ENTRY.search(remainder) or _RESTRICT.search(remainder):
         return None
 
