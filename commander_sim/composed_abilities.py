@@ -278,6 +278,13 @@ class ComposedAbilityEngine:
                 raise ValueError("X exceeds actual life lost this turn")
         results = []
         for key, source, rule in pending:
+            # An intervening-if trigger is tested both when it triggers and
+            # when it resolves. This matters for Pestilence if a creature
+            # enters after the end step began but before the trigger resolves.
+            if rule.condition.kind == "no_creatures" and not self._condition(
+                    rule, source.controller, life_start_index):
+                self._handled.add(key)
+                continue
             x = choices.get(source.object_id, 0)
             if rule.payment.x_generic:
                 if not x:
