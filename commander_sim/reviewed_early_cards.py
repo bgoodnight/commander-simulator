@@ -251,6 +251,8 @@ _PHYSICAL_MORTARION_SAFE_BODIES = {
         "oracle_text": "{B}: This creature deals 1 damage to each creature and each player."},
     "Plague Spitter": {"oracle_id": "5feedfb0-30e6-400d-9e28-d541ea1aa14e",
         "oracle_text": "At the beginning of your upkeep, this creature deals 1 damage to each creature and each player.\\nWhen this creature dies, it deals 1 damage to each creature and each player."},
+    "Stuffy Doll": {"oracle_id": "499dceab-1890-49c8-b35d-b059a1dc950f",
+        "oracle_text": "Indestructible\\nAs this creature enters, choose a player.\\nWhenever this creature is dealt damage, it deals that much damage to the chosen player.\\n{T}: This creature deals 1 damage to itself."},
     "Crypt Rats": {"oracle_id": "104095ed-55e3-408e-bf70-4fe06bb16d2f",
         "oracle_text": "{X}: This creature deals X damage to each creature and each player. Spend only black mana on X."},
     "Darksteel Myr": {"oracle_id": "f90fe86c-5cca-483b-93c2-6e856fa01c88",
