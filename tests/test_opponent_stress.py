@@ -48,7 +48,9 @@ class OpponentPressureTests(unittest.TestCase):
                          0,"battlefield")
         r=self.stress().advance(1)
         self.assertEqual(sum(x.operation=="reviewed_opponent_upkeep"
-                             for x in r),1)
+                             and x.amount>0 for x in r),1)
+        self.assertEqual(sum(x.operation=="reviewed_opponent_upkeep"
+                             for x in r),3)
         snakes=[o for o in self.kernel.on_battlefield()
                 if o.card.name=="Snake" and o.controller==0]
         self.assertEqual(len(snakes),1)
