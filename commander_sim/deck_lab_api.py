@@ -12,6 +12,7 @@ from .card_cache import card_aliases, pinned_deck_entries
 from .deck_fixtures import FIXTURES, EXPERIMENTAL_FIXTURES, SHARED_CATALOG
 from .fixture_inventory import inventory, fixture_observation
 from .snapshots import validate_snapshot
+from .provisional_import import provisional_profile
 
 
 def _get_fixture(key):
@@ -42,17 +43,32 @@ def deck_detail(key, *, catalog_path=SHARED_CATALOG, output_dir=None):
                 raise ValueError("Ambiguous source alias in verified deck")
     cards = []
     types = Counter()
+    provisional_kinds=Counter()
+    provisional_count=0
     for section, name, quantity in checked.deck.cards:
         card = by_alias.get(name)
         if card is None:
             raise ValueError("Unresolved verified card: " + name)
         type_line = card["type_line"]
+        provisional=provisional_profile(card)
+        if provisional is not None:
+            provisional_count+=1
+            provisional_kinds[provisional.kind]+=1
         cards.append({
             "zone": section, "name": name, "quantity": quantity,
             "type_line": type_line, "mana_value": card.get("cmc"),
             "mana_cost": card.get("mana_cost", ""),
             "oracle_id": card["oracle_id"],
             "abilities_status": "not_assessed",
+            "provisional_import": {
+                "status":"provisional" if provisional is not None
+                         else "manual_review_needed",
+                "kind":provisional.kind if provisional is not None else None,
+                "fidelity":provisional.fidelity if provisional is not None
+                           else "unsupported",
+                "omissions":list(provisional.omissions)
+                            if provisional is not None else [],
+            },
         })
         primary = type_line.split(" // ", 1)[0]
         card_type = ("Land" if "Land" in primary else
@@ -67,7 +83,16 @@ def deck_detail(key, *, catalog_path=SHARED_CATALOG, output_dir=None):
         "label": fixture.status, "physical_cards": checked.deck.count,
         "distinct_names": len(cards), "source_snapshot_sha256": checked.snapshot_sha256,
         "deck_sha256": checked.deck_sha256, "by_type": dict(sorted(types.items())),
-        "cards": cards, "actual_gameplay_available": False,
+        "cards": cards,
+        "provisional_import_preview":{
+            "candidate_count":provisional_count,
+            "manual_review_count":len(cards)-provisional_count,
+            "kinds":dict(provisional_kinds),
+            "fidelity":"provisional_partial",
+            "simulation_requires_opt_in":True,
+            "no_gameplay_actions_executed":True,
+        },
+        "actual_gameplay_available": False,
         "ability_coverage": "not assessed by card metadata import",
     }
 
