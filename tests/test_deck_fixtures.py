@@ -47,6 +47,12 @@ class DeckFixtureTests(unittest.TestCase):
             self.assertEqual(deck_status["wretched_ranks"]["status"], "validated_observation")
             self.assertEqual(deck_status["wretched_ranks"]["fetched"], 0)
             self.assertEqual(deck_status["wretched_ranks"]["physical_cards"], 100)
+            partial=deck_status["wretched_ranks"]["provisional_import"]
+            self.assertGreater(partial["candidate_count"],0)
+            self.assertEqual(partial["candidate_count"]+
+                             partial["manual_review_count"],
+                             deck_status["wretched_ranks"]["distinct_names"])
+            self.assertFalse(partial["gameplay_enabled_by_import"])
             self.assertEqual(deck_status["mortarion_current"]["status"], "missing_metadata")
             self.assertGreater(deck_status["mortarion_current"]["missing_before_import"], 0)
             self.assertFalse((p / "mortarion_current_m1_scryfall.json").exists())
