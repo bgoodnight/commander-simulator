@@ -17,7 +17,9 @@ permissions:
 
 concurrency:
   group: mortarion-500-review-${{ github.ref }}
-  cancel-in-progress: false
+  # Superseded PR smoke checks should not block the newest revision, but
+  # never interrupt a real 500-game main-branch batch.
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
 
 jobs:
   smoke:
