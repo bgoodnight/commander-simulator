@@ -1,0 +1,169 @@
+name: Publish long-game outcomes to Deck Lab
+
+on:
+  workflow_dispatch:
+    inputs:
+      seeds:
+        description: "Games per deck and opponent scenario (1–200)"
+        type: string
+        required: true
+        default: "12"
+      rounds:
+        description: "Maximum modeled rounds per game (1–30)"
+        type: string
+        required: true
+        default: "20"
+      scenarios:
+        description: "Comma-separated abstract opponent scenarios"
+        type: string
+        required: true
+        default: "balanced,aggressive,control,combo,mixed"
+      pilot_style:
+        description: "Shared legal-action pilot personality"
+        type: choice
+        required: true
+        options: [adaptive, balanced, engine, tempo, conservative]
+        default: adaptive
+      provisional_mode:
+        description: "Use reviewed safe generic approximations?"
+        type: choice
+        required: true
+        options: [safe, off]
+        default: safe
+  pull_request:
+    paths:
+      - ".github/workflows/publish-game-outcomes.yml"
+      - "tools/publish_game_outcomes.py"
+      - "tests/test_game_outcome_publishing.py"
+
+permissions:
+  contents: write
+  actions: write
+
+concurrency:
+  group: long-game-outcome-library-${{ github.ref }}
+  cancel-in-progress: false
+
+jobs:
+  simulate:
+    name: Generate ${{ matrix.deck }} outcomes
+    runs-on: ubuntu-latest
+    timeout-minutes: 90
+    strategy:
+      fail-fast: false
+      matrix:
+        deck: ${{ fromJSON(github.event_name == 'pull_request' && '["mortarion_current","necron_dynasties"]' || '["magnus_premium","magnus_budget","wretched_ranks","mortarion_current","mortarion_ideal","necron_dynasties","magnus_physical_trial","mortarion_physical_final"]') }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+      - name: Generate deterministic scenario cohorts from verified current engine
+        env:
+          OUTCOME_DECK: ${{ matrix.deck }}
+          OUTCOME_SEEDS: ${{ github.event_name == 'pull_request' && '1' || inputs.seeds }}
+          OUTCOME_ROUNDS: ${{ github.event_name == 'pull_request' && '3' || inputs.rounds }}
+          OUTCOME_SCENARIOS: ${{ github.event_name == 'pull_request' && 'aggressive,control' || inputs.scenarios }}
+          OUTCOME_PILOT_STYLE: ${{ github.event_name == 'pull_request' && 'adaptive' || inputs.pilot_style }}
+          OUTCOME_PROVISIONAL_MODE: ${{ github.event_name == 'pull_request' && 'safe' || inputs.provisional_mode }}
+        run: |
+          python - <<'PY'
+          import os
+          from commander_sim.opponent_stress import SCENARIOS
+          scenarios=os.environ["OUTCOME_SCENARIOS"].split(",")
+          if not scenarios or len(scenarios)!=len(set(scenarios)) or not all(s in SCENARIOS for s in scenarios):
+              raise SystemExit("Provide distinct known opponent scenario names")
+          seeds=int(os.environ["OUTCOME_SEEDS"])
+          turns=int(os.environ["OUTCOME_ROUNDS"])
+          if not 1<=seeds<=200 or not 1<=turns<=30:
+              raise SystemExit("Seeds must be 1–200 and rounds must be 1–30")
+          PY
+          mkdir -p dist/game-outcome-runs
+          IFS=',' read -ra SCENARIO_LIST <<< "$OUTCOME_SCENARIOS"
+          for scenario in "${SCENARIO_LIST[@]}"; do
+            python tools/build_game_outcomes.py \
+              --deck "$OUTCOME_DECK" \
+              --scenario "$scenario" \
+              --seeds "$OUTCOME_SEEDS" \
+              --rounds "$OUTCOME_ROUNDS" \
+              --pilot-style "$OUTCOME_PILOT_STYLE" \
+              --provisional-mode "$OUTCOME_PROVISIONAL_MODE" \
+              --examples 2 \
+              --output "dist/game-outcome-runs/$OUTCOME_DECK-$scenario.json"
+          done
+      - name: Upload immutable, authentic per-deck simulation results
+        uses: actions/upload-artifact@v4
+        with:
+          name: outcome-${{ matrix.deck }}-${{ github.sha }}
+          path: dist/game-outcome-runs/*.json
+          if-no-files-found: error
+          retention-days: 30
+
+  publish:
+    name: Validate and publish automatic Deck Lab outcome library
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    needs: simulate
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+      - name: Download all scenario and deck cohorts
+        uses: actions/download-artifact@v4
+        with:
+          pattern: outcome-*-${{ github.sha }}
+          path: dist/incoming-outcomes
+          merge-multiple: true
+      - name: Verify published provenance and static-page compatibility
+        run: |
+          python -m unittest tests.test_game_outcome_publishing -v
+          python tools/publish_game_outcomes.py \
+            --source dist/incoming-outcomes \
+            --output dist/published-game-outcomes \
+            --engine-commit "${{ github.sha }}"
+          python - <<'PY'
+          from pathlib import Path
+          from tools.build_pages_deck_lab import build
+          build(Path("dist/preview-pages"),
+                outcome_source=Path("dist/published-game-outcomes"))
+          PY
+          python -m unittest tests.test_pages_export -v
+          node --test tests/pages_game_outcomes.test.cjs
+      - name: Keep a downloadable, verified backup
+        uses: actions/upload-artifact@v4
+        with:
+          name: publishable-game-outcomes-${{ github.sha }}
+          path: dist/published-game-outcomes/
+          if-no-files-found: error
+          retention-days: 30
+      - name: Commit validated latest outcome library (dispatch only)
+        if: github.event_name == 'workflow_dispatch' && github.ref == 'refs/heads/main'
+        run: |
+          git fetch origin main
+          if ! git diff --quiet HEAD origin/main -- \
+            commander_sim/ decklists/ simulator/card_data/ \
+            tools/build_game_outcomes.py tools/publish_game_outcomes.py \
+            .github/workflows/publish-game-outcomes.yml; then
+            echo "Simulator or publishing code changed during batch; rerun on latest main."
+            exit 1
+          fi
+          git switch -C publish-game-outcomes origin/main
+          mkdir -p web/pages/data/game-outcomes
+          rsync -a --delete dist/published-game-outcomes/ web/pages/data/game-outcomes/
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add -A web/pages/data/game-outcomes/
+          if ! git diff --cached --quiet; then
+            git commit -m "Publish validated long-game outcomes from ${{ github.sha }}"
+            git push origin HEAD:main
+          else
+            echo "Current Pages data already matches this batch."
+          fi
+      - name: Rebuild published Pages site with new automatic data
+        if: github.event_name == 'workflow_dispatch' && github.ref == 'refs/heads/main'
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: gh workflow run deck-lab-pages.yml --ref main
