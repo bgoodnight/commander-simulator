@@ -87,7 +87,7 @@ class TemplateManaService:
     """One source-ID payment planner for reviewed lands and mana-rock templates."""
 
     def __init__(self, kernel, card_metadata, commander_colors, *, max_states=16000,
-                 zones=None):
+                 zones=None, provisional_mode="off"):
         colors = frozenset(commander_colors)
         if not colors or any(x not in "WUBRG" for x in colors):
             raise ValueError("Invalid commander identity")
@@ -96,6 +96,9 @@ class TemplateManaService:
         self.kernel = kernel
         self.zones = zones
         self.card_metadata = card_metadata
+        if provisional_mode not in {"off","safe"}:
+            raise ValueError("Unknown provisional mode")
+        self.provisional_mode=provisional_mode
         self.colors = colors
         self.max_states = max_states
         self.mana_events = []
@@ -130,6 +133,12 @@ class TemplateManaService:
             reviewed=reviewed_land(name,raw,self.colors)
             if reviewed is not None:
                 return reviewed.modes(self.colors)
+            if self.provisional_mode=="safe":
+                from .provisional_import import provisional_profile
+                row=provisional_profile(raw)
+                if (row is not None and row.kind=="land_mana"
+                        and obj.card.card_id==row.oracle_id):
+                    return row.mana_modes
             # Shared review: Myriad Landscape's ordinary colorless tap mode.
             if name == "Myriad Landscape":
                 from .reviewed_ramp import reviewed_ramp
@@ -144,6 +153,12 @@ class TemplateManaService:
             if reviewed is not None:
                 return tuple(mode for mode in reviewed[0].mana_modes
                              if mode.tap and not (mode.life or mode.damage or mode.sacrifice))
+            if self.provisional_mode=="safe":
+                from .provisional_import import provisional_profile
+                row=provisional_profile(card)
+                if (row is not None and row.kind=="artifact_mana"
+                        and obj.card.card_id==row.oracle_id):
+                    return row.mana_modes
         return ()
 
     def spell_cost(self, seat, mana_cost, source):
