@@ -1,0 +1,105 @@
+name: Publish enriched Mortarion replay sample
+on:
+  push:
+    branches: [main]
+    paths: [".github/workflows/mortarion-enriched-replay.yml"]
+  workflow_dispatch:
+permissions:
+  contents: write
+  actions: write
+concurrency:
+  group: mortarion-enriched-replay
+  cancel-in-progress: false
+jobs:
+  replay:
+    name: Re-run exact sample seeds and publish enriched v1 replay
+    runs-on: ubuntu-latest
+    timeout-minutes: 40
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+      - name: Run deterministic 24-seed x 5-scenario stress batch with exact pilot snapshots
+        run: |
+          mkdir -p dist
+          python tools/run_mortarion_opponent_stress.py --seeds 24 --turns 10 --output dist/mortarion-opponent-stress.json > dist/stress-summary.txt
+      - name: Validate conversion and archive without guessing hidden opponent state
+        run: |
+          python -m unittest tests.test_build_opponent_replay -v
+          python tools/build_opponent_replay.py \
+            --input dist/mortarion-opponent-stress.json \
+            --output dist/mortarion-opponent-pressure.v1.json \
+            --source-run \${{ github.run_id }} \
+            --engine-commit \${{ github.sha }} \
+            --deck-sha256 303562ea9325e36f7031840ef1b902eafae321ec4a4ecc4e3bf28259b4141ba6
+          python - <<'PY'
+          import gzip
+          import json
+          from pathlib import Path
+          source=Path("dist/mortarion-opponent-stress.json")
+          target=Path("dist/mortarion-opponent-pressure.v1.json")
+          replay=json.loads(target.read_text())
+          assert replay["format"]=="commander-replay-v1"
+          assert len(replay["scenarios"])==5
+          assert sum(x["summary"]["seeds"] for x in replay["scenarios"].values())==120
+          assert sum(len(x["games"]) for x in replay["scenarios"].values())==14
+          rounds=[round for entry in replay["scenarios"].values()
+                  for game in entry["games"] for round in game["rounds"]]
+          assert rounds
+          assert all(set(round["snapshots"])=={"0"} for round in rounds)
+          assert all("zones" in round["snapshots"]["0"]
+                     for round in rounds)
+          assert all(len(round["snapshots"]["0"]["zones"]["hand"])==round["snapshots"]["0"]["hand_size"]
+                     for round in rounds)
+          assert all(isinstance(round["mana_activations"],list) for round in rounds)
+          assert any(a["type"]=="draw" for round in rounds for a in round["actions"])
+          for name,file in [("Source stress batch",source),("Published replay",target)]:
+              raw=file.read_bytes()
+              compressed=gzip.compress(raw,compresslevel=9)
+              print(f"{name}: {len(raw):,} bytes raw; {len(compressed):,} bytes gzip")
+          assert target.stat().st_size < 2_000_000, "Replay exceeds 2 MB uncompressed budget"
+          print(f"{len(rounds)} verified pilot round snapshots across 14 selected example games")
+          PY
+          node --check web/pages/replay.js
+          node --test tests/pages_replay.test.cjs
+      - name: Upload reproducible enriched source and validated replay
+        uses: actions/upload-artifact@v4
+        with:
+          name: mortarion-enriched-narratives-v1
+          path: |
+            dist/mortarion-opponent-stress.json
+            dist/mortarion-opponent-pressure.v1.json
+            dist/stress-summary.txt
+          retention-days: 90
+          if-no-files-found: error
+      - name: Publish only versioned read-only data, preserving other commits
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          for attempt in 1 2 3; do
+            git fetch origin main
+            git reset --hard origin/main
+            mkdir -p web/pages/data/replays
+            cp dist/mortarion-opponent-pressure.v1.json web/pages/data/replays/mortarion-opponent-pressure.v1.json
+            git add web/pages/data/replays/mortarion-opponent-pressure.v1.json
+            if git diff --cached --quiet; then
+              echo "Enriched replay already present"
+              break
+            fi
+            git commit -m "Publish enriched Mortarion replay with observed hands, battlefield and mana sources"
+            if git push origin HEAD:main; then
+              echo "Published enriched read-only replay"
+              break
+            fi
+            if [ "$attempt" -eq 3 ]; then
+              echo "Concurrent branch updates blocked publication" >&2
+              exit 1
+            fi
+          done
+      - name: Trigger Pages rebuild to include the enriched replay
+        env:
+          GH_TOKEN: \${{ github.token }}
+        run: gh workflow run deck-lab-pages.yml --ref main
