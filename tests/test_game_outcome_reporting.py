@@ -121,6 +121,7 @@ class GameBatchTests(unittest.TestCase):
             "deck_key":deck_key,"seed":seed,"deck_sha256":"test-sha",
             "mode":"bounded_three_opponent_pressure",
             "opponent_roles":{1:"aggro",2:"control",3:"value"},
+            "mulligan":{"opening_hand":["Swamp"]*6+["Blood Artist"]},
             "outcome":rec.outcome(requested_rounds=turns),
             "completed_rounds":len(rec.history)-1,
             "life_history":rec.history,
@@ -140,6 +141,8 @@ class GameBatchTests(unittest.TestCase):
         self.assertEqual(result["summary"]["right_censored_games"],1)
         self.assertEqual(result["summary"]["median_rounds_to_modeled_terminal"],1)
         self.assertEqual(len(result["runs"]),3)
+        self.assertEqual(result["runs"][0]["opening_hand"][-1],"Blood Artist")
+        self.assertEqual(len(result["runs"][0]["opening_hand"]),7)
         self.assertEqual(len(result["example_replays"]),1)
         trend=result["summary"]["life_by_round"]
         self.assertEqual([r["observed_games"] for r in trend],[3,3,1])

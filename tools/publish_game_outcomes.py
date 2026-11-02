@@ -106,6 +106,14 @@ def validate_batch(batch, *, deck_hashes):
                     or not isinstance(composition, list)
                     or composition != sorted(roles.values())):
                 raise ValueError("Opponent composition disagrees with seat roles")
+        # Additive, optional card-discovery provenance. Absence in historical
+        # batches is missing evidence, not a zero for every card.
+        opening=run.get("opening_hand")
+        if opening is not None and (
+                not isinstance(opening,list) or len(opening)!=7
+                or any(not isinstance(name,str) or not name.strip()
+                       or len(name)>256 for name in opening)):
+            raise ValueError("Invalid kept opening-hand provenance")
         seeds.add(seed)
         counts[outcome["status"]] += 1
     summary = batch.get("summary")

@@ -137,6 +137,10 @@ def generate(deck_key, *, seeds=12, rounds=20, start_seed=0,
         "seed":run["seed"],
         "opponent_roles":run["opponent_roles"],
         "opponent_composition":sorted(run["opponent_roles"].values()),
+        # Kept opening hand is known before gameplay, unlike "ever seen".
+        **({"opening_hand":list(run["mulligan"]["opening_hand"])}
+           if isinstance(run.get("mulligan"),dict)
+           and isinstance(run["mulligan"].get("opening_hand"),list) else {}),
         "completed_rounds":run["completed_rounds"],
         "outcome":run["outcome"],
         "life_history":run["life_history"],

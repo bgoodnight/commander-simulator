@@ -118,6 +118,17 @@ class OutcomePublicationTests(unittest.TestCase):
         with self.assertRaisesRegex(ValueError, "independently assigned"):
             validate_batch(value, deck_hashes=DECK_HASHES)
 
+    def test_opening_hand_is_optional_but_validated_when_present(self):
+        batch=example_batch(scenario="random")
+        self.assertEqual(validate_batch(batch,deck_hashes=DECK_HASHES),
+                         "mortarion_current")
+        batch["runs"][0]["opening_hand"]=["Swamp"]*6+["Blood Artist"]
+        self.assertEqual(validate_batch(batch,deck_hashes=DECK_HASHES),
+                         "mortarion_current")
+        batch["runs"][0]["opening_hand"]=["Swamp"]*5
+        with self.assertRaisesRegex(ValueError,"opening-hand"):
+            validate_batch(batch,deck_hashes=DECK_HASHES)
+
     def test_corrupt_file_checksum_and_index_membership_rejected(self):
         self.write("x.json", example_batch())
         publish(self.source, self.output,
