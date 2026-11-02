@@ -662,6 +662,7 @@ def run_bounded_early_game(deck_key, *, seed=0, turns=6, mulligan="one-free", pr
                     "operation":outcome.operation,
                     "amount":outcome.count,
                     "drawn_ids":list(outcome.drawn_ids),
+                    "created_token_ids":list(outcome.created_token_ids),
                     "paid_source_ids":list(outcome.paid_source_ids),
                     "graveyard_object_id":outcome.resolved_zone_id,
                     "fidelity":"provisional_partial"})
