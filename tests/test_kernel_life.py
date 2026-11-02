@@ -25,6 +25,18 @@ class KernelLifeTests(unittest.TestCase):
                          ["loss","gain","loss","loss","loss"])
         self.assertEqual(self.kernel.life_changes[-1].source_id,9)
 
+    def test_dead_seat_cannot_gain_life_or_be_drained_again(self):
+        self.life.damage(1,45,source_id=101)
+        self.assertEqual(self.life.total(1),-5)
+        before=len(self.kernel.life_changes)
+        self.assertEqual(self.life.gain(1,60,source_id=102),-5)
+        self.assertEqual(self.life.lose(1,8,source_id=103),-5)
+        self.assertEqual(len(self.kernel.life_changes),before)
+        result=self.life.each_opponent_loses(0,1,source_id=104)
+        self.assertEqual([seat for seat,_ in result],[2,3])
+        self.assertEqual(self.life.total(1),-5)
+        self.assertEqual((self.life.total(2),self.life.total(3)),(39,39))
+
     def test_invalid_life_modification_and_seats_rejected(self):
         for amount in (-1,True):
             with self.subTest(amount=amount),self.assertRaises(ValueError):

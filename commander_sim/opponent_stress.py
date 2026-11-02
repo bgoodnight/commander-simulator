@@ -56,6 +56,7 @@ class BoundedOpponentPressure:
         self.roles = dict(zip(range(1,4), roles))
         self.events = []
         self._defeated = False
+        self._eliminated_seats = set()
         self._born = {}
         # Finite, explicitly abstract opponent library objects make graveyard
         # and mill interactions testable without pretending to supply real
@@ -81,6 +82,8 @@ class BoundedOpponentPressure:
             for seat,role in self.roles.items()}
 
     def _board(self, seat):
+        if self.life.total(seat)<=0:
+            return []
         return sorted(
             (o for o in self.zones.kernel.on_battlefield()
              if o.controller == seat and "creature" in o.types),
@@ -147,6 +150,8 @@ class BoundedOpponentPressure:
         return self.rng.choices(choices,weights=weights,k=1)[0]
 
     def _exile_one(self, seat, turn, role):
+        if self.life.total(seat)<=0:
+            return False
         # Model a reviewed-like targeted exile pressure event, NOT an actual
         # spell cast from an opponent's hand. No invented mana or card.
         kernel = self.zones.kernel
@@ -156,6 +161,7 @@ class BoundedOpponentPressure:
         valid=[
             o for o in kernel.on_battlefield()
             if o.controller!=seat
+            and self.life.total(o.controller)>0
             and bool(o.types & {"creature","enchantment","artifact"})
             and (removal_kind=="exile" or "indestructible" not in o.keywords)
             and kernel.legal_target(seat,o.object_id,
@@ -224,9 +230,12 @@ class BoundedOpponentPressure:
         combat-trigger stack. Declines unsafe attacker/blocker assumptions.
         """
         kernel=self.zones.kernel
+        if self.life.total(seat)<=0:
+            return
         if defender is None:
             defender=self._target_seat(seat,role,combat=True)
-        if defender is None or defender==seat:
+        if (defender is None or defender==seat
+                or self.life.total(defender)<=0):
             return
         used=set()
         attackers=[o for o in self._board(seat)
@@ -397,6 +406,31 @@ class BoundedOpponentPressure:
                      attacker_ids=set(chosen))
         return tuple(self.events[start:])
 
+    def _record_zero_life_eliminations(self,turn):
+        """Stop defeated seats contributing pressure, remove their owned cards.
+
+        The kernel's leave_game path removes actual owned objects rather than
+        converting them into graveyard deaths, which would create false death
+        triggers. Seat zero's 100-card conservation is retained until the
+        enclosing runner stops. This is life-zero only, not general SBA.
+        """
+        new=[]
+        for seat in range(4):
+            if (self.life.total(seat)>0
+                    or seat in self._eliminated_seats):
+                continue
+            self._eliminated_seats.add(seat)
+            if seat!=0:
+                self.zones.leave_game(seat)
+            else:
+                self._defeated=True
+            event=OpponentEvent(
+                turn,seat,self.roles.get(seat,"physical_pilot"),
+                "life_zero",None,0,seat)
+            self.events.append(event)
+            new.append(event)
+        return tuple(new)
+
     def advance(self, turn):
         """Three opponents take their bounded abstract turns after seat 0.
 
@@ -407,7 +441,12 @@ class BoundedOpponentPressure:
         if type(turn) is not int or turn < 1:
             raise ValueError("Positive turn required")
         current=len(self.events)
+        self._record_zero_life_eliminations(turn)
         for seat in (1,2,3):
+            if self._defeated:
+                break
+            if self.life.total(seat)<=0:
+                continue
             role=self.roles[seat]
             # Each player untaps their own permanents before their upkeep.
             # Previous stress batches incorrectly left attackers tapped for
@@ -471,9 +510,8 @@ class BoundedOpponentPressure:
                 self.zone_spells.expire(turn,active_seat=seat)
             if self.attachments is not None:
                 self.attachments.sync(turn=turn)
-            if self.life.total(0)<=0 and not self._defeated:
-                self._defeated=True
-                self.events.append(OpponentEvent(turn,seat,role,"life_zero"))
+            self._record_zero_life_eliminations(turn)
+            if self._defeated:
                 break
         if not self.zones.assert_consistent():
             raise AssertionError("Opponent pressure corrupted authoritative zones")

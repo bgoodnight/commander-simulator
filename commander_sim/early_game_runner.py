@@ -43,6 +43,7 @@ from .reviewed_token_spells import (reviewed_token_spell,
                                    cast_and_resolve_reviewed_token_spell)
 from .bounded_trigger_effects import resolve_reviewed_spell_triggers
 from .kernel_life import KernelLife
+from .outcome_reporting import LifeOutcomeRecorder
 from .reviewed_phase_effects import ReviewedPhaseEngine,reviewed_phase_permanent
 from .composed_abilities import ComposedAbilityEngine, reviewed_composed_permanent, ABILITIES
 from .reviewed_commander_cast import commander_cost, cast_commander
@@ -129,8 +130,8 @@ def run_bounded_early_game(deck_key, *, seed=0, turns=6, mulligan="one-free", pr
     pretending to implement printed abilities. All 100 physical cards occupy
     the same kernel; no observation-mode synthetic battlefield exists.
     """
-    if type(seed) is not int or type(turns) is not int or not 1 <= turns <= 10:
-        raise ValueError("Expected integer seed and 1..10 turns")
+    if type(seed) is not int or type(turns) is not int or not 1 <= turns <= 30:
+        raise ValueError("Expected integer seed and 1..30 rounds")
     if mulligan not in ("one-free", "keep"):
         raise ValueError("Unknown mulligan policy")
     fixture = next((x for x in (*FIXTURES, *EXPERIMENTAL_FIXTURES) if x.key == deck_key), None)
@@ -297,6 +298,9 @@ def run_bounded_early_game(deck_key, *, seed=0, turns=6, mulligan="one-free", pr
 
     actions_by_turn = []
     states = []
+    outcome_recorder=LifeOutcomeRecorder(
+        dict(life.kernel.life_totals),
+        opponent_model=(opponent_pressure is not None))
     for turn in range(1, turns + 1):
         mana_service.clear()
         mana_ledger_start = len(mana_service.mana_events)
@@ -1641,6 +1645,9 @@ def run_bounded_early_game(deck_key, *, seed=0, turns=6, mulligan="one-free", pr
                         "type_line":"Creature",
                         "keywords":list(foreign.keywords),
                         "fidelity":"abstract_opponent_card"})
+        round_life=outcome_recorder.record_round(
+            turn,life.kernel.life_changes[life_ledger_start:],
+            dict(life.kernel.life_totals))
         state = project_kernel_turn(zones, 0, turn, catalog)
         states.append(state)
         actions_by_turn.append({
@@ -1666,6 +1673,10 @@ def run_bounded_early_game(deck_key, *, seed=0, turns=6, mulligan="one-free", pr
             "resource_end": resource_end,
             "mana_payment_events": list(mana_service.mana_events[mana_ledger_start:]),
             "life_totals":dict(life.kernel.life_totals),
+            "life_totals_start":dict(outcome_recorder.history[-2]["life_totals"]),
+            "life_changes":list(round_life["life_changes"]),
+            "eliminations":list(round_life["new_eliminations"]),
+            "alive_seats":list(round_life["alive_seats"]),
             "unsupported_cards_in_hand": sorted(
                 kernel.get(oid).card.name for oid in zones.ids(0, "hand")
                 if not reviewed_creature(deck_key, kernel.get(oid).card.name,
@@ -1703,7 +1714,7 @@ def run_bounded_early_game(deck_key, *, seed=0, turns=6, mulligan="one-free", pr
                 and provisional_by_name.get(kernel.get(oid).card.name) is None
                 and not supported_land(oid)),
         })
-        if opponent_pressure is not None and opponent_pressure.defeated:
+        if outcome_recorder.outcome(requested_rounds=turns)["complete"]:
             break
     analysis = analyze_authoritative_run(catalog, profile or {}, states)
     return {
@@ -1713,6 +1724,9 @@ def run_bounded_early_game(deck_key, *, seed=0, turns=6, mulligan="one-free", pr
         "opponent_roles":dict(opponent_pressure.roles) if opponent_pressure else {},
         "seat_zero_defeated":opponent_pressure.defeated if opponent_pressure else False,
         "completed_turns":len(states),
+        "completed_rounds":len(states),
+        "life_history":list(outcome_recorder.history),
+        "outcome":outcome_recorder.outcome(requested_rounds=turns),
         "deck_key": deck_key,
         "provisional_mode":provisional_mode,
         "provisional_import_report":(
