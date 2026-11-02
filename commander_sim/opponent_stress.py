@@ -192,7 +192,7 @@ class BoundedOpponentPressure:
             target.object_id,0,target_seat))
         return True
 
-    def _combat(self,seat,role,turn,defender=None):
+    def _combat(self,seat,role,turn,defender=None,attacker_ids=None):
         """Resolve bounded combat using real blocker legality and damage/SBA.
 
         No first strike, trample assignment, prevention, double strike, or
@@ -206,10 +206,11 @@ class BoundedOpponentPressure:
         used=set()
         attackers=[o for o in self._board(seat)
                    if not o.tapped and o.power>0
-                   and self._born.get(o.object_id,0)<turn]
-        if role=="control":
+                   and self._born.get(o.object_id,0)<turn
+                   and (attacker_ids is None or o.object_id in attacker_ids)]
+        if attacker_ids is None and role=="control":
             attackers=attackers[:1]
-        if role=="value":
+        if attacker_ids is None and role=="value":
             attackers=attackers[:2]
         for attacker in attackers:
             if self.life.total(defender)<=0:
@@ -237,29 +238,56 @@ class BoundedOpponentPressure:
                      "indestructible" not in attacker.keywords) or
                     self.life.total(defender)<=16):
                 chosen=None
-            attacker.tapped=True
-            kernel._dirty()
-            if chosen is None:
+            selected=[chosen] if chosen is not None else []
+            if "menace" in attacker.keywords:
+                if len(blockers)<2 or chosen is None:
+                    selected=[]
+                else:
+                    second=next((b for b in blockers
+                                 if b.object_id!=chosen.object_id),None)
+                    selected=[chosen,second] if second is not None else []
+            if "vigilance" not in attacker.keywords:
+                attacker.tapped=True
+                kernel._dirty()
+            if not selected:
                 self.life.damage(defender,attacker.power,attacker.object_id)
+                if "lifelink" in attacker.keywords:
+                    self.life.gain(seat,attacker.power,attacker.object_id)
                 self.events.append(OpponentEvent(
                     turn,seat,role,"abstract_unblocked_damage",
                     attacker.object_id,attacker.power,defender))
                 continue
-            used.add(chosen.object_id)
+            for block in selected:
+                used.add(block.object_id)
             from .reviewed_death_effects import capture_battlefield
             before=capture_battlefield(kernel)
             first_move=len(kernel.moves)
             # Simultaneous marked creature damage on existing physical objects.
-            kernel.damage_creatures_together({
-                attacker.object_id:chosen.power,
-                chosen.object_id:attacker.power})
-            # Lifelink is based on actual damage dealt; prevention and combat
-            # damage triggers remain outside this bounded simulation.
-            if "lifelink" in chosen.keywords and chosen.power>0:
-                self.life.gain(defender,chosen.power,chosen.object_id)
-            # Deathtouch is a reusable combat lethal condition. It does not
-            # ignore indestructible, and it applies after damage is marked.
-            for source,target in ((attacker,chosen),(chosen,attacker)):
+            assignments={attacker.object_id:sum(x.power for x in selected)}
+            remaining=attacker.power
+            for block in selected:
+                assigned=min(remaining,max(1,block.toughness))
+                assignments[block.object_id]=assigned
+                remaining-=assigned
+            kernel.damage_creatures_together(assignments)
+            # Lifelink is based on actual marked damage; replacement,
+            # prevention, first strike and trample remain outside this slice.
+            if "lifelink" in attacker.keywords:
+                self.life.gain(seat,attacker.power,attacker.object_id)
+            for block in selected:
+                if "lifelink" in block.keywords and block.power>0:
+                    self.life.gain(defender,block.power,block.object_id)
+            # Deathtouch is a generic lethal criterion after physical damage.
+            for source,target in (
+                    (attacker,block) for block in selected):
+                if (source.power>0 and "deathtouch" in source.keywords
+                        and assignments.get(target.object_id,0)>0
+                        and target.object_id in kernel.objects
+                        and "indestructible" not in kernel.get(target.object_id).keywords):
+                    self.zones.move(target.object_id,"graveyard","state_based",
+                                    commander_choice=True)
+            for source in selected:
+                target=attacker
                 if (source.power>0 and "deathtouch" in source.keywords
                         and target.object_id in kernel.objects
                         and "indestructible" not in kernel.get(target.object_id).keywords):
@@ -273,6 +301,61 @@ class BoundedOpponentPressure:
             self.events.append(OpponentEvent(
                 turn,seat,role,"abstract_blocked_combat",
                 attacker.object_id,attacker.power,defender))
+            if ("decayed" in attacker.keywords
+                    and attacker.object_id in kernel.objects):
+                snap=capture_battlefield(kernel)
+                mid=len(kernel.moves)
+                self.zones.move(attacker.object_id,"graveyard","sacrifice",
+                                commander_choice=True)
+                if self.death_engine:
+                    self.death_engine.resolve_deaths(snap,move_index=mid,turn=turn)
+
+    def player_combat(self,turn,*,beginning_creature_ids=()):
+        """A bounded, board-aware offensive turn for the physical pilot.
+
+        Opponent seats are chosen by the same seat-neutral threat model.
+        No phantom enemy blocking or player-zero targeting preference.
+        """
+        kernel=self.zones.kernel
+        start=len(self.events)
+        beginning=set(beginning_creature_ids)
+        attackers=[]
+        all_live=[o for o in self._board(0) if o.power>0 and not o.tapped]
+        for o in all_live:
+            if o.object_id not in beginning and "haste" not in o.keywords:
+                self._born[o.object_id]=turn
+            else:
+                self._born[o.object_id]=0
+            if self._born[o.object_id]<turn:
+                attackers.append(o)
+        if not attackers:
+            return ()
+        # Reserve defensive bodies when facing dangerous developed boards.
+        opponents=sum(len(self._board(seat)) for seat in (1,2,3))
+        reserve=2 if self.life.total(0)<=18 and opponents>=5 else (
+            1 if opponents>=5 else 0)
+        attackers.sort(key=lambda o:(
+            int("lifelink" in o.keywords),
+            int("flying" in o.keywords),
+            int("menace" in o.keywords),
+            o.power,
+            int(o.token),-o.object_id),reverse=True)
+        keep=set(o.object_id for o in sorted(
+            attackers,key=lambda o:(
+                int("deathtouch" in o.keywords),
+                o.toughness,
+                int("indestructible" in o.keywords),
+                -o.object_id),reverse=True)[:reserve])
+        chosen=[o.object_id for o in attackers
+                if o.object_id not in keep][:3]
+        if not chosen:
+            return ()
+        opponent=self._target_seat(0,"value",combat=True)
+        if opponent is None:
+            return ()
+        self._combat(0,"physical_pilot",turn,defender=opponent,
+                     attacker_ids=set(chosen))
+        return tuple(self.events[start:])
 
     def advance(self, turn):
         """Three opponents take their bounded abstract turns after seat 0.
