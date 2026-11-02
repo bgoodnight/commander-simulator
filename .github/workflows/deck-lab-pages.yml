@@ -10,6 +10,14 @@ on:
       - "tests/test_pages_export.py"
       - "tests/pages_insights.test.cjs"
       - "tests/pages_replay.test.cjs"
+      - "tests/pages_insight_explorer.test.cjs"
+      - ".github/workflows/deck-lab-pages.yml"
+  pull_request:
+    paths:
+      - "web/pages/**"
+      - "tools/build_pages_deck_lab.py"
+      - "tests/test_pages_export.py"
+      - "tests/pages_insight_explorer.test.cjs"
       - ".github/workflows/deck-lab-pages.yml"
   workflow_dispatch:
 permissions:
@@ -42,12 +50,15 @@ jobs:
           python -m unittest tests.test_pages_export -v
           node --check web/pages/app.js
           node --check web/pages/replay.js
+          node --check web/pages/insight_explorer.js
           node --check web/pages/results_insights.js
           node --test tests/pages_insights.test.cjs
           node --test tests/pages_replay.test.cjs
+          node --test tests/pages_insight_explorer.test.cjs
           node --test tests/pages_deck_selection.test.cjs
           node --check dist/pages/app.js
           node --check dist/pages/replay.js
+          node --check dist/pages/insight_explorer.js
           node --check dist/pages/results_insights.js
       - name: Offer a downloadable preview even before Pages is enabled
         uses: actions/upload-artifact@v4
@@ -56,6 +67,7 @@ jobs:
           path: ./dist/pages
           retention-days: 7
       - name: Publish branch-compatible Deck Lab files under docs/deck-lab
+        if: github.event_name != 'pull_request'
         run: |
           # Root-index Pages can serve docs/deck-lab/ directly. This is
           # supplemental to the official workflow Pages artifact/deployment.
@@ -83,6 +95,7 @@ jobs:
             fi
           fi
       - name: Check Pages publishing mode (avoid competing deployments)
+        if: github.event_name != 'pull_request'
         id: pages-check
         env:
           GH_TOKEN: ${{ github.token }}
@@ -113,7 +126,7 @@ jobs:
           path: ./dist/pages
   deploy:
     name: Deploy static Deck Lab
-    if: needs.build.outputs.enabled == 'true'
+    if: github.event_name != 'pull_request' && needs.build.outputs.enabled == 'true'
     runs-on: ubuntu-latest
     needs: build
     environment:

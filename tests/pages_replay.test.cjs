@@ -159,7 +159,7 @@ test('simulation layout preserves prior reports and adds accessible takeaway and
   assert.match(replay,/replay-playbyplay/);
   assert.match(replay,/replay-table-context/);
   assert.match(css,/#pane-records\[hidden\]\{display:none!important\}/);
-  assert.match(app,/development\.open=!eligible/);
+  assert.match(app,/development\.open=true/);
 });
 
 

@@ -198,7 +198,7 @@
     const body=el("div","replay-action-body");
     const header=el("div","replay-action-header");
     const actorSeat=seats?.find(s=>s.seat===action.actor_seat);
-    const actorLabel=action.actor_seat===0?"You · Mortarion":
+    const actorLabel=action.actor_seat===0?"You · "+(seats?.find(s=>s.seat===0)?.label||"Pilot"):
       actorSeat?titleCase(actorSeat.role||"opponent")+" · Seat "+actorSeat.seat:
       isSeat(action.actor_seat)?"Seat "+action.actor_seat:"Event without actor";
     header.append(el("span","replay-action-type",eventTitle(action)),
@@ -229,7 +229,7 @@
       node.appendChild(el("div","replay-seat-meta",
         displayAmount(snapshot.lands)+" lands · "+displayAmount(snapshot.creatures)+" creatures · "+
         displayAmount(snapshot.hand_size)+" in hand"));
-      node.appendChild(el("div","replay-seat-note","Pilot counts only; zones not recorded"));
+      node.appendChild(el("div","replay-seat-note",snapshot.zones?"End-of-turn hand and battlefield recorded":"Pilot counts only; zones not recorded"));
     }else{
       node.appendChild(el("div","replay-seat-life replay-untracked","Life not recorded"));
       node.appendChild(el("div","replay-seat-meta","Battlefield not recorded"));
@@ -496,7 +496,7 @@
     }
     return null;
   }
-  function roundSection(round,previous,seats,lookup,openCard,index,commanderName){
+  function roundSection(round,previous,seats,lookup,openCard,index,commanderName,focus={}){
     const snapshot=statsForRound(round,0)||{};
     const life=typeof snapshot.life==="number"?snapshot.life:null;
     const healthDelta=changeIn(round,previous,"life");
@@ -515,7 +515,7 @@
     }
     const lead=el("span","replay-turn-lead");
     lead.append(el("span","replay-turn-number",""+round.round),
-      el("span","replay-turn-title","Round "+round.round));
+      el("span","replay-turn-title",(focus.unit==="turn"?"Turn ":"Round ")+round.round));
     const observed=pilotTurnActivity(round);
     const highlight=observed.length?observed.join(" · "):
       (round.actions.length?"No own actions retained":"No actions retained");
@@ -621,9 +621,14 @@
     all.appendChild(el("summary",null,"Full play-by-play · "+round.actions.length+" retained actions"));
     const actions=el("div","replay-action-list");
     if(round.actions.length)
-      round.actions.forEach((a,i)=>actions.appendChild(actionRow(a,i,lookup,openCard,seats)));
+      round.actions.forEach((a,i)=>{
+        const item=actionRow(a,i,lookup,openCard,seats);
+        if(focus.index===i)item.className+=" replay-action-selected";
+        actions.appendChild(item);
+      });
     else actions.appendChild(el("p","small","No actions were retained in this abbreviated round."));
     all.appendChild(actions);body.appendChild(all);
+    if(Number.isInteger(focus.index)&&focus.index>=0){wrap.open=true;all.open=true}
     wrap.appendChild(body);
     return wrap;
   }
@@ -652,6 +657,64 @@
     item.appendChild(header);
     item.appendChild(el("p","replay-takeaway-evidence",explanation));
     return item;
+  }
+
+
+  // Adapt a pinned single-pilot bounded run to this viewer's shared round
+  // structure. No opponent turns, unrecorded zones or mana are fabricated.
+  function boundedRounds(run,lookup){
+    if(!Number.isInteger(run?.seed)||!Array.isArray(run.events)||
+       !Array.isArray(run.state_snapshots))throw Error("Incomplete bounded-run evidence");
+    return run.events.map((row,i)=>{
+      const snapshot=run.state_snapshots.find(s=>s.turn===row.turn)||
+        run.state_snapshots[i];
+      if(!snapshot||!Array.isArray(snapshot.hand)||!Array.isArray(snapshot.battlefield))
+        throw Error("Bounded run lacks exact hand/battlefield snapshots for turn "+row.turn);
+      const makeObj=name=>({name,token:false});
+      const countType=type=>snapshot.battlefield.filter(name=>{
+        const card=typeof lookup==="function"?lookup(name):null;
+        return !!card&&new RegExp("\\b"+type+"\\b","i").test((card.type_line||"").split("—")[0]);
+      }).length;
+      return {
+        round:row.turn,
+        actions:(row.events||[]).map((event,index)=>({
+          id:"bounded:"+run.seed+":t"+row.turn+":a"+index,
+          type:event.type,actor_seat:0,target_seat:null,
+          card_name:typeof event.card==="string"?event.card:null,
+          fields:{...event},fidelity:"reviewed"
+        })),
+        snapshots:{"0":{
+          life:Number.isFinite(row.life)?row.life:null,
+          lands:Number.isFinite(row.land_count)?row.land_count:countType("Land"),
+          creatures:Number.isFinite(row.creature_count)?row.creature_count:countType("Creature"),
+          hand_size:snapshot.hand.length,
+          zones:{hand:snapshot.hand.map(makeObj),battlefield:snapshot.battlefield.map(makeObj)}
+        }}
+      };
+    });
+  }
+  function renderBoundedEvidence(root,run,options={}){
+    const rounds=boundedRounds(run,options.lookup);
+    root.replaceChildren();
+    root.appendChild(panelHeading("Recorded single-pilot seed "+run.seed,
+      "Turn-by-turn evidence"));
+    root.appendChild(el("p","micro",
+      "These are six-turn reviewed-action snapshots from the pinned bounded simulator. "+
+      "There are no modeled opponents, full priority windows or verified wins. "+
+      "Hand and battlefield are end-of-turn snapshots; mana shown only if source actions record it."));
+    const context=el("p","replay-legend","Focused card: "+
+      (options.cardName||"not selected")+" · Turn "+(options.turn||"not selected"));
+    root.appendChild(context);
+    const seats=[{seat:0,label:options.commanderName||"Your commander",role:"single-pilot"}];
+    const timeline=el("div","replay-timeline");
+    rounds.forEach((round,i)=>{
+      const focus=round.round===options.turn&&Number.isInteger(options.eventIndex)?
+        {unit:"turn",index:options.eventIndex}:{unit:"turn"};
+      timeline.appendChild(roundSection(round,rounds[i-1]||null,seats,
+        options.lookup,options.openCard,i,options.commanderName,focus));
+    });
+    root.appendChild(timeline);
+    return {rounds,focusedTurn:options.turn??null};
   }
 
   function render(root,data,options={}){
@@ -789,5 +852,5 @@
     draw();
     return {redraw:draw};
   }
-  return {FORMAT,validate,eventKind,eventTitle,summarizeAction,activity,statsForRound,changeIn,recordedCombat,cardSpotlight,relatedActions,pilotTurnActivity,zoneInspector,manaOutputSymbols,render};
+  return {FORMAT,validate,eventKind,eventTitle,summarizeAction,activity,statsForRound,changeIn,recordedCombat,cardSpotlight,relatedActions,pilotTurnActivity,zoneInspector,manaOutputSymbols,boundedRounds,renderBoundedEvidence,render};
 });
