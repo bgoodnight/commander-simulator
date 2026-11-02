@@ -57,6 +57,22 @@ class NarrativeAuditTests(unittest.TestCase):
         self.assertEqual(len(data["sample_timeline"]),2)
         self.assertEqual(data["sample_timeline"][0]["pilot_choices"][0]["score"],48)
 
+    def test_optional_combat_trace_preserves_preexisting_audits(self):
+        run=fake_run("necron_dynasties",seed=0,turns=2,
+                     opponent_scenario="mixed",pilot_style="tempo",
+                     provisional_mode="safe")
+        self.assertEqual(summarize_run(run)["attackers_committed"],0)
+        self.assertIsNone(summarize_run(run)["sample_timeline"][0]["pilot_combat"])
+        run["events"][0]["pilot_combat"]={
+            "style":"tempo","reserve":0,"attack_limit":4,
+            "factors":["personality:tempo"],
+            "candidate_attackers":3,"selected_attackers":3,
+            "target_seat":2}
+        data=summarize_run(run)
+        self.assertEqual(data["attackers_committed"],3)
+        self.assertEqual(data["sample_timeline"][0]["pilot_combat"]["style"],
+                         "tempo")
+
     def test_audit_summarizes_all_supported_decks_deterministically(self):
         result=run_audit(("wretched_ranks","necron_dynasties"),seeds=2,
                          rounds=12,runner=fake_run)

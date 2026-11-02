@@ -71,8 +71,10 @@ from .reviewed_sacrifice_actions import (
     activate_reviewed_sacrifice)
 from .template_resources import TemplateManaService
 from .resource_development import assess_resources, choose_tutor_target
-from .pilot_policy import (STYLES,PilotContext,infer_deck_signals,
-                            choose_legal_option)
+from .pilot_policy import (
+    STYLES,ARCHETYPES,PilotContext,infer_deck_signals,
+    infer_pilot_archetype,choose_legal_option)
+from .pilot_tactics import choose_discretionary_sacrifice
 from .resource_pilot import (choose_token_mana_sacrifice, plan_common_spell,
                              ritual_enables_spell, choose_composed_activation,
                              choose_variable_end_step_payments,
@@ -124,7 +126,7 @@ def _load_live_kernel():
     return IndexedKernel, LiveZones, CardDefinition
 
 
-def run_bounded_early_game(deck_key, *, seed=0, turns=6, mulligan="one-free", profile=None, opponent_scenario=None, provisional_mode="off",pilot_style="adaptive"):
+def run_bounded_early_game(deck_key, *, seed=0, turns=6, mulligan="one-free", profile=None, opponent_scenario=None, provisional_mode="off",pilot_style="adaptive",pilot_archetype="auto"):
     """Play a small reviewed set of actual land, rock and creature actions.
 
     A deterministic, conservative fixed pilot draws, plays one supported land,
@@ -138,6 +140,8 @@ def run_bounded_early_game(deck_key, *, seed=0, turns=6, mulligan="one-free", pr
         raise ValueError("Unknown mulligan policy")
     if pilot_style not in STYLES:
         raise ValueError("Unknown deterministic pilot personality")
+    if pilot_archetype not in ARCHETYPES:
+        raise ValueError("Unknown pilot archetype")
     fixture = next((x for x in (*FIXTURES, *EXPERIMENTAL_FIXTURES) if x.key == deck_key), None)
     if fixture is None:
         raise ValueError("Unknown pinned deck fixture")
@@ -153,6 +157,7 @@ def run_bounded_early_game(deck_key, *, seed=0, turns=6, mulligan="one-free", pr
     colors = registry.get(fixture.commander).color_identity
     raw_by_name = {entry["deck_name"]: entry["card"] for entry in pinned}
     pilot_signals=infer_deck_signals(snapshot.deck.cards,raw_by_name)
+    pilot_strategy=infer_pilot_archetype(pilot_signals,pilot_archetype)
     if provisional_mode not in {'off','safe'}:
         raise ValueError('Unknown provisional mode')
     provisional_by_name = ({name: provisional_profile(raw) for name,raw in raw_by_name.items()}
@@ -765,13 +770,15 @@ def run_bounded_early_game(deck_key, *, seed=0, turns=6, mulligan="one-free", pr
                     and life.total(obj.controller)>0
                     for obj in kernel.on_battlefield()))
             selected,rank=choose_legal_option(
-                options,context,pilot_signals,raw_by_name,style=pilot_style)
+                options,context,pilot_signals,raw_by_name,style=pilot_style,
+                archetype=pilot_strategy.primary)
             _, _, name, oid, kind, cost, target = selected
             pilot_decisions.append({
                 "round":turn,"kind":kind,"card":name,
                 "source_object_id":oid,"candidate_count":len(options),
                 "score":rank.score,"role":rank.category,
                 "factors":list(rank.factors),"personality":pilot_style,
+                "archetype":pilot_strategy.primary,
                 "fidelity":"ordering_only_verified_legal_candidates"})
             if kind == "commander":
                 triggered=[]
@@ -1267,55 +1274,26 @@ def run_bounded_early_game(deck_key, *, seed=0, turns=6, mulligan="one-free", pr
                            "destination_object_id":cast.destination_id,
                            "drawn_ids":list(cast.drawn_ids),
                            "fidelity":"bounded_reviewed_buyback"})
-        # No-opponent, single-action-per-reviewed-source sacrifice policy.
-        # Sacrifices are costs paid from real battlefield objects; they can
-        # activate reviewed death triggers, never fabricated combo events.
-        used_sacrifice_sources=set()
-        for source in sorted(list(kernel.on_battlefield()),key=lambda x:x.object_id):
-            if (source.object_id in used_sacrifice_sources
-                    or source.object_id not in kernel.objects
-                    or source.controller!=0
-                    or source.card.name not in SACRIFICE_MODES):
-                continue
+        # One optional sacrifice, scored against live reviewed death triggers.
+        # Never sacrifice a useful body just because a free outlet exists.
+        sacrifice_choice=choose_discretionary_sacrifice(
+            zones,0,life,mana_service,raw_by_name,death_engine,
+            turn=turn,entered_on_turn=entered_on_turn,
+            archetype=pilot_strategy.primary)
+        if sacrifice_choice is not None:
+            source=kernel.get(sacrifice_choice.source_id)
             mode=SACRIFICE_MODES[source.card.name]
-            if mode.action in {'colorless_mana','any_color_mana','black_mana_by_value'}:
-                continue  # no speculative late sacrifice after casting window
-            if mode.tap and (source.tapped or
-                ("creature" in source.types
-                 and entered_on_turn.get(source.object_id,0)>=turn
-                 and "haste" not in source.keywords)):
-                continue
-            victims=[obj for obj in kernel.on_battlefield()
-                if obj.controller==0 and "creature" in obj.types
-                and "commander" not in obj.card.supertypes
-                and (not mode.sacrifice_other or obj.object_id!=source.object_id)
-                and (not mode.victim_color or (
-                    obj.card.colors is not None
-                    and mode.victim_color in obj.card.colors))]
-            if not victims:
-                continue
-            # Sacrifice small expendable tokens first; don't choose a combo
-            # sacrifice across multiple iterations of the same ability.
-            victims.sort(key=lambda obj: (
-                0 if obj.token else 1,
-                0 if obj.object_id!=source.object_id else 2,
-                obj.power,obj.object_id))
-            victim=victims[0]
             resolved=activate_reviewed_sacrifice(
-                zones,life,source.object_id,victim.object_id,raw_by_name,
+                zones,life,sacrifice_choice.source_id,
+                sacrifice_choice.victim_id,raw_by_name,
                 mana_service=mana_service,turn=turn,
                 tap_ready=(not source.tapped and (
                     "creature" not in source.types
                     or entered_on_turn.get(source.object_id,0)<turn
                     or "haste" in source.keywords)),
-                death_engine=death_engine,scry_to_bottom=False,
-                mana_color=("R" if "R" in colors else
-                            "B" if "B" in colors else
-                            next(iter(sorted(colors))))
-                            if mode.action=="any_color_mana" else None)
+                death_engine=death_engine,scry_to_bottom=False)
             if resolved is None:
-                continue
-            used_sacrifice_sources.add(source.object_id)
+                raise AssertionError("Reviewed sacrifice choice became unavailable")
             events.append({
                 "type":"reviewed_sacrifice_activated","card":resolved.source_name,
                 "source_object_id":resolved.source_id,
@@ -1325,7 +1303,18 @@ def run_bounded_early_game(deck_key, *, seed=0, turns=6, mulligan="one-free", pr
                 "drawn_ids":list(resolved.drawn_ids),
                 "mana_added":list(resolved.mana_added),
                 "death_trigger_count":resolved.death_trigger_count,
-                "fidelity":"bounded_no_opponent_priority"})
+                "fidelity":"bounded_reviewed_effect_scored"})
+            pilot_decisions.append({
+                "round":turn,"kind":"sacrifice","card":resolved.source_name,
+                "source_object_id":resolved.source_id,
+                "victim_object_id":resolved.victim_old_id,
+                "candidate_count":1,"score":sacrifice_choice.score,
+                "role":"sacrifice",
+                "factors":list(sacrifice_choice.factors),
+                "personality":pilot_style,
+                "archetype":pilot_strategy.primary,
+                "fidelity":"reviewed_activated_sacrifice_choice"})
+            resolve_reactive()
         # One verified conditional graveyard creature cast per turn. Do not
         # create a synthetic loop: recursion must draw on real mana and a
         # currently controlled creature of the required subtype. The bounded
@@ -1502,7 +1491,8 @@ def run_bounded_early_game(deck_key, *, seed=0, turns=6, mulligan="one-free", pr
         # attacks on one another; no privileged target at seat zero.
         if opponent_pressure is not None:
             for combat in opponent_pressure.player_combat(
-                    turn,beginning_creature_ids=beginning_creature_ids):
+                    turn,beginning_creature_ids=beginning_creature_ids,
+                    style=pilot_style,signals=pilot_signals):
                 events.append({
                     "type":"player_"+combat.operation,
                     "object_id":combat.object_id,
@@ -1733,6 +1723,8 @@ def run_bounded_early_game(deck_key, *, seed=0, turns=6, mulligan="one-free", pr
             "resource_end": resource_end,
             "mana_payment_events": list(mana_service.mana_events[mana_ledger_start:]),
             "life_totals":dict(life.kernel.life_totals),
+            "pilot_combat":(dict(opponent_pressure.last_player_combat_decision)
+                                if opponent_pressure is not None else None),
             "pilot_decisions":list(pilot_decisions),
             "life_totals_start":dict(outcome_recorder.history[-2]["life_totals"]),
             "life_changes":list(round_life["life_changes"]),
@@ -1757,6 +1749,7 @@ def run_bounded_early_game(deck_key, *, seed=0, turns=6, mulligan="one-free", pr
         "outcome":outcome_recorder.outcome(requested_rounds=turns),
         "deck_key": deck_key,
         "pilot_style":pilot_style,
+        "pilot_archetype":pilot_strategy.as_dict(),
         "pilot_signals":pilot_signals.as_dict(),
         "provisional_mode":provisional_mode,
         "provisional_import_report":(
@@ -1789,9 +1782,12 @@ if __name__ == "__main__":
                         help="Enable safe import-derived, explicitly partial card actions")
     parser.add_argument("--pilot-style",choices=STYLES,default="adaptive",
                         help="Deterministic deck-derived legal-action personality")
+    parser.add_argument("--pilot-archetype",choices=ARCHETYPES,default="auto",
+                        help="Deck-derived strategy or explicit generic archetype")
     args = parser.parse_args()
     profile = json.loads(args.profile.read_text(encoding="utf-8")) if args.profile else None
     print(json.dumps(run_bounded_early_game(args.deck, seed=args.seed, turns=args.turns,
                                              mulligan=args.mulligan, profile=profile,
                                              provisional_mode=args.provisional_mode,
-                                             pilot_style=args.pilot_style), indent=2))
+                                             pilot_style=args.pilot_style,
+                                             pilot_archetype=args.pilot_archetype), indent=2))

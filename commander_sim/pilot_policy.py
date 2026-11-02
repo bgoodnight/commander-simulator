@@ -32,6 +32,14 @@ _FEATURE_RULES = {
     "tokens": _TOKEN,
     "artifacts": _ARTIFACT,
     "combat": _AGGRESSION,
+    "death_triggers": re.compile(r"whenever[^\n]{0,110}\b(?:dies|die)\b", re.I),
+    "recursion": re.compile(
+        r"(?:return|put)[^\n]{0,100}\b(?:graveyard|battlefield)\b"
+        r"|\bfrom (?:your|a) graveyard\b", re.I),
+    "removal": re.compile(
+        r"(?:destroy|exile) target|(?:all|each) creatures? gets? -"
+        r"|\bdeal[s]? \d+ damage to each creature\b", re.I),
+    "spells": re.compile(r"(?!)"),
 }
 # Pure preferences in the *decision layer*. Smaller shifts than a missing
 # printed effect can never be used to bypass source verification.
@@ -106,7 +114,10 @@ def infer_deck_signals(deck_cards,catalog):
         nonlands+=quantity
         text=row["oracle_text"]
         for category,pattern in _FEATURE_RULES.items():
-            if pattern.search(text):
+            if category=="spells":
+                if "instant" in types or "sorcery" in types:
+                    counts[category]+=quantity
+            elif pattern.search(text):
                 counts[category]+=quantity
         for word in ("haste","flying","lifelink","menace","deathtouch",
                      "vigilance","trample"):
@@ -114,6 +125,66 @@ def infer_deck_signals(deck_cards,catalog):
                 keywords.add(word)
     return DeckSignals(nonlands,tuple(sorted(counts.items())),
                        tuple(sorted(keywords)))
+
+
+# Archetype describes what the *deck* is built to do. Personality describes
+# how cautiously the pilot pursues that plan. Both only change ordering.
+ARCHETYPES = ("auto", "midrange", "aristocrats", "spellslinger",
+              "graveyard", "tokens", "artifacts", "combat", "control")
+
+_ARCHETYPE_WEIGHTS = {
+    "midrange": {},
+    "aristocrats": {"engine":12, "token":10, "reanimate":6,
+                    "draw":3, "commander":4},
+    "spellslinger": {"engine":11, "tutor":7, "draw":8, "token":3},
+    "graveyard": {"reanimate":13, "engine":5, "draw":4, "tutor":3},
+    "tokens": {"token":13, "engine":5, "creature":4},
+    "artifacts": {"artifact":9, "ramp":6, "engine":5},
+    "combat": {"creature":9, "combat":9, "removal":3},
+    "control": {"removal":12, "draw":7, "reanimate":3},
+}
+
+
+@dataclass(frozen=True)
+class PilotArchetype:
+    selected: str
+    primary: str
+    scores: tuple[tuple[str,int],...]
+    evidence: tuple[tuple[str,int],...]
+
+    def as_dict(self):
+        return {"selected":self.selected,"primary":self.primary,
+                "scores":dict(self.scores),"evidence":dict(self.evidence)}
+
+
+def infer_pilot_archetype(signals, selected="auto"):
+    """Infer strategic priorities from verified card quantities only.
+
+    These are descriptions, not permissions to execute printed text. A user
+    override changes preferences but never creates legal actions.
+    """
+    if not isinstance(signals,DeckSignals):
+        raise TypeError("Deck-derived signals required")
+    if selected not in ARCHETYPES:
+        raise ValueError("Unknown pilot archetype")
+    count=signals.count
+    scores={
+        "aristocrats":3*count("sacrifice")+4*count("death_triggers")
+                      +2*count("tokens"),
+        "spellslinger":4*count("spell_engine")+2*count("spells"),
+        "graveyard":3*count("graveyard")+3*count("recursion"),
+        "tokens":4*count("tokens")+count("combat"),
+        "artifacts":4*count("artifacts"),
+        "combat":5*count("combat"),
+        "control":4*count("removal"),
+    }
+    ordered=tuple(sorted(scores.items(),key=lambda item:(-item[1],item[0])))
+    inferred=ordered[0][0] if ordered and ordered[0][1]>=15 else "midrange"
+    primary=inferred if selected=="auto" else selected
+    evidence=tuple((k,count(k)) for k in (
+        "sacrifice","death_triggers","tokens","spell_engine","spells",
+        "graveyard","recursion","artifacts","combat","removal"))
+    return PilotArchetype(selected,primary,tuple(sorted(scores.items())),evidence)
 
 
 @dataclass(frozen=True)
@@ -169,6 +240,8 @@ def _category(kind,raw):
         mana_text=bool(re.search(r"\{T\}: Add|\{T\}: Add",text,re.I))
         if mana_text or re.search(r"\badd \{[WUBRGC]\}",text,re.I):
             return "ramp"
+        # Non-mana artifacts are still meaningful permanents, not "other".
+        return "artifact"
     if kind in {"creature","enchantment"}:
         if _TRIGGERS.search(text) or re.search(
                 r"whenever [^\n]{0,100}(?:dies|sacrifice)|"
@@ -183,7 +256,8 @@ def _category(kind,raw):
     return "other"
 
 
-def rank_legal_action(kind,raw,context,signals,*,style="adaptive"):
+def rank_legal_action(kind,raw,context,signals,*,style="adaptive",
+                      archetype="midrange"):
     """Return deterministic utility and explanations for a legal option.
 
     Affordability, targeting, summoning sickness and effect admission MUST
@@ -191,6 +265,8 @@ def rank_legal_action(kind,raw,context,signals,*,style="adaptive"):
     """
     if style not in STYLES:
         raise ValueError("Unknown pilot personality")
+    if archetype not in _ARCHETYPE_WEIGHTS:
+        raise ValueError("Unknown strategic archetype")
     if not isinstance(context,PilotContext) or not isinstance(signals,DeckSignals):
         raise TypeError("A complete physical context and deck signals are required")
     category=_category(kind,raw)
@@ -244,6 +320,10 @@ def rank_legal_action(kind,raw,context,signals,*,style="adaptive"):
         if signals.dense("combat") and category=="creature":
             score+=5
             factors.append("combat_keyword_density")
+    archetype_bump=_ARCHETYPE_WEIGHTS[archetype].get(category,0)
+    if archetype_bump:
+        score+=archetype_bump
+        factors.append("archetype:"+archetype)
     bump=_PERSONALITY[style].get(category,0)
     if bump:
         score+=bump
@@ -251,7 +331,8 @@ def rank_legal_action(kind,raw,context,signals,*,style="adaptive"):
     return RankedChoice(score,category,tuple(factors))
 
 
-def choose_legal_option(options,context,signals,catalog,*,style="adaptive"):
+def choose_legal_option(options,context,signals,catalog,*,style="adaptive",
+                        archetype="midrange"):
     """Order the current runner's tuples, never produce a fabricated action.
 
     The driver tuple is (legacy_priority,paid_sources,name,physical_id,kind,
@@ -268,7 +349,59 @@ def choose_legal_option(options,context,signals,catalog,*,style="adaptive"):
         if type(oid) is not int or type(paid) is not int:
             raise ValueError("Invalid source-paid option")
         result=rank_legal_action(kind,catalog.get(name,{}),context,signals,
-                                 style=style)
+                                 style=style,archetype=archetype)
         scored.append(((-result.score,paid,name,oid),option,result))
     _,best,result=min(scored,key=lambda item:item[0])
     return best,result
+
+
+@dataclass(frozen=True)
+class CombatPosture:
+    """Bounded combat preference; never changes attacker or blocker legality."""
+    attack_limit: int
+    reserve: int
+    factors: tuple[str,...]
+
+    def as_dict(self):
+        return {"attack_limit":self.attack_limit,"reserve":self.reserve,
+                "factors":list(self.factors)}
+
+
+def choose_combat_posture(*,life,opposing_creatures,style="adaptive",signals=None):
+    """Choose aggression from public board pressure and the same pilot style.
+
+    The physical kernel still selects legal attackers/blocks and resolves
+    damage. These settings only cap optional attackers and defensive reserves;
+    they are not predictions of unmodeled combat rules or card permissions.
+    """
+    if style not in STYLES:
+        raise ValueError("Unknown combat pilot personality")
+    if (type(life) is not int or type(opposing_creatures) is not int
+            or opposing_creatures<0):
+        raise ValueError("Invalid combat pilot context")
+    if signals is not None and not isinstance(signals,DeckSignals):
+        raise TypeError("Verified deck signals required")
+    reserve=(2 if life<=18 and opposing_creatures>=5 else
+             1 if opposing_creatures>=5 else 0)
+    limit=3
+    factors=["base:board_pressure"]
+    if style=="tempo":
+        reserve=max(0,reserve-1)
+        limit=4
+        factors.append("personality:tempo")
+    elif style=="conservative":
+        limit=2
+        if opposing_creatures:
+            reserve=min(3,reserve+1)
+        factors.append("personality:conservative")
+    elif (style=="engine" and opposing_creatures
+          and signals is not None
+          and (signals.dense("spell_engine") or signals.dense("sacrifice"))):
+        reserve=min(3,reserve+1)
+        factors.append("protect_engine_development")
+    elif (style=="adaptive" and signals is not None
+          and signals.dense("combat")):
+        reserve=max(0,reserve-1)
+        limit=4
+        factors.append("deck_combat_density")
+    return CombatPosture(limit,reserve,tuple(factors))

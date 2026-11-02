@@ -174,20 +174,26 @@ def ritual_enables_spell(zones,seat,source,catalog,mana_service):
 
 def choose_composed_activation(zones, seat, life, mana_service, catalog, *,
                                activations_this_turn=0):
-    """Conservative pre-combat action choice using only composed rule metadata.
+    """Choose an optional reviewed global damage action by physical net value.
 
-    No opponent battlefield is fabricated. Prefer one affordable, beneficial
-    area-damage activation when it can feed a reviewed life-loss-based token
-    trigger, without exhausting the mana needed for that later X payment.
+    A fixed damage-all activation should not wipe friendly bodies for a
+    speculative token engine. Conversely, a positive enemy sweep is useful
+    even without a commander present. A safe one-life self-trigger is
+    allowed only when a reviewed end-step life-loss engine is present and
+    enough mana remains to pay for its token output.
     """
     from .composed_abilities import ABILITIES
-    if activations_this_turn >= 1 or life.total(seat)<=12:
+    if activations_this_turn>=1 or life.total(seat)<=12:
         return None
     available=assess_resources(zones.kernel,mana_service,seat).available_fixed_mana
-    if available<2:
+    if available<1:
         return None
+    board=list(zones.kernel.on_battlefield())
+    own=[o for o in board if o.controller==seat and "creature" in o.types]
+    enemies=[o for o in board if o.controller!=seat and
+             "creature" in o.types and life.total(o.controller)>0]
     commander_engines=[]
-    for source in zones.kernel.on_battlefield():
+    for source in board:
         if source.controller!=seat:
             continue
         rules=ABILITIES.get(source.card.name,())
@@ -199,20 +205,40 @@ def choose_composed_activation(zones, seat, life, mana_service, catalog, *,
                and r.oracle_excerpt in raw.get("oracle_text","")
                for r in rules):
             commander_engines.append(source)
-    if not commander_engines:
-        return None
-    for source in sorted(zones.kernel.on_battlefield(),key=lambda o:o.object_id):
+    candidates=[]
+    for source in board:
         raw=catalog.get(source.card.name,{})
         if source.controller!=seat or raw.get("oracle_id")!=source.card.card_id:
             continue
         for rule in ABILITIES.get(source.card.name,()):
-            if (rule.event=="activate" and not rule.payment.x_generic
-                    and not rule.payment.x_black_only
-                    and rule.oracle_excerpt in raw.get("oracle_text","")
-                    and any(step.operation=="damage_all" for step in rule.steps)
-                    and mana_service.plan(seat,rule.payment.mana) is not None):
-                return source.object_id
-    return None
+            if (rule.event!="activate" or rule.payment.x_generic
+                    or rule.payment.x_black_only
+                    or rule.oracle_excerpt not in raw.get("oracle_text","")
+                    or not any(step.operation=="damage_all" for step in rule.steps)):
+                continue
+            try:
+                if mana_service.plan(seat,rule.payment.mana) is None:
+                    continue
+            except ValueError as err:
+                if str(err)!="Bounded mana search exhausted; no action committed":
+                    raise
+                continue
+            damage=1  # Reviewed fixed damage_all step in this bounded kernel.
+            def killed(obj):
+                return (obj.toughness-obj.damage_marked<=damage and
+                        "indestructible" not in obj.keywords)
+            enemy_kills=sum(killed(o) for o in enemies)
+            own_kills=sum(killed(o) for o in own)
+            has_positive_sweep=(enemy_kills>=2 and enemy_kills>own_kills)
+            has_safe_life_engine=(bool(commander_engines)
+                and available>=3 and life.total(seat)>=22
+                and own_kills==0 and len(own)<3)
+            if not (has_positive_sweep or has_safe_life_engine):
+                continue
+            # Prefer the best immediate board trade, then a safe engine setup.
+            score=4*(enemy_kills-own_kills)+int(has_safe_life_engine)
+            candidates.append((-score,source.object_id))
+    return min(candidates)[1] if candidates else None
 
 
 def choose_composed_x_activation(zones,seat,life,mana_service,catalog):
@@ -630,11 +656,18 @@ def choose_temporary_reanimation(zones,seat,attachments,mana_service,catalog):
             raw=catalog.get(target.card.name,{})
             if raw.get("oracle_id")!=target.card.card_id:
                 continue
-            score=(target.power+target.toughness
-                   +4 if target.card.name in
-                   {"Massacre Wurm","Solemn Simulacrum",
-                    "Marionette Apprentice","Bastion of Remembrance"} else
-                   target.power+target.toughness)
+            # This bounded reanimation path gives haste and temporary board
+            # presence, but does NOT currently resolve ordinary ETB triggers.
+            # Score only the supported combat/body properties; do not award
+            # hypothetical value to names or unexecuted printed text.
+            if target.power<=0:
+                continue
+            score=(2*max(0,target.power)+max(0,target.toughness)//2
+                   +5*int("lifelink" in target.keywords)
+                   +4*int("flying" in target.keywords)
+                   +3*int("menace" in target.keywords)
+                   +3*int("trample" in target.keywords)
+                   +2*int("deathtouch" in target.keywords))
             available.append((score,-oid,source.object_id,oid))
     if not available:
         return None

@@ -20,7 +20,7 @@ if str(ROOT) not in sys.path:
 from commander_sim.deck_fixtures import FIXTURES,EXPERIMENTAL_FIXTURES
 from commander_sim.early_game_runner import run_bounded_early_game
 from commander_sim.opponent_stress import SCENARIOS
-from commander_sim.pilot_policy import STYLES
+from commander_sim.pilot_policy import STYLES,ARCHETYPES
 
 DECKS=tuple(f.key for f in (*FIXTURES,*EXPERIMENTAL_FIXTURES))
 FORMAT="commander-pilot-narrative-audit-v1"
@@ -87,6 +87,7 @@ def summarize_run(run,*,turn_examples=12):
                 "lands":item["land_count"],
                 "unsupported_in_hand":list(item["unsupported_cards_in_hand"]),
                 "pilot_choices":list(choices),
+                "pilot_combat":item.get("pilot_combat"),
                 "events":[{"type":e["type"],
                            **({"card":e["card"]} if "card" in e else {}),
                            **({"target_seat":e["target_seat"]}
@@ -107,6 +108,7 @@ def summarize_run(run,*,turn_examples=12):
         "seed":run["seed"],
         "scenario":run["opponent_scenario"],
         "pilot_style":run.get("pilot_style"),
+        "pilot_archetype":run.get("pilot_archetype"),
         "provisional_mode":run["provisional_mode"],
         "pilot_signals":run.get("pilot_signals"),
         "completed_rounds":run["completed_rounds"],
@@ -117,6 +119,9 @@ def summarize_run(run,*,turn_examples=12):
         "observed_library_events":dict(sorted(library_events.items())),
         "turns_without_main_actions":sum(
             not x.get("pilot_decisions") for x in run["events"]),
+        "attackers_committed":sum(
+            (x.get("pilot_combat") or {}).get("selected_attackers",0)
+            for x in run["events"]),
         "frequently_unmodeled_hand_cards":[
             {"card":name,"turns_seen":count}
             for name,count in unmodeled.most_common(12)],
@@ -126,7 +131,7 @@ def summarize_run(run,*,turn_examples=12):
 
 
 def run_audit(deck_keys=DECKS,*,seeds=2,rounds=12,
-              scenario="mixed",style="adaptive",
+              scenario="mixed",style="adaptive",archetype="auto",
               provisional_mode="safe",first_seed=0,
               turn_examples=12,runner=run_bounded_early_game):
     if (not deck_keys or any(d not in DECKS for d in deck_keys)
@@ -134,15 +139,19 @@ def run_audit(deck_keys=DECKS,*,seeds=2,rounds=12,
             or type(rounds) is not int or not 1<=rounds<=30
             or type(first_seed) is not int or first_seed<0
             or scenario not in SCENARIOS or style not in STYLES
+            or archetype not in ARCHETYPES
             or provisional_mode not in {"off","safe"}
             or type(turn_examples) is not int or not 1<=turn_examples<=30):
         raise ValueError("Invalid narrative audit configuration")
     runs=[]
     for deck in deck_keys:
         for seed in range(first_seed,first_seed+seeds):
+            pilot_kw=({"pilot_archetype":archetype}
+                      if archetype!="auto" else {})
             run=runner(deck,seed=seed,turns=rounds,
                 opponent_scenario=scenario,
-                pilot_style=style,provisional_mode=provisional_mode)
+                pilot_style=style,provisional_mode=provisional_mode,
+                **pilot_kw)
             runs.append(summarize_run(run,turn_examples=turn_examples))
     by_deck={}
     for key in deck_keys:
@@ -175,7 +184,8 @@ def run_audit(deck_keys=DECKS,*,seeds=2,rounds=12,
         "format":FORMAT,
         "configuration":{"deck_keys":list(deck_keys),"seeds":seeds,
             "first_seed":first_seed,"rounds":rounds,"scenario":scenario,
-            "style":style,"provisional_mode":provisional_mode},
+            "style":style,"archetype":archetype,
+            "provisional_mode":provisional_mode},
         "deck_summaries":by_deck,"runs":runs,
         "disclaimer":(
             "Narrative choices were source-paid and ordered by a bounded pilot; "
@@ -191,6 +201,7 @@ def main(argv=None):
     parser.add_argument("--rounds",type=int,default=12)
     parser.add_argument("--scenario",choices=sorted(SCENARIOS),default="mixed")
     parser.add_argument("--pilot-style",choices=STYLES,default="adaptive")
+    parser.add_argument("--pilot-archetype",choices=ARCHETYPES,default="auto")
     parser.add_argument("--provisional-mode",choices=("off","safe"),default="safe")
     parser.add_argument("--first-seed",type=int,default=0)
     parser.add_argument("--output",type=Path,required=True)
@@ -198,6 +209,7 @@ def main(argv=None):
     keys=DECKS if args.deck=="all" else (args.deck,)
     result=run_audit(keys,seeds=args.seeds,rounds=args.rounds,
         scenario=args.scenario,style=args.pilot_style,
+        archetype=args.pilot_archetype,
         provisional_mode=args.provisional_mode,first_seed=args.first_seed)
     args.output.parent.mkdir(parents=True,exist_ok=True)
     args.output.write_text(json.dumps(

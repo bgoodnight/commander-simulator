@@ -9,6 +9,7 @@ Opponent combat uses physical attackers/blockers with explicit simplified legali
 from dataclasses import dataclass
 from random import Random
 from .reviewed_death_effects import capture_battlefield
+from .pilot_policy import choose_combat_posture
 
 SCENARIOS = {
     "balanced": ("aggro", "control", "value"),
@@ -58,6 +59,7 @@ class BoundedOpponentPressure:
         self._defeated = False
         self._eliminated_seats = set()
         self._born = {}
+        self.last_player_combat_decision = None
         # Finite, explicitly abstract opponent library objects make graveyard
         # and mill interactions testable without pretending to supply real
         # opposing decklists. Physical cards retain zone provenance.
@@ -242,10 +244,15 @@ class BoundedOpponentPressure:
                    if not o.tapped and o.power>0
                    and self._born.get(o.object_id,0)<turn
                    and (attacker_ids is None or o.object_id in attacker_ids)]
-        if attacker_ids is None and role=="control":
-            attackers=attackers[:1]
-        if attacker_ids is None and role=="value":
-            attackers=attackers[:2]
+        if attacker_ids is None and role in {"control","value"}:
+            # These roles commit fewer attackers. Pick the strongest legal
+            # candidates, rather than whichever entered the board first.
+            attackers.sort(key=lambda o:(
+                int("flying" in o.keywords),
+                int("menace" in o.keywords),
+                int("lifelink" in o.keywords),
+                o.power, -o.object_id), reverse=True)
+            attackers=attackers[:1 if role=="control" else 2]
         for attacker in attackers:
             if self.life.total(defender)<=0:
                 break
@@ -359,11 +366,13 @@ class BoundedOpponentPressure:
                 if self.death_engine:
                     self.death_engine.resolve_deaths(snap,move_index=mid,turn=turn)
 
-    def player_combat(self,turn,*,beginning_creature_ids=()):
+    def player_combat(self,turn,*,beginning_creature_ids=(),
+                      style="adaptive",signals=None):
         """A bounded, board-aware offensive turn for the physical pilot.
 
-        Opponent seats are chosen by the same seat-neutral threat model.
-        No phantom enemy blocking or player-zero targeting preference.
+        The legal battlefield and defender selection are unchanged. Attack
+        caps and defensive reserves follow the same deck-derived personality
+        as main-phase action ranking; no commander-specific exceptions.
         """
         kernel=self.zones.kernel
         start=len(self.events)
@@ -377,12 +386,16 @@ class BoundedOpponentPressure:
                 self._born[o.object_id]=0
             if self._born[o.object_id]<turn:
                 attackers.append(o)
+        opponents=sum(len(self._board(seat)) for seat in (1,2,3))
+        posture=choose_combat_posture(
+            life=self.life.total(0),opposing_creatures=opponents,
+            style=style,signals=signals)
+        self.last_player_combat_decision={
+            "style":style,**posture.as_dict(),
+            "candidate_attackers":len(attackers),
+            "selected_attackers":0,"target_seat":None}
         if not attackers:
             return ()
-        # Reserve defensive bodies when facing dangerous developed boards.
-        opponents=sum(len(self._board(seat)) for seat in (1,2,3))
-        reserve=2 if self.life.total(0)<=18 and opponents>=5 else (
-            1 if opponents>=5 else 0)
         attackers.sort(key=lambda o:(
             int("lifelink" in o.keywords),
             int("flying" in o.keywords),
@@ -394,14 +407,16 @@ class BoundedOpponentPressure:
                 int("deathtouch" in o.keywords),
                 o.toughness,
                 int("indestructible" in o.keywords),
-                -o.object_id),reverse=True)[:reserve])
+                -o.object_id),reverse=True)[:posture.reserve])
         chosen=[o.object_id for o in attackers
-                if o.object_id not in keep][:3]
+                if o.object_id not in keep][:posture.attack_limit]
         if not chosen:
             return ()
         opponent=self._target_seat(0,"value",combat=True)
         if opponent is None:
             return ()
+        self.last_player_combat_decision.update({
+            "selected_attackers":len(chosen),"target_seat":opponent})
         self._combat(0,"physical_pilot",turn,defender=opponent,
                      attacker_ids=set(chosen))
         return tuple(self.events[start:])

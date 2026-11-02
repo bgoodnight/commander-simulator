@@ -1,5 +1,7 @@
 # Deck-derived deterministic pilot v1
 
+See [pilot development roadmap](PILOT_DEVELOPMENT_ROADMAP.md) for the current player/opponent workstream and review gates.
+
 The current pilot is **one shared physical action-ranking mechanism**. It does
 not have commander-specific scripts, nor does it infer the legality of a card
 from Oracle text. Reviewed handlers and the mana kernel first construct a set
