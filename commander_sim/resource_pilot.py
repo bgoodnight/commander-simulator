@@ -332,7 +332,8 @@ def choose_utility_activation(zones,seat,life,mana_service,catalog,
                 continue
             tap_cost_ids=tuple(o.object_id for o in cost_options[:rule.tap_count])
         excluded=tuple(((source.object_id,) if rule.tap else ()) + tap_cost_ids)
-        if mana_service.plan(seat,rule.mana,excluded_source_ids=excluded) is None:
+        if (rule.mana and
+            mana_service.plan(seat,rule.mana,excluded_source_ids=excluded) is None):
             continue
         target=None
         if rule.operation=="creature_to_hand":
