@@ -1,7 +1,7 @@
 """Authoritative kernel-attached life totals for bounded multi-seat effect slices.
 
 Life belongs to the *existing kernel*, not a parallel simulation. This module
-does not provide priority, damage prevention, replacement effects, multiplayer
+does not provide priority, damage prevention, full replacement layers, multiplayer
 turn sequencing, commander damage or player elimination. It exposes distinct
 life-loss, life-gain, and damage interfaces so callers cannot silently equate
 damage with life loss; damage needs a reviewed host for prevention/triggers.
@@ -36,6 +36,13 @@ class KernelLife:
             raise ValueError("Kernel already holds incompatible life totals")
         if not hasattr(kernel,"life_changes"):
             kernel.life_changes=[]
+        self.replacements=None
+
+    def install_reviewed_replacements(self,catalog):
+        """Attach a source-pinned replacement policy, not a second life state."""
+        from .reviewed_life_replacements import ReviewedLifeReplacements
+        self.replacements=ReviewedLifeReplacements(self.kernel,catalog)
+
 
     def total(self,seat):
         if type(seat) is not int or seat not in self.kernel.life_totals:
@@ -46,6 +53,8 @@ class KernelLife:
         if not isinstance(change,LifeChange):
             raise TypeError("Expected typed reviewed life change")
         before=self.total(change.seat)
+        if self.replacements is not None:
+            change=self.replacements.transform(change)
         self.kernel.life_totals[change.seat]=(
             before+change.amount if change.kind=="gain" else before-change.amount)
         self.kernel.life_changes.append(change)
