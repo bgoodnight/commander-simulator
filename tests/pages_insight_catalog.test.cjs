@@ -77,7 +77,7 @@ test('held hand residence is separate from source-paid cost preview and discarde
  assert.equal(a.metrics.find(x=>x.id==='held').examples.length,6);
  assert.match(m.views[3].formula,/Games seen \+ 10/);
  assert.equal(a.metrics.find(x=>x.id==='payable').examples[0].focusTopic,'hand');
- assert.match(a.metrics.find(x=>x.id==='payable').explanation,/not evidence of legal timing/i);
+ assert.match(a.metrics.find(x=>x.id==='payable').explanation,/does not establish legal timing/i);
  const without=hands().map(r=>({...r,events:r.events.map(t=>({
   ...t,events:t.events.filter(e=>e.type!=='source_paid_candidate')}))}));
  assert.deepEqual(Catalog.heldInHand(without,lookup).views.map(v=>v.id),
@@ -132,6 +132,23 @@ test('recorded draws get exact seed/turn examples, distinct from retained snapsh
  assert.equal(c.metrics.find(x=>x.id==='played').value,'1');
  assert.equal(c.score,4/3);
  assert.equal(c.medianRounds,2);
+});
+test('mean graph separates equal medians while featured number remains median',()=>{
+ const countsA=[1,2,3,4],countsB=[1,2,3,5];
+ const runs=countsA.map((_,i)=>run(i,Array.from({length:5},(_,t)=>({
+   hand:[...(t<countsA[i]?['Mana Geyser']:[]),
+     ...(t<countsB[i]?['Bad Spell']:[])]
+ })),['Mana Geyser','Bad Spell']));
+ const m=Catalog.heldInHand(runs,lookup);
+ assert.ok(m);
+ assert.equal(m.contenders[0].name,'Bad Spell');
+ assert.equal(m.contenders[0].score,2.75);
+ assert.equal(m.contenders[1].score,2.5);
+ assert.deepEqual(m.contenders.map(c=>c.medianRounds),[2.5,2.5]);
+ assert.equal(m.value,'2.5 turns');
+ assert.equal(m.views[0].id,'mean');
+ assert.equal(m.contenders[0].metrics.find(x=>x.id==='average').value,'2.75');
+ assert.equal(m.contenders[1].metrics.find(x=>x.id==='average').value,'2.50');
 });
 test('unused only means no observed play within bounded horizon',()=>{
  const runs=Array.from({length:4},(_,i)=>run(i,[
