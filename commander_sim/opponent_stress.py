@@ -166,13 +166,25 @@ class BoundedOpponentPressure:
         candidates=[o for o in valid if o.controller==target_seat]
         # Target a consequential engine or commander over an expendable token.
         def score(o):
+            # Generic permanent threat: commander / board influence /
+            # printed size. No favored named cards or lowest-ID tie bias.
+            from .reviewed_death_effects import DEATH_RULES
+            from .composed_abilities import ABILITIES
+            from .reviewed_attachments import reviewed_attachment
             raw=self.catalog.get(o.card.name,{})
-            return (int("commander" in o.card.supertypes)*10
-                    + (4 if o.card.name in {
-                        "Pestilence","Ashnod's Altar","Pitiless Plunderer",
-                        "Bastion of Remembrance"} else 0)
-                    + min(5,int(raw.get("cmc") or 0)) - (4 if o.token else 0))
-        target=max(candidates,key=lambda o:(score(o),-o.object_id))
+            engine_effect=(
+                bool(DEATH_RULES.get(o.card.name))
+                or bool(ABILITIES.get(o.card.name))
+                or reviewed_attachment(o.card.name,raw) is not None)
+            return (3.5*int("commander" in o.card.supertypes)
+                    + 2.5*int(engine_effect)
+                    + 0.5*max(0,o.power)
+                    + 0.35*max(0,o.toughness)
+                    + min(3,max(0,float(raw.get("cmc") or 0)))*0.5
+                    - 1.5*int(o.token))
+        weights=[max(0.25,1+max(-0.5,score(obj)))**1.8
+                 for obj in candidates]
+        target=self.rng.choices(candidates,weights=weights,k=1)[0]
         from .reviewed_death_effects import capture_battlefield
         # One bounded instant response window before a creature destroy;
         # only the defending player can cast their own reviewed response.
