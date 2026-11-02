@@ -55,9 +55,10 @@ exercise mana and life payments, simultaneous damage/SBA, Treasure death
 triggers and Mortarion token output, then sacrifice a created Astartes using
 Ashnod's Altar and verify the resulting Treasures and floating mana.
 
-The **bounded early-game pilot does not yet choose activations or Mortarion X
-values**. These profiles are callable engine capabilities, not assertions
-of a fully autonomous Mortarion simulation. Existing published 100-seed
+The bounded early-game turn driver now invokes reviewed composed end-step
+triggers with no optional X choice. The **pilot does not yet choose Pestilence
+activations or Mortarion X values**. These profiles are executable engine
+capabilities, not assertions of a fully autonomous Mortarion simulation. Existing published 100-seed
 simulations should not be reinterpreted as including these new interactions.
 
 ## Explicit remaining limitations
