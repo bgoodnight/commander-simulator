@@ -178,6 +178,12 @@ class BoundedOpponentPressure:
         # only the defending player can cast their own reviewed response.
         if removal_kind=="destroy" and callable(self.before_removal):
             self.before_removal(target.object_id,seat,turn,removal_kind)
+        if (removal_kind=="destroy" and target.object_id in kernel.objects
+                and "indestructible" in kernel.get(target.object_id).keywords):
+            self.events.append(OpponentEvent(
+                turn,seat,role,"abstract_destroy_prevented",
+                target.object_id,0,target_seat))
+            return True
         before=capture_battlefield(kernel)
         moves=len(kernel.moves)
         self.zones.move(target.object_id,
@@ -256,6 +262,15 @@ class BoundedOpponentPressure:
                 self.events.append(OpponentEvent(
                     turn,seat,role,"abstract_unblocked_damage",
                     attacker.object_id,attacker.power,defender))
+                if ("decayed" in attacker.keywords
+                        and attacker.object_id in kernel.objects):
+                    snap=capture_battlefield(kernel)
+                    mid=len(kernel.moves)
+                    self.zones.move(attacker.object_id,"graveyard","sacrifice",
+                                    commander_choice=True)
+                    if self.death_engine:
+                        self.death_engine.resolve_deaths(
+                            snap,move_index=mid,turn=turn)
                 continue
             for block in selected:
                 used.add(block.object_id)
