@@ -102,6 +102,36 @@ class ComposedAbilityTests(unittest.TestCase):
         self.assertIsNotNone(self.composed.activate(beast,turn=2))
         self.assertEqual(self.life.total(0),38)
 
+    def test_cross_card_damage_tokens_altar_plunderer_chain(self):
+        from commander_sim.reviewed_sacrifice_actions import activate_reviewed_sacrifice
+        mortarion=self.add("Mortarion, Daemon Primarch",toughness=7)
+        pest=self.add("Pestilence",types=("enchantment",))
+        altar=self.add("Ashnod's Altar",types=("artifact",))
+        self.add("Pitiless Plunderer",toughness=4)
+        self.add("Fodder",toughness=1)
+        self.swamps(4)
+        start=len(self.kernel.life_changes)
+        activated=self.composed.activate(pest,turn=1)
+        self.assertEqual(activated.deaths,1)
+        first_treasures=[o for o in self.kernel.on_battlefield()
+                         if o.card.name=="Treasure"]
+        self.assertEqual(len(first_treasures),1)
+        phase=self.composed.end_step(active_seat=0,turn=1,
+                                    life_start_index=start,
+                                    x_choices={mortarion:1})
+        astartes=phase[0].created_ids[0]
+        self.assertEqual(self.kernel.get(astartes).card.name,"Astartes Warrior")
+        sacrificed=activate_reviewed_sacrifice(
+            self.zones,self.life,altar,astartes,self.catalog,
+            mana_service=self.mana,turn=1,death_engine=self.death)
+        self.assertEqual(sacrificed.mana_added,("C","C"))
+        self.assertEqual(sacrificed.death_trigger_count,1)
+        treasures=[o for o in self.kernel.on_battlefield()
+                   if o.card.name=="Treasure"]
+        self.assertEqual(len(treasures),2)
+        self.assertEqual(self.mana.floating()[5],2)
+        self.assertTrue(self.zones.assert_consistent())
+
     def test_unreviewed_source_identity_fails_closed(self):
         fake=self.add("Pestilence",types=("enchantment",),
                       oracle="not-reviewed")
