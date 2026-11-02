@@ -229,7 +229,6 @@ class StaticPagesTests(unittest.TestCase):
         self.assertIsNone(card_image({"id":"not-a-real-id"}))
 
     def test_optional_long_game_data_needs_exact_deck_revision(self):
-        from tests.test_game_outcome_publishing import example_batch
         from tools.publish_game_outcomes import publish
         source=Path(self.temp.name)/"outcome-data"
         source.mkdir()
@@ -237,7 +236,26 @@ class StaticPagesTests(unittest.TestCase):
         pinned=json.loads((Path(__file__).resolve().parents[1]/
             "web/pages/data/bounded-batches.json").read_text())
         sha=pinned["decks"][key]["deck_sha256"]
-        payload=example_batch(revision=sha)
+        counts={"win":0,"loss":0,"draw":0,"unresolved":1,"not_evaluated":0}
+        life0={"round":0,"life_totals":dict(zip("0123",[40]*4)),
+               "alive_seats":[0,1,2,3],"life_changes":[],"new_eliminations":[]}
+        life1={"round":1,"life_totals":dict(zip("0123",[39,40,40,40])),
+               "alive_seats":[0,1,2,3],"life_changes":[],"new_eliminations":[]}
+        payload={
+            "format":"commander-modeled-outcomes-v1","schema_version":1,
+            "deck_key":key,"deck_sha256":sha,"scenario":"mixed",
+            "requested_rounds":1,"seed_count":1,
+            "pilot_style":"adaptive","provisional_mode":"safe",
+            "opponent_fidelity":"abstract_opponent_pressure_not_card_exact",
+            "outcomes_are_competitive_win_rates":False,
+            "summary":{"total_games":1,"outcome_counts":counts},
+            "runs":[{
+                "seed":7,"completed_rounds":1,
+                "outcome":{"status":"unresolved","complete":False,
+                           "requested_rounds":1,"completed_rounds":1},
+                "life_history":[life0,life1]
+            }], "example_replays":[]
+        }
         (source/"incoming.json").write_text(json.dumps(payload))
         staged=Path(self.temp.name)/"outcome-library"
         publish(source, staged, engine_commit="a"*40, deck_hashes={key:sha})
