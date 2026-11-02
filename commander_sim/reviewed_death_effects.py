@@ -54,9 +54,11 @@ class DeathAction:
         scopes={"own_nontoken_zombie","own_nontoken_creature",
                 "own_zombie","any_zombie","own_creature","other_own_creature",
                 "any_creature","other_any_creature","opponent_creature",
+                "self_creature",
                 "other_own_artifact_or_creature"}
         ops={"zombie","treasure","draw_lose","drain_gain","drain",
-             "draw","counter_self","lose_controller","gain"}
+             "draw","counter_self","lose_controller","gain",
+             "target_drain_gain","damage_opponents"}
         if (self.scope not in scopes or self.operation not in ops
                 or type(self.quantity) is not int or self.quantity<=0
                 or type(self.once_per_turn) is not bool
@@ -88,6 +90,22 @@ def _rule(oracle,excerpt,slot,scope,op,amount=1,token=None,once=False):
 
 
 DEATH_RULES={
+    "Blood Artist":(
+        _rule("310f141c-7f37-4729-aed6-dd9c09db448d",
+              "Whenever this creature or another creature dies, target player loses 1 life and you gain 1 life.",
+              "any_creature_death","any_creature","target_drain_gain"),),
+    "Solemn Simulacrum":(
+        _rule("00c0543c-2a1f-4425-8283-4062d74a1637",
+              "When this creature dies, you may draw a card.",
+              "self_dies","self_creature","draw"),),
+    "Shambling Ghast":(
+        _rule("e5e6229a-3422-4afd-9a87-86daa2d31d3a",
+              "When this creature dies, choose one —",
+              "self_dies","self_creature","treasure",token=_TREASURE),),
+    "Syr Konrad, the Grim":(
+        _rule("14c3ff84-1e82-4606-a433-869fc52cc382",
+              "Whenever another creature dies, or a creature card is put into a graveyard from anywhere other than the battlefield, or a creature card leaves your graveyard, Syr Konrad deals 1 damage to each opponent.",
+              "other_dies","other_any_creature","damage_opponents"),),
     "Headless Rider":(
         _rule("d4fdacd7-3101-44e2-a880-dde7326137a4",
               "Whenever this creature or another nontoken Zombie you control dies, create a 2/2 black Zombie creature token.",
@@ -148,6 +166,7 @@ def _matches(effect,source,dead):
     zombie=creature and "Zombie" in dead.subtypes
     own=source.controller==dead.controller
     other=source.object_id!=dead.object_id
+    if scope=="self_creature":return source.object_id==dead.object_id and creature
     if scope=="own_nontoken_zombie":return own and zombie and not dead.token
     if scope=="own_nontoken_creature":return own and creature and not dead.token
     if scope=="own_zombie":return own and zombie
@@ -273,6 +292,17 @@ class ReviewedDeathEngine:
                     self.life.gain(controller,count,source.object_id)
                 elif operation.operation=="lose_controller":
                     self.life.lose(dead.controller,count,source.object_id)
+                elif operation.operation=="target_drain_gain":
+                    # Blood Artist targets one player, not the whole table.
+                    # This bounded default targets the next living opponent;
+                    # the reusable executor can later receive pilot choices.
+                    target = (controller + 1) % len(self.life.kernel.life_totals)
+                    self.life.lose(target,count,source.object_id)
+                    self.life.gain(controller,count,source.object_id)
+                elif operation.operation=="damage_opponents":
+                    for opponent in sorted(self.life.kernel.life_totals):
+                        if opponent != controller:
+                            self.life.damage(opponent,count,source.object_id)
                 elif operation.operation=="counter_self":
                     live=self.zones.kernel.objects.get(source.object_id)
                     if live is not None and live.zone=="battlefield":
