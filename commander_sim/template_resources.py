@@ -98,6 +98,7 @@ class TemplateManaService:
         self.card_metadata = card_metadata
         self.colors = colors
         self.max_states = max_states
+        self.mana_events = []
         if not hasattr(kernel, "mana_pools"):
             kernel.mana_pools = {seat: ZERO for seat in range(4)}
 
@@ -204,6 +205,12 @@ class TemplateManaService:
             if option.life_cost:
                 KernelLife(self.kernel).lose(seat, option.life_cost,
                                             source.object_id)
+                self.mana_events.append({
+                    "kind":"black_life_substitution",
+                    "source_id":source.object_id,
+                    "source_name":source.card.name,
+                    "life_paid":option.life_cost,
+                    "substituted_symbols":option.substituted_symbols})
             return paid
         return None
 
@@ -261,6 +268,13 @@ class TemplateManaService:
                     or action.mode not in self.modes(obj)):
                 raise ValueError("Stale source payment")
         for action in plan.activations:
+            obj = self.kernel.get(action.object_id)
+            self.mana_events.append({
+                "kind":"mana_source_activation",
+                "source_id":action.object_id,
+                "source_name":obj.card.name,
+                "mana_output":list(action.mode.output),
+                "sacrificed":bool(action.mode.sacrifice)})
             if action.mode.sacrifice:
                 if self.zones is None:
                     raise ValueError("Sacrifice mode requires matching physical zones")
