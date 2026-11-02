@@ -503,3 +503,96 @@ def choose_reviewed_removal(zones, seat, life, rule, *, turn=1):
                 continue
         scored.append((threat,-obj.object_id,obj.object_id))
     return (max(scored)[2],0) if scored else None
+
+
+def choose_attachment_use(zones,seat,attachments,mana_service,catalog):
+    """Select one source-paid attachment action from reviewed parameters.
+
+    Scores legal targets by survival, protection of valuable engines and
+    draw-on-death opportunities; does not know particular card-to-card combos.
+    An existing useful attachment is not needlessly moved each turn.
+    """
+    kernel=zones.kernel
+    options=[]
+    own=[o for o in kernel.on_battlefield()
+         if o.controller==seat and "creature" in o.types]
+    for source in sorted(tuple(kernel.on_battlefield()),
+                         key=lambda o:o.object_id):
+        rule=attachments._rule(source)
+        if source.controller!=seat or rule is None or not rule.equip_cost:
+            continue
+        try:
+            if mana_service.plan(seat,rule.equip_cost) is None:
+                continue
+        except ValueError as e:
+            if str(e)!="Bounded mana search exhausted; no action committed":
+                raise
+            continue
+        if source.object_id in attachments.attached:
+            live=kernel.objects.get(attachments.attached[source.object_id])
+            if live is not None and live.zone=="battlefield":
+                continue
+        for target in own:
+            if not attachments._legal_target(source,target,rule):
+                continue
+            if rule.death_draw:
+                if len(zones.ids(seat,"library"))<rule.death_draw:
+                    continue
+                # A fragile token becomes card draw. Otherwise the pilot
+                # will not throw away a valuable engine for two cards.
+                score=(16 if target.token and target.toughness+rule.toughness<=0
+                       else 3 if target.token else -8)
+            elif "hexproof" in rule.keywords:
+                score=(14 if "commander" in target.card.supertypes
+                       else 6 if not target.token else 1)
+            elif "deathtouch" in rule.keywords:
+                score=(9 if target.power>=2 and "deathtouch" not in target.keywords
+                       else 1)
+            else:
+                score=2
+            if score>0:
+                options.append((score,-target.object_id,
+                                source.object_id,target.object_id))
+    if not options:
+        return None
+    choice=max(options)
+    return choice[2],choice[3]
+
+
+def choose_temporary_reanimation(zones,seat,attachments,mana_service,catalog):
+    """Conservatively activate reviewed tap-and-reanimate effects.
+
+    Prefer creatures with verified ETB utility or valuable death triggers.
+    No graveyard action is created when the physical target is unavailable.
+    """
+    kernel=zones.kernel
+    available=[]
+    for source in kernel.on_battlefield():
+        rule=attachments._rule(source)
+        if (source.controller!=seat or source.tapped or rule is None
+                or not rule.recursion_cost):
+            continue
+        try:
+            if mana_service.plan(seat,rule.recursion_cost) is None:
+                continue
+        except ValueError as error:
+            if str(error)!="Bounded mana search exhausted; no action committed":
+                raise
+            continue
+        for oid in zones.ids(seat,"graveyard"):
+            target=kernel.get(oid)
+            if "creature" not in target.types:
+                continue
+            raw=catalog.get(target.card.name,{})
+            if raw.get("oracle_id")!=target.card.card_id:
+                continue
+            score=(target.power+target.toughness
+                   +4 if target.card.name in
+                   {"Massacre Wurm","Solemn Simulacrum",
+                    "Marionette Apprentice","Bastion of Remembrance"} else
+                   target.power+target.toughness)
+            available.append((score,-oid,source.object_id,oid))
+    if not available:
+        return None
+    best=max(available)
+    return best[2],best[3]
