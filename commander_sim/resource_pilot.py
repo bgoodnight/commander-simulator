@@ -207,11 +207,65 @@ def choose_composed_activation(zones, seat, life, mana_service, catalog, *,
             continue
         for rule in ABILITIES.get(source.card.name,()):
             if (rule.event=="activate" and not rule.payment.x_generic
+                    and not rule.payment.x_black_only
                     and rule.oracle_excerpt in raw.get("oracle_text","")
                     and any(step.operation=="damage_all" for step in rule.steps)
                     and mana_service.plan(seat,rule.payment.mana) is not None):
                 return source.object_id
     return None
+
+
+def choose_composed_x_activation(zones,seat,life,mana_service,catalog):
+    """General bounded policy for black-only X area-damage activations.
+
+    Declines any X that trades too many own creatures or threatens lethal
+    self-damage. The engine, not this pilot, validates black-only payment and
+    source identity. Works for future X-black damage cards using the same
+    declarative ability parameters.
+    """
+    from .composed_abilities import ABILITIES
+    kernel=zones.kernel
+    if life.total(seat)<=8:
+        return None
+    enemies=[o for o in kernel.on_battlefield()
+             if o.controller!=seat and "creature" in o.types]
+    own=[o for o in kernel.on_battlefield()
+         if o.controller==seat and "creature" in o.types]
+    if len(enemies)<2:
+        return None
+    candidates=[]
+    for source in sorted(own,key=lambda o:o.object_id):
+        raw=catalog.get(source.card.name,{})
+        if raw.get("oracle_id")!=source.card.card_id:
+            continue
+        for rule in ABILITIES.get(source.card.name,()):
+            if not (rule.event=="activate" and rule.payment.x_black_only
+                    and rule.oracle_excerpt in raw.get("oracle_text","")
+                    and any(step.operation=="damage_all"
+                            and step.quantity=="x" for step in rule.steps)):
+                continue
+            for x in range(1,min(5,life.total(seat)-8)+1):
+                try:
+                    payment=mana_service.plan(seat,"{B}"*x)
+                except ValueError as err:
+                    if str(err)!="Bounded mana search exhausted; no action committed":
+                        raise
+                    break
+                if payment is None:
+                    continue
+                enemy_kills=sum(o.toughness-o.damage_marked<=x
+                     and "indestructible" not in o.keywords for o in enemies)
+                self_kills=sum(o.toughness-o.damage_marked<=x
+                     and "indestructible" not in o.keywords for o in own)
+                if enemy_kills>=2 and enemy_kills>self_kills:
+                    # Avoid paying more life/mana than necessary for an
+                    # equivalent sweep. Prefer a stronger net board swing.
+                    candidates.append((enemy_kills-self_kills,-x,
+                                       -source.object_id,source.object_id,x))
+    if not candidates:
+        return None
+    best=max(candidates)
+    return best[3],best[4]
 
 
 def choose_variable_end_step_payments(zones, seat, life, mana_service,
