@@ -328,4 +328,7 @@ class ReviewedDeathEngine:
         attachments=getattr(self,"attachments",None)
         if attachments is not None and changes:
             attachments.observe_deaths(before,changes,turn=turn)
+        zone_spells=getattr(self,"zone_spells",None)
+        if zone_spells is not None and changes:
+            zone_spells.observe_deaths(before,changes,turn=turn)
         return tuple(resolved)
