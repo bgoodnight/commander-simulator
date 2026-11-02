@@ -1,0 +1,59 @@
+name: Generic provisional import and partial simulation regression
+on:
+  push:
+    branches: [main]
+    paths:
+      - ".github/workflows/provisional-import-audit.yml"
+      - "commander_sim/provisional_import.py"
+      - "commander_sim/provisional_actions.py"
+      - "commander_sim/early_game_runner.py"
+      - "commander_sim/template_resources.py"
+      - "tests/test_provisional_import.py"
+      - "tools/audit_provisional_import.py"
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  source-pinned-partial:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      - name: Validate provisional grammar and real physical effects
+        run: python -m unittest tests.test_provisional_import -v
+      - name: Audit all deck imports, no physical effects inferred from names
+        run: |
+          python tools/audit_provisional_import.py --all --output /tmp/provisional-import-audit.json >/tmp/report.json
+          python - <<'PY'
+          import json
+          data=json.load(open("/tmp/report.json"))
+          for deck,report in data.items():
+              print("PROVISIONAL_IMPORT",json.dumps({
+                  "deck":deck,"total":report["total_cards"],
+                  "status":report["counts"],
+                  "kinds":report["provisional_kinds"]},
+                  sort_keys=True))
+          PY
+      - name: Physical turn smoke, explicit opt-in
+        run: |
+          python -m commander_sim.early_game_runner --deck wretched_ranks --seed 2 --turns 3 --provisional-mode safe >/tmp/physical-provisional.json
+          python - <<'PY'
+          import json
+          r=json.load(open("/tmp/physical-provisional.json"))
+          print("PROVISIONAL_TURN_SMOKE",json.dumps({
+              "deck":r["deck_key"],
+              "mode":r["provisional_mode"],
+              "turns":r["completed_turns"],
+              "events":sum(len(t["events"]) for t in r["events"]),
+              "candidate_profiles":sum(
+                  p["status"]=="provisional" for p in r["provisional_import_report"])
+          },sort_keys=True))
+          PY
+      - uses: actions/upload-artifact@v4
+        with:
+          name: generic-provisional-import-example
+          path: /tmp/provisional-import-audit.json
+          retention-days: 14
