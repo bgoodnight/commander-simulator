@@ -75,14 +75,19 @@ test('insight renderer has art-backed header, selectable bars, cycleable metric 
   const previous=global.document;
   global.document={createElement:tag=>new Node(tag)};
   try{
-    const opened=[];
+    const rendered=[];
     const model=Explorer.creaturePlays(fixture(),card);
-    const panel=Explorer.render(model,{onOpenEvidence:(e,c,m)=>opened.push([e.seed,e.turn,e.eventIndex,c.name,m.id])});
+    const panel=Explorer.render(model,{onRenderEvidence:(root,e,c,m)=>{
+      rendered.push([e.seed,e.turn,e.eventIndex,c.name,m.id]);
+      root.appendChild(new Node('span'));
+    }});
     const walk=node=>[node,...node.children.flatMap(walk)];
     let nodes=walk(panel);
     assert.equal(panel.tag,'details');
     assert.match(panel.className,/board-report insight-report/);
     assert.ok(nodes.some(n=>n.className.includes('board-summary')));
+    assert.ok(nodes.some(n=>n.className==='insight-head-title'&&n.textContent==='Most common creature'));
+    assert.ok(nodes.some(n=>n.className==='insight-head-subtitle'));
     assert.equal(nodes.filter(n=>n.tag==='img').length,2); // banner and selected physical card
     const bar=nodes.find(n=>n.className.startsWith('insight-bar')&&n.attributes['aria-pressed']==='false');
     assert.ok(bar);bar.onclick();
@@ -93,25 +98,36 @@ test('insight renderer has art-backed header, selectable bars, cycleable metric 
     metric.onclick();
     nodes=walk(panel);
     assert.ok(nodes.some(n=>n.textContent==='Seed 0 · Turn 2'));
+    assert.ok(nodes.some(n=>n.className==='insight-inline-replay'));
+    assert.deepEqual(rendered,[[0,2,1,'Yahenni','played']]);
     // The node is rebuilt after a click, so locate the current control again.
     nodes.find(n=>n.tag==='button'&&n.className.startsWith('insight-metric')).onclick();
     nodes=walk(panel);
     assert.ok(nodes.some(n=>n.textContent==='Seed 1 · Turn 4'));
-    nodes.find(n=>n.textContent==='View full turn ↗').onclick();
-    assert.deepEqual(opened,[[1,4,1,'Yahenni','played']]);
+    assert.deepEqual(rendered,[
+      [0,2,1,'Yahenni','played'],[1,4,1,'Yahenni','played']
+    ]);
+    nodes.find(n=>n.textContent==='Hide full turn').onclick();
+    nodes=walk(panel);
+    assert.equal(nodes.some(n=>n.className==='insight-inline-replay'),false);
   }finally{global.document=previous}
 });
 
-test('simulation shell retains native card art overlay and bottom seed turn viewer',()=>{
+test('simulation shell exposes compact stats and key insights with inline seed turn viewer',()=>{
   const html=fs.readFileSync('web/pages/index.html','utf8');
   const css=fs.readFileSync('web/pages/style.css','utf8');
   const app=fs.readFileSync('web/pages/app.js','utf8');
   assert.match(html,/insight_explorer\.js/);
-  assert.match(html,/id="insight-turn-viewer"/);
-  assert.ok(html.indexOf('id="insight-turn-viewer"')>html.indexOf('id="archive-observation-details"'));
-  assert.ok(html.indexOf('id="opponent-replay-panel"')>html.indexOf('id="insight-turn-viewer"'));
+  assert.match(html,/id="simulation-snapshot"/);
+  assert.match(html,/id="key-insights-panel"/);
+  assert.match(html,/id="key-insights-grid"/);
+  assert.ok(html.indexOf('id="key-insights-panel"')<html.indexOf('id="development-panel"'));
+  assert.doesNotMatch(html,/id="insight-turn-viewer"/);
+  assert.match(html,/id="opponent-replay-panel"/);
   assert.match(css,/\.insight-report \.board-summary-copy/);
-  assert.match(app,/creatureInsightReport\(batch\.runs\)/);
+  assert.match(app,/creatureInsightReport\(runs\)/);
+  assert.match(app,/renderSimulationSnapshot\(runs\)/);
+  assert.match(app,/onRenderEvidence:openCreatureInsightEvidence/);
   assert.match(app,/CommanderReplay\.renderBoundedEvidence/);
   assert.equal(typeof Replay.renderBoundedEvidence,'function');
 });
