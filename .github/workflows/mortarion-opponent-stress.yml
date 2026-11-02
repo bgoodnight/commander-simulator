@@ -1,5 +1,5 @@
 name: Mortarion physical opponent stress and narrative audit
-# Recheck with shared chosen-player damage subscription and Stuffy Doll.
+# Repeat after opponent untap correction and physical Stuffy Doll effects.
 on:
   workflow_dispatch:
   push:
