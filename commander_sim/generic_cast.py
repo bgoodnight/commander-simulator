@@ -26,7 +26,8 @@ class CommittedCreatureCast:
 
 
 def _cast_reviewed_card(zones, seat, object_id, review, commander_colors, *,
-                        mana_service=None, card_type="creature"):
+                        mana_service=None, card_type="creature",
+                        excluded_source_ids=()):
     """Commit a reviewed creature or artifact's cost and cast into SAME zones.
 
     For legacy basic-only calls there is no floating mana. With the optional
@@ -71,11 +72,15 @@ def _cast_reviewed_card(zones, seat, object_id, review, commander_colors, *,
         kernel._dirty()
         old_pool = None
     else:
-        previous = mana_service.plan_spell(seat, review.mana_cost, obj)
+        previous = mana_service.plan_spell(
+            seat, review.mana_cost, obj,
+            excluded_source_ids=excluded_source_ids)
         if previous is None:
             return None
         old_pool = mana_service.floating(seat)
-        paid = mana_service.pay_spell(seat, review.mana_cost, obj)
+        paid = mana_service.pay_spell(
+            seat, review.mana_cost, obj,
+            excluded_source_ids=excluded_source_ids)
         source_ids = paid.source_ids
     try:
         ticket = zones.cast(seat, object_id)
@@ -104,7 +109,8 @@ def cast_reviewed_permanent(zones, seat, object_id, review, commander_colors, *,
 
 
 def cast_reviewed_spell(zones, seat, object_id, review, commander_colors, *,
-                        mana_service=None, spell_type="sorcery"):
+                        mana_service=None, spell_type="sorcery",
+                        excluded_source_ids=()):
     """Pay, tap real sources and put one reviewed instant/sorcery on stack.
 
     Caller must still provide a separately reviewed effect when it resolves.
@@ -114,7 +120,8 @@ def cast_reviewed_spell(zones, seat, object_id, review, commander_colors, *,
         raise ValueError("Expected instant or sorcery")
     return _cast_reviewed_card(
         zones, seat, object_id, review, commander_colors,
-        mana_service=mana_service, card_type=spell_type)
+        mana_service=mana_service, card_type=spell_type,
+        excluded_source_ids=excluded_source_ids)
 
 
 def cast_reviewed_creature(zones, seat, object_id, review, commander_colors, *,

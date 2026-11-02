@@ -93,6 +93,43 @@ class ReviewedCommonSpellsTests(unittest.TestCase):
         self.assertEqual(len(result.drawn_ids),2)
         self.assertTrue(self.zones.assert_consistent())
 
+    def test_one_treasure_cannot_pay_mana_and_additional_sacrifice_cost(self):
+        from commander_sim.resource_pilot import plan_common_spell
+        self.add("Swamp",types=("land",))
+        treasure=self.zones.add(self.C(
+            "reviewed-token:Treasure","Treasure",frozenset({"artifact"}),
+            subtypes=frozenset({"Treasure"}),coverage="approx"),
+            0,"battlefield",token=True)
+        self.fill(4)
+        source_id=self.add("Deadly Dispute",zone="hand")
+        source=self.kernel.get(source_id)
+        recipe=reviewed_common_spell("Deadly Dispute",self.catalog["Deadly Dispute"])
+        # Without reserving the physical victim, Treasure would produce the
+        # missing generic mana, then be incorrectly sacrificed a second time.
+        self.assertIsNotNone(self.mana.plan_spell(0,"{1}{B}",source))
+        self.assertIsNone(self.mana.plan_spell(
+            0,"{1}{B}",source,excluded_source_ids=(treasure,)))
+        self.assertIsNone(plan_common_spell(
+            self.zones,0,source,recipe,self.catalog,self.mana,self.life))
+        self.assertIsNone(cast_common_spell(
+            self.zones,self.life,0,source_id,self.catalog,frozenset({"B"}),
+            self.mana,sacrifice_ids=(treasure,),death_engine=self.death))
+        self.assertIn(treasure,self.kernel.objects)
+        self.assertIn(source_id,self.zones.ids(0,"hand"))
+        self.assertTrue(self.zones.assert_consistent())
+        # Adding a second land funds the spell independently of the victim.
+        self.add("Swamp",types=("land",))
+        self.assertIsNotNone(plan_common_spell(
+            self.zones,0,source,recipe,self.catalog,self.mana,self.life))
+        paid=cast_common_spell(
+            self.zones,self.life,0,source_id,self.catalog,frozenset({"B"}),
+            self.mana,sacrifice_ids=(treasure,),death_engine=self.death)
+        self.assertIsNotNone(paid)
+        self.assertNotIn(treasure,paid.paid_source_ids)
+        self.assertEqual(paid.sacrificed_ids,(treasure,))
+        self.assertEqual(len(paid.drawn_ids),2)
+        self.assertTrue(self.zones.assert_consistent())
+
     def test_plumb_optional_sacrifice_repeats_draw_and_life(self):
         self.add("Swamp",types=("land",))
         self.add("Swamp",types=("land",))
