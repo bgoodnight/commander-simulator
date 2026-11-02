@@ -692,7 +692,8 @@ def run_bounded_early_game(deck_key, *, seed=0, turns=6, mulligan="one-free", pr
             })
             resolved_id = zones.resolve(committed.ticket)
             entered_on_turn[resolved_id]=turn
-            if kind=="enchantment" and attachment_rule is not None and attachment_rule.scope=="opponent_aura":
+            selected_attachment=reviewed_attachment(name,raw_by_name[name])
+            if kind=="enchantment" and selected_attachment is not None and selected_attachment.scope=="opponent_aura":
                 attached=attachment_engine.bind(
                     resolved_id,target,sorcery_window=True,already_paid=True)
                 if attached is None:
