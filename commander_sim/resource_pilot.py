@@ -625,11 +625,18 @@ def choose_temporary_reanimation(zones,seat,attachments,mana_service,catalog):
             raw=catalog.get(target.card.name,{})
             if raw.get("oracle_id")!=target.card.card_id:
                 continue
-            score=(target.power+target.toughness
-                   +4 if target.card.name in
-                   {"Massacre Wurm","Solemn Simulacrum",
-                    "Marionette Apprentice","Bastion of Remembrance"} else
-                   target.power+target.toughness)
+            # This bounded reanimation path gives haste and temporary board
+            # presence, but does NOT currently resolve ordinary ETB triggers.
+            # Score only the supported combat/body properties; do not award
+            # hypothetical value to names or unexecuted printed text.
+            if target.power<=0:
+                continue
+            score=(2*max(0,target.power)+max(0,target.toughness)//2
+                   +5*int("lifelink" in target.keywords)
+                   +4*int("flying" in target.keywords)
+                   +3*int("menace" in target.keywords)
+                   +3*int("trample" in target.keywords)
+                   +2*int("deathtouch" in target.keywords))
             available.append((score,-oid,source.object_id,oid))
     if not available:
         return None
