@@ -16,6 +16,30 @@ from .mana_costs import UnsupportedManaCost, parse_fixed_mana_cost
 _WORDS = {"a":1, "one":1, "two":2, "three":3, "four":4,
           "five":5, "six":6, "seven":7}
 _MANA = re.compile(r"^\{T\}: Add ((?:\{[WUBRGC]\}){1,5})\.$")
+_MANA_CHOICE = re.compile(r"^\{T\}: Add \{([WUBRGC])\} or \{([WUBRGC])\}\.$")
+_MANA_FUNDED = re.compile(r"^\{([1-5])\}, \{T\}: Add ((?:\{[WUBRGC]\}){1,5})\.$")
+_MANA_ANY_COLOR = "{T}: Add one mana of any color."
+_MANA_COMMANDER = "{T}: Add one mana of any color in your commander's color identity."
+
+
+def _parse_mana_line(line):
+    """Recognize only self-contained printed activations, never extra clauses.
+
+    Commander-identity output is deferred to the actual deck's identity;
+    an identity-dependent profile alone cannot grant unrestricted colors.
+    """
+    if match := _MANA.fullmatch(line):
+        return ((ManaMode(tuple(re.findall(r"\{([WUBRGC])\}", match.group(1)))),), False)
+    if match := _MANA_CHOICE.fullmatch(line):
+        return (tuple(ManaMode((c,)) for c in dict.fromkeys(match.groups())), False)
+    if match := _MANA_FUNDED.fullmatch(line):
+        return ((ManaMode(tuple(re.findall(r"\{([WUBRGC])\}", match.group(2))),
+                          activation_generic=int(match.group(1))),), False)
+    if line == _MANA_ANY_COLOR:
+        return (tuple(ManaMode((c,)) for c in "WUBRG"), False)
+    if line == _MANA_COMMANDER:
+        return ((), True)
+    return None
 _RESTRICT = re.compile(
     r"\b(as an additional cost|additional cost to cast|"
     r"this spell costs|you (?:can't|cannot|may not) cast|"
@@ -53,6 +77,7 @@ class ProvisionalProfile:
     amount: int = 0
     life_amount: int = 0
     mana_modes: tuple[ManaMode,...] = ()
+    commander_identity_mana: bool = False
     enter_tapped: bool = False
     token_power: int = 0
     token_toughness: int = 0
@@ -69,6 +94,9 @@ class ProvisionalProfile:
                 or self.amount<0 or self.life_amount<0
                 or self.token_power<0 or self.token_toughness<0
                 or self.token_color not in {"","W","U","B","R","G"}
+                or type(self.commander_identity_mana) is not bool
+                or (self.commander_identity_mana
+                    and self.kind not in {"land_mana","artifact_mana"})
                 or type(self.token_tapped) is not bool):
             raise ValueError("Invalid provisional source descriptor")
 
@@ -161,21 +189,29 @@ def provisional_profile(raw):
 
     if types==frozenset({"land"}) or "artifact" in types:
         mana_modes=[]
+        commander_identity_mana=False
+        ignored=[]
         for line in remainder.splitlines():
-            match=_MANA.fullmatch(line.strip())
-            if match:
-                pips=tuple(re.findall(r"\{([WUBRGC])\}",match.group(1)))
-                mana_modes.append(ManaMode(pips))
-        if mana_modes and len(mana_modes)<=3:
+            parsed=_parse_mana_line(line.strip())
+            if parsed is None:
+                ignored.append(line)
+                continue
+            modes,uses_identity=parsed
+            mana_modes.extend(modes)
+            commander_identity_mana |= uses_identity
+        # This is an ability-level fallback; other optional printed abilities
+        # remain omissions. Mandatory entry/casting restrictions have already
+        # failed closed above.
+        if (mana_modes or commander_identity_mana) and len(mana_modes)<=8:
             kind="land_mana" if "land" in types else "artifact_mana"
-            ignored=tuple(line for line in remainder.splitlines()
-                          if not _MANA.fullmatch(line.strip()))
             return ProvisionalProfile(raw["oracle_id"],raw["oracle_text"],
-                    mana_cost,kind,mana_modes=tuple(mana_modes),
+                    mana_cost,kind,
+                    mana_modes=tuple(dict.fromkeys(mana_modes)),
+                    commander_identity_mana=commander_identity_mana,
                     enter_tapped=entry_tapped,
                     omissions=("Additional printed abilities not executed",)
-                              +ignored if ignored else
-                              ("Only fixed tap-for-mana modes implemented",))
+                              +tuple(ignored) if ignored else
+                              ("Only source-paid tap-for-mana modes implemented",))
     # Generic creature enters as a real physical body. Printed keyword
     # characteristics are read from pinned card faces by the loader.
     if "creature" in types:
