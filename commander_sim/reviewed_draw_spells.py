@@ -43,7 +43,7 @@ class DrawSpellReview:
 DRAW_SPELLS = {
     "Meeting of Minds": DrawSpellReview(
         "3b91dc3e-46ef-4a68-829f-ef7d79598cf7",
-        "Convoke (Your creatures can help cast this spell. Each creature you tap while casting this spell pays for {1} or one mana of that creature's color.)\\nDraw two cards.".replace("\\\\n","\\n"),
+        "Convoke (Your creatures can help cast this spell. Each creature you tap while casting this spell pays for {1} or one mana of that creature's color.)\nDraw two cards.",
         "{3}{U}", "instant", 2,
         ("Optional convoke payment not yet used; only normal mana sources",)),
     "Deduce": DrawSpellReview(
