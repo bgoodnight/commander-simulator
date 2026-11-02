@@ -57,11 +57,12 @@ function hands(){
 test('held hand residence is separate from source-paid cost preview and discarded cards',()=>{
  const m=Catalog.heldInHand(hands(),lookup);
  assert.equal(m.id,'held-in-hand');
- assert.deepEqual(m.views.map(x=>x.id),['median','held','adjusted','payable']);
+ assert.deepEqual(m.views.map(x=>x.id),['mean','median','held','adjusted','payable']);
  const a=m.contenders.find(x=>x.name==='Mana Geyser');
  const b=m.contenders.find(x=>x.name==='Bad Spell');
- assert.equal(a.score,6);
+ assert.equal(a.score,3);
  assert.equal(a.viewScores.median,3);
+ assert.equal(a.viewScores.mean,3);
  assert.equal(a.viewScores.held,6);
  assert.equal(a.viewScores.adjusted,0.5);
  assert.equal(a.observedRuns,2);
@@ -69,17 +70,18 @@ test('held hand residence is separate from source-paid cost preview and discarde
  assert.equal(b.viewScores.median,2);
  assert.equal(b.viewScores.payable,0);
  assert.equal(m.title,'Median turns held');
+ assert.equal(m.chartLabel,'Mean end-of-turn hand rounds per observed game');
  assert.match(m.headlineDetail,/3 median rounds held · 2 games seen/);
  assert.equal(a.metrics.find(x=>x.id==='played').value,'0');
  assert.equal(a.metrics.find(x=>x.id==='drawn').value,'0 / 4');
  assert.equal(a.metrics.find(x=>x.id==='held').examples.length,6);
- assert.match(m.views[2].formula,/Games seen \+ 10/);
+ assert.match(m.views[3].formula,/Games seen \+ 10/);
  assert.equal(a.metrics.find(x=>x.id==='payable').examples[0].focusTopic,'hand');
  assert.match(a.metrics.find(x=>x.id==='payable').explanation,/not evidence of legal timing/i);
  const without=hands().map(r=>({...r,events:r.events.map(t=>({
   ...t,events:t.events.filter(e=>e.type!=='source_paid_candidate')}))}));
  assert.deepEqual(Catalog.heldInHand(without,lookup).views.map(v=>v.id),
-  ['median','held','adjusted']);
+  ['mean','median','held','adjusted']);
 });
 test('median includes immediately played opening-hand cards as zero held rounds',()=>{
  const opening=['Mana Geyser','Bad Spell'];
@@ -128,7 +130,8 @@ test('recorded draws get exact seed/turn examples, distinct from retained snapsh
  assert.deepEqual(c.metrics.find(x=>x.id==='drawn').examples
   .map(x=>[x.seed,x.turn,x.eventIndex]),[[0,1,0],[1,1,0],[2,1,0]]);
  assert.equal(c.metrics.find(x=>x.id==='played').value,'1');
- assert.equal(c.score,2);
+ assert.equal(c.score,4/3);
+ assert.equal(c.medianRounds,2);
 });
 test('unused only means no observed play within bounded horizon',()=>{
  const runs=Array.from({length:4},(_,i)=>run(i,[
@@ -203,9 +206,10 @@ test('rank-mode graph toggles payable only when measurements exist',()=>{
   const walk=n=>[n,...n.children.flatMap(walk)];
   let items=walk(ui);
   const modes=items.filter(n=>n.tag==='button'&&n.className.startsWith('insight-ranking-view'));
-  assert.equal(modes.length,4);
-  assert.match(modes[2].textContent,/Adjusted score/);
-  modes[2].onclick();
+  assert.equal(modes.length,5);
+  assert.equal(modes[0].textContent,'Mean rounds');
+  assert.match(modes[3].textContent,/Adjusted score/);
+  modes[3].onclick();
   items=walk(ui);
   assert.ok(items.some(n=>n.className==='insight-ranking-formula'&&
     n.textContent.includes('(Games seen + 10)')));
@@ -217,7 +221,7 @@ test('rank-mode graph toggles payable only when measurements exist',()=>{
   items=walk(ui);
   assert.ok(items.some(n=>n.className==='insight-card-name'&&n.textContent==='Mana Geyser'));
   const metric=items.find(n=>n.tag==='button'&&n.className.startsWith('insight-metric')&&
-   n.children[1]?.textContent==='Cost-payable turns');
+   n.children[1]?.textContent==='Cost-payable previews');
   metric.onclick();
   assert.deepEqual(opened,[[0,2]]);
  }finally{global.document=old}
