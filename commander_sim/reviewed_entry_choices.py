@@ -19,7 +19,7 @@ class EntryChoice:
 
 CHOICES={
     "Stuffy Doll":EntryChoice(
-        "dadddddc-8200-4e84-b0e5-7156b3b0a91f",
+        "499dceab-1890-49c8-b35d-b059a1dc950f",
         "As this creature enters, choose a player.",
         "choose_player")
 }
