@@ -1,5 +1,5 @@
 name: Mortarion physical opponent stress and narrative audit
-# Re-run after physical source-reviewed Plague Drone life replacement.
+# Validate shared attachment rules and seat-neutral opponent selection.
 on:
   workflow_dispatch:
   push:
@@ -19,7 +19,7 @@ jobs:
           python-version: '3.11'
       - name: Test shared opponent pressure on authoritative zones
         run: |
-          python -m unittest tests.test_opponent_stress tests.test_reviewed_removal_spells -v
+          python -m unittest tests.test_opponent_stress tests.test_reviewed_removal_spells tests.test_reviewed_attachments -v
       - name: Execute seeded baseline and four opponent pressure archetypes
         run: |
           python tools/run_mortarion_opponent_stress.py --seeds 24 --turns 10 --output mortarion-opponent-stress.json
