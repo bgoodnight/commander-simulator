@@ -7,7 +7,8 @@ from dataclasses import dataclass
 
 from .generic_cast import ReviewedCreatureCast,cast_reviewed_spell
 from .physical_common_effects import CounterPlacement,put_reviewed_counters
-from .graveyard_recipes import GraveyardRecipe, resolve_graveyard_recipe
+from .graveyard_recipes import (
+    GraveyardRecipe, eligible_graveyard_cards, resolve_graveyard_recipe)
 
 
 @dataclass(frozen=True)
