@@ -106,3 +106,49 @@ test('replay DOM renders four seats, measured pilot only, actual event details a
     assert.deepEqual(opened,['swamp-id']);
   }finally{global.document=previous}
 });
+
+
+test('round summaries calculate net changes without inventing mana, tokens or causes',()=>{
+  const past={round:3,snapshots:{"0":{life:39,lands:3,creatures:4,hand_size:5}},actions:[]};
+  const now={round:4,snapshots:{"0":{life:33,lands:4,creatures:2,hand_size:3}},actions:[
+    {type:'land_play',card_name:'Swamp',actor_seat:0,target_seat:null,fields:{card:'Swamp'}},
+    {type:'reviewed_removal_resolved',card_name:'Infernal Grasp',actor_seat:0,target_seat:1,
+      fields:{type:'reviewed_removal_resolved',destroyed_count:1}},
+    {type:'opponent_abstract_unblocked_damage',card_name:null,actor_seat:2,target_seat:0,
+      fields:{type:'opponent_abstract_unblocked_damage',amount:3}},
+    {type:'opponent_abstract_destroy',card_name:null,actor_seat:1,target_seat:0,
+      fields:{type:'opponent_abstract_destroy',amount:0}}
+  ]};
+  assert.equal(Replay.changeIn(now,past,'life'),-6);
+  assert.equal(Replay.changeIn(now,past,'creatures'),-2);
+  assert.equal(Replay.changeIn(now,past,'lands'),1);
+  assert.equal(Replay.changeIn(now,past,'hand_size'),-2);
+  assert.equal(Replay.changeIn(now,null,'life'),null);
+  assert.deepEqual(Replay.recordedCombat(now),{dealt:0,taken:3,blocks:0,defended:0});
+  assert.deepEqual(Replay.relatedActions(now,'creatures').map(x=>x.type),
+    ['reviewed_removal_resolved','opponent_abstract_destroy']);
+  const spot=Replay.cardSpotlight(now,name=>
+    name==='Infernal Grasp'?{name,oracle_id:'id',art:'https://example.invalid/art.jpg'}:null);
+  assert.equal(spot.card.name,'Infernal Grasp');
+  assert.equal(Replay.cardSpotlight({actions:[now.actions[2]]},()=>null).card,null);
+  assert.equal(Replay.statsForRound(now,2),null);
+});
+
+test('simulation layout preserves prior reports and adds accessible takeaway and turn drilldown structure',()=>{
+  const html=fs.readFileSync('web/pages/index.html','utf8');
+  const css=fs.readFileSync('web/pages/style.css','utf8');
+  const app=fs.readFileSync('web/pages/app.js','utf8');
+  const replay=fs.readFileSync('web/pages/replay.js','utf8');
+  assert.match(html,/id="development-panel"/);
+  assert.match(html,/id="opponent-replay-panel"/);
+  assert.match(html,/id="bounded-results"/);
+  assert.match(html,/id="quiet-output"/);
+  assert.match(html,/id="archive-observation-details"/);
+  assert.match(replay,/replay-takeaway-summary/);
+  assert.match(replay,/replay-turn-summary/);
+  assert.match(replay,/replay-focus-choices/);
+  assert.match(replay,/replay-playbyplay/);
+  assert.match(replay,/replay-table-context/);
+  assert.match(css,/#pane-records\[hidden\]\{display:none!important\}/);
+  assert.match(app,/development\.open=!eligible/);
+});
