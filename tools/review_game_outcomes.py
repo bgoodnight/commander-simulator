@@ -10,6 +10,11 @@ from collections import Counter
 import json
 from pathlib import Path
 from statistics import median
+import sys
+
+ROOT = Path(__file__).resolve().parents[1]
+if str(ROOT) not in sys.path:
+    sys.path.insert(0, str(ROOT))
 
 from commander_sim.deck_lab_api import deck_detail
 from commander_sim.opponent_stress import SCENARIOS
