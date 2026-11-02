@@ -33,6 +33,36 @@ class LandReview:
 # Reef only the harmless C mode is exposed: damaging U/R modes require
 # a separate damage-payment implementation.
 LANDS={
+    "Barren Moor":LandReview(
+        "326ba371-124c-4949-a048-3a0c8962e567",
+        "This land enters tapped.\n{T}: Add {B}.\nCycling {B} ({B}, Discard this card: Draw a card.)",
+        ["B"],
+        entry="tapped",
+        ignored=("Cycling activation omitted",)),
+    "Bojuka Bog":LandReview(
+        "04b7362d-0490-4cb0-b5d7-2a7732f659ce",
+        "This land enters tapped.\nWhen this land enters, exile target player's graveyard.\n{T}: Add {B}.",
+        ["B"],
+        entry="tapped",
+        ignored=("Mandatory graveyard-exile ETB pending",)),
+    "Leechridden Swamp":LandReview(
+        "d83c86c1-126d-49e9-9b13-9e55784c49c5",
+        "({T}: Add {B}.)\nThis land enters tapped.\n{B}, {T}: Each opponent loses 1 life. Activate only if you control two or more black permanents.",
+        ["B"],
+        entry="tapped",
+        ignored=("Conditional opponent drain activation pending",)),
+    "Mortuary Mire":LandReview(
+        "1b3fb20a-e090-4286-9c03-6b71c27c45be",
+        "This land enters tapped.\nWhen this land enters, you may put target creature card from your graveyard on top of your library.\n{T}: Add {B}.",
+        ["B"],
+        entry="tapped",
+        ignored=("Optional graveyard-to-library-top ETB pending",)),
+    "War Room":LandReview(
+        "71c52bf5-2a5d-488e-8b15-7ef290e4b77d",
+        "{T}: Add {C}.\n{3}, {T}, Pay life equal to the number of colors in your commanders' color identity: Draw a card.",
+        ["C"],
+        entry="normal",
+        ignored=("Draw and life-paid tap activation pending",)),
     "Great Hall of the Biblioplex":LandReview(
         "a8c70dab-1e27-4a9c-bd2d-910d5720d02d",
         '{T}: Add {C}.\n{T}, Pay 1 life: Add one mana of any color. Spend this mana only to cast an instant or sorcery spell.\n{5}: If this land isn\'t a creature, it becomes a 2/4 Wizard creature with "Whenever you cast an instant or sorcery spell, this creature gets +1/+0 until end of turn." It\'s still a land.',
