@@ -79,7 +79,10 @@ def plan_common_spell(zones, seat, source, recipe, catalog, mana_service, life):
     from .reviewed_common_spells import spell_payment_cost
     if source.object_id not in zones.ids(seat, "hand"):
         return None
-    if life.total(seat) <= 4:
+    # Low life is a constraint on *life-consuming* effects, not a blanket
+    # prohibition on spells that can gain life (for example, an X drain).
+    # Per-step life loss is validated below before the cast is admitted.
+    if life.total(seat) <= 0:
         return None
     eligible = sorted(
         (o for o in zones.kernel.on_battlefield()
@@ -114,7 +117,10 @@ def plan_common_spell(zones, seat, source, recipe, catalog, mana_service, life):
         return None
     if recipe.variable_x:
         max_x=min(16,assess_resources(zones.kernel,mana_service,seat).available_fixed_mana)
-        for x in range(max_x,2,-1):
+        # Small but positive X is a legal, sometimes game-saving play.
+        # The shared mana planner, not a total-mana estimate, determines
+        # whether the actual colored and generic payment is possible.
+        for x in range(max_x,0,-1):
             cost=spell_payment_cost(recipe,x)
             if mana_service.plan_spell(seat,cost,source) is not None:
                 return cost,x,victims
