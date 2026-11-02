@@ -71,7 +71,7 @@ class StaticPagesTests(unittest.TestCase):
     def test_only_allowlisted_site_data_and_no_workspace_are_exported(self):
         self.run_build()
         permitted={"index.html","summary.html","results.html","editor.html",
-                   "app.js","results_insights.js","brackets.js","replay.js","style.css","game-changers.json","decks.json",
+                   "app.js","results_insights.js","brackets.js","replay.js","insight_explorer.js","style.css","game-changers.json","decks.json",
                    "observations.json","names.json","bounded-batches.json","build-manifest.json",".nojekyll"}
         published=json.loads((self.destination/"bounded-batches.json").read_text())
         permitted.update(f"bounded-runs-{key}.json" for key in published["decks"])
@@ -109,6 +109,8 @@ class StaticPagesTests(unittest.TestCase):
         self.assertIn("bracket-assessment",page)
         self.assertIn("brackets.js",page)
         self.assertIn("replay.js",page)
+        self.assertIn("insight_explorer.js",page)
+        self.assertTrue((self.destination/"insight_explorer.js").is_file())
         self.assertIn("id=\"opponent-replay-panel\"",page)
         self.assertIn("renderReplay",script)
         registry=json.loads((self.destination/"game-changers.json").read_text())
