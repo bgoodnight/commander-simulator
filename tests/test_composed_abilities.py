@@ -92,9 +92,9 @@ class ComposedAbilityTests(unittest.TestCase):
         result=self.composed.end_step(active_seat=0,turn=1,
                                       life_start_index=0)
         self.assertEqual(len(result),1)
-        self.assertEqual(self.kernel.get(result[0].source_id).zone,"graveyard"
-                         if result[0].source_id in self.kernel.objects else "graveyard",
-                         "graveyard")
+        self.assertTrue(any(
+            self.kernel.get(oid).card.name=="Pestilence"
+            for oid in self.zones.ids(0,"graveyard")))
         beast=self.add("Thrashing Wumpus",toughness=3)
         self.mana.clear()
         self.assertIsNotNone(self.composed.activate(beast,turn=2))
