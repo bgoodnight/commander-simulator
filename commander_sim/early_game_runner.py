@@ -58,6 +58,7 @@ from .reviewed_cast_reactions import resolve_cast_reactions
 from .opponent_stress import BoundedOpponentPressure
 from .reviewed_death_effects import ReviewedDeathEngine
 from .reviewed_enter_effects import reviewed_enter_rule, execute_reviewed_enter
+from .reviewed_entry_chains import resolve_reviewed_entry_chain
 from .reviewed_unearth import reviewed_unearth, activate_reviewed_unearth, expire_reviewed_unearth
 from .reviewed_flashback import reviewed_flashback, cast_reviewed_flashback
 from .reviewed_graveyard_creatures import (
@@ -302,6 +303,36 @@ def run_bounded_early_game(deck_key, *, seed=0, turns=6, mulligan="one-free", pr
         life_ledger_start = len(life.kernel.life_changes)
         turn_kernel_event_index=len(kernel.events)
         events = []
+        def append_reanimation_entry_chain(ids):
+            if not ids:
+                return
+            for oid in ids:
+                obj=kernel.objects.get(oid)
+                if obj is not None and obj.zone=="battlefield":
+                    entered_on_turn[oid]=turn
+            chain=resolve_reviewed_entry_chain(
+                zones,life,ids,raw_by_name,
+                death_engine=death_engine,turn=turn,max_triggers=12)
+            for entry in chain.resolved:
+                for revived in entry.reanimated_ids:
+                    entered_on_turn[revived]=turn
+                events.append({
+                    "type":"reviewed_reanimation_enter_resolved",
+                    "card":entry.source_name,"source_object_id":entry.source_id,
+                    "ability_operation":entry.operation,
+                    "created_token_ids":list(entry.token_ids),
+                    "drawn_ids":list(entry.drawn_ids),
+                    "milled_ids":list(entry.milled_ids),
+                    "reanimated_ids":list(entry.reanimated_ids),
+                    "library_actions":list(entry.library_steps),
+                    "fidelity":"bounded_reviewed_etb_queue_no_priority"})
+            if chain.deferred_ids:
+                events.append({
+                    "type":"reviewed_entry_chain_deferred",
+                    "source_object_ids":list(chain.deferred_ids),
+                    "reason":"finite_reviewed_trigger_budget",
+                    "fidelity":"bounded_incomplete"})
+
         beginning_creature_ids=frozenset(
             obj.object_id for obj in kernel.on_battlefield()
             if obj.controller==0 and "creature" in obj.types)
@@ -755,6 +786,7 @@ def run_bounded_early_game(deck_key, *, seed=0, turns=6, mulligan="one-free", pr
                     "drawn_ids":list(resolved.drawn_ids),
                     "unsupported_abilities":list(resolved.limitations),
                     "fidelity":"bounded_reviewed_graveyard_spell"})
+                append_reanimation_entry_chain(resolved.moved_ids)
                 continue
             if kind == "zone_spell":
                 returned=zone_engine.cast(
@@ -769,6 +801,7 @@ def run_bounded_early_game(deck_key, *, seed=0, turns=6, mulligan="one-free", pr
                     "target_object_id":returned.target_id,
                     "moved_ids":list(returned.moved_ids),
                     "fidelity":"bounded_reviewed_zone_spell"})
+                append_reanimation_entry_chain(returned.moved_ids)
                 continue
             if kind == "removal_spell":
                 target_id,x=target
@@ -1039,6 +1072,7 @@ def run_bounded_early_game(deck_key, *, seed=0, turns=6, mulligan="one-free", pr
                                "library_actions":list(entered.library_steps),
                                "reanimated_ids":list(entered.reanimated_ids),
                                "fidelity":"bounded_no_opponent_priority"})
+                append_reanimation_entry_chain(entered.reanimated_ids)
         attachment_engine.sync(turn=turn)
         # Reviewed equipment is sorcery-speed and uses the same mana service
         # as any other activated permanent. The pilot chooses one good target.
