@@ -38,6 +38,17 @@ def summarize(runs, turns):
         "survived_by_horizon":sum(not r["seat_zero_defeated"] for r in runs),
         "average_turns_observed":round(sum(finished)/len(runs),2),
         "mean_life_at_last_observation":round(sum(life)/len(runs),2),
+        "mean_last_hand_size":round(sum(
+            r["events"][-1]["hand_size"] for r in runs)/len(runs),2),
+        "mean_last_unsupported_hand_size":round(sum(
+            len(r["events"][-1]["unsupported_cards_in_hand"])
+            for r in runs)/len(runs),2),
+        "mean_blocked_attacks_per_seed":round(
+            counts["opponent_abstract_blocked_combat"]/len(runs),2),
+        "mean_unblocked_damage_per_seed":round(sum(
+            e.get("amount",0) for r in runs for phase in r["events"]
+            for e in phase["events"]
+            if e["type"]=="opponent_abstract_unblocked_damage")/len(runs),2),
         "commander_cast_turn_counts":dict(first),
         "events":dict(counts),
         "average_reviewed_removal_per_seed":round(
@@ -75,7 +86,10 @@ def narrative(r):
                     "reviewed_sacrifice_activated",
                     "reviewed_utility_activated",
                     "opponent_abstract_creature","opponent_abstract_exile",
+                    "opponent_abstract_blocked_combat",
                     "opponent_abstract_unblocked_damage",
+                    "reviewed_composed_upkeep",
+                    "reviewed_enter_resolved",
                     "opponent_abstract_combo_loss","opponent_life_zero",
                     "opponent_reviewed_opponent_upkeep"}]
         } for phase in r["events"]]
