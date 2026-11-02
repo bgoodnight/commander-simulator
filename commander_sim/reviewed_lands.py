@@ -70,7 +70,7 @@ LANDS={
     "Hidden Grotto":LandReview(
         "382d18a2-438e-4ae7-a83f-1658ef1f9b07",
         "When this land enters, surveil 1. (Look at the top card of your library. You may put it into your graveyard.)\n{T}: Add {C}.\n{1}, {T}: Add one mana of any color.",
-        ("C",),ignored=("Mandatory surveil 1 omitted","Funded any-color mana omitted")),
+        ("C",),ignored=("Funded any-color mana omitted",)),
     "Path of Ancestry":LandReview(
         "b473e293-59e3-4e04-acf2-622604aeb25f",
         "This land enters tapped.\n{T}: Add one mana of any color in your commander's color identity. When that mana is spent to cast a creature spell that shares a creature type with your commander, scry 1. (Look at the top card of your library. You may put that card on the bottom.)",
