@@ -53,7 +53,7 @@ RECIPES = {
         "Each opponent loses X life. You gain life equal to the life lost this way.",
         "{X}{B}{B}", "sorcery", (SpellStep("opponent_drain_x"),), variable_x=True),
     "Deadly Dispute": SpellRecipe(
-        "2bcb1121-f49d-4762-b5d0-2188a7610fe7",
+        "457af74a-02b3-4659-846d-63e482667f34",
         "As an additional cost to cast this spell, sacrifice an artifact or creature.\nDraw two cards and create a Treasure token. (It's an artifact with \"{T}, Sacrifice this token: Add one mana of any color.\")",
         "{1}{B}", "instant",
         (SpellStep("draw", 2), SpellStep("treasure", 1)),
