@@ -84,7 +84,7 @@
     if(!contenders.length)return null;
     return {
       id:"creature-plays",kicker:"Creature development · reviewed actions",
-      title:"Most frequently played creature",
+      title:"Most common creature",
       value:contenders[0].score+" / "+valid.length,
       description:"Runs with "+contenders[0].name+" resolved within "+valid[0].events.length+" modeled turns",
       explanation:"Counts named creature resolutions recorded by the bounded simulator. These are not multiplayer outcomes or card-power rankings.",
@@ -95,16 +95,24 @@
 
   function render(model,options={}){
     if(!model?.contenders?.length)return null;
-    let selected=0,activeMetric=null,exampleIndex=-1;
+    let selected=0,activeMetric=null,exampleIndex=-1,viewerOpen=false;
     const panel=create("details","board-report insight-report");
     const summary=create("summary","board-summary insight-summary");
-    const headline=create("span","board-summary-copy");
-    headline.append(create("span","board-kicker",model.kicker),
-      create("strong",null,model.value),
-      create("span","board-description",model.title+" · "+model.description),
-      create("span","board-open","Explore cards and games →"));
-    summary.appendChild(headline);
     const top=model.contenders[0].card;
+    const headline=create("span","board-summary-copy");
+    headline.append(create("span","board-kicker","Key insight"),
+      create("strong","insight-head-title",model.title));
+    const subtitle=create("span","insight-head-subtitle");
+    subtitle.appendChild(create("span","insight-head-name",model.contenders[0].name));
+    if(top?.mana_cost&&typeof options.renderMana==="function"){
+      const mana=create("span","insight-head-mana");
+      mana.appendChild(options.renderMana(top.mana_cost));
+      subtitle.appendChild(mana);
+    }
+    headline.append(subtitle,create("span","insight-head-stat",
+      model.value+" runs · "+model.chartLabel.toLowerCase()),
+      create("span","board-open","Explore cards and evidence →"));
+    summary.appendChild(headline);
     if(top?.art||top?.image){
       const cover=create("img","board-cover");
       cover.src=top.art||top.image;cover.alt="";cover.loading="lazy";
@@ -146,9 +154,10 @@
       previous.type=next.type="button";
       previous.onclick=()=>{exampleIndex=(exampleIndex-1+examples.length)%examples.length;showEvidence()};
       next.onclick=()=>{exampleIndex=(exampleIndex+1)%examples.length;showEvidence()};
-      const open=create("button","gold-button","View full turn ↗");
+      const open=create("button","gold-button",viewerOpen?"Hide full turn":"Show full turn here");
       open.type="button";
-      open.onclick=()=>options.onOpenEvidence?.(example,card,metric);
+      open.setAttribute("aria-expanded",String(viewerOpen));
+      open.onclick=()=>{viewerOpen=!viewerOpen;showEvidence()};
       controls.append(previous,next,open);
       detail.appendChild(controls);evidence.appendChild(detail);
       const all=create("details","insight-example-all");
@@ -162,6 +171,20 @@
         list.appendChild(button);
       });
       all.appendChild(list);evidence.appendChild(all);
+      if(viewerOpen){
+        const viewer=create("section","insight-inline-replay");
+        viewer.setAttribute("aria-label","Turn-by-turn evidence for seed "+example.seed);
+        viewer.appendChild(create("p","insight-inline-intro",
+          "Seed "+example.seed+" · Turn "+example.turn+
+          " · exact recorded actions and end-of-turn zones"));
+        const replayRoot=create("div","replay-root");
+        viewer.appendChild(replayRoot);
+        if(typeof options.onRenderEvidence==="function"){
+          try{options.onRenderEvidence(replayRoot,example,card,metric)}
+          catch(error){replayRoot.textContent="The recorded game could not be displayed."}
+        }else replayRoot.textContent="Full turn viewer is not connected.";
+        evidence.appendChild(viewer);
+      }
     }
 
     function showSelected(){
@@ -179,8 +202,8 @@
         chosen.appendChild(button);
       }
       chosen.appendChild(create("strong","insight-card-name",card.name));
-      ranking.append(create("h3",null,"Compare contenders"),
-        create("p","micro",model.chartLabel+" · select a bar to inspect its card"));
+      ranking.append(create("h3",null,"Played in recorded games"),
+        create("p","micro",model.chartLabel+" · select any bar"));
       const bars=create("div","insight-bars");
       model.contenders.slice(0,12).forEach((entry,i)=>{
         const button=create("button","insight-bar"+(i===selected?" is-selected":""));
@@ -190,7 +213,7 @@
         const track=create("span","insight-bar-track"),fill=create("span","insight-bar-fill");
         fill.style.width=100*entry.score/max+"%";
         track.appendChild(fill);button.append(head,track);
-        button.onclick=()=>{selected=i;activeMetric=null;exampleIndex=-1;showSelected()};
+        button.onclick=()=>{selected=i;activeMetric=null;exampleIndex=-1;viewerOpen=false;showSelected()};
         bars.appendChild(button);
       });
       ranking.appendChild(bars);
@@ -206,6 +229,7 @@
           if(!examples.length)return;
           if(activeMetric===item.id&&exampleIndex>=0)exampleIndex=(exampleIndex+1)%examples.length;
           else{activeMetric=item.id;exampleIndex=0}
+          viewerOpen=true; // A metric opens the cached run inline; no additional request.
           showSelected();
         };
         stats.appendChild(button);
