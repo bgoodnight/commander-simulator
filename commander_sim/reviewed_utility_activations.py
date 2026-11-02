@@ -192,7 +192,7 @@ def activate_utility(zones,life,seat,source_id,catalog,mana_service,colors,
             zones,seat,(target_id,),
             GraveyardRecipe("hand","own",frozenset({"creature"}),
                             required_subtypes=rule.target_subtypes,
-                            required_supertypes=rule.target_supertypes)))
+                            required_supertypes=rule.target_supertypes))
         moved.extend(item.new_id for item in restored)
     elif rule.operation=="all_legendary_creatures_to_hand":
         restored=resolve_graveyard_recipe(
