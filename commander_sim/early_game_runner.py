@@ -536,6 +536,16 @@ def run_bounded_early_game(deck_key, *, seed=0, turns=6, mulligan="one-free", pr
                     provisional.kind=="simple_spell"
                     and reviewed_common_spell(name,raw) is None
                     and reviewed_draw_spell(name,raw) is None)
+                if provisional_spell:
+                    # A speculative preview cannot commit a draw from an
+                    # empty library or a source-paid spell that kills its
+                    # own controller. Filter before the spell is chosen.
+                    if (provisional.mode in {"draw","draw_lose"}
+                            and len(zones.ids(0,"library"))<provisional.amount):
+                        continue
+                    if (provisional.life_amount
+                            and life.total(0)<=provisional.life_amount):
+                        continue
                 token_spell = reviewed_token_spell(name, raw)
                 draw_spell = reviewed_draw_spell(name,raw)
                 attachment_rule=reviewed_attachment(name,raw)
