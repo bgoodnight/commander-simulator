@@ -9,6 +9,7 @@ from dataclasses import dataclass
 from .library_actions import LibraryAction, resolve_library_actions
 from .graveyard_recipes import GraveyardRecipe, resolve_graveyard_recipe
 from .reviewed_lands import LANDS
+from .physical_graveyard_exile import exile_physical_graveyard
 
 @dataclass(frozen=True)
 class LandEntry:
@@ -82,8 +83,8 @@ def resolve_land_entry(zones, life, source_id, catalog, *,
             target_seat=next(s for s in sorted(life.kernel.life_totals) if s!=seat)
         if target_seat not in life.kernel.life_totals:
             raise ValueError("Target player is not in the game")
-        for oid in tuple(zones.ids(target_seat,"graveyard")):
-            moved.append(zones.move(oid,"exile","exile"))
+        moved.extend(exile_physical_graveyard(
+            zones,target_seat).exiled_ids)
     elif rule.operation=="graveyard_creature_to_library_top":
         if target_creature_id is not None:
             if target_creature_id not in zones.ids(seat,"graveyard"):
