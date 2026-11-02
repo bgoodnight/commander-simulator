@@ -75,6 +75,16 @@ _ENTRY_DRAW = re.compile(
     r"^(?:[A-Za-z][A-Za-z '’\-]{1,55} — )?"
     r"When this creature enters, draw "
     r"(a|one|two|three|four|five|six|seven|\d+) cards?\.$")
+_ENTRY_MILL_DRAW = re.compile(
+    r"^(?:[A-Za-z][A-Za-z '’\-]{1,55} — )?"
+    r"When this creature enters, mill "
+    r"(a|one|two|three|four|five|six|seven|\d+) cards?, then draw "
+    r"(a|one|two|three|four|five|six|seven|\d+) cards?\.$")
+_ENTRY_DRAW_DISCARD = re.compile(
+    r"^(?:[A-Za-z][A-Za-z '’\-]{1,55} — )?"
+    r"When this creature enters, draw "
+    r"(a|one|two|three|four|five|six|seven|\d+) cards?, then discard "
+    r"(a|one|two|three|four|five|six|seven|\d+) cards?\.$")
 
 
 def _quantity(word):
@@ -159,7 +169,7 @@ class ProvisionalProfile:
                 or (self.library_actions and self.kind != "simple_spell")
                 or not isinstance(self.entry_actions,tuple)
                 or not all(isinstance(x,LibraryAction)
-                           and x.kind in {"mill","draw"}
+                           and x.kind in {"mill","draw","discard"}
                            for x in self.entry_actions)
                 or (self.entry_actions and self.kind!="creature_body")):
             raise ValueError("Invalid provisional source descriptor")
@@ -264,6 +274,22 @@ def provisional_profile(raw):
         accepted=[]
         for line in remainder.splitlines():
             stripped=line.strip()
+            compound=_ENTRY_MILL_DRAW.fullmatch(stripped)
+            if compound is not None:
+                mill,draw=(_quantity(word) for word in compound.groups())
+                if not (1<=mill<=7 and 1<=draw<=7):
+                    return None
+                accepted.extend((LibraryAction("mill",mill),
+                                 LibraryAction("draw",draw)))
+                continue
+            compound=_ENTRY_DRAW_DISCARD.fullmatch(stripped)
+            if compound is not None:
+                draw,discard=(_quantity(word) for word in compound.groups())
+                if not (1<=draw<=7 and 1<=discard<=draw):
+                    return None
+                accepted.extend((LibraryAction("draw",draw),
+                                 LibraryAction("discard",discard)))
+                continue
             match=_ENTRY_MILL.fullmatch(stripped)
             kind="mill" if match is not None else None
             if match is None:
@@ -313,7 +339,7 @@ def provisional_profile(raw):
     if "creature" in types:
         return ProvisionalProfile(raw["oracle_id"],raw["oracle_text"],
                     mana_cost,"creature_body",entry_actions=entry_actions,
-                    omissions=(("Provisional grammar only for exact entry mill/draw",
+                    omissions=(("Provisional grammar only for exact entry library actions",
                                 "Other printed abilities remain unreviewed",
                                 "No opposing priority or counterspell response")
                                if entry_actions else

@@ -1,19 +1,22 @@
 """Physical removal/debuff templates preserve targets, life and death triggers."""
 import json
 import unittest
-from commander_sim.deck_fixtures import EXPERIMENTAL_FIXTURES
+from commander_sim.deck_fixtures import FIXTURES,EXPERIMENTAL_FIXTURES
 from commander_sim.early_game_runner import _load_live_kernel
 from commander_sim.kernel_life import KernelLife
 from commander_sim.template_resources import TemplateManaService
 from commander_sim.reviewed_death_effects import ReviewedDeathEngine
-from commander_sim.reviewed_removal_spells import cast_removal,reviewed_removal
+from commander_sim.reviewed_removal_spells import (
+    cast_removal,reviewed_removal,valid_removal_target)
+from commander_sim.resource_pilot import choose_reviewed_removal
 
 class ReviewedRemovalTests(unittest.TestCase):
     @classmethod
     def setUpClass(cls):
-        f=next(f for f in EXPERIMENTAL_FIXTURES if f.key=="mortarion_physical_final")
-        cls.catalog={row["deck_name"]:row["card"] for row
-                     in json.loads(f.snapshot_path.read_text())["cards"]}
+        cls.catalog={}
+        for fixture in (*FIXTURES,*EXPERIMENTAL_FIXTURES):
+            cls.catalog.update({row["deck_name"]:row["card"] for row
+                in json.loads(fixture.snapshot_path.read_text())["cards"]})
     def setUp(self):
         K,Z,C=_load_live_kernel()
         self.kernel=K()
@@ -66,4 +69,21 @@ class ReviewedRemovalTests(unittest.TestCase):
             self.cast("Feed the Swarm",own)
         self.assertIsNone(reviewed_removal("Feed the Swarm",
                         dict(self.catalog["Feed the Swarm"],oracle_text="Invalid")))
+    def test_withering_torment_targets_enchantment_and_loses_two_life(self):
+        self.lands(3)
+        target=self.add("Opponent Aura",("enchantment",),seat=1)
+        rule=reviewed_removal("Withering Torment",self.catalog["Withering Torment"])
+        self.assertIsNotNone(rule)
+        self.assertTrue(valid_removal_target(self.zones,0,rule,target))
+        # The generic pilot must see noncreature engine pieces as targets.
+        self.assertEqual(choose_reviewed_removal(
+            self.zones,0,self.life,rule),(target,0))
+        result=self.cast("Withering Torment",target)
+        self.assertEqual(result.destroyed_count,1)
+        self.assertEqual(self.life.total(0),38)
+        self.assertNotIn(target,self.kernel.objects)
+        self.assertIsNone(reviewed_removal("Withering Torment",
+                          dict(self.catalog["Withering Torment"],
+                               oracle_id="mismatched-source")))
+        self.assertTrue(self.zones.assert_consistent())
 if __name__=="__main__":unittest.main()

@@ -25,7 +25,7 @@ from .deck_fixtures import FIXTURES, EXPERIMENTAL_FIXTURES, SHARED_CATALOG
 from .generic_cast import ReviewedCreatureCast, cast_reviewed_permanent
 from .provisional_import import provisional_profile, provisional_report
 from .provisional_actions import cast_provisional_spell
-from .library_actions import required_draws, resolve_library_actions
+from .library_actions import required_library_cards_for_draws, resolve_library_actions
 from .kernel_reporting import project_kernel_turn
 from .board_features import analyze_authoritative_run
 from .reviewed_early_cards import REVIEWED_BY_DECK, LIMITATIONS, reviewed_creature
@@ -160,7 +160,7 @@ def run_bounded_early_game(deck_key, *, seed=0, turns=6, mulligan="one-free", pr
     # Pinned, source-verified ETB effects with safe bounded hand-cast paths.
     enter_hand_casts = {"Bastion of Remembrance", "Grave Titan", "Massacre Wurm",
                         "Flayed One", "Mire Triton", "Undead Butler",
-                        "Technomancer", "Lord of Change",
+                        "Technomancer", "Lord of Change", "Woe Strider",
                         "Marionette Apprentice", "Royal Warden",
                         "Triarch Praetorian", "Canoptek Tomb Sentinel"}
     def approved_enter_hand_cast(name):
@@ -609,18 +609,16 @@ def run_bounded_early_game(deck_key, *, seed=0, turns=6, mulligan="one-free", pr
                         and provisional.kind=="creature_body"
                         and provisional.entry_actions
                         and len(zones.ids(0,"library")) <
-                            sum(step.count for step in provisional.entry_actions
-                                if step.kind in {"draw","mill"})):
-                    # A bounded entry-draw must never be silently omitted
-                    # after paying the source. Conservatively decline the
-                    # card when a mandatory compound library sequence cannot
-                    # be fulfilled in this reduced game host.
+                            required_library_cards_for_draws(provisional.entry_actions)):
+                    # Mill-only ETBs are legal with an empty library. Reject
+                    # only when a later mandatory draw cannot be completed
+                    # in the bounded no-library-loss host.
                     continue
                 if provisional_spell:
                     # A speculative preview cannot commit a draw from an
                     # empty library or a source-paid spell that kills its
                     # own controller. Filter before the spell is chosen.
-                    draw_need = (required_draws(provisional.library_actions)
+                    draw_need = (required_library_cards_for_draws(provisional.library_actions)
                                  if provisional.library_actions else
                                  provisional.amount if provisional.mode in {"draw","draw_lose"}
                                  else 0)
@@ -658,8 +656,8 @@ def run_bounded_early_game(deck_key, *, seed=0, turns=6, mulligan="one-free", pr
                 entering = approved_enter_hand_cast(name)
                 if entering:
                     reviewed_entry=reviewed_enter_rule(name,raw)
-                    required=sum(x.count for x in reviewed_entry.library_actions
-                                 if x.kind in {"draw","mill"})
+                    required=required_library_cards_for_draws(
+                        reviewed_entry.library_actions)
                     if required>len(zones.ids(0,"library")):
                         continue
                 ramp = reviewed_ramp(name,raw) if "land" not in obj.types else None
@@ -1096,6 +1094,8 @@ def run_bounded_early_game(deck_key, *, seed=0, turns=6, mulligan="one-free", pr
                 events.append({"type":"provisional_enter_resolved",
                     "card":name,"source_object_id":resolved_id,
                     "milled_ids":list(entry.milled_ids),
+                    "drawn_ids":list(entry.drawn_ids),
+                    "discarded_ids":list(entry.discarded_ids),
                     "library_actions":list(entry.steps),
                     "fidelity":"provisional_partial"})
             if name == "Solemn Simulacrum" and reviewed_ramp(name,raw_by_name[name]):
@@ -1641,9 +1641,15 @@ def run_bounded_early_game(deck_key, *, seed=0, turns=6, mulligan="one-free", pr
                 or reviewed_ramp(name,raw) is not None
                 or reviewed_ritual(name,raw)
                 or reviewed_common_spell(name,raw) is not None
+                or reviewed_removal(name,raw) is not None
+                or reviewed_zone_spell(name,raw) is not None
+                or reviewed_graveyard_spell(name,raw) is not None
+                or reviewed_attachment(name,raw) is not None
+                or reviewed_activation(name,raw) is not None
                 or approved_enter_hand_cast(name)
                 or reviewed_breach(name,raw)
-                or reviewed_buyback(name,raw)
+                or reviewed_buyback(name,raw) is not None
+                or reviewed_copy_spell(name,raw) is not None
                 or provisional_by_name.get(name) is not None)
         cleanup = cleanup_hand(
             zones, 0, raw_by_name, supported_action=hand_action_supported)
@@ -1728,40 +1734,7 @@ def run_bounded_early_game(deck_key, *, seed=0, turns=6, mulligan="one-free", pr
             "alive_seats":list(round_life["alive_seats"]),
             "unsupported_cards_in_hand": sorted(
                 kernel.get(oid).card.name for oid in zones.ids(0, "hand")
-                if not reviewed_creature(deck_key, kernel.get(oid).card.name,
-                                         raw_by_name[kernel.get(oid).card.name])
-                and reviewed_rock(kernel.get(oid).card.name,
-                                  raw_by_name[kernel.get(oid).card.name], colors) is None
-                and not (reviewed_tutor(kernel.get(oid).card.name,
-                                        raw_by_name[kernel.get(oid).card.name])
-                         and reviewed_tutor(kernel.get(oid).card.name,
-                                            raw_by_name[kernel.get(oid).card.name])[2]
-                         in {"instant", "sorcery"})
-                and reviewed_token_spell(kernel.get(oid).card.name,
-                    raw_by_name[kernel.get(oid).card.name]) is None
-                and reviewed_draw_spell(kernel.get(oid).card.name,
-                    raw_by_name[kernel.get(oid).card.name]) is None
-                and not reviewed_phase_permanent(kernel.get(oid).card.name,
-                    raw_by_name[kernel.get(oid).card.name])
-                and not reviewed_composed_permanent(kernel.get(oid).card.name,
-                    raw_by_name[kernel.get(oid).card.name])
-                and reviewed_common_spell(kernel.get(oid).card.name,
-                    raw_by_name[kernel.get(oid).card.name]) is None
-                and reviewed_utility(kernel.get(oid).card.name,
-                    raw_by_name[kernel.get(oid).card.name]) is None
-                and not reviewed_sacrifice_artifact(kernel.get(oid).card.name,
-                    raw_by_name[kernel.get(oid).card.name])
-                and reviewed_ramp(kernel.get(oid).card.name,
-                    raw_by_name[kernel.get(oid).card.name]) is None
-                and not reviewed_ritual(kernel.get(oid).card.name,
-                    raw_by_name[kernel.get(oid).card.name])
-                and not approved_enter_hand_cast(kernel.get(oid).card.name)
-                and reviewed_buyback(kernel.get(oid).card.name,
-                    raw_by_name[kernel.get(oid).card.name]) is None
-                and reviewed_copy_spell(kernel.get(oid).card.name,
-                    raw_by_name[kernel.get(oid).card.name]) is None
-                and provisional_by_name.get(kernel.get(oid).card.name) is None
-                and not supported_land(oid)),
+                if not hand_action_supported(kernel.get(oid))),
         })
         if outcome_recorder.outcome(requested_rounds=turns)["complete"]:
             break

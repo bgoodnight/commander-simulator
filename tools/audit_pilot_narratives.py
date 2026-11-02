@@ -33,6 +33,7 @@ def summarize_run(run,*,turn_examples=12):
     action_counts=Counter()
     role_counts=Counter()
     unmodeled=Counter()
+    library_events=Counter()
     problem_turns=[]
     timeline=[]
     for item in run["events"]:
@@ -41,6 +42,8 @@ def summarize_run(run,*,turn_examples=12):
         choices=item.get("pilot_decisions",[])
         for event in events:
             action_counts[event["type"]]+=1
+            if event.get("library_actions"):
+                library_events[event["type"]]+=1
         for choice in choices:
             role_counts[choice["role"]]+=1
         for name in item["unsupported_cards_in_hand"]:
@@ -61,8 +64,19 @@ def summarize_run(run,*,turn_examples=12):
                 and len(item.get("alive_seats",[]))>=2
                 and not any(c["role"]=="removal" for c in choices)):
             diagnostics.append("low_life_no_selected_removal")
+        # Inspect physical library records, not inferred card-text effects.
+        # Mill can legally move fewer cards than requested; draw cannot in
+        # this bounded no-library-loss model.
+        for event in events:
+            for step in event.get("library_actions",()):
+                if (step.get("kind")=="draw" and "drawn" in step
+                        and len(step["drawn"])!=step["count"]):
+                    diagnostics.append("physical_draw_count_mismatch")
+                if (step.get("kind")=="mill" and "milled" in step
+                        and len(step["milled"])>step["count"]):
+                    diagnostics.append("physical_mill_count_overflow")
         if diagnostics:
-            problem_turns.append({"turn":turn,"signals":diagnostics})
+            problem_turns.append({"turn":turn,"signals":sorted(set(diagnostics))})
         if turn<=turn_examples:
             timeline.append({
                 "turn":turn,
@@ -78,7 +92,11 @@ def summarize_run(run,*,turn_examples=12):
                            **({"target_seat":e["target_seat"]}
                               if "target_seat" in e else {}),
                            **({"amount":e["amount"]}
-                              if "amount" in e else {})}
+                              if "amount" in e else {}),
+                           **{key:e[key] for key in (
+                               "source_object_id","drawn_ids","milled_ids",
+                               "discarded_ids","library_actions","fidelity")
+                               if key in e}}
                           for e in events],
                 "life_changes":item.get("life_changes",[]),
                 "review_signals":diagnostics,
@@ -96,6 +114,7 @@ def summarize_run(run,*,turn_examples=12):
         "end_life":run["life_totals"],
         "decisions_by_role":dict(sorted(role_counts.items())),
         "event_counts":dict(sorted(action_counts.items())),
+        "observed_library_events":dict(sorted(library_events.items())),
         "turns_without_main_actions":sum(
             not x.get("pilot_decisions") for x in run["events"]),
         "frequently_unmodeled_hand_cards":[
@@ -142,6 +161,12 @@ def run_audit(deck_keys=DECKS,*,seeds=2,rounds=12,
             "review_signal_counts":dict(sorted(Counter(
                 label for run in matches for row in run["review_turns"]
                 for label in row["signals"]).items())),
+            "observed_library_events":dict(sorted(Counter({
+                kind:sum(run["observed_library_events"].get(kind,0)
+                         for run in matches)
+                for kind in set().union(*(
+                    set(run["observed_library_events"]) for run in matches))
+            }).items())),
             "priority_unmodeled_cards":[
                 {"card":name,"observed_turns":count}
                 for name,count in unmodeled.most_common(12)],

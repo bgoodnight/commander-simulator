@@ -45,6 +45,27 @@ def required_draws(actions):
     return sum(action.count for action in actions if action.kind == "draw")
 
 
+def required_library_cards_for_draws(actions):
+    """Minimum starting library size for mandatory draws, in printed order.
+
+    Mill-only recipes remain legal with zero cards. Milling after the final
+    draw does not invalidate an earlier draw. A mill *before* a draw must
+    leave enough physical cards for that later draw; this bounded engine
+    cannot model losing the game to an attempted empty-library draw.
+    Put-back effects are intentionally not credited during preflight.
+    """
+    actions = tuple(actions)
+    required_draws(actions)  # Check all descriptors before previewing.
+    spent = 0
+    minimum = 0
+    for action in actions:
+        if action.kind in {"mill", "draw"}:
+            spent += action.count
+        if action.kind == "draw":
+            minimum = max(minimum, spent)
+    return minimum
+
+
 def _cards(zones, ids):
     return [{"id": oid, "card": zones.kernel.get(oid).card.name} for oid in ids]
 
@@ -100,8 +121,7 @@ def resolve_library_actions(zones, seat, actions, *, select=None):
     # A mandatory mill before a required draw cannot be shortened merely to
     # preserve that draw; the bounded host must handle library-loss SBA before
     # permitting this compound recipe. A mill-only action may mill fewer cards.
-    mandatory_mill=sum(a.count for a in actions if a.kind=="mill")
-    if len(zones.ids(seat, "library")) < needed + (mandatory_mill if needed else 0):
+    if len(zones.ids(seat, "library")) < required_library_cards_for_draws(actions):
         raise ValueError("Library cannot satisfy mandatory draws in bounded mode")
     if select is None:
         select = bounded_library_choice

@@ -147,6 +147,26 @@ class ReviewedEnterEffectTests(unittest.TestCase):
         self.assertEqual(self.kernel.get(source).toughness,4)
         self.assertTrue(self.zones.assert_consistent())
 
+    def test_woe_strider_etb_goat_is_legal_sacrifice_and_scry_fodder(self):
+        from commander_sim.reviewed_sacrifice_actions import activate_reviewed_sacrifice
+        source=self.enter("Woe Strider")
+        created=self.resolve(source)
+        self.assertEqual(created.operation,"goat_one")
+        self.assertEqual(len(created.token_ids),1)
+        goat=self.kernel.get(created.token_ids[0])
+        self.assertEqual(goat.types,frozenset({"creature"}))
+        self.assertEqual(goat.subtypes,frozenset({"Goat"}))
+        self.assertEqual(goat.card.colors,frozenset({"W"}))
+        self.assertEqual((goat.power,goat.toughness),(0,1))
+        self.add("Scry Library Card",zone="library",types=("instant",))
+        scry=activate_reviewed_sacrifice(
+            self.zones,self.life,source,goat.object_id,self.catalog,
+            death_engine=self.death,turn=1)
+        self.assertEqual(scry.operation,"scry")
+        self.assertNotIn(goat.object_id,self.kernel.objects)
+        self.assertIn(source,self.kernel.objects)
+        self.assertTrue(self.zones.assert_consistent())
+
     def test_false_identity_never_receives_named_etb_ability(self):
         fake=self.add("Royal Warden",zone="hand",oracle="unreviewed",
                       types=("artifact","creature"))
@@ -156,7 +176,7 @@ class ReviewedEnterEffectTests(unittest.TestCase):
         self.assertEqual(len(self.zones.ids(0,"battlefield")),1)
 
     def test_seven_oracle_reviewed_etb_registration_records_present(self):
-        self.assertEqual(len(ENTER_RULES),13)
+        self.assertEqual(len(ENTER_RULES),14)
         self.assertTrue({"Flayed One","Mire Triton","Undead Butler"} <=
                         set(ENTER_RULES))
         for name,entry in ENTER_RULES.items():

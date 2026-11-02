@@ -121,6 +121,49 @@ priority stack or four complete active player pilots. Some side effects can
 only be exercised by direct host-backed tests until main-turn integration
 and opponent choice/stack timing are available.
 
+## Source-conservative library entry sequences (November 2026)
+
+The safe provisional importer can now compose two **complete standalone** creature
+entry sentences using the existing physical library kernel:
+
+- `When this creature enters, mill N cards, then draw M cards.`
+- `When this creature enters, draw N cards, then discard M cards.`
+  (The importer conservatively requires `M <= N`.)
+
+Both are partial source-identified ability imports, **not** whole-card
+implementations. Their physical move IDs, ordered library steps, and omissions
+appear in per-turn replay exports. Compound text with unreviewed targeting,
+extra mandatory costs, additional effects or changed wording still fails
+closed. The historical reviewed ability paths retain their exact Oracle pins.
+
+The common `required_library_cards_for_draws` preflight now respects the
+printed order of milling and drawing. A mill-only effect can resolve even
+from an empty library, as Magic rules allow; milling *before* a mandatory
+draw requires enough cards for both. Milling *after* the final draw does not
+block a legal cast. This narrowly fixes false card rejections without
+pretending the simulator implements losing to an empty-library draw.
+
+The pilot narrative audit now retains physical library-step evidence and
+flags impossible recorded mandatory draw/mill counts. These are diagnostic
+assertions only; an absence of flags does not certify full card fidelity.
+
+A narrative-driven coverage follow-up identified **Woe Strider** as
+uncastable despite its separately reviewed sacrifice/scry activation. Its
+exact-pinned battlefield-entry trigger now creates one physical 0/1 white Goat
+token using the shared token blueprint/entry machinery. It may be cast from
+hand, and that Goat can be sacrificed through the existing reviewed scry mode.
+Escape from the graveyard and escape-entry counters are **not** implemented.
+The same audit also found false "unsupported hand" labels for already reviewed
+removal/zone/attachment and copy spells; the cleanup selector and diagnostic
+report now share a single recognized-action check. Recognized does not mean
+currently payable or target-legal.
+
+Another exposed gap was **Withering Torment**, now an exact Oracle-pinned
+configuration of the shared target-destruction and life-loss path. The generic
+removal pilot also considers noncreature enchantments instead of treating
+all zero-power permanents as irrelevant, including when an opponent has no
+creatures. This is a tactical heuristic, not a validated threat ranking.
+
 ## Still incomplete — required for full-deck claims
 
 The next gate is to connect reviewed ETB and graveyard alternatives to all

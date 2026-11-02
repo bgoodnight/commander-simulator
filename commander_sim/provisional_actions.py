@@ -9,7 +9,8 @@ from .generic_cast import ReviewedCreatureCast, cast_reviewed_spell
 from .physical_common_effects import CardQuantity, draw_physical_cards
 from .reviewed_token_spells import TokenBlueprint,create_reviewed_token_batches
 from .provisional_import import provisional_profile
-from .library_actions import resolve_library_actions, required_draws, LibraryAction
+from .library_actions import (resolve_library_actions,
+    required_library_cards_for_draws, LibraryAction)
 
 
 @dataclass(frozen=True)
@@ -50,7 +51,7 @@ def cast_provisional_spell(zones, life, seat, object_id, catalog, colors,
             or obj.card.types not in (frozenset({"instant"}),
                                        frozenset({"sorcery"}))):
         raise ValueError("Source-unverified or unsupported spell")
-    draw_need = (required_draws(profile.library_actions)
+    draw_need = (required_library_cards_for_draws(profile.library_actions)
                  if profile.library_actions else
                  profile.amount if profile.mode in {"draw","draw_lose"} else 0)
     if len(zones.ids(seat,"library")) < draw_need:

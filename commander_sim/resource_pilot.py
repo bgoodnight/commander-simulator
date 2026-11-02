@@ -485,7 +485,8 @@ def choose_reviewed_removal(zones, seat, life, rule, *, turn=1):
          if o.controller==seat and "creature" in o.types]
     opponents=[o for o in kernel.on_battlefield()
                if o.controller!=seat and "creature" in o.types]
-    if not opponents:
+    if (not opponents and rule.target not in {
+            "creature_or_enchantment","opponent_creature_or_enchantment"}):
         return None
     danger=life.total(seat)<=18
     if rule.operation=="debuff_all":
@@ -525,7 +526,11 @@ def choose_reviewed_removal(zones, seat, life, rule, *, turn=1):
         creature="creature" in obj.types
         power=obj.power if creature else 0
         toughness=obj.toughness if creature else 0
-        threat=power+min(3,toughness)
+        # Noncreature enchantments are real engine permanents even without
+        # power/toughness. Do not ignore legal removal solely because the
+        # threat heuristic was originally combat-only.
+        threat=(7 if "enchantment" in obj.types and not creature
+                else power+min(3,toughness))
         if rule.operation=="debuff_same_name":
             group=sum(o.card.name==obj.card.name and
                       o.toughness<=rule.amount for o in opponents)

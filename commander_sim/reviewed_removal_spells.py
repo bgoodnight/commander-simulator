@@ -30,7 +30,7 @@ class RemovalRule:
                                           "debuff_same_name","debuff_all",
                                           "destroy_below_power"}
                 or self.target not in {"none","creature","opponent_creature_or_enchantment",
-                                       "own_creature"}
+                                       "creature_or_enchantment","own_creature"}
                 or self.life_cost not in {"","two","target_mana_value"}):
             raise ValueError("Invalid registered removal recipe")
 
@@ -40,6 +40,11 @@ RULES={
         "94f0a572-e91c-4b56-a5d1-6cbbeabd210d",
         "Destroy target creature. You lose 2 life.",
         "{1}{B}","instant","destroy","creature",life_cost="two"),
+    "Withering Torment":RemovalRule(
+        "ffce81c5-1b58-4882-a4e7-6f8d7cb170de",
+        "Destroy target creature or enchantment. You lose 2 life.",
+        "{2}{B}","instant","destroy",
+        "creature_or_enchantment",life_cost="two"),
     "Feed the Swarm":RemovalRule(
         "5825997b-10d7-4a36-972c-a80ddd90b8ed",
         "Destroy target creature or enchantment an opponent controls. You lose life equal to that permanent's mana value.",
@@ -89,6 +94,8 @@ def valid_removal_target(zones,seat,rule,target_id):
         types={"creature"}
         if obj.controller!=seat:
             return False
+    elif rule.target=="creature_or_enchantment":
+        types={"creature","enchantment"}
     else:
         types={"creature","enchantment"}
         if obj.controller==seat:

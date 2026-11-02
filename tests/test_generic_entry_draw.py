@@ -132,5 +132,59 @@ class SharedEntryDrawTests(unittest.TestCase):
                 self.assertIn("pilot_decisions",run["events"][0])
 
 
+    def test_exact_compound_entry_sequences_are_typed(self):
+        cases=(
+            ("When this creature enters, mill two cards, then draw a card.",
+             (LibraryAction("mill",2),LibraryAction("draw",1))),
+            ("When this creature enters, draw a card, then discard a card.",
+             (LibraryAction("draw",1),LibraryAction("discard",1))),
+            ("Ominous Research — When this creature enters, mill three cards, then draw two cards.",
+             (LibraryAction("mill",3),LibraryAction("draw",2))),
+        )
+        for text,expected in cases:
+            with self.subTest(text=text):
+                p=provisional_profile(self.raw(text))
+                self.assertIsNotNone(p)
+                self.assertEqual(p.entry_actions,expected)
+                self.assertEqual(p.fidelity,"provisional_partial")
+
+    def test_compound_entry_mills_then_draws_actual_physical_cards(self):
+        text="When this creature enters, mill two cards, then draw a card."
+        p=provisional_profile(self.raw(text))
+        self.assertIsNotNone(p)
+        for i in range(3):
+            self.add("Library "+str(i))
+        out=resolve_library_actions(self.z,0,p.entry_actions)
+        self.assertEqual(len(out.milled_ids),2)
+        self.assertEqual(len(out.drawn_ids),1)
+        self.assertEqual(len(self.z.ids(0,"graveyard")),2)
+        self.assertEqual(len(self.z.ids(0,"hand")),1)
+        self.assertEqual(len(self.z.ids(0,"library")),0)
+        self.assertEqual([x["kind"] for x in out.steps],["mill","draw"])
+        self.assertTrue(self.z.assert_consistent())
+
+    def test_entry_draw_then_discard_moves_real_card_and_keeps_no_ghost(self):
+        p=provisional_profile(self.raw(
+            "When this creature enters, draw a card, then discard a card."))
+        self.add("Only")
+        out=resolve_library_actions(self.z,0,p.entry_actions)
+        self.assertEqual(len(out.drawn_ids),1)
+        self.assertEqual(len(out.discarded_ids),1)
+        self.assertEqual(len(self.z.ids(0,"hand")),0)
+        self.assertEqual(len(self.z.ids(0,"graveyard")),1)
+        self.assertTrue(self.z.assert_consistent())
+
+    def test_compound_entry_fails_closed_on_incomplete_rules(self):
+        for text in (
+            "When this creature enters, mill two cards, then draw a card, then win the game.",
+            "When this creature enters, target player mills two cards, then draws a card.",
+            "When this creature enters, mill eight cards, then draw a card.",
+            "When this creature enters, draw a card, then discard two cards.",
+            "When this creature enters, draw a card, then discard a card. Exile a creature.",
+        ):
+            with self.subTest(text=text):
+                self.assertIsNone(provisional_profile(self.raw(text)))
+
+
 if __name__=="__main__":
     unittest.main()
