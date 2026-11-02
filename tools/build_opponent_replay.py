@@ -106,15 +106,40 @@ def convert(source: dict, *, source_run: int, engine_commit: str, deck_sha256: s
                         "fidelity": ("abstract" if etype.startswith(("opponent_","player_"))
                                      else "reviewed"),
                     })
-                rounds.append({
+                pilot_state = {
+                    "life": turn.get("life"), "lands": turn.get("lands"),
+                    "creatures": turn.get("creatures"),
+                    "hand_size": turn.get("hand_size"),
+                }
+                # Optional authoritative kernel snapshots from a newer source
+                # batch. Older narratives remain valid without them.
+                if "pilot_zones" in turn:
+                    zones = turn["pilot_zones"]
+                    if (not isinstance(zones, dict)
+                            or any(not isinstance(zones.get(z), list)
+                                   for z in ("hand", "battlefield", "graveyard", "exile"))
+                            or any(not isinstance(obj, dict)
+                                   or not isinstance(obj.get("name"), str)
+                                   for z in ("hand", "battlefield", "graveyard", "exile")
+                                   for obj in zones[z])
+                            or len(zones["hand"]) != pilot_state["hand_size"]):
+                        raise ValueError("Pilot zone snapshots do not match recorded hand")
+                    pilot_state["zones"] = zones
+                round_record = {
                     "round": number,
-                    "snapshots": {"0": {
-                        "life": turn.get("life"), "lands": turn.get("lands"),
-                        "creatures": turn.get("creatures"),
-                        "hand_size": turn.get("hand_size"),
-                    }},
+                    "snapshots": {"0": pilot_state},
                     "actions": actions,
-                })
+                }
+                if "mana_activations" in turn:
+                    activations = turn["mana_activations"]
+                    if (not isinstance(activations, list)
+                            or any(not isinstance(row, dict)
+                                   or not isinstance(row.get("source_name"), str)
+                                   or not isinstance(row.get("mana_output"), list)
+                                   for row in activations)):
+                        raise ValueError("Invalid committed mana source ledger")
+                    round_record["mana_activations"] = activations
+                rounds.append(round_record)
             games.append({
                 "id": f"{key}:{seed}", "seed": seed, "scenario": key,
                 "eliminated": trace.get("eliminated") is True,
