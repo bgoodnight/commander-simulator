@@ -975,3 +975,88 @@ body:has(#pane-records:not([hidden])) .page-introduction a{font-size:.72rem}
   .insight-ranking-method{padding:8px}
   .insight-ranking-formula{font-size:.67rem}
 }
+
+
+/* Long-game outcome panels share the compact board grid while preserving
+ * the separate censored, abstract-opponent evidence model. */
+.game-outcome-panel{padding:15px 16px;margin:13px 0}
+.game-outcome-heading{display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:11px}
+.game-outcome-heading h2{font-size:clamp(1.1rem,2vw,1.5rem);margin:2px 0 4px;color:#f1dbb1}
+.game-outcome-heading .micro{margin:0;font-size:.73rem;max-width:580px}
+.game-outcome-import{cursor:pointer;display:inline-flex;gap:9px;align-items:center;border:1px solid #a58c67;
+  background:#3c3d36;color:#ead3a3;border-radius:8px;padding:9px 12px;font-size:.77rem}
+.game-outcome-import:focus-within{outline:2px solid #f3d28b}
+.game-outcome-import input{font-size:.7rem;max-width:190px}
+#game-outcome-status{margin:9px 0;font-size:.71rem}
+.game-outcome-empty{padding:12px;border:1px dashed #6a6c61;border-radius:8px;color:#d3d4c3;
+  background:rgba(27,40,41,.7);font-size:.81rem;line-height:1.5}
+.game-outcome-toolbar{display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap}
+.game-outcome-toolbar>.micro{margin:8px 0;font-size:.72rem}
+.game-outcome-scenario-select{max-width:100%;color:#f3e2c3;background:#273937;
+  border:1px solid #77877b;border-radius:7px;padding:8px;font-size:.79rem}
+.game-outcome-grid{margin:10px 0 6px}
+.game-outcome-card{min-width:0}
+.game-outcome-summary{display:flex;list-style:none;cursor:pointer;min-height:148px;padding:0;
+  background:radial-gradient(circle at 95% 0%,#55674b55,transparent 62%),linear-gradient(120deg,#1e3433,#141f24)}
+.game-outcome-summary::-webkit-details-marker{display:none}
+.game-outcome-summary:focus-visible{outline:2px solid #f4d08f;outline-offset:-3px}
+.game-outcome-summary-copy{display:flex;flex-direction:column;align-items:start;gap:4px;width:100%;
+  padding:14px 16px}
+.game-outcome-title{font-family:Cinzel,Georgia,serif;font-size:1rem;color:#f2dfc1;line-height:1.2}
+.game-outcome-number{font-size:1.65rem;font-weight:700;line-height:1.1;color:#ecd3a2}
+.game-outcome-caption{font-size:.73rem;color:#c2d0c5;line-height:1.35}
+.game-outcome-summary .board-open{margin-top:auto}
+.game-outcome-body{display:grid;gap:12px;padding:15px 16px}
+.game-outcome-body>.micro{margin:0;font-size:.76rem}
+.game-outcome-buckets,.game-outcome-seeds,.game-outcome-matchups{display:grid;gap:6px;min-width:0}
+.game-outcome-bucket,.game-outcome-seed{border:1px solid #506d63;color:#e8e5d4;border-radius:7px;
+  background:#203231;padding:9px 11px;text-align:left;cursor:pointer;font-size:.76rem}
+.game-outcome-bucket{display:flex;justify-content:space-between;gap:12px;position:relative;overflow:hidden}
+.game-outcome-bucket-bar{position:absolute;left:0;bottom:0;height:3px;min-width:3px;
+  background:#c6ab7a}
+.game-outcome-bucket.is-loss .game-outcome-bucket-bar{background:#bb8c8c}
+.game-outcome-bucket.is-unresolved .game-outcome-bucket-bar{background:#a3a0bd}
+.game-outcome-seed[aria-pressed=true],.game-outcome-seed:hover,
+.game-outcome-bucket:hover,.game-outcome-seed:focus-visible,
+.game-outcome-bucket:focus-visible{border-color:#e0c390}
+.game-outcome-evidence{min-width:0}
+.game-outcome-evidence-head{display:flex;justify-content:space-between;gap:9px;flex-wrap:wrap;
+  align-items:center;color:#f1d8a6}
+.game-outcome-round-options{display:flex;align-items:center;gap:12px;margin:10px 0}
+.game-outcome-round-slider{width:100%;min-width:0;accent-color:#dab47a;cursor:pointer}
+.game-outcome-round-options>.micro{white-space:nowrap}
+.game-outcome-round-detail{border:1px solid #53655b;background:#1b2b2b;border-radius:9px;padding:11px}
+.game-outcome-round-detail>strong{color:#e8d1a2;font-size:.81rem}
+.game-outcome-life-stats{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:5px;margin-top:9px}
+.game-outcome-life-stat{display:flex;flex-direction:column;gap:4px;padding:9px 5px;
+  border:1px solid #445e59;background:#213535;border-radius:7px;min-width:0}
+.game-outcome-life-stat span{font-size:.69rem;color:#c2c9ba}
+.game-outcome-life-stat strong{font-size:1.04rem;color:#f0d9a9;overflow-wrap:anywhere}
+.game-outcome-life-stat small{font-size:.62rem;color:#c5cbbd}
+.game-outcome-life-events{margin-top:9px;display:grid;gap:4px}
+.game-outcome-life-events>.micro{margin:0}
+.game-outcome-elimination{color:#e4aa99;font-size:.76rem}
+.game-outcome-legend{display:flex;gap:7px;flex-wrap:wrap}
+.game-outcome-legend span{border-left:4px solid;padding:5px 8px;background:#233234;border-radius:5px;
+  font-size:.72rem;color:#dde2d6}
+.game-outcome-body svg{display:block;width:100%;height:auto;max-height:260px;overflow:visible}
+.game-outcome-matchup{border:1px solid #4d645e;border-radius:8px;padding:10px;background:#1d3030}
+.game-outcome-matchup>summary{cursor:pointer;font-size:.78rem;color:#ead5b0;line-height:1.45}
+.game-outcome-matchup .game-outcome-seeds{margin-top:10px}
+.game-outcome-method>summary{font-size:.76rem}
+.game-outcome-method .micro{font-size:.71rem;line-height:1.5}
+.game-outcome-actions>summary{font-size:.73rem}
+.game-outcome-body:has(>.game-outcome-round-detail){min-width:0}
+@media(max-width:720px){
+ .game-outcome-panel{padding:10px;margin:10px 0}
+ .game-outcome-heading{align-items:start;gap:8px}
+ .game-outcome-import{padding:6px;flex-wrap:wrap;width:100%}
+ .game-outcome-import input{max-width:100%;flex:1}
+ .game-outcome-grid{gap:8px}
+ .game-outcome-summary{min-height:120px}
+ .game-outcome-summary-copy{padding:11px 13px}
+ .game-outcome-number{font-size:1.38rem}
+ .game-outcome-body{padding:10px 9px}
+ .game-outcome-life-stats{grid-template-columns:repeat(2,minmax(0,1fr))}
+ .game-outcome-life-stat{padding:7px}
+}

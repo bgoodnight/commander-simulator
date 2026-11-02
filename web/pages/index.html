@@ -6,14 +6,15 @@
   <meta name="theme-color" content="#182428">
   <meta name="description" content="Commander Deck Lab: explore cached Commander decklists, card art and precomputed early-turn observations.">
   <title>Commander Deck Lab — The Arcane Table</title>
-  <link rel="stylesheet" href="./style.css?v=held-median-20261102">
+  <link rel="stylesheet" href="./style.css?v=long-game-panels-20261102">
   <script src="https://cdn.jsdelivr.net/npm/d3@7/dist/d3.min.js" defer></script>
   <script src="./results_insights.js?v=20261101h1" defer></script>
   <script src="./brackets.js?v=20261101bracket" defer></script>
   <script src="./replay.js?v=bounded-evidence-pilot-20261102" defer></script>
   <script src="./insight_catalog.js?v=held-median-20261102" defer></script>
   <script src="./insight_explorer.js?v=held-median-20261102" defer></script>
-  <script src="./app.js?v=conditional-insights-20261102" defer></script>
+  <script src="./game_outcomes.js?v=outcomes-v1-20261102" defer></script>
+  <script src="./app.js?v=long-game-panels-20261102" defer></script>
 </head>
 <body>
 <main class="wide-wrap" id="app">
@@ -123,6 +124,28 @@
         </div>
         <div id="key-insights-grid" class="board-grid"></div>
         <p id="key-insights-empty" class="small" hidden></p>
+      </section>
+      <section id="long-game-panel" class="panel game-outcome-panel" aria-labelledby="long-game-heading">
+        <div class="game-outcome-heading">
+          <div>
+            <span class="eyebrow">Modeled multiplayer · new data</span>
+            <h2 id="long-game-heading">Life, results &amp; opposing tables</h2>
+            <p class="micro">Separate from six-turn development. Abstract opponent behavior, not verified multiplayer win rates.</p>
+          </div>
+          <label class="game-outcome-import">
+            <span>Load game JSON</span>
+            <input id="game-outcome-files" type="file" accept="application/json,.json" multiple>
+          </label>
+        </div>
+        <p id="game-outcome-status" class="micro" role="status">Checking for published long-game batches…</p>
+        <div id="game-outcome-results" aria-live="polite"></div>
+        <details class="story-drilldown game-outcome-method">
+          <summary>About this data &amp; adding more runs</summary>
+          <p class="micro">Load one or more <code>commander-modeled-outcomes-v1</code> JSON files exported by <code>tools/build_game_outcomes.py</code>. Uploads are read locally in this browser; they do not modify your deck or publish any file. All batches must match the selected deck's exact revision.</p>
+          <p class="micro">Unresolved games are right-censored at their round limit. The abstract opponents are stress policies, not Commander decks. Opponent-deck comparisons activate only when recorded <code>opponent_decks</code> identities are present. Games from different scenario/round horizons are not pooled into one outcome percentage.</p>
+          <p class="micro">Example generation: <code>python tools/build_game_outcomes.py --deck mortarion_physical_final --scenario mixed --rounds 20 --seeds 20 --examples 3 --output outcome-mortarion.json</code></p>
+          <p class="micro"><a href="https://github.com/bgoodnight/commander-simulator/actions/runs/41502434821" target="_blank" rel="noopener noreferrer">Download the initial eight-game sample from GitHub Actions</a> (ZIP with four JSON files).</p>
+        </details>
       </section>
       <details id="development-panel" class="panel result-takeaway result-takeaway-development" aria-labelledby="bounded-heading">
         <summary class="result-takeaway-summary">

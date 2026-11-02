@@ -11,6 +11,7 @@ import argparse
 from collections import Counter
 import hashlib
 import json
+import re
 from pathlib import Path
 import shutil
 import subprocess
@@ -77,7 +78,7 @@ def card_record(card):
 
 
 def build(output, *, catalog_path=SHARED_CATALOG, name_catalog_path=DEFAULT_NAME_CATALOG,
-          seeds=DEFAULT_SEEDS, archive_source=None):
+          seeds=DEFAULT_SEEDS, archive_source=None, outcome_source=None):
     output = Path(output)
     if output.resolve() in (ROOT.resolve(), (ROOT / "web").resolve()):
         raise ValueError("Build output must be a separate directory")
@@ -216,7 +217,7 @@ def build(output, *, catalog_path=SHARED_CATALOG, name_catalog_path=DEFAULT_NAME
     # attractive Deck Summary by default; results.html retains the
     # interpretive observation archive and editor.html the deck workshop.
     # The same source shell selects content by pathname without a server.
-    for filename in ("app.js", "results_insights.js", "brackets.js", "replay.js", "insight_explorer.js", "insight_catalog.js", "style.css", "game-changers.json"):
+    for filename in ("app.js", "results_insights.js", "brackets.js", "replay.js", "insight_explorer.js", "insight_catalog.js", "game_outcomes.js", "style.css", "game-changers.json"):
         shutil.copy2(static / filename, output / filename)
     for filename in ("index.html", "summary.html", "results.html", "editor.html"):
         shutil.copy2(static / "index.html", output / filename)
@@ -266,6 +267,55 @@ def build(output, *, catalog_path=SHARED_CATALOG, name_catalog_path=DEFAULT_NAME
         dest.parent.mkdir(parents=True, exist_ok=True)
         shutil.copy2(replay_source, dest)
         replay_assets.append("replay-data/" + replay_file)
+
+    # Optional long-game exports are copied only if explicitly pinned to
+    # an exact built-in deck revision. The site builder NEVER runs simulation
+    # games or treats abstract opponents as legal opposing Commander decks.
+    outcome_assets = []
+    outcome_source = (static / "data" / "game-outcomes"
+                      if outcome_source is None else Path(outcome_source))
+    if (outcome_source / "manifest.json").is_file():
+        index = json.loads((outcome_source / "manifest.json").read_text("utf-8"))
+        names = index.get("files")
+        if (index.get("format") != "commander-modeled-outcomes-library-v1"
+                or not isinstance(names, list) or len(names) > 24
+                or len(names) != len(set(names)) or
+                any(not isinstance(name, str) or
+                    re.fullmatch(r"[A-Za-z0-9_.-]+\.json", name) is None
+                    or name == "manifest.json" for name in names)):
+            raise ValueError("Invalid published long-game index")
+        known = {d["key"]: d["deck_sha256"] for d in decks}
+        for filename in names:
+            source = outcome_source / filename
+            batch = json.loads(source.read_text("utf-8"))
+            runs = batch.get("runs")
+            if (batch.get("format") != "commander-modeled-outcomes-v1"
+                    or batch.get("schema_version") != 1
+                    or batch.get("deck_key") not in known
+                    or batch.get("deck_sha256") != known[batch["deck_key"]]
+                    or batch.get("opponent_fidelity") !=
+                       "abstract_opponent_pressure_not_card_exact"
+                    or batch.get("outcomes_are_competitive_win_rates") is not False
+                    or type(batch.get("requested_rounds")) is not int
+                    or not 1 <= batch["requested_rounds"] <= 30
+                    or not isinstance(runs, list) or not 1 <= len(runs) <= 200
+                    or any(not isinstance(run, dict)
+                           or run.get("completed_rounds") !=
+                              len(run.get("life_history", [])) - 1
+                           or run.get("outcome", {}).get("requested_rounds")
+                              != batch["requested_rounds"]
+                           or run.get("outcome", {}).get("status") not in
+                              {"win", "loss", "draw", "unresolved", "not_evaluated"}
+                           for run in runs)):
+                raise ValueError("Invalid or mismatched long-game export: " + filename)
+            target = output / "game-outcomes" / filename
+            target.parent.mkdir(parents=True, exist_ok=True)
+            shutil.copy2(source, target)
+            outcome_assets.append("game-outcomes/" + filename)
+        target = output / "game-outcomes" / "manifest.json"
+        target.parent.mkdir(parents=True, exist_ok=True)
+        shutil.copy2(outcome_source / "manifest.json", target)
+        outcome_assets.append("game-outcomes/manifest.json")
     # Results are precomputed separately and must match the exported deck revisions.
     batches = json.loads((static / "data" / "bounded-batches.json").read_text(encoding="utf-8"))
     for key, batch in batches["decks"].items():
@@ -290,10 +340,10 @@ def build(output, *, catalog_path=SHARED_CATALOG, name_catalog_path=DEFAULT_NAME
         "asset_sha256": {name: hashlib.sha256((output / name).read_bytes()).hexdigest()
                          for name in ("decks.json", "observations.json", "names.json", "bounded-batches.json",
                                       "index.html", "summary.html", "results.html", "editor.html",
-                                      "app.js", "results_insights.js", "brackets.js", "replay.js", "insight_explorer.js", "style.css", "game-changers.json",
+                                      "app.js", "results_insights.js", "brackets.js", "replay.js", "insight_explorer.js", "insight_catalog.js", "game_outcomes.js", "style.css", "game-changers.json",
                                       *(f"bounded-runs-{key}.json" for key in batches["decks"]),
                                       *(f"simulation-data/{relative}" for relative in archive_files),
-                                      *replay_assets)},
+                                      *replay_assets, *outcome_assets)},
         "note": "Six canonical decks, two verified physical trials, and one exact but unverified owned source list; observations are per verified deck only.",
     }
     write_json("build-manifest.json", manifest)

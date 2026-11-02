@@ -71,7 +71,7 @@ class StaticPagesTests(unittest.TestCase):
     def test_only_allowlisted_site_data_and_no_workspace_are_exported(self):
         self.run_build()
         permitted={"index.html","summary.html","results.html","editor.html",
-                   "app.js","results_insights.js","brackets.js","replay.js","insight_explorer.js","insight_catalog.js","style.css","game-changers.json","decks.json",
+                   "app.js","results_insights.js","brackets.js","replay.js","insight_explorer.js","insight_catalog.js","game_outcomes.js","style.css","game-changers.json","decks.json",
                    "observations.json","names.json","bounded-batches.json","build-manifest.json",".nojekyll"}
         published=json.loads((self.destination/"bounded-batches.json").read_text())
         permitted.update(f"bounded-runs-{key}.json" for key in published["decks"])
@@ -93,9 +93,14 @@ class StaticPagesTests(unittest.TestCase):
                 if d["key"]=="mortarion_physical_final")
             self.assertEqual(replay["deck_sha256"],built_deck["deck_sha256"])
             self.assertEqual(len(replay["scenarios"]),5)
+        long_game_dir=self.destination/"game-outcomes"
+        if long_game_dir.is_dir():
+            permitted.add("game-outcomes")
+            for p in long_game_dir.glob("*.json"):
+                self.assertTrue(p.is_file())
         self.assertEqual({p.name for p in self.destination.iterdir()},permitted)
         self.assertNotIn("shared_scryfall_catalog.json",permitted)
-        self.assertFalse(any(p.is_dir() and p.name not in ("simulation-data","replay-data")
+        self.assertFalse(any(p.is_dir() and p.name not in ("simulation-data","replay-data","game-outcomes")
                              for p in self.destination.iterdir()))
         page=(self.destination/"index.html").read_text()
         script=(self.destination/"app.js").read_text()
@@ -111,6 +116,9 @@ class StaticPagesTests(unittest.TestCase):
         self.assertIn("replay.js",page)
         self.assertIn("insight_explorer.js",page)
         self.assertIn("insight_catalog.js",page)
+        self.assertIn("game_outcomes.js",page)
+        self.assertTrue((self.destination/"game_outcomes.js").is_file())
+        self.assertIn('id="long-game-panel"',page)
         self.assertTrue((self.destination/"insight_explorer.js").is_file())
         self.assertIn("id=\"opponent-replay-panel\"",page)
         self.assertIn("renderReplay",script)
@@ -219,6 +227,44 @@ class StaticPagesTests(unittest.TestCase):
             self.assertIsNotNone(image)
             self.assertTrue(image.startswith("https://cards.scryfall.io/art_crop/front/"))
         self.assertIsNone(card_image({"id":"not-a-real-id"}))
+
+    def test_optional_long_game_data_needs_exact_deck_revision(self):
+        source=Path(self.temp.name)/"outcome-data"
+        source.mkdir()
+        key="mortarion_current"
+        pinned=json.loads((Path(__file__).resolve().parents[1]/
+            "web/pages/data/bounded-batches.json").read_text())
+        sha=pinned["decks"][key]["deck_sha256"]
+        round0={"round":0,"life_totals":{"0":40,"1":40,"2":40,"3":40},
+                "alive_seats":[0,1,2,3],"life_changes":[],"new_eliminations":[]}
+        round1={"round":1,"life_totals":{"0":39,"1":40,"2":40,"3":40},
+                "alive_seats":[0,1,2,3],
+                "life_changes":[{"seat":0,"delta":-1,"amount":1,"kind":"loss"}],
+                "new_eliminations":[]}
+        payload={
+            "format":"commander-modeled-outcomes-v1","schema_version":1,
+            "deck_key":key,"deck_sha256":sha,"requested_rounds":2,
+            "scenario":"mixed",
+            "opponent_fidelity":"abstract_opponent_pressure_not_card_exact",
+            "outcomes_are_competitive_win_rates":False,
+            "runs":[{"seed":7,"completed_rounds":1,
+                     "life_history":[round0,round1],
+                     "outcome":{"status":"unresolved","requested_rounds":2}}]
+        }
+        index={"format":"commander-modeled-outcomes-library-v1",
+               "files":["pilot.json"]}
+        (source/"manifest.json").write_text(json.dumps(index))
+        (source/"pilot.json").write_text(json.dumps(payload))
+        published=self.run_build(outcome_source=source)
+        self.assertIn("game-outcomes/manifest.json",published["asset_sha256"])
+        self.assertIn("game-outcomes/pilot.json",published["asset_sha256"])
+        self.assertEqual(
+            json.loads((self.destination/"game-outcomes/pilot.json").read_text())
+            ["outcomes_are_competitive_win_rates"],False)
+        payload["deck_sha256"]="wrong-hash"
+        (source/"pilot.json").write_text(json.dumps(payload))
+        with self.assertRaisesRegex(ValueError,"long-game export"):
+            self.run_build(outcome_source=source)
 
     def test_build_refuses_duplicate_seeds(self):
         with self.assertRaisesRegex(ValueError,"distinct"):
