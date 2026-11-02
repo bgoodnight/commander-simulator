@@ -39,7 +39,8 @@ from .reviewed_token_spells import (reviewed_token_spell,
 from .bounded_trigger_effects import resolve_reviewed_spell_triggers
 from .kernel_life import KernelLife
 from .reviewed_phase_effects import ReviewedPhaseEngine,reviewed_phase_permanent
-from .composed_abilities import ComposedAbilityEngine, reviewed_composed_permanent
+from .composed_abilities import ComposedAbilityEngine, reviewed_composed_permanent, ABILITIES
+from .reviewed_commander_cast import commander_cost, cast_commander
 from .reviewed_reactive_triggers import ReactiveTriggerEngine
 from .reviewed_death_effects import ReviewedDeathEngine
 from .reviewed_enter_effects import reviewed_enter_rule, execute_reviewed_enter
@@ -149,7 +150,11 @@ def run_bounded_early_game(deck_key, *, seed=0, turns=6, mulligan="one-free", pr
             keywords = face.keywords or frozenset()
             colors_printed = face.colors
         tutor_review = reviewed_tutor(name, raw_by_name[name])
-        reviewed = (reviewed_creature(deck_key, name, raw_by_name[name])
+        reviewed = ((section == "Commander" and all(
+                        rule.oracle_id==identity.oracle_id and
+                        rule.oracle_excerpt in raw_by_name[name].get("oracle_text","")
+                        for rule in ABILITIES.get(name,())) and bool(ABILITIES.get(name)))
+                    or reviewed_creature(deck_key, name, raw_by_name[name])
                     or reviewed_rock(name, raw_by_name[name], colors) is not None
                     or reviewed_land(name, raw_by_name[name], colors) is not None
                     or (tutor_review is not None
@@ -333,6 +338,17 @@ def run_bounded_early_game(deck_key, *, seed=0, turns=6, mulligan="one-free", pr
         while True:
             resolve_reactive()
             options = []
+            # Command-zone casting uses the same physical mana service and
+            # a reusable two-generic-per-previous-cast tax.
+            for commander_id in zones.ids(0,"command"):
+                cmd=kernel.get(commander_id)
+                cost=commander_cost(kernel,cmd,raw_by_name)
+                if cost is None:
+                    continue
+                preview=mana_service.plan_spell(0,cost,cmd)
+                if preview is not None:
+                    options.append((1,len(preview.source_ids),cmd.card.name,
+                                    commander_id,"commander",cost,None))
             for oid in zones.ids(0, "hand"):
                 obj = kernel.get(oid)
                 name = obj.card.name
@@ -384,6 +400,21 @@ def run_bounded_early_game(deck_key, *, seed=0, turns=6, mulligan="one-free", pr
             if not options:
                 break
             _, _, name, oid, kind, cost, target = min(options)
+            if kind == "commander":
+                triggered=[]
+                outcome=cast_commander(zones,0,oid,raw_by_name,mana_service,
+                    on_cast=lambda ticket:triggered.extend(
+                        approved_spell_triggers(ticket)))
+                if outcome is None:
+                    raise AssertionError("Reviewed commander payment changed")
+                entered_on_turn[outcome.physical_id]=turn
+                events.extend(triggered)
+                events.append({"type":"reviewed_commander_cast",
+                    "card":outcome.card_name,"object_id":outcome.physical_id,
+                    "paid_source_ids":list(outcome.paid_source_ids),
+                    "commander_tax":outcome.commander_tax,
+                    "fidelity":"reviewed_command_zone"})
+                continue
             if kind == "common_spell":
                 x, victims = target
                 triggered=[]
