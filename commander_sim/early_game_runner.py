@@ -288,6 +288,15 @@ def run_bounded_early_game(deck_key, *, seed=0, turns=6, mulligan="one-free", pr
                 "drawn_ids":list(triggered.drawn_ids),
                 "returned_object_id":triggered.returned_id,
                 "fidelity":"bounded_no_opponent_priority"})
+        for composed in composed_engine.upkeep(active_seat=0,turn=turn):
+            events.append({
+                "type":"reviewed_composed_upkeep",
+                "source_object_id":composed.source_id,
+                "operation":composed.operation,
+                "created_token_ids":list(composed.created_ids),
+                "life_lost":composed.life_lost,
+                "death_trigger_count":composed.deaths,
+                "fidelity":"bounded_composed_upkeep"})
         resolve_reactive()
         drawn, okay = zones.draw(0, 1)  # Seat is explicitly not the starting seat.
         if not okay:
