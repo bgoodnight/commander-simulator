@@ -103,8 +103,15 @@ class NonhandCastTriggerTests(unittest.TestCase):
             resolve_reviewed_nonhand_cast_triggers(
                 self.z,0,SimpleNamespace(object_id=999999),
                 self.catalog)
-        # Nonhand trigger must observe this cast immediately, not be retried.
+        # The same pending stack ticket remains authentic after an
+        # unrelated physical move, including legal additional costs.
         self.z.move(fake,"hand","resolve")
+        restored=resolve_reviewed_nonhand_cast_triggers(
+            self.z,0,ticket,self.catalog)
+        self.assertEqual(len(restored),1)
+        self.assertEqual(restored[0]["triggered_by_stack_id"],ticket.object_id)
+        # A resolved ticket is no longer a legal source for the trigger.
+        self.z.resolve(ticket,lambda kernel,ticket:None)
         with self.assertRaises(ValueError):
             resolve_reviewed_nonhand_cast_triggers(
                 self.z,0,ticket,self.catalog)
