@@ -92,6 +92,29 @@ class OpponentPressureTests(unittest.TestCase):
         self.assertNotIn(attacker,self.kernel.objects)
         self.assertTrue(self.zones.assert_consistent())
 
+    def test_negative_power_blocker_deals_zero_combat_damage(self):
+        # A -2/4 creature can still block but must not submit -2 damage
+        # to the shared kernel. This was uncovered by long Mortarion runs
+        # containing signed creature-power modifiers.
+        blocker=self.zones.add(self.C(
+            "test:negative-power","Weakened Blocker",frozenset({"creature"}),
+            base_power=-2,base_toughness=4,coverage="approx"),
+            0,"battlefield")
+        opponent=self.stress("aggressive",seed=7)
+        attacker=self.zones.add(self.C(
+            "test:ordinary-attacker","Ordinary Attacker",frozenset({"creature"}),
+            base_power=2,base_toughness=2,coverage="approx"),
+            1,"battlefield",token=True)
+        opponent._born[attacker]=0
+        before=self.life.total(0)
+        opponent._combat(1,"aggro",turn=1,defender=0)
+        self.assertEqual(self.life.total(0),before)
+        self.assertIn(blocker,self.kernel.objects)
+        self.assertIn(attacker,self.kernel.objects)
+        self.assertEqual(self.kernel.get(attacker).damage_marked,0)
+        self.assertEqual(self.kernel.get(blocker).damage_marked,2)
+        self.assertTrue(self.zones.assert_consistent())
+
     def test_control_opponent_uses_capable_attacker_not_oldest(self):
         adv=self.stress("control",seed=4)
         weak=self.zones.add(self.C(
