@@ -29,7 +29,8 @@ class RemovalRule:
                 or self.operation not in {"destroy","destroy_and_debuff",
                                           "debuff_same_name","debuff_all",
                                           "destroy_below_power"}
-                or self.target not in {"none","creature","opponent_creature_or_enchantment",
+                or self.target not in {"none","creature","nonartifact_creature",
+                                       "opponent_creature_or_enchantment",
                                        "creature_or_enchantment","own_creature"}
                 or self.life_cost not in {"","two","target_mana_value"}):
             raise ValueError("Invalid registered removal recipe")
@@ -40,6 +41,10 @@ RULES={
         "94f0a572-e91c-4b56-a5d1-6cbbeabd210d",
         "Destroy target creature. You lose 2 life.",
         "{1}{B}","instant","destroy","creature",life_cost="two"),
+    "Go for the Throat":RemovalRule(
+        "2f092562-9e17-43cd-aeb8-d0567f99363e",
+        "Destroy target nonartifact creature.",
+        "{1}{B}","instant","destroy","nonartifact_creature"),
     "Withering Torment":RemovalRule(
         "ffce81c5-1b58-4882-a4e7-6f8d7cb170de",
         "Destroy target creature or enchantment. You lose 2 life.",
@@ -89,6 +94,10 @@ def valid_removal_target(zones,seat,rule,target_id):
     if obj.zone!="battlefield":
         return False
     if rule.target=="creature":
+        types={"creature"}
+    elif rule.target=="nonartifact_creature":
+        if "artifact" in obj.types:
+            return False
         types={"creature"}
     elif rule.target=="own_creature":
         types={"creature"}
