@@ -10,8 +10,8 @@ from .ability_composition import (
     AbilitySlot,AbilityHandler,ComposedCard,AbilityDispatcher)
 from .kernel_life import KernelLife
 from .physical_common_effects import (
-    CardQuantity,draw_physical_cards,GraveyardToHand,
-    retrieve_reviewed_graveyard_card)
+    CardQuantity,draw_physical_cards)
+from .graveyard_recipes import GraveyardRecipe, resolve_graveyard_recipe
 from .reviewed_token_spells import TokenBlueprint,create_reviewed_token_batches
 
 
@@ -217,9 +217,10 @@ class ReviewedPhaseEngine:
                         if selected is not None:
                             if selected not in creature_ids:
                                 raise ValueError("Unreviewed Cemetery graveyard choice")
-                            returned=retrieve_reviewed_graveyard_card(
-                                self.zones,seat,selected,
-                                GraveyardToHand(frozenset({"creature"})))
+                            returned=resolve_graveyard_recipe(
+                                self.zones,seat,(selected,),
+                                GraveyardRecipe("hand","own",
+                                                frozenset({"creature"})))[0].new_id
                 else:
                     raise NotImplementedError("Unregistered phase effect")
                 return tuple(tokens),tuple(drawn),returned

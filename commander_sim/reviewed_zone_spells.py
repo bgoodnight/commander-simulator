@@ -7,6 +7,7 @@ from dataclasses import dataclass
 
 from .generic_cast import ReviewedCreatureCast,cast_reviewed_spell
 from .physical_common_effects import CounterPlacement,put_reviewed_counters
+from .graveyard_recipes import GraveyardRecipe, resolve_graveyard_recipe
 
 
 @dataclass(frozen=True)
@@ -110,14 +111,16 @@ class ZoneSpellEngine:
         if rule.operation=="opponent_graveyard_theft":
             target=kernel.get(target_id)
             victim_owner=target.owner
-            new_id=self.zones.move(target_id,"battlefield","resolve")
-            creature=kernel.get(new_id)
-            creature.controller=seat
-            creature.tapped=True
-            kernel._dirty()
-            moved.append(new_id)
-            for other in tuple(self.zones.ids(victim_owner,"graveyard")):
-                moved.append(self.zones.move(other,"exile","exile"))
+            stolen=resolve_graveyard_recipe(
+                self.zones,seat,(target_id,),
+                GraveyardRecipe("battlefield","opponent",
+                                frozenset({"creature"}),
+                                controller_on_entry="actor",enter_tapped=True))
+            moved.extend(item.new_id for item in stolen)
+            remaining=tuple(self.zones.ids(victim_owner,"graveyard"))
+            exiled=resolve_graveyard_recipe(
+                self.zones,seat,remaining,GraveyardRecipe("exile","opponent"))
+            moved.extend(item.new_id for item in exiled)
         elif rule.operation=="return_when_dies":
             self.pending_returns[target_id]=(
                 turn,seat if expires_at_seat is None else expires_at_seat)
@@ -140,11 +143,11 @@ class ZoneSpellEngine:
                     or old not in before):
                 continue
             original_owner=before[old].owner
-            restored=self.zones.move(move.new_object_id,"battlefield","resolve")
-            creature=kernel.get(restored)
-            creature.tapped=True
-            creature.controller=original_owner
-            kernel.add_counter(restored,"+1/+1",1)
+            restored=resolve_graveyard_recipe(
+                self.zones,original_owner,(move.new_object_id,),
+                GraveyardRecipe("battlefield","own",
+                                frozenset({"creature"}),enter_tapped=True,
+                                enter_counters=("+1/+1",1)))[0].new_id
             outcome=ZoneSpellOutcome(
                 "temporary_death_return","return_when_dies",old,(restored,),())
             outcomes.append(outcome)

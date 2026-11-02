@@ -226,7 +226,8 @@ def run_bounded_early_game(deck_key, *, seed=0, turns=6, mulligan="one-free", pr
     life = KernelLife(kernel)
     life.install_reviewed_replacements(raw_by_name)
     phase_engine = ReviewedPhaseEngine(zones, life, raw_by_name)
-    death_engine = ReviewedDeathEngine(zones, life, raw_by_name)
+    death_engine = ReviewedDeathEngine(
+        zones, life, raw_by_name, provisional_mode=provisional_mode)
     composed_engine = ComposedAbilityEngine(zones, life, raw_by_name,
                                            mana_service, death_engine)
     reactive_engine = ReactiveTriggerEngine(zones,life,raw_by_name)
