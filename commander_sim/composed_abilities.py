@@ -32,6 +32,7 @@ class Payment:
     mana: str = ""
     x_generic: bool = False
     x_black_only: bool = False
+    tap: bool = False
     def __post_init__(self):
         if sum((bool(self.mana),self.x_generic,self.x_black_only))>1:
             raise ValueError("Only one explicit mana payment mode is supported")
@@ -44,7 +45,8 @@ class Step:
     quantity: str = "one"
     def __post_init__(self):
         if self.operation not in {"create_tokens", "damage_all",
-                                  "sacrifice_source", "lose_life", "amass"}:
+                                  "sacrifice_source", "lose_life", "amass",
+                                  "damage_self"}:
             raise ValueError("Unregistered composed operation")
         if self.quantity not in {"one", "x"}:
             raise ValueError("Unregistered quantity variable")
@@ -82,6 +84,12 @@ ABILITIES = {
                 "At the beginning of your upkeep, you lose 1 life and amass Zombies 1.",
                 "upkeep", Predicate("always"), Payment(),
                 (Step("lose_life"), Step("amass"))),
+    ),
+    "Stuffy Doll": (
+        Ability("499dceab-1890-49c8-b35d-b059a1dc950f",
+                "{T}: This creature deals 1 damage to itself.",
+                "activate", Predicate("always"), Payment(tap=True),
+                (Step("damage_self"),)),
     ),
     "Crypt Rats": (
         Ability("104095ed-55e3-408e-bf70-4fe06bb16d2f",
@@ -238,6 +246,8 @@ class ComposedAbilityEngine:
                 if creatures:
                     self.zones.kernel.damage_creatures_together(
                         {oid:n for oid in creatures})
+            elif step.operation == "damage_self":
+                self.zones.kernel.mark_damage(source.object_id,n)
             elif step.operation == "sacrifice_source":
                 self.zones.move(source.object_id, "graveyard", "sacrifice")
         resolved = ()
@@ -273,7 +283,7 @@ class ComposedAbilityEngine:
             slot.slot_id, source.object_id,
             lambda operation: self._execute(source, operation, x=x))
 
-    def activate(self, source_id, *, turn, legal_window=True, x=0):
+    def activate(self, source_id, *, turn, legal_window=True, x=0, tap_ready=True):
         """Perform one legal reviewed activation; repeat calls are permitted.
 
         Caller owns priority and activation strategy. This deliberately
@@ -286,6 +296,8 @@ class ComposedAbilityEngine:
         if not rules:
             raise ValueError("Unreviewed activated ability")
         rule = rules[0]
+        if rule.payment.tap and (source.tapped or tap_ready is not True):
+            return None
         if not self._condition(rule, source.controller, 0):
             return None
         if type(x) is not int or x<0:
@@ -305,6 +317,9 @@ class ComposedAbilityEngine:
         paid=self.mana_service.pay(source.controller,cost)
         if paid is None:
             return None
+        if rule.payment.tap:
+            source.tapped=True
+            self.zones.kernel._dirty()
         self._turn=turn
         return self._dispatch_reviewed(source,rule,x=x)
 
