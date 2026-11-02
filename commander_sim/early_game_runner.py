@@ -25,6 +25,7 @@ from .deck_fixtures import FIXTURES, EXPERIMENTAL_FIXTURES, SHARED_CATALOG
 from .generic_cast import ReviewedCreatureCast, cast_reviewed_permanent
 from .provisional_import import provisional_profile, provisional_report
 from .provisional_actions import cast_provisional_spell
+from .library_actions import required_draws
 from .kernel_reporting import project_kernel_turn
 from .board_features import analyze_authoritative_run
 from .reviewed_early_cards import REVIEWED_BY_DECK, LIMITATIONS, reviewed_creature
@@ -540,8 +541,11 @@ def run_bounded_early_game(deck_key, *, seed=0, turns=6, mulligan="one-free", pr
                     # A speculative preview cannot commit a draw from an
                     # empty library or a source-paid spell that kills its
                     # own controller. Filter before the spell is chosen.
-                    if (provisional.mode in {"draw","draw_lose"}
-                            and len(zones.ids(0,"library"))<provisional.amount):
+                    draw_need = (required_draws(provisional.library_actions)
+                                 if provisional.library_actions else
+                                 provisional.amount if provisional.mode in {"draw","draw_lose"}
+                                 else 0)
+                    if len(zones.ids(0,"library")) < draw_need:
                         continue
                     if (provisional.life_amount
                             and life.total(0)<=provisional.life_amount):
@@ -673,6 +677,9 @@ def run_bounded_early_game(deck_key, *, seed=0, turns=6, mulligan="one-free", pr
                     "amount":outcome.count,
                     "drawn_ids":list(outcome.drawn_ids),
                     "created_token_ids":list(outcome.created_token_ids),
+                    "library_actions":list(outcome.library_steps),
+                    "discarded_ids":list(outcome.discarded_ids),
+                    "surveilled_ids":list(outcome.surveilled_ids),
                     "paid_source_ids":list(outcome.paid_source_ids),
                     "graveyard_object_id":outcome.resolved_zone_id,
                     "fidelity":"provisional_partial"})
@@ -778,6 +785,11 @@ def run_bounded_early_game(deck_key, *, seed=0, turns=6, mulligan="one-free", pr
                                "card":name,
                                "source_graveyard_id":result.source_graveyard_id,
                                "drawn_ids":list(result.drawn_ids),
+                               "library_actions":list(result.library_steps),
+                               "discarded_ids":list(result.discarded_ids),
+                               "surveilled_ids":list(result.surveilled_ids),
+                               "bottomed_ids":list(result.bottomed_ids),
+                               "returned_ids":list(result.returned_ids),
                                "unsupported_abilities":list(result.limitations),
                                "fidelity":"reviewed_physical_draw"})
                 continue
