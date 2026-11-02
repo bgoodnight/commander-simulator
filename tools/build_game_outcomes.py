@@ -117,10 +117,17 @@ def generate(deck_key, *, seeds=12, rounds=20, start_seed=0,
     for seed in range(start_seed,start_seed+seeds):
         pilot_kw=({"pilot_archetype":pilot_archetype}
                   if pilot_archetype!="auto" else {})
-        run=runner(deck_key,seed=seed,turns=rounds,
-                   opponent_scenario=scenario,
-                   provisional_mode=provisional_mode,
-                   pilot_style=pilot_style,**pilot_kw)
+        try:
+            run=runner(deck_key,seed=seed,turns=rounds,
+                       opponent_scenario=scenario,
+                       provisional_mode=provisional_mode,
+                       pilot_style=pilot_style,**pilot_kw)
+        except Exception as error:
+            # Preserve the original cause, but always print the exact seed
+            # and cohort needed to reproduce a long-game rules failure.
+            raise RuntimeError(
+                f"Modeled outcome failed: deck={deck_key} "
+                f"scenario={scenario} seed={seed} rounds={rounds}") from error
         if (run["deck_key"]!=deck_key
                 or run["mode"]!="bounded_three_opponent_pressure"
                 or run["outcome"]["fidelity"]!=

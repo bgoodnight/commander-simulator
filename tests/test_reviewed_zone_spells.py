@@ -74,6 +74,23 @@ class ZoneSpellTests(unittest.TestCase):
         self.assertEqual(self.spells.pending_returns,{})
         self.assertTrue(self.zones.assert_consistent())
 
+    def test_delayed_return_skips_card_already_moved_out_of_graveyard(self):
+        self.land(1)
+        instant=self.add("Undying Malice",zone="hand",types=("instant",))
+        body=self.add("Target Body",power=2,toughness=3)
+        self.assertIsNotNone(self.spells.cast(0,instant,body,turn=3))
+        before=capture_battlefield(self.kernel)
+        move_ix=len(self.kernel.moves)
+        graveyard_id=self.zones.move(body,"graveyard","destroy")
+        death_move=self.kernel.moves[move_ix]
+        self.zones.move(graveyard_id,"exile","exile")
+        returned=self.spells.observe_deaths(before,(death_move,),turn=3)
+        self.assertEqual(returned,())
+        self.assertEqual(self.spells.pending_returns,{})
+        self.assertFalse(any(o.card.name=="Target Body" for o in
+                             self.kernel.on_battlefield()))
+        self.assertTrue(self.zones.assert_consistent())
+
     def test_temporary_permission_expires_at_active_turn_end(self):
         self.land(1)
         instant=self.add("Undying Malice",zone="hand",types=("instant",))

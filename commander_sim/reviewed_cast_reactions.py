@@ -34,8 +34,16 @@ class CastReactionResult:
 def resolve_cast_reactions(zones,seat,catalog,*,source_spell):
     """Use actual currently committed spell source, not guessed color tags."""
     from .physical_common_effects import CounterPlacement,put_reviewed_counters
+    # Paying additional costs can append several legitimate zone-move
+    # events after the cast. Do not rely on spell_cast being one of the last
+    # three kernel events: bind provenance to the exact active stack object.
+    valid_cast=any(
+        event.name=="spell_cast"
+        and event.source_id==source_spell.object_id
+        and event.controller==seat
+        for event in reversed(zones.kernel.events))
     if (source_spell.zone!="stack" or source_spell.controller!=seat
-            or "spell_cast" not in [event.name for event in zones.kernel.events[-3:]]):
+            or not valid_cast):
         raise ValueError("Expected an actual cast source still on stack")
     results=[]
     colors=source_spell.card.colors or frozenset()
