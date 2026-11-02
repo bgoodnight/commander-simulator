@@ -105,6 +105,22 @@ class OpponentPressureTests(unittest.TestCase):
         with self.assertRaises(ValueError):
             self.stress("infinite_cheating")
 
+    def test_opponent_exile_uses_finite_interaction_budgets(self):
+        body=self.zones.add(self.C("test:target","Durable Test Target",
+            frozenset({"creature"}),base_power=2,base_toughness=9,
+            coverage="approx"),0,"battlefield")
+        adversary=self.stress("control",seed=2)
+        for turn in range(1,11):
+            adversary.advance(turn)
+        spent={}
+        for event in adversary.events:
+            if event.operation=="abstract_exile":
+                spent[event.seat]=spent.get(event.seat,0)+1
+        for seat,role in adversary.roles.items():
+            limit=2 if role=="control" else 1 if role=="value" else 0
+            self.assertLessEqual(spent.get(seat,0),limit)
+        self.assertTrue(self.zones.assert_consistent())
+
     def test_bounded_physical_mortarion_accepts_seeded_opponent_stress(self):
         r=run_bounded_early_game("mortarion_physical_final",
                                  seed=3,turns=4,opponent_scenario="balanced")
