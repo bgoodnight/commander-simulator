@@ -22,6 +22,14 @@ class EntryChainOutcome:
 
 def bounded_entry_choice(rule, source, zones, life):
     """Deliberately simple pilot policy, replaceable without rules rewrites."""
+    if rule.operation=="exile_graveyard_tokens":
+        # The same typed choice works for any future ETB using graveyard
+        # counting, not just this source. The actor may legally choose self.
+        seats=tuple(sorted(life.kernel.life_totals))
+        return max(seats,key=lambda seat:(
+            sum(bool(zones.kernel.get(oid).types & rule.count_types_any)
+                for oid in zones.ids(seat,"graveyard")),
+            seat!=source.controller,-seat))
     if rule.operation=="fabricate_one":
         return "servo"
     if rule.operation=="optional_exile_nonland":
