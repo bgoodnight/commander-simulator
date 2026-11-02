@@ -15,6 +15,7 @@ from .physical_common_effects import (
     TargetedPermanentRemoval,remove_reviewed_permanent)
 from .reviewed_token_spells import TokenBlueprint,create_reviewed_token_batches
 from .reviewed_death_effects import capture_battlefield
+from .physical_common_effects import TemporaryCreatureChange, change_reviewed_creature_stats
 
 
 _NECRON=TokenBlueprint("Necron Warrior",
@@ -34,17 +35,23 @@ class EnterRule:
     excerpt: str
     operation: str
     only_from_graveyard: bool = False
+    amount: int = 0
 
     def __post_init__(self):
         if (not self.oracle_id or not self.excerpt
                 or self.operation not in {
                     "necron_two","zombie_two","soldier_one",
                     "draw_lose_two","optional_exile_nonland",
-                    "each_player_sacrifice","fabricate_one"}):
+                    "each_player_sacrifice","fabricate_one",
+                    "debuff_opponent_creatures"}
+                or type(self.amount) is not int or self.amount<0):
             raise ValueError("Invalid reviewed enter trigger")
 
 
 ENTER_RULES={
+    "Massacre Wurm":EnterRule("93cf50cf-0ecc-4d3e-abea-778c1ebacec4",
+        "When this creature enters, creatures your opponents control get -2/-2 until end of turn.",
+        "debuff_opponent_creatures",amount=2),
     "Royal Warden":EnterRule("0192ba05-6144-4fec-a803-462ecdf64195",
         "Phalanx Commander — When this creature enters, create two tapped 2/2 black Necron Warrior artifact creature tokens.",
         "necron_two"),
@@ -177,6 +184,14 @@ def execute_reviewed_enter(zones,life:KernelLife,source_id,catalog,*,
             else:
                 tokens=create_reviewed_token_batches(
                     zones,source.controller,(_SERVO,))
+        elif effect.operation=="debuff_opponent_creatures":
+            eligible=tuple(o.object_id for o in kernel.on_battlefield()
+                           if o.controller!=source.controller
+                           and "creature" in o.types)
+            change_reviewed_creature_stats(
+                zones,eligible,TemporaryCreatureChange(
+                    -effect.amount,-effect.amount),
+                death_engine=death_engine,turn=turn)
         elif effect.operation=="each_player_sacrifice":
             before=capture_battlefield(kernel)
             start=len(kernel.moves)
