@@ -285,3 +285,74 @@ def choose_utility_activation(zones,seat,life,mana_service,catalog,
         return None
     _,source_id,target=min(sources)
     return source_id,target
+
+
+def choose_end_step_token_mana(zones,seat,life,mana_service,catalog,
+                               *,life_start_index,max_sacrifices=3):
+    """Spend a disposable token for a larger reviewed end-step X payoff.
+
+    A source must be a live, source-reviewed creature-sacrifice mana outlet.
+    The potential increase in X must exceed the token being sacrificed;
+    this forbids speculative or net-zero sacrifices to fund Mortarion.
+    No token is invented by the choice operation; its caller must invoke the
+    existing physical reviewed sacrifice activation and re-evaluate.
+    """
+    from .composed_abilities import ABILITIES
+    from .reviewed_sacrifice_actions import SACRIFICE_MODES
+    if type(life_start_index) is not int:
+        raise ValueError("Expected physical turn life ledger index")
+    if type(max_sacrifices) is not int or max_sacrifices < 1:
+        raise ValueError("Expected positive sacrifice bound")
+    changes=life.kernel.life_changes
+    if not 0<=life_start_index<=len(changes):
+        raise ValueError("Invalid life ledger index")
+    lost=sum(change.amount for change in changes[life_start_index:]
+             if change.seat==seat and change.kind in {"loss","damage"})
+    if lost<2:
+        return None
+    objective=False
+    for obj in zones.kernel.on_battlefield():
+        if obj.controller!=seat:
+            continue
+        raw=catalog.get(obj.card.name,{})
+        if raw.get("oracle_id")!=obj.card.card_id:
+            continue
+        if any(rule.event=="end_step" and rule.payment.x_generic
+               and rule.oracle_id==obj.card.card_id
+               and rule.oracle_excerpt in raw.get("oracle_text","")
+               for rule in ABILITIES.get(obj.card.name,())):
+            objective=True
+            break
+    if not objective:
+        return None
+    tokens=sorted(
+        (obj for obj in zones.kernel.on_battlefield()
+         if obj.controller==seat and obj.token
+         and "creature" in obj.types
+         and "commander" not in obj.card.supertypes),
+        key=lambda obj:(obj.power,obj.object_id))
+    if not tokens:
+        return None
+    # Actual colored/general spendability, not simply nominal source count.
+    baseline=max(
+        (x for x in range(min(lost,20),-1,-1)
+         if mana_service.plan(seat,"{"+str(x)+"}") is not None),
+        default=0)
+    for source in sorted(zones.kernel.on_battlefield(),key=lambda o:o.object_id):
+        if source.controller!=seat or source.tapped:
+            continue
+        rule=SACRIFICE_MODES.get(source.card.name)
+        raw=catalog.get(source.card.name,{})
+        if (rule is None or rule.action not in {"colorless_mana","any_color_mana"}
+                or raw.get("oracle_id")!=source.card.card_id
+                or rule.oracle_id!=source.card.card_id
+                or rule.excerpt not in raw.get("oracle_text","")):
+            continue
+        yield_mana=2 if rule.action=="colorless_mana" else 1
+        if min(lost,baseline+yield_mana)-baseline < 2:
+            continue
+        victim=next((t for t in tokens
+                     if t.object_id!=source.object_id),None)
+        if victim is not None:
+            return source.object_id,victim.object_id
+    return None
