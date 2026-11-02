@@ -53,7 +53,8 @@ from .reviewed_sacrifice_actions import (
     activate_reviewed_sacrifice)
 from .template_resources import TemplateManaService
 from .resource_development import assess_resources, choose_tutor_target
-from .resource_pilot import choose_token_mana_sacrifice
+from .resource_pilot import choose_token_mana_sacrifice, plan_common_spell, ritual_enables_spell
+from .reviewed_common_spells import reviewed_common_spell, cast_common_spell
 from .reviewed_ramp import reviewed_ramp, reviewed_ritual, cast_ritual, activate_land_ramp, resolve_enter_ramp
 from .hand_cleanup import cleanup_hand
 from .reviewed_escape import (reviewed_breach, escape_candidates,
@@ -162,6 +163,7 @@ def run_bounded_early_game(deck_key, *, seed=0, turns=6, mulligan="one-free", pr
                     or reviewed_sacrifice_artifact(name,raw_by_name[name])
                     or reviewed_ramp(name,raw_by_name[name]) is not None
                     or reviewed_ritual(name,raw_by_name[name])
+                    or reviewed_common_spell(name,raw_by_name[name]) is not None
                     or approved_enter_hand_cast(name)
                     or reviewed_breach(name,raw_by_name[name])
                     or reviewed_buyback(name,raw_by_name[name]) is not None
@@ -329,23 +331,31 @@ def run_bounded_early_game(deck_key, *, seed=0, turns=6, mulligan="one-free", pr
                 entering = approved_enter_hand_cast(name)
                 ramp = reviewed_ramp(name,raw) if "land" not in obj.types else None
                 ritual = reviewed_ritual(name,raw)
+                common = reviewed_common_spell(name,raw)
+                common_plan = (plan_common_spell(zones,0,obj,common,raw_by_name,mana_service,life)
+                               if common is not None else None)
+                if ritual and not ritual_enables_spell(zones,0,obj,raw_by_name,mana_service):
+                    continue
                 tutor = reviewed_tutor(name, raw)
                 eligible = (eligible_reviewed_tutor_targets(zones, 0, name, raw_by_name)
                             if tutor and tutor[2] in {"instant", "sorcery"} else ())
                 if (not is_creature and rock is None and not eligible
                         and token_spell is None and draw_spell is None and not phase_enchantment
-                        and not sacrifice_artifact and not entering and not ramp and not ritual):
+                        and not sacrifice_artifact and not entering and not ramp and not ritual
+                        and not common_plan):
                     continue
-                cost = registry.get(name).primary_face().mana_cost
+                cost = common_plan[0] if common_plan else registry.get(name).primary_face().mana_cost
                 payment = mana_service.plan_spell(0, cost, obj)
                 if payment is not None:
-                    kind = ("ritual" if ritual else
+                    kind = ("common_spell" if common_plan else
+                            "ritual" if ritual else
                             "artifact" if rock is not None or sacrifice_artifact or (ramp and name == "Wayfarer\u0027s Bauble") else
                             "enchantment" if phase_enchantment or (entering and "Enchantment" in raw.get("type_line","").split(" — ",1)[0]) else
                             "tutor" if eligible else
                             "draw_spell" if draw_spell is not None else
                             "token_spell" if token_spell is not None else "creature")
-                    target = choose_tutor_target(zones, 0, eligible, raw_by_name, colors) if eligible else None
+                    target = (common_plan[1:] if common_plan else
+                              choose_tutor_target(zones, 0, eligible, raw_by_name, colors) if eligible else None)
                     # Reviewed trigger creatures precede spells so their
                     # shared effects may fire on subsequent actual casts.
                     options.append((0 if rock is not None or ritual else
@@ -357,6 +367,25 @@ def run_bounded_early_game(deck_key, *, seed=0, turns=6, mulligan="one-free", pr
             if not options:
                 break
             _, _, name, oid, kind, cost, target = min(options)
+            if kind == "common_spell":
+                x, victims = target
+                triggered=[]
+                result=cast_common_spell(
+                    zones,life,0,oid,raw_by_name,colors,mana_service,
+                    x=x,sacrifice_ids=victims,death_engine=death_engine,turn=turn,
+                    on_cast=lambda ticket: triggered.extend(approved_spell_triggers(ticket)))
+                if result is None:
+                    raise AssertionError("Reviewed common spell payment became unavailable")
+                events.extend(triggered)
+                events.append({"type":"reviewed_common_spell_resolved",
+                               "card":result.name,"x":x,
+                               "drawn_ids":list(result.drawn_ids),
+                               "created_token_ids":list(result.created_token_ids),
+                               "sacrificed_ids":list(result.sacrificed_ids),
+                               "life_lost":result.life_lost,
+                               "paid_source_ids":list(result.paid_source_ids),
+                               "fidelity":"bounded_common_spell"})
+                continue
             if kind == "ritual":
                 result = cast_ritual(zones, 0, oid, raw_by_name, colors, mana_service)
                 if result is None:
@@ -839,6 +868,7 @@ def run_bounded_early_game(deck_key, *, seed=0, turns=6, mulligan="one-free", pr
                 or reviewed_sacrifice_artifact(name, raw)
                 or reviewed_ramp(name,raw) is not None
                 or reviewed_ritual(name,raw)
+                or reviewed_common_spell(name,raw) is not None
                 or approved_enter_hand_cast(name)
                 or reviewed_breach(name,raw)
                 or reviewed_buyback(name,raw))
