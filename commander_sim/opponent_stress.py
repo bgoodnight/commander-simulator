@@ -160,12 +160,13 @@ class BoundedOpponentPressure:
             and (removal_kind=="exile" or "indestructible" not in o.keywords)
             and kernel.legal_target(seat,o.object_id,
                                     frozenset({"creature","enchantment","artifact"}))]
-        target_seat=self._target_seat(seat,role,eligible={
-            obj.controller for obj in valid})
-        if target_seat is None:
+        if not valid:
             return False
-        candidates=[o for o in valid if o.controller==target_seat]
         # Target a consequential engine or commander over an expendable token.
+        # Score *all* legal opposing objects together. Choosing a seat first
+        # made the value of a single high-priority threat depend on how many
+        # low-impact permanents another seat controlled, and could distort
+        # decisions when only the physical pilot had reviewed engines.
         def score(o):
             # Generic permanent threat: commander / board influence /
             # printed size. No favored named cards or lowest-ID tie bias.
@@ -183,9 +184,15 @@ class BoundedOpponentPressure:
                     + 0.35*max(0,o.toughness)
                     + min(3,max(0,float(raw.get("cmc") or 0)))*0.5
                     - 1.5*int(o.token))
+        # A finite stochastic choice retains interaction variance while
+        # permitting any seat's high-threat permanent to draw attention.
+        # Seat number, player identity and object insertion order never enter
+        # the scoring formula. Within a score tier, shuffle before sampling.
+        candidates=sorted(valid,key=lambda o:(o.controller,o.object_id))
         weights=[max(0.25,1+max(-0.5,score(obj)))**1.8
                  for obj in candidates]
         target=self.rng.choices(candidates,weights=weights,k=1)[0]
+        target_seat=target.controller
         # One bounded instant response window before a creature destroy;
         # only the defending player can cast their own reviewed response.
         if removal_kind=="destroy" and callable(self.before_removal):
