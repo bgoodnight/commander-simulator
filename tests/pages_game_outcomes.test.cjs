@@ -273,6 +273,73 @@ test('results page and exporter wire a future published manifest and local JSON'
   assert.match(app,/loadPublishedLongGame/);
   assert.match(app,/renderLongGamePanel/);
   assert.match(build,/outcome_assets/);
-  assert.match(build,/outcomes_are_competitive_win_rates/);
+  assert.match(build,/validate_outcome_library/);
+  const publisher=fs.readFileSync('tools/publish_game_outcomes.py','utf8');
+  assert.match(publisher,/outcomes_are_competitive_win_rates/);
   assert.equal(typeof Replay.renderBoundedEvidence,'function');
+});
+
+test('published outcome loader fetches only the selected deck and refreshes the manifest',async()=>{
+  const vm=require('node:vm');
+  const script=fs.readFileSync('web/pages/app.js','utf8');
+  const start=script.indexOf('function validatePublishedOutcomeIndex(');
+  const end=script.indexOf('/* Optional, versioned replay assets.',start);
+  assert.ok(start>=0&&end>start);
+  const ids={
+    mortarion_current:'d'.repeat(64),
+    necron_dynasties:'e'.repeat(64)
+  };
+  const index={
+    format:'commander-modeled-outcomes-library-v1',schema_version:1,
+    engine_commit:'a'.repeat(40),
+    files:['mortarion-current.json','necron.json'],
+    by_deck:{
+      mortarion_current:['mortarion-current.json'],
+      necron_dynasties:['necron.json']
+    },
+    sha256:{
+      'mortarion-current.json':'b'.repeat(64),
+      'necron.json':'c'.repeat(64)
+    }
+  };
+  const calls=[];
+  let renders=0;
+  const context={
+    pageName:'results',selected:'mortarion_current',
+    data:{decks:Object.keys(ids).map(key=>({key}))},
+    selectedDeck:()=>({deck_sha256:ids[context.selected]}),
+    isUnsimulatedVersion:()=>false,
+    renderLongGamePanel:()=>{renders++},
+    window:{DeckGameOutcomes:{validate:x=>!!x&&!!x.deck_key}},
+    fetch:async url=>{
+      calls.push(url);
+      if(url.includes('manifest.json'))return {ok:true,status:200,json:async()=>index};
+      const deck=url.includes('mortarion-current.json')?'mortarion_current':'necron_dynasties';
+      return {ok:true,status:200,
+        json:async()=>({deck_key:deck,deck_sha256:ids[deck]})};
+    }
+  };
+  vm.createContext(context);
+  vm.runInContext(
+    'const publishedOutcomeBatches=new Map();'+
+    'const publishedOutcomeRequests=new Map();'+
+    'let outcomeManifestPromise=null;let outcomeManifest=null;'+
+    'let longGameSourceNote="";'+script.slice(start,end),
+    context);
+  await vm.runInContext('loadPublishedLongGame()',context);
+  assert.equal(calls.filter(x=>x.includes('manifest.json')).length,1);
+  assert.equal(calls.filter(x=>x.includes('mortarion-current.json')).length,1);
+  assert.equal(calls.filter(x=>x.includes('/necron.json')).length,0);
+  context.selected='necron_dynasties';
+  await vm.runInContext('loadPublishedLongGame()',context);
+  assert.equal(calls.filter(x=>x.includes('/necron.json')).length,1);
+  assert.equal(calls.filter(x=>x.includes('manifest.json')).length,1);
+  context.selected='mortarion_current';
+  await vm.runInContext('loadPublishedLongGame()',context);
+  assert.equal(calls.filter(x=>x.includes('mortarion-current.json')).length,1);
+  vm.runInContext('refreshPublishedLongGame()',context);
+  await new Promise(resolve=>setTimeout(resolve,20));
+  assert.equal(calls.filter(x=>x.includes('manifest.json')).length,2);
+  assert.equal(calls.filter(x=>x.includes('mortarion-current.json')).length,2);
+  assert.ok(renders>=4);
 });

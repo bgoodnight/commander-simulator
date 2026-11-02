@@ -983,6 +983,11 @@ body:has(#pane-records:not([hidden])) .page-introduction a{font-size:.72rem}
 .game-outcome-heading{display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:11px}
 .game-outcome-heading h2{font-size:clamp(1.1rem,2vw,1.5rem);margin:2px 0 4px;color:#f1dbb1}
 .game-outcome-heading .micro{margin:0;font-size:.73rem;max-width:580px}
+.game-outcome-refresh{display:inline-flex;align-items:center;justify-content:center;cursor:pointer;
+  border:1px solid #9f8665;border-radius:8px;background:#34433e;color:#f2ddb6;
+  font:inherit;font-size:.77rem;padding:9px 13px}
+.game-outcome-refresh:hover,.game-outcome-refresh:focus-visible{border-color:#ebcb91;outline-offset:2px}
+.game-outcome-method .game-outcome-import{margin:9px 0 3px}
 .game-outcome-import{cursor:pointer;display:inline-flex;gap:9px;align-items:center;border:1px solid #a58c67;
   background:#3c3d36;color:#ead3a3;border-radius:8px;padding:9px 12px;font-size:.77rem}
 .game-outcome-import:focus-within{outline:2px solid #f3d28b}

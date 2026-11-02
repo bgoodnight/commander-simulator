@@ -28,6 +28,7 @@ from commander_sim.card_name_catalog import read_name_catalog, DEFAULT_NAME_CATA
 from commander_sim.observation import observe
 from commander_sim.reviewed_rocks import reviewed_rock
 from tools.publish_simulation_archive import validate_index
+from tools.publish_game_outcomes import validate_library as validate_outcome_library
 
 DEFAULT_SEEDS = (0, 1, 2, 3, 4, 5, 7, 11, 21, 42, 99)
 
@@ -275,47 +276,16 @@ def build(output, *, catalog_path=SHARED_CATALOG, name_catalog_path=DEFAULT_NAME
     outcome_source = (static / "data" / "game-outcomes"
                       if outcome_source is None else Path(outcome_source))
     if (outcome_source / "manifest.json").is_file():
-        index = json.loads((outcome_source / "manifest.json").read_text("utf-8"))
-        names = index.get("files")
-        if (index.get("format") != "commander-modeled-outcomes-library-v1"
-                or not isinstance(names, list) or len(names) > 24
-                or len(names) != len(set(names)) or
-                any(not isinstance(name, str) or
-                    re.fullmatch(r"[A-Za-z0-9_.-]+\.json", name) is None
-                    or name == "manifest.json" for name in names)):
-            raise ValueError("Invalid published long-game index")
         known = {d["key"]: d["deck_sha256"] for d in decks}
-        for filename in names:
-            source = outcome_source / filename
-            batch = json.loads(source.read_text("utf-8"))
-            runs = batch.get("runs")
-            if (batch.get("format") != "commander-modeled-outcomes-v1"
-                    or batch.get("schema_version") != 1
-                    or batch.get("deck_key") not in known
-                    or batch.get("deck_sha256") != known[batch["deck_key"]]
-                    or batch.get("opponent_fidelity") !=
-                       "abstract_opponent_pressure_not_card_exact"
-                    or batch.get("outcomes_are_competitive_win_rates") is not False
-                    or type(batch.get("requested_rounds")) is not int
-                    or not 1 <= batch["requested_rounds"] <= 30
-                    or not isinstance(runs, list) or not 1 <= len(runs) <= 200
-                    or any(not isinstance(run, dict)
-                           or run.get("completed_rounds") !=
-                              len(run.get("life_history", [])) - 1
-                           or run.get("outcome", {}).get("requested_rounds")
-                              != batch["requested_rounds"]
-                           or run.get("outcome", {}).get("status") not in
-                              {"win", "loss", "draw", "unresolved", "not_evaluated"}
-                           for run in runs)):
-                raise ValueError("Invalid or mismatched long-game export: " + filename)
+        try:
+            index = validate_outcome_library(outcome_source, deck_hashes=known)
+        except (KeyError, TypeError, ValueError, OSError, json.JSONDecodeError) as error:
+            raise ValueError("Invalid or mismatched long-game export") from error
+        for filename in ("manifest.json", *index["files"]):
             target = output / "game-outcomes" / filename
             target.parent.mkdir(parents=True, exist_ok=True)
-            shutil.copy2(source, target)
+            shutil.copy2(outcome_source / filename, target)
             outcome_assets.append("game-outcomes/" + filename)
-        target = output / "game-outcomes" / "manifest.json"
-        target.parent.mkdir(parents=True, exist_ok=True)
-        shutil.copy2(outcome_source / "manifest.json", target)
-        outcome_assets.append("game-outcomes/manifest.json")
     # Results are precomputed separately and must match the exported deck revisions.
     batches = json.loads((static / "data" / "bounded-batches.json").read_text(encoding="utf-8"))
     for key, batch in batches["decks"].items():
