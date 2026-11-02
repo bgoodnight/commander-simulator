@@ -1102,6 +1102,9 @@ def run_bounded_early_game(deck_key, *, seed=0, turns=6, mulligan="one-free", pr
         if cleanup.maximum_hand_size is not None:
             assert cleanup.hand_after <= cleanup.maximum_hand_size
         resolve_reactive()
+        # End-of-turn damage and temporary modifiers must not leak into the
+        # next player's turn. This uses the kernel's existing cleanup/SBAs.
+        kernel.cleanup()
         floating_end = list(mana_service.floating())
         resource_end = assess_resources(kernel, mana_service, 0).__dict__
         mana_service.clear()
