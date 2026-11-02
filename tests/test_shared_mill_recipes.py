@@ -5,7 +5,8 @@ import unittest
 from commander_sim.deck_fixtures import FIXTURES
 from commander_sim.early_game_runner import _load_live_kernel
 from commander_sim.kernel_life import KernelLife
-from commander_sim.library_actions import LibraryAction, resolve_library_actions
+from commander_sim.library_actions import (LibraryAction, resolve_library_actions,
+    required_library_cards_for_draws)
 from commander_sim.provisional_actions import cast_provisional_spell
 from commander_sim.provisional_import import provisional_profile, provisional_report
 from commander_sim.reviewed_enter_effects import reviewed_enter_rule, execute_reviewed_enter
@@ -148,6 +149,36 @@ class SharedMillRecipesTests(unittest.TestCase):
             with self.subTest(text=text):
                 raw=make_raw("Unsafe Mill",text,card_type="Sorcery",mana="{B}")
                 self.assertIsNone(provisional_profile(raw))
+
+
+    def test_order_sensitive_draw_preflight(self):
+        draw=LibraryAction("draw",1)
+        mill=LibraryAction("mill",7)
+        self.assertEqual(required_library_cards_for_draws((mill,)),0)
+        self.assertEqual(required_library_cards_for_draws((draw,mill)),1)
+        self.assertEqual(required_library_cards_for_draws((mill,draw)),8)
+        self.assertEqual(required_library_cards_for_draws((
+            draw,LibraryAction("mill",2),draw)),4)
+
+    def test_short_library_allows_mill_only_and_draw_before_mill(self):
+        out=resolve_library_actions(self.z,0,(LibraryAction("mill",7),))
+        self.assertFalse(out.milled_ids)
+        self.add("One","library")
+        out=resolve_library_actions(self.z,0,(
+            LibraryAction("draw",1),LibraryAction("mill",7)))
+        self.assertEqual(len(out.drawn_ids),1)
+        self.assertFalse(out.milled_ids)
+        self.assertFalse(self.z.ids(0,"library"))
+        self.assertTrue(self.z.assert_consistent())
+
+    def test_mill_then_draw_rejects_short_library_before_mutating(self):
+        originals=[self.add(str(i),"library") for i in range(2)]
+        with self.assertRaises(ValueError):
+            resolve_library_actions(self.z,0,(
+                LibraryAction("mill",2),LibraryAction("draw",1)))
+        self.assertEqual(tuple(originals),self.z.ids(0,"library"))
+        self.assertFalse(self.z.ids(0,"graveyard"))
+        self.assertTrue(self.z.assert_consistent())
 
 
 if __name__=="__main__":
