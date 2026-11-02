@@ -89,12 +89,12 @@ test('insight renderer has art-backed header, selectable bars, cycleable metric 
     nodes=walk(panel);
     assert.ok(nodes.some(n=>n.className==='insight-card-name'&&n.textContent==='Yahenni'));
     assert.equal(nodes.filter(n=>n.tag==='img').length,2); // contender bars contain no art
-    const metric=nodes.find(n=>n.className.startsWith('insight-metric'));
+    const metric=nodes.find(n=>n.tag==='button'&&n.className.startsWith('insight-metric'));
     metric.onclick();
     nodes=walk(panel);
     assert.ok(nodes.some(n=>n.textContent==='Seed 0 · Turn 2'));
     // The node is rebuilt after a click, so locate the current control again.
-    nodes.find(n=>n.className.startsWith('insight-metric')).onclick();
+    nodes.find(n=>n.tag==='button'&&n.className.startsWith('insight-metric')).onclick();
     nodes=walk(panel);
     assert.ok(nodes.some(n=>n.textContent==='Seed 1 · Turn 4'));
     nodes.find(n=>n.textContent==='View full turn ↗').onclick();
