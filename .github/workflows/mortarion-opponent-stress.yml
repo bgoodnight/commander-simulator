@@ -1,5 +1,5 @@
 name: Mortarion physical opponent stress and narrative audit
-# Rerun representative game narratives with bounded source-payment previews.
+# Rerun narrative audits after global threat-weighted, seat-neutral opponent removal.
 on:
   workflow_dispatch:
   push:
