@@ -1,5 +1,5 @@
 name: Mortarion physical opponent stress and narrative audit
-# Verify creature kind and defensive response after seeded targeting corrections.
+# Validate generic fail-closed casting, varied opponents and active zone spells.
 on:
   workflow_dispatch:
   push:
