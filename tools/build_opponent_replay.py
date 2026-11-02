@@ -44,7 +44,22 @@ def convert(source: dict, *, source_run: int, engine_commit: str, deck_sha256: s
             "opponent_life_snapshots": False,
             "opponent_battlefield_snapshots": False,
             "pilot_life_and_counts": True,
-            "individual_card_draws": False,
+            "individual_card_draws": any(
+                event.get("type") == "draw"
+                for entry in source["scenarios"].values()
+                for narrative in entry.get("narratives", ())
+                for turn in narrative.get("turns", ())
+                for event in turn.get("events", ())),
+            "pilot_zone_snapshots": any(
+                "pilot_zones" in turn
+                for entry in source["scenarios"].values()
+                for narrative in entry.get("narratives", ())
+                for turn in narrative.get("turns", ())),
+            "committed_mana_source_records": any(
+                "mana_activations" in turn
+                for entry in source["scenarios"].values()
+                for narrative in entry.get("narratives", ())
+                for turn in narrative.get("turns", ())),
             "card_zone_movements": False,
             "warning": source.get("warning", ""),
         },
