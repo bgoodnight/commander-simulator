@@ -16,6 +16,7 @@ from .physical_common_effects import (
 from .reviewed_token_spells import TokenBlueprint,create_reviewed_token_batches
 from .reviewed_death_effects import capture_battlefield
 from .physical_common_effects import TemporaryCreatureChange, change_reviewed_creature_stats
+from .library_actions import LibraryAction, resolve_library_actions
 
 
 _NECRON=TokenBlueprint("Necron Warrior",
@@ -36,6 +37,8 @@ class EnterRule:
     operation: str
     only_from_graveyard: bool = False
     amount: int = 0
+    library_actions: tuple[LibraryAction,...] = ()
+    life_gain: int = 0
 
     def __post_init__(self):
         if (not self.oracle_id or not self.excerpt
@@ -43,12 +46,30 @@ class EnterRule:
                     "necron_two","zombie_two","soldier_one",
                     "draw_lose_two","optional_exile_nonland",
                     "each_player_sacrifice","fabricate_one",
-                    "debuff_opponent_creatures"}
-                or type(self.amount) is not int or self.amount<0):
+                    "debuff_opponent_creatures","library_recipe"}
+                or type(self.amount) is not int or self.amount<0
+                or type(self.life_gain) is not int or self.life_gain<0
+                or not isinstance(self.library_actions,tuple)
+                or not all(isinstance(x,LibraryAction) for x in self.library_actions)
+                or (self.operation=="library_recipe")!=bool(self.library_actions)
+                or self.life_gain and self.operation!="library_recipe"):
+
             raise ValueError("Invalid reviewed enter trigger")
 
 
 ENTER_RULES={
+    "Flayed One":EnterRule(
+        "899415fd-4164-42a5-a0c7-eef1967c5ec5",
+        "Flesh Flayer — When this creature enters, mill three cards.",
+        "library_recipe",library_actions=(LibraryAction("mill",3),)),
+    "Undead Butler":EnterRule(
+        "426fa8e8-b0f9-4b6c-b22b-04ec2073187a",
+        "When this creature enters, mill three cards.",
+        "library_recipe",library_actions=(LibraryAction("mill",3),)),
+    "Mire Triton":EnterRule(
+        "4fe6f784-0290-4d4a-85ae-0b66522d31e9",
+        "When this creature enters, mill two cards and you gain 2 life.",
+        "library_recipe",library_actions=(LibraryAction("mill",2),),life_gain=2),
     "Massacre Wurm":EnterRule("93cf50cf-0ecc-4d3e-abea-778c1ebacec4",
         "When this creature enters, creatures your opponents control get -2/-2 until end of turn.",
         "debuff_opponent_creatures",amount=2),
@@ -86,6 +107,8 @@ class EnterResult:
     drawn_ids: tuple[int,...] = ()
     exiled_id: int | None = None
     sacrificed_ids: tuple[int,...] = ()
+    milled_ids: tuple[int,...] = ()
+    library_steps: tuple[dict,...] = ()
 
 
 def reviewed_enter_rule(name,raw):
@@ -159,7 +182,16 @@ def execute_reviewed_enter(zones,life:KernelLife,source_id,catalog,*,
         drawn=()
         exiled=None
         sacrificed=()
-        if effect.operation in {"necron_two","zombie_two","soldier_one"}:
+        milled=()
+        library_steps=()
+        if effect.operation=="library_recipe":
+            result=resolve_library_actions(zones,source.controller,
+                                           effect.library_actions)
+            milled=result.milled_ids
+            library_steps=result.steps
+            if effect.life_gain:
+                life.gain(source.controller,effect.life_gain,source_id)
+        elif effect.operation in {"necron_two","zombie_two","soldier_one"}:
             batch={"necron_two":_NECRON,"zombie_two":_ZOMBIE,
                    "soldier_one":_SOLDIER}[effect.operation]
             tokens=create_reviewed_token_batches(
@@ -202,8 +234,9 @@ def execute_reviewed_enter(zones,life:KernelLife,source_id,catalog,*,
                 death_engine.resolve_deaths(before,move_index=start,turn=turn)
         else:
             raise NotImplementedError("Unknown reviewed enter effect")
-        return tokens,tuple(drawn),exiled,sacrificed
-    created,drawn,exiled,sacrificed=dispatcher.invoke(slot.slot_id,source_id,apply)
+        return tokens,tuple(drawn),exiled,sacrificed,tuple(milled),tuple(library_steps)
+    created,drawn,exiled,sacrificed,milled,steps=dispatcher.invoke(
+        slot.slot_id,source_id,apply)
     return EnterResult(source_id,source.card.name,move.old_zone,
                        rule.operation,tuple(created),tuple(drawn),
-                       exiled,tuple(sacrificed))
+                       exiled,tuple(sacrificed),milled,steps)
