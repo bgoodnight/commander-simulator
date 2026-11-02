@@ -58,7 +58,7 @@ class DeathAction:
                 "other_own_artifact_or_creature"}
         ops={"zombie","treasure","draw_lose","drain_gain","drain",
              "draw","counter_self","lose_controller","gain",
-             "target_drain_gain","damage_opponents"}
+             "target_drain_gain","damage_opponents","damage_all"}
         if (self.scope not in scopes or self.operation not in ops
                 or type(self.quantity) is not int or self.quantity<=0
                 or type(self.once_per_turn) is not bool
@@ -90,6 +90,10 @@ def _rule(oracle,excerpt,slot,scope,op,amount=1,token=None,once=False):
 
 
 DEATH_RULES={
+    "Plague Spitter":(
+        _rule("5feedfb0-30e6-400d-9e28-d541ea1aa14e",
+              "When this creature dies, it deals 1 damage to each creature and each player.",
+              "self_death_global_damage","self_creature","damage_all"),),
     "Sangromancer":(
         _rule("920445ab-0ac2-4de7-bc1c-f5e58eb4424c",
               "Whenever a creature an opponent controls dies, you may gain 3 life.",
@@ -260,6 +264,9 @@ class ReviewedDeathEngine:
                for seat,need in draws.items()):
             raise NotImplementedError(
                 "Full empty-library draw loss and APNAP ordering are not yet modeled")
+        # Mark physical moves handled BEFORE dispatching any chained damage
+        # trigger, to avoid resolving prior deaths a second time.
+        self._handled.update(m.object_id for m in changes)
         resolved=[]
         for source,dead,rule in agenda:
             action=rule.action
@@ -307,6 +314,23 @@ class ReviewedDeathEngine:
                     for opponent in sorted(self.life.kernel.life_totals):
                         if opponent != controller:
                             self.life.damage(opponent,count,source.object_id)
+                elif operation.operation=="damage_all":
+                    # All creature damage shares one simultaneous state-based
+                    # window. Chain further deaths only from the new boundary.
+                    from .reviewed_death_effects import capture_battlefield
+                    kernel=self.zones.kernel
+                    live_before=capture_battlefield(kernel)
+                    start=len(kernel.moves)
+                    for player in sorted(self.life.kernel.life_totals):
+                        self.life.damage(player,count,source.object_id)
+                    targets=tuple(o.object_id for o in kernel.on_battlefield()
+                                  if "creature" in o.types)
+                    if targets:
+                        kernel.damage_creatures_together(
+                            {oid:count for oid in targets})
+                    if len(kernel.moves)>start:
+                        self.resolve_deaths(
+                            live_before,move_index=start,turn=turn)
                 elif operation.operation=="counter_self":
                     live=self.zones.kernel.objects.get(source.object_id)
                     if live is not None and live.zone=="battlefield":
