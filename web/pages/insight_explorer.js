@@ -95,7 +95,7 @@
 
   function render(model,options={}){
     if(!model?.contenders?.length)return null;
-    let selected=0,activeMetric=null,exampleIndex=-1,viewerOpen=false;
+    let selected=0,activeMetric=null,exampleIndex=-1,viewerOpen=false,viewIndex=0;
     const panel=create("details","board-report insight-report");
     const summary=create("summary","board-summary insight-summary");
     const top=model.contenders[0].card;
@@ -110,7 +110,7 @@
       subtitle.appendChild(mana);
     }
     headline.append(subtitle,create("span","insight-head-stat",
-      model.value+" runs · "+model.chartLabel.toLowerCase()),
+      model.headlineDetail||(model.value+" · "+model.chartLabel.toLowerCase())),
       create("span","board-open","Explore cards and evidence →"));
     summary.appendChild(headline);
     if(top?.art||top?.image){
@@ -188,7 +188,13 @@
     }
 
     function showSelected(){
-      const card=model.contenders[selected],max=model.contenders[0].score||1;
+      const card=model.contenders[selected];
+      const mode=model.views?.[viewIndex]||null;
+      const ranked=model.contenders.map((entry,index)=>({
+        entry,index,score:mode?Number(entry.viewScores?.[mode.id]||0):entry.score
+      })).filter(item=>item.score>0).sort((a,b)=>
+        b.score-a.score||a.entry.name.localeCompare(b.entry.name));
+      const max=ranked[0]?.score||1;
       chosen.replaceChildren();ranking.replaceChildren();performance.replaceChildren();
       chosen.appendChild(create("span","board-kicker","Selected card"));
       const physical=card.card;
@@ -202,18 +208,43 @@
         chosen.appendChild(button);
       }
       chosen.appendChild(create("strong","insight-card-name",card.name));
-      ranking.append(create("h3",null,"Played in recorded games"),
-        create("p","micro",model.chartLabel+" · select any bar"));
+      ranking.append(create("h3",null,mode?mode.label:"Recorded outcomes"));
+      if(model.views?.length>1){
+        const toggle=create("div","insight-ranking-views");
+        model.views.forEach((view,i)=>{
+          const button=create("button","insight-ranking-view"+(i===viewIndex?" is-active":""),
+            view.label);
+          button.type="button";
+          button.setAttribute("aria-pressed",String(i===viewIndex));
+          button.onclick=()=>{
+            if(i===viewIndex)return;
+            viewIndex=i;selected=model.contenders.findIndex(c=>
+              c.name===ranked[0]?.entry.name);
+            const next=[...model.contenders].map((c,j)=>({c,j,score:Number(c.viewScores?.[view.id]||0)}))
+              .filter(x=>x.score>0).sort((a,b)=>
+                b.score-a.score||a.c.name.localeCompare(b.c.name))[0];
+            if(next)selected=next.j;
+            activeMetric=null;exampleIndex=-1;viewerOpen=false;
+            showSelected();
+          };
+          toggle.appendChild(button);
+        });
+        ranking.appendChild(toggle);
+      }
+      ranking.appendChild(create("p","micro",
+        (mode?.chartLabel||model.chartLabel)+" · select any bar"));
       const bars=create("div","insight-bars");
-      model.contenders.slice(0,12).forEach((entry,i)=>{
-        const button=create("button","insight-bar"+(i===selected?" is-selected":""));
-        button.type="button";button.setAttribute("aria-pressed",String(i===selected));
+      ranked.slice(0,12).forEach(({entry,index,score})=>{
+        const button=create("button","insight-bar"+(index===selected?" is-selected":""));
+        button.type="button";button.setAttribute("aria-pressed",String(index===selected));
         const head=create("span","insight-bar-caption");
-        head.append(create("span",null,entry.name),create("strong",null,entry.scoreLabel));
+        head.append(create("span",null,entry.name),
+          create("strong",null,(mode?entry.viewLabels?.[mode.id]:null)||
+            entry.scoreLabel));
         const track=create("span","insight-bar-track"),fill=create("span","insight-bar-fill");
-        fill.style.width=100*entry.score/max+"%";
+        fill.style.width=100*score/max+"%";
         track.appendChild(fill);button.append(head,track);
-        button.onclick=()=>{selected=i;activeMetric=null;exampleIndex=-1;viewerOpen=false;showSelected()};
+        button.onclick=()=>{selected=index;activeMetric=null;exampleIndex=-1;viewerOpen=false;showSelected()};
         bars.appendChild(button);
       });
       ranking.appendChild(bars);
