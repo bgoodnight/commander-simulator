@@ -192,6 +192,13 @@ class BoundedOpponentPressure:
         current=len(self.events)
         for seat in (1,2,3):
             role=self.roles[seat]
+            # Each player untaps their own permanents before their upkeep.
+            # Previous stress batches incorrectly left attackers tapped for
+            # the rest of the game, understating repeat combat pressure.
+            for permanent in self.zones.kernel.on_battlefield():
+                if permanent.controller==seat and permanent.tapped:
+                    permanent.tapped=False
+                    self.zones.kernel._dirty()
             # Unlike goldfish mode, 'each upkeep' triggers have all four
             # upkeeps. These are resolved with existing reviewed phase logic.
             if self.phase_engine:
