@@ -81,7 +81,12 @@ class PhysicalMagnusTests(unittest.TestCase):
                 self.assertEqual(review.draw_count,count)
                 tampered=dict(data[name],oracle_text="Draw forty cards.")
                 self.assertIsNone(reviewed_draw_spell(name,tampered))
-        self.assertIsNone(reviewed_draw_spell("Brainstorm",data["Brainstorm"]))
+        # Brainstorm now has a fully parameterized draw-three/put-back-two
+        # library recipe, rather than a silently omitted mandatory effect.
+        brainstorm=reviewed_draw_spell("Brainstorm",data["Brainstorm"])
+        self.assertIsNotNone(brainstorm)
+        self.assertEqual(tuple(x.kind for x in brainstorm.library_actions()),
+                         ("draw","put_back"))
 
     def test_reviewed_draws_move_real_cards_and_preserve_replay(self):
         seen=0
