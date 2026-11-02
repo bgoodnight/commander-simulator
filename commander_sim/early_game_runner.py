@@ -467,6 +467,7 @@ def run_bounded_early_game(deck_key, *, seed=0, turns=6, mulligan="one-free", pr
                 events.append({"type":"reviewed_land_entry",
                                "card":name,"operation":etb.operation,
                                "moved_ids":list(etb.moved_ids),
+                               "library_actions":list(etb.library_steps),
                                "fidelity":"bounded_shared_land_entry"})
         resource_start = assess_resources(kernel, mana_service, 0).__dict__
         # Main-phase resource policy: trade only expendable creature tokens for
