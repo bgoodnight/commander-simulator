@@ -85,25 +85,37 @@
   function rosterIdentity(decks){
     return decks.map(x=>x.seat+":"+x.id+":"+x.version).join("|");
   }
+  function cohortValue(value){
+    return typeof value==="string"&&/^[a-z0-9_-]{1,32}$/.test(value)?
+      value:"unrecorded";
+  }
   function labelFor(group){
+    const context=" · pilot: "+group.pilotStyle+
+      " · provisional: "+group.provisionalMode;
     if(group.deckRoster.length){
-      return group.deckRoster.map(x=>x.name).join(" / ")+" · opposing pod";
+      return group.deckRoster.map(x=>x.name).join(" / ")+" · opposing pod"+context;
     }
     return group.scenario+" · "+(group.roleLabels.size===1?
-      [...group.roleLabels][0]:"mixed opponent roles")+" (abstract policies)";
+      [...group.roleLabels][0]:"mixed opponent roles")+" (abstract policies)"+context;
   }
   function model(batches,key,sha){
     const matching=(batches||[]).filter(b=>validate(b)&&exactDeck(b,key,sha));
     const groups=new Map();
     let revisions=0,duplicates=0;
     for(const batch of matching){
+      const pilotStyle=cohortValue(batch.pilot_style);
+      const provisionalMode=cohortValue(batch.provisional_mode);
       for(const run of batch.runs){
         const deckRoster=opponentDecks(run,batch);
         const roleLabel=roleNames(run.opponent_roles);
+        // Identical seeds under different pilot or rules modes are
+        // distinct experiments, rather than duplicate imports.
         const id=[batch.scenario,batch.requested_rounds,
-          deckRoster.length?"pod:"+rosterIdentity(deckRoster):"abstract_roles"].join("|");
+          deckRoster.length?"pod:"+rosterIdentity(deckRoster):"abstract_roles",
+          pilotStyle,provisionalMode].join("|");
         if(!groups.has(id))groups.set(id,{
           id,scenario:batch.scenario,requestedRounds:batch.requested_rounds,
+          pilotStyle,provisionalMode,
           roleLabels:new Set(),deckRoster,runs:[],exampleBySeed:new Map(),seeds:new Map()
         });
         const group=groups.get(id);
@@ -381,12 +393,19 @@
     toolbar.appendChild(info);root.appendChild(toolbar);
     const cards=create("div","board-grid game-outcome-grid");
     root.appendChild(cards);
-    const matchup=matchupRows(report.groups);
     function showGroup(){
       cards.replaceChildren();
       const group=report.groups[active];
+      // Opposing tables can be compared across scenarios, but only with
+      // the same pilot personality, rule approximations and round horizon.
+      const peers=report.groups.filter(g=>
+        g.pilotStyle===group.pilotStyle&&
+        g.provisionalMode===group.provisionalMode&&
+        g.requestedRounds===group.requestedRounds);
+      const matchup=matchupRows(peers);
       info.textContent=group.total+" modeled games · "+group.requestedRounds+
         "-round horizon · "+group.scenario+
+        " · pilot "+group.pilotStyle+" · provisional "+group.provisionalMode+
         " · abstract opponent policies, not competitive multiplayer win rates";
       // Outcome tile: no denominator changes due to right-censoring.
       cards.appendChild(card("Modeled results","Long-game outcome",
@@ -464,14 +483,21 @@
             (matchup.some(x=>x.kind==="named")?"named":"abstract"));
           if(groups.length>=2){
             const best=groups[0],worst=groups.at(-1);
+            const share=b=>Math.round(100*b.counts.win/b.games)+"%";
+            const tied=best.counts.win*worst.games===worst.counts.win*best.games;
             body.appendChild(create("p","micro",
-              "Most modeled wins: "+best.label+" ("+best.counts.win+"/"+best.games+
-              "). Fewest: "+worst.label+" ("+worst.counts.win+"/"+worst.games+
-              "). These tiny samples do not predict future performance."));
+              tied?
+                "Recorded opponent groups have the same observed modeled win share ("+
+                  share(best)+"); there is no meaningful best/worst ranking yet.":
+                "Highest observed modeled win share: "+best.label+
+                  " ("+best.counts.win+"/"+best.games+"; "+share(best)+
+                  "). Lowest: "+worst.label+" ("+worst.counts.win+"/"+
+                  worst.games+"; "+share(worst)+"). "+
+                  "These small, censored samples do not predict future performance."));
           }else{
             body.appendChild(create("p","micro",
-              "Only one opponent group is recorded; best/worst comparisons "+
-              "require runs against at least two different opposing groups."));
+              "Only one opponent group is recorded for this pilot, rules mode and horizon; "+
+              "best/worst comparisons require at least two opposing groups."));
           }
           const list=create("div","game-outcome-matchups");
           for(const bucket of groups){
