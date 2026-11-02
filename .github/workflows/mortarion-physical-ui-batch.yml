@@ -1,4 +1,5 @@
 name: Publish Mortarion Physical 100-Seed UI Batch
+# Manual refresh following reusable Mortarion mana and tutor engine integration.
 on:
   push:
     branches: [main]
