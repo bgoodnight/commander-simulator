@@ -44,6 +44,7 @@ from .reviewed_phase_effects import ReviewedPhaseEngine,reviewed_phase_permanent
 from .composed_abilities import ComposedAbilityEngine, reviewed_composed_permanent, ABILITIES
 from .reviewed_commander_cast import commander_cost, cast_commander
 from .reviewed_reactive_triggers import ReactiveTriggerEngine
+from .opponent_stress import BoundedOpponentPressure
 from .reviewed_death_effects import ReviewedDeathEngine
 from .reviewed_enter_effects import reviewed_enter_rule, execute_reviewed_enter
 from .reviewed_unearth import reviewed_unearth, activate_reviewed_unearth, expire_reviewed_unearth
@@ -88,7 +89,7 @@ def _load_live_kernel():
     return IndexedKernel, LiveZones, CardDefinition
 
 
-def run_bounded_early_game(deck_key, *, seed=0, turns=6, mulligan="one-free", profile=None):
+def run_bounded_early_game(deck_key, *, seed=0, turns=6, mulligan="one-free", profile=None, opponent_scenario=None):
     """Play a small reviewed set of actual land, rock and creature actions.
 
     A deterministic, conservative fixed pilot draws, plays one supported land,
@@ -199,6 +200,10 @@ def run_bounded_early_game(deck_key, *, seed=0, turns=6, mulligan="one-free", pr
     composed_engine = ComposedAbilityEngine(zones, life, raw_by_name,
                                            mana_service, death_engine)
     reactive_engine = ReactiveTriggerEngine(zones,life,raw_by_name)
+    opponent_pressure = (BoundedOpponentPressure(
+        zones,life,raw_by_name,death_engine,phase_engine,CardDefinition,
+        seed=seed,scenario=opponent_scenario)
+        if opponent_scenario is not None else None)
     entered_on_turn = {}
     if len(kernel.objects) != 100:
         raise AssertionError("Pinned 100-card zone conservation failed at loading")
@@ -1059,6 +1064,16 @@ def run_bounded_early_game(deck_key, *, seed=0, turns=6, mulligan="one-free", pr
         if (not zones.assert_consistent()
                 or sum(not obj.token for obj in kernel.objects.values()) != 100):
             raise AssertionError("Physical non-token card conservation failed")
+        if opponent_pressure is not None:
+            for pressure_event in opponent_pressure.advance(turn):
+                events.append({
+                    "type":"opponent_"+pressure_event.operation,
+                    "seat":pressure_event.seat,
+                    "role":pressure_event.role,
+                    "amount":pressure_event.amount,
+                    "object_id":pressure_event.object_id,
+                    "fidelity":"abstract_opponent_pressure_not_card_exact"})
+            resolve_reactive()
         state = project_kernel_turn(zones, 0, turn, catalog)
         states.append(state)
         actions_by_turn.append({
@@ -1070,7 +1085,7 @@ def run_bounded_early_game(deck_key, *, seed=0, turns=6, mulligan="one-free", pr
             "command_zone_count": len(zones.ids(0, "command")),
             "land_count": sum("land" in o.types and o.zone == "battlefield"
                               for o in kernel.objects.values()),
-            "creature_count": sum("creature" in o.types and o.zone == "battlefield"
+            "creature_count": sum("creature" in o.types and o.zone == "battlefield" and o.controller==0
                                   for o in kernel.objects.values()),
             "mana_rock_count": sum("artifact" in o.types and o.zone == "battlefield"
                                   and not o.token and o.card.name in raw_by_name
@@ -1118,9 +1133,16 @@ def run_bounded_early_game(deck_key, *, seed=0, turns=6, mulligan="one-free", pr
                     raw_by_name[kernel.get(oid).card.name]) is None
                 and not supported_land(oid)),
         })
+        if opponent_pressure is not None and opponent_pressure.defeated:
+            break
     analysis = analyze_authoritative_run(catalog, profile or {}, states)
     return {
-        "mode": "bounded_authoritative_early_actions",
+        "mode": "bounded_authoritative_early_actions"
+                if opponent_pressure is None else "bounded_three_opponent_pressure",
+        "opponent_scenario":opponent_scenario,
+        "opponent_roles":dict(opponent_pressure.roles) if opponent_pressure else {},
+        "seat_zero_defeated":opponent_pressure.defeated if opponent_pressure else False,
+        "completed_turns":len(states),
         "deck_key": deck_key,
         "commander": fixture.commander,
         "deck_sha256": snapshot.deck_sha256,
