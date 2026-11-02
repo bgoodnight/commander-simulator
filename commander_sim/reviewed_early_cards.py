@@ -83,6 +83,28 @@ REVIEWED_BY_DECK = {
 }
 
 
+# Recursion bodies with no mandatory immediate ETB; only the selected
+# graveyard activation has its own separate exact printed source review.
+# Lord's static Zombie buff remains unmodeled in bounded combat and must be
+# accounted for as a limitation when comparing full game power.
+_ADDITIONAL_RECURSION_BODIES = {
+    "wretched_ranks": {
+        "Lord of the Undead": {
+            "oracle_id":"7714af0e-41d9-4609-967f-27233b46055f",
+            "oracle_text":"Other Zombie creatures get +1/+1.\\n{1}{B}, {T}: Return target Zombie card from your graveyard to your hand."},
+        "Persistent Specimen": {
+            "oracle_id":"5f4ad578-f2c4-47f6-8080-8fbc17383f6f",
+            "oracle_text":"{2}{B}: Return this card from your graveyard to the battlefield tapped."},
+    },
+    "necron_dynasties": {
+        "Lychguard": {
+            "oracle_id":"e82daa7b-d9fd-48c4-b5b2-f3b1f6ef1a24",
+            "oracle_text":"Guardian Protocols — {3}{B}, Sacrifice this creature: Return all legendary creature cards from your graveyard to your hand."},
+    },
+}
+for _deck, _reviews in _ADDITIONAL_RECURSION_BODIES.items():
+    REVIEWED_BY_DECK.setdefault(_deck, {}).update(_reviews)
+
 # Source-verified bodies with no mandatory unhandled immediate ETB effects.
 # Later abilities remain bounded by their separately reviewed effect slots.
 _ADDITIONAL_SAFE_BODIES = {
