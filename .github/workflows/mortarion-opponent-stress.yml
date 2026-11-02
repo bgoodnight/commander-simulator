@@ -1,5 +1,5 @@
 name: Mortarion physical opponent stress and narrative audit
-# Repeat full opponent narratives after numeric turn key serialization fix.
+# Run post-narrative physical blocker/trade and per-turn cleanup correction.
 on:
   workflow_dispatch:
   push:
