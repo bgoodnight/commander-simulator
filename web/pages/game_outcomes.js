@@ -89,7 +89,8 @@
     if(group.deckRoster.length){
       return group.deckRoster.map(x=>x.name).join(" / ")+" · opposing pod";
     }
-    return group.scenario+" · "+group.roleLabel+" (abstract roles)";
+    return group.scenario+" · "+(group.roleLabels.size===1?
+      [...group.roleLabels][0]:"mixed opponent roles")+" (abstract policies)";
   }
   function model(batches,key,sha){
     const matching=(batches||[]).filter(b=>validate(b)&&exactDeck(b,key,sha));
@@ -100,12 +101,13 @@
         const deckRoster=opponentDecks(run,batch);
         const roleLabel=roleNames(run.opponent_roles);
         const id=[batch.scenario,batch.requested_rounds,
-          deckRoster.length?"pod:"+rosterIdentity(deckRoster):"roles:"+roleLabel].join("|");
+          deckRoster.length?"pod:"+rosterIdentity(deckRoster):"abstract_roles"].join("|");
         if(!groups.has(id))groups.set(id,{
           id,scenario:batch.scenario,requestedRounds:batch.requested_rounds,
-          roleLabel,deckRoster,runs:[],exampleBySeed:new Map(),seeds:new Map()
+          roleLabels:new Set(),deckRoster,runs:[],exampleBySeed:new Map(),seeds:new Map()
         });
         const group=groups.get(id);
+        group.roleLabels.add(roleLabel);
         const old=group.seeds.get(run.seed);
         if(old!==undefined){
           // Re-importing the same seed is an update, never an extra game.
