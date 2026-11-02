@@ -7,7 +7,7 @@ records with last-known information, distinct per-death and once-per-turn
 semantics, and reviewed effect parameters. It does NOT provide stack/priority,
 death replacement, prevention, APNAP ordering, or player elimination.
 """
-from dataclasses import dataclass
+from dataclasses import dataclass, replace
 from types import MappingProxyType
 
 from .ability_composition import (
@@ -16,6 +16,8 @@ from .kernel_life import KernelLife
 from .physical_common_effects import (
     CardQuantity, draw_physical_cards, CounterPlacement, put_reviewed_counters)
 from .reviewed_token_spells import TokenBlueprint, create_reviewed_token_batches
+from .death_recipes import (DeathPredicate, DeathEffectStep,
+                            provisional_death_recipe)
 
 
 @dataclass(frozen=True)
@@ -49,6 +51,8 @@ class DeathAction:
     quantity: int = 1
     token: TokenBlueprint | None = None
     once_per_turn: bool = False
+    match: DeathPredicate | None = None
+    steps: tuple[DeathEffectStep,...] = ()
 
     def __post_init__(self):
         scopes={"own_nontoken_zombie","own_nontoken_creature",
@@ -59,10 +63,17 @@ class DeathAction:
         ops={"zombie","treasure","draw_lose","drain_gain","drain",
              "draw","counter_self","lose_controller","gain",
              "target_drain_gain","damage_opponents","damage_all"}
+        scopes.add("custom")
+        ops.add("sequence")
         if (self.scope not in scopes or self.operation not in ops
                 or type(self.quantity) is not int or self.quantity<=0
                 or type(self.once_per_turn) is not bool
-                or (self.operation in {"zombie","treasure"})!=(self.token is not None)):
+                or (self.operation in {"zombie","treasure"})!=(self.token is not None)
+                or (self.scope=="custom" and self.match is None)
+                or (self.match is not None and not isinstance(self.match,DeathPredicate))
+                or not isinstance(self.steps,tuple)
+                or not all(isinstance(step,DeathEffectStep) for step in self.steps)
+                or (self.operation=="sequence")!=bool(self.steps)):
             raise ValueError("Invalid reviewed death action")
 
 
@@ -89,7 +100,19 @@ def _rule(oracle,excerpt,slot,scope,op,amount=1,token=None,once=False):
     return DeathRule(oracle,excerpt,slot,DeathAction(scope,op,amount,token,once))
 
 
+def _sequence_rule(oracle,excerpt,slot,match,steps):
+    return DeathRule(oracle,excerpt,slot,
+                     DeathAction("custom","sequence",match=match,
+                                 steps=tuple(steps)))
+
+
 DEATH_RULES={
+    "Midnight Reaper":(
+        _sequence_rule("e8c7566d-7cc0-48af-a986-83223ec7e06c",
+            "Whenever a nontoken creature you control dies, this creature deals 1 damage to you and you draw a card.",
+            "nontoken_creature_death",
+            DeathPredicate("own",nontoken_only=True),
+            (DeathEffectStep("damage_self"),DeathEffectStep("draw"))),),
     "Plague Spitter":(
         _rule("5feedfb0-30e6-400d-9e28-d541ea1aa14e",
               "When this creature dies, it deals 1 damage to each creature and each player.",
@@ -168,26 +191,28 @@ DEATH_RULES={
 }
 
 
-def _matches(effect,source,dead):
-    scope=effect.scope
-    creature="creature" in dead.types
-    zombie=creature and "Zombie" in dead.subtypes
-    own=source.controller==dead.controller
-    other=source.object_id!=dead.object_id
-    if scope=="self_creature":return source.object_id==dead.object_id and creature
-    if scope=="own_nontoken_zombie":return own and zombie and not dead.token
-    if scope=="own_nontoken_creature":return own and creature and not dead.token
-    if scope=="own_zombie":return own and zombie
-    if scope=="any_zombie":return zombie
-    if scope=="own_creature":return own and creature
-    if scope=="other_own_creature":return other and own and creature
-    if scope=="any_creature":return creature
-    if scope=="other_any_creature":return other and creature
-    if scope=="opponent_creature":return not own and creature
-    if scope=="other_own_artifact_or_creature":
-        return other and own and bool(dead.types & {"artifact","creature"})
-    raise ValueError("Unrecognized reviewed death predicate")
+_SCOPE_MATCH = {
+    "self_creature":DeathPredicate("self"),
+    "own_nontoken_zombie":DeathPredicate("own",subtype="Zombie",nontoken_only=True),
+    "own_nontoken_creature":DeathPredicate("own",nontoken_only=True),
+    "own_zombie":DeathPredicate("own",subtype="Zombie"),
+    "any_zombie":DeathPredicate("any",subtype="Zombie"),
+    "own_creature":DeathPredicate("own"),
+    "other_own_creature":DeathPredicate("own",exclude_source=True),
+    "any_creature":DeathPredicate("any"),
+    "other_any_creature":DeathPredicate("any",exclude_source=True),
+    "opponent_creature":DeathPredicate("opponent"),
+    "other_own_artifact_or_creature":DeathPredicate(
+        "own",frozenset({"creature","artifact"}),exclude_source=True),
+}
 
+
+def _matches(effect,source,dead):
+    """Apply a data-only predicate, never source-name-specific death logic."""
+    rule=effect.match or _SCOPE_MATCH.get(effect.scope)
+    if rule is None:
+        raise ValueError("Unregistered reviewed death predicate")
+    return rule.matches(source,dead)
 
 @dataclass(frozen=True)
 class DeathResolution:
@@ -203,12 +228,15 @@ class DeathResolution:
 class ReviewedDeathEngine:
     """Consume authoritative death moves; never replay the same old object ID."""
 
-    def __init__(self,zones,life:KernelLife,catalog):
+    def __init__(self,zones,life:KernelLife,catalog,*,provisional_mode="off"):
+        if provisional_mode not in {"off","safe"}:
+            raise ValueError("Death import effects require explicit safe opt-in")
         if life.kernel is not zones.kernel:
             raise ValueError("Life and zone state must share same kernel")
         self.zones=zones
         self.life=life
         self.catalog=catalog
+        self.provisional_mode=provisional_mode
         self._handled=set()
         self._once=set()
         self.invocations=[]
@@ -218,8 +246,21 @@ class ReviewedDeathEngine:
         if row is None or row.get("oracle_id")!=source.oracle_id:
             return ()
         rules=DEATH_RULES.get(source.name,())
-        return tuple(rule for rule in rules if rule.oracle_id==source.oracle_id
+        pinned=tuple(rule for rule in rules if rule.oracle_id==source.oracle_id
                      and rule.excerpt in row.get("oracle_text",""))
+        if pinned or self.provisional_mode!="safe" or "creature" not in source.types:
+            return pinned
+        from .provisional_import import provisional_profile
+        fallback=provisional_profile(row)
+        if fallback is None or fallback.kind!="creature_body":
+            return ()
+        inferred=provisional_death_recipe(row.get("oracle_text",""))
+        if inferred is None:
+            return ()
+        action=DeathAction("custom","sequence",match=inferred.predicate,
+                           steps=inferred.steps)
+        return (DeathRule(source.oracle_id,inferred.excerpt,
+                          "provisional_death_sequence",action),)
 
     def resolve_deaths(self,before,*,move_index,turn):
         """Handle the death moves of one already-applied physical batch.
@@ -257,9 +298,13 @@ class ReviewedDeathEngine:
                     agenda.append((source,dead,rule))
         draws={}
         for source,_,rule in agenda:
-            if rule.action.operation in {"draw","draw_lose"}:
+            if rule.action.operation in {"draw","draw_lose","sequence"}:
                 seat=source.controller
-                draws[seat]=draws.get(seat,0)+rule.action.quantity
+                needed=(sum(step.count for step in rule.action.steps
+                            if step.kind=="draw")
+                        if rule.action.operation=="sequence"
+                        else rule.action.quantity)
+                draws[seat]=draws.get(seat,0)+needed
         if any(len(self.zones.ids(seat,"library"))<need
                for seat,need in draws.items()):
             raise NotImplementedError(
@@ -285,7 +330,42 @@ class ReviewedDeathEngine:
                 token_ids=()
                 drawn_ids=()
                 count=operation.quantity
-                if operation.operation in {"zombie","treasure"}:
+                if operation.operation=="sequence":
+                    # An event can invoke multiple ordered effects, with
+                    # adjustable quantities, through one source-pinned slot.
+                    made=[]
+                    drawn=[]
+                    for step in operation.steps:
+                        if step.kind=="draw":
+                            answer=draw_physical_cards(
+                                self.zones,controller,CardQuantity(step.count))
+                            if not answer.complete:
+                                raise AssertionError("Sequence draw preview changed")
+                            drawn.extend(answer.drawn_ids)
+                        elif step.kind=="lose_life":
+                            self.life.lose(controller,step.count,source.object_id)
+                        elif step.kind=="damage_self":
+                            self.life.damage(controller,step.count,source.object_id)
+                        elif step.kind=="gain_life":
+                            self.life.gain(controller,step.count,source.object_id)
+                        elif step.kind=="opponents_lose":
+                            self.life.each_opponent_loses(
+                                controller,step.count,source.object_id)
+                        elif step.kind=="token":
+                            made.extend(create_reviewed_token_batches(
+                                self.zones,controller,
+                                (replace(step.token,count=step.count),)))
+                        elif step.kind=="counter_self":
+                            obj=self.zones.kernel.objects.get(source.object_id)
+                            if obj is not None and obj.zone=="battlefield":
+                                put_reviewed_counters(
+                                    self.zones.kernel,controller,source.object_id,
+                                    CounterPlacement("+1/+1",step.count))
+                        else:
+                            raise NotImplementedError("Unknown death sequence step")
+                    token_ids=tuple(made)
+                    drawn_ids=tuple(drawn)
+                elif operation.operation in {"zombie","treasure"}:
                     token_ids=create_reviewed_token_batches(
                         self.zones,controller,(operation.token,))
                 elif operation.operation in {"draw","draw_lose"}:
