@@ -1,4 +1,5 @@
 name: Audit Mortarion resource-engine and pilot choices
+# Rerun after generic utility-land, recursion and pilot improvements.
 on:
   workflow_dispatch:
   push:
