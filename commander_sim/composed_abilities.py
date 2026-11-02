@@ -43,7 +43,7 @@ class Step:
     quantity: str = "one"
     def __post_init__(self):
         if self.operation not in {"create_tokens", "damage_all",
-                                  "sacrifice_source"}:
+                                  "sacrifice_source", "lose_life", "amass"}:
             raise ValueError("Unregistered composed operation")
         if self.quantity not in {"one", "x"}:
             raise ValueError("Unregistered quantity variable")
@@ -61,7 +61,7 @@ class Ability:
     steps: tuple[Step, ...]
     def __post_init__(self):
         if (not self.oracle_id or not self.oracle_excerpt
-                or self.event not in {"end_step", "activate"}
+                or self.event not in {"end_step", "upkeep", "activate"}
                 or not self.steps or not all(isinstance(s, Step) for s in self.steps)):
             raise ValueError("Incomplete reviewed composed ability")
 
@@ -75,6 +75,18 @@ ABILITIES = {
                 "end_step", Predicate("life_lost_this_turn"),
                 Payment(x_generic=True),
                 (Step("create_tokens", _ASTARTES, "x"),)),
+    ),
+    "Dreadhorde Invasion": (
+        Ability("01deabbb-af6a-4998-99a7-35b7cfa9ef77",
+                "At the beginning of your upkeep, you lose 1 life and amass Zombies 1.",
+                "upkeep", Predicate("always"), Payment(),
+                (Step("lose_life"), Step("amass"))),
+    ),
+    "Plague Spitter": (
+        Ability("5feedfb0-30e6-400d-9e28-d541ea1aa14e",
+                "At the beginning of your upkeep, this creature deals 1 damage to each creature and each player.",
+                "upkeep", Predicate("always"), Payment(),
+                (Step("damage_all"),)),
     ),
     "Pestilence": (
         Ability("dafe63ef-f3d6-45e7-877a-573da92ba85e",
@@ -180,6 +192,31 @@ class ComposedAbilityEngine:
                     created += tuple(create_reviewed_token_batches(
                         self.zones, source.controller,
                         (replace(step.token, count=n),)))
+            elif step.operation == "lose_life":
+                self.life.lose(source.controller,n,source.object_id)
+                loss += n
+            elif step.operation == "amass":
+                # Shared amass primitive: an existing Army receives counters
+                # and gains Zombie subtype, otherwise create a 0/0 Zombie Army
+                # and add the counters before checking state-based actions.
+                army=next((o for o in sorted(
+                    self.zones.kernel.on_battlefield(),
+                    key=lambda object_:object_.object_id)
+                    if o.controller==source.controller and
+                    "creature" in o.types and "Army" in o.subtypes),None)
+                if army is None:
+                    army_blueprint=TokenBlueprint(
+                        "Zombie Army",frozenset({"creature"}),
+                        frozenset({"Zombie","Army"}),frozenset({"B"}),0,0)
+                    token_ids=create_reviewed_token_batches(
+                        self.zones,source.controller,(army_blueprint,))
+                    created+=tuple(token_ids)
+                    army=self.zones.kernel.get(token_ids[0])
+                elif "Zombie" not in army.subtypes:
+                    army.card=replace(army.card,
+                                      subtypes=army.subtypes | frozenset({"Zombie"}))
+                    self.zones.kernel._dirty()
+                self.zones.kernel.add_counter(army.object_id,"+1/+1",n)
             elif step.operation == "damage_all":
                 # Bounded no-prevention damage: all creature damage is marked
                 # simultaneously, then the existing kernel runs state-based
@@ -251,6 +288,27 @@ class ComposedAbilityEngine:
             return None
         self._turn = turn
         return self._dispatch_reviewed(source, rule)
+
+    def upkeep(self, *, active_seat, turn):
+        """Resolve source-reviewed own-upkeep profiles on authoritative zones."""
+        if (type(turn) is not int or turn<1 or
+                type(active_seat) is not int or
+                active_seat not in self.life.kernel.life_totals):
+            raise ValueError("Invalid composed upkeep")
+        self._turn=turn
+        outcomes=[]
+        for source in sorted(tuple(self.zones.kernel.on_battlefield()),
+                             key=lambda obj:obj.object_id):
+            if source.controller!=active_seat:
+                continue
+            for slot,rule in enumerate(self._abilities(source,"upkeep")):
+                key=(turn,active_seat,"upkeep",source.object_id,slot)
+                if key in self._handled:
+                    continue
+                self._handled.add(key)
+                if self._condition(rule,active_seat,len(self.life.kernel.life_changes)):
+                    outcomes.append(self._dispatch_reviewed(source,rule))
+        return tuple(outcomes)
 
     def end_step(self, *, active_seat, turn, life_start_index, x_choices=None):
         """Execute reviewed end-step triggers with host-provided X choices.
