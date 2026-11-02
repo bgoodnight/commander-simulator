@@ -125,6 +125,8 @@ class ProvisionalImportTests(unittest.TestCase):
             "{2}, {T}, Sacrifice this artifact: Add {B}{B}{B}.",
             "{T}, Pay 1 life: Add one mana of any color.",
             "{1}, {T}: Add {U}{R}. Activate only as a sorcery.",
+            "{T}: Add {B}.\nSpend this mana only to cast Wizard spells.",
+            "{T}: Add {B}.\nActivate only if you control two creatures.",
         ):
             with self.subTest(oracle=oracle):
                 profile=provisional_profile(
