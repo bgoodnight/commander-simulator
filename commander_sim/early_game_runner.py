@@ -62,7 +62,7 @@ from .resource_pilot import (choose_token_mana_sacrifice, plan_common_spell,
                              ritual_enables_spell, choose_composed_activation,
                              choose_variable_end_step_payments,
                              choose_utility_activation, choose_end_step_token_mana,
-                             choose_reviewed_removal)
+                             choose_reviewed_removal, choose_composed_x_activation)
 from .reviewed_common_spells import reviewed_common_spell, cast_common_spell
 from .reviewed_removal_spells import reviewed_removal, cast_removal
 from .reviewed_ramp import reviewed_ramp, reviewed_ritual, cast_ritual, activate_land_ramp, resolve_enter_ramp
@@ -714,14 +714,19 @@ def run_bounded_early_game(deck_key, *, seed=0, turns=6, mulligan="one-free", pr
                     "fidelity":"bounded_utility_policy"})
         # Generic composed-ability policy is separate from the rule executor.
         # A single conservative paid activation may generate useful life loss.
-        activation=choose_composed_activation(
+        x_activation=choose_composed_x_activation(
             zones,0,life,mana_service,raw_by_name)
-        if activation is not None:
-            outcome=composed_engine.activate(activation,turn=turn)
+        activation=(None if x_activation is not None else
+                    choose_composed_activation(
+                        zones,0,life,mana_service,raw_by_name))
+        if x_activation is not None or activation is not None:
+            source_id,x=x_activation if x_activation is not None else (activation,0)
+            outcome=composed_engine.activate(source_id,turn=turn,x=x)
             if outcome is not None:
                 events.append({"type":"reviewed_composed_activated",
-                    "source_object_id":activation,
+                    "source_object_id":source_id,
                     "operation":outcome.operation,
+                    "x":x,
                     "life_changes":outcome.life_lost,
                     "death_trigger_count":outcome.deaths,
                     "fidelity":"bounded_generic_activation_policy"})
