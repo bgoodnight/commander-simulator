@@ -145,13 +145,15 @@ def cast_common_spell(zones, life, seat, source_id, catalog, commander_colors,
                                   mana_service=mana_service,spell_type=recipe.spell_type)
     if committed is None:
         return None
-    # The existing cast-trigger host requires the immediate original cast
-    # event. Queue that observation before additional-cost death-trigger
-    # resolution, so LIFO effects cannot overwrite cast provenance.
-    if on_cast is not None:
-        on_cast(committed.ticket)
+    # Additional sacrifice costs are paid while casting and BEFORE
+    # on-cast triggers execute. The trigger callback can change the board;
+    # leaving payment until after it may try to sacrifice a stale object ID.
+    # Observe the actual cast before resolving the paid-cost death triggers,
+    # so the original ticket retains its source provenance.
     for oid in ids:
         zones.move(oid,"graveyard","sacrifice")
+    if on_cast is not None:
+        on_cast(committed.ticket)
     if ids and death_engine is not None:
         death_engine.resolve_deaths(before,move_index=move_index,turn=turn)
     drawn=[]
