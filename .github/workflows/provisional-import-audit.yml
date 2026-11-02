@@ -10,6 +10,9 @@ on:
       - "commander_sim/template_resources.py"
       - "tests/test_provisional_import.py"
       - "tools/audit_provisional_import.py"
+      - "tools/run_provisional_four_decks.py"
+      - "commander_sim/deck_lab_api.py"
+      - "tools/import_deck_fixtures.py"
   workflow_dispatch:
 permissions:
   contents: read
@@ -52,8 +55,13 @@ jobs:
                   p["status"]=="provisional" for p in r["provisional_import_report"])
           },sort_keys=True))
           PY
+      - name: Compare opt-in partial actions across four commanders
+        run: |
+          python tools/run_provisional_four_decks.py --seeds 5 --turns 5 --output /tmp/provisional-four-deck-comparison.json
       - uses: actions/upload-artifact@v4
         with:
           name: generic-provisional-import-example
-          path: /tmp/provisional-import-audit.json
+          path: |
+            /tmp/provisional-import-audit.json
+            /tmp/provisional-four-deck-comparison.json
           retention-days: 14
