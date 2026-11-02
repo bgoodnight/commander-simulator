@@ -113,7 +113,7 @@ def plan_common_spell(zones, seat, source, recipe, catalog, mana_service, life):
     if draws>len(zones.ids(seat,"library")):
         return None
     loss=multiplier*sum(step.quantity for step in recipe.steps if step.kind=="lose_life")
-    if loss>=life.total(seat)-4:
+    if loss and loss>=life.total(seat)-4:
         return None
     if recipe.variable_x:
         max_x=min(16,assess_resources(zones.kernel,mana_service,seat).available_fixed_mana)
