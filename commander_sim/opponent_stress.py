@@ -123,7 +123,9 @@ class BoundedOpponentPressure:
             # Keep priority engine creatures unless a trade is productive or
             # survival demands blocking. Tokens are the preferred expendables.
             def worth_blocking(o):
-                good_trade=o.power>=attacker.toughness
+                good_trade=(o.power>=attacker.toughness or
+                            (o.power>0 and "deathtouch" in o.keywords
+                             and "indestructible" not in attacker.keywords))
                 survives=o.toughness>attacker.power
                 return (survives, good_trade, o.token,
                         -int("commander" in o.card.supertypes),
@@ -133,6 +135,8 @@ class BoundedOpponentPressure:
             if chosen is not None and not (
                     chosen.toughness>attacker.power or
                     chosen.power>=attacker.toughness or
+                    (chosen.power>0 and "deathtouch" in chosen.keywords and
+                     "indestructible" not in attacker.keywords) or
                     self.life.total(0)<=16):
                 chosen=None
             attacker.tapped=True
