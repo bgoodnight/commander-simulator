@@ -312,11 +312,15 @@ class ComposedAbilityEngine:
             if x:
                 raise ValueError("An X choice was supplied to a fixed ability")
             cost=rule.payment.mana
-        if self.mana_service.plan(source.controller,cost) is None:
-            return None
-        paid=self.mana_service.pay(source.controller,cost)
-        if paid is None:
-            return None
+        # A tap/sacrifice-only ability has no mana payment at all; the
+        # mana planner correctly rejects empty mana strings, so skip it.
+        # This is shared by all zero-mana activated abilities.
+        if cost:
+            if self.mana_service.plan(source.controller,cost) is None:
+                return None
+            paid=self.mana_service.pay(source.controller,cost)
+            if paid is None:
+                return None
         if rule.payment.tap:
             source.tapped=True
             self.zones.kernel._dirty()
