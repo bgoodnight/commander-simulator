@@ -118,7 +118,7 @@ def run_bounded_early_game(deck_key, *, seed=0, turns=6, mulligan="one-free", pr
     colors = registry.get(fixture.commander).color_identity
     raw_by_name = {entry["deck_name"]: entry["card"] for entry in pinned}
     # Pinned, source-verified ETB effects with safe bounded hand-cast paths.
-    enter_hand_casts = {"Bastion of Remembrance", "Grave Titan",
+    enter_hand_casts = {"Bastion of Remembrance", "Grave Titan", "Massacre Wurm",
                         "Marionette Apprentice", "Royal Warden",
                         "Triarch Praetorian", "Canoptek Tomb Sentinel"}
     def approved_enter_hand_cast(name):
