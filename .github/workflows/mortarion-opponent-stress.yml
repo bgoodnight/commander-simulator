@@ -1,5 +1,5 @@
 name: Mortarion physical opponent stress and narrative audit
-# Validate generic fail-closed casting, varied opponents and active zone spells.
+# Replay with physical opponent-graveyard theft and provenance reporting.
 on:
   workflow_dispatch:
   push:
