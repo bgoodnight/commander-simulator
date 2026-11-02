@@ -6,6 +6,12 @@ on:
       - ".github/workflows/provisional-import-audit.yml"
       - "commander_sim/provisional_import.py"
       - "commander_sim/provisional_actions.py"
+      - "commander_sim/library_actions.py"
+      - "commander_sim/reviewed_draw_spells.py"
+      - "commander_sim/reviewed_flashback.py"
+      - "commander_sim/reviewed_sacrifice_actions.py"
+      - "tests/test_library_actions.py"
+      - "tools/audit_library_recipes.py"
       - "commander_sim/early_game_runner.py"
       - "commander_sim/template_resources.py"
       - "tests/test_provisional_import.py"
@@ -40,6 +46,18 @@ jobs:
                   "kinds":report["provisional_kinds"]},
                   sort_keys=True))
           PY
+      - name: Audit typed library action reuse in pinned decks
+        run: |
+          python tools/audit_library_recipes.py --all --output /tmp/library-recipes.json >/dev/null
+          python - <<'PY'
+          import json
+          data=json.load(open("/tmp/library-recipes.json"))
+          for deck,report in data.items():
+              print("LIBRARY_RECIPES",json.dumps({
+                  "deck":deck,"cards":report["cards_with_recipes"],
+                  "uses":report["recipe_uses"],"sources":report["by_source"]
+              },sort_keys=True))
+          PY
       - name: Physical turn smoke, explicit opt-in
         run: |
           python -m commander_sim.early_game_runner --deck wretched_ranks --seed 2 --turns 3 --provisional-mode safe >/tmp/physical-provisional.json
@@ -62,6 +80,7 @@ jobs:
         with:
           name: generic-provisional-import-example
           path: |
+            /tmp/library-recipes.json
             /tmp/provisional-import-audit.json
             /tmp/provisional-four-deck-comparison.json
           retention-days: 14
