@@ -21,7 +21,7 @@ if str(ROOT) not in sys.path:
 
 from commander_sim.deck_fixtures import FIXTURES, EXPERIMENTAL_FIXTURES
 from commander_sim.deck_lab_api import deck_detail
-from commander_sim.opponent_stress import SCENARIOS
+from commander_sim.opponent_stress import SCENARIOS, OPPONENT_TYPES
 from commander_sim.pilot_policy import STYLES
 from tools.build_game_outcomes import FORMAT, OUTCOME_STATES
 
@@ -94,6 +94,18 @@ def validate_batch(batch, *, deck_hashes):
                 or len(history) != completed + 1
                 or any(not _valid_life(row, i) for i, row in enumerate(history))):
             raise ValueError("Invalid outcome run chronology, duplicate seed or censoring")
+        roles = run.get("opponent_roles")
+        if batch["scenario"] == "random":
+            if (not isinstance(roles, dict)
+                    or {str(seat) for seat in roles} != {"1", "2", "3"}
+                    or any(role not in OPPONENT_TYPES for role in roles.values())):
+                raise ValueError("Invalid independently assigned opponent roles")
+        composition = run.get("opponent_composition")
+        if composition is not None:
+            if (not isinstance(roles, dict)
+                    or not isinstance(composition, list)
+                    or composition != sorted(roles.values())):
+                raise ValueError("Opponent composition disagrees with seat roles")
         seeds.add(seed)
         counts[outcome["status"]] += 1
     summary = batch.get("summary")

@@ -5,7 +5,11 @@ import unittest
 from commander_sim.deck_fixtures import EXPERIMENTAL_FIXTURES
 from commander_sim.early_game_runner import _load_live_kernel, run_bounded_early_game
 from commander_sim.kernel_life import KernelLife
-from commander_sim.opponent_stress import BoundedOpponentPressure
+from random import Random
+from unittest.mock import patch
+from commander_sim.opponent_stress import (
+    BoundedOpponentPressure, OPPONENT_TYPES, assign_opponent_roles,
+)
 from commander_sim.reviewed_death_effects import ReviewedDeathEngine
 from commander_sim.reviewed_phase_effects import ReviewedPhaseEngine
 
@@ -41,6 +45,31 @@ class OpponentPressureTests(unittest.TestCase):
         self.assertTrue(self.zones.assert_consistent())
         self.assertTrue(any(o.owner in {1,2,3} and not o.token
                             and o.zone=="library" for o in self.kernel.objects.values()))
+
+    def test_independent_random_roles_are_seeded_and_with_replacement(self):
+        self.assertEqual(set(OPPONENT_TYPES), {"aggro", "control", "value", "combo"})
+        samples = [
+            tuple(assign_opponent_roles("random", Random(seed)).values())
+            for seed in range(128)
+        ]
+        self.assertEqual(samples,
+            [tuple(assign_opponent_roles("random", Random(seed)).values())
+             for seed in range(128)])
+        self.assertTrue(any(len(set(row)) == 3 for row in samples))
+        self.assertTrue(any(len(set(row)) < 3 for row in samples))
+        self.assertTrue(any(len(set(row)) == 1 for row in samples))
+        self.assertTrue(all(set(row).issubset(OPPONENT_TYPES) for row in samples))
+
+    def test_new_registered_types_need_no_assignment_code_changes(self):
+        with patch("commander_sim.opponent_stress.OPPONENT_TYPES",
+                   ("combo", "new_pressure_type")):
+            rolls = [assign_opponent_roles("random", Random(seed))
+                     for seed in range(20)]
+        self.assertTrue(any("new_pressure_type" in roles.values()
+                            for roles in rolls))
+        self.assertTrue(all(set(roles) == {1,2,3} for roles in rolls))
+        preset = assign_opponent_roles("balanced", Random(7))
+        self.assertEqual(set(preset.values()), {"aggro","control","value"})
 
     def test_opponent_upkeeps_trigger_real_reviewed_ophiomancer(self):
         raw=self.catalog["Ophiomancer"]

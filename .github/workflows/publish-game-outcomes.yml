@@ -17,7 +17,7 @@ on:
         description: "Comma-separated abstract opponent scenarios"
         type: string
         required: true
-        default: "balanced,aggressive,control,combo,mixed"
+        default: "random"
       pilot_style:
         description: "Shared legal-action pilot personality"
         type: choice
@@ -63,7 +63,7 @@ jobs:
           OUTCOME_DECK: ${{ matrix.deck }}
           OUTCOME_SEEDS: ${{ github.event_name == 'pull_request' && '1' || inputs.seeds }}
           OUTCOME_ROUNDS: ${{ github.event_name == 'pull_request' && '3' || inputs.rounds }}
-          OUTCOME_SCENARIOS: ${{ github.event_name == 'pull_request' && 'aggressive,control' || inputs.scenarios }}
+          OUTCOME_SCENARIOS: ${{ github.event_name == 'pull_request' && 'random,control' || inputs.scenarios }}
           OUTCOME_PILOT_STYLE: ${{ github.event_name == 'pull_request' && 'adaptive' || inputs.pilot_style }}
           OUTCOME_PROVISIONAL_MODE: ${{ github.event_name == 'pull_request' && 'safe' || inputs.provisional_mode }}
         run: |

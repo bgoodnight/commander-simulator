@@ -19,7 +19,7 @@ if str(ROOT) not in sys.path:
 
 from commander_sim.deck_fixtures import FIXTURES, EXPERIMENTAL_FIXTURES
 from commander_sim.early_game_runner import run_bounded_early_game
-from commander_sim.opponent_stress import SCENARIOS
+from commander_sim.opponent_stress import SCENARIOS, OPPONENT_TYPES
 from commander_sim.pilot_policy import STYLES,ARCHETYPES
 
 FORMAT = "commander-modeled-outcomes-v1"
@@ -102,7 +102,7 @@ def summarize_games(runs, requested_rounds):
 
 
 def generate(deck_key, *, seeds=12, rounds=20, start_seed=0,
-             scenario="balanced", provisional_mode="off",
+             scenario="random", provisional_mode="off",
              pilot_style="adaptive",pilot_archetype="auto",examples=0, runner=run_bounded_early_game):
     if (deck_key not in DECK_KEYS
             or type(seeds) is not int or not 1<=seeds<=200
@@ -136,6 +136,7 @@ def generate(deck_key, *, seeds=12, rounds=20, start_seed=0,
     records=[{
         "seed":run["seed"],
         "opponent_roles":run["opponent_roles"],
+        "opponent_composition":sorted(run["opponent_roles"].values()),
         "completed_rounds":run["completed_rounds"],
         "outcome":run["outcome"],
         "life_history":run["life_history"],
@@ -143,6 +144,7 @@ def generate(deck_key, *, seeds=12, rounds=20, start_seed=0,
     replays=[{
         "seed":run["seed"],
         "opponent_roles":run["opponent_roles"],
+        "opponent_composition":sorted(run["opponent_roles"].values()),
         "outcome":run["outcome"],
         "events":run["events"],
         "state_snapshots":run["state_snapshots"],
@@ -153,7 +155,8 @@ def generate(deck_key, *, seeds=12, rounds=20, start_seed=0,
         "deck_key":deck_key,"deck_sha256":revision,
         "seed_start":start_seed,"seed_count":seeds,
         "requested_rounds":rounds,
-        "scenario":scenario,"provisional_mode":provisional_mode,
+        "scenario":scenario,"opponent_type_pool":list(OPPONENT_TYPES),
+        "provisional_mode":provisional_mode,
         "pilot_style":pilot_style,
         "pilot_archetype":raw[0].get("pilot_archetype"),
         "pilot_signals":raw[0].get("pilot_signals"),
@@ -182,7 +185,7 @@ def main(argv=None):
     parser.add_argument("--rounds",type=int,default=20)
     parser.add_argument("--start-seed",type=int,default=0)
     parser.add_argument("--scenario",choices=sorted(SCENARIOS),
-                        default="balanced")
+                        default="random")
     parser.add_argument("--provisional-mode",choices=("off","safe"),
                         default="off")
     parser.add_argument("--pilot-style",choices=STYLES,default="adaptive")

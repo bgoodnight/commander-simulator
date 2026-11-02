@@ -105,6 +105,19 @@ class OutcomePublicationTests(unittest.TestCase):
         with self.assertRaisesRegex(ValueError, "summary"):
             validate_batch(batch, deck_hashes=DECK_HASHES)
 
+    def test_random_pods_reject_missing_or_invalid_seat_roles(self):
+        value = example_batch(scenario="random")
+        self.assertEqual(validate_batch(value, deck_hashes=DECK_HASHES),
+                         "mortarion_current")
+        value["runs"][0]["opponent_roles"] = {"1": "aggro", "2": "combo"}
+        with self.assertRaisesRegex(ValueError, "independently assigned"):
+            validate_batch(value, deck_hashes=DECK_HASHES)
+        value["runs"][0]["opponent_roles"] = {
+            "1": "aggro", "2": "combo", "3": "invented"
+        }
+        with self.assertRaisesRegex(ValueError, "independently assigned"):
+            validate_batch(value, deck_hashes=DECK_HASHES)
+
     def test_corrupt_file_checksum_and_index_membership_rejected(self):
         self.write("x.json", example_batch())
         publish(self.source, self.output,

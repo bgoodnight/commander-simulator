@@ -147,6 +147,15 @@ class GameBatchTests(unittest.TestCase):
         self.assertEqual(trend[1]["alive_games"]["0"],2)
         self.assertNotIn("win_rate",result["summary"])
 
+    def test_default_batch_requests_independent_random_pods(self):
+        result = generate("necron_dynasties", seeds=2, rounds=4,
+                          runner=self.fake)
+        self.assertEqual(result["scenario"], "random")
+        self.assertEqual(set(result["opponent_type_pool"]),
+                         {"aggro", "control", "value", "combo"})
+        self.assertEqual(result["runs"][0]["opponent_composition"],
+                         ["aggro", "control", "value"])
+
     def test_batch_invalid_configuration_fails_closed(self):
         for kwargs in ({"rounds":31},{"seeds":0},{"scenario":"real_decks"},
                        {"examples":4},{"start_seed":-1}):
