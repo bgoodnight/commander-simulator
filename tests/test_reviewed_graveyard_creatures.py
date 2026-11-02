@@ -152,7 +152,7 @@ class PhysicalGraveyardCreatureTests(unittest.TestCase):
                     self.assertEqual(
                         row["library_size"] + row["hand_size"] +
                         len(snapshot["battlefield"]) + len(snapshot["graveyard"]) +
-                        len(snapshot["exile"]) + 1, 100)
+                        len(snapshot["exile"]) + row["command_zone_count"], 100)
 
 
 if __name__ == "__main__":
