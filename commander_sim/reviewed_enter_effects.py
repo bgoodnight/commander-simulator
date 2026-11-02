@@ -30,6 +30,8 @@ _SOLDIER=TokenBlueprint("Soldier",frozenset({"creature"}),
     frozenset({"Human","Soldier"}),frozenset({"W"}),1,1)
 _SERVO=TokenBlueprint("Servo",frozenset({"artifact","creature"}),
     frozenset({"Servo"}),frozenset(),1,1)
+_GOAT=TokenBlueprint("Goat",frozenset({"creature"}),
+    frozenset({"Goat"}),frozenset({"W"}),0,1)
 
 
 @dataclass(frozen=True)
@@ -47,7 +49,7 @@ class EnterRule:
     def __post_init__(self):
         if (not self.oracle_id or not self.excerpt
                 or self.operation not in {
-                    "necron_two","zombie_two","soldier_one",
+                    "necron_two","zombie_two","soldier_one","goat_one",
                     "draw_lose_two","optional_exile_nonland",
                     "each_player_sacrifice","fabricate_one",
                     "debuff_opponent_creatures","library_recipe",
@@ -72,6 +74,10 @@ class EnterRule:
 
 
 ENTER_RULES={
+    "Woe Strider":EnterRule(
+        "3adbd963-e85d-4569-963a-4472594f06f9",
+        "When this creature enters, create a 0/1 white Goat creature token.",
+        "goat_one"),
     "Lord of Change":EnterRule(
         "b575fb16-c3c3-4cad-857f-122257a4b32f",
         "Architect of Deception — When this creature enters, draw three cards.",
@@ -232,9 +238,10 @@ def execute_reviewed_enter(zones,life:KernelLife,source_id,catalog,*,
             library_steps=result.steps
             if effect.life_gain:
                 life.gain(source.controller,effect.life_gain,source_id)
-        elif effect.operation in {"necron_two","zombie_two","soldier_one"}:
+        elif effect.operation in {"necron_two","zombie_two","soldier_one",
+                                  "goat_one"}:
             batch={"necron_two":_NECRON,"zombie_two":_ZOMBIE,
-                   "soldier_one":_SOLDIER}[effect.operation]
+                   "soldier_one":_SOLDIER,"goat_one":_GOAT}[effect.operation]
             tokens=create_reviewed_token_batches(
                 zones,source.controller,(batch,))
         elif effect.operation=="draw_lose_two":
