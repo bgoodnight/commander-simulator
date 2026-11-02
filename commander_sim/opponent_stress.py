@@ -54,6 +54,23 @@ class BoundedOpponentPressure:
         self.events = []
         self._defeated = False
         self._born = {}
+        # Finite, explicitly abstract opponent library objects make graveyard
+        # and mill interactions testable without pretending to supply real
+        # opposing decklists. Physical cards retain zone provenance.
+        for seat,role in self.roles.items():
+            for i in range(16):
+                profile=i%5
+                p,t=((2,2),(3,2),(2,3),(1,4),(4,3))[profile]
+                keywords=(frozenset({"flying"}) if profile==4
+                          else frozenset({"deathtouch"}) if profile==3
+                          else frozenset())
+                definition=self.definition(
+                    "stress:"+role+":"+str(seat)+":"+str(i),
+                    "Abstract "+role+" creature "+str(i),
+                    frozenset({"creature"}),
+                    base_power=p,base_toughness=t,
+                    keywords=keywords,coverage="approx")
+                self.zones.add(definition,seat,"library")
         # Opponent exile events consume a finite abstract interaction budget,
         # rather than pretending an unlimited stream of free removal spells.
         self._removal_budget = {
@@ -67,14 +84,24 @@ class BoundedOpponentPressure:
             key=lambda o:o.object_id)
 
     def _spawn(self, seat, turn, role):
-        size = 2 if role in {"aggro","value"} else 1
-        name = "Abstract " + role + " opponent creature"
-        definition = self.definition(
-            "stress:" + role, name, frozenset({"creature"}),
-            base_power=size, base_toughness=size, coverage="approx")
-        oid = self.zones.add(definition, seat, "battlefield", token=True)
+        # A role may develop a genuine physical (but still abstract) creature
+        # card or an expendable token. Cards enter from the seat's finite
+        # abstract library and create real graveyard objects when they die.
+        as_card=bool(self.zones.ids(seat,"library")) and self.rng.random()<0.66
+        if as_card:
+            old=self.zones.ids(seat,"library")[-1]
+            oid=self.zones.move(old,"battlefield","resolve")
+            size=self.zones.kernel.get(oid).power
+        else:
+            size=2 if role in {"aggro","value"} else 1
+            name="Abstract "+role+" token"
+            definition=self.definition(
+                "stress:token:"+role,name,frozenset({"creature"}),
+                base_power=size,base_toughness=size,coverage="approx")
+            oid=self.zones.add(definition,seat,"battlefield",token=True)
         self._born[oid]=turn
-        self.events.append(OpponentEvent(turn,seat,role,"abstract_creature",oid,size))
+        self.events.append(OpponentEvent(turn,seat,role,"abstract_creature",
+                                          oid,size,seat))
 
     def _threat(self,seat):
         """Seat-neutral board/life pressure, never a hard-coded human bonus."""
