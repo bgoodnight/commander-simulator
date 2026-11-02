@@ -105,6 +105,21 @@ class OpponentPressureTests(unittest.TestCase):
         with self.assertRaises(ValueError):
             self.stress("infinite_cheating")
 
+    def test_opponent_attacker_untaps_and_attacks_again_on_next_turn(self):
+        adv=self.stress("aggressive",seed=3)
+        aggro=next(seat for seat,role in adv.roles.items() if role=="aggro")
+        adv._spawn(aggro,0,"aggro")
+        attacker=adv.events[-1].object_id
+        adv.advance(1)
+        self.assertTrue(self.kernel.get(attacker).tapped)
+        damage_before=sum(x.operation=="abstract_unblocked_damage"
+                          and x.object_id==attacker for x in adv.events)
+        adv.advance(2)
+        damage_after=sum(x.operation=="abstract_unblocked_damage"
+                          and x.object_id==attacker for x in adv.events)
+        self.assertEqual(damage_after,damage_before+1)
+        self.assertTrue(self.zones.assert_consistent())
+
     def test_opponent_exile_uses_finite_interaction_budgets(self):
         body=self.zones.add(self.C("test:target","Durable Test Target",
             frozenset({"creature"}),base_power=2,base_toughness=9,
