@@ -23,6 +23,8 @@ from .card_cache import pinned_deck_entries
 from .mana_costs import UnsupportedManaCost
 from .deck_fixtures import FIXTURES, EXPERIMENTAL_FIXTURES, SHARED_CATALOG
 from .generic_cast import ReviewedCreatureCast, cast_reviewed_permanent
+from .provisional_import import provisional_profile, provisional_report
+from .provisional_actions import cast_provisional_spell
 from .kernel_reporting import project_kernel_turn
 from .board_features import analyze_authoritative_run
 from .reviewed_early_cards import REVIEWED_BY_DECK, LIMITATIONS, reviewed_creature
@@ -97,7 +99,7 @@ def _load_live_kernel():
     return IndexedKernel, LiveZones, CardDefinition
 
 
-def run_bounded_early_game(deck_key, *, seed=0, turns=6, mulligan="one-free", profile=None, opponent_scenario=None):
+def run_bounded_early_game(deck_key, *, seed=0, turns=6, mulligan="one-free", profile=None, opponent_scenario=None, provisional_mode="off"):
     """Play a small reviewed set of actual land, rock and creature actions.
 
     A deterministic, conservative fixed pilot draws, plays one supported land,
@@ -123,6 +125,10 @@ def run_bounded_early_game(deck_key, *, seed=0, turns=6, mulligan="one-free", pr
     registry = CardRegistry(snapshot)
     colors = registry.get(fixture.commander).color_identity
     raw_by_name = {entry["deck_name"]: entry["card"] for entry in pinned}
+    if provisional_mode not in {'off','safe'}:
+        raise ValueError('Unknown provisional mode')
+    provisional_by_name = ({name: provisional_profile(raw) for name,raw in raw_by_name.items()}
+        if provisional_mode=='safe' else {})
     # Pinned, source-verified ETB effects with safe bounded hand-cast paths.
     enter_hand_casts = {"Bastion of Remembrance", "Grave Titan", "Massacre Wurm",
                         "Marionette Apprentice", "Royal Warden",
@@ -195,7 +201,8 @@ def run_bounded_early_game(deck_key, *, seed=0, turns=6, mulligan="one-free", pr
                     or approved_enter_hand_cast(name)
                     or reviewed_breach(name,raw_by_name[name])
                     or reviewed_buyback(name,raw_by_name[name]) is not None
-                    or reviewed_copy_spell(name,raw_by_name[name]) is not None)
+                    or reviewed_copy_spell(name,raw_by_name[name]) is not None
+                    or provisional_by_name.get(name) is not None)
         definition = CardDefinition(
             identity.oracle_id, name, types, subtypes=subtypes,
             supertypes=frozenset({"commander"}) if section == "Commander" else frozenset(),
@@ -205,7 +212,8 @@ def run_bounded_early_game(deck_key, *, seed=0, turns=6, mulligan="one-free", pr
         for _ in range(quantity):
             zones.add(definition, 0, "command" if section == "Commander" else "library")
 
-    mana_service = TemplateManaService(kernel, raw_by_name, colors, zones=zones)
+    mana_service = TemplateManaService(kernel, raw_by_name, colors, zones=zones,
+                                       provisional_mode=provisional_mode)
     def preview_spell(*args,**kwargs):
         """Fail closed on bounded speculative mana search, never commit it."""
         try:
@@ -244,8 +252,11 @@ def run_bounded_early_game(deck_key, *, seed=0, turns=6, mulligan="one-free", pr
         obj=kernel.get(oid)
         if "land" not in obj.types:
             return False
+        provisional=provisional_by_name.get(obj.card.name)
         return bool(_reviewed_modes(obj.card.name,colors)
                     or reviewed_land(obj.card.name,raw_by_name[obj.card.name],colors)
+                    or (provisional is not None and provisional.kind=="land_mana"
+                        and obj.card.card_id==provisional.oracle_id)
                     or (obj.card.name == 'Myriad Landscape' and reviewed_ramp(obj.card.name,raw_by_name[obj.card.name])))
     possible_lands = sum(supported_land(oid) for oid in zones.ids(0, "hand"))
     mulligan_taken = mulligan == "one-free" and not 2 <= possible_lands <= 5
@@ -420,16 +431,24 @@ def run_bounded_early_game(deck_key, *, seed=0, turns=6, mulligan="one-free", pr
             other_lands=sum("land" in obj.types and obj.zone=="battlefield"
                             and obj.controller==0 for obj in kernel.objects.values())
             land_review=reviewed_land(name,raw_by_name[name],colors)
+            provisional_land=provisional_by_name.get(name)
+            provisional_land=(provisional_land
+                              if provisional_land is not None
+                              and provisional_land.kind=="land_mana" else None)
             new_id = zones.play_land(0, land_id)
             if ((land_review is not None and land_review.enters_tapped(other_lands))
+                    or (provisional_land is not None and provisional_land.enter_tapped)
                     or (name == 'Myriad Landscape' and reviewed_ramp(name,raw_by_name[name]) is not None)):
                 kernel.get(new_id).tapped=True
                 kernel._dirty()
             events.append({"type": "land_play", "card": name,
                            "from_object_id": land_id, "object_id": new_id,
-                           "fidelity":"reviewed_partial_land" if land_review else "reviewed_basic_land",
+                           "fidelity":"reviewed_partial_land" if land_review else
+                                "provisional_partial" if provisional_land else
+                                "reviewed_basic_land",
                            "entered_tapped":bool(kernel.get(new_id).tapped),
-                           "unsupported_abilities":list(land_review.ignored) if land_review else []})
+                           "unsupported_abilities":list(land_review.ignored) if land_review else
+                               list(provisional_land.omissions) if provisional_land else []})
             entry_rule=reviewed_land_entry(name,raw_by_name[name])
             if entry_rule is not None:
                 recycle=None
@@ -505,8 +524,18 @@ def run_bounded_early_game(deck_key, *, seed=0, turns=6, mulligan="one-free", pr
                 obj = kernel.get(oid)
                 name = obj.card.name
                 raw = raw_by_name[name]
-                is_creature = reviewed_creature(deck_key, name, raw)
+                provisional=provisional_by_name.get(name)
+                is_creature = bool(reviewed_creature(deck_key, name, raw)
+                                   or (provisional is not None and
+                                       provisional.kind=="creature_body"))
                 rock = reviewed_rock(name, raw, colors)
+                provisional_rock=bool(provisional is not None
+                                      and provisional.kind in {"artifact_mana",
+                                                               "artifact_body"})
+                provisional_spell=bool(provisional is not None and
+                    provisional.kind=="simple_spell"
+                    and reviewed_common_spell(name,raw) is None
+                    and reviewed_draw_spell(name,raw) is None)
                 token_spell = reviewed_token_spell(name, raw)
                 draw_spell = reviewed_draw_spell(name,raw)
                 attachment_rule=reviewed_attachment(name,raw)
@@ -564,16 +593,18 @@ def run_bounded_early_game(deck_key, *, seed=0, turns=6, mulligan="one-free", pr
                         and token_spell is None and draw_spell is None and not phase_enchantment
                         and not sacrifice_artifact and not entering and not ramp and not ritual
                         and not common_plan and removal_plan is None
-                        and attachment_rule is None and zone_target is None):
+                        and attachment_rule is None and zone_target is None
+                        and not provisional_rock and not provisional_spell):
                     continue
                 cost = common_plan[0] if common_plan else registry.get(name).primary_face().mana_cost
                 payment = preview_spell(0, cost, obj)
                 if payment is not None:
                     kind = ("zone_spell" if zone_target is not None else
+                            "provisional_spell" if provisional_spell else
                             "removal_spell" if removal_plan is not None else
                             "common_spell" if common_plan else
                             "ritual" if ritual else
-                            "artifact" if rock is not None or sacrifice_artifact or (attachment_rule is not None and "artifact" in obj.types) or (ramp and name == "Wayfarer\u0027s Bauble") else
+                            "artifact" if rock is not None or provisional_rock or sacrifice_artifact or (attachment_rule is not None and "artifact" in obj.types) or (ramp and name == "Wayfarer\u0027s Bauble") else
                             "enchantment" if "enchantment" in obj.types and (phase_enchantment or attachment_rule is not None or entering) else
                             "tutor" if eligible else
                             "draw_spell" if draw_spell is not None else
@@ -591,7 +622,7 @@ def run_bounded_early_game(deck_key, *, seed=0, turns=6, mulligan="one-free", pr
                               choose_tutor_target(zones, 0, eligible, raw_by_name, colors) if eligible else None)
                     # Reviewed trigger creatures precede spells so their
                     # shared effects may fire on subsequent actual casts.
-                    options.append((0 if rock is not None or ritual else
+                    options.append((0 if rock is not None or (provisional is not None and provisional.kind=="artifact_mana") or ritual else
                                     1 if is_creature else
                                     2 if removal_plan is not None and life.total(0)<=18 else
                                     2 if sacrifice_artifact else
@@ -615,6 +646,25 @@ def run_bounded_early_game(deck_key, *, seed=0, turns=6, mulligan="one-free", pr
                     "paid_source_ids":list(outcome.paid_source_ids),
                     "commander_tax":outcome.commander_tax,
                     "fidelity":"reviewed_command_zone"})
+                continue
+            if kind == "provisional_spell":
+                triggered=[]
+                outcome=cast_provisional_spell(
+                    zones,life,0,oid,raw_by_name,colors,mana_service,
+                    on_cast=lambda ticket:triggered.extend(
+                        approved_spell_triggers(ticket)))
+                if outcome is None:
+                    raise AssertionError("Provisional spell became unpayable")
+                events.extend(triggered)
+                events.append({
+                    "type":"provisional_spell_resolved",
+                    "card":outcome.name,
+                    "operation":outcome.operation,
+                    "amount":outcome.count,
+                    "drawn_ids":list(outcome.drawn_ids),
+                    "paid_source_ids":list(outcome.paid_source_ids),
+                    "graveyard_object_id":outcome.resolved_zone_id,
+                    "fidelity":"provisional_partial"})
                 continue
             if kind == "zone_spell":
                 returned=zone_engine.cast(
@@ -847,11 +897,23 @@ def run_bounded_early_game(deck_key, *, seed=0, turns=6, mulligan="one-free", pr
                     "fidelity":"bounded_explicit_entry_choice"})
             if kind == "artifact":
                 rock = reviewed_rock(name, raw_by_name[name], colors)
-                if rock is not None and rock[0].enter_tapped:
+                provisional_artifact=provisional_by_name.get(name)
+                if ((rock is not None and rock[0].enter_tapped) or
+                        (provisional_artifact is not None and
+                         provisional_artifact.enter_tapped)):
                     kernel.get(resolved_id).tapped = True
                     kernel._dirty()
+            implicit=provisional_by_name.get(name)
+            implicit_only=(implicit is not None and
+                          not reviewed_creature(deck_key,name,raw_by_name[name])
+                          and reviewed_rock(name,raw_by_name[name],colors) is None
+                          and not approved_enter_hand_cast(name))
             events.append({"type": kind + "_resolved", "card": name,
-                           "object_id": resolved_id, "fidelity": "limited_generic_resolution"})
+                           "object_id": resolved_id,
+                           "fidelity":"provisional_partial" if implicit_only else
+                                      "limited_generic_resolution",
+                           "unmodeled_abilities":list(implicit.omissions)
+                               if implicit_only else []})
             if name == "Solemn Simulacrum" and reviewed_ramp(name,raw_by_name[name]):
                 moved = resolve_enter_ramp(zones,0,resolved_id,raw_by_name)
                 events.append({"type":"reviewed_enter_ramp","card":name,
@@ -1384,7 +1446,8 @@ def run_bounded_early_game(deck_key, *, seed=0, turns=6, mulligan="one-free", pr
                 or reviewed_common_spell(name,raw) is not None
                 or approved_enter_hand_cast(name)
                 or reviewed_breach(name,raw)
-                or reviewed_buyback(name,raw))
+                or reviewed_buyback(name,raw)
+                or provisional_by_name.get(name) is not None)
         cleanup = cleanup_hand(
             zones, 0, raw_by_name, supported_action=hand_action_supported)
         for choice in cleanup.discarded:
@@ -1490,6 +1553,7 @@ def run_bounded_early_game(deck_key, *, seed=0, turns=6, mulligan="one-free", pr
                     raw_by_name[kernel.get(oid).card.name]) is None
                 and reviewed_copy_spell(kernel.get(oid).card.name,
                     raw_by_name[kernel.get(oid).card.name]) is None
+                and provisional_by_name.get(kernel.get(oid).card.name) is None
                 and not supported_land(oid)),
         })
         if opponent_pressure is not None and opponent_pressure.defeated:
@@ -1503,6 +1567,9 @@ def run_bounded_early_game(deck_key, *, seed=0, turns=6, mulligan="one-free", pr
         "seat_zero_defeated":opponent_pressure.defeated if opponent_pressure else False,
         "completed_turns":len(states),
         "deck_key": deck_key,
+        "provisional_mode":provisional_mode,
+        "provisional_import_report":(
+            provisional_report(pinned) if provisional_mode=="safe" else []),
         "commander": fixture.commander,
         "deck_sha256": snapshot.deck_sha256,
         "seed": seed,
@@ -1527,7 +1594,10 @@ if __name__ == "__main__":
     parser.add_argument("--turns", type=int, default=6)
     parser.add_argument("--mulligan", choices=("one-free", "keep"), default="one-free")
     parser.add_argument("--profile", type=Path, help="Optional curated strategy JSON file")
+    parser.add_argument("--provisional-mode",choices=("off","safe"),default="off",
+                        help="Enable safe import-derived, explicitly partial card actions")
     args = parser.parse_args()
     profile = json.loads(args.profile.read_text(encoding="utf-8")) if args.profile else None
     print(json.dumps(run_bounded_early_game(args.deck, seed=args.seed, turns=args.turns,
-                                             mulligan=args.mulligan, profile=profile), indent=2))
+                                             mulligan=args.mulligan, profile=profile,
+                                             provisional_mode=args.provisional_mode), indent=2))
