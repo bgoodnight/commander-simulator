@@ -25,7 +25,7 @@ from .deck_fixtures import FIXTURES, EXPERIMENTAL_FIXTURES, SHARED_CATALOG
 from .generic_cast import ReviewedCreatureCast, cast_reviewed_permanent
 from .provisional_import import provisional_profile, provisional_report
 from .provisional_actions import cast_provisional_spell
-from .library_actions import required_draws
+from .library_actions import required_draws, resolve_library_actions
 from .kernel_reporting import project_kernel_turn
 from .board_features import analyze_authoritative_run
 from .reviewed_early_cards import REVIEWED_BY_DECK, LIMITATIONS, reviewed_creature
@@ -940,6 +940,14 @@ def run_bounded_early_game(deck_key, *, seed=0, turns=6, mulligan="one-free", pr
                                       "limited_generic_resolution",
                            "unmodeled_abilities":list(implicit.omissions)
                                if implicit_only else []})
+            if (kind=="creature" and implicit_only
+                    and implicit.entry_actions):
+                entry=resolve_library_actions(zones,0,implicit.entry_actions)
+                events.append({"type":"provisional_enter_resolved",
+                    "card":name,"source_object_id":resolved_id,
+                    "milled_ids":list(entry.milled_ids),
+                    "library_actions":list(entry.steps),
+                    "fidelity":"provisional_partial"})
             if name == "Solemn Simulacrum" and reviewed_ramp(name,raw_by_name[name]):
                 moved = resolve_enter_ramp(zones,0,resolved_id,raw_by_name)
                 events.append({"type":"reviewed_enter_ramp","card":name,
