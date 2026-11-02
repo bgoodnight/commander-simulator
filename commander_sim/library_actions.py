@@ -151,7 +151,10 @@ def resolve_library_actions(zones, seat, actions, *, select=None):
                     chosen = chosen[:limit]
                 record["to_graveyard"] = _cards(zones, chosen)
                 for oid in chosen:
-                    new_id = zones.move(oid, "graveyard", "surveil")
+                    # The physical kernel's reason vocabulary predates surveil.
+                    # Use a resolving spell's legal zone-move reason; keep
+                    # the action recorded as surveil, never mill.
+                    new_id = zones.move(oid, "graveyard", "resolve")
                     milled.append(new_id)
 
             else:
