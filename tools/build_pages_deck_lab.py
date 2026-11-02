@@ -216,7 +216,7 @@ def build(output, *, catalog_path=SHARED_CATALOG, name_catalog_path=DEFAULT_NAME
     # attractive Deck Summary by default; results.html retains the
     # interpretive observation archive and editor.html the deck workshop.
     # The same source shell selects content by pathname without a server.
-    for filename in ("app.js", "results_insights.js", "brackets.js", "replay.js", "style.css", "game-changers.json"):
+    for filename in ("app.js", "results_insights.js", "brackets.js", "replay.js", "insight_explorer.js", "style.css", "game-changers.json"):
         shutil.copy2(static / filename, output / filename)
     for filename in ("index.html", "summary.html", "results.html", "editor.html"):
         shutil.copy2(static / "index.html", output / filename)
@@ -290,7 +290,7 @@ def build(output, *, catalog_path=SHARED_CATALOG, name_catalog_path=DEFAULT_NAME
         "asset_sha256": {name: hashlib.sha256((output / name).read_bytes()).hexdigest()
                          for name in ("decks.json", "observations.json", "names.json", "bounded-batches.json",
                                       "index.html", "summary.html", "results.html", "editor.html",
-                                      "app.js", "results_insights.js", "brackets.js", "replay.js", "style.css", "game-changers.json",
+                                      "app.js", "results_insights.js", "brackets.js", "replay.js", "insight_explorer.js", "style.css", "game-changers.json",
                                       *(f"bounded-runs-{key}.json" for key in batches["decks"]),
                                       *(f"simulation-data/{relative}" for relative in archive_files),
                                       *replay_assets)},
