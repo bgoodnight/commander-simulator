@@ -15,6 +15,23 @@ ROCKS = {
             assumptions=("Mana ability modeled; other abilities if present are omitted",),
             ),
     },
+    "Hedron Archive": {
+        "printed_cost":"{4}",
+        "review":ReviewedEffect(
+            "32263baa-d3f0-463f-92b3-4e9938476add",
+            "{T}: Add {C}{C}.\n{2}, {T}, Sacrifice this artifact: Draw two cards.",
+            "rock_colorless_two",
+            assumptions=("Two colorless mana; sacrifice draw uses separately reviewed UtilityRule",)),
+    },
+    "Infernal Idol": {
+        "printed_cost":"{3}",
+        "review":ReviewedEffect(
+            "a0802918-e18a-4716-befb-96ae6667f2f3",
+            "{T}: Add {B}.\n{1}{B}{B}, {T}, Sacrifice this artifact: You draw two cards and lose 2 life.",
+            "rock_colorless_one",
+            overrides=(("mana_modes",(ManaMode(("B",)),)),),
+            assumptions=("Black mana; sacrifice draw/loss uses separately reviewed UtilityRule",)),
+    },
     "Mind Stone": {
         "printed_cost": "{2}",
         "review": ReviewedEffect("c97361b5-af16-4a7b-af85-a429dbaf4ad2", "{T}: Add {C}.\n{1}, {T}, Sacrifice this artifact: Draw a card.",
