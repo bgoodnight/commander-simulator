@@ -8,6 +8,7 @@ from commander_sim.template_resources import TemplateManaService
 from commander_sim.reviewed_death_effects import ReviewedDeathEngine
 from commander_sim.reviewed_common_spells import (
     reviewed_common_spell, cast_common_spell)
+from commander_sim.reviewed_cast_reactions import resolve_cast_reactions
 
 class ReviewedCommonSpellsTests(unittest.TestCase):
     @classmethod
@@ -79,6 +80,12 @@ class ReviewedCommonSpellsTests(unittest.TestCase):
             # react to a spell cast and change the same battlefield object.
             observed.append(sacrifice not in self.kernel.objects)
             self.assertIn(ticket.object_id,self.kernel.objects)
+            # The actual cast is still recorded even after additional
+            # sacrifice movement emitted intervening kernel events.
+            reactions=resolve_cast_reactions(
+                self.zones,0,self.catalog,
+                source_spell=self.kernel.get(ticket.object_id))
+            self.assertEqual(reactions,())
         result=self.run_spell(
             "Deadly Dispute",sacrifice_ids=(sacrifice,),on_cast=on_cast)
         self.assertEqual(observed,[True])
