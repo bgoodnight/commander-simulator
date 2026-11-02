@@ -23,6 +23,8 @@ from commander_sim.card_cache import CardCatalog, deck_names
 from commander_sim.deck_fixtures import FIXTURES, LEGACY_SEEDS, SHARED_CATALOG
 from commander_sim.snapshots import validate_snapshot
 from commander_sim.observation import observe
+from commander_sim.provisional_import import provisional_report
+from collections import Counter
 from tools.fetch_deck_identities import fetch
 
 
@@ -67,6 +69,11 @@ def prepare(*, fetch_missing=False, selected=None, catalog_path=SHARED_CATALOG,
                                         commander=fixture.commander)
             trace = observe(fixture.deck_path, destination,
                             commander=fixture.commander, turns=6, seed=0)
+            # Source-pinned read-only profile preview. It never changes
+            # historical M1 observation or upgrades a card to reviewed.
+            pinned_cards=json.loads(destination.read_text(encoding="utf-8"))["cards"]
+            partial=provisional_report(pinned_cards)
+            kinds=dict(Counter(x["kind"] for x in partial if x["kind"]))
             if (checked.deck.count != 100 or len(trace["trace"]) != 6
                 or any(t["playable_now"] for t in trace["trace"])):
                 raise ValueError("M1 import/observation invariants failed")
@@ -75,7 +82,15 @@ def prepare(*, fetch_missing=False, selected=None, catalog_path=SHARED_CATALOG,
                           snapshot_sha256=checked.snapshot_sha256,
                           deck_sha256=checked.deck_sha256,
                           observation_seed=0, observation_turns=6,
-                          not_live_gameplay=True)
+                          not_live_gameplay=True,
+                          provisional_import={
+                              "fidelity":"provisional_partial",
+                              "candidate_count":sum(
+                                  x["status"]=="provisional" for x in partial),
+                              "manual_review_count":sum(
+                                  x["status"]=="manual_review_needed" for x in partial),
+                              "kinds":kinds,"cards":partial,
+                              "gameplay_enabled_by_import":False})
         except (OSError, ValueError, TypeError, KeyError) as exc:
             report.update(status="error", error=str(exc))
         reports.append(report)
