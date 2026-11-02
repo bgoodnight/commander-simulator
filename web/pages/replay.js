@@ -206,22 +206,194 @@
     }
     return node;
   }
+  // Round-level measures only. Never infer individual token identities, mana
+  // production, life-change causes, or opponent battlefield composition.
+  const STARTING_LIFE=40;
+  function changeIn(round,previous,field){
+    const now=statsForRound(round,0)?.[field];
+    const was=previous?statsForRound(previous,0)?.[field]:null;
+    return typeof now==="number"&&typeof was==="number"?now-was:null;
+  }
+  function recordedCombat(round){
+    return round.actions.reduce((counts,a)=>{
+      const n=typeof a.fields?.amount==="number"?a.fields.amount:0;
+      if(a.type==="player_abstract_unblocked_damage")counts.dealt+=n;
+      if(a.type==="opponent_abstract_unblocked_damage"&&a.target_seat===0)counts.taken+=n;
+      if(a.type==="player_abstract_blocked_combat")counts.blocks++;
+      if(a.type==="opponent_abstract_blocked_combat"&&a.target_seat===0)counts.defended++;
+      return counts;
+    },{dealt:0,taken:0,blocks:0,defended:0});
+  }
+  function cardSpotlight(round,lookup){
+    const picked=round.actions.find(a=>a.type==="reviewed_commander_cast"&&a.card_name)||
+      round.actions.find(a=>a.card_name&&["reviewed_removal_resolved",
+        "reviewed_common_spell_resolved","reviewed_zone_spell_resolved",
+        "reviewed_composed_activated"].includes(a.type))||
+      round.actions.find(a=>a.card_name&&a.type!=="land_play")||
+      round.actions.find(a=>a.card_name&&a.type==="land_play");
+    const card=picked?.card_name&&typeof lookup==="function"?lookup(picked.card_name):null;
+    return {action:picked||null,card:validateCard(card)?card:null};
+  }
+  function statChangeClass(delta,kind){
+    if(delta===null||delta===0)return "replay-stat-steady";
+    if(kind==="life"||kind==="creatures")return delta>0?"replay-stat-up":"replay-stat-down";
+    return delta>0?"replay-stat-up":"replay-stat-shift";
+  }
+  function statBadge(icon,label,value,delta,kind){
+    const chip=el("span","replay-turn-stat "+statChangeClass(delta,kind));
+    const amount=value===null||value===undefined?"—":String(value);
+    chip.append(el("span","replay-turn-stat-icon",icon),
+      el("span","replay-turn-stat-copy",label),
+      el("strong","replay-turn-stat-number",amount));
+    if(delta!==null&&delta!==0)
+      chip.appendChild(el("span","replay-stat-delta",(delta>0?"+":"")+delta));
+    return chip;
+  }
+  function relatedActions(round,topic){
+    const relevant=round.actions.filter(a=>{
+      const t=a.type, enemy=t.startsWith("opponent_"),us=a.actor_seat===0;
+      switch(topic){
+        case "life":
+          return t.includes("life")||t.includes("damage")||
+            t==="reviewed_composed_end_step"||t==="reviewed_reactive_trigger";
+        case "lands":
+          return t==="land_play"||t.includes("ramp")||t.includes("mana");
+        case "creatures":
+          return (us&&(t.includes("commander")||t.includes("sacrifice")||
+            t.includes("enter")||t.includes("removal")||t.includes("creature")||
+            t.includes("reanimated")))||
+            (enemy&&a.target_seat===0&&(t.includes("destroy")||t.includes("exile")))||
+            t==="opponent_life_zero";
+        case "hand":
+          return (us&&(t.includes("spell")||t.includes("cast")||t==="land_play"))||
+            (enemy&&a.target_seat===0&&t.includes("discard"));
+        case "combat":
+          return t.includes("combat")||t.includes("damage");
+        default:return true;
+      }
+    });
+    return relevant;
+  }
+  function focusedNote(topic){
+    return {
+      life:"Only end-of-round life totals and a subset of damage events are retained. The recorded actions may not fully explain the net life change.",
+      lands:"This is a land count, not a mana-production or available-mana estimate. Named land plays appear where they were exported.",
+      creatures:"Creature totals are end-of-round counts. Net changes do not identify individual entries, deaths, or tokens; only explicitly named events can be shown as cards.",
+      hand:"Hand size is an end-of-round count. Individual draws and the complete sequence of casts/discards are not in this abbreviated narrative.",
+      combat:"These are selected, abstract combat events. Specific attacking or blocking cards and complete combat damage assignments are not available."
+    }[topic];
+  }
   function roundSection(round,previous,seats,lookup,openCard,index){
-    const wrap=el("details","replay-round");wrap.open=index<2;
-    const summary=el("summary","replay-round-summary");
-    summary.append(el("span","replay-round-number","Round "+round.round),
-      el("span","replay-round-counters",round.actions.length+" selected actions · "+
-        (statsForRound(round,0)?.life??"—")+" pilot life"),
-      el("span","replay-round-caret","Explore actions"));
+    const snapshot=statsForRound(round,0)||{};
+    const life=typeof snapshot.life==="number"?snapshot.life:null;
+    const healthDelta=changeIn(round,previous,"life");
+    const creaturesDelta=changeIn(round,previous,"creatures");
+    const landDelta=changeIn(round,previous,"lands");
+    const handDelta=changeIn(round,previous,"hand_size");
+    const spotlight=cardSpotlight(round,lookup);
+    const combat=recordedCombat(round);
+    const wrap=el("details","replay-round replay-turn-row");
+    const summary=el("summary","replay-round-summary replay-turn-summary");
+    const featured=spotlight.card&&(spotlight.card.art||spotlight.card.image);
+    if(featured){
+      const backdrop=el("img","replay-turn-backdrop");
+      backdrop.src=featured;backdrop.alt="";backdrop.loading="lazy";
+      summary.appendChild(backdrop);
+    }
+    const lead=el("span","replay-turn-lead");
+    lead.append(el("span","replay-turn-number",""+round.round),
+      el("span","replay-turn-title","Round "+round.round));
+    const highlight=spotlight.action?
+      summarizeAction(spotlight.action):
+      (round.actions.length?"No named key play captured":"No key actions retained");
+    lead.appendChild(el("span","replay-turn-highlight",highlight));
+    summary.appendChild(lead);
+
+    const stats=el("span","replay-turn-stats");
+    const lifeLabel=life!==null?life+" / "+STARTING_LIFE:"—";
+    const lifeChip=statBadge("♥","Life",lifeLabel,healthDelta,"life");
+    lifeChip.title="End-of-round life / starting 40 (not a maximum)";
+    const commander=typeof lookup==="function"?lookup("Mortarion, Daemon Primarch"):null;
+    if(validateCard(commander)){
+      const portrait=el("img","replay-life-portrait");portrait.alt="";
+      portrait.src=commander.art||commander.image;portrait.loading="lazy";
+      lifeChip.appendChild(portrait);
+    }
+    stats.append(lifeChip,
+      statBadge("◆","Lands",snapshot.lands,landDelta,"lands"),
+      statBadge("♟","Creatures",snapshot.creatures,creaturesDelta,"creatures"),
+      statBadge("▤","Hand",snapshot.hand_size,handDelta,"hand"));
+    summary.appendChild(stats);
+    if(combat.dealt||combat.taken||combat.defended){
+      const combatText=[
+        combat.dealt?"⚔ "+combat.dealt+" dealt":null,
+        combat.taken?"♥ −"+combat.taken+" recorded damage":null,
+        combat.defended?"◈ "+combat.defended+" attacks blocked":null
+      ].filter(Boolean).join(" · ");
+      summary.appendChild(el("span","replay-turn-combat",combatText));
+    }
+    summary.appendChild(el("span","replay-turn-expand","Explore"));
     wrap.appendChild(summary);
-    const board=el("div","replay-seats");
-    seats.forEach(seat=>board.appendChild(seatCard(round,seat,previous)));
-    wrap.appendChild(board);
+
+    const body=el("div","replay-round-body");
+    body.appendChild(el("p","micro replay-round-guidance",
+      "Select a stat to inspect relevant recorded actions, or open the full play-by-play. Highlighted counts compare against the prior recorded round."));
+    const tray=el("div","replay-focus-tray");
+    const choices=el("div","replay-focus-choices");
+    const detail=el("div","replay-focus-detail");
+    const focusLabels=[
+      ["life","♥ Life"],["lands","◆ Lands"],["creatures","♟ Creatures"],
+      ["hand","▤ Hand"],["combat","⚔ Combat"]];
+    const focusButtons=[];
+    function showFocus(topic){
+      detail.replaceChildren();
+      for(const [name,button] of focusButtons)
+        button.setAttribute("aria-pressed",String(name===topic));
+      const current=statsForRound(round,0)||{};
+      const label={
+        life:"Life: "+displayAmount(current.life),
+        lands:"Lands: "+displayAmount(current.lands),
+        creatures:"Creatures: "+displayAmount(current.creatures),
+        hand:"Hand: "+displayAmount(current.hand_size),
+        combat:"Combat and targeting"
+      }[topic];
+      detail.append(el("strong","replay-focus-heading",label),
+        el("p","micro",focusedNote(topic)));
+      const actions=relatedActions(round,topic);
+      if(!actions.length)detail.appendChild(el("p","small",
+        "No relevant actions were retained for this category in this round."));
+      else{
+        const list=el("div","replay-action-list replay-focused-list");
+        actions.forEach((a,i)=>list.appendChild(actionRow(a,i,lookup,openCard,seats)));
+        detail.appendChild(list);
+      }
+    }
+    for(const [topic,text] of focusLabels){
+      const button=el("button","replay-focus-button",text);
+      button.type="button";button.setAttribute("aria-pressed","false");
+      button.onclick=()=>showFocus(topic);
+      choices.appendChild(button);
+      focusButtons.push([topic,button]);
+    }
+    tray.append(choices,detail);body.appendChild(tray);
+    showFocus("creatures");
+
+    const table=el("details","replay-table-context");
+    table.appendChild(el("summary",null,
+      "Table context · "+seats.length+" "+(seats.length===1?"seat":"seats")+" (opponents on request)"));
+    const grid=el("div","replay-seats");
+    seats.forEach(seat=>grid.appendChild(seatCard(round,seat,previous)));
+    table.appendChild(grid);body.appendChild(table);
+
+    const all=el("details","replay-playbyplay");
+    all.appendChild(el("summary",null,"Full play-by-play · "+round.actions.length+" retained actions"));
     const actions=el("div","replay-action-list");
-    if(round.actions.length){
-      round.actions.forEach((action,i)=>actions.appendChild(actionRow(action,i,lookup,openCard)));
-    }else actions.appendChild(el("p","small","No actions were retained in this abbreviated round narrative."));
-    wrap.appendChild(actions);return wrap;
+    if(round.actions.length)
+      round.actions.forEach((a,i)=>actions.appendChild(actionRow(a,i,lookup,openCard,seats)));
+    else actions.appendChild(el("p","small","No actions were retained in this abbreviated round."));
+    all.appendChild(actions);body.appendChild(all);
+    wrap.appendChild(body);
+    return wrap;
   }
   function lifeTrack(rounds){
     const points=rounds.filter(r=>typeof statsForRound(r,0)?.life==="number");
