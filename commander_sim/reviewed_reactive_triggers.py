@@ -20,13 +20,17 @@ class ReactiveRule:
     def __post_init__(self):
         if (not self.oracle_id or not self.excerpt
                 or self.event not in {"token_created","token_sacrificed",
-                                       "token_left","life_gained"}
+                                       "token_left","life_gained","self_damaged"}
                 or self.operation not in {"drain_opponents","drain_gain",
-                                          "target_opponent_loses_amount"}):
+                                          "target_opponent_loses_amount","damage_chosen_player"}):
             raise ValueError("Invalid reactive trigger descriptor")
 
 
 RULES={
+    "Stuffy Doll":(
+        ReactiveRule("499dceab-1890-49c8-b35d-b059a1dc950f",
+                     "Whenever this creature is dealt damage, it deals that much damage to the chosen player.",
+                     "self_damaged","damage_chosen_player"),),
     "Mirkwood Bats":(
         ReactiveRule("0636b6c3-0662-420a-b30d-f0a14e7c512d",
                      "Whenever you create or sacrifice a token, each opponent loses 1 life.",
@@ -80,11 +84,13 @@ class ReactiveTriggerEngine:
                      and rule.excerpt in row.get("oracle_text","")
                      and rule.event==event)
 
-    def _dispatch(self,event,actor,quantity):
+    def _dispatch(self,event,actor,quantity,*,source_filter_id=None):
         results=[]
         for source in sorted(tuple(self.zones.kernel.on_battlefield()),
                              key=lambda o:o.object_id):
-            if source.controller!=actor:
+            if (source.controller!=actor
+                    or (source_filter_id is not None
+                        and source.object_id!=source_filter_id)):
                 continue
             for idx,rule in enumerate(self._reviewed(source,event)):
                 slot=AbilitySlot(rule.oracle_id,"front",
@@ -112,6 +118,12 @@ class ReactiveTriggerEngine:
                                    if seat!=controller]
                         if opponents:
                             self.life.lose(opponents[0],quantity,source.object_id)
+                    elif operation.operation=="damage_chosen_player":
+                        chosen=getattr(self.zones.kernel,
+                                       "reviewed_player_choices",{}).get(source.object_id)
+                        if chosen is None:
+                            raise ValueError("Damage source lacks mandatory chosen-player entry")
+                        self.life.damage(chosen,quantity,source.object_id)
                 dispatcher.invoke(slot.slot_id,source.object_id,apply)
                 results.append(ReactiveResolution(source.object_id,
                     source.card.name,event,rule.operation,quantity))
@@ -130,7 +142,7 @@ class ReactiveTriggerEngine:
             self._move_cursor+=len(new_moves)
             self._event_cursor+=len(new_events)
             self._life_cursor+=len(new_life)
-            if not (new_tokens or new_moves or new_life):
+            if not (new_tokens or new_moves or new_life or new_events):
                 break
             for seat,oid in new_tokens:
                 outcomes.extend(self._dispatch("token_created",seat,1))
@@ -145,6 +157,14 @@ class ReactiveTriggerEngine:
                 outcomes.extend(self._dispatch("token_left",seat,1))
                 if move.reason=="sacrifice":
                     outcomes.extend(self._dispatch("token_sacrificed",seat,1))
+            for event in new_events:
+                if event.name!="damage_creature" or event.amount<=0:
+                    continue
+                target=kernel.objects.get(event.target_id)
+                if target is not None and target.zone=="battlefield":
+                    outcomes.extend(self._dispatch(
+                        "self_damaged",target.controller,event.amount,
+                        source_filter_id=target.object_id))
             for change in new_life:
                 if change.kind=="gain":
                     outcomes.extend(self._dispatch("life_gained",
