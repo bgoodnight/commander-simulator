@@ -238,6 +238,11 @@ test('selecting an opponent scroll entry changes the one shown art card and per-
     let nodes=walk(root);
     assert.ok(nodes.some(n=>n.className==='game-outcome-hero-art'&&
       n.src==='https://example.com/pilot.jpg'));
+    // The headline pools both scenarios under the same pilot/rules/horizon,
+    // not only the first active scenario.
+    assert.ok(nodes.some(n=>n.textContent==='Wins · 1/2'));
+    assert.ok(nodes.some(n=>n.textContent==='Losses · 1/2'));
+    assert.ok(nodes.some(n=>n.className==='game-outcome-limits'));
     const rank=nodes.filter(n=>n.className==='game-outcome-rank-row');
     assert.equal(rank.length,2);
     assert.equal(rank[0].attributes['aria-pressed'],'true');
