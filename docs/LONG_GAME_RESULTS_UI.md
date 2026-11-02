@@ -6,7 +6,7 @@ The Results page accepts JSON files from tools/build_game_outcomes.py with forma
 
 After the pilot branch has merged into `main`, run [Publish long-game outcomes to Deck Lab](https://github.com/bgoodnight/commander-simulator/actions/workflows/publish-game-outcomes.yml) using **Run workflow** on `main`. The workflow creates authentic `commander-modeled-outcomes-v1` batches for the six canonical and two experimental simulation decks, across the selected abstract opponent scenarios. It preserves the selected engine commit, pilot style, provisional rules mode, per-seed life histories and up to two full example replays per scenario. No simulations occur in a browser, on every page load or during static Pages builds.
 
-The initial recommended parameters are **12 seeds per deck × 5 scenarios, 20 rounds, adaptive pilot, safe provisional mode** (480 modeled games total). Use a smaller 2–4-seed smoke batch first if piloting or rules changed significantly; increase to 20–40 seeds per scenario once runs are stable. The generator limits each file to 200 seeds and each game to 30 rounds, and the publisher limits each release to 64 outcome files. This is a deliberate, on-demand large-batch workflow, not an unbounded run on every commit.
+The initial recommended parameters are **12 seeds per deck × the random scenario, 20 rounds, adaptive pilot, safe provisional mode** (96 modeled games for eight decks). Use additional named scenarios for deliberate pressure comparisons. Use a smaller 2–4-seed smoke batch first if piloting or rules changed significantly; increase to 20–40 seeds per scenario once runs are stable. The generator limits each file to 200 seeds and each game to 30 rounds, and the publisher limits each release to 64 outcome files. This is a deliberate, on-demand large-batch workflow, not an unbounded run on every commit.
 
 The workflow validates every batch against its immutable local deck revision and schema; it checks unique seeds, outcome status, elapsed rounds, four-seat life records, replay provenance, completeness/censoring, summary totals, scenario and pilot configuration. It produces a manifest with `format=commander-modeled-outcomes-library-v1`, exact `engine_commit`, the source `files`, per-deck `by_deck` lookup and SHA-256 file checksums. Only after all jobs pass does it replace `web/pages/data/game-outcomes/` on `main` and explicitly trigger the existing GitHub Pages export. Changes to pilot, rules, deck fixtures or publishing code during a batch reject a stale publication. The validated full batch is also retained as a GitHub Actions artifact.
 
@@ -19,6 +19,23 @@ Generate a batch with the script (for example 20 rounds, 20 seeds, 3 example rep
 The initial real eight-game sample is in the [November 2 GitHub Actions run](https://github.com/bgoodnight/commander-simulator/actions/runs/41502434821). Download its ZIP and select the four extracted JSON files. Those exploratory observations are too few to characterize deck strength.
 
 To auto-publish later, save batch files under web/pages/data/game-outcomes and create a manifest.json with format commander-modeled-outcomes-library-v1 and a files array of allowlisted basenames, such as mortarion-mixed-20.json. The static exporter validates matching deck revision, experimental fidelity and censoring contract before copying them into the Pages site. It never performs simulations itself.
+
+## Independent three-opponent sampling
+
+The default `random` scenario independently samples the types for seats 1–3
+from `OPPONENT_TYPES` in `commander_sim/opponent_stress.py`, with replacement.
+Two or three opponents may share a type in a game. The RNG is tied to each
+recorded seed, and the exporter preserves exact `opponent_roles` by seat,
+the sorted `opponent_composition`, and `opponent_type_pool`. Adding a
+new implemented pressure type and registering it makes it available to the
+random sampler without new seat-assignment code.
+
+Existing `balanced`, `aggressive`, `control`, `combo` and `mixed` scenarios
+remain explicit, reproducible test pods, not all-opponents-the-same-type
+settings. Historical scenario exports retain their recorded meanings. For
+an after-merge rerun, use the new engine on `main` and select `random`.
+Never combine its generated data with an earlier engine commit as if it
+were the same experiment.
 
 ## Existing fields needed by the UI
 
@@ -54,7 +71,7 @@ For future source-attributed effects, preserve actor seat, target seat, source o
 
 The **Game Outcomes** headline uses cached card art from the currently selected, pinned commander as a background, with measured wins, losses and unresolved share and an outcome bar. A compact `ⓘ` disclosure contains the simulation limitations and practical ways to improve fidelity, keeping the collapsed tiles short. The existing four-seat life history remains its own panel.
 
-The opposing-table explorer orders its scrollable bar list by **observed modeled win count**, with win share and the exact denominator alongside each row. Only the currently selected opposing group displays a commander illustration. For abstract `aggressive`, `control`, `combo`, `balanced`, `mixed` and `value` policy groups, the portrait is a deliberately illustrative commander from an already-pinned user deck (no extra card fetch); it **does not claim that commander or deck was simulated**. For exported named opposing decks, the real recorded `commander_name` is used if its Scryfall art is already cached; otherwise the viewer uses a neutral fallback.
+The opposing-table explorer defaults to **opponent type present in the pod** and offers a switch to **whole-table composition**. A game is counted only once for a type even if two or three opposing seats share it. Whole-table composition is sorted by type (seat order does not change group identity). Results are associations with four-player pods, never head-to-head win rates. Both views order by **observed modeled win count**, with win share and exact denominator alongside each row. Only the currently selected opposing group displays a commander illustration. For abstract `aggressive`, `control`, `combo`, `balanced`, `mixed` and `value` policy groups, the portrait is a deliberately illustrative commander from an already-pinned user deck (no extra card fetch); it **does not claim that commander or deck was simulated**. For exported named opposing decks, the real recorded `commander_name` is used if its Scryfall art is already cached; otherwise the viewer uses a neutral fallback.
 
 Selecting a group shows recorded win/loss/unresolved shares, median round of modeled terminal outcomes (unresolved excluded), median observed pilot life-zero knockout round (losses only), median win round (wins only), median first opponent elimination round when observed, and median last observed pilot life. Each median states its contributing sample size; absent events are shown as a dash, not imputed. Click a seed to open exact life history and an optional existing replay. Abstract-policy scenario groups and named-deck presence groups are not treated as causal head-to-head results. The currently selected pilot style, provisional mode, deck revision and maximum round horizon still gate cross-scenario comparisons.
 

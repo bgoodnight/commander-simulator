@@ -70,16 +70,22 @@ test('unresolved rounds are never added to modeled losses; duplicates do not inf
   assert.equal(r.groups[0].terminal,1);
   assert.equal(r.groups[0].life[3].observed,1);
 });
-test('abstract opponent roles remain scenarios, and named decks use whole-pod associations',()=>{
+test('individual roles are compared by pod presence, with separate scenario and named-deck views',()=>{
   const a=batch([runWon(),runUnresolved()],'mixed');
   const b=batch([runLost()],'aggressive');
   const model=Outcomes.model([a,b],'necron_dynasties','a'.repeat(64));
   assert.equal(model.groups.length,2);
   let rows=Outcomes.matchupRows(model.groups);
-  assert.equal(rows.length,2);
-  assert.ok(rows.every(x=>x.kind==='abstract'));
-  assert.ok(rows.every(x=>/abstract policies/.test(x.label)));
-  assert.equal(rows[0].counts.win,1);
+  assert.equal(rows.length,3);
+  assert.ok(rows.every(x=>x.kind==='type'));
+  assert.deepEqual(new Set(rows.map(x=>x.title)),new Set(['Aggro','Control','Value']));
+  assert.equal(rows.find(x=>x.title==='Aggro').games,3);
+  assert.equal(rows.find(x=>x.title==='Aggro').counts.win,1);
+  assert.equal(Outcomes.matchupRows(model.groups,'scenarios').length,2);
+  const compositions=Outcomes.matchupRows(model.groups,'compositions');
+  assert.equal(compositions.length,1);
+  assert.equal(compositions[0].games,3);
+  assert.match(compositions[0].title,/Aggro \/ Control \/ Value/);
   const newRoles=runUnresolved();
   newRoles.opponent_roles={"1":"control","2":"aggro","3":"value"};
   const rolled=Outcomes.model(
@@ -100,6 +106,27 @@ test('abstract opponent roles remain scenarios, and named decks use whole-pod as
   assert.ok(rows.every(row=>row.kind==='named'));
   assert.equal(rows[0].games,2);
   assert.ok(rows.some(row=>row.label.includes('Mortarion')));
+});
+test('random pods compare each role once and group seat-insensitive compositions',()=>{
+  const first=runWon();
+  first.opponent_roles={"1":"aggro","2":"aggro","3":"combo"};
+  const second=runUnresolved();
+  second.opponent_roles={"1":"combo","2":"aggro","3":"aggro"};
+  const third=runLost();
+  third.opponent_roles={"1":"control","2":"combo","3":"value"};
+  const m=Outcomes.model([batch([first,second,third],'random')],
+    'necron_dynasties','a'.repeat(64));
+  const types=Outcomes.matchupRows(m.groups,'types');
+  assert.deepEqual(new Set(types.map(x=>x.title)),
+    new Set(['Aggro','Combo','Control','Value']));
+  assert.equal(types.find(x=>x.title==='Aggro').games,2);
+  assert.equal(types.find(x=>x.title==='Combo').games,3);
+  assert.equal(types.find(x=>x.title==='Aggro').counts.win,1);
+  const compositions=Outcomes.matchupRows(m.groups,'compositions');
+  assert.equal(compositions.length,2);
+  assert.equal(compositions.find(x=>x.title.includes('Aggro × 2')).games,2);
+  assert.equal(compositions.find(x=>x.title.includes('Control')).games,1);
+  assert.equal(m.totalGames,3); // no inflated headline counts
 });
 test('pilot personalities and provisional modes preserve independent seed cohorts',()=>{
   const engineLoss=runLost();
@@ -136,7 +163,7 @@ test('opponent rankings count wins and medians use observed terminal / eliminati
   const won=runWon(),lost=runLost(),unfinished=runUnresolved();
   const combined=batch([won,lost,unfinished],'aggressive');
   const result=Outcomes.model([combined],'necron_dynasties','a'.repeat(64));
-  const rows=Outcomes.matchupRows(result.groups);
+  const rows=Outcomes.matchupRows(result.groups,'scenarios');
   assert.equal(rows.length,1);
   const metrics=Outcomes.matchupMetrics(rows[0]);
   assert.equal(metrics.games,3);
@@ -152,13 +179,13 @@ test('opponent rankings count wins and medians use observed terminal / eliminati
   assert.equal(metrics.medianLastPilotLife,18);
   assert.equal(Outcomes.knockoutRound(unfinished,0),null);
   const noFinish=Outcomes.matchupMetrics(Outcomes.matchupRows(
-    Outcomes.model([batch([unfinished])],'necron_dynasties','a'.repeat(64)).groups)[0]);
+    Outcomes.model([batch([unfinished])],'necron_dynasties','a'.repeat(64)).groups,'scenarios')[0]);
   assert.equal(noFinish.medianFinishRound,null);
   assert.equal(noFinish.medianPilotKnockoutRound,null);
   const lots=batch([won,run(3,'win',[[40,40,40,40],[40,0,0,0]])],'balanced');
   const few=batch([lost,unfinished],'control');
   const ranked=Outcomes.matchupRows(Outcomes.model([lots,few],
-    'necron_dynasties','a'.repeat(64)).groups);
+    'necron_dynasties','a'.repeat(64)).groups,'scenarios');
   assert.equal(ranked[0].title,'Balanced pod');
   assert.equal(ranked[0].counts.win,2);
 });
@@ -190,7 +217,7 @@ test('modeled panels expose distinct outcome, life and matchup disclosures with 
     assert.ok(nodes.some(n=>n.textContent==='Wins · 1/2'));
     assert.ok(nodes.some(n=>n.textContent==='50%'));
     assert.ok(nodes.some(n=>n.textContent==='Game Outcomes'));
-    assert.ok(nodes.some(n=>String(n.textContent).includes('Only one opponent group')));
+    assert.ok(nodes.some(n=>String(n.textContent).includes('Select or scroll through recorded groups')));
     const rank=nodes.find(n=>n.tag==='button'&&n.className==='game-outcome-rank-row');
     assert.ok(rank);
     assert.equal(rank.attributes['aria-pressed'],'true');
@@ -207,7 +234,7 @@ test('modeled panels expose distinct outcome, life and matchup disclosures with 
     nodes=walk(root);
     assert.ok(nodes.some(n=>String(n.textContent).includes('pilot engine')));
     assert.ok(nodes.some(n=>String(n.textContent).includes(
-      'Only one opponent group has been sampled')));
+      'pilot engine')));
     assert.ok(!nodes.some(n=>String(n.textContent).includes(
       'Highest observed modeled win share')));
   }finally{global.document=before}
@@ -244,10 +271,10 @@ test('selecting an opponent scroll entry changes the one shown art card and per-
     assert.ok(nodes.some(n=>n.textContent==='Losses · 1/2'));
     assert.ok(nodes.some(n=>n.className==='game-outcome-limits'));
     const rank=nodes.filter(n=>n.className==='game-outcome-rank-row');
-    assert.equal(rank.length,2);
+    assert.equal(rank.length,3);
     assert.equal(rank[0].attributes['aria-pressed'],'true');
     assert.ok(nodes.some(n=>n.className==='game-outcome-opponent-art'&&
-      n.src.endsWith('/aggressive.jpg')));
+      n.src.endsWith('/aggro.jpg')));
     rank[1].onclick();
     nodes=walk(root);
     assert.equal(rank[1].attributes['aria-pressed'],'true');
@@ -258,8 +285,16 @@ test('selecting an opponent scroll entry changes the one shown art card and per-
       .flatMap(walk).map(n=>n.textContent);
     assert.ok(labels.includes('Median our knockout round'));
     assert.ok(labels.includes('2'));
-    assert.ok(labels.includes('0%'));
+    assert.ok(labels.includes('50%'));
     assert.equal(nodes.filter(n=>n.className==='game-outcome-opponent-art').length,1);
+    const mode=nodes.find(n=>n.className==='game-outcome-matchup-mode');
+    assert.ok(mode);
+    mode.value='compositions';mode.onchange();
+    nodes=walk(root);
+    const podRows=nodes.filter(n=>n.className==='game-outcome-rank-row');
+    assert.equal(podRows.length,1);
+    assert.ok(nodes.some(n=>String(n.textContent).includes('Whole-table compositions')||
+      String(n.textContent).includes('Table compositions')));
   }finally{global.document=before}
 });
 test('results page and exporter wire a future published manifest and local JSON',()=>{
