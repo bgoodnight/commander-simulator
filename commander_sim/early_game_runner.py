@@ -60,7 +60,7 @@ from .resource_development import assess_resources, choose_tutor_target
 from .resource_pilot import (choose_token_mana_sacrifice, plan_common_spell,
                              ritual_enables_spell, choose_composed_activation,
                              choose_variable_end_step_payments,
-                             choose_utility_activation)
+                             choose_utility_activation, choose_end_step_token_mana)
 from .reviewed_common_spells import reviewed_common_spell, cast_common_spell
 from .reviewed_ramp import reviewed_ramp, reviewed_ritual, cast_ritual, activate_land_ramp, resolve_enter_ramp
 from .hand_cleanup import cleanup_hand
@@ -905,6 +905,32 @@ def run_bounded_early_game(deck_key, *, seed=0, turns=6, mulligan="one-free", pr
                         kernel.events[turn_kernel_event_index:])
         # Resolve approved composed end-step abilities. The bounded pilot
         # supplies no optional X choice; it does not invent a strategy.
+        # The beginning-of-end-step trigger is already on the stack. In a
+        # reviewed priority window, convert expendable creature tokens to
+        # mana only when that increases the legal X payoff by more than the
+        # single token spent. No cross-phase mana carryover is assumed.
+        for _ in range(3):
+            choice=choose_end_step_token_mana(
+                zones,0,life,mana_service,raw_by_name,
+                life_start_index=life_ledger_start)
+            if choice is None:
+                break
+            source_id,victim_id=choice
+            source=kernel.get(source_id)
+            mode=SACRIFICE_MODES[source.card.name]
+            sacrificed=activate_reviewed_sacrifice(
+                zones,life,source_id,victim_id,raw_by_name,
+                mana_service=mana_service,turn=turn,tap_ready=True,
+                death_engine=death_engine,
+                mana_color="B" if mode.action=="any_color_mana" else None)
+            if sacrificed is None:
+                break
+            events.append({"type":"reviewed_end_step_mana_sacrifice",
+                           "card":sacrificed.source_name,
+                           "victim_object_id":sacrificed.victim_old_id,
+                           "mana_added":list(sacrificed.mana_added),
+                           "fidelity":"bounded_x_payoff"})
+            resolve_reactive()
         chosen_x=choose_variable_end_step_payments(
             zones,0,life,mana_service,raw_by_name,life_ledger_start)
         for composed in composed_engine.end_step(
