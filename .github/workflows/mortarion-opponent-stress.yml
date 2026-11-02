@@ -1,5 +1,5 @@
 name: Mortarion physical opponent stress and narrative audit
-# Validate canonical opponent draw/discard, reactive events and chained damage.
+# Validate physical attack keyword grants, global death damage and fair stochastic targeting.
 on:
   workflow_dispatch:
   push:
@@ -19,7 +19,7 @@ jobs:
           python-version: '3.11'
       - name: Test shared opponent pressure on authoritative zones
         run: |
-          python -m unittest tests.test_opponent_stress tests.test_reviewed_removal_spells tests.test_reviewed_attachments tests.test_reviewed_zone_spells tests.test_reviewed_activated_utilities tests.test_reviewed_cast_reactions tests.test_reactive_graveyard -v
+          python -m unittest tests.test_opponent_stress tests.test_reviewed_removal_spells tests.test_reviewed_attachments tests.test_reviewed_zone_spells tests.test_reviewed_activated_utilities tests.test_reviewed_cast_reactions tests.test_reactive_graveyard tests.test_global_death_damage tests.test_attack_grants -v
       - name: Execute seeded baseline and four opponent pressure archetypes
         run: |
           python tools/run_mortarion_opponent_stress.py --seeds 24 --turns 10 --output mortarion-opponent-stress.json
