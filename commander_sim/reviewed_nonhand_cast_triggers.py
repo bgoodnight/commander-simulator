@@ -44,10 +44,15 @@ def resolve_reviewed_nonhand_cast_triggers(zones, seat, ticket, catalog):
     events = zones.kernel.events
     if not events:
         raise ValueError("Missing authoritative spell-cast event")
-    event = events[-1]
-    if (event.name != "spell_cast" or event.source_id != ticket.object_id
-            or event.controller != seat):
-        raise ValueError("Trigger requires the immediate original cast event")
+    # Additional casting costs can emit legitimate zone-move events
+    # after the spell_cast event. Bind provenance to this exact pending
+    # stack ticket, not the most recent kernel event.
+    event = next((item for item in reversed(events)
+                  if item.name == "spell_cast"
+                  and item.source_id == ticket.object_id
+                  and item.controller == seat), None)
+    if event is None:
+        raise ValueError("Trigger requires a verified original cast event")
     origin = dict(event.metadata).get("origin", "hand")
     if origin not in {"hand", "graveyard", "command", "exile"}:
         raise ValueError("Unrecognized verified casting origin")
