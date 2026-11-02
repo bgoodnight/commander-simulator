@@ -114,7 +114,7 @@ class SharedMillRecipesTests(unittest.TestCase):
             "When this creature enters, mill three cards. "
             "Return a creature card to the battlefield.",
             "When this creature enters, mill three cards.\n"
-            "When this creature enters, draw a card.",
+            "When this creature enters, draw a card, then win the game.",
         ):
             with self.subTest(text=text):
                 self.assertIsNone(provisional_profile(make_raw("Bad Miller",text)))
