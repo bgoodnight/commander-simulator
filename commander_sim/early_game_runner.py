@@ -71,8 +71,9 @@ from .reviewed_sacrifice_actions import (
     activate_reviewed_sacrifice)
 from .template_resources import TemplateManaService
 from .resource_development import assess_resources, choose_tutor_target
-from .pilot_policy import (STYLES,PilotContext,infer_deck_signals,
-                            choose_legal_option)
+from .pilot_policy import (
+    STYLES,ARCHETYPES,PilotContext,infer_deck_signals,
+    infer_pilot_archetype,choose_legal_option)
 from .resource_pilot import (choose_token_mana_sacrifice, plan_common_spell,
                              ritual_enables_spell, choose_composed_activation,
                              choose_variable_end_step_payments,
@@ -124,7 +125,7 @@ def _load_live_kernel():
     return IndexedKernel, LiveZones, CardDefinition
 
 
-def run_bounded_early_game(deck_key, *, seed=0, turns=6, mulligan="one-free", profile=None, opponent_scenario=None, provisional_mode="off",pilot_style="adaptive"):
+def run_bounded_early_game(deck_key, *, seed=0, turns=6, mulligan="one-free", profile=None, opponent_scenario=None, provisional_mode="off",pilot_style="adaptive",pilot_archetype="auto"):
     """Play a small reviewed set of actual land, rock and creature actions.
 
     A deterministic, conservative fixed pilot draws, plays one supported land,
@@ -138,6 +139,8 @@ def run_bounded_early_game(deck_key, *, seed=0, turns=6, mulligan="one-free", pr
         raise ValueError("Unknown mulligan policy")
     if pilot_style not in STYLES:
         raise ValueError("Unknown deterministic pilot personality")
+    if pilot_archetype not in ARCHETYPES:
+        raise ValueError("Unknown pilot archetype")
     fixture = next((x for x in (*FIXTURES, *EXPERIMENTAL_FIXTURES) if x.key == deck_key), None)
     if fixture is None:
         raise ValueError("Unknown pinned deck fixture")
@@ -153,6 +156,7 @@ def run_bounded_early_game(deck_key, *, seed=0, turns=6, mulligan="one-free", pr
     colors = registry.get(fixture.commander).color_identity
     raw_by_name = {entry["deck_name"]: entry["card"] for entry in pinned}
     pilot_signals=infer_deck_signals(snapshot.deck.cards,raw_by_name)
+    pilot_strategy=infer_pilot_archetype(pilot_signals,pilot_archetype)
     if provisional_mode not in {'off','safe'}:
         raise ValueError('Unknown provisional mode')
     provisional_by_name = ({name: provisional_profile(raw) for name,raw in raw_by_name.items()}
@@ -764,13 +768,15 @@ def run_bounded_early_game(deck_key, *, seed=0, turns=6, mulligan="one-free", pr
                     and life.total(obj.controller)>0
                     for obj in kernel.on_battlefield()))
             selected,rank=choose_legal_option(
-                options,context,pilot_signals,raw_by_name,style=pilot_style)
+                options,context,pilot_signals,raw_by_name,style=pilot_style,
+                archetype=pilot_strategy.primary)
             _, _, name, oid, kind, cost, target = selected
             pilot_decisions.append({
                 "round":turn,"kind":kind,"card":name,
                 "source_object_id":oid,"candidate_count":len(options),
                 "score":rank.score,"role":rank.category,
                 "factors":list(rank.factors),"personality":pilot_style,
+                "archetype":pilot_strategy.primary,
                 "fidelity":"ordering_only_verified_legal_candidates"})
             if kind == "commander":
                 triggered=[]
@@ -1781,6 +1787,7 @@ def run_bounded_early_game(deck_key, *, seed=0, turns=6, mulligan="one-free", pr
         "outcome":outcome_recorder.outcome(requested_rounds=turns),
         "deck_key": deck_key,
         "pilot_style":pilot_style,
+        "pilot_archetype":pilot_strategy.as_dict(),
         "pilot_signals":pilot_signals.as_dict(),
         "provisional_mode":provisional_mode,
         "provisional_import_report":(
