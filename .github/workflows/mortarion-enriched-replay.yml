@@ -32,8 +32,8 @@ jobs:
           python tools/build_opponent_replay.py \
             --input dist/mortarion-opponent-stress.json \
             --output dist/mortarion-opponent-pressure.v1.json \
-            --source-run \${{ github.run_id }} \
-            --engine-commit \${{ github.sha }} \
+            --source-run ${{ github.run_id }} \
+            --engine-commit ${{ github.sha }} \
             --deck-sha256 303562ea9325e36f7031840ef1b902eafae321ec4a4ecc4e3bf28259b4141ba6
           python - <<'PY'
           import gzip
@@ -101,5 +101,5 @@ jobs:
           done
       - name: Trigger Pages rebuild to include the enriched replay
         env:
-          GH_TOKEN: \${{ github.token }}
+          GH_TOKEN: ${{ github.token }}
         run: gh workflow run deck-lab-pages.yml --ref main
