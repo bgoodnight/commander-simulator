@@ -267,6 +267,7 @@ class ReviewedDeathEngine:
         # Mark physical moves handled BEFORE dispatching any chained damage
         # trigger, to avoid resolving prior deaths a second time.
         self._handled.update(m.object_id for m in changes)
+        self._once.update(pending_once)
         resolved=[]
         for source,dead,rule in agenda:
             action=rule.action
