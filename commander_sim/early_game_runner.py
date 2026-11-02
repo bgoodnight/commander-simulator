@@ -1315,6 +1315,18 @@ def run_bounded_early_game(deck_key, *, seed=0, turns=6, mulligan="one-free", pr
                     "target_seat":pressure_event.target_seat,
                     "fidelity":"abstract_opponent_pressure_not_card_exact"})
             resolve_reactive()
+        # An opponent's explicitly abstract non-token creature can be
+        # controlled by Mortarion after Nurgle's Conscription. It is not in
+        # the pinned Mortarion catalog; identify its simulated provenance
+        # separately instead of inventing a real card name or rules profile.
+        if opponent_pressure is not None:
+            for foreign in kernel.on_battlefield():
+                if (foreign.controller==0 and foreign.owner!=0
+                        and foreign.card.card_id.startswith("stress:")):
+                    catalog.setdefault(foreign.card.name,{
+                        "type_line":"Creature",
+                        "keywords":list(foreign.keywords),
+                        "fidelity":"abstract_opponent_card"})
         state = project_kernel_turn(zones, 0, turn, catalog)
         states.append(state)
         actions_by_turn.append({
