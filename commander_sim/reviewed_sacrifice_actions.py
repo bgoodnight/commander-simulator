@@ -13,6 +13,7 @@ from .kernel_life import KernelLife
 from .physical_common_effects import (
     CardQuantity, draw_physical_cards, CounterPlacement, put_reviewed_counters,
     scry_physical_cards)
+from .library_actions import LibraryAction, resolve_library_actions
 from .reviewed_death_effects import capture_battlefield
 from .reviewed_token_spells import TokenBlueprint,create_reviewed_token_batches
 
@@ -225,10 +226,14 @@ def activate_reviewed_sacrifice(
                 raise AssertionError("Reviewed draw preview invalidated")
             drawn=answer.drawn_ids
         elif operation.action=="scry":
-            seen=zones.ids(source.controller,"library")
-            bottom=(seen[-1],) if seen and scry_to_bottom else ()
-            answer=scry_physical_cards(
-                zones,source.controller,1,bottom_ids=bottom)
+            # The same typed library operation is used by spell, trigger and
+            # sacrifice activation callers. Preserve this ability's explicit
+            # host-provided bottom/keep choice rather than choosing for it.
+            def choose(kind, seen, count, host_zones, actor):
+                return {"bottom":seen if scry_to_bottom else (),
+                        "top":() if scry_to_bottom else seen}
+            answer=resolve_library_actions(
+                zones,source.controller,(LibraryAction("scry",1),),select=choose)
             bottomed=answer.bottomed_ids
         elif operation.action in {"colorless_mana","any_color_mana","black_mana_by_value"}:
             added=(("C","C") if operation.action=="colorless_mana" else
