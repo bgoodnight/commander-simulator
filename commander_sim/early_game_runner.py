@@ -1820,9 +1820,12 @@ if __name__ == "__main__":
                         help="Enable safe import-derived, explicitly partial card actions")
     parser.add_argument("--pilot-style",choices=STYLES,default="adaptive",
                         help="Deterministic deck-derived legal-action personality")
+    parser.add_argument("--pilot-archetype",choices=ARCHETYPES,default="auto",
+                        help="Deck-derived strategy or explicit generic archetype")
     args = parser.parse_args()
     profile = json.loads(args.profile.read_text(encoding="utf-8")) if args.profile else None
     print(json.dumps(run_bounded_early_game(args.deck, seed=args.seed, turns=args.turns,
                                              mulligan=args.mulligan, profile=profile,
                                              provisional_mode=args.provisional_mode,
-                                             pilot_style=args.pilot_style), indent=2))
+                                             pilot_style=args.pilot_style,
+                                             pilot_archetype=args.pilot_archetype), indent=2))
