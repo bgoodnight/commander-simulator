@@ -136,7 +136,10 @@
       const card=model.contenders[selected];
       const metric=card.metrics.find(m=>m.id===activeMetric);
       if(!metric||exampleIndex<0||!metric.examples.length){
-        evidence.appendChild(create("p","micro","Select a performance metric to inspect recorded examples. Click the same metric again to cycle through them."));
+        const description=metric&&!metric.examples?.length?
+          "No corresponding recorded events for this card and metric. The value and interpretation above are still available.":
+          "Select a performance metric to inspect recorded examples. Click the same metric again to cycle through them.";
+        evidence.appendChild(create("p","micro",description));
         return;
       }
       const examples=metric.examples;
@@ -218,12 +221,16 @@
           button.setAttribute("aria-pressed",String(i===viewIndex));
           button.onclick=()=>{
             if(i===viewIndex)return;
-            viewIndex=i;selected=model.contenders.findIndex(c=>
-              c.name===ranked[0]?.entry.name);
-            const next=[...model.contenders].map((c,j)=>({c,j,score:Number(c.viewScores?.[view.id]||0)}))
-              .filter(x=>x.score>0).sort((a,b)=>
+            viewIndex=i;
+            // Preserve the selected card when that measurement exists.
+            // Otherwise select the strongest eligible entry in the new view.
+            if(!Number(model.contenders[selected]?.viewScores?.[view.id])){
+              const next=[...model.contenders].map((c,j)=>({
+                c,j,score:Number(c.viewScores?.[view.id]||0)
+              })).filter(x=>x.score>0).sort((a,b)=>
                 b.score-a.score||a.c.name.localeCompare(b.c.name))[0];
-            if(next)selected=next.j;
+              if(next)selected=next.j;
+            }
             activeMetric=null;exampleIndex=-1;viewerOpen=false;
             showSelected();
           };
@@ -233,6 +240,16 @@
       }
       ranking.appendChild(create("p","micro",
         (mode?.chartLabel||model.chartLabel)+" · select any bar"));
+      // The adjusted-score tab explains its heuristic where the ranking is
+      // shown. Other graph modes remain focused on inspectable game evidence.
+      if(mode?.formula){
+        const method=create("div","insight-ranking-method");
+        method.append(create("strong",null,"How this score is calculated"),
+          create("code","insight-ranking-formula",mode.formula));
+        if(mode.explanation)
+          method.appendChild(create("p","micro",mode.explanation));
+        ranking.appendChild(method);
+      }
       const bars=create("div","insight-bars");
       ranked.slice(0,12).forEach(({entry,index,score})=>{
         const button=create("button","insight-bar"+(index===selected?" is-selected":""));
@@ -257,7 +274,11 @@
         button.append(create("strong",null,item.value),create("span",null,item.label));
         button.onclick=()=>{
           const examples=item.examples||[];
-          if(!examples.length)return;
+          if(!examples.length){
+            activeMetric=item.id;exampleIndex=-1;viewerOpen=false;
+            showSelected(); // Show its explanation even when the count is zero.
+            return;
+          }
           if(activeMetric===item.id&&exampleIndex>=0)exampleIndex=(exampleIndex+1)%examples.length;
           else{activeMetric=item.id;exampleIndex=0}
           viewerOpen=true; // A metric opens the cached run inline; no additional request.
