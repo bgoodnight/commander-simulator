@@ -70,6 +70,36 @@ class OpponentPressureTests(unittest.TestCase):
                                  for x in self.kernel.events))
         self.assertTrue(self.zones.assert_consistent())
 
+    def test_opponent_attack_uses_real_blocker_not_unblocked_proxy(self):
+        defender=self.zones.add(self.C(
+            "test:defender","Guard",frozenset({"creature"}),
+            base_power=3,base_toughness=4,coverage="approx"),
+            0,"battlefield")
+        adv=self.stress("aggressive",seed=7)
+        # A prior-turn creature can attack; newly spawned ones cannot.
+        adv._spawn(1,0,"aggro")
+        attacker=adv.events[-1].object_id
+        before=self.life.total(0)
+        adv._combat(1,"aggro",turn=1)
+        self.assertEqual(self.life.total(0),before)
+        self.assertTrue(any(x.operation=="abstract_blocked_combat"
+                            and x.object_id==attacker for x in adv.events))
+        self.assertIn(defender,self.kernel.objects)
+        self.assertNotIn(attacker,self.kernel.objects)
+        self.assertTrue(self.zones.assert_consistent())
+
+    def test_deathtouch_block_kills_larger_attacker(self):
+        self.zones.add(self.C("test:snake","Test Snake",
+            frozenset({"creature"}),base_power=1,base_toughness=1,
+            keywords=frozenset({"deathtouch"}),coverage="approx"),
+            0,"battlefield")
+        adv=self.stress("aggressive",seed=3)
+        adv._spawn(1,0,"aggro")
+        attacker=adv.events[-1].object_id
+        adv._combat(1,"aggro",turn=1)
+        self.assertNotIn(attacker,self.kernel.objects)
+        self.assertTrue(self.zones.assert_consistent())
+
     def test_unsupported_opponent_scenario_fails_closed(self):
         with self.assertRaises(ValueError):
             self.stress("infinite_cheating")
