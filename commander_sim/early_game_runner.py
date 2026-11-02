@@ -160,7 +160,7 @@ def run_bounded_early_game(deck_key, *, seed=0, turns=6, mulligan="one-free", pr
     # Pinned, source-verified ETB effects with safe bounded hand-cast paths.
     enter_hand_casts = {"Bastion of Remembrance", "Grave Titan", "Massacre Wurm",
                         "Flayed One", "Mire Triton", "Undead Butler",
-                        "Technomancer", "Lord of Change",
+                        "Technomancer", "Lord of Change", "Woe Strider",
                         "Marionette Apprentice", "Royal Warden",
                         "Triarch Praetorian", "Canoptek Tomb Sentinel"}
     def approved_enter_hand_cast(name):
