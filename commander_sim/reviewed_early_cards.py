@@ -226,6 +226,39 @@ REVIEWED_BY_DECK["mortarion_physical_final"] = {
     **REVIEWED_BY_DECK["mortarion_current"],
 }
 
+# Source-pinned ordinary bodies in the locked physical deck. This is an
+# independently reviewed casting allowlist, not general keyword inference.
+_PHYSICAL_MORTARION_SAFE_BODIES = {
+    "Blood Artist": {"oracle_id": "310f141c-7f37-4729-aed6-dd9c09db448d",
+        "oracle_text": "Whenever this creature or another creature dies, target player loses 1 life and you gain 1 life."},
+    "Shambling Ghast": {"oracle_id": "e5e6229a-3422-4afd-9a87-86daa2d31d3a",
+        "oracle_text": "When this creature dies, choose one —\n• Target creature an opponent controls gets -1/-1 until end of turn.\n• Create a Treasure token. (It's an artifact with \"{T}, Sacrifice this token: Add one mana of any color.\")"},
+    "Syr Konrad, the Grim": {"oracle_id": "14c3ff84-1e82-4606-a433-869fc52cc382",
+        "oracle_text": "Whenever another creature dies, or a creature card is put into a graveyard from anywhere other than the battlefield, or a creature card leaves your graveyard, Syr Konrad deals 1 damage to each opponent.\n{1}{B}: Each player mills a card. (They each put the top card of their library into their graveyard.)"},
+    "Mirkwood Bats": {"oracle_id": "0636b6c3-0662-420a-b30d-f0a14e7c512d",
+        "oracle_text": "Flying\nWhenever you create or sacrifice a token, each opponent loses 1 life."},
+    "Nadier's Nightblade": {"oracle_id": "391978f6-0bbc-41e8-9246-f7d0e21c7900",
+        "oracle_text": "Whenever a token you control leaves the battlefield, each opponent loses 1 life and you gain 1 life."},
+    "Vito, Thorn of the Dusk Rose": {"oracle_id": "7336a541-3ae9-4ab2-acb8-f574c0a5b3a9",
+        "oracle_text": "Whenever you gain life, target opponent loses that much life.\n{3}{B}{B}: Creatures you control gain lifelink until end of turn."},
+    "Poxwalkers": {"oracle_id": "e4275202-4960-4cde-b941-27be8163ad6e",
+        "oracle_text": "Deathtouch\nCurse of the Walking Pox — Whenever you cast a spell from anywhere other than your hand, return this card from your graveyard to the battlefield tapped."},
+    "Reassembling Skeleton": {"oracle_id": "9dbc3530-b278-4c8d-b2cc-a09dfac9d5e5",
+        "oracle_text": "{1}{B}: Return this card from your graveyard to the battlefield tapped."},
+    "Pestilence Demon": {"oracle_id": "2572add6-c0b1-44bd-8713-1e94e3fe69d6",
+        "oracle_text": "Flying\n{B}: This creature deals 1 damage to each creature and each player."},
+    "Thrashing Wumpus": {"oracle_id": "ef220824-fab4-4d8e-9ba4-65ff5ba1db66",
+        "oracle_text": "{B}: This creature deals 1 damage to each creature and each player."},
+    "Crypt Rats": {"oracle_id": "104095ed-55e3-408e-bf70-4fe06bb16d2f",
+        "oracle_text": "{X}: This creature deals X damage to each creature and each player. Spend only black mana on X."},
+    "Darksteel Myr": {"oracle_id": "f90fe86c-5cca-483b-93c2-6e856fa01c88",
+        "oracle_text": "Indestructible (Damage and effects that say \"destroy\" don't destroy this creature. If its toughness is 0 or less, it still dies.)"},
+    "Sloppity Bilepiper": {"oracle_id": "6bd38092-7788-4bb6-9447-16c56e11e603",
+        "oracle_text": "Jolly Gutpipes — {2}, {T}, Sacrifice a creature: The next creature spell you cast this turn has cascade. (When you next cast a creature spell, exile cards from the top of your library until you exile a nonland card that costs less. You may cast it without paying its mana cost. Put the exiled cards on the bottom in a random order.)"},
+}
+REVIEWED_BY_DECK["mortarion_physical_final"].update(
+    _PHYSICAL_MORTARION_SAFE_BODIES)
+
 def reviewed_creature(deck_key, name, source_card):
     approved = REVIEWED_BY_DECK.get(deck_key, {}).get(name)
     return bool(approved and source_card.get("layout") == "normal"
