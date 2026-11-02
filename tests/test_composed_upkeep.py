@@ -75,6 +75,26 @@ class UpkeepComposedTests(unittest.TestCase):
         self.assertEqual(self.life.total(0),42)
         self.assertTrue(self.zones.assert_consistent())
 
+    def test_crypt_rats_black_only_x_deals_x_to_all_and_creature_states(self):
+        source=self.add("Crypt Rats",power=1,toughness=1)
+        self.add("Enemy",seat=1,toughness=2)
+        for _ in range(2):self.add("Swamp",types=("land",))
+        outcome=self.abilities.activate(source,turn=1,x=2)
+        self.assertIsNotNone(outcome)
+        self.assertEqual([self.life.total(i) for i in range(4)],[38]*4)
+        self.assertEqual(outcome.life_lost,8)
+        self.assertTrue(all(o.card.name!="Enemy"
+                             for o in self.kernel.on_battlefield()))
+        self.assertTrue(self.zones.assert_consistent())
+
+    def test_crypt_rats_rejects_generic_mana_for_black_only_x(self):
+        source=self.add("Crypt Rats",power=1,toughness=1)
+        self.add("Swamp",types=("land",))
+        self.add("Sol Ring",types=("artifact",))
+        self.assertIsNone(self.abilities.activate(source,turn=1,x=2))
+        self.assertEqual(self.life.total(0),40)
+        self.assertTrue(self.zones.assert_consistent())
+
     def test_unreviewed_upkeep_card_is_inert(self):
         self.add("Dreadhorde Invasion",types=("enchantment",),
                  oracle="wrong-source")
