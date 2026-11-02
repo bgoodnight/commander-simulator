@@ -102,7 +102,8 @@ class LifeOutcomeTests(unittest.TestCase):
 
 class GameBatchTests(unittest.TestCase):
     @staticmethod
-    def fake(deck_key, *, seed, turns, opponent_scenario, provisional_mode):
+    def fake(deck_key, *, seed, turns, opponent_scenario, provisional_mode,
+             pilot_style="adaptive")
         rec=LifeOutcomeRecorder({0:40,1:40,2:40,3:40},opponent_model=True)
         if seed%3==0:
             change=[LifeChange(i,40,"damage",100+i) for i in (1,2,3)]
