@@ -46,7 +46,7 @@ _BASE = {
     "ramp":61,"engine":55,"creature":46,"commander":46,
     "artifact":44,"enchantment":43,"draw":40,"tutor":39,
     "reanimate":41,"removal":37,"combat":39,"token":40,
-    "ritual":25,"other":34,
+    "ritual":80,"other":34,
 }
 
 
@@ -149,6 +149,8 @@ class RankedChoice:
 def _category(kind,raw):
     """Map legal driver action kind plus verified printed text to roles."""
     text=raw.get("oracle_text","") if isinstance(raw,dict) else ""
+    if not isinstance(text,str):
+        text=""
     if kind=="commander":
         return "commander"
     if kind=="ritual":
@@ -194,6 +196,9 @@ def rank_legal_action(kind,raw,context,signals,*,style="adaptive"):
     category=_category(kind,raw)
     score=_BASE[category]
     factors=[f"base:{category}"]
+    if category=="ritual":
+        # Runner only admits rituals after a legal spell-unlock preview.
+        factors.append("reviewed_spell_unlock_only")
     # Constraints induced by *current state*, never a name lookup.
     if context.round<=5 and context.mana_sources<=4 and category=="ramp":
         score+=22
