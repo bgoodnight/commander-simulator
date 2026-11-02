@@ -228,6 +228,7 @@ def execute_reviewed_enter(zones,life:KernelLife,source_id,catalog,*,
             result=resolve_library_actions(zones,source.controller,
                                            effect.library_actions)
             milled=result.milled_ids
+            drawn=result.drawn_ids
             library_steps=result.steps
             if effect.life_gain:
                 life.gain(source.controller,effect.life_gain,source_id)
