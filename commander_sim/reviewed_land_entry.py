@@ -7,6 +7,7 @@ invented. Mandatory ETB actions execute even when they affect empty zones.
 from dataclasses import dataclass
 
 from .library_actions import LibraryAction, resolve_library_actions
+from .graveyard_recipes import GraveyardRecipe, resolve_graveyard_recipe
 from .reviewed_lands import LANDS
 
 @dataclass(frozen=True)
@@ -90,7 +91,10 @@ def resolve_land_entry(zones, life, source_id, catalog, *,
             card=kernel.get(target_creature_id)
             if "creature" not in card.types:
                 raise ValueError("Mortuary Mire requires creature card")
-            moved.append(zones.move(target_creature_id,"library","resolve"))
+            returned=resolve_graveyard_recipe(
+                zones,seat,(target_creature_id,),
+                GraveyardRecipe("library","own",frozenset({"creature"})))
+            moved.extend(item.new_id for item in returned)
     elif rule.operation=="gain_one_life":
         life.gain(seat,1,source_id)
     elif rule.operation=="surveil_one":
