@@ -71,7 +71,7 @@ class StaticPagesTests(unittest.TestCase):
     def test_only_allowlisted_site_data_and_no_workspace_are_exported(self):
         self.run_build()
         permitted={"index.html","summary.html","results.html","editor.html",
-                   "app.js","results_insights.js","brackets.js","replay.js","insight_explorer.js","insight_catalog.js","style.css","game-changers.json","decks.json",
+                   "app.js","results_insights.js","brackets.js","replay.js","insight_explorer.js","insight_catalog.js","game_outcomes.js","style.css","game-changers.json","decks.json",
                    "observations.json","names.json","bounded-batches.json","build-manifest.json",".nojekyll"}
         published=json.loads((self.destination/"bounded-batches.json").read_text())
         permitted.update(f"bounded-runs-{key}.json" for key in published["decks"])
@@ -93,9 +93,14 @@ class StaticPagesTests(unittest.TestCase):
                 if d["key"]=="mortarion_physical_final")
             self.assertEqual(replay["deck_sha256"],built_deck["deck_sha256"])
             self.assertEqual(len(replay["scenarios"]),5)
+        long_game_dir=self.destination/"game-outcomes"
+        if long_game_dir.is_dir():
+            permitted.add("game-outcomes")
+            for p in long_game_dir.glob("*.json"):
+                self.assertTrue(p.is_file())
         self.assertEqual({p.name for p in self.destination.iterdir()},permitted)
         self.assertNotIn("shared_scryfall_catalog.json",permitted)
-        self.assertFalse(any(p.is_dir() and p.name not in ("simulation-data","replay-data")
+        self.assertFalse(any(p.is_dir() and p.name not in ("simulation-data","replay-data","game-outcomes")
                              for p in self.destination.iterdir()))
         page=(self.destination/"index.html").read_text()
         script=(self.destination/"app.js").read_text()
@@ -111,6 +116,9 @@ class StaticPagesTests(unittest.TestCase):
         self.assertIn("replay.js",page)
         self.assertIn("insight_explorer.js",page)
         self.assertIn("insight_catalog.js",page)
+        self.assertIn("game_outcomes.js",page)
+        self.assertTrue((self.destination/"game_outcomes.js").is_file())
+        self.assertIn('id="long-game-panel"',page)
         self.assertTrue((self.destination/"insight_explorer.js").is_file())
         self.assertIn("id=\"opponent-replay-panel\"",page)
         self.assertIn("renderReplay",script)
