@@ -32,6 +32,15 @@ jobs:
       - uses: actions/setup-python@v5
         with:
           python-version: "3.11"
+      - name: Regress previously failing mixed seed 69
+        run: |
+          python tools/build_game_outcomes.py \
+            --deck mortarion_physical_final \
+            --scenario mixed --rounds 30 \
+            --start-seed 69 --seeds 1 --examples 1 \
+            --pilot-style adaptive --pilot-archetype auto \
+            --provisional-mode safe \
+            --output dist/mortarion-known-seed-69.json
       - name: Exercise 20 full-horizon seeds per opponent scenario
         run: |
           mkdir -p dist/mortarion-smoke
