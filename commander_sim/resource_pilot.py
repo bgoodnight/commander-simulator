@@ -123,7 +123,8 @@ def plan_common_spell(zones, seat, source, recipe, catalog, mana_service, life):
         for x in range(max_x,0,-1):
             cost=spell_payment_cost(recipe,x)
             try:
-                preview=mana_service.plan_spell(seat,cost,source)
+                preview=mana_service.plan_spell(
+                    seat,cost,source,excluded_source_ids=victims)
             except ValueError as error:
                 if str(error)!="Bounded mana search exhausted; no action committed":
                     raise
@@ -135,7 +136,8 @@ def plan_common_spell(zones, seat, source, recipe, catalog, mana_service, life):
         return None
     cost=spell_payment_cost(recipe)
     try:
-        preview=mana_service.plan_spell(seat,cost,source)
+        preview=mana_service.plan_spell(
+            seat,cost,source,excluded_source_ids=victims)
     except ValueError as error:
         if str(error)!="Bounded mana search exhausted; no action committed":
             raise
