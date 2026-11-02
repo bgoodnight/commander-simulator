@@ -48,5 +48,37 @@ class PilotTests(unittest.TestCase):
             supported_spell=lambda x:x.object_id==3))
 
 
+    def test_small_x_drain_is_not_rejected_by_arbitrary_pilot_floor(self):
+        from unittest.mock import patch
+        from commander_sim.resource_pilot import plan_common_spell
+        from commander_sim.reviewed_common_spells import SpellRecipe, SpellStep
+        spell=make_object(6,"Generic X Drain",("sorcery",),zone="hand")
+        self.cards.append(spell)
+        recipe=SpellRecipe("pinned-id","Drain X","{X}{B}{B}",
+                           "sorcery",(SpellStep("opponent_drain_x"),),
+                           variable_x=True)
+        self.catalog[spell.card.name]={"mana_cost":"{X}{B}{B}"}
+        self.mana.plan_spell=lambda seat,cost,source: object() if cost=="{1}{B}{B}" else None
+        life=SimpleNamespace(total=lambda seat:3)
+        with patch("commander_sim.resource_pilot.assess_resources",
+                   return_value=SimpleNamespace(available_fixed_mana=3)):
+            result=plan_common_spell(self.zones,0,spell,recipe,
+                                     self.catalog,self.mana,life)
+        self.assertEqual(result,("{1}{B}{B}",1,()))
+
+    def test_life_consuming_spell_still_respects_safety_reserve(self):
+        from commander_sim.resource_pilot import plan_common_spell
+        from commander_sim.reviewed_common_spells import SpellRecipe, SpellStep
+        spell=make_object(6,"Generic Life Draw",("sorcery",),zone="hand")
+        self.cards.append(spell)
+        recipe=SpellRecipe("pinned-id","Draw and lose","{B}",
+                           "sorcery",(SpellStep("draw",1),
+                                       SpellStep("lose_life",2)))
+        self.mana.plan_spell=lambda seat,cost,source:object()
+        life=SimpleNamespace(total=lambda seat:5)
+        self.assertIsNone(plan_common_spell(self.zones,0,spell,recipe,
+                                            self.catalog,self.mana,life))
+
+
 if __name__ == "__main__":
     unittest.main()
