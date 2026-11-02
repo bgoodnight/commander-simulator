@@ -6,6 +6,8 @@ This bounded implementation has no opponent priority/prevention, APNAP stack,
 or combat. The caller explicitly supplies legal phase windows and choices.
 """
 from dataclasses import dataclass, replace
+from .ability_composition import (
+    AbilitySlot, AbilityHandler, ComposedCard, AbilityDispatcher)
 from .kernel_life import KernelLife
 from .reviewed_death_effects import capture_battlefield
 from .reviewed_token_spells import TokenBlueprint, create_reviewed_token_batches
@@ -184,6 +186,32 @@ class ComposedAbilityEngine:
         return Execution(source.object_id, "+".join(s.operation for s in rule.steps),
                          created, loss, len(resolved))
 
+    def _dispatch_reviewed(self, source, rule, *, x=0):
+        """Use the project's existing ability-level fidelity dispatcher.
+
+        The composed profile is a declaration; its already-reviewed atom
+        sequence is executed by the same callback mechanism as other
+        reviewed creature, search, phase and sacrifice abilities.
+        """
+        slot_id = "composed:" + rule.event + ":" + str(
+            ABILITIES[source.card.name].index(rule))
+        slot = AbilitySlot(
+            rule.oracle_id, "front", slot_id,
+            "triggered" if rule.event == "end_step" else "activated",
+            rule, rule.oracle_excerpt, "pinned-composed-v1",
+            frozenset({"physical_zones", "composed_effects"}))
+        card = ComposedCard(
+            rule.oracle_id, self.catalog[source.card.name]["oracle_text"],
+            (slot,),
+            (AbilityHandler(slot.key, "simplified", rule,
+                            slot.source_revision, slot.prereqs,
+                            ("No opponent priority, damage prevention, or APNAP stack",)),))
+        dispatcher = AbilityDispatcher(
+            card, "hybrid", frozenset({"physical_zones", "composed_effects"}))
+        return dispatcher.invoke(
+            slot.slot_id, source.object_id,
+            lambda operation: self._execute(source, operation, x=x))
+
     def activate(self, source_id, *, turn, legal_window=True):
         """Perform one legal reviewed activation; repeat calls are permitted.
 
@@ -205,7 +233,7 @@ class ComposedAbilityEngine:
         if paid is None:
             return None
         self._turn = turn
-        return self._execute(source, rule)
+        return self._dispatch_reviewed(source, rule)
 
     def end_step(self, *, active_seat, turn, life_start_index, x_choices=None):
         """Execute reviewed end-step triggers with host-provided X choices.
@@ -259,6 +287,6 @@ class ComposedAbilityEngine:
                 if paid is None:
                     self._handled.add(key)
                     continue
-            results.append(self._execute(source, rule, x=x))
+            results.append(self._dispatch_reviewed(source, rule, x=x))
             self._handled.add(key)
         return tuple(results)
