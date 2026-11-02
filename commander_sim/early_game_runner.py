@@ -1217,7 +1217,8 @@ def run_bounded_early_game(deck_key, *, seed=0, turns=6, mulligan="one-free", pr
         resource_end = assess_resources(kernel, mana_service, 0).__dict__
         mana_service.clear()
         if (not zones.assert_consistent()
-                or sum(not obj.token for obj in kernel.objects.values()) != 100):
+                or sum(not obj.token and obj.owner==0
+                       for obj in kernel.objects.values()) != 100):
             raise AssertionError("Physical non-token card conservation failed")
         if opponent_pressure is not None:
             for pressure_event in opponent_pressure.advance(turn):
