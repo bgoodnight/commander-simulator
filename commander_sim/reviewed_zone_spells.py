@@ -144,11 +144,18 @@ class ZoneSpellEngine:
                     or old not in before):
                 continue
             original_owner=before[old].owner
+            recipe=GraveyardRecipe(
+                "battlefield","own",frozenset({"creature"}),
+                enter_tapped=True,enter_counters=("+1/+1",1))
+            # Another earlier death trigger can return, exile or otherwise
+            # move the new graveyard object before this delayed ability
+            # resolves. A trigger cannot move a card that left the graveyard;
+            # it simply has no legal object left to return.
+            if move.new_object_id not in eligible_graveyard_cards(
+                    self.zones,original_owner,recipe):
+                continue
             restored=resolve_graveyard_recipe(
-                self.zones,original_owner,(move.new_object_id,),
-                GraveyardRecipe("battlefield","own",
-                                frozenset({"creature"}),enter_tapped=True,
-                                enter_counters=("+1/+1",1)))[0].new_id
+                self.zones,original_owner,(move.new_object_id,),recipe)[0].new_id
             outcome=ZoneSpellOutcome(
                 "temporary_death_return","return_when_dies",old,(restored,),())
             outcomes.append(outcome)
