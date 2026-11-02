@@ -2137,6 +2137,7 @@ async function boot(){
       choice={key:latest.key,version:latest.version};
     }
     summon(choice.key,{versionId:choice.version});
+    if(pageName==="results")loadPublishedLongGame();
   }catch(err){
     const rail=$("commander-rail");clear(rail);
     rail.appendChild(el("p","Unable to open the archive: "+err.message));
