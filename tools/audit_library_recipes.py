@@ -18,6 +18,7 @@ from commander_sim.deck_fixtures import FIXTURES, EXPERIMENTAL_FIXTURES
 from commander_sim.provisional_import import provisional_profile
 from commander_sim.reviewed_draw_spells import reviewed_draw_spell
 from commander_sim.reviewed_flashback import reviewed_flashback
+from commander_sim.reviewed_land_entry import reviewed_land_entry
 from commander_sim.reviewed_sacrifice_actions import SACRIFICE_MODES
 
 
@@ -42,6 +43,11 @@ def audit_snapshot(snapshot_path, label=None):
         elif provisional is not None and provisional.library_actions:
             rows_for_card.append((
                 "provisional_spell", provisional.library_actions))
+        land_entry = reviewed_land_entry(name, raw)
+        if land_entry is not None and land_entry.operation == "surveil_one":
+            from commander_sim.library_actions import LibraryAction
+            rows_for_card.append((
+                "reviewed_land_entry", (LibraryAction("surveil", 1),)))
         if (flashback is not None
                 and flashback.operation == "draw_discard_two"):
             from commander_sim.library_actions import LibraryAction
