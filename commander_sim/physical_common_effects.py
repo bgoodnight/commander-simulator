@@ -193,3 +193,50 @@ def scry_physical_cards(zones, seat, count, *, bottom_ids=(), top_ids=None):
     order.extend(reversed(tops))
     zones.kernel._dirty()
     return ScryOutcome(seen,bottoms,tops)
+
+
+@dataclass(frozen=True)
+class TemporaryCreatureChange:
+    """Typed end-of-turn P/T operation; target selection stays with reviewed host."""
+    power: int
+    toughness: int
+    def __post_init__(self):
+        if type(self.power) is not int or type(self.toughness) is not int:
+            raise ValueError("Temporary P/T changes must be integer values")
+
+
+def change_reviewed_creature_stats(zones, object_ids, change: TemporaryCreatureChange,
+                                  *, death_engine=None, turn=1):
+    """Apply one batch of end-of-turn modifications and a single SBA window.
+
+    This generic physical operation can be called by ETB, spell and activated
+    abilities. It does not invent targets or grant unreviewed permissions.
+    Capturing last-known information before the entire batch prevents lost
+    death triggers when several creatures die simultaneously.
+    """
+    if not isinstance(change,TemporaryCreatureChange):
+        raise TypeError("Expected typed creature characteristic change")
+    kernel=zones.kernel
+    ids=tuple(object_ids)
+    if len(set(ids))!=len(ids):
+        raise ValueError("Duplicate modification recipient")
+    for oid in ids:
+        if (oid not in kernel.objects
+                or kernel.get(oid).zone!="battlefield"
+                or "creature" not in kernel.get(oid).types):
+            raise ValueError("Temporary modification requires live creatures")
+    if type(turn) is not int or turn<1:
+        raise ValueError("Positive turn number required")
+    from simulator.v7_rules.rules import Modifier
+    from .reviewed_death_effects import capture_battlefield
+    before=capture_battlefield(kernel)
+    first_move=len(kernel.moves)
+    for oid in ids:
+        kernel.add_modifier(oid,Modifier(
+            change.power,change.toughness,expires_at="end_turn"))
+    kernel.check_state_based()
+    if death_engine is not None:
+        if death_engine.zones is not zones:
+            raise ValueError("Death resolver must share physical zones")
+        death_engine.resolve_deaths(before,move_index=first_move,turn=turn)
+    return ids
