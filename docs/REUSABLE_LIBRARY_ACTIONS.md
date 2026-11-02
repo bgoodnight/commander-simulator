@@ -38,7 +38,7 @@ Examples of parameter-only card mappings:
 | Quick Study / Think Twice · hand cast | `draw(N)` | Think Twice flashback still needs its own explicit review |
 | Viscera Seer / Woe Strider · sacrifice activation | `scry(1)` | Costs/timing remain in reviewed sacrifice engine |
 | Ayara / Yawgmoth · sacrifice activation | `draw(1)` | Costs/targets remain in reviewed sacrifice engine |
-| Hidden Grotto · land enters | `surveil(1)` | Additional funded mana mode remains independently unsupported |
+| Hidden Grotto (physical Magnus deck) · land enters | `surveil(1)` | Additional funded mana mode remains independently unsupported |
 
 The default bounded policy uses only the current pilot's hand, battlefield
 and the cards **legally revealed by the operation**. It makes a basic land
