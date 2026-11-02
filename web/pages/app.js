@@ -438,7 +438,7 @@ function renderReplay(){
   const eligible=!!file&&!isUnsimulatedVersion();
   panel.hidden=!eligible;
   const development=$("development-panel");
-  if(development)development.open=!eligible;
+  if(development)development.open=true;
   if(!eligible)return;
   const key=selected,hash=deck.deck_sha256;
   if(!window.CommanderReplay){
