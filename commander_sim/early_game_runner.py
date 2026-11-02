@@ -182,6 +182,7 @@ def run_bounded_early_game(deck_key, *, seed=0, turns=6, mulligan="one-free", pr
                     or reviewed_ramp(name,raw_by_name[name]) is not None
                     or reviewed_ritual(name,raw_by_name[name])
                     or reviewed_common_spell(name,raw_by_name[name]) is not None
+                    or reviewed_removal(name,raw_by_name[name]) is not None
                     or approved_enter_hand_cast(name)
                     or reviewed_breach(name,raw_by_name[name])
                     or reviewed_buyback(name,raw_by_name[name]) is not None
