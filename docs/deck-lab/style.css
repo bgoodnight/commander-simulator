@@ -956,3 +956,22 @@ body:has(#pane-records:not([hidden])) .page-introduction a{font-size:.72rem}
   .insight-metrics:has(.insight-metric:nth-child(4)){grid-template-columns:repeat(2,minmax(0,1fr))}
   .insight-inline-replay .replay-round{max-width:100%}
 }
+
+
+/* The held-hand insight uses median rounds as its headline; the optional
+ * reliability-adjusted ranking explains the arithmetic only on that view. */
+.insight-ranking-method{
+  margin:8px 0 11px;padding:10px 11px;
+  background:#1c2b2b;border:1px solid #687467;border-radius:8px;
+  display:grid;gap:6px;min-width:0;
+}
+.insight-ranking-method>strong{font-size:.77rem;color:#f1d5a0}
+.insight-ranking-formula{
+  font-size:.72rem;line-height:1.45;white-space:normal;overflow-wrap:anywhere;
+  color:#e5e9da;background:transparent;
+}
+.insight-ranking-method>.micro{margin:0;font-size:.7rem}
+@media(max-width:720px){
+  .insight-ranking-method{padding:8px}
+  .insight-ranking-formula{font-size:.67rem}
+}
