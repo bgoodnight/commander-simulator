@@ -2,7 +2,7 @@
 import json
 import unittest
 
-from commander_sim.deck_fixtures import FIXTURES
+from commander_sim.deck_fixtures import FIXTURES, EXPERIMENTAL_FIXTURES
 from commander_sim.early_game_runner import _load_live_kernel
 from commander_sim.kernel_life import KernelLife
 from commander_sim.reviewed_enter_effects import (
@@ -14,7 +14,7 @@ class ReviewedEnterEffectTests(unittest.TestCase):
     @classmethod
     def setUpClass(cls):
         cls.catalog={}
-        for fixture in FIXTURES:
+        for fixture in (*FIXTURES,*EXPERIMENTAL_FIXTURES):
             for item in json.loads(fixture.snapshot_path.read_text())["cards"]:
                 cls.catalog.setdefault(item["deck_name"],item["card"])
 
@@ -114,6 +114,39 @@ class ReviewedEnterEffectTests(unittest.TestCase):
         self.assertIn("artifact",self.kernel.get(
             alternative.token_ids[0]).types)
 
+    def test_massacre_wurm_etb_debuff_uses_physical_deaths_and_drain(self):
+        raw=self.catalog["Massacre Wurm"]
+        from_hand=self.zones.add(self.C(
+            raw["oracle_id"],"Massacre Wurm",frozenset({"creature"}),
+            base_power=6,base_toughness=5,coverage="approx"),0,"hand")
+        source=self.zones.move(from_hand,"battlefield","resolve")
+        for seat in (1,2):
+            self.zones.add(self.C(
+                "test:enemy","Enemy",frozenset({"creature"}),
+                base_power=2,base_toughness=2,coverage="approx"),
+                seat,"battlefield")
+        out=self.resolve(source,turn=1)
+        self.assertEqual(out.operation,"debuff_opponent_creatures")
+        self.assertEqual(self.life.total(1),38)
+        self.assertEqual(self.life.total(2),38)
+        self.assertTrue(all(o.controller==0 for o in self.kernel.on_battlefield()))
+        self.assertTrue(self.zones.assert_consistent())
+
+    def test_shared_temporary_stats_restore_at_cleanup(self):
+        from commander_sim.physical_common_effects import (
+            TemporaryCreatureChange,change_reviewed_creature_stats)
+        source=self.zones.add(self.C(
+            "test:body","Test Creature",frozenset({"creature"}),
+            base_power=4,base_toughness=4,coverage="approx"),
+            0,"battlefield")
+        change_reviewed_creature_stats(
+            self.zones,(source,),TemporaryCreatureChange(-2,-2),
+            turn=1,death_engine=self.death)
+        self.assertEqual(self.kernel.get(source).toughness,2)
+        self.kernel.cleanup()
+        self.assertEqual(self.kernel.get(source).toughness,4)
+        self.assertTrue(self.zones.assert_consistent())
+
     def test_false_identity_never_receives_named_etb_ability(self):
         fake=self.add("Royal Warden",zone="hand",oracle="unreviewed",
                       types=("artifact","creature"))
@@ -123,7 +156,7 @@ class ReviewedEnterEffectTests(unittest.TestCase):
         self.assertEqual(len(self.zones.ids(0,"battlefield")),1)
 
     def test_seven_oracle_reviewed_etb_registration_records_present(self):
-        self.assertEqual(len(ENTER_RULES),7)
+        self.assertEqual(len(ENTER_RULES),8)
         for name,entry in ENTER_RULES.items():
             with self.subTest(card=name):
                 self.assertEqual(self.catalog[name]["oracle_id"],entry.oracle_id)
