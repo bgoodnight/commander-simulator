@@ -8,11 +8,11 @@ by the requested action (or the pilot's own hand).
 from dataclasses import dataclass
 
 from .physical_common_effects import (
-    CardQuantity, draw_physical_cards, scry_physical_cards,
+    CardQuantity, draw_physical_cards, mill_physical_cards, scry_physical_cards,
 )
 
 _KINDS = frozenset({
-    "draw", "scry", "surveil", "reorder_top", "shuffle",
+    "draw", "mill", "scry", "surveil", "reorder_top", "shuffle",
     "discard", "put_back",
 })
 
@@ -97,7 +97,11 @@ def resolve_library_actions(zones, seat, actions, *, select=None):
     needed = required_draws(actions)
     if type(seat) is not int or not 0 <= seat < zones.seats:
         raise ValueError("Invalid library action seat")
-    if len(zones.ids(seat, "library")) < needed:
+    # A mandatory mill before a required draw cannot be shortened merely to
+    # preserve that draw; the bounded host must handle library-loss SBA before
+    # permitting this compound recipe. A mill-only action may mill fewer cards.
+    mandatory_mill=sum(a.count for a in actions if a.kind=="mill")
+    if len(zones.ids(seat, "library")) < needed + (mandatory_mill if needed else 0):
         raise ValueError("Library cannot satisfy mandatory draws in bounded mode")
     if select is None:
         select = bounded_library_choice
@@ -173,6 +177,14 @@ def resolve_library_actions(zones, seat, actions, *, select=None):
                 zones.shuffle(seat)
             record["shuffled"] = chosen
             last_inspected = ()
+
+        elif kind == "mill":
+            # Unlike a failed mandatory draw, milling beyond an empty
+            # library is legal and simply moves whatever remains.
+            actual=min(count,len(zones.ids(seat,"library")))
+            ids=mill_physical_cards(zones,seat,CardQuantity(actual))
+            milled.extend(ids)
+            record["milled"]=_cards(zones,ids)
 
         elif kind == "draw":
             outcome = draw_physical_cards(zones, seat, CardQuantity(count))
