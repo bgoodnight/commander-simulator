@@ -39,7 +39,7 @@ RULES={
         "{3}{B}{B}: Creatures you control gain lifelink until end of turn.",
         cost="{3}{B}{B}",operation="keyword_own_until_end",keyword="lifelink"),
     "Yahenni, Undying Partisan":ActiveRule(
-        "a9c8e585-0bbc-4a7e-8db0-903f27cb3fd0",
+        "fdba89eb-1cf5-46e6-9d09-1adb9bc40fcd",
         "Sacrifice another creature: Yahenni gains indestructible until end of turn.",
         sacrifice_other=True,operation="keyword_self_until_end",
         keyword="indestructible"),
