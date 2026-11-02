@@ -1,8 +1,9 @@
 """Paired exploratory trials of shared provisional rules across four commanders.
 
 These are bounded goldfish tests of *action availability*, not deck win rates.
-Paired seeds preserve each deck's shuffle/opening hand so changes in usable
-actions can be attributed to opting into the partial rules layer.
+Paired seeds and forced keeps preserve each deck's shuffle/opening hand
+so differences in usable actions can be attributed to opting into the
+partial rules layer. This is not a realistic mulligan-performance benchmark.
 """
 import argparse
 from collections import Counter
@@ -30,6 +31,7 @@ def run(*,seeds=6,turns=5):
         opening=[]
         for mode in ("off","safe"):
             games=[run_bounded_early_game(deck,seed=seed,turns=turns,
+                                         mulligan="keep",
                                          provisional_mode=mode)
                    for seed in range(seeds)]
             counts=Counter(
