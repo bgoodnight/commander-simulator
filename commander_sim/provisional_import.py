@@ -12,6 +12,7 @@ import re
 
 from .effect_templates import ManaMode
 from .library_actions import LibraryAction, required_draws
+from .death_recipes import provisional_death_recipe
 from .mana_costs import UnsupportedManaCost, parse_fixed_mana_cost
 
 _WORDS = {"a":1, "one":1, "two":2, "three":3, "four":4,
@@ -290,6 +291,9 @@ def provisional_report(entries):
     for entry in entries:
         raw=entry.get("card") if isinstance(entry,dict) else None
         profile=provisional_profile(raw)
+        death=(provisional_death_recipe(raw.get("oracle_text", ""))
+               if profile is not None and profile.kind=="creature_body"
+               else None)
         name=entry.get("deck_name") if isinstance(entry,dict) else None
         result.append({"card":name or (raw or {}).get("name"),
                        "oracle_id":(raw or {}).get("oracle_id"),
@@ -299,6 +303,15 @@ def provisional_report(entries):
                        "actions":[{"kind":x.kind,"count":x.count}
                                   for x in profile.library_actions]
                                   if profile else [],
+                       "provisional_death_trigger":(
+                           {"scope":{"relation":death.predicate.relation,
+                                     "types":sorted(death.predicate.types_any),
+                                     "subtype":death.predicate.subtype,
+                                     "non_token":death.predicate.nontoken_only,
+                                     "exclude_source":death.predicate.exclude_source},
+                            "steps":[{"kind":x.kind,"count":x.count}
+                                     for x in death.steps]}
+                           if death else None),
                        "fidelity":profile.fidelity if profile else "unsupported",
                        "omissions":list(profile.omissions) if profile else []})
     return result
