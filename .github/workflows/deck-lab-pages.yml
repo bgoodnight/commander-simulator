@@ -11,6 +11,7 @@ on:
       - "tests/pages_insights.test.cjs"
       - "tests/pages_replay.test.cjs"
       - "tests/pages_insight_explorer.test.cjs"
+      - "tests/pages_insight_catalog.test.cjs"
       - ".github/workflows/deck-lab-pages.yml"
   pull_request:
     paths:
@@ -51,14 +52,17 @@ jobs:
           node --check web/pages/app.js
           node --check web/pages/replay.js
           node --check web/pages/insight_explorer.js
+          node --check web/pages/insight_catalog.js
           node --check web/pages/results_insights.js
           node --test tests/pages_insights.test.cjs
           node --test tests/pages_replay.test.cjs
           node --test tests/pages_insight_explorer.test.cjs
+          node --test tests/pages_insight_catalog.test.cjs
           node --test tests/pages_deck_selection.test.cjs
           node --check dist/pages/app.js
           node --check dist/pages/replay.js
           node --check dist/pages/insight_explorer.js
+          node --check dist/pages/insight_catalog.js
           node --check dist/pages/results_insights.js
       - name: Offer a downloadable preview even before Pages is enabled
         uses: actions/upload-artifact@v4

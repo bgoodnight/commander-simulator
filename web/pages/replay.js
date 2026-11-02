@@ -602,7 +602,7 @@
       healthDelta!==null&&healthDelta!==0?"life":
       combat.dealt||combat.taken?"combat":
       landDelta!==null&&landDelta!==0?"lands":"hand";
-    showFocus(suggested);
+    showFocus(focus.topic||suggested);
     // The entire row is a native <summary>. Clicking a particular stat
     // both expands the round and selects its focused evidence tray.
     summary.onclick=event=>{
@@ -629,6 +629,7 @@
     else actions.appendChild(el("p","small","No actions were retained in this abbreviated round."));
     all.appendChild(actions);body.appendChild(all);
     if(Number.isInteger(focus.index)&&focus.index>=0){wrap.open=true;all.open=true}
+    else if(focus.topic)wrap.open=true;
     wrap.appendChild(body);
     return wrap;
   }
@@ -681,7 +682,7 @@
           id:"bounded:"+run.seed+":t"+row.turn+":a"+index,
           type:event.type,actor_seat:0,target_seat:null,
           card_name:typeof event.card==="string"?event.card:null,
-          fields:{...event},fidelity:"reviewed"
+          fields:{...event},fidelity:event.fidelity||"reviewed"
         })),
         snapshots:{"0":{
           life:Number.isFinite(row.life)?row.life:null,
@@ -708,13 +709,43 @@
     const seats=[{seat:0,label:options.commanderName||"Your commander",role:"single-pilot"}];
     const timeline=el("div","replay-timeline");
     rounds.forEach((round,i)=>{
-      const focus=round.round===options.turn&&Number.isInteger(options.eventIndex)?
-        {unit:"turn",index:options.eventIndex}:{unit:"turn"};
+      const focus=round.round===options.turn?
+        {unit:"turn",index:Number.isInteger(options.eventIndex)?options.eventIndex:null,
+          topic:options.focusTopic||null}:{unit:"turn"};
       timeline.appendChild(roundSection(round,rounds[i-1]||null,seats,
         options.lookup,options.openCard,i,options.commanderName,focus));
     });
     root.appendChild(timeline);
     return {rounds,focusedTurn:options.turn??null};
+  }
+
+
+  // Render ONE actual narrated opponent-pressure game within a selected
+  // insight. The full scenario explorer remains a separate optional report.
+  function renderNarratedEvidence(root,data,options={}){
+    validate(data,options.deckKey,options.deckHash);
+    const item=data.scenarios[options.scenario];
+    const game=item?.games?.find(g=>g.id===options.gameId);
+    if(!game)throw Error("This narrated seed is not included in the export.");
+    root.replaceChildren();
+    root.appendChild(panelHeading("Narrated "+options.scenario+" · seed "+game.seed,
+      "Recorded four-seat rounds"));
+    root.appendChild(el("p","micro",
+      "Only the exported example game is shown. Recorded order is within rounds, "+
+      "not a complete priority stack; opponents and combat may use abstract pressure. "+
+      "A named reviewed removal does not establish the removed object's creature type."));
+    root.appendChild(el("p","replay-legend","Focused card: "+
+      (options.cardName||"not selected")+" · Round "+options.turn));
+    const timeline=el("div","replay-timeline");
+    game.rounds.forEach((round,i)=>{
+      const focus=round.round===options.turn?
+        {unit:"round",index:Number.isInteger(options.eventIndex)?options.eventIndex:null,
+          topic:options.focusTopic||"creatures"}:{unit:"round"};
+      timeline.appendChild(roundSection(round,game.rounds[i-1]||null,
+        game.seats,options.lookup,options.openCard,i,options.commanderName,focus));
+    });
+    root.appendChild(timeline);
+    return {game,focusedRound:options.turn};
   }
 
   function render(root,data,options={}){
@@ -852,5 +883,5 @@
     draw();
     return {redraw:draw};
   }
-  return {FORMAT,validate,eventKind,eventTitle,summarizeAction,activity,statsForRound,changeIn,recordedCombat,cardSpotlight,relatedActions,pilotTurnActivity,zoneInspector,manaOutputSymbols,boundedRounds,renderBoundedEvidence,render};
+  return {FORMAT,validate,eventKind,eventTitle,summarizeAction,activity,statsForRound,changeIn,recordedCombat,cardSpotlight,relatedActions,pilotTurnActivity,zoneInspector,manaOutputSymbols,boundedRounds,renderBoundedEvidence,renderNarratedEvidence,render};
 });

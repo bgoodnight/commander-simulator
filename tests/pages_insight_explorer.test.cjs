@@ -127,7 +127,7 @@ test('simulation shell exposes compact stats and key insights with inline seed t
   assert.match(css,/\.insight-report \.board-summary-copy/);
   assert.match(app,/creatureInsightReport\(runs\)/);
   assert.match(app,/renderSimulationSnapshot\(runs\)/);
-  assert.match(app,/onRenderEvidence:openCreatureInsightEvidence/);
+  assert.match(app,/onRenderEvidence:openInsightEvidence/);
   assert.match(app,/CommanderReplay\.renderBoundedEvidence/);
   assert.equal(typeof Replay.renderBoundedEvidence,'function');
 });
