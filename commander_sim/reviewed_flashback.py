@@ -10,7 +10,7 @@ from dataclasses import dataclass
 
 from .ability_composition import (
     AbilitySlot,AbilityHandler,ComposedCard,AbilityDispatcher)
-from .physical_common_effects import CardQuantity,draw_physical_cards
+from .library_actions import LibraryAction, resolve_library_actions
 from .reviewed_token_spells import (
     reviewed_token_spell,create_reviewed_token_batches)
 
@@ -123,18 +123,21 @@ def cast_reviewed_flashback(zones,seat,source_id,catalog,mana_service,*,
                 produced.extend(create_reviewed_token_batches(
                     zones,seat,recipe.batches))
             elif operation.operation=="draw_discard_two":
-                answer=draw_physical_cards(zones,seat,CardQuantity(2))
-                if not answer.complete:
-                    raise AssertionError("Flashback library preview changed")
-                drawn.extend(answer.drawn_ids)
-                choice=(tuple(drawn) if discard_choice is None else
-                        tuple(discard_choice(zones,seat,tuple(drawn))))
-                if (len(choice)!=2 or len(set(choice))!=2
-                        or any(oid not in zones.ids(seat,"hand") for oid in choice)):
-                    raise ValueError("Illegal reviewed discard choice")
-                for oid in choice:
-                    zones.discard(seat,oid)
-                    discarded.append(oid)
+                # Use the same exact draw->discard operations as the reviewed
+                # hand cast. Preserve the flashback host's existing choice
+                # signature and default to discarding the newly drawn cards.
+                def choose(kind, available, count, host_zones, actor):
+                    if kind!="discard":
+                        raise AssertionError("Unexpected flashback library step")
+                    freshly_drawn=tuple(available[-count:])
+                    return (freshly_drawn if discard_choice is None else
+                            tuple(discard_choice(zones,seat,freshly_drawn)))
+                result=resolve_library_actions(
+                    zones,seat,(LibraryAction("draw",2),
+                                LibraryAction("discard",2)),select=choose)
+                drawn.extend(result.drawn_ids)
+                discarded.extend(item["id"] for item in
+                                 result.steps[-1]["selected"])
             else:
                 raise NotImplementedError("Unsupported flashback effect")
         exiled=zones.resolve(ticket,effect=resolve,spell_destination="exile")
