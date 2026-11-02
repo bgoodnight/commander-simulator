@@ -1,5 +1,5 @@
 name: Mortarion physical opponent stress and narrative audit
-# Runs real physical cards against seeded abstract three-seat pressure.
+# Re-run after distinguishing per-upkeep resolution from Snake creation.
 on:
   workflow_dispatch:
   push:
