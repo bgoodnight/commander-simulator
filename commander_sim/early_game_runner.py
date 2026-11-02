@@ -55,7 +55,9 @@ from .reviewed_sacrifice_actions import (
     activate_reviewed_sacrifice)
 from .template_resources import TemplateManaService
 from .resource_development import assess_resources, choose_tutor_target
-from .resource_pilot import choose_token_mana_sacrifice, plan_common_spell, ritual_enables_spell
+from .resource_pilot import (choose_token_mana_sacrifice, plan_common_spell,
+                             ritual_enables_spell, choose_composed_activation,
+                             choose_variable_end_step_payments)
 from .reviewed_common_spells import reviewed_common_spell, cast_common_spell
 from .reviewed_ramp import reviewed_ramp, reviewed_ritual, cast_ritual, activate_land_ramp, resolve_enter_ramp
 from .hand_cleanup import cleanup_hand
@@ -611,6 +613,19 @@ def run_bounded_early_game(deck_key, *, seed=0, turns=6, mulligan="one-free", pr
                 if moved:
                     events.append({"type":"reviewed_land_ramp","card":source.card.name,
                                    "land_ids":list(moved),"fidelity":"reviewed_shared_basic_search"})
+        # Generic composed-ability policy is separate from the rule executor.
+        # A single conservative paid activation may generate useful life loss.
+        activation=choose_composed_activation(
+            zones,0,life,mana_service,raw_by_name)
+        if activation is not None:
+            outcome=composed_engine.activate(activation,turn=turn)
+            if outcome is not None:
+                events.append({"type":"reviewed_composed_activated",
+                    "source_object_id":activation,
+                    "operation":outcome.operation,
+                    "life_changes":outcome.life_lost,
+                    "death_trigger_count":outcome.deaths,
+                    "fidelity":"bounded_generic_activation_policy"})
         resolve_reactive()
         # One reviewed instant spell per turn in the verified main-phase
         # window. Optional buyback is preferred only when fully payable.
@@ -835,8 +850,11 @@ def run_bounded_early_game(deck_key, *, seed=0, turns=6, mulligan="one-free", pr
                         kernel.events[turn_kernel_event_index:])
         # Resolve approved composed end-step abilities. The bounded pilot
         # supplies no optional X choice; it does not invent a strategy.
+        chosen_x=choose_variable_end_step_payments(
+            zones,0,life,mana_service,raw_by_name,life_ledger_start)
         for composed in composed_engine.end_step(
-                active_seat=0, turn=turn, life_start_index=life_ledger_start):
+                active_seat=0, turn=turn, life_start_index=life_ledger_start,
+                x_choices=chosen_x):
             events.append({
                 "type":"reviewed_composed_end_step",
                 "source_object_id":composed.source_id,
