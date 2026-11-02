@@ -236,6 +236,13 @@ class BoundedOpponentPressure:
             # Re-check live state: earlier combat could destroy an attacker.
             if attacker.object_id not in kernel.objects:
                 continue
+            if attacker.controller==0:
+                from .reviewed_attack_triggers import resolve_attack_grants
+                for source_id,attacker_id,keyword in resolve_attack_grants(
+                        kernel,self.catalog,attacker.object_id):
+                    self.events.append(OpponentEvent(
+                        turn,seat,role,"reviewed_attack_keyword_grant",
+                        attacker_id,0,defender))
             blockers=kernel.legal_blockers(attacker.object_id,defender,frozenset(used))
             # Keep priority engine creatures unless a trade is productive or
             # survival demands blocking. Tokens are the preferred expendables.
