@@ -63,7 +63,16 @@ test('published replay file, when present, exposes only actual sampled games',()
   if(!fs.existsSync(path))return;
   const replay=JSON.parse(fs.readFileSync(path,'utf8'));
   assert.equal(replay.format,Replay.FORMAT);
-  assert.equal(replay.source.workflow_run_id,41444353902);
+  assert.ok(Number.isInteger(replay.source.workflow_run_id)&&
+    replay.source.workflow_run_id>0);
+  assert.match(replay.source.engine_commit,/^[a-f0-9]{40}$/);
+  assert.match(replay.deck_sha256,/^[a-f0-9]{64}$/);
+  if(replay.source.workflow_run_id!==41444353902){
+    const rounds=Object.values(replay.scenarios).flatMap(x=>x.games.flatMap(g=>g.rounds));
+    assert.ok(rounds.every(r=>r.snapshots['0'].zones));
+    assert.ok(rounds.every(r=>Array.isArray(r.mana_activations)));
+    assert.ok(rounds.some(r=>r.actions.some(a=>a.type==='draw')));
+  }
   assert.equal(Object.keys(replay.scenarios).length,5);
   assert.equal(Object.values(replay.scenarios).reduce((n,r)=>n+r.games.length,0),14);
   for(const s of Object.values(replay.scenarios)){
