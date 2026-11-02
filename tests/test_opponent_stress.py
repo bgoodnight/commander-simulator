@@ -92,6 +92,48 @@ class OpponentPressureTests(unittest.TestCase):
         self.assertNotIn(attacker,self.kernel.objects)
         self.assertTrue(self.zones.assert_consistent())
 
+    def test_control_opponent_uses_capable_attacker_not_oldest(self):
+        adv=self.stress("control",seed=4)
+        weak=self.zones.add(self.C(
+            "test:weak","Older Weak Body",frozenset({"creature"}),
+            base_power=1,base_toughness=1,coverage="approx"),
+            1,"battlefield",token=True)
+        strong=self.zones.add(self.C(
+            "test:strong","Later Flying Body",frozenset({"creature"}),
+            base_power=4,base_toughness=4,
+            keywords=frozenset({"flying"}),coverage="approx"),
+            1,"battlefield",token=True)
+        adv._born[weak]=adv._born[strong]=0
+        adv._combat(1,"control",turn=1,defender=0)
+        attacks=[x for x in adv.events
+                 if x.operation=="abstract_unblocked_damage"]
+        self.assertEqual(len(attacks),1)
+        self.assertEqual(attacks[0].object_id,strong)
+        self.assertTrue(self.zones.assert_consistent())
+
+    def test_player_combat_posture_changes_attacks_without_changing_legality(self):
+        for style,expected in (("tempo",4),("conservative",2)):
+            with self.subTest(style=style):
+                self.setUp()
+                adv=self.stress("balanced",seed=3)
+                ready=[]
+                for i in range(5):
+                    ready.append(self.zones.add(self.C(
+                        "test:body:"+str(i),"Friendly "+str(i),
+                        frozenset({"creature"}),base_power=2,
+                        base_toughness=2,coverage="approx"),
+                        0,"battlefield",token=True))
+                outcome=adv.player_combat(
+                    2,beginning_creature_ids=tuple(ready),style=style)
+                attacks=[x for x in outcome
+                         if x.operation=="abstract_unblocked_damage"]
+                self.assertEqual(len(attacks),expected)
+                self.assertEqual(
+                    adv.last_player_combat_decision["selected_attackers"],
+                    expected)
+                self.assertEqual(adv.last_player_combat_decision["style"],style)
+                self.assertTrue(self.zones.assert_consistent())
+
     def test_deathtouch_block_kills_larger_attacker(self):
         self.zones.add(self.C("test:snake","Test Snake",
             frozenset({"creature"}),base_power=1,base_toughness=1,
