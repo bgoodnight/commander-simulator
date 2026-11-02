@@ -1,5 +1,8 @@
 # Development roadmap — reusable Commander simulator
 
+Current pilot-specific milestones, opponent limits and verification gates:
+[Pilot development roadmap](docs/PILOT_DEVELOPMENT_ROADMAP.md).
+
 Updated October 31, 2026 following the v35 [architecture audit](docs/ARCHITECTURE_AUDIT.md) and deck-provider implementation. Use [DEVELOPMENT_GUIDE.md](docs/DEVELOPMENT_GUIDE.md), [Hybrid Simulation Work Plan](docs/HYBRID_SIMULATION_WORKPLAN.md), and the **binding [Progressive Ability-Composition Architecture](docs/ABILITY_COMPOSITION_ARCHITECTURE.md)** as the execution contract. **The immediate delivery objective is a usable multi-deck MVP, not full named-card coverage.** The priority-ordered product gates are in [MULTI_DECK_MVP.md](docs/MULTI_DECK_MVP.md): shared offline Scryfall catalog **first**, then general deck import, shared B/W/U/R/G/C mana and generic card objects, meaningful early-game actions, a **phased Deck Lab interface (viewer → editable deck variants → explicit new-card API import)**, cross-deck play and only then broad unique-card coverage. See [USER_INTERFACE_ROADMAP.md](docs/USER_INTERFACE_ROADMAP.md); richer visuals follow available real game data.
 
 Current entry point: `run_simulation.py` -> `CopyTable`. Default deck: committed `decklists/magnus_thousand_sons_v1_14_premium.txt`, updated in `b9b3ba0abcd19676ec4f32cc9f427e52c1f55d8b`; Training Center and Otawara are pending and represented by basics. Preserve v1.13 budget and historical lists. Do not silently substitute trial/pre-delivery lists from other work.
