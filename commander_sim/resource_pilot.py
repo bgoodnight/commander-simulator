@@ -376,3 +376,76 @@ def choose_end_step_token_mana(zones,seat,life,mana_service,catalog,
         if victim is not None:
             return source.object_id,victim.object_id
     return None
+
+
+def choose_reviewed_removal(zones, seat, life, rule, *, turn=1):
+    """Choose a worthwhile existing battlefield target for a reviewed removal.
+
+    No imagined enemy permanents. The same threat/conservation heuristic is
+    shared by all physical destroy and debuff spells; it deliberately declines
+    marginal one-for-ones and unfavorable sweepers.
+    Returns (target_id, x) or None. None never authorizes a cast.
+    """
+    from .reviewed_removal_spells import valid_removal_target
+    kernel=zones.kernel
+    own=[o for o in kernel.on_battlefield()
+         if o.controller==seat and "creature" in o.types]
+    opponents=[o for o in kernel.on_battlefield()
+               if o.controller!=seat and "creature" in o.types]
+    if not opponents:
+        return None
+    danger=life.total(seat)<=18
+    if rule.operation=="debuff_all":
+        if life.total(seat)<=4:
+            return None
+        for x in range(min(5,life.total(seat)-5),0,-1):
+            foe=sum(o.toughness<=x for o in opponents)
+            friendly=sum(o.toughness<=x for o in own)
+            if foe>=2 and foe>=friendly+1 and (danger or foe>=3):
+                return None,x
+        return None
+    if rule.operation=="destroy_below_power":
+        options=[]
+        for source in own:
+            if not valid_removal_target(zones,seat,rule,source.object_id):
+                continue
+            foe=sum(o.power<source.power for o in opponents)
+            friends=sum(o.object_id!=source.object_id
+                        and o.power<source.power for o in own)
+            if foe>=2 and foe>friends:
+                options.append((foe-friends,source.power,source.object_id))
+        if not options:
+            return None
+        return max(options)[2],0
+    valid=[o for o in kernel.on_battlefield()
+           if valid_removal_target(zones,seat,rule,o.object_id)
+           and o.controller!=seat]
+    if not valid:
+        return None
+    if rule.operation=="destroy_and_debuff":
+        foe=sum(o.toughness<=rule.amount for o in opponents)
+        friends=sum(o.toughness<=rule.amount for o in own)
+        if foe < friends+2:
+            return None
+    scored=[]
+    for obj in valid:
+        creature="creature" in obj.types
+        power=obj.power if creature else 0
+        toughness=obj.toughness if creature else 0
+        threat=power+min(3,toughness)
+        if rule.operation=="debuff_same_name":
+            group=sum(o.card.name==obj.card.name and
+                      o.toughness<=rule.amount for o in opponents)
+            if not group:
+                continue
+            threat+=2*(group-1)
+        if rule.operation=="destroy" and not danger and threat<6:
+            continue
+        if rule.operation=="debuff_same_name" and threat<4 and not danger:
+            continue
+        if rule.operation=="destroy" and rule.life_cost=="target_mana_value":
+            # Only a real pinned target or a token has known mana value.
+            if not obj.token:
+                continue
+        scored.append((threat,-obj.object_id,obj.object_id))
+    return (max(scored)[2],0) if scored else None
