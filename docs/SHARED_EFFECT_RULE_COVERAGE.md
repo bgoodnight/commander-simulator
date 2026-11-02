@@ -11,6 +11,8 @@ complete Oracle rules coverage or an accurate multiplayer win-rate engine.
 | `graveyard_recipes.py` | Graveyard owner, destination, type/subtype/supertype gates, new battlefield controller, tapped entry, counters, finite batch selection | Reassembling Skeleton, Persistent Specimen, Phyrexian Reclamation, Mortuary Mire, Oversold Cemetery, Lord of the Undead, Memorial to Folly, Lychguard, Nurgle's Conscription, Undying Malice |
 | `library_actions.py` | Ordered draw/mill/scry/surveil/reorder/shuffle/discard/put-back, chosen physical IDs | Existing draw/filter cards; Flayed One, Undead Butler, Mire Triton milling; exact standalone mill spells and safe creature ETB-mill imports |
 | `reviewed_utility_activations.py` | Source zone, mana/life/tap/sacrifice costs, printed target restrictions, condition, destination recipe | War Room, Mind Stone, Barren Moor and the graveyard sources above |
+| `reviewed_graveyard_spells.py` | Printed target count, owner, type eligibility, paid mana, sacrifice, destination, tapped/control entry, conditional draw and source shuffle | Cemetery Recruitment, Dread Return (hand cast only), Beacon of Unrest, Victimize |
+| `reviewed_entry_chains.py` | Physical entry IDs, finite trigger budget, host choice callback, deferred-trigger evidence | Technomancer → Flayed One; revived Grave Titan, Marionette Apprentice, Triarch Praetorian and other already-reviewed ETBs |
 
 For example, a newly imported ordinary creature with exactly:
 
@@ -40,8 +42,10 @@ sourced from actual available cards.
 - **Fail-closed import:** Complex Oracle clauses and multi-face cards require
   explicit review. Opt-in `safe` mode reports a provisional fidelity level.
 - **Death LKI and timing:** Observed death triggers use the existing pre-move
-  battlefield snapshot. Full priority, simultaneous triggers ordering, APNAP,
-  commander zone replacements, and player elimination remain limited.
+  battlefield snapshot. A finite physical ETB queue resolves newly reanimated
+  reviewed sources; it reports deferred triggers at its budget cap. It is
+  NOT simultaneous APNAP priority/stack fidelity. Commander replacements,
+  pending multi-ability choices and player elimination remain limited.
 - **Provenance:** Every visible activated/spell effect has a source card ID,
   source payment and physical zone transitions. Derived metrics should not
   be represented as exact win rates from the bounded pilot.
@@ -54,10 +58,10 @@ adjusting arguments over adding source-specific handlers.
 
 | Priority | Cross-deck impact / examples | Reusable extension still needed |
 |---|---|---|
-| 1 | Necron artifact recursion: Technomancer, Beacon of Unrest, Dread Return, Their Number Is Legion; Wretched Ranks Victimize and Cemetery Recruitment | Multi-step mill → graveyard filter → reanimate/retrieve with aggregate mana-value caps, source-paid spell resolution, correct exile/shuffle |
-| 2 | Shared death/sacrifice engines: Skullclamp, Nurgle's Rot, Undead Butler, Resurrection Orb, Necroskitter, Midnight Reaper and related triggers | Attachment-aware deaths, delayed return triggers, target legality and simultaneous event ordering. Existing parts are partially reviewed; do not double-trigger |
-| 3 | Reusable paid utility: Hedron Archive, Commander's Sphere, Infernal Idol, Cemetery Reaper, Lychguard, Cryptbreaker, Graveborn Muse | Extend existing utility cost container with variable draw, sacrifice/discard costs, subtype/zone targets and optional/conditional selectors |
-| 4 | Combat-triggered mill/recursion: Szarekh, Anrakyr, Necron Monolith, Canoptek Wraith, Grave Titan | Actual attack/defender/vehicle state and legal opponent choices, not just mock combat damage |
+| 1 | Necron multi-step recursion: Their Number Is Legion, Resurrection Orb, Out of the Tombs, and sacrifice-three Dread Return flashback | Fully timed alternative costs, delayed returns, exile replacements and additional complex graveyard spell lines; normal Dread Return and Technomancer already have reviewed physical recipes |
+| 2 | Shared death/sacrifice engines: Skullclamp, Nurgle's Rot, Undead Butler's death trigger, Resurrection Orb, Necroskitter and related triggers | Attachment-aware deaths, delayed return triggers, target legality and simultaneous APNAP ordering. Midnight Reaper's reviewed death sequence is implemented; Undead Butler's ETB mill is implemented but its death trigger is not |
+| 3 | Reusable paid utility: Hedron Archive, Commander's Sphere, Infernal Idol, Cemetery Reaper, Cryptbreaker, Graveborn Muse | Extend existing utility cost container with variable draw, sacrifice/discard costs, subtype/zone targets and optional/conditional selectors. Lychguard's source-paid legendary retrieval is implemented |
+| 4 | Combat-triggered mill/recursion: Szarekh, Anrakyr, Necron Monolith, Canoptek Wraith, Grave Titan | Actual attack/defender/vehicle state and legal opponent choices, not just mock combat damage. Grave Titan's ETB tokens are implemented; attack triggers still need their separate timing |
 | 5 | Replacement and layer effects: Kalitas, Trazyn, Mikaeus, Shard of the Void Dragon, The War in Heaven, Out of the Tombs | Shared replacement/continuous-effect layers and priority-aware event processing, not a loose text regex |
 | 6 | Spell-combo fidelity and copies: Underworld Breach, Magnus cost reducers, copied spells, flashback, buyback, cascade, conditional tutors | Central stack/priority and alternative-cost permissions reused by every deck; test finite loop bounds and actual resource conservation |
 
@@ -76,6 +80,6 @@ Useful checks:
 python -m commander_sim.named_effect_coverage --summary
 python -m commander_sim.deck_effect_audit
 python tools/audit_library_recipes.py --all
-python -m unittest tests.test_shared_event_recipes tests.test_shared_mill_recipes tests.test_shared_recursion_activations -v
+python -m unittest tests.test_shared_event_recipes tests.test_shared_mill_recipes tests.test_shared_recursion_activations tests.test_shared_graveyard_spells tests.test_reviewed_entry_chains -v
 python run_all_tests.py
 ```
