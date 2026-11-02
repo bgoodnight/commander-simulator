@@ -71,6 +71,10 @@ _SURVEIL_ONLY = re.compile(r"^Surveil ([1-3])\.$", re.I)
 _MILL_ONLY = re.compile(r"^(?:You )?[Mm]ill (a|one|two|three|four|five|six|seven|\d+) cards?\.$")
 _ENTRY_MILL = re.compile(
     r"^When this creature enters, mill (a|one|two|three|four|five|six|seven|\d+) cards?\.$")
+_ENTRY_DRAW = re.compile(
+    r"^(?:[A-Za-z][A-Za-z '’\-]{1,55} — )?"
+    r"When this creature enters, draw "
+    r"(a|one|two|three|four|five|six|seven|\d+) cards?\.$")
 
 
 def _quantity(word):
@@ -154,7 +158,8 @@ class ProvisionalProfile:
                            for x in self.library_actions)
                 or (self.library_actions and self.kind != "simple_spell")
                 or not isinstance(self.entry_actions,tuple)
-                or not all(isinstance(x,LibraryAction) and x.kind=="mill"
+                or not all(isinstance(x,LibraryAction)
+                           and x.kind in {"mill","draw"}
                            for x in self.entry_actions)
                 or (self.entry_actions and self.kind!="creature_body")):
             raise ValueError("Invalid provisional source descriptor")
@@ -252,19 +257,29 @@ def provisional_profile(raw):
             entry_tapped=True
     entry_actions=()
     if "creature" in types:
-        # A simple, complete mandatory ETB mill may be resolved physically.
-        # Remove only that EXACT sentence before rejecting any remaining
-        # unmodeled entry/replacement instructions.
-        lines=remainder.splitlines()
-        matches=[(i,_ENTRY_MILL.fullmatch(line.strip()))
-                 for i,line in enumerate(lines)]
-        accepted=[(i,m) for i,m in matches if m is not None]
-        if len(accepted)==1:
-            index,match=accepted[0]
+        # Compose only exact, complete mandatory entry sentences. Named
+        # ability labels may precede the printed entry-draw line. Any
+        # unrecognized extra enters/replacement clause still fails closed.
+        remainder_lines=[]
+        accepted=[]
+        for line in remainder.splitlines():
+            stripped=line.strip()
+            match=_ENTRY_MILL.fullmatch(stripped)
+            kind="mill" if match is not None else None
+            if match is None:
+                match=_ENTRY_DRAW.fullmatch(stripped)
+                kind="draw" if match is not None else None
+            if match is None:
+                remainder_lines.append(line)
+                continue
             count=_quantity(match.group(1))
-            if 1<=count<=7:
-                entry_actions=(LibraryAction("mill",count),)
-                remainder="\n".join(lines[:index]+lines[index+1:]).strip()
+            if not 1<=count<=7:
+                return None
+            accepted.append(LibraryAction(kind,count))
+        if len(accepted)>3:
+            return None
+        entry_actions=tuple(accepted)
+        remainder="\n".join(remainder_lines).strip()
     if _ENTRY.search(remainder) or _RESTRICT.search(remainder):
         return None
 
@@ -298,7 +313,7 @@ def provisional_profile(raw):
     if "creature" in types:
         return ProvisionalProfile(raw["oracle_id"],raw["oracle_text"],
                     mana_cost,"creature_body",entry_actions=entry_actions,
-                    omissions=(("Reviewed grammar only for explicit entry mill",
+                    omissions=(("Provisional grammar only for exact entry mill/draw",
                                 "Other printed abilities remain unreviewed",
                                 "No opposing priority or counterspell response")
                                if entry_actions else
