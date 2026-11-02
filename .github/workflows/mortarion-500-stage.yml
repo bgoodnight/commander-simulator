@@ -1,0 +1,162 @@
+name: Stage and review 500 Mortarion modeled games
+
+# Starts on merge into main; future repeats require manual dispatch unless workflow changes.
+on:
+  push:
+    branches: [main]
+    paths: [".github/workflows/mortarion-500-stage.yml"]
+  pull_request:
+    paths:
+      - ".github/workflows/mortarion-500-stage.yml"
+      - "tools/review_game_outcomes.py"
+  workflow_dispatch:
+
+permissions:
+  contents: write
+  actions: write
+
+concurrency:
+  group: mortarion-500-review-${{ github.ref }}
+  cancel-in-progress: false
+
+jobs:
+  smoke:
+    if: github.event_name == 'pull_request'
+    name: Verify merged pilot, report and five scenario contracts
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+      - name: Generate two real seeds per opponent scenario
+        run: |
+          mkdir -p dist/mortarion-smoke
+          for scenario in balanced aggressive control combo mixed; do
+            python tools/build_game_outcomes.py \
+              --deck mortarion_physical_final \
+              --scenario "$scenario" \
+              --rounds 3 --seeds 2 --examples 1 \
+              --pilot-style adaptive --provisional-mode safe \
+              --pilot-archetype auto \
+              --output "dist/mortarion-smoke/mortarion-$scenario.json"
+          done
+          python tools/review_game_outcomes.py \
+            --source dist/mortarion-smoke --seeds 2 --rounds 3 \
+            --json-output dist/mortarion-smoke-review.json \
+            --markdown-output dist/mortarion-smoke-review.md
+      - name: Validate production publisher contracts
+        run: python -m unittest tests.test_game_outcome_publishing -v
+
+  simulate:
+    if: github.event_name != 'pull_request'
+    name: Mortarion · ${{ matrix.scenario }} · 100 games
+    runs-on: ubuntu-latest
+    timeout-minutes: 90
+    strategy:
+      fail-fast: false
+      matrix:
+        scenario: [balanced, aggressive, control, combo, mixed]
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+      - name: Generate 100 authentic 30-round games from merged adaptive pilot
+        run: |
+          mkdir -p dist/outcomes
+          python tools/build_game_outcomes.py \
+            --deck mortarion_physical_final \
+            --scenario "${{ matrix.scenario }}" \
+            --seeds 100 --start-seed 0 --rounds 30 \
+            --pilot-style adaptive --pilot-archetype auto \
+            --provisional-mode safe --examples 3 \
+            --output "dist/outcomes/mortarion_physical_final-${{ matrix.scenario }}.json"
+      - name: Preserve immutable original batch
+        uses: actions/upload-artifact@v4
+        with:
+          name: mortarion-500-${{ matrix.scenario }}-${{ github.sha }}
+          path: dist/outcomes/*.json
+          if-no-files-found: error
+          retention-days: 90
+
+  review-and-publish:
+    if: github.event_name != 'pull_request'
+    name: Review and publish Mortarion games, no other decks
+    needs: simulate
+    runs-on: ubuntu-latest
+    timeout-minutes: 35
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+      - name: Retrieve five completed scenarios
+        uses: actions/download-artifact@v4
+        with:
+          pattern: mortarion-500-*-${{ github.sha }}
+          path: dist/incoming-outcomes
+          merge-multiple: true
+      - name: Verify 500 runs and audit outcome and pilot evidence
+        run: |
+          python tools/review_game_outcomes.py \
+            --source dist/incoming-outcomes --deck mortarion_physical_final \
+            --seeds 100 --rounds 30 \
+            --json-output dist/review/mortarion-500-review.json \
+            --markdown-output dist/review/mortarion-500-review.md
+          cat dist/review/mortarion-500-review.md >> "$GITHUB_STEP_SUMMARY"
+          python -m unittest tests.test_game_outcome_publishing -v
+      - name: Build verified Pages-compatible outcome files
+        run: |
+          python tools/publish_game_outcomes.py \
+            --source dist/incoming-outcomes \
+            --output dist/published-game-outcomes \
+            --engine-commit "${{ github.sha }}"
+          python - <<'PY'
+          from pathlib import Path
+          from tools.build_pages_deck_lab import build
+          result=build(Path("dist/mortarion-preview"),
+                       outcome_source=Path("dist/published-game-outcomes"))
+          assert len([name for name in result["asset_sha256"]
+                      if name.startswith("game-outcomes/")
+                      and not name.endswith("manifest.json")])==5
+          PY
+          node --test tests/pages_game_outcomes.test.cjs
+      - name: Retain verified data and review report
+        uses: actions/upload-artifact@v4
+        with:
+          name: mortarion-500-evidence-and-review-${{ github.sha }}
+          path: |
+            dist/published-game-outcomes/*.json
+            dist/review/*.json
+            dist/review/*.md
+          if-no-files-found: error
+          retention-days: 90
+      - name: Publish only this Mortarion cohort
+        run: |
+          git fetch origin main
+          if ! git diff --quiet HEAD origin/main -- \
+            commander_sim/ decklists/ simulator/card_data/ \
+            tools/build_game_outcomes.py tools/review_game_outcomes.py \
+            tools/publish_game_outcomes.py \
+            .github/workflows/mortarion-500-stage.yml; then
+            echo "Engine or deck changed during this batch; refusing stale publication."
+            exit 1
+          fi
+          git switch -C mortarion-outcome-release origin/main
+          mkdir -p web/pages/data/game-outcomes
+          rsync -a --delete dist/published-game-outcomes/ web/pages/data/game-outcomes/
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add -A web/pages/data/game-outcomes/
+          if ! git diff --cached --quiet; then
+            git commit -m "Publish reviewed Mortarion 500-game outcome cohort"
+            git push origin HEAD:main
+          fi
+      - name: Trigger verified static site publisher
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: gh workflow run deck-lab-pages.yml --ref main
