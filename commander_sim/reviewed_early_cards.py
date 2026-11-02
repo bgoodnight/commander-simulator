@@ -89,9 +89,12 @@ REVIEWED_BY_DECK = {
 # accounted for as a limitation when comparing full game power.
 _ADDITIONAL_RECURSION_BODIES = {
     "wretched_ranks": {
+        "Cemetery Reaper": {
+            "oracle_id":"70fa209f-5e79-44de-81ce-1d8d0d8c1006",
+            "oracle_text":"Other Zombie creatures you control get +1/+1.\n{2}{B}, {T}: Exile target creature card from a graveyard. Create a 2/2 black Zombie creature token."},
         "Lord of the Undead": {
             "oracle_id":"7714af0e-41d9-4609-967f-27233b46055f",
-            "oracle_text":"Other Zombie creatures get +1/+1.\\n{1}{B}, {T}: Return target Zombie card from your graveyard to your hand."},
+            "oracle_text":"Other Zombie creatures get +1/+1.\n{1}{B}, {T}: Return target Zombie card from your graveyard to your hand."},
         "Persistent Specimen": {
             "oracle_id":"5f4ad578-f2c4-47f6-8080-8fbc17383f6f",
             "oracle_text":"{2}{B}: Return this card from your graveyard to the battlefield tapped."},
@@ -272,11 +275,11 @@ _PHYSICAL_MORTARION_SAFE_BODIES = {
     "Thrashing Wumpus": {"oracle_id": "ef220824-fab4-4d8e-9ba4-65ff5ba1db66",
         "oracle_text": "{B}: This creature deals 1 damage to each creature and each player."},
     "Plague Spitter": {"oracle_id": "5feedfb0-30e6-400d-9e28-d541ea1aa14e",
-        "oracle_text": "At the beginning of your upkeep, this creature deals 1 damage to each creature and each player.\\nWhen this creature dies, it deals 1 damage to each creature and each player."},
+        "oracle_text": "At the beginning of your upkeep, this creature deals 1 damage to each creature and each player.\nWhen this creature dies, it deals 1 damage to each creature and each player."},
     "Plague Drone": {"oracle_id": "9552fc97-9e6d-4307-bf58-30bf956356bf",
-        "oracle_text": "Flying\\nRot Fly — If an opponent would gain life, that player loses that much life instead."},
+        "oracle_text": "Flying\nRot Fly — If an opponent would gain life, that player loses that much life instead."},
     "Stuffy Doll": {"oracle_id": "499dceab-1890-49c8-b35d-b059a1dc950f",
-        "oracle_text": "Indestructible\\nAs this creature enters, choose a player.\\nWhenever this creature is dealt damage, it deals that much damage to the chosen player.\\n{T}: This creature deals 1 damage to itself."},
+        "oracle_text": "Indestructible\nAs this creature enters, choose a player.\nWhenever this creature is dealt damage, it deals that much damage to the chosen player.\n{T}: This creature deals 1 damage to itself."},
     "Crypt Rats": {"oracle_id": "104095ed-55e3-408e-bf70-4fe06bb16d2f",
         "oracle_text": "{X}: This creature deals X damage to each creature and each player. Spend only black mana on X."},
     "Darksteel Myr": {"oracle_id": "f90fe86c-5cca-483b-93c2-6e856fa01c88",

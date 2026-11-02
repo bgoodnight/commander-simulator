@@ -302,6 +302,7 @@ def choose_utility_activation(zones,seat,life,mana_service,catalog,
     """
     from .reviewed_utility_activations import reviewed_utility
     from .reviewed_sacrifice_actions import SACRIFICE_MODES
+    from .graveyard_recipes import GraveyardRecipe,eligible_graveyard_cards
     hand_size=len(zones.ids(seat,"hand"))
     land_count=sum("land" in o.types and o.controller==seat
                    for o in zones.kernel.on_battlefield())
@@ -319,8 +320,20 @@ def choose_utility_activation(zones,seat,life,mana_service,catalog,
             continue
         if life.total(seat)<12 and (rule.life or rule.life_by_commander_colors):
             continue
-        excluded=(source.object_id,) if rule.tap else ()
-        if mana_service.plan(seat,rule.mana,excluded_source_ids=excluded) is None:
+        if rule.life_loss_after and life.total(seat)<=rule.life_loss_after+4:
+            continue
+        tap_cost_ids=()
+        if rule.tap_count:
+            cost_options=sorted((o for o in zones.kernel.on_battlefield()
+                if o.controller==seat and not o.tapped
+                and "creature" in o.types and rule.tapped_subtype in o.subtypes),
+                key=lambda o:(not o.token,o.power,o.object_id))
+            if len(cost_options)<rule.tap_count:
+                continue
+            tap_cost_ids=tuple(o.object_id for o in cost_options[:rule.tap_count])
+        excluded=tuple(((source.object_id,) if rule.tap else ()) + tap_cost_ids)
+        if (rule.mana and
+            mana_service.plan(seat,rule.mana,excluded_source_ids=excluded) is None):
             continue
         target=None
         if rule.operation=="creature_to_hand":
@@ -335,6 +348,18 @@ def choose_utility_activation(zones,seat,life,mana_service,catalog,
                 continue
             target=max(target_choices,key=lambda oid: (
                 catalog.get(zones.kernel.get(oid).card.name,{}).get("cmc",0),-oid))
+        elif rule.operation=="exile_graveyard_token":
+            candidates=eligible_graveyard_cards(
+                zones,seat,GraveyardRecipe("exile","any",
+                                          frozenset({"creature"})))
+            if not candidates:
+                continue
+            # Prefer disrupting an opposing graveyard before exiling our own
+            # future reanimation piece. No commander or card-name tables.
+            target=max(candidates,key=lambda oid: (
+                zones.kernel.get(oid).owner!=seat,
+                catalog.get(zones.kernel.get(oid).card.name,{}).get("cmc",0),
+                -oid))
         elif rule.operation=="all_legendary_creatures_to_hand":
             if not any("creature" in zones.kernel.get(oid).types
                   and rule.target_supertypes <= zones.kernel.get(oid).card.supertypes
@@ -347,6 +372,10 @@ def choose_utility_activation(zones,seat,life,mana_service,catalog,
             if not has_outlet:
                 continue
         elif rule.operation=="draw":
+            if len(zones.ids(seat,"library"))<rule.draw_count:
+                continue
+            if rule.tap_count and hand_size>=5:
+                continue
             if rule.discard:
                 if land_count<4:
                     continue
@@ -362,7 +391,7 @@ def choose_utility_activation(zones,seat,life,mana_service,catalog,
             if black<2:
                 continue
         priority={"creature_to_hand":0,"all_legendary_creatures_to_hand":0,
-                  "self_to_battlefield_tapped":1,
+                  "exile_graveyard_token":1,"self_to_battlefield_tapped":1,
                   "draw":2,"drain_opponents":3}[rule.operation]
         sources.append((priority,source.object_id,target))
     if not sources:

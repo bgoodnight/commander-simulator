@@ -21,7 +21,8 @@ class RockEarlyTurnTests(unittest.TestCase):
                 self.assertEqual(row["mana_rock_count"],
                                  sum(obj["name"] in {
                                      "Sol Ring", "Mind Stone", "Arcane Signet",
-                                     "Charcoal Diamond", "Commander's Sphere"
+                                     "Charcoal Diamond", "Commander's Sphere",
+                                     "Hedron Archive", "Infernal Idol"
                                  } for obj in state["object_views"]["battlefield"]))
         self.assertGreater(len(rocks), 0)
 

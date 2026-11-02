@@ -1157,8 +1157,12 @@ def run_bounded_early_game(deck_key, *, seed=0, turns=6, mulligan="one-free", pr
                     "card":utility.source_name,
                     "operation":utility.operation,
                     "moved_ids":list(utility.new_object_ids),
+                    "created_token_ids":list(utility.created_token_ids),
+                    "tapped_cost_ids":list(utility.tapped_cost_ids),
+                    "drawn_ids":list(utility.drawn_ids),
                     "paid_source_ids":list(utility.paid_source_ids),
                     "life_paid":utility.life_paid,
+                    "life_lost_after":utility.life_lost_after,
                     "fidelity":"bounded_utility_policy"})
         # Generic composed-ability policy is separate from the rule executor.
         # A single conservative paid activation may generate useful life loss.
