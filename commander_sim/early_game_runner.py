@@ -74,6 +74,7 @@ from .resource_development import assess_resources, choose_tutor_target
 from .pilot_policy import (
     STYLES,ARCHETYPES,PilotContext,infer_deck_signals,
     infer_pilot_archetype,choose_legal_option)
+from .pilot_tactics import choose_discretionary_sacrifice
 from .resource_pilot import (choose_token_mana_sacrifice, plan_common_spell,
                              ritual_enables_spell, choose_composed_activation,
                              choose_variable_end_step_payments,
@@ -1267,55 +1268,26 @@ def run_bounded_early_game(deck_key, *, seed=0, turns=6, mulligan="one-free", pr
                            "destination_object_id":cast.destination_id,
                            "drawn_ids":list(cast.drawn_ids),
                            "fidelity":"bounded_reviewed_buyback"})
-        # No-opponent, single-action-per-reviewed-source sacrifice policy.
-        # Sacrifices are costs paid from real battlefield objects; they can
-        # activate reviewed death triggers, never fabricated combo events.
-        used_sacrifice_sources=set()
-        for source in sorted(list(kernel.on_battlefield()),key=lambda x:x.object_id):
-            if (source.object_id in used_sacrifice_sources
-                    or source.object_id not in kernel.objects
-                    or source.controller!=0
-                    or source.card.name not in SACRIFICE_MODES):
-                continue
+        # One optional sacrifice, scored against live reviewed death triggers.
+        # Never sacrifice a useful body just because a free outlet exists.
+        sacrifice_choice=choose_discretionary_sacrifice(
+            zones,0,life,mana_service,raw_by_name,death_engine,
+            turn=turn,entered_on_turn=entered_on_turn,
+            archetype=pilot_strategy.primary)
+        if sacrifice_choice is not None:
+            source=kernel.get(sacrifice_choice.source_id)
             mode=SACRIFICE_MODES[source.card.name]
-            if mode.action in {'colorless_mana','any_color_mana','black_mana_by_value'}:
-                continue  # no speculative late sacrifice after casting window
-            if mode.tap and (source.tapped or
-                ("creature" in source.types
-                 and entered_on_turn.get(source.object_id,0)>=turn
-                 and "haste" not in source.keywords)):
-                continue
-            victims=[obj for obj in kernel.on_battlefield()
-                if obj.controller==0 and "creature" in obj.types
-                and "commander" not in obj.card.supertypes
-                and (not mode.sacrifice_other or obj.object_id!=source.object_id)
-                and (not mode.victim_color or (
-                    obj.card.colors is not None
-                    and mode.victim_color in obj.card.colors))]
-            if not victims:
-                continue
-            # Sacrifice small expendable tokens first; don't choose a combo
-            # sacrifice across multiple iterations of the same ability.
-            victims.sort(key=lambda obj: (
-                0 if obj.token else 1,
-                0 if obj.object_id!=source.object_id else 2,
-                obj.power,obj.object_id))
-            victim=victims[0]
             resolved=activate_reviewed_sacrifice(
-                zones,life,source.object_id,victim.object_id,raw_by_name,
+                zones,life,sacrifice_choice.source_id,
+                sacrifice_choice.victim_id,raw_by_name,
                 mana_service=mana_service,turn=turn,
                 tap_ready=(not source.tapped and (
                     "creature" not in source.types
                     or entered_on_turn.get(source.object_id,0)<turn
                     or "haste" in source.keywords)),
-                death_engine=death_engine,scry_to_bottom=False,
-                mana_color=("R" if "R" in colors else
-                            "B" if "B" in colors else
-                            next(iter(sorted(colors))))
-                            if mode.action=="any_color_mana" else None)
+                death_engine=death_engine,scry_to_bottom=False)
             if resolved is None:
-                continue
-            used_sacrifice_sources.add(source.object_id)
+                raise AssertionError("Reviewed sacrifice choice became unavailable")
             events.append({
                 "type":"reviewed_sacrifice_activated","card":resolved.source_name,
                 "source_object_id":resolved.source_id,
@@ -1325,7 +1297,18 @@ def run_bounded_early_game(deck_key, *, seed=0, turns=6, mulligan="one-free", pr
                 "drawn_ids":list(resolved.drawn_ids),
                 "mana_added":list(resolved.mana_added),
                 "death_trigger_count":resolved.death_trigger_count,
-                "fidelity":"bounded_no_opponent_priority"})
+                "fidelity":"bounded_reviewed_effect_scored"})
+            pilot_decisions.append({
+                "round":turn,"kind":"sacrifice","card":resolved.source_name,
+                "source_object_id":resolved.source_id,
+                "victim_object_id":resolved.victim_old_id,
+                "candidate_count":1,"score":sacrifice_choice.score,
+                "role":"sacrifice",
+                "factors":list(sacrifice_choice.factors),
+                "personality":pilot_style,
+                "archetype":pilot_strategy.primary,
+                "fidelity":"reviewed_activated_sacrifice_choice"})
+            resolve_reactive()
         # One verified conditional graveyard creature cast per turn. Do not
         # create a synthetic loop: recursion must draw on real mana and a
         # currently controlled creature of the required subtype. The bounded
