@@ -67,6 +67,10 @@ def compact_run(run):
         "mode": run["mode"],
         "mulligan": run["mulligan"],
         "events": run["events"],
+        # Backward-compatible additive fields: historic goldfish archives
+        # deliberately remain "not_evaluated", never invented wins.
+        "life_history":run.get("life_history",[]),
+        "outcome":run.get("outcome"),
         "state_snapshots": [
             {k: state[k] for k in (
                 "turn", "battlefield", "hand", "graveyard", "exile",
