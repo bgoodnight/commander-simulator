@@ -1,0 +1,50 @@
+name: Audit Mortarion resource-engine and pilot choices
+on:
+  workflow_dispatch:
+  push:
+    branches: [main]
+    paths:
+      - ".github/workflows/mortarion-resource-audit.yml"
+permissions:
+  contents: read
+jobs:
+  audit:
+    runs-on: ubuntu-latest
+    timeout-minutes: 35
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      - name: Verify shared physical effect contracts
+        run: |
+          python -m unittest tests.test_mortarion_death_extensions tests.test_reviewed_common_spells tests.test_reviewed_reactive_triggers tests.test_reviewed_commander_cast -v
+      - name: Run pinned 100-seed 10-turn Mortarion batch
+        run: |
+          python tools/run_physical_deck_trials.py --deck mortarion_physical_final --seeds 100 --turns 10 --output mortarion-audit.json
+      - name: Summarize behavior and identify pilot red flags
+        run: |
+          python - <<'PY'
+          import json
+          from collections import Counter
+          r=json.load(open("mortarion-audit.json",encoding="utf-8"))
+          counts=Counter(r["events"])
+          print("SIMULATION_AUDIT_SUMMARY",json.dumps({
+            "deck":r["deck_key"],"seeds":r["seed_count"],"turns":r["turns"],
+            "last_turn":r["batch"]["turns"][-1],
+            "commander_casts":counts["reviewed_commander_cast"],
+            "damage_activations":counts["reviewed_composed_activated"],
+            "x_token_end_steps":counts["reviewed_composed_end_step"],
+            "spell_resolutions":counts["reviewed_common_spell_resolved"],
+            "mana_sacrifices":counts["reviewed_precast_mana_sacrifice"],
+            "reactive_triggers":counts["reviewed_reactive_trigger"],
+            "ritual_casts":counts["reviewed_ritual_cast"],
+            "unsupported_top":r["unsupported_hand_mentions"],
+            "sample_pilot_turns":r["sample_runs"][:2],
+          },sort_keys=True),flush=True)
+          PY
+      - uses: actions/upload-artifact@v4
+        with:
+          name: mortarion-resource-audit-100-seeds-10-turns
+          path: mortarion-audit.json
+          retention-days: 30
