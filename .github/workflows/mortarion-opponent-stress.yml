@@ -1,0 +1,42 @@
+name: Mortarion physical opponent stress and narrative audit
+# Runs real physical cards against seeded abstract three-seat pressure.
+on:
+  workflow_dispatch:
+  push:
+    branches: [main]
+    paths:
+      - ".github/workflows/mortarion-opponent-stress.yml"
+permissions:
+  contents: read
+jobs:
+  pressure:
+    runs-on: ubuntu-latest
+    timeout-minutes: 35
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      - name: Test shared opponent pressure on authoritative zones
+        run: |
+          python -m unittest tests.test_opponent_stress tests.test_reviewed_removal_spells -v
+      - name: Execute seeded baseline and four opponent pressure archetypes
+        run: |
+          python tools/run_mortarion_opponent_stress.py --seeds 24 --turns 10 --output mortarion-opponent-stress.json
+      - name: Print sample narrative sequences
+        run: |
+          python - <<'PY'
+          import json
+          r=json.load(open("mortarion-opponent-stress.json"))
+          for scenario,entry in r["scenarios"].items():
+              for game in entry["narratives"][:1]:
+                  print("NARRATIVE",json.dumps({
+                      "scenario":scenario,
+                      "roles":game["seat_roles"],
+                      "turns":game["turns"]},separators=(",",":")),flush=True)
+          PY
+      - uses: actions/upload-artifact@v4
+        with:
+          name: mortarion-opponent-pressure-scenarios
+          path: mortarion-opponent-stress.json
+          retention-days: 30
