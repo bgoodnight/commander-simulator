@@ -207,7 +207,6 @@ def activate_utility(zones,life,seat,source_id,catalog,mana_service,colors,
         # Collect before payment, and include all eligible owned cards.
         recipe=GraveyardRecipe("hand","own",frozenset({"creature"}),
              required_supertypes=rule.target_supertypes)
-        from .graveyard_recipes import eligible_graveyard_cards
         batch=eligible_graveyard_cards(zones,seat,recipe)
     else:
         batch=()
