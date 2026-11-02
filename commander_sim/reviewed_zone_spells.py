@@ -103,7 +103,9 @@ class ZoneSpellEngine:
             return None
         if on_cast is not None:
             on_cast(committed.ticket)
-        self.zones.resolve(committed.ticket)
+        # Reviewed resolution is supplied explicitly. The stack host must
+        # not infer a spell effect from an instant card name.
+        self.zones.resolve(committed.ticket,lambda kernel,ticket:None)
         moved=[]
         if rule.operation=="opponent_graveyard_theft":
             target=kernel.get(target_id)
