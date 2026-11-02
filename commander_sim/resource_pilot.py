@@ -293,7 +293,7 @@ def choose_variable_end_step_payments(zones, seat, life, mana_service,
 
 
 def choose_utility_activation(zones,seat,life,mana_service,catalog,
-                              *,hand_cast_reviewed):
+                              *,hand_cast_reviewed,tap_ready=None):
     """Select at most one value-positive utility activation at this boundary.
 
     This is an explicit policy over registered UtilityRule parameters, not
@@ -313,7 +313,9 @@ def choose_utility_activation(zones,seat,life,mana_service,catalog,
         rule=reviewed_utility(source.card.name,raw)
         if (rule is None or source.card.card_id!=rule.oracle_id
                 or source.zone!=rule.source_zone
-                or rule.tap and source.tapped):
+                or rule.tap and source.tapped
+                or rule.tap_creature and (
+                    tap_ready is None or not tap_ready(source))):
             continue
         if life.total(seat)<12 and (rule.life or rule.life_by_commander_colors):
             continue
@@ -326,11 +328,18 @@ def choose_utility_activation(zones,seat,life,mana_service,catalog,
                 continue
             target_choices=[oid for oid in zones.ids(seat,"graveyard")
                 if "creature" in zones.kernel.get(oid).types
+                and rule.target_subtypes<=zones.kernel.get(oid).subtypes
+                and rule.target_supertypes<=zones.kernel.get(oid).card.supertypes
                 and hand_cast_reviewed(zones.kernel.get(oid))]
             if not target_choices:
                 continue
             target=max(target_choices,key=lambda oid: (
                 catalog.get(zones.kernel.get(oid).card.name,{}).get("cmc",0),-oid))
+        elif rule.operation=="all_legendary_creatures_to_hand":
+            if not any("creature" in zones.kernel.get(oid).types
+                  and rule.target_supertypes <= zones.kernel.get(oid).card.supertypes
+                  for oid in zones.ids(seat,"graveyard")):
+                continue
         elif rule.operation=="self_to_battlefield_tapped":
             has_outlet=any(o.controller==seat and o.zone=="battlefield"
                            and o.card.name in SACRIFICE_MODES
@@ -352,7 +361,8 @@ def choose_utility_activation(zones,seat,life,mana_service,catalog,
                       if o.controller==seat)
             if black<2:
                 continue
-        priority={"creature_to_hand":0,"self_to_battlefield_tapped":1,
+        priority={"creature_to_hand":0,"all_legendary_creatures_to_hand":0,
+                  "self_to_battlefield_tapped":1,
                   "draw":2,"drain_opponents":3}[rule.operation]
         sources.append((priority,source.object_id,target))
     if not sources:
