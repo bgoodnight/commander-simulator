@@ -147,6 +147,15 @@ class GameBatchTests(unittest.TestCase):
         self.assertEqual(trend[1]["alive_games"]["0"],2)
         self.assertNotIn("win_rate",result["summary"])
 
+    def test_batch_runtime_failure_identifies_exact_seed_and_cohort(self):
+        def faulty(deck_key, **kwargs):
+            if kwargs["seed"]==2:
+                raise ValueError("inconsistent reviewed interaction")
+            return self.fake(deck_key,**kwargs)
+        with self.assertRaisesRegex(
+                RuntimeError,r"deck=necron_dynasties scenario=balanced seed=2 rounds=20"):
+            generate("necron_dynasties",seeds=3,rounds=20,runner=faulty)
+
     def test_batch_invalid_configuration_fails_closed(self):
         for kwargs in ({"rounds":31},{"seeds":0},{"scenario":"real_decks"},
                        {"examples":4},{"start_seed":-1}):
