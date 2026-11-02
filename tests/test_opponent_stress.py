@@ -98,9 +98,12 @@ class OpponentPressureTests(unittest.TestCase):
             keywords=frozenset({"deathtouch"}),coverage="approx"),
             0,"battlefield")
         adv=self.stress("aggressive",seed=3)
-        adv._spawn(1,0,"aggro")
-        attacker=adv.events[-1].object_id
-        adv._combat(1,"aggro",turn=1)
+        attacker=self.zones.add(self.C(
+            "test:attacker","Attacker",frozenset({"creature"}),
+            base_power=2,base_toughness=2,coverage="approx"),
+            1,"battlefield",token=True)
+        adv._born[attacker]=0
+        adv._combat(1,"aggro",turn=1,defender=0)
         self.assertNotIn(attacker,self.kernel.objects)
         self.assertTrue(self.zones.assert_consistent())
 
