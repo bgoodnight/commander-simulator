@@ -245,6 +245,8 @@
   }
   function statBadge(icon,label,value,delta,kind){
     const chip=el("span","replay-turn-stat "+statChangeClass(delta,kind));
+    chip.setAttribute("data-topic",kind);
+    chip.title="Expand this round to inspect "+label.toLowerCase()+" evidence";
     const amount=value===null||value===undefined?"—":String(value);
     chip.append(el("span","replay-turn-stat-icon",icon),
       el("span","replay-turn-stat-copy",label),
@@ -334,7 +336,10 @@
         combat.taken?"♥ −"+combat.taken+" recorded damage":null,
         combat.defended?"◈ "+combat.defended+" attacks blocked":null
       ].filter(Boolean).join(" · ");
-      summary.appendChild(el("span","replay-turn-combat",combatText));
+      const impact=el("span","replay-turn-combat",combatText);
+      impact.setAttribute("data-topic","combat");
+      impact.title="Expand this round to inspect recorded combat";
+      summary.appendChild(impact);
     }
     summary.appendChild(el("span","replay-turn-expand","Explore"));
     wrap.appendChild(summary);
@@ -380,7 +385,17 @@
       focusButtons.push([topic,button]);
     }
     tray.append(choices,detail);body.appendChild(tray);
-    showFocus("creatures");
+    const suggested=creaturesDelta!==null&&creaturesDelta!==0?"creatures":
+      healthDelta!==null&&healthDelta!==0?"life":
+      combat.dealt||combat.taken?"combat":
+      landDelta!==null&&landDelta!==0?"lands":"hand";
+    showFocus(suggested);
+    // The entire row is a native <summary>. Clicking a particular stat
+    // both expands the round and selects its focused evidence tray.
+    summary.onclick=event=>{
+      const topic=event.target.closest?.("[data-topic]")?.getAttribute("data-topic");
+      if(topic)showFocus(topic);
+    };
 
     const table=el("details","replay-table-context");
     table.appendChild(el("summary",null,
