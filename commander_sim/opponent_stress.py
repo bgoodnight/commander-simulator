@@ -409,6 +409,14 @@ class BoundedOpponentPressure:
                 role=="combo" and turn % 3 == 0)
             if spawn and len(on_board)<5:
                 self._spawn(seat,turn,role)
+            # Seeded physical hand turnover permits realistic discard triggers.
+            if turn>=3 and self.rng.random()<(0.25 if role=="value" else 0.12):
+                if self.zones.ids(seat,"library"):
+                    old=self.zones.ids(seat,"library")[-1]
+                    hand=self.zones.move(old,"hand","draw")
+                    discarded=self.zones.discard(seat,hand)
+                    self.events.append(OpponentEvent(
+                        turn,seat,role,"abstract_discard",discarded,1,seat))
             should_exile=(
                 role=="control" and turn in {4,7,9}
                 and self.rng.random()<0.74 or
