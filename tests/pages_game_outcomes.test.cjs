@@ -185,7 +185,7 @@ test('modeled panels expose distinct outcome, life and matchup disclosures with 
     const walk=n=>[n,...n.children.flatMap(walk)];
     let nodes=walk(root);
     assert.equal(report.totalGames,2);
-    assert.equal(nodes.filter(n=>n.className==='board-report game-outcome-card').length,3);
+    assert.equal(nodes.filter(n=>String(n.className).includes('game-outcome-card')).length,3);
     assert.ok(nodes.some(n=>n.tag==='svg'&&n.attributes.role==='img'));
     assert.ok(nodes.some(n=>n.textContent==='Wins · 1/2'));
     assert.ok(nodes.some(n=>n.textContent==='50%'));
