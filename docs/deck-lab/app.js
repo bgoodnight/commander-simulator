@@ -458,7 +458,8 @@ function renderReplay(){
   replayDownloads.get(file).then(payload=>{
     if(selected!==key||selectedDeck()?.deck_sha256!==hash)return;
     window.CommanderReplay.render(root,payload,{
-      deckKey:key,deckHash:hash,lookup:cardInfo,openCard:showCard
+      deckKey:key,deckHash:hash,commanderName:deck.commander,
+      lookup:cardInfo,openCard:showCard
     });
   }).catch(error=>{
     if(selected!==key||selectedDeck()?.deck_sha256!==hash)return;

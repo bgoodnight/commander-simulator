@@ -117,7 +117,7 @@
   }
   function append(parent,...nodes){nodes.forEach(node=>parent.appendChild(node));return parent}
   function displayAmount(value){return typeof value==="number"?String(value):"Not recorded"}
-  function seatName(seat){return seat.seat===0?"Mortarion · You":seat.label+" · "+(seat.role||"opponent")}
+  function seatName(seat){return seat.seat===0?(seat.label||"Your commander")+" · You":seat.label+" · "+(seat.role||"opponent")}
   function panelHeading(eyebrow,heading){
     const box=el("div","replay-intro");
     box.append(el("span","eyebrow",eyebrow),el("h2","replay-title",heading));
@@ -292,7 +292,7 @@
       combat:"These are selected, abstract combat events. Specific attacking or blocking cards and complete combat damage assignments are not available."
     }[topic];
   }
-  function roundSection(round,previous,seats,lookup,openCard,index){
+  function roundSection(round,previous,seats,lookup,openCard,index,commanderName){
     const snapshot=statsForRound(round,0)||{};
     const life=typeof snapshot.life==="number"?snapshot.life:null;
     const healthDelta=changeIn(round,previous,"life");
@@ -322,7 +322,7 @@
     const lifeLabel=life!==null?life+" / "+STARTING_LIFE:"—";
     const lifeChip=statBadge("♥","Life",lifeLabel,healthDelta,"life");
     lifeChip.title="End-of-round life / starting 40 (not a maximum)";
-    const commander=typeof lookup==="function"?lookup("Mortarion, Daemon Primarch"):null;
+    const commander=typeof lookup==="function"&&commanderName?lookup(commanderName):null;
     if(validateCard(commander)){
       const portrait=el("img","replay-life-portrait");portrait.alt="";
       portrait.src=commander.art||commander.image;portrait.loading="lazy";
@@ -450,9 +450,13 @@
       Object.keys(data.scenarios)[0];
     let gameId=null;
     const lookup=options.lookup,openCard=options.openCard;
+    const commanderName=options.commanderName||
+      Object.values(data.scenarios).flatMap(entry=>entry.games||[])
+        .find(game=>game.seats?.some(seat=>seat.seat===0))?.seats
+        .find(seat=>seat.seat===0)?.label||"Your commander";
     function draw(){
       root.replaceChildren();
-      const heading=panelHeading("Example games · Mortarion",
+      const heading=panelHeading("Example games · "+commanderName,
         "Opponent pressure & turn progression");
       heading.appendChild(el("p","replay-lead-small",
         "Your board first, recorded actions on demand · "+data.seeds_per_scenario+
@@ -494,9 +498,9 @@
           "Individual samples may differ significantly and can exceed the starting 40 life."),
         takeaway("Commander access",
           cast===null?"Not recorded":cast+" / "+summary.seeds,
-          "Mortarion casts within the horizon",
+          "Commander casts within the horizon",
           cast===null?"The source summary did not report commander-cast timing.":
-          never+" run"+(never===1?"":"s")+" did not cast Mortarion within the "+
+          never+" run"+(never===1?"":"s")+" did not cast "+commanderName+" within the "+
           data.round_horizon+"-round horizon. These counts reflect reviewed casts; "+
           "commander board presence at the end is not guaranteed."),
         takeaway("Reviewed removal",
@@ -544,7 +548,7 @@
 
       const timeline=el("div","replay-timeline");
       game.rounds.forEach((round,i)=>timeline.appendChild(
-        roundSection(round,game.rounds[i-1]||null,game.seats,lookup,openCard,i)));
+        roundSection(round,game.rounds[i-1]||null,game.seats,lookup,openCard,i,commanderName)));
       section.appendChild(timeline);
       section.appendChild(el("p","replay-endline",
         game.eliminated?"Seat 0 was eliminated during this sample.":
