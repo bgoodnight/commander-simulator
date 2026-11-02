@@ -9,6 +9,7 @@ from .generic_cast import ReviewedCreatureCast, cast_reviewed_spell
 from .physical_common_effects import CardQuantity, draw_physical_cards
 from .reviewed_token_spells import TokenBlueprint,create_reviewed_token_batches
 from .provisional_import import provisional_profile
+from .library_actions import resolve_library_actions, required_draws, LibraryAction
 
 
 @dataclass(frozen=True)
@@ -21,6 +22,11 @@ class ProvisionalSpellOutcome:
     paid_source_ids: tuple[int,...]
     resolved_zone_id: int
     fidelity: str = "provisional_partial"
+    library_steps: tuple[dict, ...] = ()
+    discarded_ids: tuple[int, ...] = ()
+    surveilled_ids: tuple[int, ...] = ()
+    bottomed_ids: tuple[int, ...] = ()
+    returned_ids: tuple[int, ...] = ()
 
 
 def cast_provisional_spell(zones, life, seat, object_id, catalog, colors,
@@ -44,8 +50,10 @@ def cast_provisional_spell(zones, life, seat, object_id, catalog, colors,
             or obj.card.types not in (frozenset({"instant"}),
                                        frozenset({"sorcery"}))):
         raise ValueError("Source-unverified or unsupported spell")
-    if (profile.mode in {"draw","draw_lose"}
-            and len(zones.ids(seat,"library"))<profile.amount):
+    draw_need = (required_draws(profile.library_actions)
+                 if profile.library_actions else
+                 profile.amount if profile.mode in {"draw","draw_lose"} else 0)
+    if len(zones.ids(seat,"library")) < draw_need:
         return None
     if profile.life_amount and life.total(seat)<=profile.life_amount:
         return None
@@ -59,13 +67,13 @@ def cast_provisional_spell(zones, life, seat, object_id, catalog, colors,
         on_cast(commit.ticket)
     drawn=[]
     created=[]
+    library_outcomes=[]
     def apply_effect(kernel,ticket):
-        if profile.mode in {"draw","draw_lose"}:
-            outcome=draw_physical_cards(
-                zones,seat,CardQuantity(profile.amount))
-            if not outcome.complete:
-                raise AssertionError("Provisional draw feasibility changed")
-            drawn.extend(outcome.drawn_ids)
+        if profile.library_actions or profile.mode in {"draw","draw_lose"}:
+            actions = profile.library_actions or (LibraryAction("draw",profile.amount),)
+            library_outcome=resolve_library_actions(zones,seat,actions)
+            library_outcomes.append(library_outcome)
+            drawn.extend(library_outcome.drawn_ids)
         if profile.mode=="draw_lose":
             life.lose(seat,profile.life_amount,object_id)
         elif profile.mode=="create_creature_tokens":
@@ -81,6 +89,12 @@ def cast_provisional_spell(zones, life, seat, object_id, catalog, colors,
         elif profile.mode=="opponent_loss":
             life.each_opponent_loses(seat,profile.amount,object_id)
     resolved=zones.resolve(commit.ticket,effect=apply_effect)
+    library = library_outcomes[0] if library_outcomes else None
     return ProvisionalSpellOutcome(
         obj.card.name,profile.mode,profile.amount,tuple(drawn),
-        tuple(created),tuple(commit.paid_source_ids),resolved)
+        tuple(created),tuple(commit.paid_source_ids),resolved,
+        library_steps=library.steps if library else (),
+        discarded_ids=library.discarded_ids if library else (),
+        surveilled_ids=library.milled_ids if library else (),
+        bottomed_ids=library.bottomed_ids if library else (),
+        returned_ids=library.returned_ids if library else ())

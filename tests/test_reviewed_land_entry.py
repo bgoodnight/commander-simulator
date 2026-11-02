@@ -49,4 +49,25 @@ class MortarionLandTests(unittest.TestCase):
         self.assertEqual(len(out.moved_ids),1)
         self.assertEqual(self.zones.ids(0,"library")[-1],out.moved_ids[0])
         self.assertTrue(self.zones.assert_consistent())
+    def test_magnus_hidden_grotto_surveille_uses_shared_library_action(self):
+        from commander_sim.reviewed_land_entry import reviewed_land_entry
+        deck=next(f for f in EXPERIMENTAL_FIXTURES
+                  if f.key=="magnus_physical_trial")
+        card=next(item["card"] for item in
+                  json.loads(deck.snapshot_path.read_text())["cards"]
+                  if item["deck_name"]=="Hidden Grotto")
+        self.catalog["Hidden Grotto"]=card
+        land=self.add("Hidden Grotto",types=("land",))
+        keep=self.add("Keep",zone="library",types=("land",))
+        top=self.add("Top creature",zone="library",types=("creature",))
+        out=resolve_land_entry(self.zones,self.life,land,self.catalog)
+        self.assertEqual(out.operation,"surveil_one")
+        self.assertEqual(out.library_steps[0]["kind"],"surveil")
+        self.assertEqual(len(out.moved_ids),1)
+        self.assertEqual(self.kernel.get(out.moved_ids[0]).zone,"graveyard")
+        self.assertEqual(self.zones.ids(0,"library"),(keep,))
+        self.assertTrue(self.zones.assert_consistent())
+        tampered=dict(card,oracle_text=card["oracle_text"]+" Changed.")
+        self.assertIsNone(reviewed_land_entry("Hidden Grotto",tampered))
+
 if __name__=="__main__":unittest.main()
