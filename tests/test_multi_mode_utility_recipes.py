@@ -151,7 +151,8 @@ class MultiModeUtilityTests(unittest.TestCase):
             self.assertIsNotNone(reviewed_utility(name,raw),name)
             modified=dict(raw,oracle_id="unverified")
             self.assertIsNone(reviewed_utility(name,modified))
-            self.assertIsNone(reviewed_rock(name,modified,frozenset({"B"})))
+            with self.assertRaises(ValueError):
+                reviewed_rock(name,modified,frozenset({"B"}))
 
     def test_source_pinned_recursion_and_physical_body_newlines_admit(self):
         expected=(("wretched_ranks","Lord of the Undead"),
