@@ -25,7 +25,7 @@ from .deck_fixtures import FIXTURES, EXPERIMENTAL_FIXTURES, SHARED_CATALOG
 from .generic_cast import ReviewedCreatureCast, cast_reviewed_permanent
 from .provisional_import import provisional_profile, provisional_report
 from .provisional_actions import cast_provisional_spell
-from .library_actions import required_draws
+from .library_actions import required_draws, resolve_library_actions
 from .kernel_reporting import project_kernel_turn
 from .board_features import analyze_authoritative_run
 from .reviewed_early_cards import REVIEWED_BY_DECK, LIMITATIONS, reviewed_creature
@@ -89,6 +89,23 @@ def _live_types(face):
     return frozenset(face.types)
 
 
+def _printed_supertypes(type_line, *, commander=False):
+    """Preserve official supertypes on verified physical card definitions.
+
+    The identity loader historically projected types and subtypes but not the
+    printed Legendary supertype. A graveyard's 'all legendary creature cards'
+    requirement must use the actual printed characteristic, never a card
+    name or deck-specific list.
+    """
+    if not isinstance(type_line,str):
+        raise TypeError("Printed type line must be verified text")
+    supertype_words=frozenset({"basic","legendary","snow","world","ongoing"})
+    printed=frozenset(word.lower()
+                      for word in type_line.split(" — ",1)[0].split()
+                      if word.lower() in supertype_words)
+    return printed | (frozenset({"commander"}) if commander else frozenset())
+
+
 def _load_live_kernel():
     # Historical version modules aren't packaged; use the established isolated
     # v9b physical-zone kernel. This is NOT another state/zone implementation.
@@ -132,6 +149,7 @@ def run_bounded_early_game(deck_key, *, seed=0, turns=6, mulligan="one-free", pr
         if provisional_mode=='safe' else {})
     # Pinned, source-verified ETB effects with safe bounded hand-cast paths.
     enter_hand_casts = {"Bastion of Remembrance", "Grave Titan", "Massacre Wurm",
+                        "Flayed One", "Mire Triton", "Undead Butler",
                         "Marionette Apprentice", "Royal Warden",
                         "Triarch Praetorian", "Canoptek Tomb Sentinel"}
     def approved_enter_hand_cast(name):
@@ -206,7 +224,9 @@ def run_bounded_early_game(deck_key, *, seed=0, turns=6, mulligan="one-free", pr
                     or provisional_by_name.get(name) is not None)
         definition = CardDefinition(
             identity.oracle_id, name, types, subtypes=subtypes,
-            supertypes=frozenset({"commander"}) if section == "Commander" else frozenset(),
+            supertypes=_printed_supertypes(
+                face.type_line if face is not None else raw_by_name[name].get("type_line",""),
+                commander=(section=="Commander")),
             base_power=power, base_toughness=toughness,
             keywords=keywords, colors=colors_printed,
             coverage="approx" if reviewed else "unimplemented")
@@ -939,6 +959,14 @@ def run_bounded_early_game(deck_key, *, seed=0, turns=6, mulligan="one-free", pr
                                       "limited_generic_resolution",
                            "unmodeled_abilities":list(implicit.omissions)
                                if implicit_only else []})
+            if (kind=="creature" and implicit_only
+                    and implicit.entry_actions):
+                entry=resolve_library_actions(zones,0,implicit.entry_actions)
+                events.append({"type":"provisional_enter_resolved",
+                    "card":name,"source_object_id":resolved_id,
+                    "milled_ids":list(entry.milled_ids),
+                    "library_actions":list(entry.steps),
+                    "fidelity":"provisional_partial"})
             if name == "Solemn Simulacrum" and reviewed_ramp(name,raw_by_name[name]):
                 moved = resolve_enter_ramp(zones,0,resolved_id,raw_by_name)
                 events.append({"type":"reviewed_enter_ramp","card":name,
@@ -957,6 +985,8 @@ def run_bounded_early_game(deck_key, *, seed=0, turns=6, mulligan="one-free", pr
                                "ability_operation":entered.operation,
                                "created_token_ids":list(entered.token_ids),
                                "drawn_ids":list(entered.drawn_ids),
+                               "milled_ids":list(entered.milled_ids),
+                               "library_actions":list(entered.library_steps),
                                "fidelity":"bounded_no_opponent_priority"})
         attachment_engine.sync(turn=turn)
         # Reviewed equipment is sorcery-speed and uses the same mana service
@@ -995,12 +1025,17 @@ def run_bounded_early_game(deck_key, *, seed=0, turns=6, mulligan="one-free", pr
         action=choose_utility_activation(
             zones,0,life,mana_service,raw_by_name,
             hand_cast_reviewed=lambda obj: reviewed_creature(
-                deck_key,obj.card.name,raw_by_name[obj.card.name]))
+                deck_key,obj.card.name,raw_by_name[obj.card.name]),
+            tap_ready=lambda source: (
+                entered_on_turn.get(source.object_id,0)<turn
+                or "haste" in source.keywords))
         if action is not None:
             source_id,target_id=action
             utility=activate_utility(zones,life,0,source_id,raw_by_name,
                 mana_service,colors,target_id=target_id,
-                death_engine=death_engine,turn=turn)
+                death_engine=death_engine,turn=turn,
+                tap_ready=(entered_on_turn.get(source_id,0)<turn
+                           or "haste" in kernel.get(source_id).keywords))
             if utility is not None:
                 events.append({"type":"reviewed_utility_activated",
                     "card":utility.source_name,

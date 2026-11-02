@@ -156,7 +156,9 @@ class ReviewedEnterEffectTests(unittest.TestCase):
         self.assertEqual(len(self.zones.ids(0,"battlefield")),1)
 
     def test_seven_oracle_reviewed_etb_registration_records_present(self):
-        self.assertEqual(len(ENTER_RULES),8)
+        self.assertEqual(len(ENTER_RULES),11)
+        self.assertTrue({"Flayed One","Mire Triton","Undead Butler"} <=
+                        set(ENTER_RULES))
         for name,entry in ENTER_RULES.items():
             with self.subTest(card=name):
                 self.assertEqual(self.catalog[name]["oracle_id"],entry.oracle_id)

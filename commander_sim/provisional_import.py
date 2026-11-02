@@ -68,6 +68,9 @@ _DRAW_DISCARD = re.compile(
     r"discard (a|one|two|three|four|five|\d+) cards?\.$", re.I)
 _SCRY_ONLY = re.compile(r"^Scry ([1-3])\.$", re.I)
 _SURVEIL_ONLY = re.compile(r"^Surveil ([1-3])\.$", re.I)
+_MILL_ONLY = re.compile(r"^(?:You )?[Mm]ill (a|one|two|three|four|five|six|seven|\d+) cards?\.$")
+_ENTRY_MILL = re.compile(
+    r"^When this creature enters, mill (a|one|two|three|four|five|six|seven|\d+) cards?\.$")
 
 
 def _quantity(word):
@@ -97,6 +100,9 @@ def _library_recipe(text):
         return (LibraryAction("scry", int(match.group(1))),)
     if match := _SURVEIL_ONLY.fullmatch(text):
         return (LibraryAction("surveil", int(match.group(1))),)
+    if match := _MILL_ONLY.fullmatch(text):
+        count=_quantity(match.group(1))
+        return (LibraryAction("mill",count),) if 1<=count<=7 else ()
     return ()
 
 _DRAIN = re.compile(r"^Each opponent loses (\d+) life\.$")
@@ -128,6 +134,7 @@ class ProvisionalProfile:
     token_subtype: str = ""
     token_tapped: bool = False
     library_actions: tuple[LibraryAction,...] = ()
+    entry_actions: tuple[LibraryAction,...] = ()
     omissions: tuple[str,...] = ()
     fidelity: str = "provisional_partial"
     def __post_init__(self):
@@ -145,7 +152,11 @@ class ProvisionalProfile:
                 or not isinstance(self.library_actions, tuple)
                 or not all(isinstance(x, LibraryAction)
                            for x in self.library_actions)
-                or (self.library_actions and self.kind != "simple_spell")):
+                or (self.library_actions and self.kind != "simple_spell")
+                or not isinstance(self.entry_actions,tuple)
+                or not all(isinstance(x,LibraryAction) and x.kind=="mill"
+                           for x in self.entry_actions)
+                or (self.entry_actions and self.kind!="creature_body")):
             raise ValueError("Invalid provisional source descriptor")
 
 
@@ -239,6 +250,21 @@ def provisional_profile(raw):
         if re.search(r"(?m)^"+tapped_line+r"$",remainder):
             remainder=re.sub(r"(?m)^"+tapped_line+r"\n?","",remainder).strip()
             entry_tapped=True
+    entry_actions=()
+    if "creature" in types:
+        # A simple, complete mandatory ETB mill may be resolved physically.
+        # Remove only that EXACT sentence before rejecting any remaining
+        # unmodeled entry/replacement instructions.
+        lines=remainder.splitlines()
+        matches=[(i,_ENTRY_MILL.fullmatch(line.strip()))
+                 for i,line in enumerate(lines)]
+        accepted=[(i,m) for i,m in matches if m is not None]
+        if len(accepted)==1:
+            index,match=accepted[0]
+            count=_quantity(match.group(1))
+            if 1<=count<=7:
+                entry_actions=(LibraryAction("mill",count),)
+                remainder="\n".join(lines[:index]+lines[index+1:]).strip()
     if _ENTRY.search(remainder) or _RESTRICT.search(remainder):
         return None
 
@@ -271,9 +297,13 @@ def provisional_profile(raw):
     # characteristics are read from pinned card faces by the loader.
     if "creature" in types:
         return ProvisionalProfile(raw["oracle_id"],raw["oracle_text"],
-                    mana_cost,"creature_body",
-                    omissions=("Non-keyword abilities unreviewed; no automatic "
-                               "enter/death/combat/activation effects",))
+                    mana_cost,"creature_body",entry_actions=entry_actions,
+                    omissions=(("Reviewed grammar only for explicit entry mill",
+                                "Other printed abilities remain unreviewed",
+                                "No opposing priority or counterspell response")
+                               if entry_actions else
+                               ("Non-keyword abilities remain unreviewed; only "
+                                "separately recognized simple triggers execute",)))
     if types==frozenset({"artifact"}):
         return ProvisionalProfile(raw["oracle_id"],raw["oracle_text"],
                     mana_cost,"artifact_body",
@@ -303,6 +333,9 @@ def provisional_report(entries):
                        "actions":[{"kind":x.kind,"count":x.count}
                                   for x in profile.library_actions]
                                   if profile else [],
+                       "entry_actions":[{"kind":x.kind,"count":x.count}
+                                        for x in profile.entry_actions]
+                                        if profile else [],
                        "provisional_death_trigger":(
                            {"scope":{"relation":death.predicate.relation,
                                      "types":sorted(death.predicate.types_any),

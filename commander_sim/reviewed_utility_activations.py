@@ -23,13 +23,28 @@ class UtilityRule:
     life: int = 0
     life_by_commander_colors: bool = False
     condition: str = "always"
+    target_subtypes: frozenset[str] = frozenset()
+    target_supertypes: frozenset[str] = frozenset()
+    tap_creature: bool = False
+
     def __post_init__(self):
         if (not self.oracle_id or not self.excerpt
                 or self.source_zone not in {"battlefield","hand","graveyard"}
                 or self.operation not in {"draw","drain_opponents",
-                                          "creature_to_hand","self_to_battlefield_tapped"}
+                    "creature_to_hand","self_to_battlefield_tapped",
+                    "all_legendary_creatures_to_hand"}
                 or self.condition not in {"always","two_black_permanents"}
-                or any((self.tap,self.sacrifice,self.discard)) and self.source_zone=="graveyard"
+                or not isinstance(self.target_subtypes,frozenset)
+                or not isinstance(self.target_supertypes,frozenset)
+                or any(not isinstance(x,str) or not x
+                       for x in self.target_subtypes | self.target_supertypes)
+                or type(self.tap_creature) is not bool
+                or self.tap_creature and not self.tap
+                or self.target_subtypes and self.operation!="creature_to_hand"
+                or self.target_supertypes and self.operation not in {
+                    "creature_to_hand","all_legendary_creatures_to_hand"}
+                or self.source_zone=="graveyard" and any(
+                    (self.tap,self.sacrifice,self.discard))
                 or (self.sacrifice and self.discard)):
             raise ValueError("Invalid reviewed utility activation")
 
@@ -51,6 +66,24 @@ RULES={
         "326ba371-124c-4949-a048-3a0c8962e567",
         "Cycling {B} ({B}, Discard this card: Draw a card.)",
         "hand","{B}","draw",discard=True),
+    "Persistent Specimen":UtilityRule(
+        "5f4ad578-f2c4-47f6-8080-8fbc17383f6f",
+        "{2}{B}: Return this card from your graveyard to the battlefield tapped.",
+        "graveyard","{2}{B}","self_to_battlefield_tapped"),
+    "Lord of the Undead":UtilityRule(
+        "7714af0e-41d9-4609-967f-27233b46055f",
+        "{1}{B}, {T}: Return target Zombie card from your graveyard to your hand.",
+        "battlefield","{1}{B}","creature_to_hand",tap=True,
+        tap_creature=True,target_subtypes=frozenset({"Zombie"})),
+    "Memorial to Folly":UtilityRule(
+        "2bc38f14-0314-4351-8138-e2b8bf041404",
+        "{2}{B}, {T}, Sacrifice this land: Return target creature card from your graveyard to your hand.",
+        "battlefield","{2}{B}","creature_to_hand",tap=True,sacrifice=True),
+    "Lychguard":UtilityRule(
+        "e82daa7b-d9fd-48c4-b5b2-f3b1f6ef1a24",
+        "{3}{B}, Sacrifice this creature: Return all legendary creature cards from your graveyard to your hand.",
+        "battlefield","{3}{B}","all_legendary_creatures_to_hand",
+        sacrifice=True,target_supertypes=frozenset({"legendary"})),
     "Reassembling Skeleton":UtilityRule(
         "9dbc3530-b278-4c8d-b2cc-a09dfac9d5e5",
         "{1}{B}: Return this card from your graveyard to the battlefield tapped.",
@@ -81,7 +114,8 @@ class UtilityOutcome:
 
 
 def activate_utility(zones,life,seat,source_id,catalog,mana_service,colors,
-                     *,target_id=None,death_engine=None,turn=1):
+                     *,target_id=None,death_engine=None,turn=1,
+                     tap_ready=False):
     kernel=zones.kernel
     if life.kernel is not kernel or mana_service.kernel is not kernel:
         raise ValueError("Utility source and payment hosts must match")
@@ -91,6 +125,11 @@ def activate_utility(zones,life,seat,source_id,catalog,mana_service,colors,
             or source.controller!=seat or source.zone!=rule.source_zone
             or rule.tap and source.tapped):
         raise ValueError("Unreviewed or unavailable utility activation")
+    # Creature tap abilities require the turn driver to verify summoning
+    # sickness. Noncreature mana rocks/lands do not use this authorization.
+    if rule.tap_creature and (not "creature" in source.types
+                              or tap_ready is not True):
+        return None
     if rule.condition=="two_black_permanents":
         count=sum("B" in (obj.card.colors or ())
                   for obj in kernel.on_battlefield() if obj.controller==seat)
@@ -99,10 +138,22 @@ def activate_utility(zones,life,seat,source_id,catalog,mana_service,colors,
     if rule.operation=="creature_to_hand":
         if target_id not in zones.ids(seat,"graveyard"):
             return None
-        if "creature" not in kernel.get(target_id).types:
-            raise ValueError("Graveyard target is not a creature card")
+        target=kernel.get(target_id)
+        if ("creature" not in target.types
+                or not rule.target_subtypes<=target.subtypes
+                or not rule.target_supertypes<=target.card.supertypes):
+            raise ValueError("Graveyard target does not meet printed restrictions")
     elif target_id is not None:
         raise ValueError("Unexpected utility target")
+    if rule.operation=="all_legendary_creatures_to_hand":
+        # A non-targeting 'all' effect has no optional target chosen at cast.
+        # Collect before payment, and include all eligible owned cards.
+        recipe=GraveyardRecipe("hand","own",frozenset({"creature"}),
+             required_supertypes=rule.target_supertypes)
+        from .graveyard_recipes import eligible_graveyard_cards
+        batch=eligible_graveyard_cards(zones,seat,recipe)
+    else:
+        batch=()
     if rule.operation=="draw" and not zones.ids(seat,"library"):
         return None
     life_cost=len(colors) if rule.life_by_commander_colors else rule.life
@@ -139,7 +190,15 @@ def activate_utility(zones,life,seat,source_id,catalog,mana_service,colors,
     elif rule.operation=="creature_to_hand":
         restored=resolve_graveyard_recipe(
             zones,seat,(target_id,),
-            GraveyardRecipe("hand","own",frozenset({"creature"})))
+            GraveyardRecipe("hand","own",frozenset({"creature"}),
+                            required_subtypes=rule.target_subtypes,
+                            required_supertypes=rule.target_supertypes))
+        moved.extend(item.new_id for item in restored)
+    elif rule.operation=="all_legendary_creatures_to_hand":
+        restored=resolve_graveyard_recipe(
+            zones,seat,batch,
+            GraveyardRecipe("hand","own",frozenset({"creature"}),
+                            required_supertypes=rule.target_supertypes))
         moved.extend(item.new_id for item in restored)
     elif rule.operation=="self_to_battlefield_tapped":
         restored=resolve_graveyard_recipe(
