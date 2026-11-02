@@ -39,7 +39,7 @@ from .reviewed_token_spells import (reviewed_token_spell,
 from .bounded_trigger_effects import resolve_reviewed_spell_triggers
 from .kernel_life import KernelLife
 from .reviewed_phase_effects import ReviewedPhaseEngine,reviewed_phase_permanent
-from .composed_abilities import ComposedAbilityEngine
+from .composed_abilities import ComposedAbilityEngine, reviewed_composed_permanent
 from .reviewed_reactive_triggers import ReactiveTriggerEngine
 from .reviewed_death_effects import ReviewedDeathEngine
 from .reviewed_enter_effects import reviewed_enter_rule, execute_reviewed_enter
@@ -161,6 +161,7 @@ def run_bounded_early_game(deck_key, *, seed=0, turns=6, mulligan="one-free", pr
                     or reviewed_flashback(name, raw_by_name[name]) is not None
                     or reviewed_graveyard_creature(name, raw_by_name[name]) is not None
                     or reviewed_phase_permanent(name, raw_by_name[name])
+                    or reviewed_composed_permanent(name,raw_by_name[name])
                     or reviewed_sacrifice_artifact(name,raw_by_name[name])
                     or reviewed_ramp(name,raw_by_name[name]) is not None
                     or reviewed_ritual(name,raw_by_name[name])
@@ -340,7 +341,9 @@ def run_bounded_early_game(deck_key, *, seed=0, turns=6, mulligan="one-free", pr
                 rock = reviewed_rock(name, raw, colors)
                 token_spell = reviewed_token_spell(name, raw)
                 draw_spell = reviewed_draw_spell(name,raw)
-                phase_enchantment = reviewed_phase_permanent(name, raw) or reviewed_breach(name, raw)
+                phase_enchantment = (reviewed_phase_permanent(name, raw)
+                                     or reviewed_breach(name, raw)
+                                     or reviewed_composed_permanent(name,raw))
                 sacrifice_artifact = reviewed_sacrifice_artifact(name, raw)
                 entering = approved_enter_hand_cast(name)
                 ramp = reviewed_ramp(name,raw) if "land" not in obj.types else None
@@ -882,6 +885,7 @@ def run_bounded_early_game(deck_key, *, seed=0, turns=6, mulligan="one-free", pr
                 or reviewed_draw_spell(name,raw) is not None
                 or reviewed_tutor(name, raw) is not None
                 or reviewed_phase_permanent(name, raw)
+                or reviewed_composed_permanent(name,raw)
                 or reviewed_sacrifice_artifact(name, raw)
                 or reviewed_ramp(name,raw) is not None
                 or reviewed_ritual(name,raw)
