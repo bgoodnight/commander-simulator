@@ -46,7 +46,8 @@ _RESTRICT = re.compile(
     r"cast (?:this|only)|you may cast this|"
     r"if you cast|rather than pay|"
     r"without paying its mana cost|"
-    r"unless you pay|affinity for|"
+    r"unless you pay|spend (?:this|that) mana only|activate only|"
+    r"affinity for|"
     r"convoke|delve|improvise|evoke|"
     r"prototype|mutate|bestow|impending)\b", re.I)
 _ENTRY = re.compile(r"\b(?:enter|enters|entering)\b", re.I)
