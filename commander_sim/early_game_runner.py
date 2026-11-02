@@ -45,6 +45,7 @@ from .composed_abilities import ComposedAbilityEngine, reviewed_composed_permane
 from .reviewed_commander_cast import commander_cost, cast_commander
 from .reviewed_reactive_triggers import ReactiveTriggerEngine
 from .reviewed_entry_choices import reviewed_entry_choice, set_reviewed_entry_choice
+from .reviewed_attachments import AttachmentEngine,reviewed_attachment
 from .opponent_stress import BoundedOpponentPressure
 from .reviewed_death_effects import ReviewedDeathEngine
 from .reviewed_enter_effects import reviewed_enter_rule, execute_reviewed_enter
@@ -63,7 +64,8 @@ from .resource_pilot import (choose_token_mana_sacrifice, plan_common_spell,
                              ritual_enables_spell, choose_composed_activation,
                              choose_variable_end_step_payments,
                              choose_utility_activation, choose_end_step_token_mana,
-                             choose_reviewed_removal, choose_composed_x_activation)
+                             choose_reviewed_removal, choose_composed_x_activation,
+                             choose_attachment_use,choose_temporary_reanimation)
 from .reviewed_common_spells import reviewed_common_spell, cast_common_spell
 from .reviewed_removal_spells import reviewed_removal, cast_removal
 from .reviewed_ramp import reviewed_ramp, reviewed_ritual, cast_ritual, activate_land_ramp, resolve_enter_ramp
@@ -176,6 +178,7 @@ def run_bounded_early_game(deck_key, *, seed=0, turns=6, mulligan="one-free", pr
                     or reviewed_graveyard_creature(name, raw_by_name[name]) is not None
                     or reviewed_phase_permanent(name, raw_by_name[name])
                     or reviewed_composed_permanent(name,raw_by_name[name])
+                    or reviewed_attachment(name,raw_by_name[name]) is not None
                     or (reviewed_utility(name,raw_by_name[name]) is not None
                         and reviewed_utility(name,raw_by_name[name]).source_zone=="battlefield"
                         and "enchantment" in types)
@@ -205,9 +208,13 @@ def run_bounded_early_game(deck_key, *, seed=0, turns=6, mulligan="one-free", pr
     composed_engine = ComposedAbilityEngine(zones, life, raw_by_name,
                                            mana_service, death_engine)
     reactive_engine = ReactiveTriggerEngine(zones,life,raw_by_name)
+    attachment_engine=AttachmentEngine(
+        zones,life,raw_by_name,mana_service,death_engine)
+    death_engine.attachments=attachment_engine
     opponent_pressure = (BoundedOpponentPressure(
         zones,life,raw_by_name,death_engine,phase_engine,CardDefinition,
-        seed=seed,scenario=opponent_scenario)
+        seed=seed,scenario=opponent_scenario,
+        attachment_engine=attachment_engine)
         if opponent_scenario is not None else None)
     entered_on_turn = {}
     if len(kernel.objects) != 100:
@@ -280,6 +287,14 @@ def run_bounded_early_game(deck_key, *, seed=0, turns=6, mulligan="one-free", pr
                                "card": obj.card.name})
         if events:
             kernel._dirty()
+        # Upkeep sacrifice costs and continuous statics operate on the same
+        # physical sources before optional later phase triggers resolve.
+        attachment_engine.sync(turn=turn)
+        for paid_upkeep in attachment_engine.upkeep(0,turn=turn):
+            events.append({"type":"reviewed_attachment_upkeep",
+                           "operation":paid_upkeep.operation,
+                           "source_object_id":paid_upkeep.source_id,
+                           "target_object_id":paid_upkeep.target_id})
         # Upkeep happens after untap but before the ordinary draw.
         for triggered in phase_engine.resolve(
                 phase="upkeep",active_seat=0,round_id=turn):
@@ -411,9 +426,22 @@ def run_bounded_early_game(deck_key, *, seed=0, turns=6, mulligan="one-free", pr
                 rock = reviewed_rock(name, raw, colors)
                 token_spell = reviewed_token_spell(name, raw)
                 draw_spell = reviewed_draw_spell(name,raw)
+                attachment_rule=reviewed_attachment(name,raw)
+                aura_target=None
+                if attachment_rule is not None and attachment_rule.scope=="opponent_aura":
+                    enemy_targets=[o for o in kernel.on_battlefield()
+                                   if o.controller!=0 and "creature" in o.types
+                                   and kernel.legal_target(
+                                       0,o.object_id,frozenset({"creature"}))]
+                    if enemy_targets:
+                        aura_target=max(enemy_targets,
+                                        key=lambda o:(o.power,o.toughness,-o.object_id)).object_id
+                    else:
+                        continue
                 phase_enchantment = (reviewed_phase_permanent(name, raw)
                                      or reviewed_breach(name, raw)
                                      or reviewed_composed_permanent(name,raw)
+                or reviewed_attachment(name,raw) is not None
                                      or (reviewed_utility(name,raw) is not None
                                          and reviewed_utility(name,raw).source_zone=="battlefield"
                                          and "enchantment" in obj.types))
@@ -435,7 +463,8 @@ def run_bounded_early_game(deck_key, *, seed=0, turns=6, mulligan="one-free", pr
                 if (not is_creature and rock is None and not eligible
                         and token_spell is None and draw_spell is None and not phase_enchantment
                         and not sacrifice_artifact and not entering and not ramp and not ritual
-                        and not common_plan and removal_plan is None):
+                        and not common_plan and removal_plan is None
+                        and attachment_rule is None):
                     continue
                 cost = common_plan[0] if common_plan else registry.get(name).primary_face().mana_cost
                 payment = mana_service.plan_spell(0, cost, obj)
@@ -443,12 +472,13 @@ def run_bounded_early_game(deck_key, *, seed=0, turns=6, mulligan="one-free", pr
                     kind = ("removal_spell" if removal_plan is not None else
                             "common_spell" if common_plan else
                             "ritual" if ritual else
-                            "artifact" if rock is not None or sacrifice_artifact or (ramp and name == "Wayfarer\u0027s Bauble") else
-                            "enchantment" if phase_enchantment or (entering and "Enchantment" in raw.get("type_line","").split(" — ",1)[0]) else
+                            "artifact" if rock is not None or sacrifice_artifact or (attachment_rule is not None and "artifact" in obj.types) or (ramp and name == "Wayfarer\u0027s Bauble") else
+                            "enchantment" if phase_enchantment or (attachment_rule is not None and "enchantment" in obj.types) or (entering and "Enchantment" in raw.get("type_line","").split(" — ",1)[0]) else
                             "tutor" if eligible else
                             "draw_spell" if draw_spell is not None else
                             "token_spell" if token_spell is not None else "creature")
-                    target = (removal_plan if removal_plan is not None else
+                    target = (aura_target if aura_target is not None else
+                              removal_plan if removal_plan is not None else
                               common_plan[1:] if common_plan else
                               choose_tutor_target(zones, 0, eligible, raw_by_name, colors) if eligible else None)
                     # Reviewed trigger creatures precede spells so their
@@ -662,6 +692,14 @@ def run_bounded_early_game(deck_key, *, seed=0, turns=6, mulligan="one-free", pr
             })
             resolved_id = zones.resolve(committed.ticket)
             entered_on_turn[resolved_id]=turn
+            if kind=="enchantment" and attachment_rule is not None and attachment_rule.scope=="opponent_aura":
+                attached=attachment_engine.bind(
+                    resolved_id,target,sorcery_window=True,already_paid=True)
+                if attached is None:
+                    raise AssertionError("Aura target ceased being legal before entry")
+                events.append({"type":"reviewed_aura_attached",
+                               "source_object_id":resolved_id,
+                               "target_object_id":target})
             entry_choice=reviewed_entry_choice(name,raw_by_name[name])
             if entry_choice is not None:
                 # A legal explicit player choice made as the reviewed source
@@ -702,6 +740,31 @@ def run_bounded_early_game(deck_key, *, seed=0, turns=6, mulligan="one-free", pr
                                "created_token_ids":list(entered.token_ids),
                                "drawn_ids":list(entered.drawn_ids),
                                "fidelity":"bounded_no_opponent_priority"})
+        attachment_engine.sync(turn=turn)
+        # Reviewed equipment is sorcery-speed and uses the same mana service
+        # as any other activated permanent. The pilot chooses one good target.
+        equip_choice=choose_attachment_use(
+            zones,0,attachment_engine,mana_service,raw_by_name)
+        if equip_choice is not None:
+            source_id,target_id=equip_choice
+            equipped=attachment_engine.bind(
+                source_id,target_id,sorcery_window=True)
+            if equipped is not None:
+                events.append({"type":"reviewed_attachment_equipped",
+                    "source_object_id":source_id,"target_object_id":target_id,
+                    "paid_source_ids":list(equipped.paid_source_ids)})
+        # Shared temporary resurrection uses the existing unearth-style
+        # haste/exile replacement machinery, not shadow game objects.
+        resurrection=choose_temporary_reanimation(
+            zones,0,attachment_engine,mana_service,raw_by_name)
+        if resurrection is not None:
+            source_id,target_id=resurrection
+            rec=attachment_engine.resurrect(
+                source_id,target_id,turn=turn,sorcery_window=True)
+            if rec is not None:
+                events.append({"type":"reviewed_attachment_reanimated",
+                    "source_object_id":source_id,"target_object_id":rec.target_id,
+                    "paid_source_ids":list(rec.paid_source_ids)})
         # Shared ramp activation uses actual paid sources and shuffled basic lands.
         for source in list(kernel.on_battlefield()):
             if source.controller == 0 and source.card.name in {"Wayfarer's Bauble", "Myriad Landscape"}:
@@ -1106,6 +1169,7 @@ def run_bounded_early_game(deck_key, *, seed=0, turns=6, mulligan="one-free", pr
                                    "priority and resolution were not assessed")
                 })
         resolve_reactive()
+        attachment_engine.sync(turn=turn)
         # Cleanup follows all end-step abilities; use actual kernel movement.
         # The limited pilot already spent available main-phase mana and cast
         # supported spells before this point, avoiding excess hand cards when
@@ -1162,6 +1226,7 @@ def run_bounded_early_game(deck_key, *, seed=0, turns=6, mulligan="one-free", pr
                     "role":pressure_event.role,
                     "amount":pressure_event.amount,
                     "object_id":pressure_event.object_id,
+                    "target_seat":pressure_event.target_seat,
                     "fidelity":"abstract_opponent_pressure_not_card_exact"})
             resolve_reactive()
         state = project_kernel_turn(zones, 0, turn, catalog)
