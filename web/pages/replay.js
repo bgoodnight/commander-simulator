@@ -456,7 +456,11 @@
 
       const chosen=data.scenarios[scenario],summary=chosen.summary,games=chosen.games;
       const castCounts=summary.commander_cast_turn_counts||{};
-      const never=Number(castCounts.never||0),cast=summary.seeds-never;
+      const hasCastEvidence=Object.keys(castCounts).length>0;
+      const never=hasCastEvidence?Number(castCounts.never||0):null;
+      const cast=hasCastEvidence?
+        Object.entries(castCounts).filter(([turn])=>turn!=="never")
+          .reduce((n,[,count])=>n+Number(count),0):null;
       const killed=Number(summary.eliminated_by_horizon||0);
       const cards=el("div","replay-takeaway-grid");
       cards.append(
@@ -471,8 +475,9 @@
           "Mean Seat 0 life at the last observation, including any abbreviated runs. "+
           "Individual samples may differ significantly and can exceed the starting 40 life."),
         takeaway("Commander access",
-          cast+" / "+summary.seeds,
+          cast===null?"Not recorded":cast+" / "+summary.seeds,
           "Mortarion casts within the horizon",
+          cast===null?"The source summary did not report commander-cast timing.":
           never+" run"+(never===1?"":"s")+" did not cast Mortarion within the "+
           data.round_horizon+"-round horizon. These counts reflect reviewed casts; "+
           "commander board presence at the end is not guaranteed."),
@@ -548,5 +553,5 @@
     draw();
     return {redraw:draw};
   }
-  return {FORMAT,validate,eventKind,eventTitle,summarizeAction,activity,statsForRound,render};
+  return {FORMAT,validate,eventKind,eventTitle,summarizeAction,activity,statsForRound,changeIn,recordedCombat,cardSpotlight,relatedActions,render};
 });
