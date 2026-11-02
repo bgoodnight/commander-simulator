@@ -691,5 +691,6 @@
     showGroup();
     return report;
   }
-  return {FORMAT,STATES,validate,model,lifeTrend,matchupRows,opponentDecks,render};
+  return {FORMAT,STATES,validate,model,lifeTrend,matchupRows,matchupMetrics,
+    knockoutRound,opponentDecks,render};
 });
