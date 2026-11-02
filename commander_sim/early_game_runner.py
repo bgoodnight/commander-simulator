@@ -746,9 +746,17 @@ def run_bounded_early_game(deck_key, *, seed=0, turns=6, mulligan="one-free", pr
             review = ReviewedCreatureCast(
                 kernel.get(oid).card.card_id, cost, True,
                 ("Other printed abilities remain unsupported",))
-            committed = cast_reviewed_permanent(
-                zones, 0, oid, review, colors, mana_service=mana_service,
-                permanent_type=kind)
+            try:
+                committed = cast_reviewed_permanent(
+                    zones, 0, oid, review, colors, mana_service=mana_service,
+                    permanent_type=kind)
+            except ValueError as error:
+                if str(error)=="Not an approved reviewed permanent":
+                    raise AssertionError(
+                        "Reviewed cast kind or admission mismatch: "
+                        +repr((name,kind,tuple(kernel.get(oid).types),
+                               kernel.get(oid).card.coverage))) from error
+                raise
             if committed is None:
                 raise AssertionError("Payment feasibility changed without an action")
             events.append({
