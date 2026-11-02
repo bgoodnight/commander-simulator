@@ -48,6 +48,7 @@ from .reviewed_entry_choices import reviewed_entry_choice, set_reviewed_entry_ch
 from .reviewed_attachments import AttachmentEngine,reviewed_attachment
 from .reviewed_zone_spells import ZoneSpellEngine,reviewed_zone_spell
 from .reviewed_activated_utilities import activate_reviewed,reviewed_activation
+from .reviewed_cast_reactions import resolve_cast_reactions
 from .opponent_stress import BoundedOpponentPressure
 from .reviewed_death_effects import ReviewedDeathEngine
 from .reviewed_enter_effects import reviewed_enter_rule, execute_reviewed_enter
@@ -326,12 +327,19 @@ def run_bounded_early_game(deck_key, *, seed=0, turns=6, mulligan="one-free", pr
         def approved_spell_triggers(ticket):
             """Execute only vetted cast triggers after an actual source cast."""
             source = kernel.get(ticket.object_id)
+            reactions=resolve_cast_reactions(
+                zones,0,raw_by_name,source_spell=source)
             nonhand = resolve_reviewed_nonhand_cast_triggers(
                 zones, 0, ticket, raw_by_name)
             effects = resolve_reviewed_spell_triggers(
                 zones, 0, raw_by_name, event="spell_cast",
                 spell_types=frozenset(source.types))
-            return [{"type":"reviewed_trigger_resolved",
+            return [{"type":"reviewed_cast_reaction",
+                     "source_object_id":reaction.source_id,
+                     "operation":reaction.operation,
+                     "quantity":reaction.quantity,
+                     "fidelity":"bounded_verified_cast"}
+                    for reaction in reactions] + [{"type":"reviewed_trigger_resolved",
                      "source":effect.card_name,
                      "source_object_id":effect.source_id,
                      "ability_slot":effect.slot_id,
