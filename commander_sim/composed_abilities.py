@@ -223,28 +223,42 @@ class ComposedAbilityEngine:
         if not isinstance(choices, dict):
             raise TypeError("X choices must map physical source IDs to integers")
         self._turn = turn
-        results = []
+        # All end-step conditions are checked at the triggering boundary,
+        # before Mortarion can create tokens or another trigger changes life.
+        # Triggers then resolve in bounded source order (not APNAP/priority).
+        pending = []
         for source in sorted(tuple(self.zones.kernel.on_battlefield()),
                              key=lambda o:o.object_id):
             for slot, rule in enumerate(self._abilities(source, "end_step")):
                 if source.controller != active_seat and rule.condition.kind != "no_creatures":
                     continue
-                key = (turn, source.object_id, slot, rule.oracle_excerpt)
+                key = (turn, active_seat, source.object_id, slot, rule.oracle_excerpt)
                 if key in self._handled:
                     continue
-                self._handled.add(key)
-                if not self._condition(rule, source.controller, life_start_index):
+                if self._condition(rule, source.controller, life_start_index):
+                    pending.append((key, source, rule))
+                else:
+                    # At the beginning of the step the condition was false.
+                    self._handled.add(key)
+        # Validate all externally supplied decisions before mutating state.
+        for key, source, rule in pending:
+            x = choices.get(source.object_id, 0)
+            if type(x) is not int or x < 0:
+                raise ValueError("X must be a nonnegative integer")
+            if rule.payment.x_generic and x > self.life_lost_since(
+                    source.controller, life_start_index):
+                raise ValueError("X exceeds actual life lost this turn")
+        results = []
+        for key, source, rule in pending:
+            x = choices.get(source.object_id, 0)
+            if rule.payment.x_generic:
+                if not x:
+                    self._handled.add(key)
                     continue
-                x = choices.get(source.object_id, 0)
-                if type(x) is not int or x < 0:
-                    raise ValueError("X must be a nonnegative integer")
-                if rule.payment.x_generic:
-                    if x > self.life_lost_since(source.controller, life_start_index):
-                        raise ValueError("X exceeds actual life lost this turn")
-                    if not x:
-                        continue
-                    paid = self.mana_service.pay(source.controller, "{" + str(x) + "}")
-                    if paid is None:
-                        continue
-                results.append(self._execute(source, rule, x=x))
+                paid = self.mana_service.pay(source.controller, "{" + str(x) + "}")
+                if paid is None:
+                    self._handled.add(key)
+                    continue
+            results.append(self._execute(source, rule, x=x))
+            self._handled.add(key)
         return tuple(results)
