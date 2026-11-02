@@ -1496,7 +1496,8 @@ def run_bounded_early_game(deck_key, *, seed=0, turns=6, mulligan="one-free", pr
         # attacks on one another; no privileged target at seat zero.
         if opponent_pressure is not None:
             for combat in opponent_pressure.player_combat(
-                    turn,beginning_creature_ids=beginning_creature_ids):
+                    turn,beginning_creature_ids=beginning_creature_ids,
+                    style=pilot_style,signals=pilot_signals):
                 events.append({
                     "type":"player_"+combat.operation,
                     "object_id":combat.object_id,
@@ -1721,6 +1722,8 @@ def run_bounded_early_game(deck_key, *, seed=0, turns=6, mulligan="one-free", pr
             "resource_end": resource_end,
             "mana_payment_events": list(mana_service.mana_events[mana_ledger_start:]),
             "life_totals":dict(life.kernel.life_totals),
+            "pilot_combat": (dict(opponent_pressure.last_player_combat_decision)
+                                if opponent_pressure is not None else None),
             "pilot_decisions":list(pilot_decisions),
             "life_totals_start":dict(outcome_recorder.history[-2]["life_totals"]),
             "life_changes":list(round_life["life_changes"]),
