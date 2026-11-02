@@ -30,6 +30,15 @@ def _mean(values):
     return round(sum(values)/len(values),3)
 
 
+def _quantile(values,fraction):
+    """Stable linear quantile for any n>=1; no external dependencies."""
+    values=sorted(values)
+    position=(len(values)-1)*fraction
+    lo=int(position)
+    hi=min(len(values)-1,lo+1)
+    return round(values[lo]+(values[hi]-values[lo])*(position-lo),3)
+
+
 def summarize_games(runs, requested_rounds):
     """Count results without assigning a winner to censored games."""
     if not runs or type(requested_rounds) is not int:
@@ -37,12 +46,16 @@ def summarize_games(runs, requested_rounds):
     outcome_counts={state:0 for state in OUTCOME_STATES}
     eliminated={str(seat):0 for seat in range(4)}
     completion=[]
+    terminal_rounds={state:{} for state in OUTCOME_STATES}
     for run in runs:
         result=run["outcome"]
         status=result["status"]
         if status not in outcome_counts:
             raise ValueError("Unexpected modeled outcome")
         outcome_counts[status]+=1
+        completed=result["completed_rounds"]
+        hist=terminal_rounds[status]
+        hist[str(completed)]=hist.get(str(completed),0)+1
         if result["complete"]:
             completion.append(result["completed_rounds"])
         for entry in result["eliminations"]:
@@ -62,6 +75,10 @@ def summarize_games(runs, requested_rounds):
                          for seat,vals in by_seat.items()},
             "median_life":{seat:median(vals)
                            for seat,vals in by_seat.items()},
+            "p25_life":{seat:_quantile(vals,0.25)
+                        for seat,vals in by_seat.items()},
+            "p75_life":{seat:_quantile(vals,0.75)
+                        for seat,vals in by_seat.items()},
             "alive_games":{str(seat):sum(seat in row["alive_seats"]
                                        for row in observed)
                            for seat in range(4)},
@@ -74,6 +91,7 @@ def summarize_games(runs, requested_rounds):
         "median_rounds_to_modeled_terminal":(
             median(completion) if completion else None),
         "eliminations_by_seat":eliminated,
+        "round_counts_by_outcome":terminal_rounds,
         "life_by_round":trend,
         "interpretation":(
             "Outcomes use modeled life-zero elimination only, with "
