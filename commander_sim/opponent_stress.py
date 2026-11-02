@@ -85,7 +85,7 @@ class BoundedOpponentPressure:
         commanders=sum("commander" in o.card.supertypes for o in board)
         return 1.0 + 0.45*force + 1.1*len(board) + 1.3*noncreatures + 4.0*commanders + 0.07*max(0,self.life.total(seat))
 
-    def _target_seat(self,actor,role,*,combat=False):
+    def _target_seat(self,actor,role,*,combat=False,eligible=None):
         """Weighted stochastic threat selection among *all* other live seats.
 
         Aggro biases toward poorly defended opponents, control toward
@@ -94,7 +94,8 @@ class BoundedOpponentPressure:
         seating order or by assuming seat zero is the human player.
         """
         choices=[seat for seat in self.life.kernel.life_totals
-                 if seat!=actor and self.life.total(seat)>0]
+                 if seat!=actor and self.life.total(seat)>0
+                 and (eligible is None or seat in eligible)]
         if not choices:
             return None
         weights=[]
@@ -117,17 +118,17 @@ class BoundedOpponentPressure:
         # Model a reviewed-like targeted exile pressure event, NOT an actual
         # spell cast from an opponent's hand. No invented mana or card.
         kernel = self.zones.kernel
-        target_seat=self._target_seat(seat,role)
-        if target_seat is None:
-            return False
-        candidates = [
+        valid=[
             o for o in kernel.on_battlefield()
-            if o.controller == target_seat
+            if o.controller!=seat
             and bool(o.types & {"creature","enchantment","artifact"})
             and kernel.legal_target(seat,o.object_id,
                                     frozenset({"creature","enchantment","artifact"}))]
-        if not candidates:
+        target_seat=self._target_seat(seat,role,eligible={
+            obj.controller for obj in valid})
+        if target_seat is None:
             return False
+        candidates=[o for o in valid if o.controller==target_seat]
         # Target a consequential engine or commander over an expendable token.
         def score(o):
             raw=self.catalog.get(o.card.name,{})
@@ -275,11 +276,13 @@ class BoundedOpponentPressure:
             # death triggers run on the existing authoritative battlefield.
             self._combat(seat,role,turn)
             # Combo role adds an explicitly abstract noncombat clock.
-            if role=="combo" and turn>=7 and self.life.total(0)>0:
-                amount=3+turn//3+self.rng.choice((-1,0,0,1))
-                self.life.lose(0,amount)
-                self.events.append(OpponentEvent(
-                    turn,seat,role,"abstract_combo_loss",None,amount))
+            if role=="combo" and turn>=7:
+                victim=self._target_seat(seat,role)
+                if victim is not None:
+                    amount=3+turn//3+self.rng.choice((-1,0,0,1))
+                    self.life.lose(victim,amount)
+                    self.events.append(OpponentEvent(
+                        turn,seat,role,"abstract_combo_loss",None,amount,victim))
             # Each opponent has its own end-of-turn damage cleanup and
             # duration expiration before the next player's turn begins.
             kernel=self.zones.kernel
