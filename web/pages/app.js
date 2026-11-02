@@ -437,8 +437,6 @@ function renderReplay(){
   const deck=selectedDeck(),file=REPLAY_ASSETS[selected];
   const eligible=!!file&&!isUnsimulatedVersion();
   panel.hidden=!eligible;
-  const development=$("development-panel");
-  if(development)development.open=true;
   if(!eligible)return;
   const key=selected,hash=deck.deck_sha256;
   if(!window.CommanderReplay){
@@ -806,22 +804,23 @@ function creatureInsightReport(runs){
   if(!model)return null;
   return window.DeckInsightExplorer.render(model,{
     onOpenCard:id=>showCard(id),
-    onOpenEvidence:openCreatureInsightEvidence
+    renderMana:manaSymbols,
+    onRenderEvidence:openCreatureInsightEvidence
   });
 }
-function openCreatureInsightEvidence(example,card){
-  const panel=$("insight-turn-viewer"),root=$("insight-turn-root");
+function openCreatureInsightEvidence(root,example,card){
   const deck=selectedDeck();
-  if(!panel||!root||!deck||!window.CommanderReplay)return;
+  if(!root||!deck||!window.CommanderReplay)return;
   if(isUnsimulatedVersion()||example.run.deck_key!==selected||
-     example.run.deck_sha256!==deck.deck_sha256)return;
-  panel.hidden=false;panel.open=true;
+     example.run.deck_sha256!==deck.deck_sha256){
+    root.textContent="The selected game does not match this deck revision.";
+    return;
+  }
   try{
     window.CommanderReplay.renderBoundedEvidence(root,example.run,{
       turn:example.turn,eventIndex:example.eventIndex,cardName:card.name,
       commanderName:deck.commander,lookup:cardInfo,openCard:showCard
     });
-    panel.scrollIntoView?.({behavior:"smooth",block:"start"});
   }catch(error){
     root.textContent="This run could not be opened: "+error.message;
   }
@@ -957,71 +956,84 @@ function physicalArchiveBreakdownNode(runs){
   area.appendChild(content);
   return area;
 }
+
+/* Stats and primary insights are independent of the disclosure containing the
+ * heavier development archive. This keeps the first useful cards above the fold.
+ */
+function renderSimulationSnapshot(runs){
+  const section=$("simulation-snapshot"),metrics=$("simulation-snapshot-metrics");
+  clear(metrics);section.hidden=true;
+  const stats=physicalArchiveMetrics(runs||[]);
+  if(!stats)return;
+  section.hidden=false;
+  $("simulation-snapshot-scope").textContent=stats.n+" runs · 6 turns · reviewed actions";
+  for(const [icon,value,label] of [
+    ["◆",stats.third+"%","3+ lands by turn 3"],
+    ["♟",stats.creatures+"%","Creature on board · turn 6"],
+    ["▤",stats.unsupported,"Unsupported cards in hand · avg. turn 6"]
+  ]){
+    const tile=el("div",null,"simulation-snapshot-stat");
+    tile.append(el("span",icon,"simulation-snapshot-icon"),
+      el("strong",value),el("span",label,"simulation-snapshot-name"));
+    metrics.appendChild(tile);
+  }
+}
 function showBoundedBatch(){
-  const root=$("bounded-results");clear(root);
-  const insightViewer=$("insight-turn-viewer");
-  if(insightViewer){insightViewer.hidden=true;insightViewer.open=false;clear($("insight-turn-root"))}
+  const root=$("bounded-results"),grid=$("key-insights-grid");
+  clear(root);clear(grid);
+  const empty=$("key-insights-empty");empty.hidden=true;empty.textContent="";
   const batch=boundedBatches?.decks?.[selected],archive=detailedArchives[selected];
-  const exact=!isUnsimulatedVersion()&&archive?.deck_sha256===selectedDeck().deck_sha256;
+  const selectedHash=selectedDeck()?.deck_sha256;
+  const exact=!isUnsimulatedVersion()&&archive?.deck_sha256===selectedHash;
+  const matchingBatch=!isUnsimulatedVersion()&&batch?.deck_sha256===selectedHash;
+  const runs=matchingBatch?batch.runs:(exact?archive.runs:null);
+  renderSimulationSnapshot(runs);
+  if(Array.isArray(runs)&&runs.length){
+    const source={runs};
+    const creature=creatureInsightReport(runs)||boardReport(source,"Creature");
+    grid.appendChild(creature);
+    for(const type of ["Artifact","Enchantment"])
+      grid.appendChild(boardReport(source,type));
+  }else{
+    empty.hidden=false;
+    empty.textContent="No matching reviewed-action simulations are available for this exact deck revision.";
+  }
+  // All extended development data remains available, but collapsed by default.
   if(exact){
-    if(selected==="mortarion_physical_final"){
-      const stats=physicalArchiveMetrics(archive.runs);
-      if(stats){
-        const intro=el("section",null,"panel");
-        intro.append(el("h3","Physical Mortarion · early-game development","board-heading"),
-          el("p",stats.n+" seeded runs · six turns · modeled reviewed actions, not full games","small"));
-        const metrics=el("div",null,"metrics");
-        for(const [value,label] of [
-          [stats.third+"%","3+ lands by turn 3"],
-          [stats.fourth+"%","4+ lands by turn 4"],
-          [stats.median,"Median lands on turn 6"],
-          [stats.creatures+"%","Reviewed creature on board, turn 6"],
-          [stats.rocks+"%","Reviewed mana rock on board, turn 6"],
-          [stats.unsupported,"Unsupported cards in hand, turn 6 (mean)"]]){
-          const tile=el("div",null,"metric");
-          tile.append(el("strong",value),el("span",label));
-          metrics.appendChild(tile);
-        }
-        intro.appendChild(metrics);
-        intro.appendChild(el("p","These figures measure modeled early development, not deck power, win probability or full card synergy.","micro"));
-        root.appendChild(intro);
-      }
-    }
-    const stories=archiveStories(archive);if(stories)root.appendChild(stories);
-    if(selected==="mortarion_physical_final"&&(!batch||batch.deck_sha256!==selectedDeck().deck_sha256)){
-      const archived={runs:archive.runs};
-      root.append(el("h3","Mana and battlefield development","board-heading"),
-        el("p","Open each report to inspect turn-by-turn changes and individual seeded runs.","small"));
-      root.appendChild(landStory(archived));
-      const reports=el("div",null,"board-grid");
-      for(const type of ["Creature","Artifact","Enchantment"])
-        reports.appendChild(type==="Creature"?(creatureInsightReport(archive.runs)||boardReport(archived,type)):boardReport(archived,type));
-      root.appendChild(reports);
+    const stories=archiveStories(archive);
+    if(stories)root.appendChild(stories);
+    if(selected==="mortarion_physical_final"&&!matchingBatch){
+      root.append(el("h3","Mana development","board-heading"),
+        el("p","Explore the recorded land progression and seeded examples.","small"));
+      root.appendChild(landStory({runs:archive.runs}));
       root.appendChild(physicalArchiveBreakdownNode(archive.runs));
-      root.appendChild(el("p","Unsupported abilities, opponents, combat, Mortarion casting, and wins are not modeled as resolved outcomes. No win-rate conclusion is justified.","micro"));
+      root.appendChild(el("p","Unsupported abilities, opponents, combat and wins cannot be inferred from these records.","micro"));
     }
   }
-  if(isUnsimulatedVersion() || !batch || batch.deck_sha256!==selectedDeck().deck_sha256){
-    if(!exact)root.appendChild(el("p","No matching reviewed-action archive is available for this exact deck revision."));
+  if(!matchingBatch){
+    if(!exact)root.appendChild(el("p","No matching reviewed-action archive is available for this exact deck revision.","small"));
     return;
   }
-  root.appendChild(el("p",batch.seed_count+" simulated runs · 6 turns · one free mulligan", "small"));
   if(batch.runs?.length)root.appendChild(landStory(batch));
-  if(batch.runs?.length){
-    root.append(el("h3","What reaches the battlefield?","board-heading"),el("p","Open a takeaway for its timeline, common cards, and matching runs.","small"));
-    const reports=el("div",null,"board-grid");["Creature","Artifact","Enchantment"].forEach(type=>reports.appendChild(
-      type==="Creature"?(creatureInsightReport(batch.runs)||boardReport(batch,type)):boardReport(batch,type)));root.appendChild(reports);
-  }
   const details=document.createElement("details");details.className="story-drilldown";
   details.appendChild(el("summary","View turn-by-turn averages"));
-  const table=el("table"), head=el("tr");
+  const table=el("table"),head=el("tr");
   ["Turn","Avg. lands","Avg. creatures on board","Avg. rocks","Avg. unsupported cards in hand"].forEach(x=>head.appendChild(el("th",x)));
   table.appendChild(head);
-  for(const row of batch.turns){const tr=el("tr"); [row.turn,row.mean_lands_in_play,row.mean_reviewed_creatures_in_play,row.mean_reviewed_mana_rocks_in_play,row.mean_unsupported_hand_cards].forEach(x=>tr.appendChild(el("td",String(x))));table.appendChild(tr);}
-  const wrap=el("div",null,"table-scroll");wrap.appendChild(table);details.appendChild(wrap);root.appendChild(details);
+  for(const row of batch.turns){
+    const tr=el("tr");
+    [row.turn,row.mean_lands_in_play,row.mean_reviewed_creatures_in_play,
+     row.mean_reviewed_mana_rocks_in_play,row.mean_unsupported_hand_cards]
+      .forEach(x=>tr.appendChild(el("td",String(x))));
+    table.appendChild(tr);
+  }
+  const wrap=el("div",null,"table-scroll");wrap.appendChild(table);
+  details.appendChild(wrap);root.appendChild(details);
   const model=document.createElement("details");model.className="story-drilldown";
-  model.appendChild(el("summary","About this simulation"));model.appendChild(el("p",batch.limitations,"small"));root.appendChild(model);
+  model.appendChild(el("summary","About this simulation"));
+  model.appendChild(el("p",batch.limitations,"small"));root.appendChild(model);
 }
+
 function showAggregate(){
   showBoundedBatch();
   const result=$("results-kpis"),intro=$("results-takeaway");
