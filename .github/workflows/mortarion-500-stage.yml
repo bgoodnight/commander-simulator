@@ -1,6 +1,6 @@
 name: Stage and review 500 Mortarion modeled games
 
-# Re-run after the signed-power combat damage correction; next repeats require dispatch.
+# Re-run after correcting paid sacrifice and delayed graveyard return timing.
 on:
   push:
     branches: [main]
