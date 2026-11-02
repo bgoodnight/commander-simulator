@@ -19,7 +19,7 @@ class LifeChange:
     def __post_init__(self):
         if (type(self.seat) is not int or self.seat < 0
                 or type(self.amount) is not int or self.amount < 0
-                or self.kind not in {"gain","loss"}):
+                or self.kind not in {"gain","loss","damage"}):
             raise ValueError("Invalid kernel life change")
 
 
@@ -57,6 +57,15 @@ class KernelLife:
 
     def lose(self,seat,amount,source_id=None):
         return self.apply(LifeChange(seat,amount,"loss",source_id))
+
+    def damage(self,seat,amount,source_id=None):
+        """Record unprevented player damage as damage, distinct from costs.
+
+        This bounded operation requires an external host to establish that
+        prevention, replacement, protection and player elimination do not
+        change the result. It is not a full damage prevention engine.
+        """
+        return self.apply(LifeChange(seat,amount,"damage",source_id))
 
     def each_opponent_loses(self,controller,amount,source_id=None):
         self.total(controller)
