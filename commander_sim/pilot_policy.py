@@ -169,6 +169,8 @@ def _category(kind,raw):
         mana_text=bool(re.search(r"\{T\}: Add|\{T\}: Add",text,re.I))
         if mana_text or re.search(r"\badd \{[WUBRGC]\}",text,re.I):
             return "ramp"
+        # Non-mana artifacts are still meaningful permanents, not "other".
+        return "artifact"
     if kind in {"creature","enchantment"}:
         if _TRIGGERS.search(text) or re.search(
                 r"whenever [^\n]{0,100}(?:dies|sacrifice)|"
@@ -272,3 +274,55 @@ def choose_legal_option(options,context,signals,catalog,*,style="adaptive"):
         scored.append(((-result.score,paid,name,oid),option,result))
     _,best,result=min(scored,key=lambda item:item[0])
     return best,result
+
+
+@dataclass(frozen=True)
+class CombatPosture:
+    """Bounded combat preference; never changes attacker or blocker legality."""
+    attack_limit: int
+    reserve: int
+    factors: tuple[str,...]
+
+    def as_dict(self):
+        return {"attack_limit":self.attack_limit,"reserve":self.reserve,
+                "factors":list(self.factors)}
+
+
+def choose_combat_posture(*,life,opposing_creatures,style="adaptive",signals=None):
+    """Choose aggression from public board pressure and the same pilot style.
+
+    The physical kernel still selects legal attackers/blocks and resolves
+    damage. These settings only cap optional attackers and defensive reserves;
+    they are not predictions of unmodeled combat rules or card permissions.
+    """
+    if style not in STYLES:
+        raise ValueError("Unknown combat pilot personality")
+    if (type(life) is not int or type(opposing_creatures) is not int
+            or opposing_creatures<0):
+        raise ValueError("Invalid combat pilot context")
+    if signals is not None and not isinstance(signals,DeckSignals):
+        raise TypeError("Verified deck signals required")
+    reserve=(2 if life<=18 and opposing_creatures>=5 else
+             1 if opposing_creatures>=5 else 0)
+    limit=3
+    factors=["base:board_pressure"]
+    if style=="tempo":
+        reserve=max(0,reserve-1)
+        limit=4
+        factors.append("personality:tempo")
+    elif style=="conservative":
+        limit=2
+        if opposing_creatures:
+            reserve=min(3,reserve+1)
+        factors.append("personality:conservative")
+    elif (style=="engine" and opposing_creatures
+          and signals is not None
+          and (signals.dense("spell_engine") or signals.dense("sacrifice"))):
+        reserve=min(3,reserve+1)
+        factors.append("protect_engine_development")
+    elif (style=="adaptive" and signals is not None
+          and signals.dense("combat")):
+        reserve=max(0,reserve-1)
+        limit=4
+        factors.append("deck_combat_density")
+    return CombatPosture(limit,reserve,tuple(factors))
