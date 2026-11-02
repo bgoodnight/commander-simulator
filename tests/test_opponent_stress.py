@@ -131,6 +131,47 @@ class OpponentPressureTests(unittest.TestCase):
         self.assertEqual(a.events[-1].target_seat,2)
         self.assertNotIn(body,self.kernel.objects)
 
+    def test_removal_priority_favors_high_threat_across_seats(self):
+        """A commander should compete globally, not lose a seat lottery."""
+        selections={0:0,2:0,3:0}
+        for seed in range(96):
+            self.setUp()
+            # Same large creature on each eligible seat; one extra
+            # commander threat on seat 3, never seat zero.
+            for seat in (0,2,3):
+                self.zones.add(self.C(
+                    "test:body:"+str(seat),"Comparable threat",
+                    frozenset({"creature"}),base_power=3,base_toughness=3,
+                    coverage="approx"),seat,"battlefield")
+            self.zones.add(self.C(
+                "test:leader","High-threat commander",
+                frozenset({"creature"}),supertypes=frozenset({"commander"}),
+                base_power=5,base_toughness=5,coverage="approx"),
+                3,"battlefield")
+            a=self.stress("control",seed=seed)
+            self.assertTrue(a._exile_one(1,3,"control"))
+            selections[a.events[-1].target_seat]+=1
+        self.assertGreater(selections[3],selections[0],selections)
+        self.assertGreater(selections[3],selections[2],selections)
+        self.assertGreater(selections[0],0,selections)
+        self.assertGreater(selections[2],0,selections)
+
+    def test_removal_priority_is_not_fixed_on_physical_player_seat(self):
+        """Symmetric permanent threats receive attention on all seats."""
+        selections={0:0,2:0,3:0}
+        for seed in range(96):
+            self.setUp()
+            for seat in (0,2,3):
+                self.zones.add(self.C(
+                    "test:threat:"+str(seat),"Equal threat",
+                    frozenset({"creature"}),base_power=4,base_toughness=4,
+                    coverage="approx"),seat,"battlefield")
+            a=self.stress("control",seed=seed)
+            self.assertTrue(a._exile_one(1,3,"control"))
+            selections[a.events[-1].target_seat]+=1
+        self.assertTrue(all(count>=12 for count in selections.values()),
+                        selections)
+
     def test_unsupported_opponent_scenario_fails_closed(self):
         with self.assertRaises(ValueError):
             self.stress("infinite_cheating")
