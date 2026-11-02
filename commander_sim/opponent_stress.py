@@ -8,6 +8,7 @@ Opponent combat uses physical attackers/blockers with explicit simplified legali
 """
 from dataclasses import dataclass
 from random import Random
+from .reviewed_death_effects import capture_battlefield
 
 SCENARIOS = {
     "balanced": ("aggro", "control", "value"),
@@ -185,7 +186,6 @@ class BoundedOpponentPressure:
         weights=[max(0.25,1+max(-0.5,score(obj)))**1.8
                  for obj in candidates]
         target=self.rng.choices(candidates,weights=weights,k=1)[0]
-        from .reviewed_death_effects import capture_battlefield
         # One bounded instant response window before a creature destroy;
         # only the defending player can cast their own reviewed response.
         if removal_kind=="destroy" and callable(self.before_removal):
@@ -286,7 +286,6 @@ class BoundedOpponentPressure:
                 continue
             for block in selected:
                 used.add(block.object_id)
-            from .reviewed_death_effects import capture_battlefield
             before=capture_battlefield(kernel)
             first_move=len(kernel.moves)
             # Simultaneous marked creature damage on existing physical objects.
