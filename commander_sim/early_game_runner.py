@@ -25,7 +25,7 @@ from .deck_fixtures import FIXTURES, EXPERIMENTAL_FIXTURES, SHARED_CATALOG
 from .generic_cast import ReviewedCreatureCast, cast_reviewed_permanent
 from .provisional_import import provisional_profile, provisional_report
 from .provisional_actions import cast_provisional_spell
-from .library_actions import required_draws, resolve_library_actions
+from .library_actions import required_library_cards_for_draws, resolve_library_actions
 from .kernel_reporting import project_kernel_turn
 from .board_features import analyze_authoritative_run
 from .reviewed_early_cards import REVIEWED_BY_DECK, LIMITATIONS, reviewed_creature
@@ -609,18 +609,16 @@ def run_bounded_early_game(deck_key, *, seed=0, turns=6, mulligan="one-free", pr
                         and provisional.kind=="creature_body"
                         and provisional.entry_actions
                         and len(zones.ids(0,"library")) <
-                            sum(step.count for step in provisional.entry_actions
-                                if step.kind in {"draw","mill"})):
-                    # A bounded entry-draw must never be silently omitted
-                    # after paying the source. Conservatively decline the
-                    # card when a mandatory compound library sequence cannot
-                    # be fulfilled in this reduced game host.
+                            required_library_cards_for_draws(provisional.entry_actions)):
+                    # Mill-only ETBs are legal with an empty library. Reject
+                    # only when a later mandatory draw cannot be completed
+                    # in the bounded no-library-loss host.
                     continue
                 if provisional_spell:
                     # A speculative preview cannot commit a draw from an
                     # empty library or a source-paid spell that kills its
                     # own controller. Filter before the spell is chosen.
-                    draw_need = (required_draws(provisional.library_actions)
+                    draw_need = (required_library_cards_for_draws(provisional.library_actions)
                                  if provisional.library_actions else
                                  provisional.amount if provisional.mode in {"draw","draw_lose"}
                                  else 0)
@@ -658,8 +656,8 @@ def run_bounded_early_game(deck_key, *, seed=0, turns=6, mulligan="one-free", pr
                 entering = approved_enter_hand_cast(name)
                 if entering:
                     reviewed_entry=reviewed_enter_rule(name,raw)
-                    required=sum(x.count for x in reviewed_entry.library_actions
-                                 if x.kind in {"draw","mill"})
+                    required=required_library_cards_for_draws(
+                        reviewed_entry.library_actions)
                     if required>len(zones.ids(0,"library")):
                         continue
                 ramp = reviewed_ramp(name,raw) if "land" not in obj.types else None
@@ -1096,6 +1094,8 @@ def run_bounded_early_game(deck_key, *, seed=0, turns=6, mulligan="one-free", pr
                 events.append({"type":"provisional_enter_resolved",
                     "card":name,"source_object_id":resolved_id,
                     "milled_ids":list(entry.milled_ids),
+                    "drawn_ids":list(entry.drawn_ids),
+                    "discarded_ids":list(entry.discarded_ids),
                     "library_actions":list(entry.steps),
                     "fidelity":"provisional_partial"})
             if name == "Solemn Simulacrum" and reviewed_ramp(name,raw_by_name[name]):
