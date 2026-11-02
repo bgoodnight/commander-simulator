@@ -204,6 +204,7 @@ def run_bounded_early_game(deck_key, *, seed=0, turns=6, mulligan="one-free", pr
     states = []
     for turn in range(1, turns + 1):
         mana_service.clear()
+        mana_ledger_start = len(mana_service.mana_events)
         turn_kernel_event_index=len(kernel.events)
         events = []
         def approved_spell_triggers(ticket):
@@ -866,6 +867,7 @@ def run_bounded_early_game(deck_key, *, seed=0, turns=6, mulligan="one-free", pr
             "resource_start": resource_start,
             "resource_after_precast": resource_after_precast,
             "resource_end": resource_end,
+            "mana_payment_events": list(mana_service.mana_events[mana_ledger_start:]),
             "life_totals":dict(life.kernel.life_totals),
             "unsupported_cards_in_hand": sorted(
                 kernel.get(oid).card.name for oid in zones.ids(0, "hand")
