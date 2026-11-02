@@ -51,6 +51,10 @@ LANDS={
         ["B"],
         entry="tapped",
         ignored=("Conditional opponent drain activation pending",)),
+    "Memorial to Folly":LandReview(
+        "2bc38f14-0314-4351-8138-e2b8bf041404",
+        "This land enters tapped.\n{T}: Add {B}.\n{2}{B}, {T}, Sacrifice this land: Return target creature card from your graveyard to your hand.",
+        ("B",),entry="tapped"),
     "Mortuary Mire":LandReview(
         "1b3fb20a-e090-4286-9c03-6b71c27c45be",
         "This land enters tapped.\nWhen this land enters, you may put target creature card from your graveyard on top of your library.\n{T}: Add {B}.",
