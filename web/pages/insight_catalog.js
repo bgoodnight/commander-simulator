@@ -190,7 +190,7 @@
     function add(name){
       if(!summaries.has(name))summaries.set(name,{
         name,card:lookup(name),seen:new Set(),drawn:new Set(),
-        held:new Map(),previews:[],played:[],seenEvidence:new Map()
+        held:new Map(),previews:[],played:[],seenEvidence:new Map(),drawEvidence:new Map()
       });
       return summaries.get(name);
     }
@@ -240,7 +240,10 @@
         const c=add(name),held=facts.handTurns.get(name)||[];
         c.seen.add(run.seed);
         c.held.set(run.seed,held);
-        if(drawn.has(name))c.drawn.add(run.seed);
+        if(drawn.has(name)){
+          c.drawn.add(run.seed);
+          c.drawEvidence.set(run.seed,drawing.get(name));
+        }
         c.previews.push(...facts.previewTurns.get(name)||[]);
         c.played.push(...plays.get(name)||[]);
         c.seenEvidence.set(run.seed,
@@ -267,7 +270,7 @@
         a.seed-b.seed).map(item=>item.sample);
       const allHeld=[...heldTurns].sort(bySeed);
       const drawnExamples=[...c.drawn].sort((a,b)=>a-b)
-        .map(seed=>c.seenEvidence.get(seed)).filter(Boolean);
+        .map(seed=>c.drawEvidence.get(seed)).filter(Boolean);
       const allPlays=[...c.played].sort(bySeed);
       const previews=[...c.previews].sort(bySeed);
       const mostHeld=[...byDuration].sort((a,b)=>b.length-a.length||a.seed-b.seed)
@@ -277,7 +280,7 @@
           items[0].run.events[items[0].run.events.length-1].turn))
         .map(([,items])=>items.at(-1)).sort(bySeed);
       return {
-        name:c.name,card:c.card,score:typical,
+        name:c.name,card:c.card,score:typical,observedRuns:n,
         scoreLabel:duration(typical)+" median rounds · "+n+" seen",
         viewScores:{median:typical,held:total,adjusted,payable:previews.length},
         viewLabels:{
@@ -314,7 +317,7 @@
         ]
       };
     }).filter(c=>c.viewScores.held>=2&&c.viewScores.median>0&&
-      c.viewLabels&&Number(c.viewLabels.median.split(" · ").at(-1).split(" ")[0])>=minRuns)
+      c.observedRuns>=minRuns)
       .sort((a,b)=>b.score-a.score||
         b.viewScores.adjusted-a.viewScores.adjusted||
         b.viewScores.held-a.viewScores.held||
@@ -325,7 +328,7 @@
       id:"held-in-hand",kind:"diagnostic",title:"Median turns held",
       value:duration(contenders[0].score)+" turns",
       headlineDetail:duration(contenders[0].score)+
-        " median rounds held · "+contenders[0].viewLabels.median.split(" · ").at(-1),
+        " median rounds held · "+contenders[0].observedRuns+" games seen",
       chartLabel:"Median end-of-turn hand rounds per observed game",
       explanation:"Ranks cards by the typical number of end-of-turn snapshots spent in hand across games where each card was seen. Immediate plays contribute zero; frequent appearances are shown separately. Low-sample cards are filtered out. This is not a measure of card quality or missed legal casts.",
       views:[
