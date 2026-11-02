@@ -1,5 +1,5 @@
 name: Mortarion physical opponent stress and narrative audit
-# Re-test seat-neutral stochastic opponents with real graveyard interactions.
+# Re-test reviewed instant resolution, actor type, and seat-neutral targets.
 on:
   workflow_dispatch:
   push:
