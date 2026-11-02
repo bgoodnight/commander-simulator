@@ -208,7 +208,7 @@
         chosen.appendChild(button);
       }
       chosen.appendChild(create("strong","insight-card-name",card.name));
-      ranking.append(create("h3",null,mode?mode.label:"Recorded outcomes"));
+      ranking.append(create("h3",null,mode?mode.chartLabel:model.chartLabel));
       if(model.views?.length>1){
         const toggle=create("div","insight-ranking-views");
         model.views.forEach((view,i)=>{
