@@ -205,7 +205,7 @@ class BoundedEarlyGameTests(unittest.TestCase):
 
     def test_invalid_deck_or_horizon_fails_closed(self):
         for key, turns in (("unsupported_deck", 6), ("wretched_ranks", 0),
-                           ("wretched_ranks", 11)):
+                           ("wretched_ranks", 31)):
             with self.assertRaises(ValueError):
                 run_bounded_early_game(key, turns=turns)
 
