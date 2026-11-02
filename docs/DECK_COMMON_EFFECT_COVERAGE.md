@@ -158,6 +158,12 @@ removal/zone/attachment and copy spells; the cleanup selector and diagnostic
 report now share a single recognized-action check. Recognized does not mean
 currently payable or target-legal.
 
+Another exposed gap was **Withering Torment**, now an exact Oracle-pinned
+configuration of the shared target-destruction and life-loss path. The generic
+removal pilot also considers noncreature enchantments instead of treating
+all zero-power permanents as irrelevant, including when an opponent has no
+creatures. This is a tactical heuristic, not a validated threat ranking.
+
 ## Still incomplete — required for full-deck claims
 
 The next gate is to connect reviewed ETB and graveyard alternatives to all
