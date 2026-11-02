@@ -47,6 +47,8 @@ class BoundedOpponentPressure:
         self.definition = card_definition
         self.scenario = scenario
         self.attachments = attachment_engine
+        self.before_removal = None
+        self.zone_spells = None
         self.rng = Random(seed * 1009 + 617)
         roles = list(SCENARIOS[scenario])
         self.rng.shuffle(roles)
@@ -147,10 +149,14 @@ class BoundedOpponentPressure:
         # Model a reviewed-like targeted exile pressure event, NOT an actual
         # spell cast from an opponent's hand. No invented mana or card.
         kernel = self.zones.kernel
+        removal_kind=("destroy" if self.rng.random()<
+                      (0.58 if role=="control" else 0.73)
+                      else "exile")
         valid=[
             o for o in kernel.on_battlefield()
             if o.controller!=seat
             and bool(o.types & {"creature","enchantment","artifact"})
+            and (removal_kind=="exile" or "indestructible" not in o.keywords)
             and kernel.legal_target(seat,o.object_id,
                                     frozenset({"creature","enchantment","artifact"}))]
         target_seat=self._target_seat(seat,role,eligible={
@@ -168,15 +174,22 @@ class BoundedOpponentPressure:
                     + min(5,int(raw.get("cmc") or 0)) - (4 if o.token else 0))
         target=max(candidates,key=lambda o:(score(o),-o.object_id))
         from .reviewed_death_effects import capture_battlefield
+        # One bounded instant response window before a creature destroy;
+        # only the defending player can cast their own reviewed response.
+        if removal_kind=="destroy" and callable(self.before_removal):
+            self.before_removal(target.object_id,seat,turn,removal_kind)
         before=capture_battlefield(kernel)
         moves=len(kernel.moves)
-        self.zones.move(target.object_id,"exile","exile",commander_choice=True)
+        self.zones.move(target.object_id,
+                        "graveyard" if removal_kind=="destroy" else "exile",
+                        removal_kind,commander_choice=True)
         if self.death_engine is not None:
             self.death_engine.resolve_deaths(before,move_index=moves,turn=turn)
         if self.attachments is not None:
             self.attachments.sync(turn=turn)
-        self.events.append(OpponentEvent(turn,seat,role,"abstract_exile",
-                                         target.object_id,0,target_seat))
+        self.events.append(OpponentEvent(
+            turn,seat,role,"abstract_"+removal_kind,
+            target.object_id,0,target_seat))
         return True
 
     def _combat(self,seat,role,turn,defender=None):
@@ -322,6 +335,8 @@ class BoundedOpponentPressure:
             # duration expiration before the next player's turn begins.
             kernel=self.zones.kernel
             kernel.cleanup()
+            if self.zone_spells is not None:
+                self.zone_spells.expire(turn,active_seat=seat)
             if self.attachments is not None:
                 self.attachments.sync(turn=turn)
             if self.life.total(0)<=0 and not self._defeated:
