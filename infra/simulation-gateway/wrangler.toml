@@ -1,0 +1,22 @@
+name = "commander-simulation-gateway"
+main = "worker.mjs"
+compatibility_date = "2026-10-21"
+
+# The origin is public configuration; change if Pages uses a custom domain.
+[vars]
+ALLOWED_ORIGIN = "https://bgoodnight.github.io"
+
+# Approximate per-edge throttling, not a strict global spending cap.
+[[ratelimits]]
+name = "ATTEMPT_LIMIT"
+namespace_id = "670101"
+[ratelimits.simple]
+limit = 6
+period = 60
+
+[[ratelimits]]
+name = "RUN_LIMIT"
+namespace_id = "670102"
+[ratelimits.simple]
+limit = 2
+period = 60
