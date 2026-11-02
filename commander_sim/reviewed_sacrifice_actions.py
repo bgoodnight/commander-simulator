@@ -11,8 +11,7 @@ from .ability_composition import (
     AbilitySlot, AbilityHandler, ComposedCard, AbilityDispatcher)
 from .kernel_life import KernelLife
 from .physical_common_effects import (
-    CardQuantity, draw_physical_cards, CounterPlacement, put_reviewed_counters,
-    scry_physical_cards)
+    CounterPlacement, put_reviewed_counters)
 from .library_actions import LibraryAction, resolve_library_actions
 from .reviewed_death_effects import capture_battlefield
 from .reviewed_token_spells import TokenBlueprint,create_reviewed_token_batches
@@ -221,9 +220,10 @@ def activate_reviewed_sacrifice(
             if operation.action=="wither_draw" and target_id is not None:
                 put_reviewed_counters(kernel,source.controller,target_id,
                     CounterPlacement("-1/-1",1,frozenset({"creature"}),False))
-            answer=draw_physical_cards(zones,source.controller,CardQuantity(1))
-            if not answer.complete:
-                raise AssertionError("Reviewed draw preview invalidated")
+            # Ayara and Yawgmoth reuse the same typed draw primitive that
+            # hand-cast spells and flashback spells now call.
+            answer=resolve_library_actions(
+                zones,source.controller,(LibraryAction("draw",1),))
             drawn=answer.drawn_ids
         elif operation.action=="scry":
             # The same typed library operation is used by spell, trigger and
