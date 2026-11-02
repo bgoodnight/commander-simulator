@@ -90,6 +90,10 @@ def _rule(oracle,excerpt,slot,scope,op,amount=1,token=None,once=False):
 
 
 DEATH_RULES={
+    "Sangromancer":(
+        _rule("920445ab-0ac2-4de7-bc1c-f5e58eb4424c",
+              "Whenever a creature an opponent controls dies, you may gain 3 life.",
+              "opponent_creature_dies","opponent_creature","gain",amount=3),),
     "Blood Artist":(
         _rule("310f141c-7f37-4729-aed6-dd9c09db448d",
               "Whenever this creature or another creature dies, target player loses 1 life and you gain 1 life.",
