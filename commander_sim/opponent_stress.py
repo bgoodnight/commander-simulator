@@ -4,7 +4,7 @@ This is *not* a second rules engine or a claim to run three real Commander
 decks. Three opponents have varied seeded development/removal/damage policies.
 Their abstract creature tokens occupy the same battlefield, so reviewed
 Pestilence, sweepers and death triggers interact with real physical objects.
-Unblocked attack pressure and opponent spell effects are explicitly abstract.
+Opponent combat uses physical attackers/blockers with explicit simplified legality;\nopponent spell effects remain abstract.
 """
 from dataclasses import dataclass
 from random import Random
@@ -50,6 +50,7 @@ class BoundedOpponentPressure:
         self.roles = dict(zip(range(1,4), roles))
         self.events = []
         self._defeated = False
+        self._born = {}
 
     def _board(self, seat):
         return sorted(
@@ -64,6 +65,7 @@ class BoundedOpponentPressure:
             "stress:" + role, name, frozenset({"creature"}),
             base_power=size, base_toughness=size, coverage="approx")
         oid = self.zones.add(definition, seat, "battlefield", token=True)
+        self._born[oid]=turn
         self.events.append(OpponentEvent(turn,seat,role,"abstract_creature",oid,size))
 
     def _exile_one(self, seat, turn, role):
@@ -95,6 +97,78 @@ class BoundedOpponentPressure:
             self.death_engine.resolve_deaths(before,move_index=moves,turn=turn)
         self.events.append(OpponentEvent(turn,seat,role,"abstract_exile",
                                          target.object_id))
+
+    def _combat(self,seat,role,turn):
+        """Resolve bounded combat using real blocker legality and damage/SBA.
+
+        No first strike, trample assignment, prevention, double strike, or
+        combat-trigger stack. Declines unsafe attacker/blocker assumptions.
+        """
+        kernel=self.zones.kernel
+        used=set()
+        attackers=[o for o in self._board(seat)
+                   if not o.tapped and o.power>0
+                   and self._born.get(o.object_id,0)<turn]
+        if role=="control":
+            attackers=attackers[:1]
+        if role=="value":
+            attackers=attackers[:2]
+        for attacker in attackers:
+            if self.life.total(0)<=0:
+                break
+            # Re-check live state: earlier combat could destroy an attacker.
+            if attacker.object_id not in kernel.objects:
+                continue
+            blockers=kernel.legal_blockers(attacker.object_id,0,frozenset(used))
+            # Keep priority engine creatures unless a trade is productive or
+            # survival demands blocking. Tokens are the preferred expendables.
+            def worth_blocking(o):
+                good_trade=o.power>=attacker.toughness
+                survives=o.toughness>attacker.power
+                return (survives, good_trade, o.token,
+                        -int("commander" in o.card.supertypes),
+                        -o.object_id)
+            blockers.sort(key=worth_blocking,reverse=True)
+            chosen=blockers[0] if blockers else None
+            if chosen is not None and not (
+                    chosen.toughness>attacker.power or
+                    chosen.power>=attacker.toughness or
+                    self.life.total(0)<=16):
+                chosen=None
+            attacker.tapped=True
+            kernel._dirty()
+            if chosen is None:
+                self.life.damage(0,attacker.power,attacker.object_id)
+                self.events.append(OpponentEvent(
+                    turn,seat,role,"abstract_unblocked_damage",
+                    attacker.object_id,attacker.power))
+                continue
+            used.add(chosen.object_id)
+            from .reviewed_death_effects import capture_battlefield
+            before=capture_battlefield(kernel)
+            first_move=len(kernel.moves)
+            # Simultaneous marked creature damage on existing physical objects.
+            kernel.damage_creatures_together({
+                attacker.object_id:chosen.power,
+                chosen.object_id:attacker.power})
+            # Lifelink is based on actual damage dealt; prevention and combat
+            # damage triggers remain outside this bounded simulation.
+            if "lifelink" in chosen.keywords and chosen.power>0:
+                self.life.gain(0,chosen.power,chosen.object_id)
+            # Deathtouch is a reusable combat lethal condition. It does not
+            # ignore indestructible, and it applies after damage is marked.
+            for source,target in ((attacker,chosen),(chosen,attacker)):
+                if (source.power>0 and "deathtouch" in source.keywords
+                        and target.object_id in kernel.objects
+                        and "indestructible" not in kernel.get(target.object_id).keywords):
+                    self.zones.move(target.object_id,"graveyard","state_based",
+                                    commander_choice=True)
+            if self.death_engine is not None:
+                self.death_engine.resolve_deaths(
+                    before,move_index=first_move,turn=turn)
+            self.events.append(OpponentEvent(
+                turn,seat,role,"abstract_blocked_combat",
+                attacker.object_id,attacker.power))
 
     def advance(self, turn):
         """Three opponents take their bounded abstract turns after seat 0.
@@ -128,23 +202,20 @@ class BoundedOpponentPressure:
                 self._exile_one(seat,turn,role)
             elif role=="value" and turn in {6,9} and self.rng.random()<0.28:
                 self._exile_one(seat,turn,role)
-            # Abstract unblocked attack pressure: never claimed as combat,
-            # never counted as commander damage, no invented blockers.
-            pressure=(
-                (1+turn//3) if role=="aggro" else
-                (1 if turn>=4 else 0) if role=="value" else
-                (1 if turn>=7 else 0) if role=="control" else
-                (3+turn//3 if turn>=7 else 0))
-            if pressure and self.life.total(0)>0:
-                amount=max(0,pressure+self.rng.choice((-1,0,0,1)))
-                if amount:
-                    if role=="combo":
-                        self.life.lose(0,amount)
-                    else:
-                        self.life.damage(0,amount)
-                    self.events.append(OpponentEvent(
-                        turn,seat,role,"abstract_combo_loss" if role=="combo"
-                        else "abstract_unblocked_damage",None,amount))
+            # Attack with actual non-summoning-sick abstract opponent
+            # creatures. Legal defender blockers, creature damage, and LKI
+            # death triggers run on the existing authoritative battlefield.
+            self._combat(seat,role,turn)
+            # Combo role adds an explicitly abstract noncombat clock.
+            if role=="combo" and turn>=7 and self.life.total(0)>0:
+                amount=3+turn//3+self.rng.choice((-1,0,0,1))
+                self.life.lose(0,amount)
+                self.events.append(OpponentEvent(
+                    turn,seat,role,"abstract_combo_loss",None,amount))
+            # Each opponent has its own end-of-turn damage cleanup and
+            # duration expiration before the next player's turn begins.
+            kernel=self.zones.kernel
+            kernel.cleanup()
             if self.life.total(0)<=0 and not self._defeated:
                 self._defeated=True
                 self.events.append(OpponentEvent(turn,seat,role,"life_zero"))
