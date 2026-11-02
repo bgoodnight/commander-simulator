@@ -273,7 +273,9 @@ test('results page and exporter wire a future published manifest and local JSON'
   assert.match(app,/loadPublishedLongGame/);
   assert.match(app,/renderLongGamePanel/);
   assert.match(build,/outcome_assets/);
-  assert.match(build,/outcomes_are_competitive_win_rates/);
+  assert.match(build,/validate_outcome_library/);
+  const publisher=fs.readFileSync('tools/publish_game_outcomes.py','utf8');
+  assert.match(publisher,/outcomes_are_competitive_win_rates/);
   assert.equal(typeof Replay.renderBoundedEvidence,'function');
 });
 
