@@ -224,7 +224,7 @@ def run_bounded_early_game(deck_key, *, seed=0, turns=6, mulligan="one-free", pr
     if opponent_pressure is not None:
         opponent_pressure.zone_spells=zone_engine
     entered_on_turn = {}
-    if len(kernel.objects) != 100:
+    if sum(o.owner==0 and not o.token for o in kernel.objects.values()) != 100:
         raise AssertionError("Pinned 100-card zone conservation failed at loading")
     zones.shuffle(0)
     zones.draw(0, 7)
