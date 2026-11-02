@@ -135,12 +135,13 @@ class OpponentPressureTests(unittest.TestCase):
         attacker=adv.events[-1].object_id
         adv.advance(1)
         self.assertTrue(self.kernel.get(attacker).tapped)
-        damage_before=sum(x.operation=="abstract_unblocked_damage"
+        attacks=lambda:sum(x.operation in {
+                            "abstract_unblocked_damage",
+                            "abstract_blocked_combat"}
                           and x.object_id==attacker for x in adv.events)
+        before=attacks()
         adv.advance(2)
-        damage_after=sum(x.operation=="abstract_unblocked_damage"
-                          and x.object_id==attacker for x in adv.events)
-        self.assertEqual(damage_after,damage_before+1)
+        self.assertEqual(attacks(),before+1)
         self.assertTrue(self.zones.assert_consistent())
 
     def test_opponent_exile_uses_finite_interaction_budgets(self):
