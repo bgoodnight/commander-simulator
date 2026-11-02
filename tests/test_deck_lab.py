@@ -26,6 +26,14 @@ class DeckLabTests(unittest.TestCase):
                 self.assertEqual(detail["commander"], fixture.commander)
                 self.assertFalse(detail["actual_gameplay_available"])
                 self.assertEqual(detail["ability_coverage"], "not assessed by card metadata import")
+                preview=detail["provisional_import_preview"]
+                self.assertGreater(preview["candidate_count"],0)
+                self.assertEqual(
+                    preview["candidate_count"]+preview["manual_review_count"],
+                    len(detail["cards"]))
+                self.assertTrue(preview["simulation_requires_opt_in"])
+                self.assertTrue(all("provisional_import" in card
+                                    for card in detail["cards"]))
 
     def test_observation_replay_and_no_legal_spell_claims(self):
         for key in ("magnus_premium", "wretched_ranks", "mortarion_current",
