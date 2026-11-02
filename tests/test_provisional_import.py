@@ -7,6 +7,7 @@ from commander_sim.deck_fixtures import FIXTURES
 from commander_sim.early_game_runner import _load_live_kernel, run_bounded_early_game
 from commander_sim.kernel_life import KernelLife
 from commander_sim.provisional_actions import cast_provisional_spell
+from commander_sim.library_actions import LibraryAction
 from commander_sim.provisional_import import provisional_profile,provisional_report
 from commander_sim.template_resources import TemplateManaService
 
@@ -36,8 +37,9 @@ class ProvisionalImportTests(unittest.TestCase):
         self.assertTrue(result.omissions)
 
     def test_mandatory_enter_effect_never_disappears(self):
-        self.assertIsNone(provisional_profile(
-            card(text="When this creature enters, draw a card.")))
+        source=provisional_profile(
+            card(text="When this creature enters, draw a card."))
+        self.assertEqual(source.entry_actions,(LibraryAction("draw",1),))
         self.assertIsNone(provisional_profile(
             card(text="As this creature enters, choose a color.")))
 
