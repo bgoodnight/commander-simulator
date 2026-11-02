@@ -199,6 +199,7 @@ def run_bounded_early_game(deck_key, *, seed=0, turns=6, mulligan="one-free", pr
 
     mana_service = TemplateManaService(kernel, raw_by_name, colors, zones=zones)
     life = KernelLife(kernel)
+    life.install_reviewed_replacements(raw_by_name)
     phase_engine = ReviewedPhaseEngine(zones, life, raw_by_name)
     death_engine = ReviewedDeathEngine(zones, life, raw_by_name)
     composed_engine = ComposedAbilityEngine(zones, life, raw_by_name,
