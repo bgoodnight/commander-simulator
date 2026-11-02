@@ -287,6 +287,9 @@ class BoundedOpponentPressure:
                         turn,seat,role,"reviewed_attack_keyword_grant",
                         attacker_id,0,defender))
             blockers=kernel.legal_blockers(attacker.object_id,defender,frozenset(used))
+            # Magic creatures with negative power assign/deal zero combat
+            # damage. Their signed power still matters for other effects.
+            attacker_damage=max(0,attacker.power)
             # Keep priority engine creatures unless a trade is productive or
             # survival demands blocking. Tokens are the preferred expendables.
             def worth_blocking(o):
@@ -318,12 +321,13 @@ class BoundedOpponentPressure:
                 attacker.tapped=True
                 kernel._dirty()
             if not selected:
-                self.life.damage(defender,attacker.power,attacker.object_id)
-                if "lifelink" in attacker.keywords:
-                    self.life.gain(seat,attacker.power,attacker.object_id)
+                if attacker_damage:
+                    self.life.damage(defender,attacker_damage,attacker.object_id)
+                    if "lifelink" in attacker.keywords:
+                        self.life.gain(seat,attacker_damage,attacker.object_id)
                 self.events.append(OpponentEvent(
                     turn,seat,role,"abstract_unblocked_damage",
-                    attacker.object_id,attacker.power,defender))
+                    attacker.object_id,attacker_damage,defender))
                 if ("decayed" in attacker.keywords
                         and attacker.object_id in kernel.objects):
                     snap=capture_battlefield(kernel)
@@ -339,8 +343,9 @@ class BoundedOpponentPressure:
             before=capture_battlefield(kernel)
             first_move=len(kernel.moves)
             # Simultaneous marked creature damage on existing physical objects.
-            assignments={attacker.object_id:sum(x.power for x in selected)}
-            remaining=attacker.power
+            assignments={
+                attacker.object_id:sum(max(0,block.power) for block in selected)}
+            remaining=attacker_damage
             for block in selected:
                 assigned=min(remaining,max(1,block.toughness))
                 assignments[block.object_id]=assigned
@@ -348,8 +353,8 @@ class BoundedOpponentPressure:
             kernel.damage_creatures_together(assignments)
             # Lifelink is based on actual marked damage; replacement,
             # prevention, first strike and trample remain outside this slice.
-            if "lifelink" in attacker.keywords:
-                self.life.gain(seat,attacker.power,attacker.object_id)
+            if "lifelink" in attacker.keywords and attacker_damage:
+                self.life.gain(seat,attacker_damage,attacker.object_id)
             for block in selected:
                 if "lifelink" in block.keywords and block.power>0:
                     self.life.gain(defender,block.power,block.object_id)
