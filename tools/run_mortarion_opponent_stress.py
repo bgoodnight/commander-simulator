@@ -23,9 +23,19 @@ def summarize(runs, turns):
     first=Counter()
     finished=[]
     life=[]
+    opponent_targets=Counter()
+    physical_pilot_targets=Counter()
     for r in runs:
         ev=[e for phase in r["events"] for e in phase["events"]]
         counts.update(e["type"] for e in ev)
+        for e in ev:
+            target=e.get("target_seat")
+            if target is None:
+                continue
+            if e["type"].startswith("opponent_"):
+                opponent_targets[str(target)]+=1
+            elif e["type"].startswith("player_"):
+                physical_pilot_targets[str(target)]+=1
         played=next((phase["turn"] for phase in r["events"] if
                      any(e["type"]=="reviewed_commander_cast"
                          for e in phase["events"])),None)
@@ -51,6 +61,11 @@ def summarize(runs, turns):
             if e["type"]=="opponent_abstract_unblocked_damage")/len(runs),2),
         "commander_cast_turn_counts":dict(first),
         "events":dict(counts),
+        "opponent_target_seat_counts":dict(opponent_targets),
+        "physical_pilot_target_seat_counts":dict(physical_pilot_targets),
+        "opponent_seat_zero_target_fraction":round(
+            opponent_targets["0"]/sum(opponent_targets.values()),3)
+            if opponent_targets else None,
         "average_reviewed_removal_per_seed":round(
             counts["reviewed_removal_resolved"]/len(runs),2),
         "average_paid_mortarion_triggers_per_seed":round(
@@ -73,7 +88,7 @@ def narrative(r):
             "hand_size":phase["hand_size"],
             "events":[
                 {k:e[k] for k in ("type","card","seat","role","amount",
-                                    "target_object_id","destroyed_count")
+                                    "target_object_id","target_seat","destroyed_count")
                  if k in e}
                 for e in phase["events"]
                 if e["type"] in {
@@ -85,6 +100,20 @@ def narrative(r):
                     "reviewed_precast_mana_sacrifice",
                     "reviewed_sacrifice_activated",
                     "reviewed_utility_activated",
+                    "reviewed_zone_spell_resolved",
+                    "reviewed_instant_response",
+                    "reviewed_attachment_equipped",
+                    "reviewed_attachment_reanimated",
+                    "reviewed_aura_attached",
+                    "reviewed_attachment_upkeep",
+                    "reviewed_generic_activated",
+                    "reviewed_cast_reaction",
+                    "reviewed_reactive_trigger",
+                    "reviewed_composed_tap_activation",
+                    "player_abstract_blocked_combat",
+                    "player_abstract_unblocked_damage",
+                    "opponent_abstract_discard",
+                    "opponent_abstract_destroy",
                     "opponent_abstract_creature","opponent_abstract_exile",
                     "opponent_abstract_blocked_combat",
                     "opponent_abstract_unblocked_damage",
@@ -131,7 +160,7 @@ def run(*,seeds=24,turns=10):
         "turn_horizon":turns,"scenarios":results,
         "review_flags":anomalies,
         "warning":"Abstract enemy pressure, not real opponent deck mechanics or win rates; "
-                  "no general combat/blockers, opponent spell priority or tuned targeting."
+                  "simplified combat and opponent actions, no complete priority or verified match win rates."
     }
 
 
