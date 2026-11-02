@@ -459,6 +459,14 @@ function renderReplay(){
       deckKey:key,deckHash:hash,commanderName:deck.commander,
       lookup:cardInfo,openCard:showCard
     });
+    // Use the same pinned narrated payload. No duplicate replay download.
+    const grid=$("key-insights-grid");
+    if(grid&&window.DeckInsightCatalog&&window.DeckInsightExplorer){
+      for(const model of window.DeckInsightCatalog.verifiedImpact(payload,cardInfo)){
+        const panel=renderInsightModel(model);
+        if(panel)grid.prepend(panel);
+      }
+    }
   }).catch(error=>{
     if(selected!==key||selectedDeck()?.deck_sha256!==hash)return;
     root.textContent="Replay archive could not be displayed: "+error.message+
@@ -798,29 +806,46 @@ function boardReport(batch, type){
 /* Reusable insight pilot: one model, one container, exact source-paid events.
  * Future categories should supply a model rather than building another UI.
  */
-function creatureInsightReport(runs){
-  if(!window.DeckInsightExplorer)return null;
-  const model=window.DeckInsightExplorer.creaturePlays(runs,cardInfo);
-  if(!model)return null;
+function renderInsightModel(model){
+  if(!model||!window.DeckInsightExplorer)return null;
   return window.DeckInsightExplorer.render(model,{
     onOpenCard:id=>showCard(id),
     renderMana:manaSymbols,
-    onRenderEvidence:openCreatureInsightEvidence
+    onRenderEvidence:openInsightEvidence
   });
 }
-function openCreatureInsightEvidence(root,example,card){
+function creatureInsightReport(runs){
+  const model=window.DeckInsightCatalog?.commonPlayedByType(runs,cardInfo,"Creature")||
+    window.DeckInsightExplorer?.creaturePlays(runs,cardInfo);
+  return renderInsightModel(model);
+}
+function openInsightEvidence(root,example,card){
   const deck=selectedDeck();
   if(!root||!deck||!window.CommanderReplay)return;
-  if(isUnsimulatedVersion()||example.run.deck_key!==selected||
-     example.run.deck_sha256!==deck.deck_sha256){
+  if(isUnsimulatedVersion()||
+     (example.source==="opponent_replay"?
+       (example.replay?.deck_key!==selected||
+        example.replay?.deck_sha256!==deck.deck_sha256):
+       (example.run?.deck_key!==selected||
+        example.run?.deck_sha256!==deck.deck_sha256))){
     root.textContent="The selected game does not match this deck revision.";
     return;
   }
   try{
-    window.CommanderReplay.renderBoundedEvidence(root,example.run,{
-      turn:example.turn,eventIndex:example.eventIndex,cardName:card.name,
-      commanderName:deck.commander,lookup:cardInfo,openCard:showCard
-    });
+    if(example.source==="opponent_replay"){
+      window.CommanderReplay.renderNarratedEvidence(root,example.replay,{
+        scenario:example.scenario,gameId:example.gameId,turn:example.turn,
+        eventIndex:example.eventIndex,cardName:card.name,
+        deckKey:selected,deckHash:deck.deck_sha256,
+        commanderName:deck.commander,lookup:cardInfo,openCard:showCard
+      });
+    }else{
+      window.CommanderReplay.renderBoundedEvidence(root,example.run,{
+        turn:example.turn,eventIndex:example.eventIndex,cardName:card.name,
+        focusTopic:example.focusTopic||undefined,
+        commanderName:deck.commander,lookup:cardInfo,openCard:showCard
+      });
+    }
   }catch(error){
     root.textContent="This run could not be opened: "+error.message;
   }
@@ -989,11 +1014,25 @@ function showBoundedBatch(){
   const runs=matchingBatch?batch.runs:(exact?archive.runs:null);
   renderSimulationSnapshot(runs);
   if(Array.isArray(runs)&&runs.length){
-    const source={runs};
-    const creature=creatureInsightReport(runs)||boardReport(source,"Creature");
-    grid.appendChild(creature);
-    for(const type of ["Artifact","Enchantment"])
-      grid.appendChild(boardReport(source,type));
+    if(window.DeckInsightCatalog&&window.DeckInsightExplorer){
+      const catalog=window.DeckInsightCatalog;
+      const models=[
+        catalog.commonPlayedByType(runs,cardInfo,"Creature"),
+        catalog.heldInHand(runs,cardInfo),
+        catalog.leftUnplayed(runs,cardInfo),
+        ...["Sorcery","Instant","Artifact","Enchantment"]
+          .map(type=>catalog.commonPlayedByType(runs,cardInfo,type))
+      ].filter(Boolean);
+      for(const model of models)grid.appendChild(renderInsightModel(model));
+      if(!models.length){
+        empty.hidden=false;
+        empty.textContent="No named source-backed insight met the relevance checks for this deck.";
+      }
+    }else{
+      // Preserve the original summary if the optional insights module fails.
+      const source={runs};
+      grid.appendChild(creatureInsightReport(runs)||boardReport(source,"Creature"));
+    }
   }else{
     empty.hidden=false;
     empty.textContent="No matching reviewed-action simulations are available for this exact deck revision.";
