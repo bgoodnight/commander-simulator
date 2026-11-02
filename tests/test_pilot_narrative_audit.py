@@ -103,5 +103,30 @@ class NarrativeAuditTests(unittest.TestCase):
             self.assertEqual(one[key],two[key])
 
 
+    def test_narrative_preserves_physical_library_evidence_and_flags_invariant(self):
+        run=fake_run("necron_dynasties",seed=0,turns=12,
+                     opponent_scenario="mixed",pilot_style="adaptive",
+                     provisional_mode="safe")
+        good={"type":"provisional_enter_resolved","card":"Library Creature",
+              "source_object_id":21,"drawn_ids":[45],"milled_ids":[43,44],
+              "discarded_ids":[],"fidelity":"provisional_partial",
+              "library_actions":[
+                  {"kind":"mill","count":3,
+                   "milled":[{"id":43,"card":"A"},{"id":44,"card":"B"}]},
+                  {"kind":"draw","count":1,
+                   "drawn":[{"id":45,"card":"C"}]}]}
+        run["events"][0]["events"].append(good)
+        summary=summarize_run(run)
+        self.assertEqual(summary["observed_library_events"],
+                         {"provisional_enter_resolved":1})
+        self.assertEqual(summary["sample_timeline"][0]["events"][-1],good)
+        self.assertNotIn("physical_draw_count_mismatch",
+                         summary["sample_timeline"][0]["review_signals"])
+        run["events"][0]["events"][-1]["library_actions"][-1]["drawn"]=[]
+        bad=summarize_run(run)
+        self.assertIn("physical_draw_count_mismatch",
+                      bad["sample_timeline"][0]["review_signals"])
+
+
 if __name__=="__main__":
     unittest.main()
