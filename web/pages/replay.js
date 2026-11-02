@@ -359,9 +359,10 @@
   }
   function galleryCard(item,lookup,openCard){
     const card=typeof lookup==="function"?lookup(item.name):null;
-    const tile=el(validateCard(card)&&typeof openCard==="function"?"button":"div",
+    const interactive=validateCard(card)&&typeof openCard==="function";
+    const tile=el(interactive?"button":"div",
       "replay-zone-card"+(item.token?" replay-zone-token":""));
-    if(tile.tagName==="BUTTON"||tile.type!==undefined){
+    if(interactive){
       tile.type="button";tile.title="View "+item.name+" card details";
       tile.onclick=()=>openCard(card.oracle_id);
     }
@@ -600,7 +601,7 @@
     const points=rounds.filter(r=>typeof statsForRound(r,0)?.life==="number");
     if(!points.length)return null;
     const outer=el("div","replay-life-track");
-    outer.append(el("strong",null,"Mortarion life progression"),
+    outer.append(el("strong",null,"Your life progression"),
       el("span","micro","Recorded end-of-round life for Seat 0 only. Opponent life totals are not available."));
     const strip=el("div","replay-life-values");
     for(const round of points){
@@ -740,12 +741,16 @@
       section.appendChild(trends);
       const methodology=el("details","replay-table-key");
       methodology.appendChild(el("summary",null,"What this replay does and doesn't record"));
+      const exactPilot=game.rounds.some(r=>!!statsForRound(r,0)?.zones);
       methodology.appendChild(el("p","micro",
-        "The source preserves selected events in exported order within each round, "+
-        "not individual player turns or the full priority stack. Only Mortarion's "+
-        "end-of-round life, lands, creatures and hand size are snapshots. "+
-        "Opponent life/boards, mana spent, card draws, token identities and zone "+
-        "movements are unavailable until later replay schemas include them. "+
+        "The source preserves selected events in recorded order within each round, "+
+        "not individual player turns or the full priority stack. "+
+        (exactPilot?
+          "Your end-of-round hand, battlefield, graveyard and exile are authoritative kernel snapshots. "+
+          "Named draws and committed mana sources appear when logged. ":
+          "Only your end-of-round life, lands, creatures and hand size were retained in this older export. ")+
+        "Opponent life and battlefield snapshots, full mana flows, token card identities "+
+        "and action-by-action zone movements cannot be reconstructed from abbreviated rounds. "+
         "Opposing roles use abstract behaviors, not invented named spells. "+
         "Source workflow #"+data.source.workflow_run_id+"."));
       section.appendChild(methodology);
