@@ -117,7 +117,7 @@ class BuybackTests(unittest.TestCase):
                     self.assertEqual(len(casts),sum(e["type"]=="reviewed_buyback_resolved" for e in turn["events"]))
                     self.assertEqual(turn["library_size"]+turn["hand_size"]+
                         len(state["battlefield"])+len(state["graveyard"])+
-                        len(state["exile"])+1,100)
+                        len(state["exile"]) + turn["command_zone_count"], 100)
 
 if __name__=="__main__":
     unittest.main()
