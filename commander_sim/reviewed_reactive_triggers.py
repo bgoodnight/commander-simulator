@@ -17,16 +17,32 @@ class ReactiveRule:
     excerpt: str
     event: str
     operation: str
+    scope: str = "own"
     def __post_init__(self):
         if (not self.oracle_id or not self.excerpt
                 or self.event not in {"token_created","token_sacrificed",
-                                       "token_left","life_gained","self_damaged"}
+                                       "token_left","life_gained","self_damaged",
+                                       "creature_to_grave_nonbattlefield",
+                                       "creature_leaves_graveyard","opponent_discard"}
                 or self.operation not in {"drain_opponents","drain_gain",
-                                          "target_opponent_loses_amount","damage_chosen_player"}):
+                                          "target_opponent_loses_amount","damage_chosen_player",
+                                          "damage_opponents","gain_fixed_three"}
+                or self.scope not in {"own","any","opponent"}):
             raise ValueError("Invalid reactive trigger descriptor")
 
 
 RULES={
+    "Syr Konrad, the Grim":(
+        ReactiveRule("14c3ff84-1e82-4606-a433-869fc52cc382",
+                     "Whenever another creature dies, or a creature card is put into a graveyard from anywhere other than the battlefield, or a creature card leaves your graveyard, Syr Konrad deals 1 damage to each opponent.",
+                     "creature_to_grave_nonbattlefield","damage_opponents","any"),
+        ReactiveRule("14c3ff84-1e82-4606-a433-869fc52cc382",
+                     "Whenever another creature dies, or a creature card is put into a graveyard from anywhere other than the battlefield, or a creature card leaves your graveyard, Syr Konrad deals 1 damage to each opponent.",
+                     "creature_leaves_graveyard","damage_opponents","own")),
+    "Sangromancer":(
+        ReactiveRule("920445ab-0ac2-4de7-bc1c-f5e58eb4424c",
+                     "Whenever an opponent discards a card, you may gain 3 life.",
+                     "opponent_discard","gain_fixed_three","opponent"),),
     "Stuffy Doll":(
         ReactiveRule("499dceab-1890-49c8-b35d-b059a1dc950f",
                      "Whenever this creature is dealt damage, it deals that much damage to the chosen player.",
@@ -88,11 +104,12 @@ class ReactiveTriggerEngine:
         results=[]
         for source in sorted(tuple(self.zones.kernel.on_battlefield()),
                              key=lambda o:o.object_id):
-            if (source.controller!=actor
-                    or (source_filter_id is not None
-                        and source.object_id!=source_filter_id)):
+            if source_filter_id is not None and source.object_id!=source_filter_id:
                 continue
             for idx,rule in enumerate(self._reviewed(source,event)):
+                if (rule.scope=="own" and source.controller!=actor or
+                        rule.scope=="opponent" and source.controller==actor):
+                    continue
                 slot=AbilitySlot(rule.oracle_id,"front",
                     "reactive_"+rule.event+"_"+str(idx),"triggered",rule,
                     rule.excerpt,"pinned-reactive-v1",
@@ -124,6 +141,12 @@ class ReactiveTriggerEngine:
                         if chosen is None:
                             raise ValueError("Damage source lacks mandatory chosen-player entry")
                         self.life.damage(chosen,quantity,source.object_id)
+                    elif operation.operation=="damage_opponents":
+                        for opposing in sorted(self.life.kernel.life_totals):
+                            if opposing!=controller:
+                                self.life.damage(opposing,quantity,source.object_id)
+                    elif operation.operation=="gain_fixed_three":
+                        self.life.gain(controller,3,source.object_id)
                 dispatcher.invoke(slot.slot_id,source.object_id,apply)
                 results.append(ReactiveResolution(source.object_id,
                     source.card.name,event,rule.operation,quantity))
@@ -151,6 +174,20 @@ class ReactiveTriggerEngine:
             controllers={event.source_id:event.controller for event in new_events
                          if event.name=="token_ceased"}
             for move in new_moves:
+                new_obj=kernel.objects.get(move.new_object_id)
+                if (new_obj is not None and "creature" in new_obj.types
+                        and move.old_zone!="battlefield"
+                        and move.new_zone=="graveyard"):
+                    outcomes.extend(self._dispatch(
+                        "creature_to_grave_nonbattlefield",new_obj.owner,1))
+                if (new_obj is not None and "creature" in new_obj.types
+                        and move.old_zone=="graveyard"):
+                    outcomes.extend(self._dispatch(
+                        "creature_leaves_graveyard",new_obj.owner,1))
+                if (new_obj is not None and move.old_zone=="hand"
+                        and move.reason=="discard"):
+                    outcomes.extend(self._dispatch(
+                        "opponent_discard",new_obj.owner,1))
                 if move.old_zone!="battlefield" or move.object_id not in controllers:
                     continue
                 seat=controllers[move.object_id]
