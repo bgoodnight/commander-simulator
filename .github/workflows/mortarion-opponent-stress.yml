@@ -1,5 +1,5 @@
 name: Mortarion physical opponent stress and narrative audit
-# Recheck narrated scenarios after Massacre Wurm, permanent buffs and detailed block metrics.
+# Recheck with shared chosen-player damage subscription and Stuffy Doll.
 on:
   workflow_dispatch:
   push:
