@@ -1060,3 +1060,104 @@ body:has(#pane-records:not([hidden])) .page-introduction a{font-size:.72rem}
  .game-outcome-life-stats{grid-template-columns:repeat(2,minmax(0,1fr))}
  .game-outcome-life-stat{padding:7px}
 }
+
+
+/* Outcome hero and art-backed, scrollable opposing archetype explorer. */
+.game-outcome-grid{grid-template-columns:repeat(2,minmax(0,1fr))}
+.game-outcome-hero{grid-column:1/-1;position:relative;isolation:isolate}
+.game-outcome-hero-summary{position:relative;overflow:hidden;min-height:172px;
+  background:linear-gradient(110deg,#132b2b,#20242c)}
+.game-outcome-hero-summary:before{content:"";position:absolute;inset:0;z-index:1;
+  background:linear-gradient(90deg,#101e21 0%,#152429f5 48%,#18232399 78%,#101e2152 100%);
+  pointer-events:none}
+.game-outcome-hero-art{position:absolute;inset:0 0 0 auto;width:55%;height:100%;
+  object-fit:cover;object-position:50% 30%;filter:saturate(.84) brightness(.82)}
+.game-outcome-hero-copy{position:relative;z-index:2;display:flex;flex-direction:column;
+  gap:8px;padding:16px 18px;min-width:0;width:min(100%,620px)}
+.game-outcome-hero-stats{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:12px}
+.game-outcome-hero-stat{display:grid;gap:2px;min-width:0}
+.game-outcome-hero-stat strong{font-size:clamp(1.35rem,2.5vw,2rem);
+  line-height:1.1;color:#f0dfc0;font-variant-numeric:tabular-nums}
+.game-outcome-hero-stat.is-win strong{color:#a8d3b1}
+.game-outcome-hero-stat.is-loss strong{color:#e3ada4}
+.game-outcome-hero-stat span{font-size:.68rem;color:#d4d8c9}
+.game-outcome-stacked-bar{display:flex;gap:2px;width:100%;height:9px;
+  border-radius:10px;overflow:hidden;background:#4a4c53}
+.game-outcome-stacked-bar .is-win{background:#77ac8d}
+.game-outcome-stacked-bar .is-loss{background:#c07b78}
+.game-outcome-stacked-bar .is-draw{background:#baa26e}
+.game-outcome-stacked-bar .is-unresolved{background:#928ba8}
+.game-outcome-stacked-bar .is-not_evaluated{background:#687b80}
+.game-outcome-hero .board-open{color:#e5d2a8;font-size:.72rem}
+.game-outcome-limits{position:absolute;right:10px;top:9px;z-index:5}
+.game-outcome-limits>summary{list-style:none;cursor:pointer;display:grid;place-items:center;
+  width:29px;height:29px;border-radius:50%;border:1px solid #c7b589;
+  color:#f4deb5;background:#243737ed;font-size:.93rem}
+.game-outcome-limits>summary::-webkit-details-marker{display:none}
+.game-outcome-limits>summary:focus-visible{outline:2px solid #f2d28b;outline-offset:2px}
+.game-outcome-limits-content{position:absolute;right:0;top:35px;width:min(320px,82vw);
+  padding:13px;background:#192d2c;border:1px solid #bda47b;border-radius:10px;
+  box-shadow:0 10px 24px #070b0dcc;color:#d4dfd4;font-size:.77rem;line-height:1.45}
+.game-outcome-limits-content strong{color:#f2dcad}
+.game-outcome-limits-content p{margin:7px 0 0}
+.game-outcome-explorer-intro{display:flex;align-items:baseline;justify-content:space-between;
+  gap:8px;flex-wrap:wrap}
+.game-outcome-explorer-intro>strong{color:#ead7b1;font-size:.91rem}
+.game-outcome-explorer{display:grid;grid-template-columns:minmax(175px,.72fr) minmax(220px,1.28fr);
+  gap:13px;align-items:stretch}
+.game-outcome-opponent-portrait{position:relative;display:flex;align-items:end;
+  min-height:270px;overflow:hidden;border:1px solid #735f4e;border-radius:11px;
+  background:radial-gradient(circle at 40% 30%,#566354,#17292e 75%);isolation:isolate}
+.game-outcome-opponent-art{position:absolute;inset:0;width:100%;height:100%;
+  object-fit:cover;object-position:center 33%;filter:brightness(.83)}
+.game-outcome-art-missing{position:absolute;inset:0;display:grid;place-items:center;
+  color:#bb9f75;font-size:3rem}
+.game-outcome-portrait-label{position:relative;width:100%;padding:30px 11px 12px;
+  background:linear-gradient(0deg,#091616fa,#102528d9 70%,transparent);
+  display:grid;gap:3px;text-shadow:0 1px 3px #000}
+.game-outcome-portrait-label strong{font-family:Cinzel,Georgia,serif;
+  color:#f5dbb2;font-size:.99rem}
+.game-outcome-portrait-label small{color:#e5e3d0;font-size:.68rem}
+.game-outcome-portrait-label .micro{margin:4px 0 0;color:#cbd3c6;font-size:.66rem}
+.game-outcome-ranking-side{min-width:0;display:flex;flex-direction:column;gap:6px}
+.game-outcome-rank-nav{display:flex;align-items:center;justify-content:space-between;gap:7px}
+.game-outcome-rank-nav button{font:inherit;font-size:.72rem;color:#e8d8b9;
+  background:#2c3f3b;border:1px solid #657e72;border-radius:7px;padding:7px;cursor:pointer}
+.game-outcome-rank-nav button:disabled{opacity:.32;cursor:default}
+.game-outcome-ranking{min-height:120px;max-height:300px;overflow-y:auto;
+  scrollbar-width:thin;scrollbar-color:#9d8764 #1a2c2e;
+  display:grid;align-content:start;gap:7px;padding:3px 5px 5px 1px}
+.game-outcome-rank-row{display:grid;gap:8px;width:100%;padding:9px 11px;border-radius:8px;
+  border:1px solid #53695f;background:#1b3030;color:#e8e0cf;cursor:pointer;text-align:left}
+.game-outcome-rank-row:hover,.game-outcome-rank-row[aria-pressed=true]{
+  border-color:#d5b77f;background:#2c3e38}
+.game-outcome-rank-row:focus-visible{outline:2px solid #f4d08f;outline-offset:1px}
+.game-outcome-rank-label{display:flex;align-items:baseline;justify-content:space-between;
+  flex-wrap:wrap;gap:6px}
+.game-outcome-rank-label strong{font-size:.79rem;color:#efdcba}
+.game-outcome-rank-label span{font-size:.7rem;color:#d5d7cd}
+.game-outcome-rank-track{height:7px;border-radius:8px;background:#445450;overflow:hidden}
+.game-outcome-rank-fill{display:block;height:100%;background:#97b6a0}
+.game-outcome-insight-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:7px}
+.game-outcome-insight-metric{min-width:0;display:grid;gap:5px;padding:9px;border-radius:9px;
+  border:1px solid #50685d;background:#213535}
+.game-outcome-insight-metric span{font-size:.71rem;color:#c4d1c2}
+.game-outcome-insight-metric strong{font-size:1.25rem;color:#e9d2a3;font-variant-numeric:tabular-nums}
+.game-outcome-insight-metric small{font-size:.64rem;color:#cdd2c8}
+@media(max-width:720px){
+  .game-outcome-grid{grid-template-columns:1fr}
+  .game-outcome-hero{grid-column:1}
+  .game-outcome-hero-summary{min-height:160px}
+  .game-outcome-hero-copy{padding:12px 42px 12px 12px}
+  .game-outcome-hero-art{width:74%;object-position:center}
+  .game-outcome-hero-summary:before{background:linear-gradient(90deg,#122427fa 0%,#16282ded 66%,#14262b99)}
+  .game-outcome-hero-stats{gap:6px}
+  .game-outcome-hero-stat strong{font-size:1.36rem}
+  .game-outcome-hero-stat span{font-size:.62rem}
+  .game-outcome-explorer{grid-template-columns:1fr}
+  .game-outcome-opponent-portrait{min-height:210px;max-height:270px}
+  .game-outcome-insight-grid{grid-template-columns:repeat(2,minmax(0,1fr))}
+}
+@media(prefers-reduced-motion:reduce){
+  .game-outcome-ranking,.game-outcome-rank-row{scroll-behavior:auto;transition:none}
+}
