@@ -987,6 +987,20 @@ def run_bounded_early_game(deck_key, *, seed=0, turns=6, mulligan="one-free", pr
                 payment=mana_service.plan_spell(0,printed,obj)
             except (NotImplementedError,UnsupportedManaCost):
                 continue
+            except ValueError as error:
+                # This is a *diagnostic-only* preview for an unsupported
+                # spell, not a legal action. The bounded mana planner may
+                # exhaust its search budget in high-resource board states.
+                # Preserve the game and report uncertainty; never classify
+                # the spell as castable or silently swallow unrelated errors.
+                if str(error)!="Bounded mana search exhausted; no action committed":
+                    raise
+                events.append({
+                    "type":"unsupported_mana_preview_exhausted",
+                    "card":name,"object_id":oid,
+                    "effect_status":"unsupported",
+                    "fidelity":"payment_preview_inconclusive"})
+                continue
             if payment is not None:
                 events.append({
                     "type":"source_paid_candidate",
