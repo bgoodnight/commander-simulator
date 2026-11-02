@@ -1,5 +1,5 @@
 name: Mortarion physical opponent stress and narrative audit
-# Rerun narrated matchup diagnostics with bounded opponent removal resources.
+# Recheck narrated scenarios after Massacre Wurm, permanent buffs and detailed block metrics.
 on:
   workflow_dispatch:
   push:
