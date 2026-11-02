@@ -130,6 +130,12 @@ def create_reviewed_token_batches(zones, seat, batches):
             coverage="unimplemented" if batch.limitations else "approx")
         def add():
             oid=zones.add(definition,seat,"battlefield",token=True)
+            # Physical token creation is an observable event, irrespective
+            # of which reviewed card produced the token. Consumers own their
+            # cursors; there is no permanent/global event queue.
+            if not hasattr(zones.kernel, "reviewed_token_events"):
+                zones.kernel.reviewed_token_events=[]
+            zones.kernel.reviewed_token_events.append((seat,oid))
             if batch.tapped:
                 zones.kernel.get(oid).tapped=True
                 zones.kernel._dirty()
