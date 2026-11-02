@@ -1,5 +1,5 @@
 name: Mortarion physical opponent stress and narrative audit
-# Exercise source-pinned graveyard/discard triggers and two-way opponent targeting.
+# Validate canonical opponent draw/discard, reactive events and chained damage.
 on:
   workflow_dispatch:
   push:
