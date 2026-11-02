@@ -173,7 +173,7 @@ class StaticPagesTests(unittest.TestCase):
         self.assertIn('class="deck-selection-row"',html)
         self.assertNotIn('id="deck-version-select"',html)
         self.assertIn(".deck-selection-row .global-deck-select",css)
-        self.assertIn("mortarion-mana-glyphs-20261102",html)
+        self.assertRegex(html, r'style\.css\?v=[^"]+')
         self.assertIn(".compact-selection",css)
         self.assertIn(".commander-picker",css)
 
