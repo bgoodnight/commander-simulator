@@ -136,7 +136,7 @@ class ReactiveTriggerEngine:
                 outcomes.extend(self._dispatch("token_created",seat,1))
             # The kernel's token_ceased event records the pre-move controller,
             # even when the old token ceased to exist as a game object.
-            controllers={event.target_id:event.actor for event in new_events
+            controllers={event.source_id:event.controller for event in new_events
                          if event.name=="token_ceased"}
             for move in new_moves:
                 if move.old_zone!="battlefield" or move.object_id not in controllers:
