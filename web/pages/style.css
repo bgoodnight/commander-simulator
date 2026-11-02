@@ -683,6 +683,7 @@ body{background-color:#101019;background-image:radial-gradient(ellipse at 50% -1
 /* Simulation first-pass redesign: shared takeaway accordion + compact replay.
    This layer intentionally only changes presentation and leaves all older views intact. */
 #pane-records{display:grid;gap:12px}
+#pane-records[hidden]{display:none!important}
 #pane-records > .result-takeaway{margin:0}
 #pane-records > .result-takeaway[hidden]{display:none!important}
 .result-takeaway{overflow:hidden;border-radius:15px}
