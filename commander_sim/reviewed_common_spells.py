@@ -136,13 +136,18 @@ def cast_common_spell(zones, life, seat, source_id, catalog, commander_colors,
         return None
     review=ReviewedCreatureCast(recipe.oracle_id,cost,True,
                     ("Bounded/no priority; pilot supplies all optional choices",))
-    if mana_service.plan_spell(seat,cost,source) is None:
+    # The same physical Treasure cannot produce mana AND be sacrificed as
+    # an additional spell cost. Reserve all chosen victims before payment.
+    if mana_service.plan_spell(
+            seat,cost,source,excluded_source_ids=ids) is None:
         return None
     before=capture_battlefield(zones.kernel)
     move_index=len(zones.kernel.moves)
     # Source-paid physical cast, then additional sacrifices before cast triggers.
-    committed=cast_reviewed_spell(zones,seat,source_id,review,commander_colors,
-                                  mana_service=mana_service,spell_type=recipe.spell_type)
+    committed=cast_reviewed_spell(
+        zones,seat,source_id,review,commander_colors,
+        mana_service=mana_service,spell_type=recipe.spell_type,
+        excluded_source_ids=ids)
     if committed is None:
         return None
     # Additional sacrifice costs are paid while casting and BEFORE
