@@ -485,7 +485,8 @@ def choose_reviewed_removal(zones, seat, life, rule, *, turn=1):
          if o.controller==seat and "creature" in o.types]
     opponents=[o for o in kernel.on_battlefield()
                if o.controller!=seat and "creature" in o.types]
-    if not opponents:
+    if (not opponents and rule.target not in {
+            "creature_or_enchantment","opponent_creature_or_enchantment"}):
         return None
     danger=life.total(seat)<=18
     if rule.operation=="debuff_all":
