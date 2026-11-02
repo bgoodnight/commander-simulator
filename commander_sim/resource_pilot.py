@@ -150,3 +150,69 @@ def ritual_enables_spell(zones,seat,source,catalog,mana_service):
         if current < total <= current+2 and "B" in fixed.colored:
             return True
     return False
+
+
+def choose_composed_activation(zones, seat, life, mana_service, catalog, *,
+                               activations_this_turn=0):
+    """Conservative pre-combat action choice using only composed rule metadata.
+
+    No opponent battlefield is fabricated. Prefer one affordable, beneficial
+    area-damage activation when it can feed a reviewed life-loss-based token
+    trigger, without exhausting the mana needed for that later X payment.
+    """
+    from .composed_abilities import ABILITIES
+    if activations_this_turn >= 1 or life.total(seat)<=12:
+        return None
+    available=assess_resources(zones.kernel,mana_service,seat).available_fixed_mana
+    if available<2:
+        return None
+    commander_engines=[]
+    for source in zones.kernel.on_battlefield():
+        if source.controller!=seat:
+            continue
+        rules=ABILITIES.get(source.card.name,())
+        raw=catalog.get(source.card.name,{})
+        if raw.get("oracle_id")!=source.card.card_id:
+            continue
+        if any(r.event=="end_step" and r.payment.x_generic
+               and r.oracle_id==source.card.card_id
+               and r.oracle_excerpt in raw.get("oracle_text","")
+               for r in rules):
+            commander_engines.append(source)
+    if not commander_engines:
+        return None
+    for source in sorted(zones.kernel.on_battlefield(),key=lambda o:o.object_id):
+        raw=catalog.get(source.card.name,{})
+        if source.controller!=seat or raw.get("oracle_id")!=source.card.card_id:
+            continue
+        for rule in ABILITIES.get(source.card.name,()):
+            if (rule.event=="activate" and not rule.payment.x_generic
+                    and rule.oracle_excerpt in raw.get("oracle_text","")
+                    and any(step.operation=="damage_all" for step in rule.steps)
+                    and mana_service.plan(seat,rule.payment.mana) is not None):
+                return source.object_id
+    return None
+
+
+def choose_variable_end_step_payments(zones, seat, life, mana_service,
+                                      catalog, life_start_index):
+    """Supply explicit mana-backed X choices, never inventing triggered mana."""
+    from .composed_abilities import ABILITIES
+    lost=sum(event.amount for event in life.kernel.life_changes[life_start_index:]
+             if event.seat==seat and event.kind in {"loss","damage"})
+    if lost<=0:
+        return {}
+    choices={}
+    for source in zones.kernel.on_battlefield():
+        raw=catalog.get(source.card.name,{})
+        if source.controller!=seat or raw.get("oracle_id")!=source.card.card_id:
+            continue
+        for rule in ABILITIES.get(source.card.name,()):
+            if not (rule.event=="end_step" and rule.payment.x_generic
+                    and rule.oracle_excerpt in raw.get("oracle_text","")):
+                continue
+            for x in range(min(lost,8),0,-1):
+                if mana_service.plan(seat,"{"+str(x)+"}") is not None:
+                    choices[source.object_id]=x
+                    break
+    return choices
