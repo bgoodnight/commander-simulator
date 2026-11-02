@@ -867,3 +867,71 @@ button.replay-zone-card:hover,button.replay-zone-card:focus-visible{border-color
   .insight-example-list{grid-template-columns:1fr}
   .insight-report .board-summary-copy{width:84%}
 }
+
+
+/* Results hierarchy: a slim, noncollapsible overview followed immediately
+ * by visible key-insight artwork cards; bulk distributions stay on request. */
+body:has(#pane-records:not([hidden])) .page-introduction{
+  display:flex;align-items:baseline;justify-content:flex-start;flex-wrap:wrap;
+  text-align:left;max-width:none;gap:4px 12px;margin:6px 0 10px;
+}
+body:has(#pane-records:not([hidden])) .page-introduction h1{
+  margin:0;font-size:clamp(1.1rem,2vw,1.4rem);line-height:1.2;
+}
+body:has(#pane-records:not([hidden])) .page-introduction p{
+  margin:0;font-size:.73rem;color:#cad5cb;
+}
+body:has(#pane-records:not([hidden])) .page-introduction a{font-size:.72rem}
+.simulation-snapshot{border:1px solid #655f58;border-radius:11px;padding:9px 12px;background:#172628}
+.simulation-snapshot-heading{display:flex;align-items:center;justify-content:space-between;gap:10px;margin-bottom:8px}
+.simulation-snapshot-heading .eyebrow{font-size:.66rem}
+.simulation-snapshot-heading .micro{font-size:.67rem;color:#aebcb3;margin:0;text-align:right}
+.simulation-snapshot-metrics{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:7px}
+.simulation-snapshot-stat{
+  min-width:0;display:flex;align-items:center;flex-wrap:wrap;gap:5px 7px;
+  padding:8px 9px;border:1px solid #405856;border-radius:8px;background:#1f3031;
+}
+.simulation-snapshot-icon{font-size:1.05rem;line-height:1;color:#c9b889}
+.simulation-snapshot-stat strong{font-family:Cinzel,Georgia,serif;font-size:1.17rem;line-height:1.1;color:#f0d7a2;white-space:nowrap}
+.simulation-snapshot-name{font-size:.73rem;color:#d6dbd1;line-height:1.2}
+.key-insights-panel{padding:14px 15px 12px}
+.key-insights-heading{display:flex;align-items:end;justify-content:space-between;gap:10px 20px;flex-wrap:wrap}
+.key-insights-heading .eyebrow{font-size:.65rem}
+.key-insights-heading h2{font-size:clamp(1.2rem,2vw,1.52rem);color:#f3ddb5;margin:2px 0 0}
+.key-insights-heading .micro{margin:0;max-width:390px;font-size:.73rem}
+#key-insights-grid{margin:10px 0 0;gap:10px}
+#key-insights-grid .board-summary{min-height:137px}
+#key-insights-grid .board-summary-copy{padding:13px 15px;gap:5px;width:82%}
+#key-insights-grid .board-summary-copy strong{font-size:clamp(1.13rem,1.9vw,1.47rem);line-height:1.13}
+#key-insights-grid .board-kicker{font-size:.63rem}
+#key-insights-grid .board-open{margin-top:auto;font-size:.7rem}
+#key-insights-grid .board-description{font-size:.72rem}
+.insight-head-subtitle{display:flex;align-items:center;flex-wrap:wrap;gap:4px 7px;line-height:1.28}
+.insight-head-name{font-size:.87rem;font-weight:600;color:#e8e7db}
+.insight-head-mana{display:inline-flex;align-items:center;min-height:16px}
+.insight-head-mana .mana-symbols{flex-wrap:nowrap;gap:2px;font-size:.77rem}
+.insight-head-mana .mana-symbol{width:1.08em;height:1.08em}
+.insight-head-stat{font-size:.72rem;color:#b9cfbf;line-height:1.25}
+.insight-inline-replay{border:1px solid #6b7e76;background:#142225;
+  padding:12px;border-radius:9px;min-width:0;margin-top:12px}
+.insight-inline-intro{margin:0 0 10px;font-size:.76rem;color:#e7d4a7;font-weight:600}
+.insight-inline-replay .replay-root{min-width:0}
+.insight-inline-replay .replay-explorer{padding:9px}
+.insight-inline-replay .replay-round{scroll-margin-top:15px}
+@media(max-width:720px){
+  .simulation-snapshot{padding:8px}
+  .simulation-snapshot-metrics{gap:5px}
+  .simulation-snapshot-stat{gap:3px;padding:7px 6px}
+  .simulation-snapshot-icon{font-size:.88rem}
+  .simulation-snapshot-stat strong{font-size:1rem}
+  .simulation-snapshot-name{flex-basis:100%;font-size:.65rem}
+  .key-insights-panel{padding:10px}
+  .key-insights-heading{align-items:start;gap:3px}
+  .key-insights-heading .micro{font-size:.67rem}
+  #key-insights-grid .board-summary{min-height:125px}
+  #key-insights-grid .board-summary-copy{padding:11px 12px;width:85%;gap:4px}
+  #key-insights-grid .board-summary-copy strong{font-size:1.15rem}
+  .insight-head-name{font-size:.79rem}
+  .insight-head-stat{font-size:.68rem}
+  .insight-inline-replay{padding:7px}
+}
