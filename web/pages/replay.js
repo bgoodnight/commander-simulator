@@ -292,6 +292,179 @@
       combat:"These are selected, abstract combat events. Specific attacking or blocking cards and complete combat damage assignments are not available."
     }[topic];
   }
+
+  // The highlight is an ordered index of recorded player actions, not a
+  // reconstructed log. Draws and responses appear only when exported.
+  const CAST_EVENTS=new Set([
+    "artifact_cast","creature_cast","enchantment_cast","reviewed_commander_cast",
+    "reviewed_draw_spell_cast","reviewed_flashback_cast","reviewed_escape_cast",
+    "reviewed_buyback_cast","reviewed_ritual_cast","tutor_cast","token_spell_cast"
+  ]);
+  const RESOLVED_SPELL_EVENTS=new Set([
+    "reviewed_common_spell_resolved","reviewed_removal_resolved",
+    "reviewed_zone_spell_resolved","provisional_spell_resolved",
+    "reviewed_flashback_resolved","reviewed_escape_resolved",
+    "reviewed_buyback_resolved","reviewed_draw_spell_resolved",
+    "tutor_resolved","token_spell_resolved"
+  ]);
+  function pilotTurnActivity(round){
+    const items=[],awaiting=new Map();
+    const add=(label,name)=>items.push(label+(name?" "+name:""));
+    for(const action of round.actions){
+      if(action.actor_seat!==0)continue;
+      const type=action.type;
+      const name=action.card_name||
+        (typeof action.fields?.source==="string"?action.fields.source:null);
+      if(type==="draw"){add("drew",name||"a card (name unrecorded)");continue}
+      if(type==="land_play"){add("played",name||"land");continue}
+      if(CAST_EVENTS.has(type)){
+        add("cast",name||"a spell (name unrecorded)");
+        if(name)awaiting.set(name,(awaiting.get(name)||0)+1);
+        continue;
+      }
+      if(RESOLVED_SPELL_EVENTS.has(type)){
+        if(name&&(awaiting.get(name)||0)>0){
+          awaiting.set(name,awaiting.get(name)-1);
+          continue;
+        }
+        add(type==="reviewed_removal_resolved"?"resolved removal with":"played",
+          name||"an unnamed spell");
+        continue;
+      }
+      if(type==="reviewed_instant_response"){
+        add("responded with",name||"an instant (name not exported)");continue;
+      }
+      if(type==="reviewed_unearth_resolved"||type==="reviewed_attachment_reanimated"){
+        add("returned",name||"a permanent (name not exported)");continue;
+      }
+      if(type==="cleanup_discard"){add("discarded",name||"a card");continue}
+      if(type==="player_abstract_unblocked_damage"){
+        const target=isSeat(action.target_seat)?" to Seat "+action.target_seat:"";
+        add("dealt "+(action.fields?.amount??"unquantified")+" damage"+target);continue;
+      }
+      if(type==="player_abstract_blocked_combat"){
+        add("attacked (blocked"+(isSeat(action.target_seat)?" by Seat "+action.target_seat:"")+")");continue;
+      }
+      if(type.includes("activated")||type.includes("activation")||
+         type==="reviewed_utility_activated"){
+        add("activated",name||"an ability (source not exported)");continue;
+      }
+      if(type.includes("trigger")||type.includes("end_step")||
+         type.includes("upkeep")||type==="reviewed_phase_resolved"||
+         type==="reviewed_enter_resolved"){
+        add("resolved trigger from",name||"a source not named in the export");continue;
+      }
+    }
+    return items;
+  }
+  function galleryCard(item,lookup,openCard){
+    const card=typeof lookup==="function"?lookup(item.name):null;
+    const tile=el(validateCard(card)&&typeof openCard==="function"?"button":"div",
+      "replay-zone-card"+(item.token?" replay-zone-token":""));
+    if(tile.tagName==="BUTTON"||tile.type!==undefined){
+      tile.type="button";tile.title="View "+item.name+" card details";
+      tile.onclick=()=>openCard(card.oracle_id);
+    }
+    if(validateCard(card)){
+      const img=el("img","replay-zone-art");img.src=card.image||card.art;
+      img.alt=item.name;img.loading="lazy";tile.appendChild(img);
+    }else tile.appendChild(el("span","replay-zone-unpictured",item.token?"◇ token":"◇ card"));
+    tile.appendChild(el("span","replay-zone-card-name",item.name));
+    if(item.token)tile.appendChild(el("span","replay-zone-tag","Token"));
+    if(item.count>1)tile.appendChild(el("span","replay-zone-qty","×"+item.count));
+    return tile;
+  }
+  function groupCardObjects(items){
+    const grouped=new Map();
+    for(const obj of items){
+      const key=(obj.token?"token:":"card:")+obj.name;
+      if(!grouped.has(key))grouped.set(key,{name:obj.name,token:!!obj.token,count:0});
+      grouped.get(key).count++;
+    }
+    return [...grouped.values()];
+  }
+  function cardGallery(items,lookup,openCard){
+    const gallery=el("div","replay-zone-gallery");
+    for(const item of groupCardObjects(items))gallery.appendChild(
+      galleryCard(item,lookup,openCard));
+    return gallery;
+  }
+  function zoneInspector(round,topic,lookup,openCard){
+    const snapshot=statsForRound(round,0),zones=snapshot?.zones;
+    if(!zones)return null;
+    const box=el("section","replay-zone-inspector");
+    const named=(items)=>items.filter(item=>item&&typeof item.name==="string");
+    const show=(heading,items,empty)=>{
+      box.appendChild(el("strong","replay-zone-title",heading));
+      if(items.length)box.appendChild(cardGallery(items,lookup,openCard));
+      else box.appendChild(el("p","micro",empty));
+    };
+    if(topic==="hand"){
+      show("Hand at the end of this round",named(zones.hand||[]),"Hand is empty");
+      return box;
+    }
+    if(topic==="creatures"){
+      const creatures=[],unverified=[];
+      for(const item of named(zones.battlefield||[])){
+        const card=typeof lookup==="function"?lookup(item.name):null;
+        if(/\bCreature\b/i.test(card?.type_line||""))creatures.push(item);
+        else if(item.token)unverified.push(item);
+      }
+      show("Named creatures on your battlefield",creatures,
+        "No verified creature names are present in the end-of-round snapshot");
+      const lost=zones.untracked_tokens||[];
+      if(unverified.length||lost.length){
+        show("Tokens without verified creature type",
+          [...unverified,...lost.map(t=>({name:t.name,token:true}))],
+          "No unclassified tokens");
+        box.appendChild(el("p","micro",
+          "Unclassified tokens are shown without assuming their creature type or card art."));
+      }
+      return box;
+    }
+    if(topic==="lands"){
+      const lands=[],other=[];
+      for(const item of named(zones.battlefield||[])){
+        const card=typeof lookup==="function"?lookup(item.name):null;
+        if(/\bLand\b/i.test(card?.type_line||""))lands.push(item);
+        else if(/\bLand\b/i.test(item.type_line||""))lands.push(item);
+      }
+      show("Lands on your battlefield",lands,
+        "No land identities matched the verified local card catalog");
+      const activations=Array.isArray(round.mana_activations)?
+        round.mana_activations:[];
+      for(const row of activations){
+        const card=typeof lookup==="function"?lookup(row.source_name):null;
+        if(!/\bLand\b/i.test(card?.type_line||""))other.push(row);
+      }
+      box.appendChild(el("strong","replay-zone-title","Nonland mana sources activated this round"));
+      if(other.length){
+        const counts=new Map();
+        for(const row of other){
+          const key=row.source_name+"|"+JSON.stringify(row.mana_output);
+          if(!counts.has(key))counts.set(key,{name:row.source_name,
+            token:false,count:0,outputs:row.mana_output});
+          counts.get(key).count++;
+        }
+        box.appendChild(cardGallery([...counts.values()].map(x=>({
+          name:x.name,token:false,count:x.count
+        })),lookup,openCard));
+        const list=el("div","replay-mana-credits");
+        for(const value of counts.values()){
+          list.appendChild(el("span","micro",value.name+
+            " · "+value.count+" recorded activation"+(value.count===1?"":"s")+
+            " · output "+(value.outputs?.join(", ")||"unreported")));
+        }
+        box.appendChild(list);
+      }else box.appendChild(el("p","micro",
+        activations.length?"Only land-source activations were recorded.":
+        "No committed mana-source activations are recorded for this round."));
+      box.appendChild(el("p","micro",
+        "Mana activation records cover mana committed to modeled payments; they are not a full accounting of potential or unspent mana."));
+      return box;
+    }
+    return null;
+  }
   function roundSection(round,previous,seats,lookup,openCard,index,commanderName){
     const snapshot=statsForRound(round,0)||{};
     const life=typeof snapshot.life==="number"?snapshot.life:null;
@@ -312,10 +485,12 @@
     const lead=el("span","replay-turn-lead");
     lead.append(el("span","replay-turn-number",""+round.round),
       el("span","replay-turn-title","Round "+round.round));
-    const highlight=spotlight.action?
-      summarizeAction(spotlight.action):
-      (round.actions.length?"No named key play captured":"No key actions retained");
-    lead.appendChild(el("span","replay-turn-highlight",highlight));
+    const observed=pilotTurnActivity(round);
+    const highlight=observed.length?observed.join(" · "):
+      (round.actions.length?"No own actions retained":"No actions retained");
+    const activityLine=el("span","replay-turn-highlight",highlight);
+    activityLine.title=highlight;
+    lead.appendChild(activityLine);
     summary.appendChild(lead);
 
     const stats=el("span","replay-turn-stats");
@@ -369,8 +544,12 @@
         hand:"Hand: "+displayAmount(current.hand_size),
         combat:"Combat and targeting"
       }[topic];
-      detail.append(el("strong","replay-focus-heading",label),
-        el("p","micro",focusedNote(topic)));
+      detail.appendChild(el("strong","replay-focus-heading",label));
+      const cards=zoneInspector(round,topic,lookup,openCard);
+      if(cards)detail.appendChild(cards);
+      detail.appendChild(el("p","micro",cards?
+        "This is an exact end-of-round pilot snapshot; action causes may still be abbreviated.":
+        focusedNote(topic)));
       const actions=relatedActions(round,topic);
       if(!actions.length)detail.appendChild(el("p","small",
         "No relevant actions were retained for this category in this round."));
@@ -575,5 +754,5 @@
     draw();
     return {redraw:draw};
   }
-  return {FORMAT,validate,eventKind,eventTitle,summarizeAction,activity,statsForRound,changeIn,recordedCombat,cardSpotlight,relatedActions,render};
+  return {FORMAT,validate,eventKind,eventTitle,summarizeAction,activity,statsForRound,changeIn,recordedCombat,cardSpotlight,relatedActions,pilotTurnActivity,zoneInspector,render};
 });
