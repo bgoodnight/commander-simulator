@@ -168,12 +168,12 @@ class SharedEffectRecipeTests(unittest.TestCase):
 
     def test_provisional_death_body_is_opt_in_and_identity_pinned(self):
         text="Flying\nWhen this creature dies, draw a card."
-        source={"name":"Future Phoenix","oracle_id":"future:pinned",
+        source={"name":"Future Phoenix","oracle_id":"a11a11a1-1111-4111-8111-111111111111",
                 "oracle_text":text,"type_line":"Creature — Phoenix",
                 "mana_cost":"{2}{R}","layout":"normal"}
         self.assertEqual(provisional_profile(source).kind,"creature_body")
         catalog=dict(self.catalog,**{"Future Phoenix":source})
-        obj=self.add("Future Phoenix",zone="battlefield",oid="future:pinned")
+        obj=self.add("Future Phoenix",zone="battlefield",oid="a11a11a1-1111-4111-8111-111111111111")
         self.add("Drawn",zone="library")
         strict=ReviewedDeathEngine(self.zones,self.life,catalog)
         safe=ReviewedDeathEngine(self.zones,self.life,catalog,provisional_mode="safe")
@@ -190,12 +190,12 @@ class SharedEffectRecipeTests(unittest.TestCase):
     def test_provisional_death_drain_uses_same_generic_condition(self):
         printed=("Whenever another creature you control dies, "
                  "each opponent loses 1 life.")
-        card={"name":"Future Drain","oracle_id":"future:drain",
+        card={"name":"Future Drain","oracle_id":"b22b22b2-2222-4222-8222-222222222222",
               "oracle_text":printed,"type_line":"Creature — Horror",
               "mana_cost":"{1}{B}","layout":"normal"}
         self.assertIsNotNone(provisional_death_recipe(printed))
         catalog=dict(self.catalog,**{"Future Drain":card})
-        source=self.add("Future Drain",zone="battlefield",oid="future:drain")
+        source=self.add("Future Drain",zone="battlefield",oid="b22b22b2-2222-4222-8222-222222222222")
         friend=self.add("Friend",zone="battlefield")
         opponent=self.add("Enemy",zone="battlefield",seat=1)
         engine=ReviewedDeathEngine(self.zones,self.life,catalog,provisional_mode="safe")
