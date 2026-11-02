@@ -21,3 +21,5 @@ jobs:
         run: node --test tests/pages_brackets.test.cjs
       - name: Test named deck selection and cross-commander navigation
         run: node --test tests/pages_deck_selection.test.cjs
+      - name: Test replay-data boundaries and four-seat narrative UI
+        run: node --test tests/pages_replay.test.cjs
