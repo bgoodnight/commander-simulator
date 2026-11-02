@@ -81,7 +81,7 @@ class OpponentPressureTests(unittest.TestCase):
         adv._spawn(1,0,"aggro")
         attacker=adv.events[-1].object_id
         before=self.life.total(0)
-        adv._combat(1,"aggro",turn=1)
+        adv._combat(1,"aggro",turn=1,defender=0)
         self.assertEqual(self.life.total(0),before)
         self.assertTrue(any(x.operation=="abstract_blocked_combat"
                             and x.object_id==attacker for x in adv.events))
@@ -100,6 +100,29 @@ class OpponentPressureTests(unittest.TestCase):
         adv._combat(1,"aggro",turn=1)
         self.assertNotIn(attacker,self.kernel.objects)
         self.assertTrue(self.zones.assert_consistent())
+
+
+    def test_target_priority_not_fixed_on_seat_zero(self):
+        # In symmetric worlds every non-actor seat must be targetable.
+        picked={0:0,2:0,3:0}
+        for seed in range(90):
+            a=self.stress("balanced",seed=seed)
+            actor=1
+            for _ in range(4):
+                seat=a._target_seat(actor,"control")
+                picked[seat]+=1
+        self.assertTrue(all(picked[seat]>15 for seat in picked),picked)
+        self.assertEqual(sum(picked.values()),360)
+
+    def test_exile_target_can_be_another_opponent(self):
+        body=self.zones.add(self.C("test:body","Other seat threat",
+            frozenset({"creature"}),base_power=3,base_toughness=4,
+            coverage="approx"),2,"battlefield")
+        a=self.stress("control",seed=4)
+        chosen=a._exile_one(1,3,"control")
+        self.assertTrue(chosen)
+        self.assertEqual(a.events[-1].target_seat,2)
+        self.assertNotIn(body,self.kernel.objects)
 
     def test_unsupported_opponent_scenario_fails_closed(self):
         with self.assertRaises(ValueError):
