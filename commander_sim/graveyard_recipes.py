@@ -18,6 +18,7 @@ class GraveyardRecipe:
     controller_on_entry: str = "owner"  # owner or actor
     enter_tapped: bool = False
     enter_counters: tuple[str, int] = ("", 0)
+    required_types_all: frozenset[str] = frozenset()
 
     def __post_init__(self):
         kind, count = self.enter_counters if (
@@ -30,7 +31,8 @@ class GraveyardRecipe:
                            all(isinstance(x, str) and x for x in items)
                            for items in (self.allowed_types_any,
                                          self.required_subtypes,
-                                         self.required_supertypes))
+                                         self.required_supertypes,
+                                         self.required_types_all))
                 or type(self.enter_tapped) is not bool
                 or type(kind) is not str or type(count) is not int
                 or count < 0 or bool(kind) != bool(count)
@@ -58,6 +60,8 @@ def _allowed(zones, actor, oid, recipe):
         return False
     if (recipe.allowed_types_any
             and not obj.types.intersection(recipe.allowed_types_any)):
+        return False
+    if recipe.required_types_all and not recipe.required_types_all <= obj.types:
         return False
     if recipe.required_subtypes and not recipe.required_subtypes <= obj.subtypes:
         return False
@@ -124,3 +128,46 @@ def resolve_graveyard_recipe(zones, actor, object_ids, recipe: GraveyardRecipe):
     if recipe.destination == "library":
         outcome.reverse()
     return tuple(outcome)
+
+
+def select_bounded_graveyard_batch(zones, actor, recipe: GraveyardRecipe,
+                                  catalog, *, max_total_mana_value=None,
+                                  max_count=100):
+    """Choose a finite legal subset under a printed mana-value budget.
+
+    Bounded policy: prefer higher printed mana-value eligible cards, then
+    stable object ID. This is NOT optimal strategy. Fail closed if metadata
+    is missing or conflicts with a real physical Oracle ID. A caller still
+    must independently authorize any recursion effect and pay its costs.
+    """
+    if (not isinstance(catalog,dict)
+            or max_total_mana_value is not None and
+            (type(max_total_mana_value) is not int or
+             max_total_mana_value < 0)
+            or type(max_count) is not int or not 0<=max_count<=100):
+        raise ValueError("Invalid pinned graveyard selection budget")
+    candidates=eligible_graveyard_cards(zones,actor,recipe)
+    values={}
+    for oid in candidates:
+        obj=zones.kernel.get(oid)
+        row=catalog.get(obj.card.name)
+        if (not isinstance(row,dict)
+                or row.get("oracle_id")!=obj.card.card_id):
+            # Unknown card identity cannot be silently assigned a CMC.
+            continue
+        printed=row.get("cmc")
+        if (type(printed) not in (int,float)
+                or printed<0 or int(printed)!=printed):
+            continue
+        values[oid]=int(printed)
+    chosen=[]
+    budget=max_total_mana_value
+    for oid in sorted(values,key=lambda ident:(-values[ident],ident)):
+        if len(chosen)>=max_count:
+            break
+        mv=values[oid]
+        if budget is None or mv<=budget:
+            chosen.append(oid)
+            if budget is not None:
+                budget-=mv
+    return tuple(chosen)
