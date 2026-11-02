@@ -73,3 +73,36 @@ test('published replay file, when present, exposes only actual sampled games',()
     }
   }
 });
+
+
+test('replay DOM renders four seats, measured pilot only, actual event details and optional verified card art',()=>{
+  class Node{
+    constructor(tag){this.tag=tag;this.children=[];this.textContent='';this.attributes={};this.className='';}
+    append(...nodes){this.children.push(...nodes)}
+    appendChild(node){this.children.push(node);return node}
+    replaceChildren(...nodes){this.children=[...nodes]}
+    setAttribute(name,value){this.attributes[name]=value}
+  }
+  const previous=global.document;
+  global.document={createElement:tag=>new Node(tag)};
+  try{
+    const root=new Node('div'),input=fixture();
+    const opened=[];
+    Replay.render(root,input,{deckKey:input.deck_key,deckHash:input.deck_sha256,
+      lookup:name=>name==='Swamp'?{name:'Swamp',oracle_id:'swamp-id',art:'https://example.invalid/swamp.jpg'}:null,
+      openCard:id=>opened.push(id)});
+    const walk=node=>[node,...(node.children||[]).flatMap(walk)];
+    const nodes=walk(root),texts=nodes.map(x=>x.textContent).filter(Boolean);
+    assert.ok(texts.some(x=>x.includes('Mortarion · You')));
+    assert.ok(texts.some(x=>x.includes('Seat 3 · value')));
+    assert.ok(texts.some(x=>x.includes('Life not recorded')));
+    assert.ok(texts.some(x=>x.includes('40 life')));
+    assert.ok(texts.some(x=>x.includes('Seat 1 applied 2 abstract unblocked damage')));
+    assert.ok(texts.some(x=>x.includes('Seat 3 reached zero life')));
+    const art=nodes.find(x=>x.tag==='img');
+    assert.equal(art.src,'https://example.invalid/swamp.jpg');
+    const button=nodes.find(x=>x.className==='replay-card-art');
+    button.onclick();
+    assert.deepEqual(opened,['swamp-id']);
+  }finally{global.document=previous}
+});
