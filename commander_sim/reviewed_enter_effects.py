@@ -72,6 +72,10 @@ class EnterRule:
 
 
 ENTER_RULES={
+    "Lord of Change":EnterRule(
+        "b575fb16-c3c3-4cad-857f-122257a4b32f",
+        "Architect of Deception — When this creature enters, draw three cards.",
+        "library_recipe",library_actions=(LibraryAction("draw",3),)),
     "Technomancer":EnterRule(
         "3f97541e-34f3-4f7f-8ac2-7167b2ec9b33",
         "When this creature enters, mill three cards, then return any number of artifact creature cards with total mana value 6 or less from your graveyard to the battlefield.",
@@ -224,6 +228,7 @@ def execute_reviewed_enter(zones,life:KernelLife,source_id,catalog,*,
             result=resolve_library_actions(zones,source.controller,
                                            effect.library_actions)
             milled=result.milled_ids
+            drawn=result.drawn_ids
             library_steps=result.steps
             if effect.life_gain:
                 life.gain(source.controller,effect.life_gain,source_id)

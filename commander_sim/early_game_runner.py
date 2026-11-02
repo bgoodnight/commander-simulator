@@ -160,7 +160,7 @@ def run_bounded_early_game(deck_key, *, seed=0, turns=6, mulligan="one-free", pr
     # Pinned, source-verified ETB effects with safe bounded hand-cast paths.
     enter_hand_casts = {"Bastion of Remembrance", "Grave Titan", "Massacre Wurm",
                         "Flayed One", "Mire Triton", "Undead Butler",
-                        "Technomancer",
+                        "Technomancer", "Lord of Change",
                         "Marionette Apprentice", "Royal Warden",
                         "Triarch Praetorian", "Canoptek Tomb Sentinel"}
     def approved_enter_hand_cast(name):
@@ -605,6 +605,17 @@ def run_bounded_early_game(deck_key, *, seed=0, turns=6, mulligan="one-free", pr
                     provisional.kind=="simple_spell"
                     and reviewed_common_spell(name,raw) is None
                     and reviewed_draw_spell(name,raw) is None)
+                if (provisional is not None
+                        and provisional.kind=="creature_body"
+                        and provisional.entry_actions
+                        and len(zones.ids(0,"library")) <
+                            sum(step.count for step in provisional.entry_actions
+                                if step.kind in {"draw","mill"})):
+                    # A bounded entry-draw must never be silently omitted
+                    # after paying the source. Conservatively decline the
+                    # card when a mandatory compound library sequence cannot
+                    # be fulfilled in this reduced game host.
+                    continue
                 if provisional_spell:
                     # A speculative preview cannot commit a draw from an
                     # empty library or a source-paid spell that kills its
@@ -645,6 +656,12 @@ def run_bounded_early_game(deck_key, *, seed=0, turns=6, mulligan="one-free", pr
                                          and "enchantment" in obj.types))
                 sacrifice_artifact = reviewed_sacrifice_artifact(name, raw)
                 entering = approved_enter_hand_cast(name)
+                if entering:
+                    reviewed_entry=reviewed_enter_rule(name,raw)
+                    required=sum(x.count for x in reviewed_entry.library_actions
+                                 if x.kind in {"draw","mill"})
+                    if required>len(zones.ids(0,"library")):
+                        continue
                 ramp = reviewed_ramp(name,raw) if "land" not in obj.types else None
                 ritual = reviewed_ritual(name,raw)
                 common = reviewed_common_spell(name,raw)
