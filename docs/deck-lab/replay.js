@@ -159,7 +159,7 @@
       "Abstract pressure model, not a card-exact opponent action.":"Reviewed event with abbreviated source details; other outcomes may be omitted."));
     return details;
   }
-  function actionRow(action,index,lookup,openCard){
+  function actionRow(action,index,lookup,openCard,seats){
     const card=action.card_name&&typeof lookup==="function"?lookup(action.card_name):null;
     const row=el("div","replay-action replay-kind-"+eventKind(action));
     const pic=art(card,openCard);
@@ -170,8 +170,12 @@
     }[eventKind(action)]||"·"));
     const body=el("div","replay-action-body");
     const header=el("div","replay-action-header");
+    const actorSeat=seats?.find(s=>s.seat===action.actor_seat);
+    const actorLabel=action.actor_seat===0?"You · Mortarion":
+      actorSeat?titleCase(actorSeat.role||"opponent")+" · Seat "+actorSeat.seat:
+      isSeat(action.actor_seat)?"Seat "+action.actor_seat:"Event without actor";
     header.append(el("span","replay-action-type",eventTitle(action)),
-      el("span","replay-action-seat",isSeat(action.actor_seat)?"Seat "+action.actor_seat:"Unattributed"));
+      el("span","replay-action-seat",actorLabel));
     body.append(header,el("div","replay-action-label",summarizeAction(action)));
     if(action.card_name&&!card)body.appendChild(el("span","micro","Card art unavailable in pinned catalog"));
     if(isSeat(action.target_seat))body.appendChild(el("span","replay-target","Target: Seat "+action.target_seat));
@@ -410,6 +414,18 @@
     }
     outer.appendChild(strip);return outer;
   }
+  function takeaway(title,value,description,explanation){
+    const item=el("details","replay-takeaway");
+    const header=el("summary","replay-takeaway-summary");
+    header.append(el("span","replay-takeaway-kicker",title),
+      el("strong","replay-takeaway-value",value),
+      el("span","replay-takeaway-description",description),
+      el("span","replay-takeaway-explore","Explore evidence"));
+    item.appendChild(header);
+    item.appendChild(el("p","replay-takeaway-evidence",explanation));
+    return item;
+  }
+
   function render(root,data,options={}){
     validate(data,options.deckKey,options.deckHash);
     let scenario=options.scenario&&data.scenarios[options.scenario]?options.scenario:
@@ -418,68 +434,116 @@
     const lookup=options.lookup,openCard=options.openCard;
     function draw(){
       root.replaceChildren();
-      const head=panelHeading("Opponent-pressure replays","Four-seat action timeline");
-      head.appendChild(el("p","small",
-        "Version 1 · source run #"+data.source.workflow_run_id+" · "+
-        data.seeds_per_scenario+" simulated seeds per scenario. Only selected narrative samples were exported."));
-      root.appendChild(head);
-      root.appendChild(el("p","replay-fidelity",
-        "Abbreviated, round-level events. Seat 0 has observed life and board counts; opponent life, boards, individual card draws, precise phases, and full zone changes are not in this artifact. No match win rates."));
-      const layout=el("div","replay-scenario-grid");
+      const heading=panelHeading("Example games · Mortarion",
+        "Opponent pressure & turn progression");
+      heading.appendChild(el("p","replay-lead-small",
+        "Your board first, recorded actions on demand · "+data.seeds_per_scenario+
+        " seeds per scenario · abbreviated pressure model, not verified game wins."));
+      root.appendChild(heading);
+      const scenarioBar=el("div","replay-scenario-picker");
+      scenarioBar.appendChild(el("span","replay-picker-label","Compare pressure"));
+      const buttons=el("div","replay-scenario-tabs");
       for(const [key,entry] of Object.entries(data.scenarios)){
-        const summary=entry.summary;
-        const button=el("button","replay-scenario"+(key===scenario?" is-active":""));
-        button.type="button";button.setAttribute("aria-pressed",String(key===scenario));
-        button.append(el("span","replay-scenario-title",titleCase(key)),
-          el("strong",null,summary.survived_by_horizon+" / "+summary.seeds),
-          el("span","micro","Seat 0 survived through observation horizon"),
-          el("span","replay-scenario-foot",entry.games.length+" sample logs · mean final life "+summary.mean_life_at_last_observation));
+        const active=key===scenario;
+        const button=el("button","replay-scenario-tab"+(active?" is-active":""));
+        button.type="button";button.setAttribute("aria-pressed",String(active));
+        button.append(el("span","replay-scenario-tab-name",titleCase(key)),
+          el("span","replay-scenario-tab-sub",entry.summary.mean_life_at_last_observation+" mean life"));
         button.onclick=()=>{scenario=key;gameId=null;draw()};
-        layout.appendChild(button);
+        buttons.appendChild(button);
       }
-      root.appendChild(layout);
-      const chosen=data.scenarios[scenario],games=chosen.games;
-      const panel=el("section","replay-explorer");
-      panel.appendChild(panelHeading("Explore a recorded game",titleCase(scenario)+" pressure"));
-      const top=el("div","replay-explorer-overview");
-      top.append(metric("Simulated seeds",chosen.summary.seeds),
-        metric("Narratives available",games.length),
-        metric("Mean pilot life (all seeds)",chosen.summary.mean_life_at_last_observation),
-        metric("Pilot eliminated by horizon",chosen.summary.eliminated_by_horizon+" / "+chosen.summary.seeds));
-      panel.appendChild(top);
-      const note=el("p","micro",scenario==="goldfish"?
-        "Goldfish is a solo baseline with no abstract opposing seats; no opponents are invented.":
-        "Roles indicate the three modeled abstract adversaries. Surviving the horizon does not imply a game victory.");
-      panel.appendChild(note);
-      if(!games.length){panel.appendChild(el("p","small","No narrative examples were exported for this scenario."));root.appendChild(panel);return}
-      const selection=el("div","replay-selection");
-      const label=el("label",null,"Example game");
-      const select=el("select");select.setAttribute("aria-label","Choose an example replay game");
+      scenarioBar.appendChild(buttons);root.appendChild(scenarioBar);
+
+      const chosen=data.scenarios[scenario],summary=chosen.summary,games=chosen.games;
+      const castCounts=summary.commander_cast_turn_counts||{};
+      const never=Number(castCounts.never||0),cast=summary.seeds-never;
+      const killed=Number(summary.eliminated_by_horizon||0);
+      const cards=el("div","replay-takeaway-grid");
+      cards.append(
+        takeaway("Pressure survival",
+          summary.survived_by_horizon+" / "+summary.seeds,
+          "Still active after "+data.round_horizon+" rounds",
+          killed+" of "+summary.seeds+" runs had Seat 0 eliminated by the recorded horizon. "+
+          "This is survival against simplified opponent pressure, not a win rate."),
+        takeaway("Life under pressure",
+          String(summary.mean_life_at_last_observation),
+          "Mean observed final life · 40 starting",
+          "Mean Seat 0 life at the last observation, including any abbreviated runs. "+
+          "Individual samples may differ significantly and can exceed the starting 40 life."),
+        takeaway("Commander access",
+          cast+" / "+summary.seeds,
+          "Mortarion casts within the horizon",
+          never+" run"+(never===1?"":"s")+" did not cast Mortarion within the "+
+          data.round_horizon+"-round horizon. These counts reflect reviewed casts; "+
+          "commander board presence at the end is not guaranteed."),
+        takeaway("Reviewed removal",
+          String(summary.average_reviewed_removal_per_seed??"—"),
+          "Mean resolved removals per seed",
+          "Only reviewed removal effects are counted; abstract opponent disruption "+
+          "and unrecorded permanent identities cannot support card-specific attribution.")
+      );
+      root.appendChild(cards);
+
+      const section=el("section","replay-explorer");
+      const heading2=panelHeading("Inspect a recorded example","A game, one round at a time");
+      section.appendChild(heading2);
+      const control=el("div","replay-game-control");
+      if(!games.length){
+        section.appendChild(el("p","small","No example replay was exported for this scenario."));
+        root.appendChild(section);return;
+      }
+      const label=el("label","replay-game-label","Example game");
+      const select=el("select","replay-game-select");
+      select.setAttribute("aria-label","Select an example replay game");
       if(!games.some(g=>g.id===gameId))gameId=games[0].id;
-      games.forEach(g=>{const opt=el("option",null,"Seed "+g.seed+" · "+
-        g.rounds.length+" rounds · "+(g.eliminated?"pilot eliminated":"pilot still active"));
-        opt.value=g.id;select.appendChild(opt)});
+      for(const game of games){
+        const opt=el("option",null,"Seed "+game.seed+" · "+
+          game.rounds.length+" rounds · "+(game.eliminated?"Eliminated":"Survived horizon"));
+        opt.value=game.id;select.appendChild(opt);
+      }
       select.value=gameId;
       select.onchange=()=>{gameId=select.value;draw()};
-      label.appendChild(select);
-      selection.appendChild(label);
-      panel.appendChild(selection);
+      label.appendChild(select);control.appendChild(label);
+      control.appendChild(el("div","replay-game-provenance",
+        games.length+" narrated examples from "+summary.seeds+" simulated seeds"));
+      section.appendChild(control);
+
       const game=games.find(g=>g.id===gameId)||games[0];
+      const legend=el("details","replay-table-key");
+      legend.appendChild(el("summary",null,"Show table seats and roles"));
       const seatLegend=el("div","replay-seat-legend");
-      game.seats.forEach(seat=>seatLegend.appendChild(el("span","replay-seat-pill replay-seat-pill-"+seat.seat,seatName(seat))));
-      panel.appendChild(seatLegend);
-      const life=lifeTrack(game.rounds);if(life)panel.appendChild(life);
-      panel.appendChild(el("p","micro",
-        "Chronology is the order retained by the exporter within each numbered round—not a reconstructed player-turn or priority sequence. "+
-        "Click a round to reveal the four seat summaries and the available action details."));
+      game.seats.forEach(seat=>seatLegend.appendChild(
+        el("span","replay-seat-pill replay-seat-pill-"+seat.seat,seatName(seat))));
+      legend.appendChild(seatLegend);section.appendChild(legend);
+      section.appendChild(el("p","replay-legend",
+        "Highlighted numbers changed since the previous round · ◆ lands, not available mana. "+
+        "Expand a row for a specific stat, opponent context, or all recorded actions."));
+
       const timeline=el("div","replay-timeline");
-      game.rounds.forEach((round,i)=>timeline.appendChild(roundSection(round,game.rounds[i-1]||null,game.seats,lookup,openCard,i)));
-      panel.appendChild(timeline);
-      const end=el("div","replay-end");
-      end.append(el("strong",null,game.eliminated?"Pilot eliminated in this example":"Pilot still active at end of example"),
-        el("span","micro","No winner, opponent final standings, or complete battlefield state is recorded."));
-      panel.appendChild(end);
-      root.appendChild(panel);
+      game.rounds.forEach((round,i)=>timeline.appendChild(
+        roundSection(round,game.rounds[i-1]||null,game.seats,lookup,openCard,i)));
+      section.appendChild(timeline);
+      section.appendChild(el("p","replay-endline",
+        game.eliminated?"Seat 0 was eliminated during this sample.":
+        "Seat 0 was still active at the last observed round. No victory is inferred."));
+
+      const trends=el("details","replay-table-key");
+      trends.appendChild(el("summary",null,"Life totals over the sample"));
+      const life=lifeTrack(game.rounds);
+      if(life)trends.appendChild(life);
+      section.appendChild(trends);
+      const methodology=el("details","replay-table-key");
+      methodology.appendChild(el("summary",null,"What this replay does and doesn't record"));
+      methodology.appendChild(el("p","micro",
+        "The source preserves selected events in exported order within each round, "+
+        "not individual player turns or the full priority stack. Only Mortarion's "+
+        "end-of-round life, lands, creatures and hand size are snapshots. "+
+        "Opponent life/boards, mana spent, card draws, token identities and zone "+
+        "movements are unavailable until later replay schemas include them. "+
+        "Opposing roles use abstract behaviors, not invented named spells. "+
+        "Source workflow #"+data.source.workflow_run_id+"."));
+      section.appendChild(methodology);
+      root.appendChild(section);
     }
     draw();
     return {redraw:draw};
