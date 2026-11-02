@@ -227,13 +227,16 @@ def activate_utility(zones,life,seat,source_id,catalog,mana_service,colors,
     if life.total(seat)<=life_cost:
         return None
     excluded=tuple(((source_id,) if rule.tap else ()) + tap_cost_ids)
-    preview=mana_service.plan(seat,rule.mana,excluded_source_ids=excluded)
-    if preview is None:
-        return None
+    if rule.mana:
+        preview=mana_service.plan(
+            seat,rule.mana,excluded_source_ids=excluded)
+        if preview is None:
+            return None
     before=capture_battlefield(kernel)
     move_index=len(kernel.moves)
-    paid=mana_service.pay(seat,rule.mana,excluded_source_ids=excluded)
-    if paid is None:
+    paid=(mana_service.pay(seat,rule.mana,excluded_source_ids=excluded)
+          if rule.mana else None)
+    if rule.mana and paid is None:
         raise AssertionError("Reviewed utility payment changed")
     if rule.tap:
         source.tapped=True
@@ -291,6 +294,6 @@ def activate_utility(zones,life,seat,source_id,catalog,mana_service,colors,
                             enter_tapped=True))
         moved.extend(item.new_id for item in restored)
     return UtilityOutcome(source.card.name,rule.operation,tuple(moved),
-                          life_cost,tuple(paid.source_ids),tuple(tokens),
+                          life_cost,tuple(paid.source_ids) if paid else (),tuple(tokens),
                           tuple(tap_cost_ids),tuple(drawn),
                           rule.life_loss_after if rule.operation=="draw" else 0)
