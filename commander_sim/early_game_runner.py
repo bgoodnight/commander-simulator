@@ -39,6 +39,7 @@ from .reviewed_token_spells import (reviewed_token_spell,
 from .bounded_trigger_effects import resolve_reviewed_spell_triggers
 from .kernel_life import KernelLife
 from .reviewed_phase_effects import ReviewedPhaseEngine,reviewed_phase_permanent
+from .composed_abilities import ComposedAbilityEngine
 from .reviewed_death_effects import ReviewedDeathEngine
 from .reviewed_enter_effects import reviewed_enter_rule, execute_reviewed_enter
 from .reviewed_unearth import reviewed_unearth, activate_reviewed_unearth, expire_reviewed_unearth
@@ -178,6 +179,8 @@ def run_bounded_early_game(deck_key, *, seed=0, turns=6, mulligan="one-free", pr
     life = KernelLife(kernel)
     phase_engine = ReviewedPhaseEngine(zones, life, raw_by_name)
     death_engine = ReviewedDeathEngine(zones, life, raw_by_name)
+    composed_engine = ComposedAbilityEngine(zones, life, raw_by_name,
+                                           mana_service, death_engine)
     entered_on_turn = {}
     if len(kernel.objects) != 100:
         raise AssertionError("Pinned 100-card zone conservation failed at loading")
@@ -205,6 +208,7 @@ def run_bounded_early_game(deck_key, *, seed=0, turns=6, mulligan="one-free", pr
     for turn in range(1, turns + 1):
         mana_service.clear()
         mana_ledger_start = len(mana_service.mana_events)
+        life_ledger_start = len(life.kernel.life_changes)
         turn_kernel_event_index=len(kernel.events)
         events = []
         def approved_spell_triggers(ticket):
@@ -751,6 +755,17 @@ def run_bounded_early_game(deck_key, *, seed=0, turns=6, mulligan="one-free", pr
                            "fidelity":"bounded_no_opponent_priority"})
         death_count=sum(ev.name=="dies" for ev in
                         kernel.events[turn_kernel_event_index:])
+        # Resolve approved composed end-step abilities. The bounded pilot
+        # supplies no optional X choice; it does not invent a strategy.
+        for composed in composed_engine.end_step(
+                active_seat=0, turn=turn, life_start_index=life_ledger_start):
+            events.append({
+                "type":"reviewed_composed_end_step",
+                "source_object_id":composed.source_id,
+                "effect":composed.operation,
+                "created_token_ids":list(composed.created_ids),
+                "death_trigger_count":composed.deaths,
+                "fidelity":"bounded_no_opponent_priority"})
         for triggered in phase_engine.resolve(
                 phase="end_step",active_seat=0,round_id=turn,
                 death_count=death_count):
