@@ -71,7 +71,7 @@ class StaticPagesTests(unittest.TestCase):
     def test_only_allowlisted_site_data_and_no_workspace_are_exported(self):
         self.run_build()
         permitted={"index.html","summary.html","results.html","editor.html",
-                   "app.js","results_insights.js","brackets.js","style.css","game-changers.json","decks.json",
+                   "app.js","results_insights.js","brackets.js","replay.js","style.css","game-changers.json","decks.json",
                    "observations.json","names.json","bounded-batches.json","build-manifest.json",".nojekyll"}
         published=json.loads((self.destination/"bounded-batches.json").read_text())
         permitted.update(f"bounded-runs-{key}.json" for key in published["decks"])
@@ -80,9 +80,22 @@ class StaticPagesTests(unittest.TestCase):
             permitted.add("simulation-data")
             from tools.publish_simulation_archive import validate_index
             self.assertGreaterEqual(len(validate_index(archive_dir)["releases"]),1)
+        replay_dir=self.destination/"replay-data"
+        if replay_dir.is_dir():
+            permitted.add("replay-data")
+            entries=list(replay_dir.iterdir())
+            self.assertEqual({p.name for p in entries},{"mortarion-opponent-pressure.v1.json"})
+            replay=json.loads(entries[0].read_text(encoding="utf-8"))
+            self.assertEqual(replay["format"],"commander-replay-v1")
+            self.assertEqual(replay["schema_version"],1)
+            built_deck=next(d for d in datasets["decks"] if d["key"]=="mortarion_physical_final") if "datasets" in locals() else next(
+                d for d in json.loads((self.destination/"decks.json").read_text())["decks"]
+                if d["key"]=="mortarion_physical_final")
+            self.assertEqual(replay["deck_sha256"],built_deck["deck_sha256"])
+            self.assertEqual(len(replay["scenarios"]),5)
         self.assertEqual({p.name for p in self.destination.iterdir()},permitted)
         self.assertNotIn("shared_scryfall_catalog.json",permitted)
-        self.assertFalse(any(p.is_dir() and p.name!="simulation-data"
+        self.assertFalse(any(p.is_dir() and p.name not in ("simulation-data","replay-data")
                              for p in self.destination.iterdir()))
         page=(self.destination/"index.html").read_text()
         script=(self.destination/"app.js").read_text()
@@ -95,6 +108,9 @@ class StaticPagesTests(unittest.TestCase):
         self.assertIn("game-changers.json",script)
         self.assertIn("bracket-assessment",page)
         self.assertIn("brackets.js",page)
+        self.assertIn("replay.js",page)
+        self.assertIn("id=\"opponent-replay-panel\"",page)
+        self.assertIn("renderReplay",script)
         registry=json.loads((self.destination/"game-changers.json").read_text())
         self.assertEqual(len(registry["names"]),53)
         self.assertIn("Underworld Breach",registry["names"])
