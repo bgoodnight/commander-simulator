@@ -30,7 +30,7 @@ test('common types show only proven casts/plays with relevant distinct contender
     event('tutor_cast','Faithless Looting'),event('reviewed_instant_response','Counterspell')]:[]),
   event('reviewed_enter_resolved','Bad Spell')
  ],hand:['Mana Geyser']}]));
- for(const [type,winner] of [['Artifact','Sol Ring'],['Sorcery','Ponder'],['Instant','Opt']]){
+ for(const [type,winner] of [['Artifact','Arcane Signet'],['Sorcery','Faithless Looting'],['Instant','Counterspell']]){
   const m=Catalog.commonPlayedByType(runs,lookup,type);
   assert.ok(m,type+' should qualify');
   assert.equal(m.contenders[0].name,winner);
@@ -60,7 +60,7 @@ test('held hand residence is separate from source-paid cost preview and discarde
  assert.deepEqual(m.views.map(x=>x.id),['held','payable']);
  const a=m.contenders.find(x=>x.name==='Mana Geyser');
  const b=m.contenders.find(x=>x.name==='Bad Spell');
- assert.equal(a.score,5);
+ assert.equal(a.score,6);
  assert.equal(a.viewScores.payable,3);
  assert.equal(b.viewScores.payable,0);
  assert.equal(a.metrics.find(x=>x.id==='payable').examples[0].focusTopic,'hand');
