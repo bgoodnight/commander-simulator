@@ -1,0 +1,93 @@
+name: Publish pinned Mortarion opponent replay artifact
+on:
+  push:
+    branches: [main]
+    paths:
+      - ".github/workflows/publish-mortarion-replay.yml"
+  workflow_dispatch:
+permissions:
+  contents: write
+  actions: read
+concurrency:
+  group: publish-mortarion-replay-v1
+  cancel-in-progress: false
+jobs:
+  convert-and-publish:
+    name: Validate and publish abbreviation-only replay v1
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+      - name: Download the actual archived opponent-pressure batch
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          mkdir -p dist/replay-incoming
+          gh run download 41444353902 --repo "${{ github.repository }}" --name mortarion-opponent-pressure-scenarios --dir dist/replay-incoming
+          echo '50e40d7e283069eab621feb551004804315afde9d553a2f64de2ef9e4fed02d8  dist/replay-incoming/mortarion-opponent-stress.json' | sha256sum --check
+      - name: Verify pinned deck identity and lossless schema contracts
+        run: |
+          python -m unittest tests.test_build_opponent_replay -v
+          python - <<'PY'
+          from commander_sim.deck_lab_api import deck_detail
+          assert deck_detail("mortarion_physical_final")["deck_sha256"] == "303562ea9325e36f7031840ef1b902eafae321ec4a4ecc4e3bf28259b4141ba6"
+          PY
+      - name: Build compact versioned replay data from the downloaded artifact
+        run: |
+          python tools/build_opponent_replay.py \
+            --input dist/replay-incoming/mortarion-opponent-stress.json \
+            --output dist/mortarion-opponent-pressure.v1.json \
+            --source-run 41444353902 \
+            --engine-commit 48add63d531c5ac01b87a556e9821b7e5d8d3c85 \
+            --deck-sha256 303562ea9325e36f7031840ef1b902eafae321ec4a4ecc4e3bf28259b4141ba6
+          python - <<'PY'
+          import json
+          p=json.load(open("dist/mortarion-opponent-pressure.v1.json"))
+          assert p["format"]=="commander-replay-v1"
+          assert len(p["scenarios"])==5
+          assert sum(len(e["games"]) for e in p["scenarios"].values())==14
+          assert all(e["summary"]["seeds"]==24 for e in p["scenarios"].values())
+          assert all(set(round["snapshots"])=={"0"} for e in p["scenarios"].values()
+                     for game in e["games"] for round in game["rounds"])
+          print("Verified 120 sampled-stress scenarios, 14 abbreviated replay examples; no invented opponent states")
+          PY
+      - name: Preserve replay artifact for debugging
+        uses: actions/upload-artifact@v4
+        with:
+          name: mortarion-replay-v1-validated
+          path: dist/mortarion-opponent-pressure.v1.json
+          retention-days: 90
+          if-no-files-found: error
+      - name: Commit only sanitized replay source without touching simulation rules
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          for attempt in 1 2 3; do
+            git fetch origin main
+            git reset --hard origin/main
+            mkdir -p web/pages/data/replays
+            cp dist/mortarion-opponent-pressure.v1.json web/pages/data/replays/mortarion-opponent-pressure.v1.json
+            git add web/pages/data/replays/mortarion-opponent-pressure.v1.json
+            if git diff --cached --quiet; then
+              echo "Replay data already published"
+              break
+            fi
+            git commit -m "Publish immutable Mortarion opponent-pressure replay v1 from Actions run 41444353902"
+            if git push origin HEAD:main; then
+              echo "Published verified replay source"
+              break
+            fi
+            if [ "$attempt" -eq 3 ]; then
+              echo "Concurrent writes prevented safe publication" >&2
+              exit 1
+            fi
+          done
+      - name: Rebuild static Deck Lab without changing game engine
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: gh workflow run deck-lab-pages.yml --ref main
