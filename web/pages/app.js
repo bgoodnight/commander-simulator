@@ -422,8 +422,105 @@ function showPage(){
   }
   renderPageIntro();
   document.title=PAGE_INFO[pageName]+" | Commander Deck Lab";
-  if(pageName==="results"){renderScrollStory();renderQuietDiagnostic();renderReplay()}
+  if(pageName==="results"){
+    renderScrollStory();renderQuietDiagnostic();renderReplay();renderLongGamePanel();
+  }
 }
+
+/* Modeled long-game batches are kept separate from early-turn goldfish
+ * observations. Local file imports are in memory only, never uploaded.
+ */
+const longGameBatches=[];
+let longGameSourceNote="No published long-game batches yet.";
+function renderLongGamePanel(){
+  const root=$("game-outcome-results"),status=$("game-outcome-status");
+  if(!root||!status||!data||!selectedDeck())return;
+  if(isUnsimulatedVersion()){
+    status.textContent="This edited deck has no exact long-game results.";
+    root.textContent="Load a simulation for this exact revision to compare results.";
+    return;
+  }
+  if(!window.DeckGameOutcomes){
+    root.textContent="Long-game report renderer unavailable.";
+    return;
+  }
+  const exact=longGameBatches.filter(b=>
+    window.DeckGameOutcomes.validate(b)&&
+    b.deck_key===selected&&b.deck_sha256===selectedDeck().deck_sha256);
+  status.textContent=exact.length?
+    exact.length+" long-game batch"+(exact.length===1?"":"es")+
+      " loaded for this deck · modeled, not competitive win rates.":
+    longGameSourceNote;
+  window.DeckGameOutcomes.render(root,exact,{
+    deckKey:selected,deckHash:selectedDeck().deck_sha256,
+    onShowRecordedActions:(target,example,run)=>{
+      try{
+        if(!window.CommanderReplay?.renderBoundedEvidence)
+          throw Error("Action viewer unavailable");
+        window.CommanderReplay.renderBoundedEvidence(target,{
+          ...example,deck_key:run.batch.deck_key,
+          deck_sha256:run.batch.deck_sha256,
+          mode:"bounded_three_opponent_pressure"
+        },{
+          commanderName:selectedDeck().commander,lookup:cardInfo,
+          openCard:showCard,abstractOpponents:true
+        });
+      }catch(e){target.textContent="Cannot display recorded actions: "+e.message}
+    }
+  });
+}
+async function loadLongGameFiles(event){
+  const files=[...event.target.files||[]];
+  if(!files.length)return;
+  try{
+    const batches=await Promise.all(files.map(async file=>{
+      if(file.size>15_000_000)throw Error(file.name+" is larger than 15 MB.");
+      const data=JSON.parse(await file.text());
+      if(!window.DeckGameOutcomes?.validate(data))
+        throw Error(file.name+" is not a modeled-outcomes-v1 export.");
+      return data;
+    }));
+    longGameBatches.push(...batches);
+    longGameSourceNote="Local JSON loaded; no files were uploaded.";
+    renderLongGamePanel();
+  }catch(e){
+    $("game-outcome-status").textContent="Cannot load long-game JSON: "+e.message;
+  }
+  event.target.value="";
+}
+let gameOutcomeIndexRequested=false;
+async function loadPublishedLongGame(){
+  if(gameOutcomeIndexRequested||pageName!=="results")return;
+  gameOutcomeIndexRequested=true;
+  try{
+    const response=await fetch("./game-outcomes/manifest.json?v=modeled-v1");
+    if(!response.ok){
+      if(response.status!==404)throw Error("Index returned "+response.status);
+      longGameSourceNote="No published long-game batches yet. Load a local outcome JSON file to preview.";
+      renderLongGamePanel();return;
+    }
+    const index=await response.json();
+    if(index?.format!=="commander-modeled-outcomes-library-v1"||
+       !Array.isArray(index.files)||index.files.length>24||
+       !index.files.every(n=>typeof n==="string"&&
+         /^[a-zA-Z0-9_.-]+\.json$/.test(n)&&n!=="manifest.json"))
+      throw Error("Invalid long-game index.");
+    const batches=await Promise.all(index.files.map(async file=>{
+      const resource=await fetch("./game-outcomes/"+file);
+      if(!resource.ok)throw Error("Missing "+file);
+      const data=await resource.json();
+      if(!window.DeckGameOutcomes.validate(data))
+        throw Error("Invalid published export "+file);
+      return data;
+    }));
+    longGameBatches.push(...batches);
+    longGameSourceNote="Published long-game datasets loaded.";
+  }catch(e){
+    longGameSourceNote="Published long-game data unavailable: "+e.message;
+  }
+  renderLongGamePanel();
+}
+
 /* Optional, versioned replay assets. All gameplay generation stays in Python.
  * New deck types only need an entry in this registry and replay-v1 data.
  */
@@ -1947,6 +2044,8 @@ function registerEvents(){
   document.addEventListener("keydown",()=>{audioUnlocked=true},{once:true});
   $("audio-toggle").onclick=enableSound;
   $("quiet-files").addEventListener("change",loadQuietFiles);
+  const outcomeFiles=$("game-outcome-files");
+  if(outcomeFiles)outcomeFiles.addEventListener("change",loadLongGameFiles);
   $("commander-medallion").onclick=toggleCommanderPicker;
   document.addEventListener("click",e=>{
     if(!e.target.closest(".selector-anchor"))closeCommanderPicker();
