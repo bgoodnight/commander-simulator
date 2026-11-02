@@ -50,6 +50,9 @@ from .reviewed_reactive_triggers import ReactiveTriggerEngine
 from .reviewed_entry_choices import reviewed_entry_choice, set_reviewed_entry_choice
 from .reviewed_attachments import AttachmentEngine,reviewed_attachment
 from .reviewed_zone_spells import ZoneSpellEngine,reviewed_zone_spell
+from .reviewed_graveyard_spells import (
+    reviewed_graveyard_spell,choose_graveyard_spell_targets,
+    cast_reviewed_graveyard_spell)
 from .reviewed_activated_utilities import activate_reviewed,reviewed_activation
 from .reviewed_cast_reactions import resolve_cast_reactions
 from .opponent_stress import BoundedOpponentPressure
@@ -209,6 +212,7 @@ def run_bounded_early_game(deck_key, *, seed=0, turns=6, mulligan="one-free", pr
                     or reviewed_composed_permanent(name,raw_by_name[name])
                     or reviewed_attachment(name,raw_by_name[name]) is not None
                     or reviewed_zone_spell(name,raw_by_name[name]) is not None
+                    or reviewed_graveyard_spell(name,raw_by_name[name]) is not None
                     or reviewed_activation(name,raw_by_name[name]) is not None
                     or (reviewed_utility(name,raw_by_name[name]) is not None
                         and reviewed_utility(name,raw_by_name[name]).source_zone=="battlefield"
@@ -605,6 +609,24 @@ def run_bounded_early_game(deck_key, *, seed=0, turns=6, mulligan="one-free", pr
                 common = reviewed_common_spell(name,raw)
                 removal = reviewed_removal(name,raw)
                 zone_rule=reviewed_zone_spell(name,raw)
+                gy_rule=reviewed_graveyard_spell(name,raw)
+                gy_targets=(choose_graveyard_spell_targets(
+                    zones,0,gy_rule,raw_by_name) if gy_rule is not None else ())
+                gy_victim=None
+                if gy_rule is not None and gy_rule.sacrifice_creature:
+                    candidates=[o for o in kernel.on_battlefield()
+                        if o.controller==0 and "creature" in o.types
+                        and "commander" not in o.card.supertypes]
+                    if candidates:
+                        gy_victim=min(candidates,key=lambda o:(
+                            not o.token,o.power,o.object_id)).object_id
+                gy_ready=(gy_rule is not None and
+                    len(gy_targets)==gy_rule.target_count
+                    and (not gy_rule.sacrifice_creature or gy_victim is not None)
+                    and (not gy_rule.conditional_draw_subtype
+                         or not any(gy_rule.conditional_draw_subtype in
+                             kernel.get(i).subtypes for i in gy_targets)
+                         or bool(zones.ids(0,"library"))))
                 zone_target=None
                 if zone_rule is not None:
                     if zone_rule.operation=="opponent_graveyard_theft":
@@ -630,13 +652,14 @@ def run_bounded_early_game(deck_key, *, seed=0, turns=6, mulligan="one-free", pr
                         and token_spell is None and draw_spell is None and not phase_enchantment
                         and not sacrifice_artifact and not entering and not ramp and not ritual
                         and not common_plan and removal_plan is None
-                        and attachment_rule is None and zone_target is None
+                        and attachment_rule is None and zone_target is None and not gy_ready
                         and not provisional_rock and not provisional_spell):
                     continue
                 cost = common_plan[0] if common_plan else registry.get(name).primary_face().mana_cost
                 payment = preview_spell(0, cost, obj)
                 if payment is not None:
                     kind = ("zone_spell" if zone_target is not None else
+                            "graveyard_spell" if gy_ready else
                             "provisional_spell" if provisional_spell else
                             "removal_spell" if removal_plan is not None else
                             "common_spell" if common_plan else
@@ -653,6 +676,7 @@ def run_bounded_early_game(deck_key, *, seed=0, turns=6, mulligan="one-free", pr
                             and kind not in obj.types):
                         continue
                     target = (zone_target if zone_target is not None else
+                              (gy_targets,gy_victim) if gy_ready else
                               aura_target if aura_target is not None else
                               removal_plan if removal_plan is not None else
                               common_plan[1:] if common_plan else
@@ -706,6 +730,31 @@ def run_bounded_early_game(deck_key, *, seed=0, turns=6, mulligan="one-free", pr
                     "paid_source_ids":list(outcome.paid_source_ids),
                     "graveyard_object_id":outcome.resolved_zone_id,
                     "fidelity":"provisional_partial"})
+                continue
+            if kind == "graveyard_spell":
+                selected,sacrifice_id=target
+                triggered=[]
+                resolved=cast_reviewed_graveyard_spell(
+                    zones,life,0,oid,raw_by_name,colors,mana_service,
+                    target_ids=selected,sacrifice_id=sacrifice_id,
+                    death_engine=death_engine,turn=turn,
+                    on_cast=lambda ticket:triggered.extend(
+                        approved_spell_triggers(ticket)))
+                if resolved is None:
+                    raise AssertionError("Reviewed graveyard spell became unavailable")
+                events.extend(triggered)
+                events.append({"type":"reviewed_graveyard_spell_cast",
+                    "card":name,"stack_object_id":resolved.source_stack_id,
+                    "paid_source_ids":list(resolved.paid_source_ids),
+                    "fidelity":"bounded_reviewed_graveyard_spell"})
+                events.append({"type":"reviewed_graveyard_spell_resolved",
+                    "card":name,"source_object_id":resolved.source_resolved_id,
+                    "target_ids":list(resolved.target_ids),
+                    "moved_ids":list(resolved.moved_ids),
+                    "sacrificed_old_id":resolved.sacrificed_old_id,
+                    "drawn_ids":list(resolved.drawn_ids),
+                    "unsupported_abilities":list(resolved.limitations),
+                    "fidelity":"bounded_reviewed_graveyard_spell"})
                 continue
             if kind == "zone_spell":
                 returned=zone_engine.cast(
