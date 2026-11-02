@@ -779,3 +779,20 @@ body{background-color:#101019;background-image:radial-gradient(ellipse at 50% -1
 @media(max-width:640px){.result-takeaway > .result-takeaway-summary{column-gap:8px}.result-takeaway-open{padding:6px 9px;font-size:.68rem}.replay-scenario-tabs{display:flex;overflow-x:auto;scroll-snap-type:x proximity;padding-bottom:3px}.replay-scenario-tab{min-width:115px;scroll-snap-align:start}.replay-takeaway-summary{min-height:104px}.replay-turn-summary{grid-template-columns:1fr;gap:9px;padding:11px;min-height:0}.replay-turn-lead{grid-column:1}.replay-turn-stats{grid-column:1;grid-row:2}.replay-turn-combat{grid-column:1;grid-row:3}.replay-turn-expand{position:absolute;right:11px;top:13px}.replay-turn-highlight{padding-right:52px}.replay-turn-stat{font-size:.69rem;padding:6px}.replay-turn-stat-number{font-size:.84rem}.replay-turn-backdrop{width:80%;opacity:.12}.replay-game-control{display:grid}.replay-game-label{max-width:none}.replay-game-provenance{padding-bottom:0}}
 @media(max-width:380px){.replay-takeaway-grid{gap:6px}.replay-takeaway-summary{padding:9px}.replay-turn-stats{gap:4px}.replay-turn-stat{padding:5px}.replay-turn-stat-copy{display:none}}
 @media(prefers-reduced-motion:reduce){.replay-takeaway,.replay-turn-row{scroll-behavior:auto}}
+
+
+/* Exact-zone replay drilldowns; portrait thumbnails use pinned card metadata. */
+.replay-turn-highlight{font-size:.74rem;line-height:1.35;white-space:normal;overflow-wrap:anywhere;max-width:100%;color:#d7d7c8}
+.replay-zone-inspector{display:grid;gap:9px;min-width:0;border:1px solid rgba(211,187,143,.18);background:rgba(14,32,34,.38);border-radius:9px;padding:11px}
+.replay-zone-title{font-size:.76rem;letter-spacing:.03em;color:#e8cda1}
+.replay-zone-gallery{display:grid;grid-template-columns:repeat(auto-fill,minmax(92px,1fr));gap:9px}
+.replay-zone-card{min-width:0;border:1px solid rgba(194,180,151,.29);border-radius:8px;padding:5px;background:rgba(17,30,33,.8);color:#e8e4d7;display:grid;gap:5px;align-content:start;position:relative;text-align:left}
+button.replay-zone-card{cursor:pointer}
+button.replay-zone-card:hover,button.replay-zone-card:focus-visible{border-color:#e4be7e;box-shadow:0 0 0 2px rgba(228,190,126,.15)}
+.replay-zone-art{width:100%;height:117px;object-fit:cover;object-position:center 20%;border-radius:5px}
+.replay-zone-unpictured{display:grid;place-items:center;width:100%;height:117px;border-radius:5px;background:radial-gradient(ellipse at center,#49646466,#203137);font-size:.77rem;color:#d3c19d}
+.replay-zone-card-name{font-size:.69rem;line-height:1.25;overflow-wrap:anywhere;font-weight:600}
+.replay-zone-tag{font-size:.58rem;color:#dec9a5}
+.replay-zone-qty{position:absolute;top:7px;right:7px;background:#111e22ed;border:1px solid #d3bd97;border-radius:4px;padding:3px 5px;font-size:.65rem;font-weight:700}
+.replay-mana-credits{display:grid;gap:4px;padding:8px 11px;border-radius:7px;background:rgba(31,49,46,.67)}
+@media(max-width:560px){.replay-zone-gallery{grid-template-columns:repeat(auto-fill,minmax(80px,1fr));gap:7px}.replay-zone-art,.replay-zone-unpictured{height:99px}}
