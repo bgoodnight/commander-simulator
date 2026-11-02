@@ -280,11 +280,12 @@
           items[0].run.events[items[0].run.events.length-1].turn))
         .map(([,items])=>items.at(-1)).sort(bySeed);
       return {
-        name:c.name,card:c.card,score:typical,observedRuns:n,
-        scoreLabel:duration(typical)+" median rounds · "+n+" seen",
-        viewScores:{median:typical,held:total,adjusted,payable:previews.length},
+        name:c.name,card:c.card,score:average,observedRuns:n,medianRounds:typical,
+        scoreLabel:average.toFixed(2)+" mean rounds · "+n+" seen",
+        viewScores:{mean:average,median:typical,held:total,adjusted,payable:previews.length},
         viewLabels:{
-          median:duration(typical)+" rounds · "+n+" games seen",
+          mean:average.toFixed(2)+" mean rounds · "+n+" games seen",
+          median:duration(typical)+" median rounds · "+n+" games seen",
           held:total+" rounds · "+n+" games seen",
           adjusted:adjusted.toFixed(2)+" adjusted · "+n+" games seen",
           payable:previews.length+" cost previews"
@@ -302,7 +303,7 @@
           {id:"played",label:"Times played",value:String(allPlays.length),
            explanation:"Named recorded spell casts (and fallback resolutions when no corresponding cast event exists), counting repeat casts separately. A zero can reflect unsupported simulator behavior, not necessarily an unplayable card.",
            examples:allPlays},
-          {id:"average",label:"Average rounds held",value:duration(average),
+          {id:"average",label:"Average rounds held",value:average.toFixed(2),
            explanation:"Total rounds held divided by "+n+" games in which the card was observed. Games with no end-of-turn retention contribute zero.",
            examples:nearMedian},
           {id:"adjusted",label:"Adjusted score",value:adjusted.toFixed(2),
@@ -326,12 +327,13 @@
     const payment=contenders.some(c=>c.viewScores.payable>0);
     return {
       id:"held-in-hand",kind:"diagnostic",title:"Median turns held",
-      value:duration(contenders[0].score)+" turns",
-      headlineDetail:duration(contenders[0].score)+
+      value:duration(contenders[0].medianRounds)+" turns",
+      headlineDetail:duration(contenders[0].medianRounds)+
         " median rounds held · "+contenders[0].observedRuns+" games seen",
-      chartLabel:"Median end-of-turn hand rounds per observed game",
-      explanation:"Ranks cards by the typical number of end-of-turn snapshots spent in hand across games where each card was seen. Immediate plays contribute zero; frequent appearances are shown separately. Low-sample cards are filtered out. This is not a measure of card quality or missed legal casts.",
+      chartLabel:"Mean end-of-turn hand rounds per observed game",
+      explanation:"The tile reports the median rounds held for the top-ranked card, while the graph ranks by mean rounds held per game where the card was seen. Mean preserves more differences between cards than the median. Immediate plays contribute zero; low-sample cards are filtered. These are not assessments of card quality or missed legal casts.",
       views:[
+        {id:"mean",label:"Mean rounds",chartLabel:"Mean rounds held when seen"},
         {id:"median",label:"Median rounds",chartLabel:"Median rounds held when seen"},
         {id:"held",label:"Total rounds",chartLabel:"All recorded rounds held"},
         {id:"adjusted",label:"Adjusted score",
