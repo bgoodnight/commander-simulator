@@ -1,5 +1,5 @@
 name: Mortarion physical opponent stress and narrative audit
-# Repeat after opponent untap correction and physical Stuffy Doll effects.
+# Repeat final opponent story audit after zero-mana tap ability bugfix.
 on:
   workflow_dispatch:
   push:
