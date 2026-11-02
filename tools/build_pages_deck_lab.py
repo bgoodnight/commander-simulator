@@ -216,7 +216,7 @@ def build(output, *, catalog_path=SHARED_CATALOG, name_catalog_path=DEFAULT_NAME
     # attractive Deck Summary by default; results.html retains the
     # interpretive observation archive and editor.html the deck workshop.
     # The same source shell selects content by pathname without a server.
-    for filename in ("app.js", "results_insights.js", "brackets.js", "style.css", "game-changers.json"):
+    for filename in ("app.js", "results_insights.js", "brackets.js", "replay.js", "style.css", "game-changers.json"):
         shutil.copy2(static / filename, output / filename)
     for filename in ("index.html", "summary.html", "results.html", "editor.html"):
         shutil.copy2(static / "index.html", output / filename)
@@ -246,6 +246,26 @@ def build(output, *, catalog_path=SHARED_CATALOG, name_catalog_path=DEFAULT_NAME
             target.parent.mkdir(parents=True, exist_ok=True)
             shutil.copy2(archive_source / relative, target)
         validate_index(public_root)
+    # Optional versioned replay data is presentation-only and cannot replace
+    # any existing simulation, observations, source model, or historical archive.
+    # Publish a single explicitly allowlisted artifact with an exact deck hash.
+    replay_assets = []
+    replay_file = "mortarion-opponent-pressure.v1.json"
+    replay_source = static / "data" / "replays" / replay_file
+    if replay_source.is_file():
+        replay = json.loads(replay_source.read_text(encoding="utf-8"))
+        physical = next(d for d in decks if d["key"] == "mortarion_physical_final")
+        if (replay.get("format") != "commander-replay-v1"
+                or replay.get("schema_version") != 1
+                or replay.get("deck_key") != physical["key"]
+                or replay.get("deck_sha256") != physical["deck_sha256"]
+                or not isinstance(replay.get("scenarios"), dict)
+                or not replay["scenarios"]):
+            raise ValueError("Replay data is not pinned to Mortarion physical deck")
+        dest = output / "replay-data" / replay_file
+        dest.parent.mkdir(parents=True, exist_ok=True)
+        shutil.copy2(replay_source, dest)
+        replay_assets.append("replay-data/" + replay_file)
     # Results are precomputed separately and must match the exported deck revisions.
     batches = json.loads((static / "data" / "bounded-batches.json").read_text(encoding="utf-8"))
     for key, batch in batches["decks"].items():
@@ -270,9 +290,10 @@ def build(output, *, catalog_path=SHARED_CATALOG, name_catalog_path=DEFAULT_NAME
         "asset_sha256": {name: hashlib.sha256((output / name).read_bytes()).hexdigest()
                          for name in ("decks.json", "observations.json", "names.json", "bounded-batches.json",
                                       "index.html", "summary.html", "results.html", "editor.html",
-                                      "app.js", "results_insights.js", "brackets.js", "style.css", "game-changers.json",
+                                      "app.js", "results_insights.js", "brackets.js", "replay.js", "style.css", "game-changers.json",
                                       *(f"bounded-runs-{key}.json" for key in batches["decks"]),
-                                      *(f"simulation-data/{relative}" for relative in archive_files))},
+                                      *(f"simulation-data/{relative}" for relative in archive_files),
+                                      *replay_assets)},
         "note": "Six canonical decks, two verified physical trials, and one exact but unverified owned source list; observations are per verified deck only.",
     }
     write_json("build-manifest.json", manifest)
