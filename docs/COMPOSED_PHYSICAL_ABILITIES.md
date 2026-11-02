@@ -48,7 +48,8 @@ spend every spare B. `end_step(active_seat=..., turn=...,
 life_start_index=..., x_choices={source_id: X})` requires the host to capture
 the `KernelLife.life_changes` index at the beginning of the active turn.
 Zero or absent X declines the optional payment. All beginning-of-end-step
-conditions are snapshotted before effects resolve.
+conditions are snapshotted before effects resolve, and intervening-if
+conditions such as Pestilence's no-creatures check are rechecked at resolution.
 
 Current tests construct real physical objects with the existing live kernel,
 exercise mana and life payments, simultaneous damage/SBA, Treasure death
