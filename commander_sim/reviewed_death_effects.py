@@ -323,4 +323,9 @@ class ReviewedDeathEngine:
                 action.operation,created,drawn))
         self._handled.update(m.object_id for m in changes)
         self._once.update(pending_once)
+        # Source-pinned attachment death triggers use the *same* pre-event
+        # last-known snapshot; they never poll a separate battlefield.
+        attachments=getattr(self,"attachments",None)
+        if attachments is not None and changes:
+            attachments.observe_deaths(before,changes,turn=turn)
         return tuple(resolved)
