@@ -150,6 +150,7 @@ def run_bounded_early_game(deck_key, *, seed=0, turns=6, mulligan="one-free", pr
     # Pinned, source-verified ETB effects with safe bounded hand-cast paths.
     enter_hand_casts = {"Bastion of Remembrance", "Grave Titan", "Massacre Wurm",
                         "Flayed One", "Mire Triton", "Undead Butler",
+                        "Technomancer",
                         "Marionette Apprentice", "Royal Warden",
                         "Triarch Praetorian", "Canoptek Tomb Sentinel"}
     def approved_enter_hand_cast(name):
@@ -987,6 +988,7 @@ def run_bounded_early_game(deck_key, *, seed=0, turns=6, mulligan="one-free", pr
                                "drawn_ids":list(entered.drawn_ids),
                                "milled_ids":list(entered.milled_ids),
                                "library_actions":list(entered.library_steps),
+                               "reanimated_ids":list(entered.reanimated_ids),
                                "fidelity":"bounded_no_opponent_priority"})
         attachment_engine.sync(turn=turn)
         # Reviewed equipment is sorcery-speed and uses the same mana service
