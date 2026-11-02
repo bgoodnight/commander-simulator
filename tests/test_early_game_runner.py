@@ -75,6 +75,8 @@ class BoundedEarlyGameTests(unittest.TestCase):
                     "reviewed_draw_spell_resolved",
                     "reviewed_graveyard_spell_cast",
                     "reviewed_graveyard_spell_resolved",
+                    "reviewed_reanimation_enter_resolved",
+                    "reviewed_entry_chain_deferred",
                 } for event in turn["events"]))
                 for event in turn["events"]:
                     if event["type"]=="source_paid_candidate":
