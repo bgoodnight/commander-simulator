@@ -101,6 +101,37 @@ test('abstract opponent roles remain scenarios, and named decks use whole-pod as
   assert.equal(rows[0].games,2);
   assert.ok(rows.some(row=>row.label.includes('Mortarion')));
 });
+test('pilot personalities and provisional modes preserve independent seed cohorts',()=>{
+  const engineLoss=runLost();
+  engineLoss.seed=0;
+  const original=batch([runWon()],'mixed',{
+    pilot_style:'adaptive',provisional_mode:'safe'
+  });
+  const otherPilot=batch([engineLoss],'mixed',{
+    pilot_style:'engine',provisional_mode:'safe'
+  });
+  const otherMode=batch([runUnresolved()],'mixed',{
+    pilot_style:'adaptive',provisional_mode:'off'
+  });
+  const legacy=batch([runLost()],'mixed');
+  const result=Outcomes.model(
+    [original,otherPilot,otherMode,legacy],
+    'necron_dynasties','a'.repeat(64));
+  assert.equal(result.totalGames,4);
+  assert.equal(result.groups.length,4);
+  assert.equal(result.duplicates,0);
+  assert.ok(result.groups.some(g=>g.pilotStyle==='engine'&&g.counts.loss===1));
+  assert.ok(result.groups.some(g=>g.pilotStyle==='adaptive'&&
+    g.provisionalMode==='safe'&&g.counts.win===1));
+  assert.ok(result.groups.some(g=>g.pilotStyle==='adaptive'&&
+    g.provisionalMode==='off'&&g.counts.unresolved===1));
+  assert.ok(result.groups.some(g=>g.pilotStyle==='unrecorded'&&
+    g.provisionalMode==='unrecorded'));
+  const duplicate=Outcomes.model([original,original],
+    'necron_dynasties','a'.repeat(64));
+  assert.equal(duplicate.duplicates,1);
+  assert.equal(duplicate.totalGames,1);
+});
 test('modeled panels expose distinct outcome, life and matchup disclosures with clickable seeds',()=>{
   class Node{
     constructor(tag){
@@ -132,6 +163,17 @@ test('modeled panels expose distinct outcome, life and matchup disclosures with 
     assert.ok(seed);seed.onclick();
     nodes=walk(root);
     assert.ok(nodes.some(n=>n.textContent==='Round 2 · 1 of 4 seats alive'));
+    // Scenario comparison must not silently cross pilot personalities.
+    Outcomes.render(root,[
+      batch([runWon()],'balanced',{pilot_style:'adaptive',provisional_mode:'safe'}),
+      batch([runLost()],'aggressive',{pilot_style:'engine',provisional_mode:'safe'})
+    ],{deckKey:'necron_dynasties',deckHash:'a'.repeat(64)});
+    nodes=walk(root);
+    assert.ok(nodes.some(n=>String(n.textContent).includes('pilot engine')));
+    assert.ok(nodes.some(n=>String(n.textContent).includes(
+      'Only one opponent group is recorded for this pilot')));
+    assert.ok(!nodes.some(n=>String(n.textContent).includes(
+      'Highest observed modeled win share')));
   }finally{global.document=before}
 });
 test('results page and exporter wire a future published manifest and local JSON',()=>{
