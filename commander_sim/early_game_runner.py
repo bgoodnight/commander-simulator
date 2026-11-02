@@ -1006,12 +1006,17 @@ def run_bounded_early_game(deck_key, *, seed=0, turns=6, mulligan="one-free", pr
         action=choose_utility_activation(
             zones,0,life,mana_service,raw_by_name,
             hand_cast_reviewed=lambda obj: reviewed_creature(
-                deck_key,obj.card.name,raw_by_name[obj.card.name]))
+                deck_key,obj.card.name,raw_by_name[obj.card.name]),
+            tap_ready=lambda source: (
+                entered_on_turn.get(source.object_id,0)<turn
+                or "haste" in source.keywords))
         if action is not None:
             source_id,target_id=action
             utility=activate_utility(zones,life,0,source_id,raw_by_name,
                 mana_service,colors,target_id=target_id,
-                death_engine=death_engine,turn=turn)
+                death_engine=death_engine,turn=turn,
+                tap_ready=(entered_on_turn.get(source_id,0)<turn
+                           or "haste" in kernel.get(source_id).keywords))
             if utility is not None:
                 events.append({"type":"reviewed_utility_activated",
                     "card":utility.source_name,
