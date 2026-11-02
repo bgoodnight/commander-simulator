@@ -8,7 +8,9 @@ It does not infer arbitrary Oracle abilities from names or type lines.
 from dataclasses import dataclass
 from .physical_common_effects import CardQuantity, draw_physical_cards
 from .reviewed_death_effects import capture_battlefield
-from .graveyard_recipes import GraveyardRecipe, resolve_graveyard_recipe
+from .graveyard_recipes import (
+    GraveyardRecipe,eligible_graveyard_cards,resolve_graveyard_recipe)
+from .reviewed_token_spells import TokenBlueprint,create_reviewed_token_batches
 
 @dataclass(frozen=True)
 class UtilityRule:
@@ -26,13 +28,19 @@ class UtilityRule:
     target_subtypes: frozenset[str] = frozenset()
     target_supertypes: frozenset[str] = frozenset()
     tap_creature: bool = False
+    draw_count: int = 1
+    life_loss_after: int = 0
+    tapped_subtype: str = ""
+    tap_count: int = 0
+    created_token: TokenBlueprint | None = None
 
     def __post_init__(self):
         if (not self.oracle_id or not self.excerpt
                 or self.source_zone not in {"battlefield","hand","graveyard"}
                 or self.operation not in {"draw","drain_opponents",
                     "creature_to_hand","self_to_battlefield_tapped",
-                    "all_legendary_creatures_to_hand"}
+                    "all_legendary_creatures_to_hand",
+                    "exile_graveyard_token"}
                 or self.condition not in {"always","two_black_permanents"}
                 or not isinstance(self.target_subtypes,frozenset)
                 or not isinstance(self.target_supertypes,frozenset)
@@ -45,11 +53,51 @@ class UtilityRule:
                     "creature_to_hand","all_legendary_creatures_to_hand"}
                 or self.source_zone=="graveyard" and any(
                     (self.tap,self.sacrifice,self.discard))
-                or (self.sacrifice and self.discard)):
+                or (self.sacrifice and self.discard)
+                or type(self.draw_count) is not int or not 1<=self.draw_count<=7
+                or type(self.life_loss_after) is not int
+                or not 0<=self.life_loss_after<=20
+                or (self.draw_count!=1 or self.life_loss_after)
+                    and self.operation!="draw"
+                or type(self.tapped_subtype) is not str
+                or type(self.tap_count) is not int
+                or not 0<=self.tap_count<=7
+                or bool(self.tapped_subtype)!=bool(self.tap_count)
+                or self.tap_count and (self.operation!="draw"
+                    or self.tap or self.source_zone!="battlefield")
+                or (self.operation=="exile_graveyard_token")
+                    !=(self.created_token is not None)
+                or self.created_token is not None
+                    and not isinstance(self.created_token,TokenBlueprint)):
             raise ValueError("Invalid reviewed utility activation")
 
 
 RULES={
+    "Hedron Archive":UtilityRule(
+        "32263baa-d3f0-463f-92b3-4e9938476add",
+        "{2}, {T}, Sacrifice this artifact: Draw two cards.",
+        "battlefield","{2}","draw",tap=True,sacrifice=True,draw_count=2),
+    "Commander's Sphere":UtilityRule(
+        "0b67c4e2-f88b-4e01-85a1-9d5f5b8db13b",
+        "Sacrifice this artifact: Draw a card.",
+        "battlefield","","draw",sacrifice=True),
+    "Infernal Idol":UtilityRule(
+        "a0802918-e18a-4716-befb-96ae6667f2f3",
+        "{1}{B}{B}, {T}, Sacrifice this artifact: You draw two cards and lose 2 life.",
+        "battlefield","{1}{B}{B}","draw",tap=True,sacrifice=True,
+        draw_count=2,life_loss_after=2),
+    "Cryptbreaker":UtilityRule(
+        "16f75a65-d067-4f79-81b9-833c373cf4d2",
+        "Tap three untapped Zombies you control: You draw a card and lose 1 life.",
+        "battlefield","","draw",life_loss_after=1,
+        tapped_subtype="Zombie",tap_count=3),
+    "Cemetery Reaper":UtilityRule(
+        "70fa209f-5e79-44de-81ce-1d8d0d8c1006",
+        "{2}{B}, {T}: Exile target creature card from a graveyard. Create a 2/2 black Zombie creature token.",
+        "battlefield","{2}{B}","exile_graveyard_token",tap=True,
+        tap_creature=True,created_token=TokenBlueprint(
+            "Zombie",frozenset({"creature"}),frozenset({"Zombie"}),
+            frozenset({"B"}),2,2)),
     "War Room":UtilityRule(
         "71c52bf5-2a5d-488e-8b15-7ef290e4b77d",
         "{3}, {T}, Pay life equal to the number of colors in your commanders' color identity: Draw a card.",
@@ -111,6 +159,10 @@ class UtilityOutcome:
     new_object_ids: tuple[int,...]
     life_paid: int
     paid_source_ids: tuple[int,...]
+    created_token_ids: tuple[int,...] = ()
+    tapped_cost_ids: tuple[int,...] = ()
+    drawn_ids: tuple[int,...] = ()
+    life_lost_after: int = 0
 
 
 def activate_utility(zones,life,seat,source_id,catalog,mana_service,colors,
@@ -143,6 +195,11 @@ def activate_utility(zones,life,seat,source_id,catalog,mana_service,colors,
                 or not rule.target_subtypes<=target.subtypes
                 or not rule.target_supertypes<=target.card.supertypes):
             raise ValueError("Graveyard target does not meet printed restrictions")
+    elif rule.operation=="exile_graveyard_token":
+        eligible=eligible_graveyard_cards(
+            zones,seat,GraveyardRecipe("exile","any",frozenset({"creature"})))
+        if target_id not in eligible:
+            return None
     elif target_id is not None:
         raise ValueError("Unexpected utility target")
     if rule.operation=="all_legendary_creatures_to_hand":
@@ -154,12 +211,22 @@ def activate_utility(zones,life,seat,source_id,catalog,mana_service,colors,
         batch=eligible_graveyard_cards(zones,seat,recipe)
     else:
         batch=()
-    if rule.operation=="draw" and not zones.ids(seat,"library"):
+    if rule.operation=="draw" and len(zones.ids(seat,"library"))<rule.draw_count:
         return None
+    tap_cost_ids=()
+    if rule.tap_count:
+        options=sorted((o for o in kernel.on_battlefield()
+                if o.controller==seat and not o.tapped
+                and "creature" in o.types
+                and rule.tapped_subtype in o.subtypes),
+                key=lambda o:(not o.token,o.power,o.object_id))
+        if len(options)<rule.tap_count:
+            return None
+        tap_cost_ids=tuple(o.object_id for o in options[:rule.tap_count])
     life_cost=len(colors) if rule.life_by_commander_colors else rule.life
     if life.total(seat)<=life_cost:
         return None
-    excluded=(source_id,) if rule.tap else ()
+    excluded=tuple(((source_id,) if rule.tap else ()) + tap_cost_ids)
     preview=mana_service.plan(seat,rule.mana,excluded_source_ids=excluded)
     if preview is None:
         return None
@@ -171,9 +238,15 @@ def activate_utility(zones,life,seat,source_id,catalog,mana_service,colors,
     if rule.tap:
         source.tapped=True
         kernel._dirty()
+    for oid in tap_cost_ids:
+        kernel.get(oid).tapped=True
+    if tap_cost_ids:
+        kernel._dirty()
     if life_cost:
         life.lose(seat,life_cost,source_id)
     moved=[]
+    tokens=()
+    drawn=()
     if rule.sacrifice:
         moved.append(zones.move(source_id,"graveyard","sacrifice"))
         if death_engine is not None:
@@ -181,10 +254,21 @@ def activate_utility(zones,life,seat,source_id,catalog,mana_service,colors,
     if rule.discard:
         moved.append(zones.discard(seat,source_id))
     if rule.operation=="draw":
-        out=draw_physical_cards(zones,seat,CardQuantity(1))
+        out=draw_physical_cards(zones,seat,CardQuantity(rule.draw_count))
         if not out.complete:
             raise AssertionError("Reviewed utility draw preview invalidated")
-        moved.extend(out.drawn_ids)
+        drawn=tuple(out.drawn_ids)
+        moved.extend(drawn)
+        if rule.life_loss_after:
+            life.lose(seat,rule.life_loss_after,source_id)
+    elif rule.operation=="exile_graveyard_token":
+        removed=resolve_graveyard_recipe(
+            zones,seat,(target_id,),
+            GraveyardRecipe("exile","any",frozenset({"creature"})))
+        moved.extend(item.new_id for item in removed)
+        tokens=create_reviewed_token_batches(
+            zones,seat,(rule.created_token,))
+        moved.extend(tokens)
     elif rule.operation=="drain_opponents":
         life.each_opponent_loses(seat,1,source_id)
     elif rule.operation=="creature_to_hand":
@@ -207,4 +291,6 @@ def activate_utility(zones,life,seat,source_id,catalog,mana_service,colors,
                             enter_tapped=True))
         moved.extend(item.new_id for item in restored)
     return UtilityOutcome(source.card.name,rule.operation,tuple(moved),
-                          life_cost,tuple(paid.source_ids))
+                          life_cost,tuple(paid.source_ids),tuple(tokens),
+                          tuple(tap_cost_ids),tuple(drawn),
+                          rule.life_loss_after if rule.operation=="draw" else 0)
