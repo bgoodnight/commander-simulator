@@ -317,7 +317,8 @@
   function metricTile(label,value,detail){
     const item=create("div","game-outcome-insight-metric");
     item.append(create("span",null,label),
-      create("strong",null,value===null||value===undefined?"—":nfmt(value)),
+      create("strong",null,value===null||value===undefined?"—":
+        typeof value==="string"?value:nfmt(value)),
       create("small",null,detail));
     return item;
   }
@@ -336,15 +337,15 @@
     const portrait=create("div","game-outcome-opponent-portrait");
     const rankSide=create("div","game-outcome-ranking-side");
     const nav=create("div","game-outcome-rank-nav");
-    const previous=textButton("← Previous","game-outcome-rank-prev",()=>pick(selected-1));
-    const next=textButton("Next →","game-outcome-rank-next",()=>pick(selected+1));
+    const previous=textButton("← Previous","game-outcome-rank-prev",()=>pick(selected-1,true));
+    const next=textButton("Next →","game-outcome-rank-next",()=>pick(selected+1,true));
     const position=create("span","micro");
     nav.append(previous,position,next);
     const ranking=create("div","game-outcome-ranking");
     ranking.setAttribute("role","group");
     ranking.setAttribute("aria-label","Opponent groups sorted by observed modeled wins");
     const rows=groups.map((bucket,i)=>{
-      const button=textButton("","game-outcome-rank-row",()=>pick(i));
+      const button=textButton("","game-outcome-rank-row",()=>pick(i,true));
       const header=create("div","game-outcome-rank-label");
       header.append(create("strong",null,bucket.title||bucket.label),
         create("span",null,bucket.counts.win+" win"+(bucket.counts.win===1?"":"s")+
@@ -369,7 +370,7 @@
     parent.append(metrics,
       create("strong",null,"Example games"),seeds,evidence);
     let selected=0;
-    function pick(index){
+    function pick(index,scroll=false){
       if(index<0||index>=groups.length)return;
       selected=index;
       const bucket=groups[index],values=matchupMetrics(bucket);
@@ -377,7 +378,8 @@
       previous.disabled=index===0;
       next.disabled=index===groups.length-1;
       rows.forEach((row,i)=>row.setAttribute("aria-pressed",String(i===index)));
-      if(rows[index].scrollIntoView)rows[index].scrollIntoView({block:"nearest"});
+      if(scroll&&rows[index].scrollIntoView)
+        rows[index].scrollIntoView({block:"nearest"});
       portrait.replaceChildren();
       const art=typeof options.portraitFor==="function"?options.portraitFor(bucket):null;
       if(art?.art){
