@@ -43,6 +43,18 @@ class SharedRecursionActivationTests(unittest.TestCase):
         return activate_utility(self.z,self.life,0,source,self.catalog,
                                 self.mana,frozenset({"B"}),**kwargs)
 
+    def test_printed_supertype_projection_is_not_card_name_inference(self):
+        from commander_sim.early_game_runner import _printed_supertypes
+        self.assertEqual(_printed_supertypes("Legendary Artifact Creature — Necron"),
+                         frozenset({"legendary"}))
+        self.assertEqual(_printed_supertypes("Basic Land — Swamp"),
+                         frozenset({"basic"}))
+        self.assertEqual(_printed_supertypes("Legendary Creature — Wizard",
+                                            commander=True),
+                         frozenset({"legendary","commander"}))
+        self.assertEqual(_printed_supertypes("Creature — Zombie"),
+                         frozenset())
+
     def test_persistent_specimen_reuses_same_self_resurrection_as_skeleton(self):
         self.swamps(3)
         src=self.add("Persistent Specimen",zone="graveyard")
