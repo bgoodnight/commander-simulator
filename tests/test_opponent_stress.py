@@ -44,7 +44,8 @@ class OpponentPressureTests(unittest.TestCase):
     def test_opponent_upkeeps_trigger_real_reviewed_ophiomancer(self):
         raw=self.catalog["Ophiomancer"]
         self.zones.add(self.C(raw["oracle_id"],"Ophiomancer",
-                         frozenset({"creature"}),coverage="approx"),
+                         frozenset({"creature"}),
+                         base_power=2,base_toughness=2,coverage="approx"),
                          0,"battlefield")
         r=self.stress().advance(1)
         self.assertEqual(sum(x.operation=="reviewed_opponent_upkeep"
