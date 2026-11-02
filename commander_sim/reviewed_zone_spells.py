@@ -82,7 +82,8 @@ class ZoneSpellEngine:
                                             frozenset({"creature"})))
         return False
 
-    def cast(self,seat,source_id,target_id,*,turn,on_cast=None):
+    def cast(self,seat,source_id,target_id,*,turn,on_cast=None,
+             expires_at_seat=None):
         kernel=self.zones.kernel
         if source_id not in self.zones.ids(seat,"hand"):
             raise ValueError("Zone spell source must be a hand card")
@@ -116,7 +117,8 @@ class ZoneSpellEngine:
             for other in tuple(self.zones.ids(victim_owner,"graveyard")):
                 moved.append(self.zones.move(other,"exile","exile"))
         elif rule.operation=="return_when_dies":
-            self.pending_returns[target_id]=(turn,seat)
+            self.pending_returns[target_id]=(
+                turn,seat if expires_at_seat is None else expires_at_seat)
         result=ZoneSpellOutcome(
             source.card.name,rule.operation,target_id,tuple(moved),
             tuple(committed.paid_source_ids))
