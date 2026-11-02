@@ -22,7 +22,7 @@ class LifeReplacementRule:
 
 RULES={
     "Plague Drone":LifeReplacementRule(
-        "9e859925-6a08-4ec2-8dd5-d461ea333dae",
+        "9552fc97-9e6d-4307-bf58-30bf956356bf",
         "If an opponent would gain life, that player loses that much life instead.",
         "opponent_would_gain_life","lose_that_much_instead"),
 }
