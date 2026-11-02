@@ -143,6 +143,29 @@
     else button.disabled=true;
     return button;
   }
+  // Match Deck Lab's Scryfall mana glyphs while keeping the replay module
+  // independent of the app's global helpers and of the simulation engine.
+  function manaOutputSymbols(output){
+    const glyphs=el("span","mana-symbols replay-mana-output");
+    if(!Array.isArray(output)||!output.length){
+      glyphs.appendChild(el("span","mana-empty","Unreported"));
+      return glyphs;
+    }
+    for(const item of output){
+      const token=String(item).replace(/^\{/,"").replace(/\}$/,"").toUpperCase();
+      if(/^(?:[WUBRGCS]|[0-9]{1,2}|[WUBRG]\/2|[WUBRG]\/P|[WUBRG]\/[WUBRG])$/.test(token)){
+        const img=el("img","mana-symbol");
+        img.src="https://svgs.scryfall.io/card-symbols/"+token.replace(/\//g,"")+".svg";
+        img.alt="{"+token+"}";
+        img.title="{"+token+"}";
+        img.loading="lazy";
+        img.referrerPolicy="no-referrer";
+        img.onerror=()=>img.replaceWith(el("span","mana-symbol-fallback","{"+token+"}"));
+        glyphs.appendChild(img);
+      }else glyphs.appendChild(el("span","mana-symbol-fallback",String(item)));
+    }
+    return glyphs;
+  }
   function detailedAction(action){
     const details=el("details","replay-action-detail");
     details.appendChild(el("summary",null,"Recorded fields & fidelity"));
@@ -150,7 +173,11 @@
     const fields=Object.entries(action.fields||{});
     for(const [key,value] of fields){
       const dt=el("dt",null,titleCase(key));
-      const dd=el("dd",null,value===null?"Not specified":typeof value==="object"?JSON.stringify(value):String(value));
+      const dd=el("dd");
+      if(key==="mana_output"&&Array.isArray(value))
+        dd.appendChild(manaOutputSymbols(value));
+      else dd.textContent=value===null?"Not specified":
+        typeof value==="object"?JSON.stringify(value):String(value);
       dl.append(dt,dd);
     }
     if(!fields.length)dl.append(el("dt",null,"Available data"),el("dd",null,"No additional fields"));
@@ -452,9 +479,12 @@
         })),lookup,openCard));
         const list=el("div","replay-mana-credits");
         for(const value of counts.values()){
-          list.appendChild(el("span","micro",value.name+
+          const credit=el("div","replay-mana-credit");
+          credit.appendChild(el("span","micro",value.name+
             " · "+value.count+" recorded activation"+(value.count===1?"":"s")+
-            " · output "+(value.outputs?.join(", ")||"unreported")));
+            " · output"));
+          credit.appendChild(manaOutputSymbols(value.outputs));
+          list.appendChild(credit);
         }
         box.appendChild(list);
       }else box.appendChild(el("p","micro",
@@ -759,5 +789,5 @@
     draw();
     return {redraw:draw};
   }
-  return {FORMAT,validate,eventKind,eventTitle,summarizeAction,activity,statsForRound,changeIn,recordedCombat,cardSpotlight,relatedActions,pilotTurnActivity,zoneInspector,render};
+  return {FORMAT,validate,eventKind,eventTitle,summarizeAction,activity,statsForRound,changeIn,recordedCombat,cardSpotlight,relatedActions,pilotTurnActivity,zoneInspector,manaOutputSymbols,render};
 });
