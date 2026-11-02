@@ -166,6 +166,47 @@ class ProvisionalImportTests(unittest.TestCase):
             self.assertTrue(any(x["status"]=="provisional" for x in report),name)
             self.assertTrue(any(x["status"]=="manual_review_needed" for x in report),name)
 
+    def test_token_spell_recognizes_color_size_count_and_tap(self):
+        raw=card(name="New Rally",types="Sorcery",mana="{3}{B}",
+                 text="Create three tapped 2/2 black Zombie creature tokens.")
+        profile=provisional_profile(raw)
+        self.assertEqual(profile.kind,"simple_spell")
+        self.assertEqual(profile.mode,"create_creature_tokens")
+        self.assertEqual((profile.amount,profile.token_power,
+                          profile.token_toughness,profile.token_color,
+                          profile.token_subtype,profile.token_tapped),
+                         (3,2,2,"B","Zombie",True))
+        bad=copy.deepcopy(raw)
+        bad["oracle_text"] += "\\nThen destroy all lands."
+        self.assertIsNone(provisional_profile(bad))
+
+    def test_token_spell_uses_real_zone_and_token_emitter(self):
+        K,Z,C=_load_live_kernel()
+        k=K()
+        z=Z(k,seed=10)
+        life=KernelLife(k)
+        raw=card(name="Test Token Production",types="Sorcery",mana="{1}{B}",
+                 text="Create two 1/1 blue Spirit creature tokens.")
+        oid=z.add(C(raw["oracle_id"],raw["name"],frozenset({"sorcery"}),
+                    coverage="approx"),0,"hand")
+        for i in range(2):
+            z.add(C("test:swamp:"+str(i),"Swamp",frozenset({"land"}),
+                    coverage="approx"),0,"battlefield")
+        mana=TemplateManaService(k,{raw["name"]:raw},
+             frozenset({"B"}),zones=z,provisional_mode="safe")
+        out=cast_provisional_spell(z,life,0,oid,{raw["name"]:raw},
+                                   frozenset({"B"}),mana)
+        self.assertIsNotNone(out)
+        self.assertEqual(len(out.created_token_ids),2)
+        for token_id in out.created_token_ids:
+            obj=k.get(token_id)
+            self.assertTrue(obj.token)
+            self.assertEqual((obj.power,obj.toughness),(1,1))
+            self.assertEqual(obj.card.colors,frozenset({"U"}))
+            self.assertEqual(obj.subtypes,frozenset({"Spirit"}))
+        self.assertEqual(len(z.ids(0,"graveyard")),1)
+        self.assertTrue(z.assert_consistent())
+
     def test_runner_opt_in_does_not_rewrite_existing_baseline(self):
         off=run_bounded_early_game("wretched_ranks",seed=2,turns=3)
         on=run_bounded_early_game("wretched_ranks",seed=2,turns=3,
