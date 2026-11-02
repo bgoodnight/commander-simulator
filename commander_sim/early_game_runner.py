@@ -40,6 +40,7 @@ from .bounded_trigger_effects import resolve_reviewed_spell_triggers
 from .kernel_life import KernelLife
 from .reviewed_phase_effects import ReviewedPhaseEngine,reviewed_phase_permanent
 from .composed_abilities import ComposedAbilityEngine
+from .reviewed_reactive_triggers import ReactiveTriggerEngine
 from .reviewed_death_effects import ReviewedDeathEngine
 from .reviewed_enter_effects import reviewed_enter_rule, execute_reviewed_enter
 from .reviewed_unearth import reviewed_unearth, activate_reviewed_unearth, expire_reviewed_unearth
@@ -183,6 +184,7 @@ def run_bounded_early_game(deck_key, *, seed=0, turns=6, mulligan="one-free", pr
     death_engine = ReviewedDeathEngine(zones, life, raw_by_name)
     composed_engine = ComposedAbilityEngine(zones, life, raw_by_name,
                                            mana_service, death_engine)
+    reactive_engine = ReactiveTriggerEngine(zones,life,raw_by_name)
     entered_on_turn = {}
     if len(kernel.objects) != 100:
         raise AssertionError("Pinned 100-card zone conservation failed at loading")
@@ -213,6 +215,16 @@ def run_bounded_early_game(deck_key, *, seed=0, turns=6, mulligan="one-free", pr
         life_ledger_start = len(life.kernel.life_changes)
         turn_kernel_event_index=len(kernel.events)
         events = []
+        def resolve_reactive():
+            for triggered in reactive_engine.resolve():
+                events.append({
+                    "type":"reviewed_reactive_trigger",
+                    "source":triggered.source_name,
+                    "source_object_id":triggered.source_id,
+                    "trigger_event":triggered.event,
+                    "operation":triggered.operation,
+                    "quantity":triggered.quantity,
+                    "fidelity":"bounded_event_dispatch"})
         def approved_spell_triggers(ticket):
             """Execute only vetted cast triggers after an actual source cast."""
             source = kernel.get(ticket.object_id)
@@ -255,6 +267,7 @@ def run_bounded_early_game(deck_key, *, seed=0, turns=6, mulligan="one-free", pr
                 "drawn_ids":list(triggered.drawn_ids),
                 "returned_object_id":triggered.returned_id,
                 "fidelity":"bounded_no_opponent_priority"})
+        resolve_reactive()
         drawn, okay = zones.draw(0, 1)  # Seat is explicitly not the starting seat.
         if not okay:
             raise ValueError("Library depleted before supported turn horizon")
@@ -317,6 +330,7 @@ def run_bounded_early_game(deck_key, *, seed=0, turns=6, mulligan="one-free", pr
         # Reuse the same source-paid action for approved artifacts and creatures.
         # Prefer affordable ramp rocks before creatures: a limited pilot policy.
         while True:
+            resolve_reactive()
             options = []
             for oid in zones.ids(0, "hand"):
                 obj = kernel.get(oid)
@@ -563,6 +577,7 @@ def run_bounded_early_game(deck_key, *, seed=0, turns=6, mulligan="one-free", pr
                 if moved:
                     events.append({"type":"reviewed_land_ramp","card":source.card.name,
                                    "land_ids":list(moved),"fidelity":"reviewed_shared_basic_search"})
+        resolve_reactive()
         # One reviewed instant spell per turn in the verified main-phase
         # window. Optional buyback is preferred only when fully payable.
         buyback_options=[]
@@ -806,6 +821,7 @@ def run_bounded_early_game(deck_key, *, seed=0, turns=6, mulligan="one-free", pr
                 "drawn_ids":list(triggered.drawn_ids),
                 "returned_object_id":triggered.returned_id,
                 "fidelity":"bounded_no_opponent_priority"})
+        resolve_reactive()
         # Unearthed cards remaining here leave at the next end step.
         # Exits earlier in the turn were already replaced by the kernel.
         for old_id,exiled_id in expire_reviewed_unearth(zones):
@@ -850,6 +866,7 @@ def run_bounded_early_game(deck_key, *, seed=0, turns=6, mulligan="one-free", pr
                                    "timing, targets, mandatory abilities, "
                                    "priority and resolution were not assessed")
                 })
+        resolve_reactive()
         # Cleanup follows all end-step abilities; use actual kernel movement.
         # The limited pilot already spent available main-phase mana and cast
         # supported spells before this point, avoiding excess hand cards when
@@ -886,6 +903,7 @@ def run_bounded_early_game(deck_key, *, seed=0, turns=6, mulligan="one-free", pr
                 "fidelity": "physical_cleanup_no_discard_triggers"})
         if cleanup.maximum_hand_size is not None:
             assert cleanup.hand_after <= cleanup.maximum_hand_size
+        resolve_reactive()
         floating_end = list(mana_service.floating())
         resource_end = assess_resources(kernel, mana_service, 0).__dict__
         mana_service.clear()
