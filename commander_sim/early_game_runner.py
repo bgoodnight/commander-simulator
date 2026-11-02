@@ -46,6 +46,7 @@ from .reviewed_commander_cast import commander_cost, cast_commander
 from .reviewed_reactive_triggers import ReactiveTriggerEngine
 from .reviewed_entry_choices import reviewed_entry_choice, set_reviewed_entry_choice
 from .reviewed_attachments import AttachmentEngine,reviewed_attachment
+from .reviewed_zone_spells import ZoneSpellEngine,reviewed_zone_spell
 from .opponent_stress import BoundedOpponentPressure
 from .reviewed_death_effects import ReviewedDeathEngine
 from .reviewed_enter_effects import reviewed_enter_rule, execute_reviewed_enter
@@ -179,6 +180,7 @@ def run_bounded_early_game(deck_key, *, seed=0, turns=6, mulligan="one-free", pr
                     or reviewed_phase_permanent(name, raw_by_name[name])
                     or reviewed_composed_permanent(name,raw_by_name[name])
                     or reviewed_attachment(name,raw_by_name[name]) is not None
+                    or reviewed_zone_spell(name,raw_by_name[name]) is not None
                     or (reviewed_utility(name,raw_by_name[name]) is not None
                         and reviewed_utility(name,raw_by_name[name]).source_zone=="battlefield"
                         and "enchantment" in types)
@@ -211,11 +213,16 @@ def run_bounded_early_game(deck_key, *, seed=0, turns=6, mulligan="one-free", pr
     attachment_engine=AttachmentEngine(
         zones,life,raw_by_name,mana_service,death_engine)
     death_engine.attachments=attachment_engine
+    zone_engine=ZoneSpellEngine(zones,life,raw_by_name,
+                               mana_service,death_engine)
+    death_engine.zone_spells=zone_engine
     opponent_pressure = (BoundedOpponentPressure(
         zones,life,raw_by_name,death_engine,phase_engine,CardDefinition,
         seed=seed,scenario=opponent_scenario,
         attachment_engine=attachment_engine)
         if opponent_scenario is not None else None)
+    if opponent_pressure is not None:
+        opponent_pressure.zone_spells=zone_engine
     entered_on_turn = {}
     if len(kernel.objects) != 100:
         raise AssertionError("Pinned 100-card zone conservation failed at loading")
@@ -256,6 +263,38 @@ def run_bounded_early_game(deck_key, *, seed=0, turns=6, mulligan="one-free", pr
                     "operation":triggered.operation,
                     "quantity":triggered.quantity,
                     "fidelity":"bounded_event_dispatch"})
+        def respond_to_removal(target_id,opponent_seat,pressure_turn,kind):
+            # Reviewed instant response, not a full priority stack.
+            # Save a meaningful nontoken creature only against destruction.
+            if kind!="destroy" or target_id not in kernel.objects:
+                return
+            target=kernel.get(target_id)
+            if (target.controller!=0 or target.token
+                    or "creature" not in target.types or
+                    (target.power+target.toughness<4
+                     and "commander" not in target.card.supertypes)):
+                return
+            for spell_id in tuple(zones.ids(0,"hand")):
+                spell=kernel.get(spell_id)
+                review=reviewed_zone_spell(
+                    spell.card.name,raw_by_name.get(spell.card.name))
+                if review is None or review.operation!="return_when_dies":
+                    continue
+                outcome=zone_engine.cast(
+                    0,spell_id,target_id,turn=pressure_turn,
+                    on_cast=lambda ticket:events.extend(
+                        approved_spell_triggers(ticket)),
+                    expires_at_seat=opponent_seat)
+                if outcome is not None:
+                    events.append({
+                        "type":"reviewed_instant_response",
+                        "card":outcome.name,
+                        "target_object_id":target_id,
+                        "against_seat":opponent_seat,
+                        "fidelity":"bounded_single_response_window"})
+                    break
+        if opponent_pressure is not None:
+            opponent_pressure.before_removal=respond_to_removal
         def approved_spell_triggers(ticket):
             """Execute only vetted cast triggers after an actual source cast."""
             source = kernel.get(ticket.object_id)
@@ -442,6 +481,7 @@ def run_bounded_early_game(deck_key, *, seed=0, turns=6, mulligan="one-free", pr
                                      or reviewed_breach(name, raw)
                                      or reviewed_composed_permanent(name,raw)
                 or reviewed_attachment(name,raw) is not None
+                or reviewed_zone_spell(name,raw) is not None
                                      or (reviewed_utility(name,raw) is not None
                                          and reviewed_utility(name,raw).source_zone=="battlefield"
                                          and "enchantment" in obj.types))
@@ -451,6 +491,19 @@ def run_bounded_early_game(deck_key, *, seed=0, turns=6, mulligan="one-free", pr
                 ritual = reviewed_ritual(name,raw)
                 common = reviewed_common_spell(name,raw)
                 removal = reviewed_removal(name,raw)
+                zone_rule=reviewed_zone_spell(name,raw)
+                zone_target=None
+                if zone_rule is not None:
+                    if zone_rule.operation=="opponent_graveyard_theft":
+                        valid_targets=[o for o in kernel.objects.values()
+                                       if zone_engine.valid_target(
+                                           0,zone_rule,o.object_id)]
+                        if valid_targets:
+                            best=max(valid_targets,
+                                key=lambda o:(o.power+o.toughness,-o.object_id))
+                            zone_target=best.object_id
+                    # Protective instants are reserved for real destroy
+                    # responses rather than spent fruitlessly in main phase.
                 removal_plan = (choose_reviewed_removal(
                     zones,0,life,removal,turn=turn) if removal is not None else None)
                 common_plan = (plan_common_spell(zones,0,obj,common,raw_by_name,mana_service,life)
@@ -464,12 +517,13 @@ def run_bounded_early_game(deck_key, *, seed=0, turns=6, mulligan="one-free", pr
                         and token_spell is None and draw_spell is None and not phase_enchantment
                         and not sacrifice_artifact and not entering and not ramp and not ritual
                         and not common_plan and removal_plan is None
-                        and attachment_rule is None):
+                        and attachment_rule is None and zone_target is None):
                     continue
                 cost = common_plan[0] if common_plan else registry.get(name).primary_face().mana_cost
                 payment = mana_service.plan_spell(0, cost, obj)
                 if payment is not None:
-                    kind = ("removal_spell" if removal_plan is not None else
+                    kind = ("zone_spell" if zone_target is not None else
+                            "removal_spell" if removal_plan is not None else
                             "common_spell" if common_plan else
                             "ritual" if ritual else
                             "artifact" if rock is not None or sacrifice_artifact or (attachment_rule is not None and "artifact" in obj.types) or (ramp and name == "Wayfarer\u0027s Bauble") else
@@ -477,7 +531,8 @@ def run_bounded_early_game(deck_key, *, seed=0, turns=6, mulligan="one-free", pr
                             "tutor" if eligible else
                             "draw_spell" if draw_spell is not None else
                             "token_spell" if token_spell is not None else "creature")
-                    target = (aura_target if aura_target is not None else
+                    target = (zone_target if zone_target is not None else
+                              aura_target if aura_target is not None else
                               removal_plan if removal_plan is not None else
                               common_plan[1:] if common_plan else
                               choose_tutor_target(zones, 0, eligible, raw_by_name, colors) if eligible else None)
@@ -507,6 +562,20 @@ def run_bounded_early_game(deck_key, *, seed=0, turns=6, mulligan="one-free", pr
                     "paid_source_ids":list(outcome.paid_source_ids),
                     "commander_tax":outcome.commander_tax,
                     "fidelity":"reviewed_command_zone"})
+                continue
+            if kind == "zone_spell":
+                returned=zone_engine.cast(
+                    0,oid,target,turn=turn,
+                    on_cast=lambda ticket:events.extend(
+                        approved_spell_triggers(ticket)))
+                if returned is None:
+                    raise AssertionError("Reviewed zone spell payment changed")
+                events.append({
+                    "type":"reviewed_zone_spell_resolved",
+                    "card":returned.name,"operation":returned.operation,
+                    "target_object_id":returned.target_id,
+                    "moved_ids":list(returned.moved_ids),
+                    "fidelity":"bounded_reviewed_zone_spell"})
                 continue
             if kind == "removal_spell":
                 target_id,x=target
@@ -1171,6 +1240,7 @@ def run_bounded_early_game(deck_key, *, seed=0, turns=6, mulligan="one-free", pr
                 })
         resolve_reactive()
         attachment_engine.sync(turn=turn)
+        zone_engine.expire(turn,active_seat=0)
         # Cleanup follows all end-step abilities; use actual kernel movement.
         # The limited pilot already spent available main-phase mana and cast
         # supported spells before this point, avoiding excess hand cards when
