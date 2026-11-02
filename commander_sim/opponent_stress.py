@@ -26,6 +26,7 @@ class OpponentEvent:
     operation: str
     object_id: int | None = None
     amount: int = 0
+    target_seat: int | None = None
 
 
 class BoundedOpponentPressure:
@@ -73,13 +74,55 @@ class BoundedOpponentPressure:
         self._born[oid]=turn
         self.events.append(OpponentEvent(turn,seat,role,"abstract_creature",oid,size))
 
+    def _threat(self,seat):
+        """Seat-neutral board/life pressure, never a hard-coded human bonus."""
+        board=tuple(self._board(seat))
+        noncreatures=sum(
+            "artifact" in o.types or "enchantment" in o.types
+            for o in self.zones.kernel.on_battlefield()
+            if o.controller==seat)
+        force=sum(max(0,o.power) for o in board)
+        commanders=sum("commander" in o.card.supertypes for o in board)
+        return 1.0 + 0.45*force + 1.1*len(board) + 1.3*noncreatures + 4.0*commanders + 0.07*max(0,self.life.total(seat))
+
+    def _target_seat(self,actor,role,*,combat=False):
+        """Weighted stochastic threat selection among *all* other live seats.
+
+        Aggro biases toward poorly defended opponents, control toward
+        developed boards, value mixes both. Never target the source seat.
+        Each candidate receives a positive floor; ties are not broken by
+        seating order or by assuming seat zero is the human player.
+        """
+        choices=[seat for seat in self.life.kernel.life_totals
+                 if seat!=actor and self.life.total(seat)>0]
+        if not choices:
+            return None
+        weights=[]
+        for seat in choices:
+            board=self._board(seat)
+            blocker_power=sum(max(0,o.power) for o in board if not o.tapped)
+            threat=self._threat(seat)
+            if combat:
+                weight=(2.0+0.35*threat)/(1+0.22*blocker_power)
+                if role=="aggro":
+                    weight*=1.3
+            elif role=="control":
+                weight=2.0+threat
+            else:
+                weight=2.0+0.55*threat
+            weights.append(max(0.25,weight))
+        return self.rng.choices(choices,weights=weights,k=1)[0]
+
     def _exile_one(self, seat, turn, role):
         # Model a reviewed-like targeted exile pressure event, NOT an actual
         # spell cast from an opponent's hand. No invented mana or card.
         kernel = self.zones.kernel
+        target_seat=self._target_seat(seat,role)
+        if target_seat is None:
+            return False
         candidates = [
             o for o in kernel.on_battlefield()
-            if o.controller == 0
+            if o.controller == target_seat
             and bool(o.types & {"creature","enchantment","artifact"})
             and kernel.legal_target(seat,o.object_id,
                                     frozenset({"creature","enchantment","artifact"}))]
@@ -101,16 +144,20 @@ class BoundedOpponentPressure:
         if self.death_engine is not None:
             self.death_engine.resolve_deaths(before,move_index=moves,turn=turn)
         self.events.append(OpponentEvent(turn,seat,role,"abstract_exile",
-                                         target.object_id))
+                                         target.object_id,0,target_seat))
         return True
 
-    def _combat(self,seat,role,turn):
+    def _combat(self,seat,role,turn,defender=None):
         """Resolve bounded combat using real blocker legality and damage/SBA.
 
         No first strike, trample assignment, prevention, double strike, or
         combat-trigger stack. Declines unsafe attacker/blocker assumptions.
         """
         kernel=self.zones.kernel
+        if defender is None:
+            defender=self._target_seat(seat,role,combat=True)
+        if defender is None or defender==seat:
+            return
         used=set()
         attackers=[o for o in self._board(seat)
                    if not o.tapped and o.power>0
@@ -120,12 +167,12 @@ class BoundedOpponentPressure:
         if role=="value":
             attackers=attackers[:2]
         for attacker in attackers:
-            if self.life.total(0)<=0:
+            if self.life.total(defender)<=0:
                 break
             # Re-check live state: earlier combat could destroy an attacker.
             if attacker.object_id not in kernel.objects:
                 continue
-            blockers=kernel.legal_blockers(attacker.object_id,0,frozenset(used))
+            blockers=kernel.legal_blockers(attacker.object_id,defender,frozenset(used))
             # Keep priority engine creatures unless a trade is productive or
             # survival demands blocking. Tokens are the preferred expendables.
             def worth_blocking(o):
@@ -143,15 +190,15 @@ class BoundedOpponentPressure:
                     chosen.power>=attacker.toughness or
                     (chosen.power>0 and "deathtouch" in chosen.keywords and
                      "indestructible" not in attacker.keywords) or
-                    self.life.total(0)<=16):
+                    self.life.total(defender)<=16):
                 chosen=None
             attacker.tapped=True
             kernel._dirty()
             if chosen is None:
-                self.life.damage(0,attacker.power,attacker.object_id)
+                self.life.damage(defender,attacker.power,attacker.object_id)
                 self.events.append(OpponentEvent(
                     turn,seat,role,"abstract_unblocked_damage",
-                    attacker.object_id,attacker.power))
+                    attacker.object_id,attacker.power,defender))
                 continue
             used.add(chosen.object_id)
             from .reviewed_death_effects import capture_battlefield
@@ -164,7 +211,7 @@ class BoundedOpponentPressure:
             # Lifelink is based on actual damage dealt; prevention and combat
             # damage triggers remain outside this bounded simulation.
             if "lifelink" in chosen.keywords and chosen.power>0:
-                self.life.gain(0,chosen.power,chosen.object_id)
+                self.life.gain(defender,chosen.power,chosen.object_id)
             # Deathtouch is a reusable combat lethal condition. It does not
             # ignore indestructible, and it applies after damage is marked.
             for source,target in ((attacker,chosen),(chosen,attacker)):
@@ -178,7 +225,7 @@ class BoundedOpponentPressure:
                     before,move_index=first_move,turn=turn)
             self.events.append(OpponentEvent(
                 turn,seat,role,"abstract_blocked_combat",
-                attacker.object_id,attacker.power))
+                attacker.object_id,attacker.power,defender))
 
     def advance(self, turn):
         """Three opponents take their bounded abstract turns after seat 0.
