@@ -173,65 +173,170 @@
     };
   }
 
+  // A held-hand opportunity is defined by an observed opening hand, draw,
+  // or retained hand snapshot. A same-turn cast counts as ZERO held rounds.
+  // Count each card name once per end-of-turn snapshot; individual copies
+  // cannot be reconstructed from this abbreviated replay format.
   function heldInHand(runs,lookup){
     const valid=usableRuns(runs);if(valid.length<2)return null;
     const summaries=new Map();
+    const playActions=new Set([...HAND_CASTS,
+      "reviewed_common_spell_resolved","reviewed_zone_spell_resolved"]);
+    const adjustedWeight=n=>n/(n+10); // Reliability prior: 10 pseudo-observations.
+    const precision=n=>Number(n.toFixed(2));
+    const duration=n=>Number(n.toFixed(1)).toString();
+    const bySeed=(a,b)=>a.seed-b.seed||a.turn-b.turn||
+      (a.eventIndex??-1)-(b.eventIndex??-1);
+    function add(name){
+      if(!summaries.has(name))summaries.set(name,{
+        name,card:lookup(name),seen:new Set(),drawn:new Set(),
+        held:new Map(),previews:[],played:[],seenEvidence:new Map()
+      });
+      return summaries.get(name);
+    }
     for(const run of valid){
       const facts=seedFacts(run);
-      for(const [name,all] of facts.handTurns){
+      const drawn=new Set(cardsByName(run.mulligan?.opening_hand));
+      const drawing=new Map();
+      for(const name of drawn){
+        drawing.set(name,{seed:run.seed,turn:run.events[0].turn,
+          run,source:"bounded",cardName:name,eventIndex:null,
+          focusTopic:"hand",description:"In the kept opening hand"});
+      }
+      const plays=new Map();
+      for(const row of run.events){
+        const namedCasts=new Set((row.events||[])
+          .filter(event=>HAND_CASTS.has(event.type)&&typeof event.card==="string")
+          .map(event=>event.card));
+        (row.events||[]).forEach((event,eventIndex)=>{
+          const name=event.card;
+          if(typeof name!=="string")return;
+          if(event.type==="draw"){
+            drawn.add(name);
+            if(!drawing.has(name))drawing.set(name,{
+              seed:run.seed,turn:row.turn,run,source:"bounded",
+              cardName:name,eventIndex,focusTopic:"hand",
+              description:"Drawn on turn "+row.turn
+            });
+          }
+          if(!playActions.has(event.type))return;
+          // When a named cast and a fallback resolution occur together,
+          // they are one recorded play, not two.
+          if(!HAND_CASTS.has(event.type)&&namedCasts.has(name))return;
+          if(!plays.has(name))plays.set(name,[]);
+          plays.get(name).push({
+            seed:run.seed,turn:row.turn,run,source:"bounded",
+            cardName:name,eventIndex,focusTopic:"hand",
+            description:"Recorded "+event.type.replaceAll("_"," ")+" on turn "+row.turn
+          });
+        });
+      }
+      const seen=new Set([...drawn,...facts.handTurns.keys()]);
+      // Do not treat an unrelated graveyard recast as proof this spell
+      // was observed in hand during the same simulated horizon.
+      for(const name of seen){
         const card=lookup(name);
         if(!card||isType(card,"Land"))continue;
-        if(!summaries.has(name))summaries.set(name,{
-          name,card,runs:new Map(),previews:[],unusedRuns:new Set()});
-        const row=summaries.get(name);
-        row.runs.set(run.seed,all);
-        row.previews.push(...facts.previewTurns.get(name)||[]);
-        if(!facts.played.has(name))row.unusedRuns.add(run.seed);
+        const c=add(name),held=facts.handTurns.get(name)||[];
+        c.seen.add(run.seed);
+        c.held.set(run.seed,held);
+        if(drawn.has(name))c.drawn.add(run.seed);
+        c.previews.push(...facts.previewTurns.get(name)||[]);
+        c.played.push(...plays.get(name)||[]);
+        c.seenEvidence.set(run.seed,
+          held[0]||drawing.get(name)||plays.get(name)?.[0]);
       }
     }
+    const minRuns=valid.length>=40?Math.max(3,Math.ceil(valid.length*0.05)):2;
     const contenders=[...summaries.values()].map(c=>{
-      const holdTurns=[...c.runs.values()].flat();
-      const count=c.runs.size,total=holdTurns.length;
-      const holdsPerSeed=[...c.runs.values()].map(x=>x.length);
-      const best=[...c.runs.entries()].sort((a,b)=>b[1].length-a[1].length||a[0]-b[0])
-        .map(([,x])=>x[x.length-1]);
-      const previews=[...c.previews].sort((a,b)=>a.seed-b.seed||a.turn-b.turn);
-      const noCast=best.filter(x=>c.unusedRuns.has(x.seed));
+      const n=c.seen.size,heldTurns=[...c.held.values()].flat();
+      const total=heldTurns.length;
+      const durations=[...c.held.values()].map(items=>items.length);
+      // Include zero-hand-round games when observed in opening hand or
+      // a draw but played immediately, rather than conditioning on a stall.
+      const typical=median(durations);
+      const average=total/n;
+      const adjusted=precision(average*adjustedWeight(n));
+      const ordered=[...c.held.entries()].sort((a,b)=>a[0]-b[0]);
+      const byDuration=ordered.map(([seed,items])=>({
+        seed,length:items.length,
+        sample:items.at(-1)||c.seenEvidence.get(seed)
+      })).filter(item=>item.sample);
+      const nearMedian=[...byDuration].sort((a,b)=>
+        Math.abs(a.length-typical)-Math.abs(b.length-typical)||
+        a.seed-b.seed).map(item=>item.sample);
+      const allHeld=[...heldTurns].sort(bySeed);
+      const drawnExamples=[...c.drawn].sort((a,b)=>a-b)
+        .map(seed=>c.seenEvidence.get(seed)).filter(Boolean);
+      const allPlays=[...c.played].sort(bySeed);
+      const previews=[...c.previews].sort(bySeed);
+      const mostHeld=[...byDuration].sort((a,b)=>b.length-a.length||a.seed-b.seed)
+        .map(item=>item.sample);
+      const stillHeld=[...c.held.entries()]
+        .filter(([,items])=>items.some(x=>x.turn===
+          items[0].run.events[items[0].run.events.length-1].turn))
+        .map(([,items])=>items.at(-1)).sort(bySeed);
       return {
-        name:c.name,card:c.card,score:total,
-        scoreLabel:total+" turns / "+count+" runs",
-        viewScores:{held:total,payable:previews.length},
-        viewLabels:{held:total+" held turns",payable:previews.length+" cost previews"},
+        name:c.name,card:c.card,score:typical,
+        scoreLabel:duration(typical)+" median rounds · "+n+" seen",
+        viewScores:{median:typical,held:total,adjusted,payable:previews.length},
+        viewLabels:{
+          median:duration(typical)+" rounds · "+n+" games seen",
+          held:total+" rounds · "+n+" games seen",
+          adjusted:adjusted.toFixed(2)+" adjusted · "+n+" games seen",
+          payable:previews.length+" cost previews"
+        },
         metrics:[
-          {id:"held",label:"Turns in hand",value:String(total),
-           explanation:"Total end-of-turn snapshots containing this card. Counts only retained hand snapshots, including turns when the card may not be castable.",
-           examples:best},
-          {id:"seeds",label:"Runs held",value:count+" / "+valid.length,
-           explanation:"Distinct pinned seeds with this card still in hand at the end of at least one turn.",
-           examples:best},
-          {id:"duration",label:"Median turns held",
-           value:String(median(holdsPerSeed)),
-           explanation:"Median number of end-of-turn hand snapshots among runs in which this card remained in hand at least once. Not uninterrupted elapsed time since draw.",
-           examples:best},
-          {id:"payable",label:"Cost-payable turns",value:String(previews.length),
-           explanation:"Explicit source-paid printed-cost previews for a card that remained in hand. Measured after the pilot's modeled actions; not evidence of legal timing, valid targets or a missed play. Supported spells often have no such preview.",
+          {id:"median",label:"Median rounds held",value:duration(typical),
+           explanation:"Median number of end-of-turn snapshots in hand per game where this card was observed ("+n+" games). Includes zero for cards drawn and played before the end-of-turn snapshot. This is not continuous real-time duration.",
+           examples:nearMedian},
+          {id:"held",label:"Rounds held",value:String(total),
+           explanation:"Total recorded end-of-turn hand snapshots with this card across "+n+" observed games. Each game/turn counts once per card name, even if multiple copies were present.",
+           examples:allHeld},
+          {id:"drawn",label:"Games drawn",value:c.drawn.size+" / "+valid.length,
+           explanation:"Distinct games where the card was in the kept opening hand or appeared in a recorded draw. Games where it appeared in hand without a recorded draw can contribute to the median but not this count.",
+           examples:drawnExamples},
+          {id:"played",label:"Times played",value:String(allPlays.length),
+           explanation:"Named recorded spell casts (and fallback resolutions when no corresponding cast event exists), counting repeat casts separately. A zero can reflect unsupported simulator behavior, not necessarily an unplayable card.",
+           examples:allPlays},
+          {id:"average",label:"Average rounds held",value:duration(average),
+           explanation:"Total rounds held divided by "+n+" games in which the card was observed. Games with no end-of-turn retention contribute zero.",
+           examples:nearMedian},
+          {id:"adjusted",label:"Adjusted score",value:adjusted.toFixed(2),
+           explanation:"Exploratory reliability-adjusted persistence: (rounds held / games seen) × (games seen / (games seen + 10)). The +10 is a configurable evidence penalty, not a Magic rule or statistical confidence interval.",
+           examples:mostHeld},
+          {id:"payable",label:"Cost-payable previews",value:String(previews.length),
+           explanation:"Read-only post-action source-paid printed-cost previews while this card stayed in hand. This does not establish legal timing, targets, or a missed casting opportunity. Supported spells often have no such preview.",
            examples:previews},
-          {id:"unplayed",label:"Not played in run",value:c.unusedRuns.size+" / "+count,
-           explanation:"Among runs with the card observed in end-of-turn hand, no named cast was recorded through the six-turn horizon; this may be unsupported simulator behavior.",
-           examples:noCast}
+          {id:"last",label:"Still held at horizon",value:String(stillHeld.length),
+           explanation:"Games with the card in the final retained end-of-turn hand. This is not necessarily a bad result; instants and interaction may be held deliberately.",
+           examples:stillHeld}
         ]
       };
-    }).filter(c=>c.score>=2).sort((a,b)=>b.score-a.score||a.name.localeCompare(b.name));
+    }).filter(c=>c.viewScores.held>=2&&c.viewScores.median>0&&
+      c.viewLabels&&Number(c.viewLabels.median.split(" · ").at(-1).split(" ")[0])>=minRuns)
+      .sort((a,b)=>b.score-a.score||
+        b.viewScores.adjusted-a.viewScores.adjusted||
+        b.viewScores.held-a.viewScores.held||
+        a.name.localeCompare(b.name));
     if(contenders.length<2)return null;
     const payment=contenders.some(c=>c.viewScores.payable>0);
     return {
-      id:"held-in-hand",kind:"diagnostic",title:"Most often held in hand",
-      value:String(contenders[0].score),chartLabel:"Observed end-of-turn hand appearances",
-      explanation:"The primary ranking counts turns spent in retained hands, regardless of mana. When available, switch to a source-paid printed-cost preview; that diagnostic does not prove a legal casting opportunity or a piloting mistake.",
+      id:"held-in-hand",kind:"diagnostic",title:"Median turns held",
+      value:duration(contenders[0].score)+" turns",
+      headlineDetail:duration(contenders[0].score)+
+        " median rounds held · "+contenders[0].viewLabels.median.split(" · ").at(-1),
+      chartLabel:"Median end-of-turn hand rounds per observed game",
+      explanation:"Ranks cards by the typical number of end-of-turn snapshots spent in hand across games where each card was seen. Immediate plays contribute zero; frequent appearances are shown separately. Low-sample cards are filtered out. This is not a measure of card quality or missed legal casts.",
       views:[
-        {id:"held",label:"All held turns",chartLabel:"End-of-turn hand appearances"},
-        ...(payment?[{id:"payable",label:"Cost-payable previews",
-          chartLabel:"Verified post-action printed-cost payment previews while still held"}]:[])
+        {id:"median",label:"Median rounds",chartLabel:"Median rounds held when seen"},
+        {id:"held",label:"Total rounds",chartLabel:"All recorded rounds held"},
+        {id:"adjusted",label:"Adjusted score",
+          chartLabel:"Reliability-adjusted mean rounds held",
+          formula:"(Total rounds held ÷ Games seen) × (Games seen ÷ (Games seen + 10))",
+          explanation:"This optional heuristic downweights cards seen in few games. The 10 is an evidence-penalty constant; it is not a probability, win-rate estimate, or Magic rule."},
+        ...(payment?[{id:"payable",label:"Cost-payable",
+          chartLabel:"Post-action printed-cost payment previews while held"}]:[])
       ],
       contenders,total:valid.length
     };
