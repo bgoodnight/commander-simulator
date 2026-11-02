@@ -176,11 +176,15 @@
       for(const run of group.runs){
         const opponents=opponentDecks(run,run.batch);
         const names=opponents.length?
-          opponents.map(d=>({id:"deck:"+d.id+":"+d.version,label:d.name+" · present in pod",kind:"named"})):
-          [{id:"scenario:"+group.id,label:group.label,kind:"abstract"}];
+          opponents.map(d=>({id:"deck:"+d.id+":"+d.version,label:d.name+" · present in pod",
+            title:d.name,kind:"named",portraitName:d.name})):
+          [{id:"scenario:"+group.id,label:group.label,kind:"abstract",
+            title:group.scenario[0].toUpperCase()+group.scenario.slice(1)+" pod",
+            archetype:group.scenario}];
         for(const named of names){
           if(!buckets.has(named.id))buckets.set(named.id,{
-            id:named.id,label:named.label,kind:named.kind,
+            id:named.id,label:named.label,title:named.title,kind:named.kind,
+            portraitName:named.portraitName||null,archetype:named.archetype||null,
             counts:Object.fromEntries(STATES.map(x=>[x,0])),games:0,runs:[]
           });
           const row=buckets.get(named.id);
@@ -189,10 +193,50 @@
         }
       }
     }
-    return [...buckets.values()].sort((a,b)=>{
-      const ar=a.counts.win/a.games,br=b.counts.win/b.games;
-      return br-ar||b.games-a.games||a.label.localeCompare(b.label);
-    });
+    return [...buckets.values()].sort((a,b)=>
+      b.counts.win-a.counts.win||
+      b.counts.win/b.games-a.counts.win/a.games||
+      b.games-a.games||a.label.localeCompare(b.label));
+  }
+  function knockoutRound(run,seat){
+    for(let i=1;i<run.life_history.length;i++){
+      const row=run.life_history[i],before=run.life_history[i-1];
+      if(row.new_eliminations.some(e=>Number(e.seat)===seat)||
+         (lifeAt(before,seat)>0&&lifeAt(row,seat)<=0))
+        return row.round;
+    }
+    return null;
+  }
+  function matchupMetrics(bucket){
+    const terminal=bucket.runs.map(x=>x.run).filter(r=>
+      r.outcome.complete&&["win","loss","draw"].includes(r.outcome.status));
+    const won=terminal.filter(r=>r.outcome.status==="win");
+    const losses=bucket.runs.map(x=>x.run).filter(r=>r.outcome.status==="loss");
+    const pilotKnockouts=losses.map(r=>knockoutRound(r,0))
+      .filter(Number.isFinite);
+    const opposingKnockouts=bucket.runs.map(({run})=>
+      [1,2,3].map(seat=>knockoutRound(run,seat))
+        .filter(Number.isFinite).sort((a,b)=>a-b)[0])
+      .filter(Number.isFinite);
+    const lastLife=bucket.runs.map(({run})=>
+      lifeAt(run.life_history.at(-1),0)).filter(Number.isFinite);
+    const median=values=>quantile(values,.5);
+    return {
+      games:bucket.games,
+      wins:bucket.counts.win,losses:bucket.counts.loss,
+      draws:bucket.counts.draw,unresolved:bucket.counts.unresolved,
+      notEvaluated:bucket.counts.not_evaluated,
+      winShare:bucket.games?bucket.counts.win/bucket.games:0,
+      medianFinishRound:median(terminal.map(r=>r.completed_rounds)),
+      finishedGames:terminal.length,
+      medianPilotKnockoutRound:median(pilotKnockouts),
+      pilotKnockouts:pilotKnockouts.length,
+      medianVictoryRound:median(won.map(r=>r.completed_rounds)),
+      victoryGames:won.length,
+      medianFirstOpponentKnockoutRound:median(opposingKnockouts),
+      gamesWithOpponentKnockout:opposingKnockouts.length,
+      medianLastPilotLife:median(lastLife)
+    };
   }
   function textButton(label,cls,onclick){
     const b=create("button",cls,label);
