@@ -11,6 +11,7 @@ from dataclasses import dataclass
 import re
 
 from .effect_templates import ManaMode
+from .library_actions import LibraryAction, required_draws
 from .mana_costs import UnsupportedManaCost, parse_fixed_mana_cost
 
 _WORDS = {"a":1, "one":1, "two":2, "three":3, "four":4,
@@ -57,6 +58,46 @@ _DRAW_LOSE = re.compile(
 _DRAW = re.compile(
     r"^(?:You )?[Dd]raw (a|one|two|three|four|five|six|seven|\d+) cards?\.$")
 _GAIN = re.compile(r"^You gain (\d+) life\.$")
+_SCRY_DRAW = re.compile(
+    r"^Scry ([1-3]), then draw (a|one|two|three|\d+) cards?\.$", re.I)
+_SURVEIL_DRAW = re.compile(
+    r"^Surveil ([1-3])\.\nDraw (a|one|two|three|\d+) cards?\.$", re.I)
+_DRAW_DISCARD = re.compile(
+    r"^Draw (a|one|two|three|four|five|\d+) cards?, then "
+    r"discard (a|one|two|three|four|five|\d+) cards?\.$", re.I)
+_SCRY_ONLY = re.compile(r"^Scry ([1-3])\.$", re.I)
+_SURVEIL_ONLY = re.compile(r"^Surveil ([1-3])\.$", re.I)
+
+
+def _quantity(word):
+    return _WORDS.get(word.lower(), int(word) if word.isdigit() else 0)
+
+
+def _library_recipe(text):
+    """Parse only complete, stand-alone simple library sentences.
+
+    Reminder text, alternate costs and trailing clauses fail closed. More
+    complex official cards use exact reviewed registrations instead.
+    """
+    if match := _SCRY_DRAW.fullmatch(text):
+        draw = _quantity(match.group(2))
+        return (LibraryAction("scry", int(match.group(1))),
+                LibraryAction("draw", draw)) if 1 <= draw <= 7 else ()
+    if match := _SURVEIL_DRAW.fullmatch(text):
+        draw = _quantity(match.group(2))
+        return (LibraryAction("surveil", int(match.group(1))),
+                LibraryAction("draw", draw)) if 1 <= draw <= 7 else ()
+    if match := _DRAW_DISCARD.fullmatch(text):
+        draw, discard = (_quantity(x) for x in match.groups())
+        if 1 <= draw <= 7 and 1 <= discard <= 7:
+            return (LibraryAction("draw", draw),
+                    LibraryAction("discard", discard))
+    if match := _SCRY_ONLY.fullmatch(text):
+        return (LibraryAction("scry", int(match.group(1))),)
+    if match := _SURVEIL_ONLY.fullmatch(text):
+        return (LibraryAction("surveil", int(match.group(1))),)
+    return ()
+
 _DRAIN = re.compile(r"^Each opponent loses (\d+) life\.$")
 _CREATURE_TOKENS = re.compile(
     r"^Create (a|one|two|three|four|five|six|seven|\d+) "
@@ -85,6 +126,7 @@ class ProvisionalProfile:
     token_color: str = ""
     token_subtype: str = ""
     token_tapped: bool = False
+    library_actions: tuple[LibraryAction,...] = ()
     omissions: tuple[str,...] = ()
     fidelity: str = "provisional_partial"
     def __post_init__(self):
@@ -98,7 +140,11 @@ class ProvisionalProfile:
                 or type(self.commander_identity_mana) is not bool
                 or (self.commander_identity_mana
                     and self.kind not in {"land_mana","artifact_mana"})
-                or type(self.token_tapped) is not bool):
+                or type(self.token_tapped) is not bool
+                or not isinstance(self.library_actions, tuple)
+                or not all(isinstance(x, LibraryAction)
+                           for x in self.library_actions)
+                or (self.library_actions and self.kind != "simple_spell")):
             raise ValueError("Invalid provisional source descriptor")
 
 
@@ -124,6 +170,13 @@ def provisional_profile(raw):
             return None
         try:parse_fixed_mana_cost(mana)
         except UnsupportedManaCost:return None
+        if actions := _library_recipe(text):
+            return ProvisionalProfile(
+                raw["oracle_id"], raw["oracle_text"], mana,
+                "simple_spell", "library_sequence", required_draws(actions),
+                library_actions=actions,
+                omissions=("Library selection uses bounded deterministic policy",
+                           "No opposing priority or counterspell response"))
         if match:=_DRAW_LOSE.fullmatch(text):
             amount=_WORDS.get(match.group(1).lower())
             if amount is None:
@@ -243,6 +296,9 @@ def provisional_report(entries):
                        "status":"provisional" if profile else "manual_review_needed",
                        "kind":profile.kind if profile else None,
                        "mode":profile.mode if profile else None,
+                       "actions":[{"kind":x.kind,"count":x.count}
+                                  for x in profile.library_actions]
+                                  if profile else [],
                        "fidelity":profile.fidelity if profile else "unsupported",
                        "omissions":list(profile.omissions) if profile else []})
     return result
