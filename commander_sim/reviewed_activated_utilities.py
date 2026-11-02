@@ -128,7 +128,7 @@ def activate_reviewed(zones,life,mana,death_engine,catalog,source_id, *,
     affected=()
     if rule.operation=="counter_target":
         put_reviewed_counters(kernel,source.controller,target_id,
-            CounterPlacement("+1/+1"))
+            CounterPlacement("+1/+1",require_controller=False))
         affected=(target_id,)
     elif rule.operation=="keyword_self_until_end":
         live=kernel.objects.get(source_id)
