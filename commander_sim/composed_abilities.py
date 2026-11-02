@@ -31,8 +31,9 @@ class Predicate:
 class Payment:
     mana: str = ""
     x_generic: bool = False
+    x_black_only: bool = False
     def __post_init__(self):
-        if self.mana and self.x_generic:
+        if sum((bool(self.mana),self.x_generic,self.x_black_only))>1:
             raise ValueError("Only one explicit mana payment mode is supported")
 
 
@@ -81,6 +82,12 @@ ABILITIES = {
                 "At the beginning of your upkeep, you lose 1 life and amass Zombies 1.",
                 "upkeep", Predicate("always"), Payment(),
                 (Step("lose_life"), Step("amass"))),
+    ),
+    "Crypt Rats": (
+        Ability("104095ed-55e3-408e-bf70-4fe06bb16d2f",
+                "{X}: This creature deals X damage to each creature and each player. Spend only black mana on X.",
+                "activate", Predicate("always"), Payment(x_black_only=True),
+                (Step("damage_all",quantity="x"),)),
     ),
     "Plague Spitter": (
         Ability("5feedfb0-30e6-400d-9e28-d541ea1aa14e",
@@ -266,7 +273,7 @@ class ComposedAbilityEngine:
             slot.slot_id, source.object_id,
             lambda operation: self._execute(source, operation, x=x))
 
-    def activate(self, source_id, *, turn, legal_window=True):
+    def activate(self, source_id, *, turn, legal_window=True, x=0):
         """Perform one legal reviewed activation; repeat calls are permitted.
 
         Caller owns priority and activation strategy. This deliberately
@@ -281,13 +288,25 @@ class ComposedAbilityEngine:
         rule = rules[0]
         if not self._condition(rule, source.controller, 0):
             return None
-        if self.mana_service.plan(source.controller, rule.payment.mana) is None:
+        if type(x) is not int or x<0:
+            raise ValueError("X must be nonnegative")
+        if rule.payment.x_black_only:
+            # Each pip of an X-only-black payment is a real {B} requirement,
+            # not an unrestricted {X} generic source.
+            if x==0:
+                return None
+            cost="{B}"*x
+        else:
+            if x:
+                raise ValueError("An X choice was supplied to a fixed ability")
+            cost=rule.payment.mana
+        if self.mana_service.plan(source.controller,cost) is None:
             return None
-        paid = self.mana_service.pay(source.controller, rule.payment.mana)
+        paid=self.mana_service.pay(source.controller,cost)
         if paid is None:
             return None
-        self._turn = turn
-        return self._dispatch_reviewed(source, rule)
+        self._turn=turn
+        return self._dispatch_reviewed(source,rule,x=x)
 
     def upkeep(self, *, active_seat, turn):
         """Resolve source-reviewed own-upkeep profiles on authoritative zones."""
