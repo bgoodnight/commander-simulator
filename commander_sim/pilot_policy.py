@@ -32,13 +32,13 @@ _FEATURE_RULES = {
     "tokens": _TOKEN,
     "artifacts": _ARTIFACT,
     "combat": _AGGRESSION,
-    "death_triggers": re.compile(r"whenever[^\\n]{0,110}\\b(?:dies|die)\\b", re.I),
+    "death_triggers": re.compile(r"whenever[^\n]{0,110}\b(?:dies|die)\b", re.I),
     "recursion": re.compile(
-        r"(?:return|put)[^\\n]{0,100}\\b(?:graveyard|battlefield)\\b"
-        r"|\\bfrom (?:your|a) graveyard\\b", re.I),
+        r"(?:return|put)[^\n]{0,100}\b(?:graveyard|battlefield)\b"
+        r"|\bfrom (?:your|a) graveyard\b", re.I),
     "removal": re.compile(
         r"(?:destroy|exile) target|(?:all|each) creatures? gets? -"
-        r"|\\bdeal[s]? \\d+ damage to each creature\\b", re.I),
+        r"|\bdeal[s]? \d+ damage to each creature\b", re.I),
     "spells": re.compile(r"(?!)"),
 }
 # Pure preferences in the *decision layer*. Smaller shifts than a missing
