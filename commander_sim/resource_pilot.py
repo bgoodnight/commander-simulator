@@ -122,11 +122,25 @@ def plan_common_spell(zones, seat, source, recipe, catalog, mana_service, life):
         # whether the actual colored and generic payment is possible.
         for x in range(max_x,0,-1):
             cost=spell_payment_cost(recipe,x)
-            if mana_service.plan_spell(seat,cost,source) is not None:
+            try:
+                preview=mana_service.plan_spell(seat,cost,source)
+            except ValueError as error:
+                if str(error)!="Bounded mana search exhausted; no action committed":
+                    raise
+                # Never guess that X was payable. Conservatively decline
+                # the entire spell when source planning is inconclusive.
+                return None
+            if preview is not None:
                 return cost,x,victims
         return None
     cost=spell_payment_cost(recipe)
-    if mana_service.plan_spell(seat,cost,source) is None:
+    try:
+        preview=mana_service.plan_spell(seat,cost,source)
+    except ValueError as error:
+        if str(error)!="Bounded mana search exhausted; no action committed":
+            raise
+        return None
+    if preview is None:
         return None
     return cost,0,victims
 
