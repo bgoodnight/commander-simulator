@@ -10,6 +10,7 @@ import argparse
 from collections import Counter
 import json
 from pathlib import Path
+from statistics import median
 import sys
 
 ROOT=Path(__file__).resolve().parents[1]
@@ -109,7 +110,7 @@ def run_audit(deck_keys=DECKS,*,seeds=2,rounds=12,
               scenario="mixed",style="adaptive",
               provisional_mode="safe",first_seed=0,
               turn_examples=12,runner=run_bounded_early_game):
-    if (any(d not in DECKS for d in deck_keys)
+    if (not deck_keys or any(d not in DECKS for d in deck_keys)
             or type(seeds) is not int or not 1<=seeds<=15
             or type(rounds) is not int or not 1<=rounds<=30
             or type(first_seed) is not int or first_seed<0
@@ -135,8 +136,8 @@ def run_audit(deck_keys=DECKS,*,seeds=2,rounds=12,
         by_deck[key]={
             "sample_games":len(matches),
             "outcomes":dict(sorted(outcomes.items())),
-            "median_completed_rounds":sorted(
-                x["completed_rounds"] for x in matches)[len(matches)//2],
+            "median_completed_rounds":median(
+                x["completed_rounds"] for x in matches),
             "idle_turns":sum(x["turns_without_main_actions"] for x in matches),
             "review_signal_counts":dict(sorted(Counter(
                 label for run in matches for row in run["review_turns"]
