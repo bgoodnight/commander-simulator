@@ -47,6 +47,7 @@ from .reviewed_reactive_triggers import ReactiveTriggerEngine
 from .reviewed_entry_choices import reviewed_entry_choice, set_reviewed_entry_choice
 from .reviewed_attachments import AttachmentEngine,reviewed_attachment
 from .reviewed_zone_spells import ZoneSpellEngine,reviewed_zone_spell
+from .reviewed_activated_utilities import activate_reviewed,reviewed_activation
 from .opponent_stress import BoundedOpponentPressure
 from .reviewed_death_effects import ReviewedDeathEngine
 from .reviewed_enter_effects import reviewed_enter_rule, execute_reviewed_enter
@@ -181,6 +182,7 @@ def run_bounded_early_game(deck_key, *, seed=0, turns=6, mulligan="one-free", pr
                     or reviewed_composed_permanent(name,raw_by_name[name])
                     or reviewed_attachment(name,raw_by_name[name]) is not None
                     or reviewed_zone_spell(name,raw_by_name[name]) is not None
+                    or reviewed_activation(name,raw_by_name[name]) is not None
                     or (reviewed_utility(name,raw_by_name[name]) is not None
                         and reviewed_utility(name,raw_by_name[name]).source_zone=="battlefield"
                         and "enchantment" in types)
@@ -253,6 +255,9 @@ def run_bounded_early_game(deck_key, *, seed=0, turns=6, mulligan="one-free", pr
         life_ledger_start = len(life.kernel.life_changes)
         turn_kernel_event_index=len(kernel.events)
         events = []
+        beginning_creature_ids=frozenset(
+            obj.object_id for obj in kernel.on_battlefield()
+            if obj.controller==0 and "creature" in obj.types)
         def resolve_reactive():
             for triggered in reactive_engine.resolve():
                 events.append({
@@ -477,11 +482,14 @@ def run_bounded_early_game(deck_key, *, seed=0, turns=6, mulligan="one-free", pr
                                         key=lambda o:(o.power,o.toughness,-o.object_id)).object_id
                     else:
                         continue
-                phase_enchantment = (reviewed_phase_permanent(name, raw)
+                phase_enchantment = ((reviewed_activation(name,raw) is not None
+                                     and "enchantment" in obj.types)
+                                     or reviewed_phase_permanent(name, raw)
                                      or reviewed_breach(name, raw)
                                      or reviewed_composed_permanent(name,raw)
                 or reviewed_attachment(name,raw) is not None
                 or reviewed_zone_spell(name,raw) is not None
+                or reviewed_activation(name,raw) is not None
                                      or (reviewed_utility(name,raw) is not None
                                          and reviewed_utility(name,raw).source_zone=="battlefield"
                                          and "enchantment" in obj.types))
@@ -1140,6 +1148,65 @@ def run_bounded_early_game(deck_key, *, seed=0, turns=6, mulligan="one-free", pr
                            "created_token_ids":(list(result.enter_result.token_ids)
                                                 if result.enter_result else []),
                            "fidelity":"bounded_no_opponent_priority"})
+        # Use remaining resources for one sensible generic utility effect
+        # before combat. These are authorized typed effect descriptors, not
+        # specific card scripts. Defend life before paying costly activations.
+        for source in sorted(tuple(kernel.on_battlefield()),
+                             key=lambda o:o.object_id):
+            rule=reviewed_activation(
+                source.card.name,raw_by_name.get(source.card.name))
+            if source.controller!=0 or rule is None:
+                continue
+            choice={}
+            if rule.operation=="counter_target":
+                enemy_power=max((o.power for o in kernel.on_battlefield()
+                    if o.controller!=0 and "creature" in o.types),default=0)
+                candidates=[o for o in kernel.on_battlefield()
+                    if o.controller==0 and "creature" in o.types
+                    and not o.token and o.toughness<=enemy_power
+                    and o.power+o.toughness>=5]
+                if life.total(0)<=20 or not candidates:
+                    continue
+                best=max(candidates,key=lambda o:(
+                    int("commander" in o.card.supertypes),
+                    o.power+o.toughness,-o.object_id))
+                choice["target_id"]=best.object_id
+            elif rule.operation=="mill_all":
+                if (not opponent_pressure or turn<4
+                        or not any(zones.ids(seat,"library")
+                                   for seat in (1,2,3))):
+                    continue
+            elif rule.operation=="keyword_own_until_end":
+                if (opponent_pressure is None or life.total(0)>33
+                        or sum(o.controller==0 and "creature" in o.types
+                               for o in kernel.on_battlefield())<2):
+                    continue
+            else:
+                continue
+            outcome=activate_reviewed(
+                zones,life,mana_service,death_engine,raw_by_name,
+                source.object_id,turn=turn,**choice)
+            if outcome is not None:
+                events.append({"type":"reviewed_generic_activated",
+                               "source_object_id":source.object_id,
+                               "operation":outcome.operation,
+                               "affected_ids":list(outcome.affected_ids),
+                               "life_paid":outcome.life_paid})
+                resolve_reactive()
+        # Physical pilot attacks once with a conservative board-aware policy.
+        # Opposing seats are sampled using the same threat weights as their
+        # attacks on one another; no privileged target at seat zero.
+        if opponent_pressure is not None:
+            for combat in opponent_pressure.player_combat(
+                    turn,beginning_creature_ids=beginning_creature_ids):
+                events.append({
+                    "type":"player_"+combat.operation,
+                    "object_id":combat.object_id,
+                    "target_seat":combat.target_seat,
+                    "amount":combat.amount,
+                    "fidelity":"bounded_physical_combat"})
+            attachment_engine.sync(turn=turn)
+            resolve_reactive()
         death_count=sum(ev.name=="dies" for ev in
                         kernel.events[turn_kernel_event_index:])
         # Resolve approved composed end-step abilities. The bounded pilot
