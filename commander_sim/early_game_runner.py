@@ -1641,9 +1641,15 @@ def run_bounded_early_game(deck_key, *, seed=0, turns=6, mulligan="one-free", pr
                 or reviewed_ramp(name,raw) is not None
                 or reviewed_ritual(name,raw)
                 or reviewed_common_spell(name,raw) is not None
+                or reviewed_removal(name,raw) is not None
+                or reviewed_zone_spell(name,raw) is not None
+                or reviewed_graveyard_spell(name,raw) is not None
+                or reviewed_attachment(name,raw) is not None
+                or reviewed_activation(name,raw) is not None
                 or approved_enter_hand_cast(name)
                 or reviewed_breach(name,raw)
-                or reviewed_buyback(name,raw)
+                or reviewed_buyback(name,raw) is not None
+                or reviewed_copy_spell(name,raw) is not None
                 or provisional_by_name.get(name) is not None)
         cleanup = cleanup_hand(
             zones, 0, raw_by_name, supported_action=hand_action_supported)
@@ -1728,40 +1734,7 @@ def run_bounded_early_game(deck_key, *, seed=0, turns=6, mulligan="one-free", pr
             "alive_seats":list(round_life["alive_seats"]),
             "unsupported_cards_in_hand": sorted(
                 kernel.get(oid).card.name for oid in zones.ids(0, "hand")
-                if not reviewed_creature(deck_key, kernel.get(oid).card.name,
-                                         raw_by_name[kernel.get(oid).card.name])
-                and reviewed_rock(kernel.get(oid).card.name,
-                                  raw_by_name[kernel.get(oid).card.name], colors) is None
-                and not (reviewed_tutor(kernel.get(oid).card.name,
-                                        raw_by_name[kernel.get(oid).card.name])
-                         and reviewed_tutor(kernel.get(oid).card.name,
-                                            raw_by_name[kernel.get(oid).card.name])[2]
-                         in {"instant", "sorcery"})
-                and reviewed_token_spell(kernel.get(oid).card.name,
-                    raw_by_name[kernel.get(oid).card.name]) is None
-                and reviewed_draw_spell(kernel.get(oid).card.name,
-                    raw_by_name[kernel.get(oid).card.name]) is None
-                and not reviewed_phase_permanent(kernel.get(oid).card.name,
-                    raw_by_name[kernel.get(oid).card.name])
-                and not reviewed_composed_permanent(kernel.get(oid).card.name,
-                    raw_by_name[kernel.get(oid).card.name])
-                and reviewed_common_spell(kernel.get(oid).card.name,
-                    raw_by_name[kernel.get(oid).card.name]) is None
-                and reviewed_utility(kernel.get(oid).card.name,
-                    raw_by_name[kernel.get(oid).card.name]) is None
-                and not reviewed_sacrifice_artifact(kernel.get(oid).card.name,
-                    raw_by_name[kernel.get(oid).card.name])
-                and reviewed_ramp(kernel.get(oid).card.name,
-                    raw_by_name[kernel.get(oid).card.name]) is None
-                and not reviewed_ritual(kernel.get(oid).card.name,
-                    raw_by_name[kernel.get(oid).card.name])
-                and not approved_enter_hand_cast(kernel.get(oid).card.name)
-                and reviewed_buyback(kernel.get(oid).card.name,
-                    raw_by_name[kernel.get(oid).card.name]) is None
-                and reviewed_copy_spell(kernel.get(oid).card.name,
-                    raw_by_name[kernel.get(oid).card.name]) is None
-                and provisional_by_name.get(kernel.get(oid).card.name) is None
-                and not supported_land(oid)),
+                if not hand_action_supported(kernel.get(oid))),
         })
         if outcome_recorder.outcome(requested_rounds=turns)["complete"]:
             break
