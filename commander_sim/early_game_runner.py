@@ -1031,6 +1031,10 @@ def run_bounded_early_game(deck_key, *, seed=0, turns=6, mulligan="one-free", pr
                     raw_by_name[kernel.get(oid).card.name]) is None
                 and not reviewed_phase_permanent(kernel.get(oid).card.name,
                     raw_by_name[kernel.get(oid).card.name])
+                and not reviewed_composed_permanent(kernel.get(oid).card.name,
+                    raw_by_name[kernel.get(oid).card.name])
+                and reviewed_common_spell(kernel.get(oid).card.name,
+                    raw_by_name[kernel.get(oid).card.name]) is None
                 and not reviewed_sacrifice_artifact(kernel.get(oid).card.name,
                     raw_by_name[kernel.get(oid).card.name])
                 and reviewed_ramp(kernel.get(oid).card.name,
