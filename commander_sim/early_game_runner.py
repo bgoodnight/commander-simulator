@@ -44,6 +44,7 @@ from .reviewed_phase_effects import ReviewedPhaseEngine,reviewed_phase_permanent
 from .composed_abilities import ComposedAbilityEngine, reviewed_composed_permanent, ABILITIES
 from .reviewed_commander_cast import commander_cost, cast_commander
 from .reviewed_reactive_triggers import ReactiveTriggerEngine
+from .reviewed_entry_choices import reviewed_entry_choice, set_reviewed_entry_choice
 from .opponent_stress import BoundedOpponentPressure
 from .reviewed_death_effects import ReviewedDeathEngine
 from .reviewed_enter_effects import reviewed_enter_rule, execute_reviewed_enter
@@ -660,6 +661,20 @@ def run_bounded_early_game(deck_key, *, seed=0, turns=6, mulligan="one-free", pr
             })
             resolved_id = zones.resolve(committed.ticket)
             entered_on_turn[resolved_id]=turn
+            entry_choice=reviewed_entry_choice(name,raw_by_name[name])
+            if entry_choice is not None:
+                # A legal explicit player choice made as the reviewed source
+                # enters. Targeting policy is provisional, rules operation
+                # remains general and can accept any seat chosen by host.
+                target_seat=next(seat for seat in sorted(life.kernel.life_totals)
+                                 if seat!=0)
+                set_reviewed_entry_choice(
+                    zones,resolved_id,raw_by_name,player=target_seat)
+                events.append({
+                    "type":"reviewed_as_enters_player_choice",
+                    "source_object_id":resolved_id,
+                    "chosen_player":target_seat,
+                    "fidelity":"bounded_explicit_entry_choice"})
             if kind == "artifact":
                 rock = reviewed_rock(name, raw_by_name[name], colors)
                 if rock is not None and rock[0].enter_tapped:
@@ -730,6 +745,33 @@ def run_bounded_early_game(deck_key, *, seed=0, turns=6, mulligan="one-free", pr
                     "life_changes":outcome.life_lost,
                     "death_trigger_count":outcome.deaths,
                     "fidelity":"bounded_generic_activation_policy"})
+        # One generic tap-based composed activation per turn when the
+        # physical source entered on an earlier turn and its entry choice
+        # was made. Do not activate a newly summoned creature without haste.
+        for source in sorted(tuple(kernel.on_battlefield()),
+                             key=lambda obj:obj.object_id):
+            if source.controller!=0 or source.tapped:
+                continue
+            if entered_on_turn.get(source.object_id,0)>=turn and "haste" not in source.keywords:
+                continue
+            raw=raw_by_name.get(source.card.name,{})
+            if raw.get("oracle_id")!=source.card.card_id:
+                continue
+            if (source.object_id not in getattr(kernel,"reviewed_player_choices",{})
+                    or not any(
+                        rule.event=="activate" and rule.payment.tap
+                        and rule.oracle_excerpt in raw.get("oracle_text","")
+                        for rule in ABILITIES.get(source.card.name,()))):
+                continue
+            activated=composed_engine.activate(
+                source.object_id,turn=turn,tap_ready=True)
+            if activated is not None:
+                events.append({
+                    "type":"reviewed_composed_tap_activation",
+                    "source_object_id":source.object_id,
+                    "operation":activated.operation,
+                    "fidelity":"bounded_explicit_tap_ready"})
+            break
         resolve_reactive()
         # One reviewed instant spell per turn in the verified main-phase
         # window. Optional buyback is preferred only when fully payable.
