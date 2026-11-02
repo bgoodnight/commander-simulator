@@ -4,7 +4,8 @@ import unittest
 
 from commander_sim.pilot_policy import (
     STYLES,DeckSignals,PilotContext,choose_legal_option,
-    infer_deck_signals,rank_legal_action)
+    infer_deck_signals,rank_legal_action,choose_combat_posture,
+    infer_pilot_archetype,ARCHETYPES)
 from commander_sim.early_game_runner import run_bounded_early_game
 
 
@@ -47,6 +48,82 @@ class GeneralPilotPolicyTests(unittest.TestCase):
         self.assertEqual(out.count("sacrifice"),2)
         self.assertTrue(out.dense("spell_engine"))
         self.assertIn("flying",out.keywords)
+
+    def test_non_mana_artifact_keeps_its_permanent_role(self):
+        artifact=catalog_row(
+            "At the beginning of your upkeep, scry 1.","Artifact","{2}")
+        rank=rank_legal_action("artifact",artifact,self.context,self.empty)
+        other=rank_legal_action("unreviewed_other",artifact,
+                                self.context,self.empty)
+        self.assertEqual(rank.category,"artifact")
+        self.assertGreater(rank.score,other.score)
+
+    def test_combat_posture_uses_same_personality_and_deck_signals(self):
+        base=choose_combat_posture(
+            life=14,opposing_creatures=6,style="balanced")
+        tempo=choose_combat_posture(
+            life=14,opposing_creatures=6,style="tempo")
+        cautious=choose_combat_posture(
+            life=14,opposing_creatures=6,style="conservative")
+        self.assertEqual((base.reserve,base.attack_limit),(2,3))
+        self.assertEqual((tempo.reserve,tempo.attack_limit),(1,4))
+        self.assertEqual((cautious.reserve,cautious.attack_limit),(3,2))
+        combat_rich=DeckSignals(65,(
+            ("artifacts",0),("combat",8),("graveyard",0),
+            ("sacrifice",0),("spell_engine",0),("tokens",0)),())
+        adaptive=choose_combat_posture(
+            life=14,opposing_creatures=6,style="adaptive",
+            signals=combat_rich)
+        self.assertEqual((adaptive.reserve,adaptive.attack_limit),(1,4))
+        self.assertIn("deck_combat_density",adaptive.factors)
+        with self.assertRaises(ValueError):
+            choose_combat_posture(
+                life=20,opposing_creatures=1,style="named_commander")
+        with self.assertRaises(ValueError):
+            choose_combat_posture(life=20,opposing_creatures=-1)
+
+    def test_archetype_inference_uses_deck_functions_without_names(self):
+        evidence=DeckSignals(65,tuple(sorted({
+            "sacrifice":15,"death_triggers":10,"tokens":8,
+            "graveyard":5,"recursion":4,"artifacts":3,"combat":2,
+            "spell_engine":1,"spells":8,"removal":2}.items())),())
+        auto=infer_pilot_archetype(evidence)
+        self.assertEqual(auto.primary,"aristocrats")
+        self.assertEqual(auto.selected,"auto")
+        self.assertGreater(auto.as_dict()["scores"]["aristocrats"],
+                           auto.as_dict()["scores"]["spellslinger"])
+        manual=infer_pilot_archetype(evidence,"control")
+        self.assertEqual(manual.primary,"control")
+        self.assertEqual(manual.evidence,auto.evidence)
+        with self.assertRaises(ValueError):
+            infer_pilot_archetype(evidence,"named_commander_script")
+
+    def test_archetype_weights_only_rank_verified_options(self):
+        option=(0,2,"Useful Engine",5,"creature","{2}{B}",None)
+        row=catalog_row("Whenever a creature you control dies, draw a card.")
+        base,base_score=choose_legal_option(
+            [option],self.context,self.empty,{"Useful Engine":row},
+            archetype="midrange")
+        chosen,special=choose_legal_option(
+            [option],self.context,self.empty,{"Useful Engine":row},
+            archetype="aristocrats")
+        self.assertEqual(base,chosen)
+        self.assertGreater(special.score,base_score.score)
+        self.assertIn("archetype:aristocrats",special.factors)
+
+    def test_physical_mortarion_automatically_selects_aristocrats(self):
+        run=run_bounded_early_game(
+            "mortarion_physical_final",seed=5,turns=3,
+            pilot_archetype="auto")
+        self.assertEqual(run["pilot_archetype"]["primary"],"aristocrats")
+        self.assertGreater(run["pilot_archetype"]["evidence"]["death_triggers"],5)
+        override=run_bounded_early_game(
+            "mortarion_physical_final",seed=5,turns=2,
+            pilot_archetype="control")
+        self.assertEqual(override["pilot_archetype"]["primary"],"control")
+        with self.assertRaises(ValueError):
+            run_bounded_early_game("mortarion_physical_final",
+                                   turns=1,pilot_archetype="commander_only")
 
     def test_early_mana_development_beats_otherwise_equal_body(self):
         rock=catalog_row("{T}: Add {C}{C}.","Artifact","{1}")
