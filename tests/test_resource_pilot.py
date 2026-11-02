@@ -71,6 +71,7 @@ class PilotTests(unittest.TestCase):
         from commander_sim.reviewed_common_spells import SpellRecipe, SpellStep
         spell=make_object(6,"Generic Life Draw",("sorcery",),zone="hand")
         self.cards.append(spell)
+        self.cards.append(make_object(7,"Drawn Card",("creature",),zone="library"))
         recipe=SpellRecipe("pinned-id","Draw and lose","{B}",
                            "sorcery",(SpellStep("draw",1),
                                        SpellStep("lose_life",2)))
