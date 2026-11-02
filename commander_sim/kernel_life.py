@@ -53,6 +53,12 @@ class KernelLife:
         if not isinstance(change,LifeChange):
             raise TypeError("Expected typed reviewed life change")
         before=self.total(change.seat)
+        # Life-zero is an immediate modeled loss in longer-game pressure.
+        # A subsequent lifelink, global drain or gain must not re-enter that
+        # seat's life ledger after its first zero-life state. This is a
+        # life-only policy, not comprehensive replacement / SBA timing.
+        if before<=0:
+            return before
         if self.replacements is not None:
             change=self.replacements.transform(change)
         self.kernel.life_totals[change.seat]=(
@@ -82,4 +88,4 @@ class KernelLife:
             raise ValueError("Invalid reviewed opponent loss")
         return tuple((seat,self.lose(seat,amount,source_id))
                      for seat in sorted(self.kernel.life_totals)
-                     if seat!=controller)
+                     if seat!=controller and self.total(seat)>0)
