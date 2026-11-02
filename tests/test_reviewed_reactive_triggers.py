@@ -23,7 +23,7 @@ class ReactiveTests(unittest.TestCase):
     def creature(self,name):
         raw=self.catalog[name]
         return self.zones.add(self.C(raw["oracle_id"],name,
-                              frozenset({"creature"}),coverage="approx"),0)
+                              frozenset({"creature"}),coverage="approx"),0,"battlefield")
     def token(self):
         blueprint=TokenBlueprint("Test token",frozenset({"creature"}),
                                  frozenset({"Zombie"}),frozenset({"B"}),1,1)
@@ -52,7 +52,7 @@ class ReactiveTests(unittest.TestCase):
     def test_invalid_source_identity_not_registered(self):
         fake=self.C("bad-oracle","Mirkwood Bats",frozenset({"creature"}),
                     coverage="approx")
-        self.zones.add(fake,0)
+        self.zones.add(fake,0,"battlefield")
         self.token()
         self.assertEqual(self.events.resolve(),())
 if __name__=="__main__": unittest.main()
