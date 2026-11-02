@@ -78,8 +78,14 @@ test('abstract opponent roles remain scenarios, and named decks use whole-pod as
   let rows=Outcomes.matchupRows(model.groups);
   assert.equal(rows.length,2);
   assert.ok(rows.every(x=>x.kind==='abstract'));
-  assert.ok(rows.every(x=>/abstract roles/.test(x.label)));
+  assert.ok(rows.every(x=>/abstract policies/.test(x.label)));
   assert.equal(rows[0].counts.win,1);
+  const newRoles=runUnresolved();
+  newRoles.opponent_roles={"1":"control","2":"aggro","3":"value"};
+  const rolled=Outcomes.model(
+    [batch([runWon(),newRoles])],'necron_dynasties','a'.repeat(64));
+  assert.equal(rolled.groups.length,1);
+  assert.match(rolled.groups[0].label,/mixed opponent roles/);
   const tagged=batch([runWon(),runUnresolved()],'mixed',{
     opponent_decks:[
       {seat:1,deck_key:'death_guard',commander_name:'Mortarion'},
