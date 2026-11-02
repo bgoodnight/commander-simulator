@@ -1,0 +1,172 @@
+name: Run bounded Commander games on request
+
+on:
+  pull_request:
+    paths:
+      - '.github/workflows/deep-simulations.yml'
+      - 'infra/simulation-gateway/**'
+      - 'tools/append_requested_outcomes.py'
+      - 'tests/test_append_requested_outcomes.py'
+      - 'tests/run_gateway.test.mjs'
+  workflow_dispatch:
+    inputs:
+      deck:
+        description: Pinned physical deck
+        required: true
+        type: choice
+        options:
+          - mortarion_physical_final
+          - necron_dynasties
+          - magnus_premium
+          - wretched_ranks
+          - mortarion_current
+          - mortarion_ideal
+          - magnus_budget
+          - magnus_physical_trial
+      scenario:
+        description: Abstract opposing table
+        required: true
+        default: mixed
+        type: choice
+        options: [mixed, balanced, aggressive, control, combo]
+      seeds:
+        description: Number of games (1-200 per request)
+        required: true
+        default: 100
+        type: number
+      rounds:
+        description: Maximum rounds (1-30)
+        required: true
+        default: 30
+        type: number
+      start_seed:
+        description: First reproducible seed
+        required: true
+        default: 0
+        type: number
+      pilot_style:
+        description: Generic pilot preference
+        required: true
+        default: adaptive
+        type: choice
+        options: [adaptive, balanced, engine, tempo, conservative]
+      provisional_mode:
+        description: Optional source-pinned provisional effects
+        required: true
+        default: safe
+        type: choice
+        options: [off, safe]
+
+permissions:
+  contents: write
+  actions: write
+
+concurrency:
+  group: requested-deck-${{ inputs.deck }}-${{ inputs.scenario }}
+  cancel-in-progress: false
+
+jobs:
+  contract-tests:
+    if: github.event_name == 'pull_request'
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    permissions:
+      contents: read
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      - name: Verify dispatch gate and outcome publication
+        run: |
+          node --test tests/run_gateway.test.mjs
+          python -m unittest tests.test_append_requested_outcomes tests.test_game_outcome_reporting -v
+
+  simulate:
+    if: github.event_name == 'workflow_dispatch'
+    name: ${{ inputs.deck }} / ${{ inputs.scenario }} / ${{ inputs.seeds }} seeds
+    runs-on: ubuntu-latest
+    timeout-minutes: 35
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      - name: Validate bounded configuration
+        env:
+          SEEDS: ${{ inputs.seeds }}
+          ROUNDS: ${{ inputs.rounds }}
+          START_SEED: ${{ inputs.start_seed }}
+          DECK: ${{ inputs.deck }}
+          SCENARIO: ${{ inputs.scenario }}
+          PILOT: ${{ inputs.pilot_style }}
+          MODE: ${{ inputs.provisional_mode }}
+        run: |
+          python - <<'PY'
+          import os
+          from commander_sim.deck_fixtures import FIXTURES, EXPERIMENTAL_FIXTURES
+          from commander_sim.opponent_stress import SCENARIOS
+          from commander_sim.pilot_policy import STYLES
+          assert os.environ['DECK'] in {f.key for f in (*FIXTURES, *EXPERIMENTAL_FIXTURES)}
+          assert os.environ['SCENARIO'] in SCENARIOS
+          assert os.environ['PILOT'] in STYLES
+          assert os.environ['MODE'] in {'off', 'safe'}
+          assert 1 <= int(os.environ['SEEDS']) <= 200
+          assert 1 <= int(os.environ['ROUNDS']) <= 30
+          assert 0 <= int(os.environ['START_SEED']) <= 10_000_000
+          PY
+      - name: Run existing outcome contract tests
+        run: python -m unittest tests.test_game_outcome_reporting -v
+      - name: Execute bounded 30-round-capable simulation
+        env:
+          SEEDS: ${{ inputs.seeds }}
+          ROUNDS: ${{ inputs.rounds }}
+          START_SEED: ${{ inputs.start_seed }}
+          DECK: ${{ inputs.deck }}
+          SCENARIO: ${{ inputs.scenario }}
+          PILOT: ${{ inputs.pilot_style }}
+          MODE: ${{ inputs.provisional_mode }}
+        run: |
+          mkdir -p dist/requested-outcomes
+          python tools/build_game_outcomes.py \
+            --deck "$DECK" --scenario "$SCENARIO" \
+            --rounds "$ROUNDS" --seeds "$SEEDS" \
+            --start-seed "$START_SEED" --pilot-style "$PILOT" \
+            --provisional-mode "$MODE" --examples 3 \
+            --output dist/requested-outcomes/batch.json
+      - name: Save immutable full run artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: requested-games-${{ inputs.deck }}-${{ inputs.scenario }}-${{ github.run_id }}
+          path: dist/requested-outcomes/batch.json
+          retention-days: 30
+          if-no-files-found: error
+      - name: Validate publication against pinned deck and UI schema
+        run: |
+          ENGINE_SHA="$(git log -1 --format=%H -- commander_sim decklists simulator/card_data tools/build_game_outcomes.py tools/publish_game_outcomes.py tools/append_requested_outcomes.py)"
+          python -m unittest tests.test_append_requested_outcomes -v
+          python tools/append_requested_outcomes.py \
+            --source dist/requested-outcomes/batch.json \
+            --output web/pages/data/game-outcomes \
+            --engine-commit "$ENGINE_SHA"
+          python tools/build_pages_deck_lab.py --output dist/verified-public-pages
+          python -m unittest tests.test_pages_export -v
+      - name: Publish only tested result JSON, not UI code
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          git fetch origin main
+          if [ "$(git rev-parse HEAD)" != "$(git rev-parse origin/main)" ]; then
+            echo "Main changed during simulation; retaining artifact, skipping stale publication."
+            exit 0
+          fi
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add -A web/pages/data/game-outcomes/
+          if ! git diff --cached --quiet; then
+            git commit -m "Publish requested bounded outcomes (${{ github.run_id }})"
+            git push origin HEAD:main
+            gh workflow run deck-lab-pages.yml --ref main
+          fi
