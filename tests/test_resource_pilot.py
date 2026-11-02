@@ -30,7 +30,7 @@ class PilotTests(unittest.TestCase):
         self.mana=SimpleNamespace(kernel=self.kernel,
             modes=lambda x:(mode,) if "land" in x.types else (),
             floating=lambda seat:(0,0,0,0,0,0),
-            plan_spell=lambda seat,cost,source:None)
+            plan_spell=lambda seat,cost,source,**kwargs:None)
         self.catalog={"Reviewed Four Drop":{"mana_cost":"{3}{B}"}}
 
     def test_only_expendable_token_for_plausibly_reachable_spell(self):
@@ -58,7 +58,7 @@ class PilotTests(unittest.TestCase):
                            "sorcery",(SpellStep("opponent_drain_x"),),
                            variable_x=True)
         self.catalog[spell.card.name]={"mana_cost":"{X}{B}{B}"}
-        self.mana.plan_spell=lambda seat,cost,source: object() if cost=="{1}{B}{B}" else None
+        self.mana.plan_spell=lambda seat,cost,source,**kwargs: object() if cost=="{1}{B}{B}" else None
         life=SimpleNamespace(total=lambda seat:3)
         with patch("commander_sim.resource_pilot.assess_resources",
                    return_value=SimpleNamespace(available_fixed_mana=3)):
@@ -75,7 +75,7 @@ class PilotTests(unittest.TestCase):
         recipe=SpellRecipe("pinned-id","Draw and lose","{B}",
                            "sorcery",(SpellStep("draw",1),
                                        SpellStep("lose_life",2)))
-        self.mana.plan_spell=lambda seat,cost,source:object()
+        self.mana.plan_spell=lambda seat,cost,source,**kwargs:object()
         life=SimpleNamespace(total=lambda seat:5)
         self.assertIsNone(plan_common_spell(self.zones,0,spell,recipe,
                                             self.catalog,self.mana,life))
