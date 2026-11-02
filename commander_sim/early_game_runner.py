@@ -206,6 +206,14 @@ def run_bounded_early_game(deck_key, *, seed=0, turns=6, mulligan="one-free", pr
             zones.add(definition, 0, "command" if section == "Commander" else "library")
 
     mana_service = TemplateManaService(kernel, raw_by_name, colors, zones=zones)
+    def preview_spell(*args,**kwargs):
+        """Fail closed on bounded speculative mana search, never commit it."""
+        try:
+            return mana_service.plan_spell(*args,**kwargs)
+        except ValueError as err:
+            if str(err)!="Bounded mana search exhausted; no action committed":
+                raise
+            return None
     life = KernelLife(kernel)
     life.install_reviewed_replacements(raw_by_name)
     phase_engine = ReviewedPhaseEngine(zones, life, raw_by_name)
@@ -489,7 +497,7 @@ def run_bounded_early_game(deck_key, *, seed=0, turns=6, mulligan="one-free", pr
                 cost=commander_cost(kernel,cmd,raw_by_name)
                 if cost is None:
                     continue
-                preview=mana_service.plan_spell(0,cost,cmd)
+                preview=preview_spell(0,cost,cmd)
                 if preview is not None:
                     options.append((1,len(preview.source_ids),cmd.card.name,
                                     commander_id,"commander",cost,None))
@@ -559,7 +567,7 @@ def run_bounded_early_game(deck_key, *, seed=0, turns=6, mulligan="one-free", pr
                         and attachment_rule is None and zone_target is None):
                     continue
                 cost = common_plan[0] if common_plan else registry.get(name).primary_face().mana_cost
-                payment = mana_service.plan_spell(0, cost, obj)
+                payment = preview_spell(0, cost, obj)
                 if payment is not None:
                     kind = ("zone_spell" if zone_target is not None else
                             "removal_spell" if removal_plan is not None else
@@ -727,9 +735,9 @@ def run_bounded_early_game(deck_key, *, seed=0, turns=6, mulligan="one-free", pr
                                         raw_by_name[copy_obj.card.name]) is None):
                             continue
                         extra=buyback_total_cost(REITERATE,True)
-                        afford_buyback=(mana_service.plan_spell(
+                        afford_buyback=(preview_spell(
                             0,extra,copy_obj) is not None)
-                        if (not afford_buyback and mana_service.plan_spell(
+                        if (not afford_buyback and preview_spell(
                                 0,REITERATE.mana_cost,copy_obj) is None):
                             continue
                         response_triggers=[]
@@ -970,9 +978,9 @@ def run_bounded_early_game(deck_key, *, seed=0, turns=6, mulligan="one-free", pr
                 if rule is None or obj.card.coverage=="unimplemented":
                     continue
                 with_buyback=buyback_total_cost(rule,True)
-                if mana_service.plan_spell(0,with_buyback,obj) is not None:
+                if preview_spell(0,with_buyback,obj) is not None:
                     buyback_options.append((obj.card.name,oid,True))
-                elif mana_service.plan_spell(0,rule.mana_cost,obj) is not None:
+                elif preview_spell(0,rule.mana_cost,obj) is not None:
                     buyback_options.append((obj.card.name,oid,False))
         if buyback_options:
             _,oid,use_buyback=min(buyback_options)
@@ -1063,7 +1071,7 @@ def run_bounded_early_game(deck_key, *, seed=0, turns=6, mulligan="one-free", pr
             rule=graveyard_creature_cast_ready(
                 zones,0,grave_id,raw_by_name)
             if (rule is not None
-                    and mana_service.plan_spell(
+                    and preview_spell(
                         0,rule.printed_cost,source) is not None):
                 gy_creature_options.append((source.card.name,grave_id))
         if gy_creature_options:
@@ -1093,7 +1101,7 @@ def run_bounded_early_game(deck_key, *, seed=0, turns=6, mulligan="one-free", pr
         for grave_id in zones.ids(0,"graveyard"):
             spell=kernel.get(grave_id)
             review=reviewed_flashback(spell.card.name,raw_by_name.get(spell.card.name))
-            if review and mana_service.plan_spell(0,review.alternate_cost,spell) is not None:
+            if review and preview_spell(0,review.alternate_cost,spell) is not None:
                 if (review.operation!="draw_discard_two"
                         or len(zones.ids(0,"library"))>=2):
                     flashback_options.append((review.alternate_cost,spell.card.name,grave_id))
@@ -1321,7 +1329,7 @@ def run_bounded_early_game(deck_key, *, seed=0, turns=6, mulligan="one-free", pr
                 continue
             try:
                 printed=registry.get(name).primary_face().mana_cost
-                payment=mana_service.plan_spell(0,printed,obj)
+                payment=preview_spell(0,printed,obj)
             except (NotImplementedError,UnsupportedManaCost):
                 continue
             except ValueError as error:
