@@ -1,6 +1,6 @@
 name: Stage and review 500 Mortarion modeled games
 
-# Re-run after correcting paid sacrifice and delayed graveyard return timing.
+# Re-run after excluding paid sacrifice victims from mana-source selection.
 on:
   push:
     branches: [main]
