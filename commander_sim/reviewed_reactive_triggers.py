@@ -7,6 +7,7 @@ the dispatcher consumes only new events and handles newly generated life events
 until quiescent. Event ordering is bounded, not full APNAP priority ordering.
 """
 from dataclasses import dataclass
+from random import Random
 from .ability_composition import (
     AbilitySlot, AbilityHandler, ComposedCard, AbilityDispatcher)
 
@@ -89,6 +90,7 @@ class ReactiveTriggerEngine:
         self._life_cursor=len(kernel.life_changes)
         self._event_cursor=len(kernel.events)
         self.resolutions=[]
+        self._target_rng=Random(0x5EED + len(catalog)*17)
 
     def _reviewed(self,source,event):
         row=self.catalog.get(source.card.name)
@@ -118,7 +120,7 @@ class ReactiveTriggerEngine:
                     self.catalog[source.card.name]["oracle_text"],(slot,),
                     (AbilityHandler(slot.key,"simplified",rule,
                         slot.source_revision,slot.prereqs,
-                        ("No opponent priority, target selection policy uses first opponent",)),))
+                        ("No opponent priority; seat-neutral stochastic target selection",)),))
                 dispatcher=AbilityDispatcher(
                     reviewed,"hybrid",frozenset({"physical_events","life_totals"}))
                 def apply(operation):
@@ -131,10 +133,25 @@ class ReactiveTriggerEngine:
                     elif operation.operation=="target_opponent_loses_amount":
                         # Deterministic legal target; strategy may override
                         # selection later without changing this rules effect.
-                        opponents=[seat for seat in sorted(self.life.kernel.life_totals)
-                                   if seat!=controller]
+                        opponents=[seat for seat in self.life.kernel.life_totals
+                                   if seat!=controller and self.life.total(seat)>0]
                         if opponents:
-                            self.life.lose(opponents[0],quantity,source.object_id)
+                            # Seat-neutral bounded choice: prioritize opposing
+                            # battlefield pressure, while giving every living
+                            # opponent a nonzero chance. Never default to the
+                            # lowest numbered opponent or the human seat.
+                            board=tuple(self.zones.kernel.on_battlefield())
+                            weights=[]
+                            for seat in opponents:
+                                force=sum(max(0,o.power) for o in board
+                                          if o.controller==seat and "creature" in o.types)
+                                engines=sum(("artifact" in o.types or
+                                             "enchantment" in o.types)
+                                            for o in board if o.controller==seat)
+                                weights.append(1.0+0.4*force+1.5*engines)
+                            target=self._target_rng.choices(
+                                opponents,weights=weights,k=1)[0]
+                            self.life.lose(target,quantity,source.object_id)
                     elif operation.operation=="damage_chosen_player":
                         chosen=getattr(self.zones.kernel,
                                        "reviewed_player_choices",{}).get(source.object_id)
