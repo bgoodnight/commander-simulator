@@ -29,31 +29,49 @@ jobs:
             --scenario mixed --rounds 20 --seeds 2 \
             --examples 1 \
             --output outcome-preview/mortarion-20-rounds.json
+          python tools/build_game_outcomes.py \
+            --deck necron_dynasties \
+            --scenario aggressive --rounds 20 --seeds 2 \
+            --examples 1 \
+            --output outcome-preview/necrons-20-rounds.json
+          python tools/build_game_outcomes.py \
+            --deck magnus_premium \
+            --scenario mixed --rounds 20 --seeds 2 \
+            --examples 1 \
+            --output outcome-preview/magnus-20-rounds.json
+          python tools/build_game_outcomes.py \
+            --deck wretched_ranks \
+            --scenario mixed --rounds 20 --seeds 2 \
+            --examples 1 \
+            --output outcome-preview/gisa-20-rounds.json
       - name: Validate output structure and outcome provenance
         run: |
           python - <<'PY'
           import json
           from pathlib import Path
-          p=Path('outcome-preview/mortarion-20-rounds.json')
-          data=json.loads(p.read_text())
-          assert data['format']=='commander-modeled-outcomes-v1'
-          assert data['requested_rounds']==20
-          assert data['seed_count']==2
-          assert data['opponent_fidelity']=='abstract_opponent_pressure_not_card_exact'
-          assert data['outcomes_are_competitive_win_rates'] is False
-          assert len(data['runs'])==2
-          for run in data['runs']:
-              assert 1<=run['completed_rounds']<=20
-              assert len(run['life_history'])==run['completed_rounds']+1
-              for row in run['life_history']:
-                  assert len(row['life_totals'])==4
-              assert run['outcome']['status'] in {
-                  'win','loss','draw','unresolved'}
-          print('Validated sample records for both seeds')
+          files=sorted(Path('outcome-preview').glob('*-20-rounds.json'))
+          assert len(files)==4, files
+          for p in files:
+              data=json.loads(p.read_text())
+              assert data['format']=='commander-modeled-outcomes-v1'
+              assert data['requested_rounds']==20
+              assert data['seed_count']==2
+              assert data['opponent_fidelity']=='abstract_opponent_pressure_not_card_exact'
+              assert data['outcomes_are_competitive_win_rates'] is False
+              assert len(data['runs'])==2
+              for run in data['runs']:
+                  assert 1<=run['completed_rounds']<=20
+                  assert len(run['life_history'])==run['completed_rounds']+1
+                  for row in run['life_history']:
+                      assert len(row['life_totals'])==4
+                  assert run['outcome']['status'] in {
+                      'win','loss','draw','unresolved'}
+              print(p.name, data['summary']['outcome_counts'])
+          print('Validated all four 20-round outcome datasets')
           PY
       - uses: actions/upload-artifact@v4
         with:
-          name: life-outcome-mortarion-20-rounds
-          path: outcome-preview/mortarion-20-rounds.json
+          name: life-outcomes-four-decks-20-rounds
+          path: outcome-preview/*-20-rounds.json
           if-no-files-found: error
           retention-days: 30
