@@ -971,6 +971,7 @@ def run_bounded_early_game(deck_key, *, seed=0, turns=6, mulligan="one-free", pr
             "maximum_hand_size": cleanup.maximum_hand_size,
             "cleanup_discard_count": len(cleanup.discarded),
             "library_size": len(zones.ids(0, "library")),
+            "command_zone_count": len(zones.ids(0, "command")),
             "land_count": sum("land" in o.types and o.zone == "battlefield"
                               for o in kernel.objects.values()),
             "creature_count": sum("creature" in o.types and o.zone == "battlefield"
