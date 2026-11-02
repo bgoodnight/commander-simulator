@@ -531,6 +531,12 @@ def run_bounded_early_game(deck_key, *, seed=0, turns=6, mulligan="one-free", pr
                             "tutor" if eligible else
                             "draw_spell" if draw_spell is not None else
                             "token_spell" if token_spell is not None else "creature")
+                    # A source-verified card may have a reviewed ability
+                    # while still lacking an executable spell-resolution path.
+                    # Never treat an instant as an ordinary creature cast.
+                    if (kind in {"artifact","creature","enchantment"}
+                            and kind not in obj.types):
+                        continue
                     target = (zone_target if zone_target is not None else
                               aura_target if aura_target is not None else
                               removal_plan if removal_plan is not None else
