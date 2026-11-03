@@ -27,7 +27,7 @@ jobs:
       - name: Export four pinned real Commander decks
         run: |
           mkdir -p "$RUNNER_TEMP/gorge-decks" "$RUNNER_TEMP/results"
-          python tools/export_gorge_decks.py --out "$RUNNER_TEMP/gorge-decks" --decks mortarion_current magnus_premium necron_dynasties wretched_ranks
+          python -m tools.export_gorge_decks --out "$RUNNER_TEMP/gorge-decks" --decks mortarion_current magnus_premium necron_dynasties wretched_ranks
       - name: Clone pinned gorge release (not a vendored dependency)
         env:
           GORGE_COMMIT: b78e4c8b16078f6decbc48875bba953ce5535b85
@@ -51,7 +51,7 @@ jobs:
           go build -o "$RUNNER_TEMP/commander-probe" ./commander_probe.go
       - name: Measure current Python bounded-pressure baseline
         run: |
-          python tools/gorge_benchmark.py baseline --games 4 --turns 10 --seed 100 --output "$RUNNER_TEMP/results/python_baseline.json"
+          python -m tools.gorge_benchmark baseline --games 4 --turns 10 --seed 100 --output "$RUNNER_TEMP/results/python_baseline.json"
       - name: Run three real four-player Commander games on gorge
         id: gorge_run
         working-directory: ${{ runner.temp }}/gorge
@@ -67,9 +67,9 @@ jobs:
           echo "gorge_exit_code=$status" >> "$GITHUB_OUTPUT"
           exit 0
       - name: Compare measured run characteristics and limitations
-        if: always()
+        if: steps.gorge_run.outcome == 'success'
         run: |
-          python tools/gorge_benchmark.py collect \
+          python -m tools.gorge_benchmark collect \
             --gorge "$RUNNER_TEMP/results/gorge_runs.jsonl" \
             --baseline "$RUNNER_TEMP/results/python_baseline.json" \
             --output "$RUNNER_TEMP/results/comparison.json"
