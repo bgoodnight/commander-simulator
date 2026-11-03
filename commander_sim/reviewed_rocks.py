@@ -8,6 +8,15 @@ claimed as implemented. If printed text changes, review admission fails.
 from .effect_templates import ReviewedEffect, ManaMode, admit_reviewed_effect
 
 ROCKS = {
+    "Patchwork Banner": {
+        "printed_cost": "{3}",
+        "review": ReviewedEffect(
+            "4fb00dbe-1f82-4ba6-b18c-97e816d10d3a",
+            "As this artifact enters, choose a creature type.\nCreatures you control of the chosen type get +1/+1.\n{T}: Add one mana of any color.",
+            "rock_commander_identity",
+            assumptions=("Chosen creature type is recorded by the generic static-rule host",),
+        ),
+    },
     "Sol Ring": {
         "printed_cost": "{1}",
         "review": ReviewedEffect("6ad8011d-3471-4369-9d68-b264cc027487", "{T}: Add {C}{C}.",
@@ -103,7 +112,7 @@ def reviewed_rock(name, card, commander_colors):
             or "Artifact" not in card.get("type_line", "").split(" — ", 1)[0]):
         return None
     descriptor = row["review"]
-    if name in ("Arcane Signet", "Commander\'s Sphere", "Chromatic Lantern"):
+    if name in ("Arcane Signet", "Commander\'s Sphere", "Chromatic Lantern", "Patchwork Banner"):
         colors = tuple(symbol for symbol in "WUBRG" if symbol in set(commander_colors))
         if not colors or any(c not in "WUBRG" for c in colors):
             raise ValueError("Commander color identity is required")

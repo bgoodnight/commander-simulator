@@ -37,6 +37,7 @@ from .reviewed_utility_activations import RULES as UTILITY_ACTIVATIONS
 from .reviewed_activated_utilities import RULES as ACTIVATED_UTILITIES
 from .reviewed_reactive_triggers import RULES as REACTIVE_TRIGGERS
 from .reviewed_attack_triggers import RULES as ATTACK_TRIGGERS
+from .reviewed_static_modifiers import RULES as STATIC_CREATURE_RULES
 
 
 def _named_sources():
@@ -72,6 +73,7 @@ def _named_sources():
         ("activated_utility",ACTIVATED_UTILITIES),
         ("reactive_trigger",REACTIVE_TRIGGERS),
         ("attack_trigger",ATTACK_TRIGGERS),
+        ("static_creature_modifier",STATIC_CREATURE_RULES),
     ):
         for name,row in source.items():
             if kind in {"mana","search"}:
