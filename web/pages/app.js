@@ -397,7 +397,11 @@ function summon(key,{versionId=null,remember=true}={}){
   $("app-content").style.animation="none";
   void $("app-content").offsetWidth;$("app-content").style.animation="";
   selectedSeed=String(data.seeds[0]);
-  renderOverview();renderLibrary();renderRecords();initializeDraft();
+  // Results are driven exclusively by the published long-game library.
+  // Do not render or aggregate historical opening-hand/6-turn archives.
+  if(pageName!=="results"){
+    renderOverview();renderLibrary();renderRecords();initializeDraft();
+  }
   renderGlobalDeckSelector();
   showPage();syncPageNavigation();
 }
@@ -408,7 +412,7 @@ function physicalArchive(){
 }
 function showPage(){
   const enabled={
-    results:physicalArchive()?["records"]:["records","insights"],
+    results:["records"],
     summary:["overview"],
     editor:["library","workshop"]
   }[pageName];
@@ -423,7 +427,7 @@ function showPage(){
   renderPageIntro();
   document.title=PAGE_INFO[pageName]+" | Commander Deck Lab";
   if(pageName==="results"){
-    renderScrollStory();renderQuietDiagnostic();renderReplay();renderLongGamePanel();
+    renderLongGamePanel();
     void loadPublishedLongGame();
   }
 }
@@ -434,6 +438,7 @@ function showPage(){
 const longGameBatches=[];
 const publishedOutcomeBatches=new Map();
 const publishedOutcomeRequests=new Map();
+let outcomeLoadEpoch=0;
 let outcomeManifestPromise=null;
 let outcomeManifest=null;
 let longGameSourceNote="Checking the published simulation library…";
@@ -461,43 +466,53 @@ function outcomeOpponentPortrait(bucket){
 }
 function renderLongGamePanel(){
   const root=$("game-outcome-results"),status=$("game-outcome-status");
+  const reviewer=$("turn-reviewer-results");
   if(!root||!status||!data||!selectedDeck())return;
   if(isUnsimulatedVersion()){
-    status.textContent="This edited deck has no exact long-game results.";
-    root.textContent="Load a simulation for this exact revision to compare results.";
+    status.textContent="No current simulations for this edited deck";
+    root.textContent="No published simulations match this deck revision.";
+    if(reviewer)reviewer.replaceChildren();
     return;
   }
   if(!window.DeckGameOutcomes){
-    root.textContent="Long-game report renderer unavailable.";
+    root.textContent="Results viewer unavailable.";
+    if(reviewer)reviewer.replaceChildren();
     return;
   }
-  const exact=[...publishedOutcomeBatches.values(),...longGameBatches].filter(b=>
-    window.DeckGameOutcomes.validate(b)&&
-    b.deck_key===selected&&b.deck_sha256===selectedDeck().deck_sha256);
-  status.textContent=exact.length?
-    exact.length+" modeled batch"+(exact.length===1?"":"es")+
-      " for this deck"+
-      (outcomeManifest?.engine_commit?
-        " · simulator "+outcomeManifest.engine_commit.slice(0,8):"")+
-      " · select a scenario or opponent type to explore.":
+  // Published manifest is the sole source. Never combine historical six-turn
+  // archives, narrative replay assets or manually imported older game runs.
+  const allowed=new Set(outcomeManifest?.by_deck?.[selected]||[]);
+  const exact=[...publishedOutcomeBatches.entries()]
+    .filter(([file,b])=>allowed.has(file)&&
+      window.DeckGameOutcomes.validate(b)&&
+      b.deck_key===selected&&b.deck_sha256===selectedDeck().deck_sha256)
+    .map(([,b])=>b);
+  const n=exact.reduce((total,b)=>total+b.runs.length,0);
+  const horizons=new Set(exact.map(b=>b.requested_rounds));
+  status.textContent=n?
+    n+" games · "+(horizons.size===1?[...horizons][0]+" rounds":"mixed horizons")+
+      " · "+exact.length+" opponent groups"+
+      (outcomeManifest?.engine_commit?" · "+outcomeManifest.engine_commit.slice(0,8):""):
     longGameSourceNote;
   window.DeckGameOutcomes.render(root,exact,{
     deckKey:selected,deckHash:selectedDeck().deck_sha256,
     commanderArt:commanderCard(selectedDeck())?.art||null,
     portraitFor:outcomeOpponentPortrait,
+    reviewerRoot:reviewer,
+    reviewerPanel:$("turn-reviewer-panel"),
     onShowRecordedActions:(target,example,run)=>{
       try{
         if(!window.CommanderReplay?.renderBoundedEvidence)
-          throw Error("Action viewer unavailable");
+          throw Error("Turn viewer unavailable");
         window.CommanderReplay.renderBoundedEvidence(target,{
           ...example,deck_key:run.batch.deck_key,
           deck_sha256:run.batch.deck_sha256,
           mode:"bounded_three_opponent_pressure"
         },{
           commanderName:selectedDeck().commander,lookup:cardInfo,
-          openCard:showCard,abstractOpponents:true
+          openCard:showCard,abstractOpponents:true,compact:true
         });
-      }catch(e){target.textContent="Cannot display recorded actions: "+e.message}
+      }catch(e){target.textContent="Recorded actions unavailable: "+e.message}
     }
   });
 }
@@ -709,6 +724,10 @@ function bracketLink(){
 }
 function renderPageIntro(){
   const intro=$("page-introduction");clear(intro);
+  if(pageName==="results"){
+    intro.appendChild(el("h1","Simulation Results"));
+    return;
+  }
   const facts=deckFacts();
   let detail=facts.total+" cards · "+facts.lands+" lands";
   if(pageName==="results"){
@@ -2188,39 +2207,48 @@ function registerEvents(){
 async function boot(){
   registerEvents();
   try{
-    const response=await Promise.all([
-      fetch("./decks.json?v=physical-decks-20261101-1"),fetch("./observations.json?v=physical-decks-20261101-1"),fetch("./names.json"),fetch("./bounded-batches.json?v=20261101b"),fetch("./game-changers.json?v=20261101bracket")
-    ]);
-    if(response.some(r=>!r.ok))throw Error("Site data could not be loaded. Check the Pages deployment.");
-    [data,archives,allNames,boundedBatches,gameChangers]=await Promise.all(response.map(r=>r.json()));
-    const batchKeys=Object.keys(boundedBatches.decks);
-    const runResponses=await Promise.all(batchKeys.map(key=>fetch("./bounded-runs-"+key+".json?v=20261101b")));
-    if(runResponses.some(r=>!r.ok))throw Error("Simulation run data could not be loaded.");
-    const runSets=await Promise.all(runResponses.map(r=>r.json()));
-    batchKeys.forEach((key,i)=>{boundedBatches.decks[key].runs=runSets[i]});
-    // Detailed archives are optional and separate from the existing 100-run batch.
-    try{
-      const response=await fetch("./simulation-data/manifest.json");
-      if(response.ok){
-        const index=await response.json(),matches=new Map();
-        for(const release of index.releases||[]){
-          if(typeof release.engine_commit!=="string")continue;
-          for(const [key,entry] of Object.entries(release.decks||{})){
-            const deck=data.decks.find(d=>d.key===key);
-            if(!matches.has(key)&&deck?.deck_sha256===entry.deck_sha256)
-              matches.set(key,{release,entry});
+    if(pageName==="results"){
+      // Do not request older observations, cached six-turn runs, archive
+      // replays or backfilled snapshots for the latest-only Results page.
+      const response=await fetch("./decks.json?v=physical-decks-20261101-1");
+      if(!response.ok)throw Error("Deck metadata is unavailable.");
+      data=await response.json();
+      archives={};allNames=[];boundedBatches={decks:{}};gameChangers=null;
+    }else{
+      const response=await Promise.all([
+        fetch("./decks.json?v=physical-decks-20261101-1"),fetch("./observations.json?v=physical-decks-20261101-1"),fetch("./names.json"),fetch("./bounded-batches.json?v=20261101b"),fetch("./game-changers.json?v=20261101bracket")
+      ]);
+      if(response.some(r=>!r.ok))throw Error("Site data could not be loaded. Check the Pages deployment.");
+      [data,archives,allNames,boundedBatches,gameChangers]=await Promise.all(response.map(r=>r.json()));
+      const batchKeys=Object.keys(boundedBatches.decks);
+      const runResponses=await Promise.all(batchKeys.map(key=>fetch("./bounded-runs-"+key+".json?v=20261101b")));
+      if(runResponses.some(r=>!r.ok))throw Error("Simulation run data could not be loaded.");
+      const runSets=await Promise.all(runResponses.map(r=>r.json()));
+      batchKeys.forEach((key,i)=>{boundedBatches.decks[key].runs=runSets[i]});
+      // Detailed archives are optional and separate from the existing 100-run batch.
+      try{
+        const response=await fetch("./simulation-data/manifest.json");
+        if(response.ok){
+          const index=await response.json(),matches=new Map();
+          for(const release of index.releases||[]){
+            if(typeof release.engine_commit!=="string")continue;
+            for(const [key,entry] of Object.entries(release.decks||{})){
+              const deck=data.decks.find(d=>d.key===key);
+              if(!matches.has(key)&&deck?.deck_sha256===entry.deck_sha256)
+                matches.set(key,{release,entry});
+            }
           }
+          await Promise.all([...matches.entries()].map(async ([key,{release,entry}])=>{
+            const res=await fetch("./simulation-data/"+entry.runs);
+            if(!res.ok)return;
+            const runs=await res.json();
+            if(Array.isArray(runs)&&runs.length===release.seed_count&&
+               runs.every(r=>r.deck_key===key&&r.deck_sha256===entry.deck_sha256&&r.mode===release.mode))
+              detailedArchives[key]={runs,deck_sha256:entry.deck_sha256,release:release.engine_commit};
+          }));
         }
-        await Promise.all([...matches.entries()].map(async ([key,{release,entry}])=>{
-          const res=await fetch("./simulation-data/"+entry.runs);
-          if(!res.ok)return;
-          const runs=await res.json();
-          if(Array.isArray(runs)&&runs.length===release.seed_count&&
-             runs.every(r=>r.deck_key===key&&r.deck_sha256===entry.deck_sha256&&r.mode===release.mode))
-            detailedArchives[key]={runs,deck_sha256:entry.deck_sha256,release:release.engine_commit};
-        }));
-      }
-    }catch(error){console.warn("Detailed simulation archive unavailable",error)}
+      }catch(error){console.warn("Detailed simulation archive unavailable",error)}
+    }
 
     if(data.format!=="commander-deck-lab-static-v1"||!data.decks.length)
       throw Error("Unexpected static dataset format.");
@@ -2241,7 +2269,7 @@ async function boot(){
       choice={key:latest.key,version:latest.version};
     }
     summon(choice.key,{versionId:choice.version});
-    if(pageName==="results")loadPublishedLongGame();
+    if(pageName==="results")void loadPublishedLongGame();
   }catch(err){
     const rail=$("commander-rail");clear(rail);
     rail.appendChild(el("p","Unable to open the archive: "+err.message));
