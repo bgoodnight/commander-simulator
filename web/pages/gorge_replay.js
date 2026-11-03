@@ -301,6 +301,38 @@ function paint(rootElement,data,options={}){
  * Full game-state panels remain explicitly unavailable until gorge exports
  * authoritative snapshots. No reconstructed life totals or card identity.
  */
+function paintPublicSnapshot(section,snapshot,decks){
+  if(!snapshot||snapshot.boundary!=="first_pending_decision_of_turn")return;
+  const details=node("details","gorge-replay-state");
+  details.append(node("summary",null,"Verified turn-entry state · "+snapshot.step+
+    " · after event #"+snapshot.after_event_seq));
+  const grid=node("div","gorge-replay-state-grid");
+  const manaSymbols=["{W}","{U}","{B}","{R}","{G}","{C}"];
+  for(const player of snapshot.players||[]){
+    const card=node("div","gorge-replay-state-player");
+    card.append(node("strong",null,decks[player.seat]),
+      node("span",null,"Life "+player.life+" · Hand "+player.hand_count+
+        " · Library "+player.library_count+(player.lost?" · Eliminated":"")));
+    const mana=(player.mana_pool||[]).map((n,i)=>n>0?manaSymbols[i]+" ×"+n:null).filter(Boolean);
+    card.append(node("small",null,"Unspent mana: "+(mana.join("  ")||"none")));
+    for(const zoneName of ["battlefield","graveyard","exile","command"]){
+      const cards=player.zones&&player.zones[zoneName]||[];
+      const zone=node("details","gorge-replay-zone");
+      zone.append(node("summary",null,zoneName+" · "+cards.length));
+      const content=node("div","gorge-replay-zone-cards");
+      for(const c of cards){
+        const link=node("a",null,c.name+" (#"+c.object_id+")");
+        link.href="https://scryfall.com/search?q="+encodeURIComponent('!"'+c.name+'"');
+        link.rel="noopener noreferrer";link.target="_blank";
+        content.append(link);
+      }
+      if(!cards.length)content.append(node("small",null,"Empty"));
+      zone.append(content);card.append(zone);
+    }
+    grid.append(card);
+  }
+  details.append(grid);section.append(details);
+}
 function paintView(rootElement,data){
   if(!data||data.schema!=="gorge-ui-replay-v1"||data.engine!=="gorge"||
      !Array.isArray(data.turns)||!Array.isArray(data.decks)||
@@ -315,9 +347,9 @@ function paintView(rootElement,data){
     " decisions · "+data.source.exported_events+" public display events"));
   rootElement.append(header);
   rootElement.append(node("p","gorge-replay-caution",
-    "Recorded events only. Complete hands, battlefield, graveyard, life and mana "+
-    "snapshots are unavailable until gorge exports authoritative state. "+
-    "Card identities are shown only when directly established by gorge."));
+    data.snapshots?.length?
+    "Authoritative state recorded at the FIRST pending decision of each turn, not turn end. Opponent hand and library identities remain private.":
+    "Event-only recording: no authoritative physical state available."));
   const roster=node("div","gorge-replay-roster");
   data.decks.forEach((name,i)=>{
     const box=node("div","gorge-replay-player");
@@ -337,6 +369,10 @@ function paintView(rootElement,data){
     summary.append(node("span","gorge-replay-event-count",
       turn.event_count+" recorded events"));
     section.append(summary);
+    if(Array.isArray(data.snapshots)){
+      const snap=data.snapshots.find(x=>x.turn===turn.turn);
+      if(snap)paintPublicSnapshot(section,snap,data.decks);
+    }
     const highlight=turn.highlights.map(e=>
       e.kind.replace(/_/g," ")+(e.card_name?" · "+e.card_name:
       e.text?" · "+e.text:"")).slice(0,10);
