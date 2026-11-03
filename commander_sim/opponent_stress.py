@@ -297,6 +297,22 @@ class BoundedOpponentPressure:
                     self.events.append(OpponentEvent(
                         turn,seat,role,"reviewed_attack_tokens",
                         attacker.object_id,len(created),defender))
+            if attacker.controller==0:
+                from .reviewed_attack_mill import resolve_attack_mill
+                milled=resolve_attack_mill(
+                    self.zones,self.catalog,attacker.object_id)
+                if milled is not None:
+                    self.events.append(OpponentEvent(
+                        turn,seat,role,"reviewed_attack_mill",
+                        attacker.object_id,len(milled.milled_ids),defender))
+                    if milled.token_ids:
+                        self.events.append(OpponentEvent(
+                            turn,seat,role,"reviewed_attack_tokens",
+                            attacker.object_id,len(milled.token_ids),defender))
+                    if milled.returned_id is not None:
+                        self.events.append(OpponentEvent(
+                            turn,seat,role,"reviewed_attack_retrieve",
+                            milled.returned_id,1,defender))
             blockers=kernel.legal_blockers(attacker.object_id,defender,frozenset(used))
             # Magic creatures with negative power assign/deal zero combat
             # damage. Their signed power still matters for other effects.
