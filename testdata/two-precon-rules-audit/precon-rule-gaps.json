@@ -1,0 +1,2619 @@
+{
+  "format": "two-precon-game-rules-audit-v1",
+  "provenance": "real precon seat zero; three ABSTRACT opponent seats; no precon-vs-precon games",
+  "decks": {
+    "necron_dynasties": {
+      "attempted_games": 10,
+      "completed_games": 10,
+      "engine_errors": [],
+      "terminal_statuses": {
+        "loss": 9,
+        "win": 1
+      },
+      "static_registration_counts": {
+        "no_registered_recipe": 23,
+        "provisional_only": 26,
+        "reviewed_partial": 22
+      },
+      "unsupported_cards_observed_in_hand": [
+        {
+          "card": "Tomb Fortress",
+          "unsupported_hand_turns": 89,
+          "games_seen": 6,
+          "first_observations": [
+            {
+              "scenario": "control",
+              "seed": 0,
+              "round": 1
+            },
+            {
+              "scenario": "control",
+              "seed": 0,
+              "round": 2
+            },
+            {
+              "scenario": "control",
+              "seed": 0,
+              "round": 3
+            },
+            {
+              "scenario": "control",
+              "seed": 0,
+              "round": 4
+            },
+            {
+              "scenario": "control",
+              "seed": 0,
+              "round": 5
+            },
+            {
+              "scenario": "control",
+              "seed": 0,
+              "round": 6
+            },
+            {
+              "scenario": "control",
+              "seed": 0,
+              "round": 7
+            },
+            {
+              "scenario": "control",
+              "seed": 0,
+              "round": 8
+            }
+          ],
+          "printed_candidate_families": [
+            "graveyard_recursion",
+            "card_selection"
+          ],
+          "registered_suboperations": []
+        },
+        {
+          "card": "Out of the Tombs",
+          "unsupported_hand_turns": 72,
+          "games_seen": 6,
+          "first_observations": [
+            {
+              "scenario": "control",
+              "seed": 0,
+              "round": 15
+            },
+            {
+              "scenario": "control",
+              "seed": 0,
+              "round": 16
+            },
+            {
+              "scenario": "control",
+              "seed": 0,
+              "round": 17
+            },
+            {
+              "scenario": "control",
+              "seed": 0,
+              "round": 18
+            },
+            {
+              "scenario": "control",
+              "seed": 0,
+              "round": 19
+            },
+            {
+              "scenario": "control",
+              "seed": 0,
+              "round": 20
+            },
+            {
+              "scenario": "control",
+              "seed": 0,
+              "round": 21
+            },
+            {
+              "scenario": "control",
+              "seed": 0,
+              "round": 22
+            }
+          ],
+          "printed_candidate_families": [
+            "graveyard_recursion",
+            "card_selection",
+            "continuous_modifiers"
+          ],
+          "registered_suboperations": []
+        },
+        {
+          "card": "Mutilate",
+          "unsupported_hand_turns": 66,
+          "games_seen": 5,
+          "first_observations": [
+            {
+              "scenario": "control",
+              "seed": 0,
+              "round": 1
+            },
+            {
+              "scenario": "control",
+              "seed": 0,
+              "round": 2
+            },
+            {
+              "scenario": "control",
+              "seed": 0,
+              "round": 3
+            },
+            {
+              "scenario": "control",
+              "seed": 0,
+              "round": 4
+            },
+            {
+              "scenario": "control",
+              "seed": 0,
+              "round": 5
+            },
+            {
+              "scenario": "control",
+              "seed": 0,
+              "round": 6
+            },
+            {
+              "scenario": "control",
+              "seed": 0,
+              "round": 7
+            },
+            {
+              "scenario": "control",
+              "seed": 0,
+              "round": 8
+            }
+          ],
+          "printed_candidate_families": [
+            "continuous_modifiers"
+          ],
+          "registered_suboperations": []
+        },
+        {
+          "card": "Darkness",
+          "unsupported_hand_turns": 44,
+          "games_seen": 4,
+          "first_observations": [
+            {
+              "scenario": "control",
+              "seed": 0,
+              "round": 9
+            },
+            {
+              "scenario": "control",
+              "seed": 0,
+              "round": 10
+            },
+            {
+              "scenario": "control",
+              "seed": 0,
+              "round": 11
+            },
+            {
+              "scenario": "control",
+              "seed": 0,
+              "round": 12
+            },
+            {
+              "scenario": "control",
+              "seed": 0,
+              "round": 13
+            },
+            {
+              "scenario": "control",
+              "seed": 0,
+              "round": 14
+            },
+            {
+              "scenario": "control",
+              "seed": 0,
+              "round": 15
+            },
+            {
+              "scenario": "control",
+              "seed": 0,
+              "round": 16
+            }
+          ],
+          "printed_candidate_families": [
+            "combat_attack"
+          ],
+          "registered_suboperations": []
+        },
+        {
+          "card": "Living Death",
+          "unsupported_hand_turns": 44,
+          "games_seen": 4,
+          "first_observations": [
+            {
+              "scenario": "control",
+              "seed": 1,
+              "round": 1
+            },
+            {
+              "scenario": "control",
+              "seed": 1,
+              "round": 2
+            },
+            {
+              "scenario": "control",
+              "seed": 1,
+              "round": 3
+            },
+            {
+              "scenario": "control",
+              "seed": 1,
+              "round": 4
+            },
+            {
+              "scenario": "control",
+              "seed": 1,
+              "round": 5
+            },
+            {
+              "scenario": "control",
+              "seed": 1,
+              "round": 6
+            },
+            {
+              "scenario": "control",
+              "seed": 1,
+              "round": 7
+            },
+            {
+              "scenario": "control",
+              "seed": 1,
+              "round": 8
+            }
+          ],
+          "printed_candidate_families": [
+            "graveyard_recursion",
+            "sacrifice_death"
+          ],
+          "registered_suboperations": []
+        },
+        {
+          "card": "Lokhust Heavy Destroyer",
+          "unsupported_hand_turns": 42,
+          "games_seen": 4,
+          "first_observations": [
+            {
+              "scenario": "control",
+              "seed": 0,
+              "round": 1
+            },
+            {
+              "scenario": "control",
+              "seed": 0,
+              "round": 2
+            },
+            {
+              "scenario": "control",
+              "seed": 0,
+              "round": 3
+            },
+            {
+              "scenario": "control",
+              "seed": 0,
+              "round": 4
+            },
+            {
+              "scenario": "control",
+              "seed": 0,
+              "round": 5
+            },
+            {
+              "scenario": "control",
+              "seed": 0,
+              "round": 6
+            },
+            {
+              "scenario": "control",
+              "seed": 0,
+              "round": 7
+            },
+            {
+              "scenario": "control",
+              "seed": 0,
+              "round": 8
+            }
+          ],
+          "printed_candidate_families": [
+            "graveyard_recursion",
+            "sacrifice_death",
+            "entry_trigger"
+          ],
+          "registered_suboperations": [
+            "enter_trigger",
+            "unearth"
+          ]
+        },
+        {
+          "card": "Sculpting Steel",
+          "unsupported_hand_turns": 38,
+          "games_seen": 6,
+          "first_observations": [
+            {
+              "scenario": "control",
+              "seed": 0,
+              "round": 13
+            },
+            {
+              "scenario": "control",
+              "seed": 0,
+              "round": 14
+            },
+            {
+              "scenario": "control",
+              "seed": 0,
+              "round": 15
+            },
+            {
+              "scenario": "control",
+              "seed": 0,
+              "round": 16
+            },
+            {
+              "scenario": "control",
+              "seed": 0,
+              "round": 17
+            },
+            {
+              "scenario": "control",
+              "seed": 0,
+              "round": 18
+            },
+            {
+              "scenario": "control",
+              "seed": 0,
+              "round": 19
+            },
+            {
+              "scenario": "control",
+              "seed": 0,
+              "round": 20
+            }
+          ],
+          "printed_candidate_families": [],
+          "registered_suboperations": []
+        },
+        {
+          "card": "The War in Heaven",
+          "unsupported_hand_turns": 37,
+          "games_seen": 3,
+          "first_observations": [
+            {
+              "scenario": "control",
+              "seed": 0,
+              "round": 3
+            },
+            {
+              "scenario": "control",
+              "seed": 0,
+              "round": 4
+            },
+            {
+              "scenario": "control",
+              "seed": 0,
+              "round": 5
+            },
+            {
+              "scenario": "control",
+              "seed": 0,
+              "round": 6
+            },
+            {
+              "scenario": "control",
+              "seed": 0,
+              "round": 7
+            },
+            {
+              "scenario": "control",
+              "seed": 0,
+              "round": 8
+            },
+            {
+              "scenario": "control",
+              "seed": 0,
+              "round": 9
+            },
+            {
+              "scenario": "control",
+              "seed": 0,
+              "round": 10
+            }
+          ],
+          "printed_candidate_families": [
+            "graveyard_recursion",
+            "sacrifice_death",
+            "card_selection",
+            "continuous_modifiers"
+          ],
+          "registered_suboperations": []
+        },
+        {
+          "card": "Their Number Is Legion",
+          "unsupported_hand_turns": 36,
+          "games_seen": 3,
+          "first_observations": [
+            {
+              "scenario": "control",
+              "seed": 3,
+              "round": 1
+            },
+            {
+              "scenario": "control",
+              "seed": 3,
+              "round": 2
+            },
+            {
+              "scenario": "control",
+              "seed": 3,
+              "round": 3
+            },
+            {
+              "scenario": "control",
+              "seed": 3,
+              "round": 4
+            },
+            {
+              "scenario": "control",
+              "seed": 3,
+              "round": 5
+            },
+            {
+              "scenario": "control",
+              "seed": 3,
+              "round": 6
+            },
+            {
+              "scenario": "control",
+              "seed": 3,
+              "round": 7
+            },
+            {
+              "scenario": "control",
+              "seed": 3,
+              "round": 8
+            }
+          ],
+          "printed_candidate_families": [
+            "graveyard_recursion",
+            "token_generation"
+          ],
+          "registered_suboperations": []
+        },
+        {
+          "card": "Necron Deathmark",
+          "unsupported_hand_turns": 34,
+          "games_seen": 2,
+          "first_observations": [
+            {
+              "scenario": "control",
+              "seed": 2,
+              "round": 1
+            },
+            {
+              "scenario": "control",
+              "seed": 2,
+              "round": 2
+            },
+            {
+              "scenario": "control",
+              "seed": 2,
+              "round": 3
+            },
+            {
+              "scenario": "control",
+              "seed": 2,
+              "round": 4
+            },
+            {
+              "scenario": "control",
+              "seed": 2,
+              "round": 5
+            },
+            {
+              "scenario": "control",
+              "seed": 2,
+              "round": 6
+            },
+            {
+              "scenario": "control",
+              "seed": 2,
+              "round": 7
+            },
+            {
+              "scenario": "control",
+              "seed": 2,
+              "round": 8
+            }
+          ],
+          "printed_candidate_families": [
+            "entry_trigger",
+            "removal_interaction"
+          ],
+          "registered_suboperations": []
+        },
+        {
+          "card": "Sautekh Immortal",
+          "unsupported_hand_turns": 31,
+          "games_seen": 5,
+          "first_observations": [
+            {
+              "scenario": "control",
+              "seed": 1,
+              "round": 4
+            },
+            {
+              "scenario": "control",
+              "seed": 1,
+              "round": 5
+            },
+            {
+              "scenario": "control",
+              "seed": 1,
+              "round": 6
+            },
+            {
+              "scenario": "control",
+              "seed": 1,
+              "round": 7
+            },
+            {
+              "scenario": "control",
+              "seed": 1,
+              "round": 8
+            },
+            {
+              "scenario": "control",
+              "seed": 1,
+              "round": 9
+            },
+            {
+              "scenario": "control",
+              "seed": 1,
+              "round": 10
+            },
+            {
+              "scenario": "control",
+              "seed": 1,
+              "round": 11
+            }
+          ],
+          "printed_candidate_families": [
+            "continuous_modifiers"
+          ],
+          "registered_suboperations": []
+        },
+        {
+          "card": "Endless Atlas",
+          "unsupported_hand_turns": 30,
+          "games_seen": 2,
+          "first_observations": [
+            {
+              "scenario": "control",
+              "seed": 0,
+              "round": 4
+            },
+            {
+              "scenario": "control",
+              "seed": 0,
+              "round": 5
+            },
+            {
+              "scenario": "control",
+              "seed": 0,
+              "round": 6
+            },
+            {
+              "scenario": "control",
+              "seed": 0,
+              "round": 7
+            },
+            {
+              "scenario": "control",
+              "seed": 0,
+              "round": 8
+            },
+            {
+              "scenario": "control",
+              "seed": 0,
+              "round": 9
+            },
+            {
+              "scenario": "control",
+              "seed": 0,
+              "round": 10
+            },
+            {
+              "scenario": "control",
+              "seed": 0,
+              "round": 11
+            }
+          ],
+          "printed_candidate_families": [
+            "card_selection"
+          ],
+          "registered_suboperations": []
+        },
+        {
+          "card": "Their Name Is Death",
+          "unsupported_hand_turns": 28,
+          "games_seen": 5,
+          "first_observations": [
+            {
+              "scenario": "control",
+              "seed": 0,
+              "round": 21
+            },
+            {
+              "scenario": "control",
+              "seed": 0,
+              "round": 22
+            },
+            {
+              "scenario": "control",
+              "seed": 0,
+              "round": 23
+            },
+            {
+              "scenario": "control",
+              "seed": 3,
+              "round": 9
+            },
+            {
+              "scenario": "control",
+              "seed": 3,
+              "round": 10
+            },
+            {
+              "scenario": "control",
+              "seed": 3,
+              "round": 11
+            },
+            {
+              "scenario": "control",
+              "seed": 3,
+              "round": 12
+            },
+            {
+              "scenario": "control",
+              "seed": 3,
+              "round": 13
+            }
+          ],
+          "printed_candidate_families": [
+            "removal_interaction"
+          ],
+          "registered_suboperations": []
+        },
+        {
+          "card": "Skorpekh Destroyer",
+          "unsupported_hand_turns": 26,
+          "games_seen": 2,
+          "first_observations": [
+            {
+              "scenario": "control",
+              "seed": 0,
+              "round": 6
+            },
+            {
+              "scenario": "control",
+              "seed": 0,
+              "round": 7
+            },
+            {
+              "scenario": "control",
+              "seed": 0,
+              "round": 8
+            },
+            {
+              "scenario": "control",
+              "seed": 0,
+              "round": 9
+            },
+            {
+              "scenario": "control",
+              "seed": 0,
+              "round": 10
+            },
+            {
+              "scenario": "control",
+              "seed": 0,
+              "round": 11
+            },
+            {
+              "scenario": "control",
+              "seed": 0,
+              "round": 12
+            },
+            {
+              "scenario": "control",
+              "seed": 0,
+              "round": 13
+            }
+          ],
+          "printed_candidate_families": [
+            "entry_trigger"
+          ],
+          "registered_suboperations": []
+        },
+        {
+          "card": "Sceptre of Eternal Glory",
+          "unsupported_hand_turns": 22,
+          "games_seen": 4,
+          "first_observations": [
+            {
+              "scenario": "control",
+              "seed": 2,
+              "round": 8
+            },
+            {
+              "scenario": "control",
+              "seed": 2,
+              "round": 9
+            },
+            {
+              "scenario": "control",
+              "seed": 2,
+              "round": 10
+            },
+            {
+              "scenario": "control",
+              "seed": 2,
+              "round": 11
+            },
+            {
+              "scenario": "control",
+              "seed": 2,
+              "round": 12
+            },
+            {
+              "scenario": "control",
+              "seed": 2,
+              "round": 13
+            },
+            {
+              "scenario": "control",
+              "seed": 2,
+              "round": 14
+            },
+            {
+              "scenario": "control",
+              "seed": 2,
+              "round": 15
+            }
+          ],
+          "printed_candidate_families": [],
+          "registered_suboperations": []
+        },
+        {
+          "card": "Plasmancer",
+          "unsupported_hand_turns": 15,
+          "games_seen": 2,
+          "first_observations": [
+            {
+              "scenario": "control",
+              "seed": 3,
+              "round": 10
+            },
+            {
+              "scenario": "control",
+              "seed": 3,
+              "round": 11
+            },
+            {
+              "scenario": "control",
+              "seed": 3,
+              "round": 12
+            },
+            {
+              "scenario": "control",
+              "seed": 3,
+              "round": 13
+            },
+            {
+              "scenario": "control",
+              "seed": 3,
+              "round": 14
+            },
+            {
+              "scenario": "control",
+              "seed": 3,
+              "round": 15
+            },
+            {
+              "scenario": "control",
+              "seed": 3,
+              "round": 16
+            },
+            {
+              "scenario": "control",
+              "seed": 3,
+              "round": 17
+            }
+          ],
+          "printed_candidate_families": [
+            "entry_trigger"
+          ],
+          "registered_suboperations": []
+        },
+        {
+          "card": "Night Scythe",
+          "unsupported_hand_turns": 12,
+          "games_seen": 1,
+          "first_observations": [
+            {
+              "scenario": "control",
+              "seed": 2,
+              "round": 13
+            },
+            {
+              "scenario": "control",
+              "seed": 2,
+              "round": 14
+            },
+            {
+              "scenario": "control",
+              "seed": 2,
+              "round": 15
+            },
+            {
+              "scenario": "control",
+              "seed": 2,
+              "round": 16
+            },
+            {
+              "scenario": "control",
+              "seed": 2,
+              "round": 17
+            },
+            {
+              "scenario": "control",
+              "seed": 2,
+              "round": 18
+            },
+            {
+              "scenario": "control",
+              "seed": 2,
+              "round": 19
+            },
+            {
+              "scenario": "control",
+              "seed": 2,
+              "round": 20
+            }
+          ],
+          "printed_candidate_families": [
+            "entry_trigger",
+            "token_generation"
+          ],
+          "registered_suboperations": []
+        },
+        {
+          "card": "Vault of Whispers",
+          "unsupported_hand_turns": 5,
+          "games_seen": 1,
+          "first_observations": [
+            {
+              "scenario": "control",
+              "seed": 2,
+              "round": 17
+            },
+            {
+              "scenario": "control",
+              "seed": 2,
+              "round": 18
+            },
+            {
+              "scenario": "control",
+              "seed": 2,
+              "round": 19
+            },
+            {
+              "scenario": "control",
+              "seed": 2,
+              "round": 20
+            },
+            {
+              "scenario": "control",
+              "seed": 2,
+              "round": 21
+            }
+          ],
+          "printed_candidate_families": [],
+          "registered_suboperations": []
+        },
+        {
+          "card": "Canoptek Spyder",
+          "unsupported_hand_turns": 2,
+          "games_seen": 2,
+          "first_observations": [
+            {
+              "scenario": "control",
+              "seed": 2,
+              "round": 24
+            },
+            {
+              "scenario": "control",
+              "seed": 4,
+              "round": 23
+            }
+          ],
+          "printed_candidate_families": [
+            "entry_trigger",
+            "card_selection"
+          ],
+          "registered_suboperations": []
+        },
+        {
+          "card": "Defile",
+          "unsupported_hand_turns": 1,
+          "games_seen": 1,
+          "first_observations": [
+            {
+              "scenario": "control",
+              "seed": 0,
+              "round": 23
+            }
+          ],
+          "printed_candidate_families": [
+            "continuous_modifiers"
+          ],
+          "registered_suboperations": []
+        }
+      ],
+      "unsupported_event_counts": {},
+      "provisional_event_counts": {},
+      "action_event_counts": {
+        "draw": 166,
+        "land_play": 82,
+        "artifact_cast": 29,
+        "artifact_resolved": 29,
+        "opponent_abstract_creature": 163,
+        "untap": 388,
+        "opponent_abstract_unblocked_damage": 378,
+        "opponent_abstract_destroy": 15,
+        "opponent_abstract_discard": 54,
+        "opponent_abstract_exile": 13,
+        "opponent_abstract_blocked_combat": 78,
+        "source_paid_candidate": 305,
+        "creature_cast": 53,
+        "creature_resolved": 53,
+        "reviewed_enter_resolved": 9,
+        "reviewed_land_ramp": 3,
+        "player_abstract_blocked_combat": 23,
+        "player_abstract_unblocked_damage": 92,
+        "reviewed_unearth_resolved": 10,
+        "reviewed_unearth_expired": 9,
+        "opponent_life_zero": 16,
+        "cleanup_discard": 11,
+        "reviewed_removal_resolved": 2,
+        "opponent_abstract_combo_loss": 27,
+        "reviewed_graveyard_spell_cast": 1,
+        "reviewed_graveyard_spell_resolved": 1,
+        "reviewed_reanimation_enter_resolved": 1
+      },
+      "game_narrative_index": [
+        {
+          "scenario": "control",
+          "seed": 0,
+          "rounds": 23,
+          "outcome": "loss",
+          "opening_hand": [
+            "Cranial Plating",
+            "Swamp",
+            "Arcane Signet",
+            "Lokhust Heavy Destroyer",
+            "Mutilate",
+            "Reliquary Tower",
+            "Tomb Fortress"
+          ],
+          "gap_events": [],
+          "unsupported_cards_final_hand": [
+            "Darkness",
+            "Defile",
+            "Endless Atlas",
+            "Lokhust Heavy Destroyer",
+            "Mutilate",
+            "Out of the Tombs",
+            "Sculpting Steel",
+            "Skorpekh Destroyer",
+            "The War in Heaven",
+            "Their Name Is Death",
+            "Tomb Fortress"
+          ]
+        },
+        {
+          "scenario": "control",
+          "seed": 1,
+          "rounds": 12,
+          "outcome": "loss",
+          "opening_hand": [
+            "Canoptek Scarab Swarm",
+            "Swamp",
+            "Necron Overlord",
+            "Living Death",
+            "Trazyn the Infinite",
+            "Barren Moor",
+            "Unstable Obelisk"
+          ],
+          "gap_events": [],
+          "unsupported_cards_final_hand": [
+            "Living Death",
+            "Out of the Tombs",
+            "Sautekh Immortal",
+            "Sculpting Steel",
+            "Tomb Fortress"
+          ]
+        },
+        {
+          "scenario": "control",
+          "seed": 2,
+          "rounds": 24,
+          "outcome": "loss",
+          "opening_hand": [
+            "Illuminor Szeras",
+            "Swamp",
+            "Canoptek Tomb Sentinel",
+            "Swamp",
+            "Necron Deathmark",
+            "Swamp",
+            "Swamp"
+          ],
+          "gap_events": [],
+          "unsupported_cards_final_hand": [
+            "Canoptek Spyder",
+            "Darkness",
+            "Living Death",
+            "Necron Deathmark",
+            "Night Scythe",
+            "Out of the Tombs",
+            "Sautekh Immortal",
+            "Sceptre of Eternal Glory"
+          ]
+        },
+        {
+          "scenario": "control",
+          "seed": 3,
+          "rounds": 21,
+          "outcome": "loss",
+          "opening_hand": [
+            "Their Number Is Legion",
+            "Swamp",
+            "Swamp",
+            "Triarch Stalker",
+            "Mystic Forge",
+            "Swamp",
+            "Out of the Tombs"
+          ],
+          "gap_events": [],
+          "unsupported_cards_final_hand": [
+            "Mutilate",
+            "Out of the Tombs",
+            "Plasmancer",
+            "Their Name Is Death",
+            "Their Number Is Legion"
+          ]
+        },
+        {
+          "scenario": "control",
+          "seed": 4,
+          "rounds": 23,
+          "outcome": "loss",
+          "opening_hand": [
+            "Tomb Fortress",
+            "Swamp",
+            "Lychguard",
+            "Sculpting Steel",
+            "Lokhust Heavy Destroyer",
+            "Hexmark Destroyer",
+            "Sceptre of Eternal Glory"
+          ],
+          "gap_events": [],
+          "unsupported_cards_final_hand": [
+            "Canoptek Spyder",
+            "Mutilate",
+            "The War in Heaven",
+            "Their Name Is Death",
+            "Their Number Is Legion",
+            "Tomb Fortress"
+          ]
+        },
+        {
+          "scenario": "mixed",
+          "seed": 0,
+          "rounds": 13,
+          "outcome": "loss",
+          "opening_hand": [
+            "Cranial Plating",
+            "Swamp",
+            "Arcane Signet",
+            "Lokhust Heavy Destroyer",
+            "Mutilate",
+            "Reliquary Tower",
+            "Tomb Fortress"
+          ],
+          "gap_events": [],
+          "unsupported_cards_final_hand": [
+            "Darkness",
+            "Endless Atlas",
+            "Lokhust Heavy Destroyer",
+            "Mutilate",
+            "Sculpting Steel",
+            "Skorpekh Destroyer",
+            "The War in Heaven",
+            "Tomb Fortress"
+          ]
+        },
+        {
+          "scenario": "mixed",
+          "seed": 1,
+          "rounds": 14,
+          "outcome": "win",
+          "opening_hand": [
+            "Canoptek Scarab Swarm",
+            "Swamp",
+            "Necron Overlord",
+            "Living Death",
+            "Trazyn the Infinite",
+            "Barren Moor",
+            "Unstable Obelisk"
+          ],
+          "gap_events": [],
+          "unsupported_cards_final_hand": [
+            "Living Death",
+            "Out of the Tombs",
+            "Sautekh Immortal",
+            "Sculpting Steel",
+            "Their Name Is Death",
+            "Tomb Fortress"
+          ]
+        },
+        {
+          "scenario": "mixed",
+          "seed": 2,
+          "rounds": 10,
+          "outcome": "loss",
+          "opening_hand": [
+            "Illuminor Szeras",
+            "Swamp",
+            "Canoptek Tomb Sentinel",
+            "Swamp",
+            "Necron Deathmark",
+            "Swamp",
+            "Swamp"
+          ],
+          "gap_events": [],
+          "unsupported_cards_final_hand": [
+            "Darkness",
+            "Living Death",
+            "Necron Deathmark",
+            "Sceptre of Eternal Glory"
+          ]
+        },
+        {
+          "scenario": "mixed",
+          "seed": 3,
+          "rounds": 12,
+          "outcome": "loss",
+          "opening_hand": [
+            "Their Number Is Legion",
+            "Swamp",
+            "Swamp",
+            "Triarch Stalker",
+            "Mystic Forge",
+            "Swamp",
+            "Out of the Tombs"
+          ],
+          "gap_events": [],
+          "unsupported_cards_final_hand": [
+            "Mutilate",
+            "Out of the Tombs",
+            "Plasmancer",
+            "Their Name Is Death",
+            "Their Number Is Legion"
+          ]
+        },
+        {
+          "scenario": "mixed",
+          "seed": 4,
+          "rounds": 14,
+          "outcome": "loss",
+          "opening_hand": [
+            "Tomb Fortress",
+            "Swamp",
+            "Lychguard",
+            "Sculpting Steel",
+            "Lokhust Heavy Destroyer",
+            "Hexmark Destroyer",
+            "Sceptre of Eternal Glory"
+          ],
+          "gap_events": [],
+          "unsupported_cards_final_hand": [
+            "Tomb Fortress"
+          ]
+        }
+      ],
+      "unregistered_printed_family_candidates": {
+        "card_selection": {
+          "card_count": 5,
+          "card_names": [
+            "Canoptek Spyder",
+            "Endless Atlas",
+            "Out of the Tombs",
+            "The War in Heaven",
+            "Tomb Fortress"
+          ]
+        },
+        "combat_attack": {
+          "card_count": 1,
+          "card_names": [
+            "Darkness"
+          ]
+        },
+        "continuous_modifiers": {
+          "card_count": 6,
+          "card_names": [
+            "Caged Sun",
+            "Defile",
+            "Mutilate",
+            "Out of the Tombs",
+            "Sautekh Immortal",
+            "The War in Heaven"
+          ]
+        },
+        "entry_trigger": {
+          "card_count": 6,
+          "card_names": [
+            "Canoptek Spyder",
+            "Necron Deathmark",
+            "Night Scythe",
+            "Plasmancer",
+            "Shard of the Nightbringer",
+            "Skorpekh Destroyer"
+          ]
+        },
+        "graveyard_recursion": {
+          "card_count": 5,
+          "card_names": [
+            "Living Death",
+            "Out of the Tombs",
+            "The War in Heaven",
+            "Their Number Is Legion",
+            "Tomb Fortress"
+          ]
+        },
+        "removal_interaction": {
+          "card_count": 2,
+          "card_names": [
+            "Necron Deathmark",
+            "Their Name Is Death"
+          ]
+        },
+        "sacrifice_death": {
+          "card_count": 2,
+          "card_names": [
+            "Living Death",
+            "The War in Heaven"
+          ]
+        },
+        "token_generation": {
+          "card_count": 3,
+          "card_names": [
+            "Biotransference",
+            "Night Scythe",
+            "Their Number Is Legion"
+          ]
+        }
+      }
+    },
+    "wretched_ranks": {
+      "attempted_games": 10,
+      "completed_games": 10,
+      "engine_errors": [],
+      "terminal_statuses": {
+        "unresolved": 2,
+        "win": 2,
+        "loss": 6
+      },
+      "static_registration_counts": {
+        "no_registered_recipe": 21,
+        "provisional_only": 13,
+        "reviewed_partial": 34
+      },
+      "unsupported_cards_observed_in_hand": [
+        {
+          "card": "Consumed by Greed",
+          "unsupported_hand_turns": 85,
+          "games_seen": 6,
+          "first_observations": [
+            {
+              "scenario": "control",
+              "seed": 0,
+              "round": 10
+            },
+            {
+              "scenario": "control",
+              "seed": 0,
+              "round": 11
+            },
+            {
+              "scenario": "control",
+              "seed": 0,
+              "round": 12
+            },
+            {
+              "scenario": "control",
+              "seed": 0,
+              "round": 13
+            },
+            {
+              "scenario": "control",
+              "seed": 0,
+              "round": 14
+            },
+            {
+              "scenario": "control",
+              "seed": 0,
+              "round": 15
+            },
+            {
+              "scenario": "control",
+              "seed": 0,
+              "round": 16
+            },
+            {
+              "scenario": "control",
+              "seed": 0,
+              "round": 17
+            }
+          ],
+          "printed_candidate_families": [
+            "graveyard_recursion",
+            "sacrifice_death",
+            "card_selection",
+            "removal_interaction"
+          ],
+          "registered_suboperations": []
+        },
+        {
+          "card": "Consuming Corruption",
+          "unsupported_hand_turns": 78,
+          "games_seen": 5,
+          "first_observations": [
+            {
+              "scenario": "control",
+              "seed": 0,
+              "round": 1
+            },
+            {
+              "scenario": "control",
+              "seed": 0,
+              "round": 2
+            },
+            {
+              "scenario": "control",
+              "seed": 0,
+              "round": 3
+            },
+            {
+              "scenario": "control",
+              "seed": 0,
+              "round": 4
+            },
+            {
+              "scenario": "control",
+              "seed": 0,
+              "round": 5
+            },
+            {
+              "scenario": "control",
+              "seed": 0,
+              "round": 6
+            },
+            {
+              "scenario": "control",
+              "seed": 0,
+              "round": 7
+            },
+            {
+              "scenario": "control",
+              "seed": 0,
+              "round": 8
+            }
+          ],
+          "printed_candidate_families": [],
+          "registered_suboperations": []
+        },
+        {
+          "card": "Patchwork Banner",
+          "unsupported_hand_turns": 78,
+          "games_seen": 6,
+          "first_observations": [
+            {
+              "scenario": "control",
+              "seed": 0,
+              "round": 17
+            },
+            {
+              "scenario": "control",
+              "seed": 0,
+              "round": 18
+            },
+            {
+              "scenario": "control",
+              "seed": 0,
+              "round": 19
+            },
+            {
+              "scenario": "control",
+              "seed": 0,
+              "round": 20
+            },
+            {
+              "scenario": "control",
+              "seed": 0,
+              "round": 21
+            },
+            {
+              "scenario": "control",
+              "seed": 0,
+              "round": 22
+            },
+            {
+              "scenario": "control",
+              "seed": 0,
+              "round": 23
+            },
+            {
+              "scenario": "control",
+              "seed": 0,
+              "round": 24
+            }
+          ],
+          "printed_candidate_families": [
+            "continuous_modifiers"
+          ],
+          "registered_suboperations": []
+        },
+        {
+          "card": "Liliana's Mastery",
+          "unsupported_hand_turns": 65,
+          "games_seen": 5,
+          "first_observations": [
+            {
+              "scenario": "control",
+              "seed": 2,
+              "round": 19
+            },
+            {
+              "scenario": "control",
+              "seed": 2,
+              "round": 20
+            },
+            {
+              "scenario": "control",
+              "seed": 2,
+              "round": 21
+            },
+            {
+              "scenario": "control",
+              "seed": 3,
+              "round": 1
+            },
+            {
+              "scenario": "control",
+              "seed": 3,
+              "round": 2
+            },
+            {
+              "scenario": "control",
+              "seed": 3,
+              "round": 3
+            },
+            {
+              "scenario": "control",
+              "seed": 3,
+              "round": 4
+            },
+            {
+              "scenario": "control",
+              "seed": 3,
+              "round": 5
+            }
+          ],
+          "printed_candidate_families": [
+            "entry_trigger",
+            "token_generation",
+            "continuous_modifiers"
+          ],
+          "registered_suboperations": []
+        },
+        {
+          "card": "Bad Moon",
+          "unsupported_hand_turns": 61,
+          "games_seen": 4,
+          "first_observations": [
+            {
+              "scenario": "control",
+              "seed": 2,
+              "round": 4
+            },
+            {
+              "scenario": "control",
+              "seed": 2,
+              "round": 5
+            },
+            {
+              "scenario": "control",
+              "seed": 2,
+              "round": 6
+            },
+            {
+              "scenario": "control",
+              "seed": 2,
+              "round": 7
+            },
+            {
+              "scenario": "control",
+              "seed": 2,
+              "round": 8
+            },
+            {
+              "scenario": "control",
+              "seed": 2,
+              "round": 9
+            },
+            {
+              "scenario": "control",
+              "seed": 2,
+              "round": 10
+            },
+            {
+              "scenario": "control",
+              "seed": 2,
+              "round": 11
+            }
+          ],
+          "printed_candidate_families": [
+            "continuous_modifiers"
+          ],
+          "registered_suboperations": []
+        },
+        {
+          "card": "Witch's Cottage",
+          "unsupported_hand_turns": 56,
+          "games_seen": 4,
+          "first_observations": [
+            {
+              "scenario": "control",
+              "seed": 0,
+              "round": 1
+            },
+            {
+              "scenario": "control",
+              "seed": 0,
+              "round": 2
+            },
+            {
+              "scenario": "control",
+              "seed": 0,
+              "round": 3
+            },
+            {
+              "scenario": "control",
+              "seed": 0,
+              "round": 4
+            },
+            {
+              "scenario": "control",
+              "seed": 0,
+              "round": 5
+            },
+            {
+              "scenario": "control",
+              "seed": 0,
+              "round": 6
+            },
+            {
+              "scenario": "control",
+              "seed": 0,
+              "round": 7
+            },
+            {
+              "scenario": "control",
+              "seed": 0,
+              "round": 8
+            }
+          ],
+          "printed_candidate_families": [
+            "graveyard_recursion",
+            "entry_trigger"
+          ],
+          "registered_suboperations": []
+        },
+        {
+          "card": "Champion of the Perished",
+          "unsupported_hand_turns": 51,
+          "games_seen": 4,
+          "first_observations": [
+            {
+              "scenario": "control",
+              "seed": 2,
+              "round": 1
+            },
+            {
+              "scenario": "control",
+              "seed": 2,
+              "round": 2
+            },
+            {
+              "scenario": "control",
+              "seed": 2,
+              "round": 3
+            },
+            {
+              "scenario": "control",
+              "seed": 2,
+              "round": 4
+            },
+            {
+              "scenario": "control",
+              "seed": 2,
+              "round": 5
+            },
+            {
+              "scenario": "control",
+              "seed": 2,
+              "round": 6
+            },
+            {
+              "scenario": "control",
+              "seed": 2,
+              "round": 7
+            },
+            {
+              "scenario": "control",
+              "seed": 2,
+              "round": 8
+            }
+          ],
+          "printed_candidate_families": [
+            "entry_trigger",
+            "continuous_modifiers"
+          ],
+          "registered_suboperations": []
+        },
+        {
+          "card": "Ayara, First of Locthwain",
+          "unsupported_hand_turns": 47,
+          "games_seen": 6,
+          "first_observations": [
+            {
+              "scenario": "control",
+              "seed": 1,
+              "round": 13
+            },
+            {
+              "scenario": "control",
+              "seed": 1,
+              "round": 14
+            },
+            {
+              "scenario": "control",
+              "seed": 1,
+              "round": 15
+            },
+            {
+              "scenario": "control",
+              "seed": 1,
+              "round": 16
+            },
+            {
+              "scenario": "control",
+              "seed": 1,
+              "round": 17
+            },
+            {
+              "scenario": "control",
+              "seed": 1,
+              "round": 18
+            },
+            {
+              "scenario": "control",
+              "seed": 1,
+              "round": 19
+            },
+            {
+              "scenario": "control",
+              "seed": 1,
+              "round": 20
+            }
+          ],
+          "printed_candidate_families": [
+            "sacrifice_death",
+            "entry_trigger",
+            "card_selection"
+          ],
+          "registered_suboperations": [
+            "sacrifice_activation"
+          ]
+        },
+        {
+          "card": "Open the Graves",
+          "unsupported_hand_turns": 46,
+          "games_seen": 4,
+          "first_observations": [
+            {
+              "scenario": "control",
+              "seed": 2,
+              "round": 6
+            },
+            {
+              "scenario": "control",
+              "seed": 2,
+              "round": 7
+            },
+            {
+              "scenario": "control",
+              "seed": 2,
+              "round": 8
+            },
+            {
+              "scenario": "control",
+              "seed": 2,
+              "round": 9
+            },
+            {
+              "scenario": "control",
+              "seed": 2,
+              "round": 10
+            },
+            {
+              "scenario": "control",
+              "seed": 2,
+              "round": 11
+            },
+            {
+              "scenario": "control",
+              "seed": 2,
+              "round": 12
+            },
+            {
+              "scenario": "control",
+              "seed": 2,
+              "round": 13
+            }
+          ],
+          "printed_candidate_families": [
+            "sacrifice_death",
+            "token_generation"
+          ],
+          "registered_suboperations": [
+            "death_trigger"
+          ]
+        },
+        {
+          "card": "Diregraf Colossus",
+          "unsupported_hand_turns": 34,
+          "games_seen": 2,
+          "first_observations": [
+            {
+              "scenario": "control",
+              "seed": 2,
+              "round": 1
+            },
+            {
+              "scenario": "control",
+              "seed": 2,
+              "round": 2
+            },
+            {
+              "scenario": "control",
+              "seed": 2,
+              "round": 3
+            },
+            {
+              "scenario": "control",
+              "seed": 2,
+              "round": 4
+            },
+            {
+              "scenario": "control",
+              "seed": 2,
+              "round": 5
+            },
+            {
+              "scenario": "control",
+              "seed": 2,
+              "round": 6
+            },
+            {
+              "scenario": "control",
+              "seed": 2,
+              "round": 7
+            },
+            {
+              "scenario": "control",
+              "seed": 2,
+              "round": 8
+            }
+          ],
+          "printed_candidate_families": [
+            "graveyard_recursion",
+            "token_generation",
+            "continuous_modifiers"
+          ],
+          "registered_suboperations": []
+        },
+        {
+          "card": "Tendrils of Corruption",
+          "unsupported_hand_turns": 31,
+          "games_seen": 2,
+          "first_observations": [
+            {
+              "scenario": "control",
+              "seed": 3,
+              "round": 1
+            },
+            {
+              "scenario": "control",
+              "seed": 3,
+              "round": 2
+            },
+            {
+              "scenario": "control",
+              "seed": 3,
+              "round": 3
+            },
+            {
+              "scenario": "control",
+              "seed": 3,
+              "round": 4
+            },
+            {
+              "scenario": "control",
+              "seed": 3,
+              "round": 5
+            },
+            {
+              "scenario": "control",
+              "seed": 3,
+              "round": 6
+            },
+            {
+              "scenario": "control",
+              "seed": 3,
+              "round": 7
+            },
+            {
+              "scenario": "control",
+              "seed": 3,
+              "round": 8
+            }
+          ],
+          "printed_candidate_families": [],
+          "registered_suboperations": []
+        },
+        {
+          "card": "Gray Merchant of Asphodel",
+          "unsupported_hand_turns": 31,
+          "games_seen": 2,
+          "first_observations": [
+            {
+              "scenario": "control",
+              "seed": 4,
+              "round": 4
+            },
+            {
+              "scenario": "control",
+              "seed": 4,
+              "round": 5
+            },
+            {
+              "scenario": "control",
+              "seed": 4,
+              "round": 6
+            },
+            {
+              "scenario": "control",
+              "seed": 4,
+              "round": 7
+            },
+            {
+              "scenario": "control",
+              "seed": 4,
+              "round": 8
+            },
+            {
+              "scenario": "control",
+              "seed": 4,
+              "round": 9
+            },
+            {
+              "scenario": "control",
+              "seed": 4,
+              "round": 10
+            },
+            {
+              "scenario": "control",
+              "seed": 4,
+              "round": 11
+            }
+          ],
+          "printed_candidate_families": [
+            "entry_trigger"
+          ],
+          "registered_suboperations": []
+        },
+        {
+          "card": "Eternal Taskmaster",
+          "unsupported_hand_turns": 26,
+          "games_seen": 3,
+          "first_observations": [
+            {
+              "scenario": "control",
+              "seed": 1,
+              "round": 9
+            },
+            {
+              "scenario": "control",
+              "seed": 1,
+              "round": 10
+            },
+            {
+              "scenario": "control",
+              "seed": 1,
+              "round": 11
+            },
+            {
+              "scenario": "control",
+              "seed": 1,
+              "round": 12
+            },
+            {
+              "scenario": "control",
+              "seed": 1,
+              "round": 13
+            },
+            {
+              "scenario": "control",
+              "seed": 1,
+              "round": 14
+            },
+            {
+              "scenario": "control",
+              "seed": 1,
+              "round": 15
+            },
+            {
+              "scenario": "control",
+              "seed": 1,
+              "round": 16
+            }
+          ],
+          "printed_candidate_families": [
+            "graveyard_recursion",
+            "removal_interaction",
+            "combat_attack"
+          ],
+          "registered_suboperations": []
+        },
+        {
+          "card": "Marchesa's Decree",
+          "unsupported_hand_turns": 20,
+          "games_seen": 2,
+          "first_observations": [
+            {
+              "scenario": "control",
+              "seed": 0,
+              "round": 14
+            },
+            {
+              "scenario": "control",
+              "seed": 0,
+              "round": 15
+            },
+            {
+              "scenario": "control",
+              "seed": 0,
+              "round": 16
+            },
+            {
+              "scenario": "control",
+              "seed": 0,
+              "round": 17
+            },
+            {
+              "scenario": "control",
+              "seed": 0,
+              "round": 18
+            },
+            {
+              "scenario": "control",
+              "seed": 0,
+              "round": 19
+            },
+            {
+              "scenario": "control",
+              "seed": 0,
+              "round": 20
+            },
+            {
+              "scenario": "control",
+              "seed": 0,
+              "round": 21
+            }
+          ],
+          "printed_candidate_families": [
+            "entry_trigger",
+            "combat_attack"
+          ],
+          "registered_suboperations": []
+        },
+        {
+          "card": "Noxious Ghoul",
+          "unsupported_hand_turns": 17,
+          "games_seen": 2,
+          "first_observations": [
+            {
+              "scenario": "control",
+              "seed": 2,
+              "round": 9
+            },
+            {
+              "scenario": "control",
+              "seed": 2,
+              "round": 10
+            },
+            {
+              "scenario": "control",
+              "seed": 2,
+              "round": 11
+            },
+            {
+              "scenario": "control",
+              "seed": 2,
+              "round": 12
+            },
+            {
+              "scenario": "control",
+              "seed": 2,
+              "round": 13
+            },
+            {
+              "scenario": "control",
+              "seed": 2,
+              "round": 14
+            },
+            {
+              "scenario": "control",
+              "seed": 2,
+              "round": 15
+            },
+            {
+              "scenario": "control",
+              "seed": 2,
+              "round": 16
+            }
+          ],
+          "printed_candidate_families": [
+            "entry_trigger",
+            "continuous_modifiers"
+          ],
+          "registered_suboperations": []
+        },
+        {
+          "card": "God-Eternal Bontu",
+          "unsupported_hand_turns": 16,
+          "games_seen": 2,
+          "first_observations": [
+            {
+              "scenario": "control",
+              "seed": 0,
+              "round": 16
+            },
+            {
+              "scenario": "control",
+              "seed": 0,
+              "round": 17
+            },
+            {
+              "scenario": "control",
+              "seed": 0,
+              "round": 18
+            },
+            {
+              "scenario": "control",
+              "seed": 0,
+              "round": 19
+            },
+            {
+              "scenario": "control",
+              "seed": 0,
+              "round": 20
+            },
+            {
+              "scenario": "control",
+              "seed": 0,
+              "round": 21
+            },
+            {
+              "scenario": "control",
+              "seed": 0,
+              "round": 22
+            },
+            {
+              "scenario": "control",
+              "seed": 0,
+              "round": 23
+            }
+          ],
+          "printed_candidate_families": [
+            "sacrifice_death",
+            "entry_trigger",
+            "card_selection"
+          ],
+          "registered_suboperations": []
+        },
+        {
+          "card": "Castle Locthwain",
+          "unsupported_hand_turns": 7,
+          "games_seen": 2,
+          "first_observations": [
+            {
+              "scenario": "control",
+              "seed": 1,
+              "round": 15
+            },
+            {
+              "scenario": "control",
+              "seed": 1,
+              "round": 16
+            },
+            {
+              "scenario": "control",
+              "seed": 1,
+              "round": 17
+            },
+            {
+              "scenario": "control",
+              "seed": 1,
+              "round": 18
+            },
+            {
+              "scenario": "control",
+              "seed": 1,
+              "round": 19
+            },
+            {
+              "scenario": "control",
+              "seed": 1,
+              "round": 20
+            },
+            {
+              "scenario": "control",
+              "seed": 3,
+              "round": 18
+            }
+          ],
+          "printed_candidate_families": [
+            "card_selection"
+          ],
+          "registered_suboperations": []
+        },
+        {
+          "card": "Syphon Flesh",
+          "unsupported_hand_turns": 5,
+          "games_seen": 1,
+          "first_observations": [
+            {
+              "scenario": "control",
+              "seed": 3,
+              "round": 19
+            },
+            {
+              "scenario": "control",
+              "seed": 3,
+              "round": 20
+            },
+            {
+              "scenario": "control",
+              "seed": 3,
+              "round": 21
+            },
+            {
+              "scenario": "control",
+              "seed": 3,
+              "round": 22
+            },
+            {
+              "scenario": "control",
+              "seed": 3,
+              "round": 23
+            }
+          ],
+          "printed_candidate_families": [
+            "sacrifice_death",
+            "token_generation"
+          ],
+          "registered_suboperations": []
+        }
+      ],
+      "unsupported_event_counts": {},
+      "provisional_event_counts": {
+        "provisional_spell_resolved": 10
+      },
+      "action_event_counts": {
+        "draw": 182,
+        "land_play": 118,
+        "creature_cast": 73,
+        "creature_resolved": 73,
+        "untap": 567,
+        "player_abstract_unblocked_damage": 140,
+        "opponent_abstract_creature": 168,
+        "artifact_cast": 17,
+        "artifact_resolved": 17,
+        "player_abstract_blocked_combat": 41,
+        "opponent_abstract_unblocked_damage": 323,
+        "opponent_abstract_destroy": 16,
+        "opponent_abstract_discard": 56,
+        "opponent_abstract_exile": 11,
+        "reviewed_enter_resolved": 9,
+        "opponent_abstract_blocked_combat": 94,
+        "source_paid_candidate": 517,
+        "reviewed_removal_resolved": 9,
+        "reviewed_graveyard_creature_cast": 14,
+        "reviewed_graveyard_creature_resolved": 14,
+        "opponent_life_zero": 20,
+        "provisional_spell_resolved": 10,
+        "reviewed_land_entry": 3,
+        "enchantment_cast": 8,
+        "enchantment_resolved": 8,
+        "reviewed_phase_resolved": 68,
+        "reviewed_utility_activated": 18,
+        "reviewed_flashback_cast": 2,
+        "reviewed_flashback_resolved": 2,
+        "cleanup_discard": 8,
+        "reviewed_common_spell_resolved": 4,
+        "reviewed_graveyard_spell_cast": 1,
+        "reviewed_graveyard_spell_resolved": 1,
+        "token_spell_cast": 1,
+        "token_spell_resolved": 1,
+        "opponent_abstract_combo_loss": 30
+      },
+      "game_narrative_index": [
+        {
+          "scenario": "control",
+          "seed": 0,
+          "rounds": 25,
+          "outcome": "unresolved",
+          "opening_hand": [
+            "Undead Butler",
+            "Swamp",
+            "Withering Torment",
+            "Cryptbreaker",
+            "Consuming Corruption",
+            "Witch's Cottage",
+            "Barren Moor"
+          ],
+          "gap_events": [],
+          "unsupported_cards_final_hand": [
+            "Consumed by Greed",
+            "Consuming Corruption",
+            "God-Eternal Bontu",
+            "Marchesa's Decree",
+            "Patchwork Banner",
+            "Witch's Cottage"
+          ]
+        },
+        {
+          "scenario": "control",
+          "seed": 1,
+          "rounds": 20,
+          "outcome": "win",
+          "opening_hand": [
+            "Liliana's Reaver",
+            "Swamp",
+            "Endless Ranks of the Dead",
+            "Consumed by Greed",
+            "Kalitas, Traitor of Ghet",
+            "Bojuka Bog",
+            "Commander's Sphere"
+          ],
+          "gap_events": [],
+          "unsupported_cards_final_hand": [
+            "Ayara, First of Locthwain",
+            "Castle Locthwain",
+            "Consumed by Greed",
+            "Eternal Taskmaster",
+            "Patchwork Banner"
+          ]
+        },
+        {
+          "scenario": "control",
+          "seed": 2,
+          "rounds": 21,
+          "outcome": "loss",
+          "opening_hand": [
+            "Champion of the Perished",
+            "Swamp",
+            "Midnight Reaper",
+            "Swamp",
+            "Diregraf Colossus",
+            "Swamp",
+            "Swamp"
+          ],
+          "gap_events": [],
+          "unsupported_cards_final_hand": [
+            "Ayara, First of Locthwain",
+            "Champion of the Perished",
+            "Consumed by Greed",
+            "Diregraf Colossus",
+            "Liliana's Mastery",
+            "Noxious Ghoul",
+            "Open the Graves"
+          ]
+        },
+        {
+          "scenario": "control",
+          "seed": 3,
+          "rounds": 23,
+          "outcome": "loss",
+          "opening_hand": [
+            "Carrion Feeder",
+            "Swamp",
+            "Swamp",
+            "Liliana's Mastery",
+            "Tendrils of Corruption",
+            "Swamp",
+            "Patchwork Banner"
+          ],
+          "gap_events": [],
+          "unsupported_cards_final_hand": [
+            "Ayara, First of Locthwain",
+            "Consuming Corruption",
+            "Eternal Taskmaster",
+            "Patchwork Banner",
+            "Syphon Flesh",
+            "Tendrils of Corruption"
+          ]
+        },
+        {
+          "scenario": "control",
+          "seed": 4,
+          "rounds": 25,
+          "outcome": "unresolved",
+          "opening_hand": [
+            "Barren Moor",
+            "Swamp",
+            "Death Baron",
+            "Undead Augur",
+            "Cryptbreaker",
+            "Oversold Cemetery",
+            "Night's Whisper"
+          ],
+          "gap_events": [],
+          "unsupported_cards_final_hand": [
+            "Bad Moon",
+            "Champion of the Perished",
+            "Consuming Corruption",
+            "Gray Merchant of Asphodel",
+            "Liliana's Mastery",
+            "Open the Graves"
+          ]
+        },
+        {
+          "scenario": "mixed",
+          "seed": 0,
+          "rounds": 21,
+          "outcome": "win",
+          "opening_hand": [
+            "Undead Butler",
+            "Swamp",
+            "Withering Torment",
+            "Cryptbreaker",
+            "Consuming Corruption",
+            "Witch's Cottage",
+            "Barren Moor"
+          ],
+          "gap_events": [],
+          "unsupported_cards_final_hand": [
+            "Consumed by Greed",
+            "Consuming Corruption",
+            "God-Eternal Bontu",
+            "Marchesa's Decree",
+            "Patchwork Banner",
+            "Witch's Cottage"
+          ]
+        },
+        {
+          "scenario": "mixed",
+          "seed": 1,
+          "rounds": 13,
+          "outcome": "loss",
+          "opening_hand": [
+            "Liliana's Reaver",
+            "Swamp",
+            "Endless Ranks of the Dead",
+            "Consumed by Greed",
+            "Kalitas, Traitor of Ghet",
+            "Bojuka Bog",
+            "Commander's Sphere"
+          ],
+          "gap_events": [],
+          "unsupported_cards_final_hand": [
+            "Ayara, First of Locthwain",
+            "Consumed by Greed",
+            "Eternal Taskmaster",
+            "Patchwork Banner"
+          ]
+        },
+        {
+          "scenario": "mixed",
+          "seed": 2,
+          "rounds": 13,
+          "outcome": "loss",
+          "opening_hand": [
+            "Champion of the Perished",
+            "Swamp",
+            "Midnight Reaper",
+            "Swamp",
+            "Diregraf Colossus",
+            "Swamp",
+            "Swamp"
+          ],
+          "gap_events": [],
+          "unsupported_cards_final_hand": [
+            "Ayara, First of Locthwain",
+            "Bad Moon",
+            "Champion of the Perished",
+            "Consumed by Greed",
+            "Diregraf Colossus",
+            "Noxious Ghoul",
+            "Open the Graves"
+          ]
+        },
+        {
+          "scenario": "mixed",
+          "seed": 3,
+          "rounds": 8,
+          "outcome": "loss",
+          "opening_hand": [
+            "Carrion Feeder",
+            "Swamp",
+            "Swamp",
+            "Liliana's Mastery",
+            "Tendrils of Corruption",
+            "Swamp",
+            "Patchwork Banner"
+          ],
+          "gap_events": [],
+          "unsupported_cards_final_hand": [
+            "Ayara, First of Locthwain",
+            "Consuming Corruption",
+            "Liliana's Mastery",
+            "Patchwork Banner",
+            "Tendrils of Corruption"
+          ]
+        },
+        {
+          "scenario": "mixed",
+          "seed": 4,
+          "rounds": 13,
+          "outcome": "loss",
+          "opening_hand": [
+            "Barren Moor",
+            "Swamp",
+            "Death Baron",
+            "Undead Augur",
+            "Cryptbreaker",
+            "Oversold Cemetery",
+            "Night's Whisper"
+          ],
+          "gap_events": [],
+          "unsupported_cards_final_hand": [
+            "Bad Moon",
+            "Champion of the Perished",
+            "Gray Merchant of Asphodel",
+            "Liliana's Mastery",
+            "Open the Graves",
+            "Witch's Cottage"
+          ]
+        }
+      ],
+      "unregistered_printed_family_candidates": {
+        "card_selection": {
+          "card_count": 3,
+          "card_names": [
+            "Castle Locthwain",
+            "Consumed by Greed",
+            "God-Eternal Bontu"
+          ]
+        },
+        "combat_attack": {
+          "card_count": 2,
+          "card_names": [
+            "Eternal Taskmaster",
+            "Marchesa's Decree"
+          ]
+        },
+        "continuous_modifiers": {
+          "card_count": 7,
+          "card_names": [
+            "Bad Moon",
+            "Champion of the Perished",
+            "Diregraf Colossus",
+            "Liliana's Mastery",
+            "Mutilate",
+            "Noxious Ghoul",
+            "Patchwork Banner"
+          ]
+        },
+        "entry_trigger": {
+          "card_count": 9,
+          "card_names": [
+            "Champion of the Perished",
+            "Fleshbag Marauder",
+            "God-Eternal Bontu",
+            "Gray Merchant of Asphodel",
+            "Josu Vess, Lich Knight",
+            "Liliana's Mastery",
+            "Marchesa's Decree",
+            "Noxious Ghoul",
+            "Witch's Cottage"
+          ]
+        },
+        "graveyard_recursion": {
+          "card_count": 4,
+          "card_names": [
+            "Consumed by Greed",
+            "Diregraf Colossus",
+            "Eternal Taskmaster",
+            "Witch's Cottage"
+          ]
+        },
+        "removal_interaction": {
+          "card_count": 2,
+          "card_names": [
+            "Consumed by Greed",
+            "Eternal Taskmaster"
+          ]
+        },
+        "sacrifice_death": {
+          "card_count": 5,
+          "card_names": [
+            "Consumed by Greed",
+            "Fleshbag Marauder",
+            "God-Eternal Bontu",
+            "Necrotic Hex",
+            "Syphon Flesh"
+          ]
+        },
+        "token_generation": {
+          "card_count": 5,
+          "card_names": [
+            "Diregraf Colossus",
+            "Josu Vess, Lich Knight",
+            "Liliana's Mastery",
+            "Necrotic Hex",
+            "Syphon Flesh"
+          ]
+        }
+      }
+    }
+  },
+  "attempts": 20,
+  "limitations": [
+    "A card appearing unsupported in hand does not prove it was affordable or legal to cast that round",
+    "A named suboperation is not proof of full-card coverage",
+    "Printed-text ability family classification is diagnostic only",
+    "Abstract opponent cards, spells, resources and priority are not validated real precon gameplay",
+    "Outcomes are not meaningful head-to-head precon win rates"
+  ]
+}
