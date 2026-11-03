@@ -89,8 +89,20 @@ jobs:
               --pilot-style "$OUTCOME_PILOT_STYLE" \
               --provisional-mode "$OUTCOME_PROVISIONAL_MODE" \
               --examples 2 \
+              --observations-output "dist/game-observations/$OUTCOME_DECK-$scenario.jsonl" \
               --output "dist/game-outcome-runs/$OUTCOME_DECK-$scenario.json"
           done
+          python tools/validate_game_observations.py \
+            --source dist/game-observations \
+            --expected-games "$OUTCOME_SEEDS" --expected-rounds "$OUTCOME_ROUNDS"
+          # Complete observation records are preserved separately from Pages.
+      - name: Upload complete per-game observations for later feature engineering
+        uses: actions/upload-artifact@v4
+        with:
+          name: observations-${{ matrix.deck }}-${{ github.sha }}
+          path: dist/game-observations/*.jsonl
+          if-no-files-found: error
+          retention-days: 90
       - name: Upload immutable, authentic per-deck simulation results
         uses: actions/upload-artifact@v4
         with:

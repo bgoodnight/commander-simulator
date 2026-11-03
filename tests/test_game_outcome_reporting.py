@@ -1,11 +1,14 @@
 """Four-seat life changes, modeled eliminations and UI outcome batch contracts."""
 import unittest
+import json
+from pathlib import Path
+from tempfile import TemporaryDirectory
 
 from commander_sim.early_game_runner import _load_live_kernel, run_bounded_early_game
 from commander_sim.kernel_life import LifeChange, KernelLife
 from commander_sim.opponent_stress import BoundedOpponentPressure
 from commander_sim.outcome_reporting import LifeOutcomeRecorder
-from tools.build_game_outcomes import generate, summarize_games, FORMAT
+from tools.build_game_outcomes import generate, summarize_games, write_batch, FORMAT
 
 
 class LifeOutcomeTests(unittest.TestCase):
@@ -146,6 +149,47 @@ class GameBatchTests(unittest.TestCase):
         self.assertEqual(trend[0]["median_life"]["0"],40)
         self.assertEqual(trend[1]["alive_games"]["0"],2)
         self.assertNotIn("win_rate",result["summary"])
+
+    def test_complete_observations_are_separate_from_ui_outcomes(self):
+        def detailed(deck_key, **kw):
+            record=self.fake(deck_key,**kw)
+            record["mulligan"]={"opening_hand":["Swamp"]*6+["Blood Artist"],
+                                "initial_hand":["Swamp"]*7,"taken":False}
+            for i,turn in enumerate(record["events"]):
+                turn["events"]=[{"type":"cast","card":"Blood Artist"}]
+                turn["pilot_decisions"]=[{"role":"legal_cast","source":"scorer"}]
+                turn["mana_payment_events"]=[]
+                record["state_snapshots"][i]["hand"]=["Swamp"]
+                record["state_snapshots"][i]["battlefield"]=["Blood Artist"]
+            return record
+        with TemporaryDirectory() as folder:
+            source=Path(folder)/"outcome.json"
+            archive=Path(folder)/"observations.jsonl"
+            batch=write_batch(source,"necron_dynasties",seeds=3,rounds=20,
+                              runner=detailed,observation_output=archive)
+            observations=[json.loads(line) for line in archive.read_text().splitlines()]
+            self.assertEqual(len(observations),3)
+            self.assertEqual([x["seed"] for x in observations],[0,1,2])
+            self.assertEqual(observations[0]["mulligan"]["opening_hand"][-1],
+                             "Blood Artist")
+            self.assertEqual(observations[0]["turn_records"][0]["events"][0]["card"],
+                             "Blood Artist")
+            self.assertEqual(observations[0]["state_snapshots"][0]["hand"],
+                             ["Swamp"])
+            self.assertEqual(len(batch["runs"]),3)
+            self.assertNotIn("turn_records",batch["runs"][0])
+            self.assertNotIn("opening_hand",batch["runs"][0])
+            self.assertTrue(source.is_file())
+
+    def test_observation_export_fails_closed_if_runner_did_not_record_hand(self):
+        with TemporaryDirectory() as folder:
+            source=Path(folder)/"outcome.json"
+            archive=Path(folder)/"observations.jsonl"
+            with self.assertRaisesRegex(ValueError,"authoritative"):
+                write_batch(source,"necron_dynasties",seeds=2,rounds=20,
+                            runner=self.fake,observation_output=archive)
+            self.assertFalse(source.exists())
+            self.assertFalse(archive.exists())
 
     def test_batch_runtime_failure_identifies_exact_seed_and_cohort(self):
         def faulty(deck_key, **kwargs):

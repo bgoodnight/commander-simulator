@@ -81,7 +81,20 @@ jobs:
             --seeds 100 --start-seed 0 --rounds 30 \
             --pilot-style adaptive --pilot-archetype auto \
             --provisional-mode safe --examples 3 \
+            --observations-output "dist/observations/mortarion_physical_final-${{ matrix.scenario }}.jsonl" \
             --output "dist/outcomes/mortarion_physical_final-${{ matrix.scenario }}.json"
+      - name: Preserve complete observation histories for all 100 games
+        uses: actions/upload-artifact@v4
+        with:
+          name: mortarion-observations-${{ matrix.scenario }}-${{ github.sha }}
+          path: dist/observations/*.jsonl
+          if-no-files-found: error
+          retention-days: 90
+      - name: Validate every observation record before archiving
+        run: |
+          python tools/validate_game_observations.py \
+            --source dist/observations \
+            --expected-games 100 --expected-rounds 30
       - name: Preserve immutable original batch
         uses: actions/upload-artifact@v4
         with:

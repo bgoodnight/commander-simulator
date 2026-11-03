@@ -103,7 +103,8 @@ def summarize_games(runs, requested_rounds):
 
 def generate(deck_key, *, seeds=12, rounds=20, start_seed=0,
              scenario="balanced", provisional_mode="off",
-             pilot_style="adaptive",pilot_archetype="auto",examples=0, runner=run_bounded_early_game):
+             pilot_style="adaptive",pilot_archetype="auto",examples=0,
+             runner=run_bounded_early_game, observation_rows=None):
     if (deck_key not in DECK_KEYS
             or type(seeds) is not int or not 1<=seeds<=200
             or type(rounds) is not int or not 1<=rounds<=30
@@ -140,6 +141,42 @@ def generate(deck_key, *, seeds=12, rounds=20, start_seed=0,
     revision=raw[0]["deck_sha256"]
     if any(run["deck_sha256"]!=revision for run in raw):
         raise ValueError("Cannot aggregate mixed deck revisions")
+    # Observation output is the unabridged, actually recorded runner state.
+    # No computed statistical predictors, inferred actions, or synthetic zones.
+    # Keep it separate from small public UI outcome batches.
+    if observation_rows is not None:
+        if not isinstance(observation_rows,list) or observation_rows:
+            raise ValueError("Observation row collector must be an empty list")
+        for run in raw:
+            if (not isinstance(run.get("mulligan"),dict)
+                    or not isinstance(run["mulligan"].get("opening_hand"),list)
+                    or not isinstance(run.get("events"),list)
+                    or len(run["events"])!=run["completed_rounds"]
+                    or not isinstance(run.get("state_snapshots"),list)
+                    or len(run["state_snapshots"])!=run["completed_rounds"]):
+                raise ValueError("Missing authoritative per-game observation evidence")
+            observation_rows.append({
+                "format":"commander-game-observations-v1",
+                "schema_version":1,
+                "deck_key":run["deck_key"],
+                "deck_sha256":run["deck_sha256"],
+                "seed":run["seed"],
+                "scenario":scenario,
+                "opponent_roles":run["opponent_roles"],
+                "pilot_style":pilot_style,
+                "pilot_archetype":run.get("pilot_archetype"),
+                "pilot_signals":run.get("pilot_signals"),
+                "provisional_mode":provisional_mode,
+                "requested_rounds":rounds,
+                "completed_rounds":run["completed_rounds"],
+                "outcome":run["outcome"],
+                "mulligan":run["mulligan"],
+                "life_history":run["life_history"],
+                "turn_records":run["events"],
+                "state_snapshots":run["state_snapshots"],
+                "fidelity":"authoritative_recorded_pilot_and_abstract_opponent_events",
+                "interpretation":"Observations only, not engineered predictors or a competitive Commander result",
+            })
     records=[{
         "seed":run["seed"],
         "opponent_roles":run["opponent_roles"],
@@ -172,8 +209,23 @@ def generate(deck_key, *, seeds=12, rounds=20, start_seed=0,
     }
 
 
-def write_batch(path,deck_key,**kwargs):
-    data=generate(deck_key,**kwargs)
+def write_batch(path,deck_key,*,observation_output=None,**kwargs):
+    if observation_output is not None:
+        destination=Path(observation_output)
+        location=Path(path)
+        if destination.resolve()==location.resolve():
+            raise ValueError("Observations and published outcomes need separate paths")
+        observations=[]
+        data=generate(deck_key,observation_rows=observations,**kwargs)
+        if len(observations)!=data["seed_count"]:
+            raise ValueError("Incomplete per-game observation archive")
+        destination.parent.mkdir(parents=True,exist_ok=True)
+        # Complete, validated cohorts only. No partial file on a seed failure.
+        destination.write_text("".join(
+            json.dumps(row,sort_keys=True,ensure_ascii=False,separators=(",",":"))+"\n"
+            for row in observations),encoding="utf-8")
+    else:
+        data=generate(deck_key,**kwargs)
     location=Path(path)
     location.parent.mkdir(parents=True,exist_ok=True)
     location.write_text(
@@ -197,12 +249,14 @@ def main(argv=None):
     parser.add_argument("--examples",type=int,default=0,
                         help="Include 0–3 full per-game replay drilldowns")
     parser.add_argument("--output",type=Path,required=True)
+    parser.add_argument("--observations-output",type=Path,
+                        help="Separate complete per-game JSONL archive for feature engineering")
     args=parser.parse_args(argv)
     result=write_batch(args.output,args.deck,
         seeds=args.seeds,rounds=args.rounds,start_seed=args.start_seed,
         scenario=args.scenario,provisional_mode=args.provisional_mode,
         pilot_style=args.pilot_style,pilot_archetype=args.pilot_archetype,
-        examples=args.examples)
+        examples=args.examples,observation_output=args.observations_output)
     print(json.dumps({
         "format":result["format"],"deck_key":result["deck_key"],
         "requested_rounds":result["requested_rounds"],
