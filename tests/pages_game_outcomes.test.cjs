@@ -201,7 +201,7 @@ test('modeled panels expose distinct outcome, life and matchup disclosures with 
     assert.ok(nodes.some(n=>n.textContent==='Round 2 · 1 of 4 seats alive'));
     const reviewNodes=walk(reviewer);
     assert.ok(reviewNodes.some(n=>n.tag==='select'));
-    assert.ok(reviewNodes.some(n=>n.textContent==='Seed 1 · Win · Round 2'));
+    assert.ok(reviewNodes.some(n=>n.textContent==='Seed 0 · Win · Round 2'));
 
     // Scenario comparison must not silently cross pilot personalities.
     Outcomes.render(root,[
