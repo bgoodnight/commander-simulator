@@ -1147,82 +1147,20 @@
       body.appendChild(create("div","micro",groups.length+" opponent groups · "+
         groups[0].requestedRounds+"-round horizon"));
     }));
-    const analysis=options.discoveryReport;
-    if(analysis?.status==="ready"&&analysis.findings?.length){
-      const top=analysis.findings.slice(0,8);
-      cards.appendChild(card("Statistical signals","Exploratory elastic net",
-        analysis.selected_predictors+" selected",
-        analysis.independent_seeds+" independent seeds · "+analysis.games+" games",
-        body=>{
-          body.appendChild(create("p","micro",
-            "Held-out Brier "+analysis.holdout_brier+
-            " · opponent-only "+analysis.opponent_baseline_brier+
-            " · coefficients are penalized and exploratory"));
-          for(const finding of top){
-            const detail=create("details","game-outcome-observed-zone");
-            const direction=finding.direction==="positive"?"Positive":"Negative";
-            detail.appendChild(create("summary",null,
-              finding.feature+" · "+direction+" · "+
-              Math.round(100*finding.selection_frequency)+"% selected"));
-            detail.appendChild(create("p","micro",
-              finding.observed_games+" observed games · direction consistency "+
-              Math.round(100*finding.direction_consistency)+"%"+
-              (finding.interaction_parents?.length?
-                " · interaction parents: "+finding.interaction_parents.join(" and "):"")));
-            body.appendChild(detail);
-          }
-          body.appendChild(create("p","micro",analysis.limitations||
-            "These are simulated-game associations, not card causal effects."));
-        }));
-    }else{
-      cards.appendChild(card("Statistical signals","Elastic-net discovery",
-        "Not available",
-        analysis?.status==="insufficient_data"?
-          "Not enough independent games or outcome variation":
-          "The current historical batch lacks complete observations",
-        body=>body.appendChild(create("p","micro",
-          "Results will populate from the same complete observation archive used to derive card and turn evidence."))));
-    }
+    // Card-specific discoveries precede the statistical interpretation.
+    // Missing named sources never become guessed card-level findings.
     const signals=observationCardStats(runs,options.lookupRecordedCard);
     if(signals.coverage){
-      for(const [kind,label,metric] of [
-        ["played","Most played card","Casts or land plays"],
-        ["creature","Most played creature","Recorded creature casts"],
-        ["seen","Most frequently seen card","Opening hands and recorded draws"],
-        ["activated","Most active ability source","Recorded activations and triggers"],
-        ["spell","Most cast instant or sorcery","Recorded spell casts"],
-        ["instant","Most cast instant","Recorded instant casts"],
-        ["artifact","Most cast artifact","Recorded artifact casts"],
-        ["removal","Most recorded creature removal","Recorded destroyed objects, where attributed"],
-        ["longest","Longest-held card","Mean observed turn-end rounds in hand; ties by game coverage"]
-      ]){
-        const item=signals[kind];
-        if(!item)continue;
-        const panel=card(label,"Observed card evidence",String(item.count),
-          item.name+" · "+item.seeds.size+" games",body=>{
-            body.appendChild(create("p","micro",
-              metric+" · "+signals.coverage+" games with recorded turn observations"));
-            const medianTurn=quantile(item.turns,.5);
-            if(medianTurn!==null)body.appendChild(create("p","micro",
-              item.held?"Median observed rounds held: "+nfmt(medianTurn):
-                "Median recorded event turn: "+nfmt(medianTurn)));
-            const button=create("button","game-outcome-recorded-card",item.name);
-            button.type="button";button.onclick=()=>options.onOpenRecordedCard?.(item.name);
-            body.appendChild(button);
-          });
-        const art=options.lookupRecordedCard?.(item.name)?.art;
-        if(art){
-          const summary=panel.querySelector("summary");
-          summary.style.backgroundImage=
-            "linear-gradient(90deg, rgba(17,23,28,.96),rgba(17,23,28,.68)),url("+JSON.stringify(art)+")";
-          summary.style.backgroundSize="cover";
-          summary.style.backgroundPosition="center";
-        }
-        cards.appendChild(panel);
+      for(const kind of ["played","creature","artifact","enchantment",
+        "instant","spell","land","seen","unplayed","longest",
+        "activated","removal","damage","finisher"]){
+        const panel=cardPerformancePanel(kind,signals.ranked[kind],
+          signals.coverage,groups,options,onReviewRun);
+        if(panel)cards.appendChild(panel);
       }
     }else{
       cards.appendChild(create("p","game-outcome-empty",
-        "Card insights will appear with the next complete published simulation batch."));
+        "Card insights require named card and hand observations from the current published batch."));
     }
     const best=matchup[0];
     cards.appendChild(card("Opponent Types","Types & table compositions",
@@ -1316,6 +1254,9 @@
         slider.addEventListener("input",displayRound);
         body.append(slider,detail);displayRound();
       }));
+    // The regression story belongs after every game/card panel, immediately
+    // above the independent turn reviewer.
+    cards.appendChild(elasticNetPanel(options.discoveryReport,options));
     if(options.reviewerRoot){
       jumpToReview=turnReviewer(options.reviewerRoot,groups,options);
     }
