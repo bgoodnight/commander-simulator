@@ -82,10 +82,27 @@ class KernelLife:
         """
         return self.apply(LifeChange(seat,amount,"damage",source_id))
 
+    def active_seats(self):
+        """Current eligible players for bounded life-dependent effects.
+
+        Keep eliminated players' historical totals in the kernel ledger, but
+        never treat a player at zero or less life as an active opponent.
+        Non-life game losses are terminal in this bounded runner.
+        """
+        return tuple(seat for seat in sorted(self.kernel.life_totals)
+                     if self.total(seat)>0)
+
+    def active_opponents(self,controller):
+        """Opponents still in the game; do not count eliminated players."""
+        self.total(controller)
+        if controller not in self.active_seats():
+            return ()
+        return tuple(seat for seat in self.active_seats()
+                     if seat!=controller)
+
     def each_opponent_loses(self,controller,amount,source_id=None):
         self.total(controller)
         if type(amount) is not int or amount<0:
             raise ValueError("Invalid reviewed opponent loss")
         return tuple((seat,self.lose(seat,amount,source_id))
-                     for seat in sorted(self.kernel.life_totals)
-                     if seat!=controller and self.total(seat)>0)
+                     for seat in self.active_opponents(controller))
