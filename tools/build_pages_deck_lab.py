@@ -284,6 +284,55 @@ def build(output, *, catalog_path=SHARED_CATALOG, name_catalog_path=DEFAULT_NAME
         shutil.copy2(replay_source, dest)
         replay_assets.append("replay-data/" + replay_file)
 
+    # Only allowlisted, public-visibility gorge replays can ship to Pages.
+    # The original event/intent logs, object crosswalk and hidden-zone
+    # snapshots stay in restricted GitHub Actions artifacts.
+    public_gorge = static / "data" / "gorge"
+    if public_gorge.is_dir():
+        manifest_file = public_gorge / "manifest.json"
+        if not manifest_file.is_file():
+            raise ValueError("Gorge replay samples require a manifest")
+        manifest = json.loads(manifest_file.read_text(encoding="utf-8"))
+        games = manifest.get("games", [])
+        if (manifest.get("schema") != "gorge-public-replay-manifest-v1"
+                or not isinstance(games, list) or not 1 <= len(games) <= 4):
+            raise ValueError("Invalid gorge replay sample manifest")
+        validated = []
+        for row in games:
+            filename = row.get("file", "")
+            if not re.fullmatch(r"gorge-seed-[0-9]+\\.ui\\.json", filename):
+                raise ValueError("Unsafe gorge replay filename")
+            source_file = public_gorge / filename
+            if not source_file.is_file():
+                raise ValueError("Missing gorge public replay file")
+            game = json.loads(source_file.read_text(encoding="utf-8"))
+            if (game.get("schema") != "gorge-ui-replay-v1"
+                    or game.get("visibility") != "public_events_only"
+                    or game.get("seed") != row.get("seed")
+                    or not isinstance(game.get("snapshots"), list)
+                    or not game["snapshots"]
+                    or "objects" in game or "log" in game or "intents" in game):
+                raise ValueError("Gorge replay could disclose private game data")
+            for snap in game["snapshots"]:
+                if snap.get("boundary") != "first_pending_decision_of_turn":
+                    raise ValueError("Gorge snapshot boundary is not documented")
+                players = snap.get("players", [])
+                if len(players) != 4:
+                    raise ValueError("Gorge public replay is missing seats")
+                for player in players:
+                    zones = player.get("zones", {})
+                    if set(zones) != {"battlefield", "graveyard", "exile", "command"}:
+                        raise ValueError("Private zone leaked in gorge public replay")
+            if any(event.get("secret") for turn in game.get("turns", [])
+                   for event in turn.get("events", [])):
+                raise ValueError("Secret gorge event leaked to public sample")
+            validated.append((source_file, filename))
+        target = output / "gorge-data"
+        target.mkdir(parents=True, exist_ok=True)
+        shutil.copy2(manifest_file, target / "manifest.json")
+        for source_file, filename in validated:
+            shutil.copy2(source_file, target / filename)
+
     # Optional long-game exports are copied only if explicitly pinned to
     # an exact built-in deck revision. The site builder NEVER runs simulation
     # games or treats abstract opponents as legal opposing Commander decks.
