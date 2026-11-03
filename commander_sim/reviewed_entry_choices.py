@@ -47,8 +47,9 @@ def set_reviewed_entry_choice(zones,source_id,catalog,*,player):
     rule=reviewed_entry_choice(source.card.name,catalog.get(source.card.name))
     if rule is None or rule.oracle_id!=source.card.card_id:
         raise ValueError("Unreviewed entry choice source")
-    if type(player) is not int or player not in kernel.life_totals:
-        raise ValueError("Chosen player must exist")
+    if (type(player) is not int or player not in kernel.life_totals
+            or kernel.life_totals[player]<=0):
+        raise ValueError("Chosen player must still be in the game")
     if not hasattr(kernel,"reviewed_player_choices"):
         kernel.reviewed_player_choices={}
     if source_id in kernel.reviewed_player_choices:

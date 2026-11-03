@@ -1183,8 +1183,10 @@ def run_bounded_early_game(deck_key, *, seed=0, turns=6, mulligan="one-free", pr
                 # A legal explicit player choice made as the reviewed source
                 # enters. Targeting policy is provisional, rules operation
                 # remains general and can accept any seat chosen by host.
-                target_seat=next(seat for seat in sorted(life.kernel.life_totals)
-                                 if seat!=0)
+                # A printed 'choose a player' effect can select self, but an
+                # eliminated player is no longer a legal choice.
+                opponents=life.active_opponents(0)
+                target_seat=opponents[0] if opponents else 0
                 set_reviewed_entry_choice(
                     zones,resolved_id,raw_by_name,player=target_seat)
                 events.append({
