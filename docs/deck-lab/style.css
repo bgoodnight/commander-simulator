@@ -1796,3 +1796,32 @@ body:has(#pane-records:not([hidden])) .page-introduction a{font-size:.72rem}
   .insight-featured-panel .game-outcome-body{padding:8px;gap:7px}
   .insight-featured-panel .game-outcome-summary-copy{padding:8px 11px}
 }
+
+/* More compact insight headers, without stretching beside expanded panels. */
+.latest-insight-grid .game-outcome-card:not(.game-outcome-hero){height:auto;align-self:start}
+.insight-featured-panel .game-outcome-summary{min-height:64px}
+.insight-featured-panel .game-outcome-summary-copy{padding:6px 11px;gap:1px}
+.insight-featured-panel .game-outcome-title{font-size:clamp(.86rem,1.45vw,1.04rem);line-height:1.12}
+.insight-featured-panel .insight-head-name{font-size:.73rem;line-height:1.14}
+.insight-featured-panel .game-outcome-number{font-size:1.15rem;line-height:1.08}
+/* Artwork belongs to the closed summary itself. It is rendered above the
+   summary's background, underneath the fade and all controls/text. */
+.insight-turn-row .insight-turn-row-summary{
+  position:relative;isolation:isolate;overflow:hidden;z-index:1;
+  background:#15272c}
+.insight-turn-row .insight-turn-row-summary::before{
+  content:"";position:absolute;inset:0;z-index:1;pointer-events:none;
+  background:linear-gradient(90deg,#14262cfb 0%,#17292ce9 32%,
+    #17282bb4 54%,#17282b3b 82%,#17282b1c 100%)}
+.insight-turn-row .insight-turn-cover{
+  position:absolute;inset:0 0 0 auto;z-index:0;
+  width:79%;height:100%;max-height:none;opacity:.95;
+  object-fit:cover;object-position:center 35%;
+  mask-image:none;pointer-events:none}
+.insight-turn-row .insight-turn-row-summary>:not(.insight-turn-cover){
+  position:relative;z-index:2}
+@media(max-width:720px){
+ .insight-featured-panel .game-outcome-summary{min-height:62px}
+ .insight-featured-panel .game-outcome-summary-copy{padding:6px 9px}
+ .insight-turn-row .insight-turn-cover{width:86%;opacity:.98}
+}

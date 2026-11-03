@@ -899,21 +899,29 @@
       const previous=index>1?run.ui_observations?.[index-2]:null;
       const current=life[index],before=index?life[index-1]:null;
       const row=create("details","insight-turn-row");
-      const firstCard=index===0?(run.opening_hand||[])[0]:
-        (observation?.actions||[]).find(a=>
-          typeof (a.card||a.source)==="string"&&
-          (a.card||a.source).trim())?.card||
-        (observation?.actions||[]).find(a=>
-          typeof a.source==="string"&&a.source.trim())?.source;
+      // Use the first explicitly named card with available artwork.
+      // Never infer artwork for anonymous or abstract opponent events.
+      const referenced=index===0?(run.opening_hand||[]):
+        (observation?.actions||[]).map(a=>a?.card||a?.source);
+      const firstCard=referenced.find(name=>{
+        if(typeof name!=="string"||!name.trim())return false;
+        const card=options.lookupRecordedCard?.(name);
+        return typeof (card?.art||card?.image)==="string";
+      });
       const firstArt=firstCard&&options.lookupRecordedCard?.(firstCard);
       const image=firstArt?.art||firstArt?.image;
+      let cover=null;
       if(typeof image==="string"&&/^https:\/\//.test(image)){
-        const cover=create("img","insight-turn-cover");
+        cover=create("img","insight-turn-cover");
         cover.src=image;cover.alt="";cover.loading="lazy";
-        cover.referrerPolicy="no-referrer";row.appendChild(cover);
+        cover.referrerPolicy="no-referrer";
+        // Attach art to the summary itself so it is visible while the
+        // native details element is collapsed, not only when expanded.
+
       }
       if(Number.isInteger(options.focusTurn)&&options.focusTurn===index)row.open=true;
       const summary=create("summary","insight-turn-row-summary");
+      if(cover)summary.appendChild(cover);
       summary.appendChild(create("strong","insight-turn-label",
         index?"Turn "+index:"Opening"));
       const pilot=(observation?.actions||[]).filter(a=>
