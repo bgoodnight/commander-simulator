@@ -1012,7 +1012,7 @@
     }
     const raw=resource.available_fixed_mana??resource.total_available_mana;
     if(Number.isFinite(raw)&&raw>=0)
-      return {symbols:[{key:"C",label:"Unspecified mana capacity",count:raw}],
+      return {symbols:[{key:"generic",label:"Unspecified mana capacity",count:raw}],
         kind:"capacity"};
     return null;
   }
