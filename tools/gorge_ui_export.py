@@ -40,7 +40,7 @@ def convert(source, *, include_hidden=False):
             raise ValueError("Unordered or malformed native events")
         previous=seq
         # Explicit native casting-event names are evidence, not inferred names.
-        if kind==11 and type(event.get("obj")) is int and isinstance(event.get("text"),str) and event["text"].strip():
+        if kind==11 and (include_hidden or not event.get("secret")) and type(event.get("obj")) is int and isinstance(event.get("text"),str) and event["text"].strip():
             obj=str(event["obj"])
             name=event["text"].strip()
             if obj in identity and identity[obj]!=name:
