@@ -1360,3 +1360,66 @@ body:has(#pane-records:not([hidden])) .page-introduction a{font-size:.72rem}
  .insight-featured-bar-caption{font-size:.7rem;align-items:start}
  .insight-featured-card-art{width:100%}
 }
+
+
+/* Results overview: one full-width, commander-art performance hero,
+   followed immediately by the four expandable game-level analyses. */
+.latest-insight-grid .game-outcome-hero-frame{
+  grid-column:1/-1;min-width:0
+}
+.latest-insight-grid .game-outcome-hero-summary{
+  min-height:325px
+}
+.latest-insight-grid .game-outcome-hero-art{
+  width:76%;object-position:60% 30%;
+  filter:saturate(.91) brightness(.9)
+}
+.latest-insight-grid .game-outcome-hero-summary:before{
+  background:linear-gradient(90deg,#0c1d20fa 0%,#11252bed 36%,#152b2dc9 65%,#16252c61 100%)
+}
+.latest-insight-grid .game-outcome-hero-copy{
+  width:min(100%,880px);padding:24px 32px;gap:15px
+}
+.latest-insight-grid .game-outcome-hero .game-outcome-title{
+  font-size:clamp(1.5rem,3.1vw,2.35rem)
+}
+.latest-insight-grid .game-outcome-hero-stats{
+  max-width:720px;gap:17px
+}
+.game-outcome-hero-highlights{
+  display:grid;grid-template-columns:repeat(4,minmax(0,1fr));
+  gap:10px;max-width:840px
+}
+.game-outcome-hero-highlight{
+  min-width:0;display:flex;flex-direction:column;gap:3px;
+  padding:11px 13px;border:1px solid #b6b39a55;border-radius:10px;
+  background:#0a1b21ab;backdrop-filter:blur(3px)
+}
+.game-outcome-hero-highlight>span{
+  font-size:.68rem;letter-spacing:.045em;text-transform:uppercase;
+  color:#ddcca7
+}
+.game-outcome-hero-highlight>strong{
+  font-size:clamp(1.22rem,2.4vw,1.8rem);line-height:1.2;
+  color:#f4e4c8;font-variant-numeric:tabular-nums
+}
+.game-outcome-hero-highlight>small{
+  font-size:.67rem;line-height:1.35;color:#cbd1c8;
+  overflow-wrap:anywhere
+}
+@media(max-width:720px){
+  .latest-insight-grid .game-outcome-hero-summary{min-height:350px}
+  .latest-insight-grid .game-outcome-hero-copy{
+    padding:18px 16px;gap:13px;width:100%
+  }
+  .latest-insight-grid .game-outcome-hero-art{
+    width:100%;object-position:50% 25%;opacity:.52
+  }
+  .latest-insight-grid .game-outcome-hero-summary:before{
+    background:linear-gradient(90deg,#0c1d20f5,#101f25db 65%,#0c1d20b0)
+  }
+  .game-outcome-hero-highlights{
+    grid-template-columns:repeat(2,minmax(0,1fr));gap:8px
+  }
+  .game-outcome-hero-highlight{padding:9px 10px}
+}
