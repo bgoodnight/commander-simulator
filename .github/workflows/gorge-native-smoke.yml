@@ -133,10 +133,16 @@ jobs:
         if: github.event_name != 'pull_request'
         run: |
           git fetch origin main
-          if [ "$(git rev-parse HEAD)" != "$(git rev-parse origin/main)" ]; then
-            echo "Main advanced; skipped stale sample publish." >> "$GITHUB_STEP_SUMMARY"
+          # A Pages publisher may have committed only generated docs while
+          # gorge was compiling. Accept that harmless change, but never
+          # publish stale samples if source engine/export code has changed.
+          if ! git diff --quiet HEAD origin/main -- \
+            tools/gorge_commander_probe.go tools/gorge_ui_export.py \
+            tools/gorge_public_state.py .github/workflows/gorge-native-smoke.yml; then
+            echo "Gorge source advanced; skipped stale replay samples." >> "$GITHUB_STEP_SUMMARY"
             exit 0
           fi
+          git checkout -B gorge-public-publish origin/main
           mkdir -p web/pages/data/gorge
           rsync -ac --delete "$RUNNER_TEMP/results/public_ui/" web/pages/data/gorge/
           git config user.name "github-actions[bot]"
