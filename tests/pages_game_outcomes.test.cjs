@@ -190,14 +190,6 @@ test('modeled panels expose distinct outcome, life and matchup disclosures with 
     assert.ok(nodes.some(n=>n.textContent==='Wins · 1/2'));
     assert.ok(nodes.some(n=>n.textContent==='50%'));
     assert.ok(nodes.some(n=>n.textContent==='Game Outcomes'));
-    const hudTiles=nodes.filter(n=>n.className==='results-hud-tile');
-    assert.equal(hudTiles.length,5);
-    assert.equal(hudTiles[0].attributes['aria-pressed'],'true');
-    hudTiles[4].onclick();
-    assert.equal(hudTiles[4].attributes['aria-pressed'],'true');
-    assert.equal(hudTiles[0].attributes['aria-pressed'],'false');
-    assert.equal(nodes.filter(n=>n.className==='results-hud-detail-cards')[0]
-      .children.filter(x=>!x.hidden).length,1);
     assert.ok(nodes.some(n=>String(n.textContent).includes('One opponent type recorded')));
     const rank=nodes.find(n=>n.tag==='button'&&n.className==='game-outcome-rank-row');
     assert.ok(rank);
@@ -280,9 +272,6 @@ test('results page and exporter wire a future published manifest and local JSON'
   const build=fs.readFileSync('tools/build_pages_deck_lab.py','utf8');
   assert.match(html,/id="long-game-panel"/);
   assert.match(html,/id="turn-reviewer-results"/);
-  assert.match(html,/id="results-hud"/);
-  assert.match(html,/id="hud-commander-slot"/);
-  assert.match(html,/data-page="summary" href=".\/summary.html"/);
   assert.doesNotMatch(html,/id="game-outcome-files"/);
   assert.match(html,/game_outcomes\.js/);
   assert.match(app,/loadLongGameFiles/);
@@ -359,4 +348,30 @@ test('published outcome loader fetches only the selected deck and refreshes the 
   assert.equal(calls.filter(x=>x.includes('manifest.json')).length,2);
   assert.equal(calls.filter(x=>x.includes('mortarion-current.json')).length,2);
   assert.ok(renders>=4);
+});
+
+test('rich current-run observations restore most played creature and instant cards',()=>{
+  const lookup=name=>({
+    'Grave Titan':{type_line:'Creature — Giant'},
+    'Sol Ring':{type_line:'Artifact'},
+    'Go for the Throat':{type_line:'Instant'}
+  })[name]||null;
+  const rich={seed:12,completed_rounds:2,opening_hand:['Grave Titan'],
+    ui_observations:[
+      {turn:1,hand:['Grave Titan'],actions:[
+        {type:'artifact_cast',card:'Sol Ring'},
+        {type:'reviewed_instant_response',card:'Go for the Throat'}]},
+      {turn:2,hand:[],actions:[
+        {type:'creature_cast',card:'Grave Titan'},
+        {type:'reviewed_removal_resolved',card:'Go for the Throat',destroyed_count:1}]}
+    ]};
+  const signals=Outcomes.observationCardStats([rich],lookup);
+  assert.equal(signals.coverage,1);
+  assert.equal(signals.creature.name,'Grave Titan');
+  assert.equal(signals.instant.name,'Go for the Throat');
+  assert.equal(signals.artifact.name,'Sol Ring');
+  assert.equal(signals.removal.name,'Go for the Throat');
+  const missing=Outcomes.observationCardStats([{seed:13,completed_rounds:2}],lookup);
+  assert.equal(missing.coverage,0);
+  assert.equal(missing.creature,null);
 });

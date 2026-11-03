@@ -507,7 +507,8 @@
   }
   function observationCardStats(runs,lookupCard=()=>null){
     const appearances=new Map(),plays=new Map(),spells=new Map(),
-      artifacts=new Map(),activations=new Map(),removal=new Map(),holding=new Map();
+      creatures=new Map(),instants=new Map(),artifacts=new Map(),
+      activations=new Map(),removal=new Map(),holding=new Map();
     const inc=(map,key,seed,turn,weight=1)=>{
       if(typeof key!=="string"||!key.trim())return;
       if(!map.has(key))map.set(key,{name:key,count:0,seeds:new Set(),turns:[]});
@@ -523,21 +524,31 @@
         for(const action of row.actions||[]){
           if(action.type==="draw"&&action.card)seen.add(action.card);
           const played=action.type==="land_play"||
-            action.type?.endsWith("_cast")||action.type==="reviewed_commander_cast";
+            action.type?.endsWith("_cast")||
+            action.type==="reviewed_instant_response"||
+            action.type==="reviewed_common_spell_resolved"||
+            action.type==="reviewed_zone_spell_resolved"||
+            action.type==="reviewed_commander_cast";
           if(played){
             inc(plays,action.card,run.seed,row.turn);
-            const kind=lookupCard(action.card)?.category;
-            if(["Instant","Sorcery"].includes(kind))
+            const card=lookupCard(action.card);
+            const types=String(card?.type_line||card?.category||"").split("—")[0];
+            if(/\b(Instant|Sorcery)\b/i.test(types))
               inc(spells,action.card,run.seed,row.turn);
-            if(kind==="Artifact")inc(artifacts,action.card,run.seed,row.turn);
+            if(/\bInstant\b/i.test(types))
+              inc(instants,action.card,run.seed,row.turn);
+            if(/\bArtifact\b/i.test(types))
+              inc(artifacts,action.card,run.seed,row.turn);
+            if(/\bCreature\b/i.test(types))
+              inc(creatures,action.card,run.seed,row.turn);
           }
           if(action.type?.includes("activated")||action.type?.includes("trigger")){
             // Only name abilities where the event itself identifies the source.
-            inc(activations,action.card||action.source||action.operation,
+            inc(activations,action.card||action.source,
                 run.seed,row.turn);
           }
           if(Number.isFinite(action.destroyed_count)&&action.destroyed_count>0){
-            inc(removal,action.card||action.source||action.operation,
+            inc(removal,action.card||action.source,
                 run.seed,row.turn,action.destroyed_count);
           }
         }
@@ -561,8 +572,9 @@
       seeds:longest.seeds,turns:longest.counts,held:true
     }:null;
     return {
-      seen:top(appearances),played:top(plays),spell:top(spells),
-      artifact:top(artifacts),activated:top(activations),removal:top(removal),
+      seen:top(appearances),played:top(plays),creature:top(creatures),
+      instant:top(instants),spell:top(spells),artifact:top(artifacts),
+      activated:top(activations),removal:top(removal),
       longest:longestMetric,
       coverage:runs.filter(run=>Array.isArray(run.ui_observations)&&
         run.ui_observations.length===run.completed_rounds).length
@@ -831,8 +843,6 @@
   function render(root,batches,options={}){
     root.replaceChildren();
     if(options.reviewerRoot)options.reviewerRoot.replaceChildren();
-    if(options.hudTiles)options.hudTiles.replaceChildren();
-    if(options.hudPanel)options.hudPanel.replaceChildren();
     const report=model(batches,options.deckKey,options.deckHash);
     if(!report.groups.length){
       root.appendChild(create("p","game-outcome-empty",
@@ -868,18 +878,11 @@
       .filter(Number.isFinite);
     const life=lifeTrend(runs,groups[0].requestedRounds);
     const matchup=matchupRows(groups,"types");
-    const cards=create("div","latest-insight-grid latest-insight-strips");
-    const insightCards=create("div","latest-insight-strips");
-    cards.appendChild(insightCards);
+    const cards=create("div","board-grid game-outcome-grid latest-insight-grid");
     root.appendChild(cards);
-    const gameCards=create("div","results-hud-detail-cards");
-    const tileRoot=options.hudTiles||create("div","results-hud-tiles");
-    const detailRoot=options.hudPanel||create("div","results-hud-metric-panel");
-    detailRoot.appendChild(gameCards);
-    if(!options.hudTiles)root.append(tileRoot,detailRoot);
     let jumpToReview=null;
     const onReviewRun=(id,seed)=>{if(jumpToReview)jumpToReview(id,seed)};
-    gameCards.appendChild(outcomeCard({
+    cards.appendChild(outcomeCard({
       counts,total,terminal:finished.length,
       terminalRounds:finished.map(run=>run.completed_rounds)
     },options,body=>{
@@ -898,49 +901,6 @@
         groups[0].requestedRounds+"-round horizon"));
     }));
     const analysis=options.discoveryReport;
-    // Card-level discoveries are strips, never extra game HUD metrics.
-    const commanderName=options.commanderName;
-    const commanderTurns=runs.flatMap(run=>(run.ui_observations||[])
-      .filter(row=>(row.actions||[]).some(action=>
-        action.type==="reviewed_commander_cast"&&
-        (action.card===commanderName||!action.card)))
-      .map(row=>({turn:row.turn,seed:run.seed})));
-    if(commanderName&&commanderTurns.length){
-      const distinct=new Set(commanderTurns.map(e=>e.seed));
-      const medianTurn=quantile(commanderTurns.map(e=>e.turn),.5);
-      const panel=card("Commander played","Commander timing",
-        nfmt(medianTurn),"Median round · "+distinct.size+" / "+total+" games",
-        body=>{
-          const stats=create("div","game-outcome-insight-grid");
-          stats.append(
-            metricTile("Median cast round",medianTurn,distinct.size+" games"),
-            metricTile("Recorded casts",commanderTurns.length,total+" games"),
-            metricTile("Games cast",distinct.size+"/"+total,"Exact deck revision"));
-          body.appendChild(stats);
-          const histogramRoot=create("div","game-outcome-finish-bars");
-          const turns=new Map();
-          for(const hit of commanderTurns)
-            turns.set(hit.turn,(turns.get(hit.turn)||0)+1);
-          for(const [turn,count] of [...turns].sort((a,b)=>a[0]-b[0])){
-            const row=create("div","game-outcome-finish-row");
-            row.append(create("span",null,"R"+turn),
-              create("div","game-outcome-finish-track"),
-              create("strong",null,count));
-            const fill=create("span","game-outcome-finish-fill");
-            fill.style.width=100*count/commanderTurns.length+"%";
-            row.children[1].appendChild(fill);histogramRoot.appendChild(row);
-          }
-          body.appendChild(histogramRoot);
-        });
-      const art=options.lookupRecordedCard?.(commanderName)?.art||options.commanderArt;
-      if(art)panel.className+=" has-card-art";
-      if(art){
-        const img=create("img","insight-strip-art");
-        img.src=art;img.alt="";img.loading="lazy";
-        panel.children[0].appendChild(img);
-      }
-      insightCards.appendChild(panel);
-    }
     if(analysis?.status==="ready"&&analysis.findings?.length){
       const top=analysis.findings.slice(0,8);
       cards.appendChild(card("Statistical signals","Exploratory elastic net",
@@ -980,9 +940,11 @@
     if(signals.coverage){
       for(const [kind,label,metric] of [
         ["played","Most played card","Casts or land plays"],
+        ["creature","Most played creature","Recorded creature casts"],
         ["seen","Most frequently seen card","Opening hands and recorded draws"],
         ["activated","Most active ability source","Recorded activations and triggers"],
         ["spell","Most cast instant or sorcery","Recorded spell casts"],
+        ["instant","Most cast instant","Recorded instant casts"],
         ["artifact","Most cast artifact","Recorded artifact casts"],
         ["removal","Most recorded creature removal","Recorded destroyed objects, where attributed"],
         ["longest","Longest-held card","Mean observed turn-end rounds in hand; ties by game coverage"]
@@ -1009,23 +971,14 @@
           summary.style.backgroundSize="cover";
           summary.style.backgroundPosition="center";
         }
-        panel.className+=" insight-strip-card";
-        const summary=panel.children[0];
-        if(art){
-          const img=create("img","insight-strip-art");
-          img.src=art;img.alt="";img.loading="lazy";
-          summary.appendChild(img);
-        }
-        insightCards.appendChild(panel);
+        cards.appendChild(panel);
       }
     }else{
-      insightCards.appendChild(card("Card diagnostics","Data coverage","Unavailable",
-        "The historical outcome exports omit complete turn/card observations.",
-        body=>body.appendChild(create("p","micro",
-          "Next publication will provide recorded card plays, draws and zone histories for each game."))));
+      cards.appendChild(create("p","game-outcome-empty",
+        "Card insights will appear with the next complete published simulation batch."));
     }
     const best=matchup[0];
-    gameCards.appendChild(card("Opponent Types","Types & table compositions",
+    cards.appendChild(card("Opponent Types","Types & table compositions",
       matchup.length+" types",
       best?best.counts.win+" wins · "+best.title:"No recorded groups",
       body=>{
@@ -1052,7 +1005,7 @@
         selector.addEventListener("change",redraw);
         redraw();
       }));
-    gameCards.appendChild(card("Game Length","Finished rounds",
+    cards.appendChild(card("Game Length","Finished rounds",
       quantile(finished.map(run=>run.completed_rounds),.5)===null?"—":
         nfmt(quantile(finished.map(run=>run.completed_rounds),.5)),
       "Median · "+finished.length+" finished games",
@@ -1066,7 +1019,7 @@
         body.appendChild(stats);
         histogram(body,finished,groups[0].requestedRounds);
       }));
-    gameCards.appendChild(card("Eliminations","Survival",
+    cards.appendChild(card("Eliminations","Survival",
       knocked.length+" / "+total,
       "Our seat eliminated",
       body=>{
@@ -1095,7 +1048,7 @@
         }
         body.appendChild(bySeat);
       }));
-    gameCards.appendChild(card("Life Progression","Four seats",
+    cards.appendChild(card("Life Progression","Four seats",
       quantile(lastLife,.5)===null?"—":nfmt(quantile(lastLife,.5)),
       "Your median final recorded life",
       body=>{
@@ -1116,105 +1069,11 @@
         slider.addEventListener("input",displayRound);
         body.append(slider,detail);displayRound();
       }));
-    // Include progression only when the current release has real end-of-turn
-    // observations. Mana is explicitly lands + rocks, not inferred production.
-    const observedRounds=new Map();
-    for(const run of runs)for(const row of run.ui_observations||[]){
-      if(!Number.isInteger(row.turn)||row.turn<1)continue;
-      const values=observedRounds.get(row.turn)||[];
-      values.push(row);observedRounds.set(row.turn,values);
-    }
-    const progression=[...observedRounds].sort((a,b)=>a[0]-b[0]);
-    const avg=(rows,key)=>{
-      const values=rows.map(x=>x[key]).filter(Number.isFinite);
-      return values.length?values.reduce((a,b)=>a+b,0)/values.length:null;
-    };
-    function progressionCard(title,subtitle,readValue,format){
-      const points=progression.map(([turn,rows])=>({
-        turn,observed:rows.length,value:readValue(rows)
-      })).filter(x=>Number.isFinite(x.value));
-      if(!points.length)return null;
-      const atSix=points.find(x=>x.turn===6)||points.at(-1);
-      return card(title,subtitle,format(atSix.value),
-        "Round "+atSix.turn+" · "+atSix.observed+" recorded games",body=>{
-        const max=Math.max(1,...points.map(x=>x.value));
-        const chart=create("div","game-outcome-finish-bars");
-        for(const point of points){
-          const row=create("div","game-outcome-finish-row");
-          row.appendChild(create("span",null,"R"+point.turn));
-          const track=create("div","game-outcome-finish-track");
-          const bar=create("span","game-outcome-finish-fill");
-          bar.style.width=(point.value/max*100)+"%";
-          track.appendChild(bar);
-          row.append(track,create("strong",null,format(point.value)));
-          chart.appendChild(row);
-        }
-        body.append(chart,create("p","micro",
-          "Observed runs at each round · unfinished games stop contributing."));
-      });
-    }
-    const mana=progressionCard("Mana development","Lands + mana rocks",
-      rows=>{
-        const valid=rows.filter(x=>Number.isFinite(x.land_count)&&
-          Number.isFinite(x.mana_rock_count));
-        return valid.length?valid.reduce((n,x)=>n+x.land_count+x.mana_rock_count,0)/valid.length:null;
-      },x=>x.toFixed(1));
-    if(mana)gameCards.appendChild(mana);
-    const board=progressionCard("Board development","Creatures in play",
-      rows=>avg(rows,"creature_count"),x=>x.toFixed(1));
-    if(board)gameCards.appendChild(board);
-    // The HUD is one fixed-area explorer. All existing charts and drilldowns
-    // stay attached but only the selected metric is visible.
-    const hudCards=[...gameCards.children];
-    const hudMeta=[
-      ["◈","Outcomes",counts.win+"/"+total],
-      ["⚔","Opponents",String(matchup.length)],
-      ["◷","Game length",nfmt(quantile(finished.map(r=>r.completed_rounds),.5))],
-      ["♟","Eliminations",String(knocked.length)],
-      ["♥","Life",nfmt(quantile(lastLife,.5))],
-      ["✦","Mana",mana?(
-        (()=>{
-          const rows=observedRounds.get(6)||progression.at(-1)?.[1]||[];
-          const valid=rows.filter(x=>Number.isFinite(x.land_count)&&
-            Number.isFinite(x.mana_rock_count));
-          return valid.length?(valid.reduce((n,x)=>n+x.land_count+x.mana_rock_count,0)/valid.length).toFixed(1):"—";
-        })()):"—"],
-      ["♟","Board",board?(
-        (()=>{
-          const rows=observedRounds.get(6)||progression.at(-1)?.[1]||[];
-          const value=avg(rows,"creature_count");
-          return value===null?"—":value.toFixed(1);
-        })()):"—"]
-    ];
-    let chosen=0;
-    const buttons=[];
-    for(let i=0;i<hudCards.length;i++){
-      const [symbol,label,value]=hudMeta[i]||["◆","Metric","—"];
-      const button=textButton("","results-hud-tile",()=>selectHud(i));
-      button.setAttribute("aria-label",label+" · "+value);
-      button.setAttribute("aria-pressed","false");
-      button.append(create("span","results-hud-symbol",symbol),
-        create("strong","results-hud-value",value),
-        create("span","results-hud-tile-label",label));
-      tileRoot.appendChild(button);buttons.push(button);
-    }
-    function selectHud(index){
-      chosen=index;
-      for(let i=0;i<hudCards.length;i++){
-        hudCards[i].hidden=i!==index;
-        buttons[i].setAttribute("aria-pressed",String(i===index));
-        // Expand selected metric in place rather than extending page height.
-        const panel=hudCards[i].className.includes("game-outcome-hero-frame")?
-          hudCards[i].children[0]:hudCards[i];
-        if(panel)panel.open=i===index;
-      }
-    }
-    if(hudCards.length)selectHud(0);
     if(options.reviewerRoot){
       jumpToReview=turnReviewer(options.reviewerRoot,groups,options);
     }
     return report;
   }
   return {FORMAT,STATES,validate,model,lifeTrend,matchupRows,matchupMetrics,
-    knockoutRound,opponentDecks,render};
+    knockoutRound,opponentDecks,observationCardStats,render};
 });

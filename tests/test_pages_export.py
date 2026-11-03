@@ -144,8 +144,6 @@ class StaticPagesTests(unittest.TestCase):
         js=(self.destination/"app.js").read_text(encoding="utf-8")
         self.assertIn('location.pathname.endsWith("/summary.html")?"summary":"results"',js)
         self.assertIn("function showPage()",js)
-        self.assertIn('id="results-hud"',(self.destination/"results.html").read_text())
-        self.assertIn('id="hud-commander-slot"',(self.destination/"results.html").read_text())
         self.assertIn("function renderScrollStory()",js)
         self.assertIn("IntersectionObserver",js)
         self.assertIn("window.d3",js)
