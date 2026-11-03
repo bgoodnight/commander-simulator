@@ -1129,7 +1129,7 @@ test('opening draw row shows actual cards with only sourced mulligan wording',()
   assert.match(js,/count!==null\?"Mulliganed "\+count\+" times"/);
   assert.match(js,/run\.opening_hand/);
   assert.match(exporter,/"mulligan":\{/);
-  assert.match(exporter,/"taken":run\["mulligan"\]\.get\("taken"\)/);
+  assert.match(exporter,/"taken":run\.get\("mulligan",\{\}\)\.get\("taken"\)/);
 });
 test('compact example controls omit selector and repeated run heading',()=>{
   const js=fs.readFileSync('web/pages/game_outcomes.js','utf8');
