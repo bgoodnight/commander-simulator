@@ -761,10 +761,7 @@ function bracketLink(){
 }
 function renderPageIntro(){
   const intro=$("page-introduction");clear(intro);
-  if(pageName==="results"){
-    intro.appendChild(el("h1","Simulation Results"));
-    return;
-  }
+  if(pageName==="results")return;
   const facts=deckFacts();
   let detail=facts.total+" cards · "+facts.lands+" lands";
   if(pageName==="results"){
