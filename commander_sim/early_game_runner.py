@@ -298,7 +298,8 @@ def run_bounded_early_game(deck_key, *, seed=0, turns=6, mulligan="one-free", pr
     opponent_pressure = (BoundedOpponentPressure(
         zones,life,raw_by_name,death_engine,phase_engine,CardDefinition,
         seed=seed,scenario=opponent_scenario,
-        attachment_engine=attachment_engine)
+        attachment_engine=attachment_engine,
+        mana_service=mana_service)
         if opponent_scenario is not None else None)
     if opponent_pressure is not None:
         opponent_pressure.zone_spells=zone_engine
