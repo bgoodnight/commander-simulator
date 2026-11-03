@@ -864,7 +864,7 @@ test('turn background uses first named card and enemy activity has one condensed
     const firstBody=walk(turns[1]);
     const rest=firstBody.filter(n=>n.className==='insight-rest-of-turn');
     assert.equal(rest.length,1);
-    assert.ok(walk(rest[0]).some(n=>n.textContent.includes('3 other recorded events')));
+    assert.ok(!walk(rest[0]).some(n=>n.textContent.includes('abstract')));
     assert.equal(firstBody.filter(n=>n.className==='insight-action-phase is-opponent').length,0);
     assert.ok(!firstBody.some(n=>n.textContent==='Seat not recorded'));
     const player=firstBody.find(n=>n.className==='insight-action-phase is-player');
@@ -1080,4 +1080,20 @@ test('turn header art prefers highest-value nonland play, ties first, and falls 
     assert.equal(image(2),'https://example.com/Swamp.jpg');
     assert.equal(image(3),'https://example.com/Sol-Ring.jpg');
   }finally{global.document=before}
+});
+
+test('compact turn display does not leak internal abstract event identifiers',()=>{
+  const js=fs.readFileSync('web/pages/game_outcomes.js','utf8');
+  const css=fs.readFileSync('web/pages/style.css','utf8');
+  const a=js.indexOf('function narratedAction(');
+  const b=js.indexOf('function narratedText(',a);
+  const narrator=js.slice(a,b);
+  assert.ok(a>=0&&b>a);
+  assert.doesNotMatch(narrator,/return \{verb:type\.replaceAll/);
+  assert.match(narrator,/Destruction prevented/);
+  assert.match(narrator,/Attack blocked/);
+  assert.match(narrator,/Unblocked combat damage/);
+  assert.match(narrator,/return null/);
+  assert.match(css,/\.insight-turn-row \.insight-turn-row-summary\{\s*min-height:48px/);
+  assert.match(css,/\.insight-turn-activity\{font-size:\.72rem;min-width:0/);
 });
