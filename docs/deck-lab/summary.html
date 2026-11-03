@@ -6,15 +6,15 @@
   <meta name="theme-color" content="#182428">
   <meta name="description" content="Commander Deck Lab: explore cached Commander decklists, card art and precomputed early-turn observations.">
   <title>Commander Deck Lab — The Arcane Table</title>
-  <link rel="stylesheet" href="./style.css?v=auto-outcomes-20261102">
+  <link rel="stylesheet" href="./style.css?v=latest-card-feed-20261102">
   <script src="https://cdn.jsdelivr.net/npm/d3@7/dist/d3.min.js" defer></script>
   <script src="./results_insights.js?v=20261101h1" defer></script>
   <script src="./brackets.js?v=20261101bracket" defer></script>
   <script src="./replay.js?v=bounded-evidence-pilot-20261102" defer></script>
   <script src="./insight_catalog.js?v=held-median-20261102" defer></script>
   <script src="./insight_explorer.js?v=held-median-20261102" defer></script>
-  <script src="./game_outcomes.js?v=art-outcomes-20261102" defer></script>
-  <script src="./app.js?v=auto-outcomes-20261102" defer></script>
+  <script src="./game_outcomes.js?v=latest-card-feed-20261102" defer></script>
+  <script src="./app.js?v=latest-card-feed-20261102" defer></script>
 </head>
 <body>
 <main class="wide-wrap" id="app">
@@ -125,26 +125,17 @@
         <div id="key-insights-grid" class="board-grid"></div>
         <p id="key-insights-empty" class="small" hidden></p>
       </section>
-      <section id="long-game-panel" class="panel game-outcome-panel" aria-labelledby="long-game-heading">
-        <div class="game-outcome-heading">
-          <div>
-            <span class="eyebrow">Current published simulations</span>
-            <h2 id="long-game-heading">Game outcomes &amp; opponent types</h2>
-            <p class="micro">Results load automatically for the selected deck.</p>
-          </div>
-          <button type="button" id="game-outcome-refresh" class="game-outcome-refresh">↻ Refresh results</button>
+      <section id="long-game-panel" class="game-outcome-panel" aria-label="Latest simulated results">
+        <div class="latest-results-topline">
+          <span id="game-outcome-status" role="status">Loading latest simulations…</span>
+          <button type="button" id="game-outcome-refresh" class="game-outcome-refresh"
+            aria-label="Refresh latest simulation results" title="Refresh results">↻</button>
         </div>
-        <p id="game-outcome-status" class="micro" role="status">Checking published simulation batches…</p>
         <div id="game-outcome-results" aria-live="polite"></div>
-        <details class="story-drilldown game-outcome-method">
-          <summary>About these results &amp; optional local import</summary>
-          <p class="micro">The published simulation library loads automatically when you select a deck. Use Refresh results to check for a newly completed batch. Published outcomes remain pinned to the source deck revision and simulator commit.</p>
-          <p class="micro">The current opponent model uses abstract stress policies, not full opposing Commander decks. Unresolved games are kept separate from losses. Select the ⓘ icon on the outcome card for limitations and accuracy improvements.</p>
-          <label class="game-outcome-import">
-            <span>Import local JSON (optional)</span>
-            <input id="game-outcome-files" type="file" accept="application/json,.json" multiple>
-          </label>
-        </details>
+      </section>
+      <section id="turn-reviewer-panel" class="latest-turn-reviewer" aria-labelledby="turn-reviewer-heading">
+        <h2 id="turn-reviewer-heading">Turn reviewer</h2>
+        <div id="turn-reviewer-results" aria-live="polite"></div>
       </section>
       <details id="development-panel" class="panel result-takeaway result-takeaway-development" aria-labelledby="bounded-heading">
         <summary class="result-takeaway-summary">
