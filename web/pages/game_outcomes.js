@@ -587,11 +587,14 @@
               action.creatures_killed,{eventIndex});
           // Do not infer player damage/finishing blows from unattributed
           // life deltas. Both require a named source and explicit provenance.
-          if(action.target_seat>0&&Number.isFinite(action.life_lost)&&
+          if(action.target_seat>0&&
+              (action.seat===undefined||Number(action.seat)===0)&&
+              Number.isFinite(action.life_lost)&&
               action.life_lost>0&&(action.card||action.source))
             record("damage",action.card||action.source,run,row.turn,
               action.life_lost,{eventIndex});
           if(action.type==="reviewed_finishing_blow"&&
+              (action.seat===undefined||Number(action.seat)===0)&&
               (action.card||action.source))
             record("finisher",action.card||action.source,run,row.turn,1,{eventIndex});
         }
@@ -995,7 +998,7 @@
     panel.className+=" insight-card-with-evidence";
     const art=options.lookupRecordedCard?.(winner.name)?.art;
     if(art){
-      const summary=panel.querySelector("summary");
+      const summary=panel.children[0];
       summary.style.backgroundImage=
         "linear-gradient(90deg, rgba(17,23,28,.96),rgba(17,23,28,.70)),url("+JSON.stringify(art)+")";
       summary.style.backgroundSize="cover";
