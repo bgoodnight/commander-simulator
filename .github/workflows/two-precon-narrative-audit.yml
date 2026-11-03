@@ -1,0 +1,104 @@
+name: Two-precon source-pinned narrative rules audit
+
+on:
+  push:
+    branches: [audit/two-precon-narrative-gaps-20261103]
+    paths:
+      - .github/workflows/two-precon-narrative-audit.yml
+      - tools/audit_two_precon_games.py
+
+permissions:
+  contents: write
+
+jobs:
+  narratives:
+    name: ${{ matrix.deck }} / ${{ matrix.scenario }} / 5 seeds
+    runs-on: ubuntu-latest
+    timeout-minutes: 55
+    strategy:
+      fail-fast: false
+      matrix:
+        deck: [necron_dynasties, wretched_ranks]
+        scenario: [mixed, control]
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      - name: Run source-pinned precon and archive real game-turn observations
+        run: |
+          mkdir -p dist/narratives
+          python tools/audit_two_precon_games.py run \
+            --deck "${{ matrix.deck }}" --scenario "${{ matrix.scenario }}" \
+            --seeds 5 \
+            --output "dist/narratives/${{ matrix.deck }}-${{ matrix.scenario }}.jsonl"
+          python - <<'PY'
+          import glob,json
+          for path in glob.glob("dist/narratives/*.jsonl"):
+              rows=[json.loads(x) for x in open(path)]
+              assert len(rows)==5
+              print(path, [(x['seed'],x['status']) for x in rows])
+          PY
+      - uses: actions/upload-artifact@v4
+        with:
+          name: pinned-precon-${{ matrix.deck }}-${{ matrix.scenario }}-${{ github.sha }}
+          path: dist/narratives/*.jsonl
+          if-no-files-found: error
+          retention-days: 90
+
+  report:
+    needs: narratives
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      - uses: actions/download-artifact@v4
+        with:
+          pattern: pinned-precon-*-${{ github.sha }}
+          path: dist/all
+          merge-multiple: true
+      - name: Aggregate observed rule gaps and rank by games encountered
+        run: |
+          mkdir -p dist/report
+          test "$(find dist/all -name '*.jsonl' | wc -l)" -eq 4
+          python tools/audit_two_precon_games.py report \
+            --source dist/all --output dist/report/precon-rule-gaps.json
+          python - <<'PY'
+          import json
+          from pathlib import Path
+          report=json.loads(Path('dist/report/precon-rule-gaps.json').read_text())
+          assert report['attempts']==20
+          assert set(report['decks'])=={'necron_dynasties','wretched_ranks'}
+          assert all(x['attempted_games']==10 for x in report['decks'].values())
+          for name,x in report['decks'].items():
+            print(name,'completed',x['completed_games'],'errors',x['engine_errors'])
+            print('Top unsupported cards:',[(c['card'],c['games_seen'])
+                   for c in x['unsupported_cards_observed_in_hand'][:12]])
+          PY
+      - uses: actions/upload-artifact@v4
+        with:
+          name: two-precon-source-audit-${{ github.sha }}
+          path: dist/report/*
+          if-no-files-found: error
+          retention-days: 90
+      - name: Save review report to audit branch only
+        run: |
+          git fetch origin audit/two-precon-narrative-gaps-20261103
+          if [ "$(git rev-parse HEAD)" != "$(git rev-parse origin/audit/two-precon-narrative-gaps-20261103)" ]; then
+            echo 'The branch advanced; report remains saved as an Actions artifact.'
+            exit 0
+          fi
+          mkdir -p testdata/two-precon-rules-audit
+          cp dist/report/precon-rule-gaps.json testdata/two-precon-rules-audit/
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add testdata/two-precon-rules-audit/
+          if ! git diff --cached --quiet; then
+            git commit -m 'Record observed unsupported rules from two-precon narrative audit'
+            git push origin HEAD:audit/two-precon-narrative-gaps-20261103
+          fi
