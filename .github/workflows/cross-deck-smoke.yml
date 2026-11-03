@@ -1,0 +1,66 @@
+name: Cross-deck bounded-game smoke after engine changes
+
+# Small, observational validation only. No Pages publication, no 500-game jobs.
+on:
+  pull_request:
+    paths:
+      - ".github/workflows/cross-deck-smoke.yml"
+      - "commander_sim/early_game_runner.py"
+      - "commander_sim/template_resources.py"
+      - "commander_sim/reviewed_phase_effects.py"
+      - "commander_sim/outcome_reporting.py"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  smoke:
+    name: ${{ matrix.deck }} / ${{ matrix.scenario }} / 6 seeds × 25 rounds
+    runs-on: ubuntu-latest
+    timeout-minutes: 35
+    strategy:
+      fail-fast: false
+      max-parallel: 6
+      matrix:
+        deck: [magnus_premium, magnus_budget, wretched_ranks, mortarion_current, mortarion_ideal, necron_dynasties, magnus_physical_trial, mortarion_physical_final]
+        scenario: [control, aggressive, random]
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+      - name: Run authentic full-observation cross-deck smoke cohort
+        env:
+          DECK: ${{ matrix.deck }}
+          SCENARIO: ${{ matrix.scenario }}
+        run: |
+          mkdir -p dist/outcomes dist/observations
+          python tools/build_game_outcomes.py \
+            --deck "$DECK" --scenario "$SCENARIO" \
+            --seeds 6 --start-seed 0 --rounds 25 \
+            --pilot-style adaptive --pilot-archetype auto \
+            --provisional-mode safe --examples 2 \
+            --observations-output "dist/observations/$DECK-$SCENARIO.jsonl" \
+            --output "dist/outcomes/$DECK-$SCENARIO.json"
+          python tools/validate_game_observations.py \
+            --source dist/observations --expected-games 6 --expected-rounds 25
+          python - <<'PY'
+          import json
+          from pathlib import Path
+          result=json.loads(next(Path("dist/outcomes").glob("*.json")).read_text())
+          assert result["summary"]["total_games"]==6
+          assert len(result["runs"])==6
+          assert len(result["example_replays"])==2
+          assert all(x["completed_rounds"]<=25 for x in result["runs"])
+          print(json.dumps({"deck":result["deck_key"],"scenario":result["scenario"],
+                            "outcomes":result["summary"]["outcome_counts"]},sort_keys=True))
+          PY
+      - name: Retain smoke observations and results
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: smoke-${{ matrix.deck }}-${{ matrix.scenario }}
+          path: dist/
+          if-no-files-found: ignore
+          retention-days: 14
