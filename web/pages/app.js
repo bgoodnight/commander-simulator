@@ -763,7 +763,7 @@ function bracketName(result){
     " · "+({2:"Core",3:"Upgraded",4:"Optimized"}[result.estimated_bracket]||"Review needed"):"Bracket unavailable";
 }
 function bracketLink(){
-  const url=new URL("./index.html",location.href);
+  const url=new URL("./summary.html",location.href);
   url.searchParams.set("deck",selected);
   if(selectedVersionId)url.searchParams.set("version",selectedVersionId);
   url.hash="bracket-assessment";
