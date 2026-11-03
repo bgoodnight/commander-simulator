@@ -43,7 +43,10 @@ class ElasticNetDiscoveryTests(unittest.TestCase):
         cohort,names,matrix,y,parents=design(rows,landmark=6,min_support=2)
         self.assertEqual(len(cohort),14)
         self.assertEqual(len(matrix),14)
-        self.assertIn("resource:land_count",names)
+        # The observed resource is available to feature engineering, but
+        # the design matrix correctly drops a constant predictor.
+        self.assertEqual(features(cohort[0],6)["resource:land_count"],3.)
+        self.assertNotIn("resource:land_count",names)
 
     def test_fits_exploratory_model_without_tree_or_ridge(self):
         try:
