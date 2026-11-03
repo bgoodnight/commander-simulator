@@ -1,0 +1,686 @@
+{
+  "decks": {
+    "magnus_physical_trial": {
+      "games": 20,
+      "median_last_observed_round": 14.0,
+      "median_terminal_round": 14.0,
+      "outcomes": {
+        "loss": 18,
+        "win": 2
+      }
+    },
+    "mortarion_physical_final": {
+      "games": 20,
+      "median_last_observed_round": 12.0,
+      "median_terminal_round": 12.0,
+      "outcomes": {
+        "loss": 9,
+        "win": 11
+      }
+    },
+    "necron_dynasties": {
+      "games": 20,
+      "median_last_observed_round": 12.0,
+      "median_terminal_round": 12.0,
+      "outcomes": {
+        "loss": 17,
+        "win": 3
+      }
+    },
+    "wretched_ranks": {
+      "games": 20,
+      "median_last_observed_round": 12.5,
+      "median_terminal_round": 12.5,
+      "outcomes": {
+        "loss": 18,
+        "win": 2
+      }
+    }
+  },
+  "format": "opponent-pressure-calibration-baseline-v1",
+  "limitations": [
+    "This is not a four-AI tournament: seat zero is a full real deck pilot.",
+    "Opponent policies are abstract, not source-paid Commander decks.",
+    "All four archetypes can spawn creatures; other card-type play is not fully modeled.",
+    "Threat proxies are first two spawned creatures and cumulative 5 combat damage, not demonstrated lethal threats.",
+    "Medians conditional on observation exclude games without the event.",
+    "No equal-seat or equal-archetype win-rate estimate is possible from this asymmetric engine."
+  ],
+  "opponent_archetypes": {
+    "aggro": {
+      "combat_events_per_seat_game": 23.2,
+      "combo_events_per_seat_game": 0.0,
+      "creature_spawn_per_seat_game": 7.45,
+      "first_events": {
+        "blocked": {
+          "median_round_if_observed": 4,
+          "observed": 55
+        },
+        "combat_damage": {
+          "median_round_if_observed": 2.0,
+          "observed": 56
+        },
+        "combo": {
+          "median_round_if_observed": null,
+          "observed": 0
+        },
+        "creature": {
+          "median_round_if_observed": 1.0,
+          "observed": 56
+        },
+        "five_combat_damage": {
+          "median_round_if_observed": 3.0,
+          "observed": 56
+        },
+        "removal": {
+          "median_round_if_observed": null,
+          "observed": 0
+        },
+        "two_creatures": {
+          "median_round_if_observed": 2.0,
+          "observed": 56
+        }
+      },
+      "median_observed_combat_damage": 51.0,
+      "removal_events_per_seat_game": 0.0,
+      "seat_eliminated": 13,
+      "seat_games": 56
+    },
+    "combo": {
+      "combat_events_per_seat_game": 3.91,
+      "combo_events_per_seat_game": 5.34,
+      "creature_spawn_per_seat_game": 3.44,
+      "first_events": {
+        "blocked": {
+          "median_round_if_observed": 4,
+          "observed": 65
+        },
+        "combat_damage": {
+          "median_round_if_observed": 7.0,
+          "observed": 70
+        },
+        "combo": {
+          "median_round_if_observed": 7,
+          "observed": 79
+        },
+        "creature": {
+          "median_round_if_observed": 3.0,
+          "observed": 80
+        },
+        "five_combat_damage": {
+          "median_round_if_observed": 8.0,
+          "observed": 40
+        },
+        "removal": {
+          "median_round_if_observed": null,
+          "observed": 0
+        },
+        "two_creatures": {
+          "median_round_if_observed": 6.0,
+          "observed": 80
+        }
+      },
+      "median_observed_combat_damage": 4.5,
+      "removal_events_per_seat_game": 0.0,
+      "seat_eliminated": 30,
+      "seat_games": 80
+    },
+    "control": {
+      "combat_events_per_seat_game": 3.28,
+      "combo_events_per_seat_game": 0.0,
+      "creature_spawn_per_seat_game": 2.78,
+      "first_events": {
+        "blocked": {
+          "median_round_if_observed": 6.0,
+          "observed": 46
+        },
+        "combat_damage": {
+          "median_round_if_observed": 9,
+          "observed": 53
+        },
+        "combo": {
+          "median_round_if_observed": null,
+          "observed": 0
+        },
+        "creature": {
+          "median_round_if_observed": 4.0,
+          "observed": 64
+        },
+        "five_combat_damage": {
+          "median_round_if_observed": 10,
+          "observed": 31
+        },
+        "removal": {
+          "median_round_if_observed": 4,
+          "observed": 63
+        },
+        "two_creatures": {
+          "median_round_if_observed": 8,
+          "observed": 63
+        }
+      },
+      "median_observed_combat_damage": 4.0,
+      "removal_events_per_seat_game": 1.89,
+      "seat_eliminated": 32,
+      "seat_games": 64
+    },
+    "value": {
+      "combat_events_per_seat_game": 9.7,
+      "combo_events_per_seat_game": 0.0,
+      "creature_spawn_per_seat_game": 6.17,
+      "first_events": {
+        "blocked": {
+          "median_round_if_observed": 5,
+          "observed": 39
+        },
+        "combat_damage": {
+          "median_round_if_observed": 3.0,
+          "observed": 40
+        },
+        "combo": {
+          "median_round_if_observed": null,
+          "observed": 0
+        },
+        "creature": {
+          "median_round_if_observed": 2.0,
+          "observed": 40
+        },
+        "five_combat_damage": {
+          "median_round_if_observed": 6.0,
+          "observed": 36
+        },
+        "removal": {
+          "median_round_if_observed": 6,
+          "observed": 17
+        },
+        "two_creatures": {
+          "median_round_if_observed": 4.0,
+          "observed": 40
+        }
+      },
+      "median_observed_combat_damage": 24.0,
+      "removal_events_per_seat_game": 0.42,
+      "seat_eliminated": 19,
+      "seat_games": 40
+    }
+  },
+  "role_by_seat": {
+    "aggro": {
+      "1": {
+        "combat_events_per_seat_game": 24.21,
+        "combo_events_per_seat_game": 0.0,
+        "creature_spawn_per_seat_game": 7.46,
+        "first_events": {
+          "blocked": {
+            "median_round_if_observed": 4,
+            "observed": 23
+          },
+          "combat_damage": {
+            "median_round_if_observed": 2.0,
+            "observed": 24
+          },
+          "combo": {
+            "median_round_if_observed": null,
+            "observed": 0
+          },
+          "creature": {
+            "median_round_if_observed": 1.0,
+            "observed": 24
+          },
+          "five_combat_damage": {
+            "median_round_if_observed": 3.0,
+            "observed": 24
+          },
+          "removal": {
+            "median_round_if_observed": null,
+            "observed": 0
+          },
+          "two_creatures": {
+            "median_round_if_observed": 2.0,
+            "observed": 24
+          }
+        },
+        "median_observed_combat_damage": 57.5,
+        "removal_events_per_seat_game": 0.0,
+        "seat_eliminated": 7,
+        "seat_games": 24
+      },
+      "2": {
+        "combat_events_per_seat_game": 21.92,
+        "combo_events_per_seat_game": 0.0,
+        "creature_spawn_per_seat_game": 7.75,
+        "first_events": {
+          "blocked": {
+            "median_round_if_observed": 4.5,
+            "observed": 12
+          },
+          "combat_damage": {
+            "median_round_if_observed": 2.0,
+            "observed": 12
+          },
+          "combo": {
+            "median_round_if_observed": null,
+            "observed": 0
+          },
+          "creature": {
+            "median_round_if_observed": 1.0,
+            "observed": 12
+          },
+          "five_combat_damage": {
+            "median_round_if_observed": 3.0,
+            "observed": 12
+          },
+          "removal": {
+            "median_round_if_observed": null,
+            "observed": 0
+          },
+          "two_creatures": {
+            "median_round_if_observed": 2.0,
+            "observed": 12
+          }
+        },
+        "median_observed_combat_damage": 51.5,
+        "removal_events_per_seat_game": 0.0,
+        "seat_eliminated": 2,
+        "seat_games": 12
+      },
+      "3": {
+        "combat_events_per_seat_game": 22.75,
+        "combo_events_per_seat_game": 0.0,
+        "creature_spawn_per_seat_game": 7.25,
+        "first_events": {
+          "blocked": {
+            "median_round_if_observed": 5.0,
+            "observed": 20
+          },
+          "combat_damage": {
+            "median_round_if_observed": 2.0,
+            "observed": 20
+          },
+          "combo": {
+            "median_round_if_observed": null,
+            "observed": 0
+          },
+          "creature": {
+            "median_round_if_observed": 1.0,
+            "observed": 20
+          },
+          "five_combat_damage": {
+            "median_round_if_observed": 3.0,
+            "observed": 20
+          },
+          "removal": {
+            "median_round_if_observed": null,
+            "observed": 0
+          },
+          "two_creatures": {
+            "median_round_if_observed": 2.0,
+            "observed": 20
+          }
+        },
+        "median_observed_combat_damage": 48.0,
+        "removal_events_per_seat_game": 0.0,
+        "seat_eliminated": 4,
+        "seat_games": 20
+      }
+    },
+    "combo": {
+      "1": {
+        "combat_events_per_seat_game": 4.25,
+        "combo_events_per_seat_game": 5.67,
+        "creature_spawn_per_seat_game": 3.5,
+        "first_events": {
+          "blocked": {
+            "median_round_if_observed": 5,
+            "observed": 21
+          },
+          "combat_damage": {
+            "median_round_if_observed": 4.0,
+            "observed": 20
+          },
+          "combo": {
+            "median_round_if_observed": 7.0,
+            "observed": 24
+          },
+          "creature": {
+            "median_round_if_observed": 3.0,
+            "observed": 24
+          },
+          "five_combat_damage": {
+            "median_round_if_observed": 7.5,
+            "observed": 14
+          },
+          "removal": {
+            "median_round_if_observed": null,
+            "observed": 0
+          },
+          "two_creatures": {
+            "median_round_if_observed": 6.0,
+            "observed": 24
+          }
+        },
+        "median_observed_combat_damage": 6.0,
+        "removal_events_per_seat_game": 0.0,
+        "seat_eliminated": 9,
+        "seat_games": 24
+      },
+      "2": {
+        "combat_events_per_seat_game": 2.85,
+        "combo_events_per_seat_game": 5.2,
+        "creature_spawn_per_seat_game": 3.45,
+        "first_events": {
+          "blocked": {
+            "median_round_if_observed": 5,
+            "observed": 17
+          },
+          "combat_damage": {
+            "median_round_if_observed": 7.0,
+            "observed": 18
+          },
+          "combo": {
+            "median_round_if_observed": 7,
+            "observed": 19
+          },
+          "creature": {
+            "median_round_if_observed": 3.0,
+            "observed": 20
+          },
+          "five_combat_damage": {
+            "median_round_if_observed": 7.0,
+            "observed": 6
+          },
+          "removal": {
+            "median_round_if_observed": null,
+            "observed": 0
+          },
+          "two_creatures": {
+            "median_round_if_observed": 6.0,
+            "observed": 20
+          }
+        },
+        "median_observed_combat_damage": 3.5,
+        "removal_events_per_seat_game": 0.0,
+        "seat_eliminated": 11,
+        "seat_games": 20
+      },
+      "3": {
+        "combat_events_per_seat_game": 4.28,
+        "combo_events_per_seat_game": 5.19,
+        "creature_spawn_per_seat_game": 3.39,
+        "first_events": {
+          "blocked": {
+            "median_round_if_observed": 4,
+            "observed": 27
+          },
+          "combat_damage": {
+            "median_round_if_observed": 7.0,
+            "observed": 32
+          },
+          "combo": {
+            "median_round_if_observed": 7.0,
+            "observed": 36
+          },
+          "creature": {
+            "median_round_if_observed": 3.0,
+            "observed": 36
+          },
+          "five_combat_damage": {
+            "median_round_if_observed": 8.0,
+            "observed": 20
+          },
+          "removal": {
+            "median_round_if_observed": null,
+            "observed": 0
+          },
+          "two_creatures": {
+            "median_round_if_observed": 6.0,
+            "observed": 36
+          }
+        },
+        "median_observed_combat_damage": 6.5,
+        "removal_events_per_seat_game": 0.0,
+        "seat_eliminated": 10,
+        "seat_games": 36
+      }
+    },
+    "control": {
+      "1": {
+        "combat_events_per_seat_game": 2.65,
+        "combo_events_per_seat_game": 0.0,
+        "creature_spawn_per_seat_game": 2.3,
+        "first_events": {
+          "blocked": {
+            "median_round_if_observed": 6.0,
+            "observed": 14
+          },
+          "combat_damage": {
+            "median_round_if_observed": 5.0,
+            "observed": 16
+          },
+          "combo": {
+            "median_round_if_observed": null,
+            "observed": 0
+          },
+          "creature": {
+            "median_round_if_observed": 4.0,
+            "observed": 20
+          },
+          "five_combat_damage": {
+            "median_round_if_observed": 8,
+            "observed": 11
+          },
+          "removal": {
+            "median_round_if_observed": 4,
+            "observed": 19
+          },
+          "two_creatures": {
+            "median_round_if_observed": 8.0,
+            "observed": 20
+          }
+        },
+        "median_observed_combat_damage": 5.0,
+        "removal_events_per_seat_game": 1.75,
+        "seat_eliminated": 9,
+        "seat_games": 20
+      },
+      "2": {
+        "combat_events_per_seat_game": 2.81,
+        "combo_events_per_seat_game": 0.0,
+        "creature_spawn_per_seat_game": 2.81,
+        "first_events": {
+          "blocked": {
+            "median_round_if_observed": 5,
+            "observed": 25
+          },
+          "combat_damage": {
+            "median_round_if_observed": 9.0,
+            "observed": 30
+          },
+          "combo": {
+            "median_round_if_observed": null,
+            "observed": 0
+          },
+          "creature": {
+            "median_round_if_observed": 4.0,
+            "observed": 36
+          },
+          "five_combat_damage": {
+            "median_round_if_observed": 10,
+            "observed": 13
+          },
+          "removal": {
+            "median_round_if_observed": 4.0,
+            "observed": 36
+          },
+          "two_creatures": {
+            "median_round_if_observed": 8,
+            "observed": 35
+          }
+        },
+        "median_observed_combat_damage": 3.5,
+        "removal_events_per_seat_game": 1.94,
+        "seat_eliminated": 17,
+        "seat_games": 36
+      },
+      "3": {
+        "combat_events_per_seat_game": 7.0,
+        "combo_events_per_seat_game": 0.0,
+        "creature_spawn_per_seat_game": 3.88,
+        "first_events": {
+          "blocked": {
+            "median_round_if_observed": 8,
+            "observed": 7
+          },
+          "combat_damage": {
+            "median_round_if_observed": 9,
+            "observed": 7
+          },
+          "combo": {
+            "median_round_if_observed": null,
+            "observed": 0
+          },
+          "creature": {
+            "median_round_if_observed": 4.0,
+            "observed": 8
+          },
+          "five_combat_damage": {
+            "median_round_if_observed": 10,
+            "observed": 7
+          },
+          "removal": {
+            "median_round_if_observed": 4.0,
+            "observed": 8
+          },
+          "two_creatures": {
+            "median_round_if_observed": 8.0,
+            "observed": 8
+          }
+        },
+        "median_observed_combat_damage": 13.5,
+        "removal_events_per_seat_game": 2.0,
+        "seat_eliminated": 6,
+        "seat_games": 8
+      }
+    },
+    "value": {
+      "1": {
+        "combat_events_per_seat_game": 11.58,
+        "combo_events_per_seat_game": 0.0,
+        "creature_spawn_per_seat_game": 7.83,
+        "first_events": {
+          "blocked": {
+            "median_round_if_observed": 5.0,
+            "observed": 12
+          },
+          "combat_damage": {
+            "median_round_if_observed": 3.0,
+            "observed": 12
+          },
+          "combo": {
+            "median_round_if_observed": null,
+            "observed": 0
+          },
+          "creature": {
+            "median_round_if_observed": 2.0,
+            "observed": 12
+          },
+          "five_combat_damage": {
+            "median_round_if_observed": 7.0,
+            "observed": 12
+          },
+          "removal": {
+            "median_round_if_observed": 6.0,
+            "observed": 4
+          },
+          "two_creatures": {
+            "median_round_if_observed": 4.0,
+            "observed": 12
+          }
+        },
+        "median_observed_combat_damage": 32.0,
+        "removal_events_per_seat_game": 0.33,
+        "seat_eliminated": 5,
+        "seat_games": 12
+      },
+      "2": {
+        "combat_events_per_seat_game": 7.5,
+        "combo_events_per_seat_game": 0.0,
+        "creature_spawn_per_seat_game": 5.17,
+        "first_events": {
+          "blocked": {
+            "median_round_if_observed": 3,
+            "observed": 11
+          },
+          "combat_damage": {
+            "median_round_if_observed": 5.0,
+            "observed": 12
+          },
+          "combo": {
+            "median_round_if_observed": null,
+            "observed": 0
+          },
+          "creature": {
+            "median_round_if_observed": 2.0,
+            "observed": 12
+          },
+          "five_combat_damage": {
+            "median_round_if_observed": 5.5,
+            "observed": 10
+          },
+          "removal": {
+            "median_round_if_observed": 6,
+            "observed": 5
+          },
+          "two_creatures": {
+            "median_round_if_observed": 4.0,
+            "observed": 12
+          }
+        },
+        "median_observed_combat_damage": 20.0,
+        "removal_events_per_seat_game": 0.42,
+        "seat_eliminated": 4,
+        "seat_games": 12
+      },
+      "3": {
+        "combat_events_per_seat_game": 9.94,
+        "combo_events_per_seat_game": 0.0,
+        "creature_spawn_per_seat_game": 5.69,
+        "first_events": {
+          "blocked": {
+            "median_round_if_observed": 4.0,
+            "observed": 16
+          },
+          "combat_damage": {
+            "median_round_if_observed": 3.5,
+            "observed": 16
+          },
+          "combo": {
+            "median_round_if_observed": null,
+            "observed": 0
+          },
+          "creature": {
+            "median_round_if_observed": 2.0,
+            "observed": 16
+          },
+          "five_combat_damage": {
+            "median_round_if_observed": 6.5,
+            "observed": 14
+          },
+          "removal": {
+            "median_round_if_observed": 6.0,
+            "observed": 8
+          },
+          "two_creatures": {
+            "median_round_if_observed": 4.0,
+            "observed": 16
+          }
+        },
+        "median_observed_combat_damage": 25.0,
+        "removal_events_per_seat_game": 0.5,
+        "seat_eliminated": 10,
+        "seat_games": 16
+      }
+    }
+  },
+  "total_games": 80
+}
