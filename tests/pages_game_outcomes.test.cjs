@@ -616,10 +616,11 @@ test('turn spotlight prioritizes real own plays and never invents drawn/opposing
     {type:'creature_cast',card:'Grave Titan',seat:0}
   ]},()=>({name:'Grave Titan'})),null);
 });
-test('turn reviewer builds illustrated selectable turns using actual recorded evidence',()=>{
+test('full-game reviewer uses same compact turn rows as insight evidence',()=>{
   class Node{
     constructor(tag){this.tag=tag;this.className='';this.textContent='';
-      this.children=[];this.attributes={};this.style={};this.dataset={};this.events={};}
+      this.children=[];this.attributes={};this.style={};this.dataset={};this.events={};
+      this.open=false;}
     append(...items){this.children.push(...items)}
     appendChild(item){this.children.push(item);return item}
     replaceChildren(...items){this.children=[...items]}
@@ -634,9 +635,12 @@ test('turn reviewer builds illustrated selectable turns using actual recorded ev
     const root=new Node('main'),reviewer=new Node('section');
     const withTurns={...runUnresolved(),opening_hand:['Grave Titan'],
       ui_observations:[
-        {turn:1,hand:['Grave Titan'],actions:[{type:'creature_cast',card:'Grave Titan',seat:0}]},
-        {turn:2,hand:[],actions:[{type:'draw',card:'Plains',seat:0}]},
-        {turn:3,hand:[],actions:[{type:'land_play',card:'Swamp',seat:0}]}]};
+        {turn:1,hand:['Grave Titan'],battlefield:[],graveyard:[],
+          actions:[{type:'creature_cast',card:'Grave Titan',seat:0}]},
+        {turn:2,hand:[],battlefield:['Grave Titan'],graveyard:[],
+          actions:[{type:'draw',card:'Plains',seat:0}]},
+        {turn:3,hand:[],battlefield:['Grave Titan'],graveyard:[],
+          actions:[{type:'land_play',card:'Swamp',seat:0}]}]};
     Outcomes.render(root,[batch([withTurns])],{
       deckKey:'necron_dynasties',deckHash:'a'.repeat(64),
       reviewerRoot:reviewer,lookupRecordedCard:name=>({
@@ -644,22 +648,28 @@ test('turn reviewer builds illustrated selectable turns using actual recorded ev
       })
     });
     const walk=n=>[n,...n.children.flatMap(walk)];
-    const tiles=walk(reviewer).filter(n=>n.className==='game-outcome-turn-tile');
-    assert.equal(tiles.length,4);
-    assert.equal(tiles[0].children.some(n=>n.className==='game-outcome-turn-art'),false);
-    assert.equal(tiles[1].children.find(n=>n.className==='game-outcome-turn-art')?.src,
-      'https://example.com/Grave-Titan.jpg');
-    assert.equal(tiles[2].children.some(n=>n.className==='game-outcome-turn-art'),false);
-    assert.equal(tiles[3].children.find(n=>n.className==='game-outcome-turn-art')?.src,
-      'https://example.com/Swamp.jpg');
-    assert.equal(tiles[3].attributes['aria-pressed'],'true');
-    tiles[1].onclick();
-    assert.equal(tiles[1].attributes['aria-pressed'],'true');
-    assert.equal(tiles[3].attributes['aria-pressed'],'false');
-    assert.ok(walk(reviewer).some(n=>n.textContent==='Round 1 · 4 of 4 seats alive'));
+    const turns=walk(reviewer).filter(n=>n.className==='insight-turn-row');
+    assert.equal(turns.length,4);
+    assert.equal(walk(reviewer).some(n=>n.className==='game-outcome-turn-tile'),false);
+    const opened=turns[1];
+    opened.open=true;
+    assert.ok(walk(opened).some(n=>n.className==='insight-action-art'&&
+      n.src==='https://example.com/Grave-Titan.jpg'));
+    assert.ok(walk(opened).some(n=>n.className==='insight-turn-seats'));
+    assert.ok(walk(opened).some(n=>n.className==='game-outcome-life-stat is-life-loss'));
+    assert.ok(walk(turns[3]).some(n=>n.textContent==='Swamp'));
+    const insight=walk(root).find(n=>n.className.includes('insight-featured-panel')&&
+      walk(n).some(x=>x.textContent==='Most played card'));
+    assert.ok(insight);
+    const tracker=walk(insight).find(n=>n.className==='insight-inline-tracker');
+    assert.ok(tracker);
+    tracker.open=true;tracker.events.toggle();
+    const inline=walk(tracker).filter(n=>n.className==='insight-turn-row');
+    assert.equal(inline.length,turns.length);
+    assert.deepEqual(inline.map(n=>n.children[0].children[0].textContent),
+      turns.map(n=>n.children[0].children[0].textContent));
   }finally{global.document=before}
 });
-
 
 test('resolved tutor insights count found targets and tutor sources, not merely casts',()=>{
   const observed=(seed,actions)=>({seed,completed_rounds:1,
