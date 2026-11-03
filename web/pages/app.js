@@ -500,6 +500,8 @@ function renderLongGamePanel(){
     portraitFor:outcomeOpponentPortrait,
     reviewerRoot:reviewer,
     reviewerPanel:$("turn-reviewer-panel"),
+    lookupRecordedCard:cardInfo,
+    onOpenRecordedCard:name=>{const card=cardInfo(name);if(card?.oracle_id)showCard(card.oracle_id)},
     onShowRecordedActions:(target,example,run)=>{
       try{
         if(!window.CommanderReplay?.renderBoundedEvidence)

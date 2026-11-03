@@ -505,6 +505,72 @@
     }
     parent.appendChild(bars);
   }
+  function observationCardStats(runs){
+    const appearances=new Map(),plays=new Map(),activations=new Map();
+    const inc=(map,key,seed,turn)=>{
+      if(typeof key!=="string"||!key.trim())return;
+      if(!map.has(key))map.set(key,{name:key,count:0,seeds:new Set(),turns:[]});
+      const item=map.get(key);item.count++;item.seeds.add(seed);
+      if(Number.isFinite(turn))item.turns.push(turn);
+    };
+    for(const run of runs){
+      const seen=new Set(Array.isArray(run.opening_hand)?run.opening_hand:[]);
+      for(const row of run.ui_observations||[]){
+        for(const action of row.actions||[]){
+          if(action.type==="draw"&&action.card)seen.add(action.card);
+          if(action.type==="land_play"||action.type?.endsWith("_cast")||
+             action.type==="reviewed_commander_cast"){
+            inc(plays,action.card,run.seed,row.turn);
+          }
+          if(action.type?.includes("activated")||action.type?.includes("trigger")){
+            // Only name abilities where the event itself identifies the source.
+            const key=action.card||action.source||action.operation;
+            inc(activations,key,run.seed,row.turn);
+          }
+        }
+      }
+      for(const name of seen)inc(appearances,name,run.seed,null);
+    }
+    const top=map=>[...map.values()].sort((a,b)=>
+      b.count-a.count||b.seeds.size-a.seeds.size||
+      a.name.localeCompare(b.name))[0]||null;
+    return {
+      seen:top(appearances),played:top(plays),activated:top(activations),
+      coverage:runs.filter(run=>Array.isArray(run.ui_observations)&&
+        run.ui_observations.length===run.completed_rounds).length
+    };
+  }
+  function renderObservationZones(root,observation,options={}){
+    if(!observation)return;
+    const box=create("div","game-outcome-observed-zones");
+    box.appendChild(create("strong",null,"Recorded hand, board and actions"));
+    const zones=[["Hand",observation.hand],["Battlefield",observation.battlefield],
+      ["Graveyard",observation.graveyard]];
+    for(const [label,names] of zones){
+      const details=create("details","game-outcome-observed-zone");
+      details.appendChild(create("summary",null,label+" · "+(names?.length||0)));
+      const list=create("div","game-outcome-observed-cards");
+      if(!names?.length)list.appendChild(create("span","micro","None recorded"));
+      for(const name of names||[]){
+        const button=create("button","game-outcome-recorded-card",name);
+        button.type="button";button.onclick=()=>options.onOpenRecordedCard?.(name);
+        list.appendChild(button);
+      }
+      details.appendChild(list);box.appendChild(details);
+    }
+    const actions=create("details","game-outcome-observed-zone");
+    actions.appendChild(create("summary",null,
+      "Ordered actions · "+(observation.actions?.length||0)));
+    for(const a of observation.actions||[]){
+      if(a.type==="untap")continue;
+      const label=[a.type?.replaceAll("_"," "),a.card||a.source||a.operation,
+        a.seat===undefined?"":"seat "+(Number(a.seat)+1)]
+        .filter(Boolean).join(" · ");
+      actions.appendChild(create("p","micro",label));
+    }
+    box.appendChild(actions);
+    root.appendChild(box);
+  }
   function runDetails(root,run,options={}){
     root.replaceChildren();
     const heading=create("div","game-outcome-evidence-head");
@@ -529,6 +595,12 @@
         totals.appendChild(stat);
       }
       info.appendChild(totals);
+      if(index>0&&run.ui_observations?.[index-1]){
+        renderObservationZones(info,run.ui_observations[index-1],options);
+      }else if(index>0){
+        info.appendChild(create("p","micro",
+          "Detailed card and action observations were not exported for this historical game."));
+      }
       const changes=row.life_changes||[];
       if(!changes.length){
         info.appendChild(create("p","micro","No life changes recorded this round."));
@@ -687,7 +759,8 @@
       const run=active.runs.find(r=>String(r.seed)===String(seedSelect.value));
       if(!run)return;
       runDetails(evidence,run,{example:active.exampleBySeed.get(run.seed),
-        onShowRecordedActions:options.onShowRecordedActions});
+        onShowRecordedActions:options.onShowRecordedActions,
+        onOpenRecordedCard:options.onOpenRecordedCard});
     }
     function showGroup(seed){
       active=available.find(g=>g.id===scenarioSelect.value)||available[0];
@@ -774,6 +847,42 @@
       body.appendChild(create("div","micro",groups.length+" opponent groups · "+
         groups[0].requestedRounds+"-round horizon"));
     }));
+    const signals=observationCardStats(runs);
+    if(signals.coverage){
+      for(const [kind,label,metric] of [
+        ["played","Most played card","Casts or land plays"],
+        ["seen","Most frequently seen card","Opening hands and recorded draws"],
+        ["activated","Most active ability source","Recorded activations and triggers"]
+      ]){
+        const item=signals[kind];
+        if(!item)continue;
+        const panel=card(label,"Observed card evidence",String(item.count),
+          item.name+" · "+item.seeds.size+" games",body=>{
+            body.appendChild(create("p","micro",
+              metric+" · "+signals.coverage+" games with recorded turn observations"));
+            const medianTurn=quantile(item.turns,.5);
+            if(medianTurn!==null)body.appendChild(create("p","micro",
+              "Median recorded event turn: "+nfmt(medianTurn)));
+            const button=create("button","game-outcome-recorded-card",item.name);
+            button.type="button";button.onclick=()=>options.onOpenRecordedCard?.(item.name);
+            body.appendChild(button);
+          });
+        const art=options.lookupRecordedCard?.(item.name)?.art;
+        if(art){
+          const summary=panel.querySelector("summary");
+          summary.style.backgroundImage=
+            "linear-gradient(90deg, rgba(17,23,28,.96),rgba(17,23,28,.68)),url("+JSON.stringify(art)+")";
+          summary.style.backgroundSize="cover";
+          summary.style.backgroundPosition="center";
+        }
+        cards.appendChild(panel);
+      }
+    }else{
+      cards.appendChild(card("Card diagnostics","Data coverage","Unavailable",
+        "The historical outcome exports omit complete turn/card observations.",
+        body=>body.appendChild(create("p","micro",
+          "Next publication will provide recorded card plays, draws and zone histories for each game."))));
+    }
     const best=matchup[0];
     cards.appendChild(card("Opponent Types","Types & table compositions",
       matchup.length+" types",
