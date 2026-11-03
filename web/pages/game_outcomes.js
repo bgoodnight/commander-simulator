@@ -505,80 +505,127 @@
     }
     parent.appendChild(bars);
   }
+  // Every card statistic is computed from the active manifest's complete,
+  // named turn observations. A cast counts once per recorded action, with
+  // separate per-game counts and evidence for median summaries/drilldowns.
+  const BASIC_LANDS=new Set(["plains","island","swamp","mountain","forest",
+    "wastes","snow-covered plains","snow-covered island","snow-covered swamp",
+    "snow-covered mountain","snow-covered forest"]);
+  const CAST_TYPES=new Set(["creature_cast","artifact_cast","enchantment_cast",
+    "tutor_cast","token_spell_cast","reviewed_draw_spell_cast",
+    "reviewed_ritual_cast","reviewed_buyback_cast","reviewed_flashback_cast",
+    "reviewed_escape_cast","reviewed_graveyard_spell_cast",
+    "reviewed_copy_spell_cast","reviewed_instant_response",
+    "reviewed_commander_cast","reviewed_generic_spell_cast",
+    "provisional_spell_cast","reviewed_common_spell_resolved",
+    "reviewed_zone_spell_resolved","land_play"]);
   function observationCardStats(runs,lookupCard=()=>null){
-    const appearances=new Map(),plays=new Map(),spells=new Map(),
-      creatures=new Map(),instants=new Map(),artifacts=new Map(),
-      activations=new Map(),removal=new Map(),holding=new Map();
-    const inc=(map,key,seed,turn,weight=1)=>{
-      if(typeof key!=="string"||!key.trim())return;
-      if(!map.has(key))map.set(key,{name:key,count:0,seeds:new Set(),turns:[]});
-      const item=map.get(key);item.count+=weight;item.seeds.add(seed);
-      if(Number.isFinite(turn))item.turns.push(turn);
-    };
-    for(const run of runs){
-      const seen=new Set(Array.isArray(run.opening_hand)?run.opening_hand:[]);
-      const held=new Map();
-      for(const row of run.ui_observations||[]){
-        for(const name of new Set(row.hand||[]))
-          held.set(name,(held.get(name)||0)+1);
-        for(const action of row.actions||[]){
-          if(action.type==="draw"&&action.card)seen.add(action.card);
-          const played=action.type==="land_play"||
-            action.type?.endsWith("_cast")||
-            action.type==="reviewed_instant_response"||
-            action.type==="reviewed_common_spell_resolved"||
-            action.type==="reviewed_zone_spell_resolved"||
-            action.type==="reviewed_commander_cast";
-          if(played){
-            inc(plays,action.card,run.seed,row.turn);
-            const card=lookupCard(action.card);
-            const types=String(card?.type_line||card?.category||"").split("—")[0];
-            if(/\b(Instant|Sorcery)\b/i.test(types))
-              inc(spells,action.card,run.seed,row.turn);
-            if(/\bInstant\b/i.test(types))
-              inc(instants,action.card,run.seed,row.turn);
-            if(/\bArtifact\b/i.test(types))
-              inc(artifacts,action.card,run.seed,row.turn);
-            if(/\bCreature\b/i.test(types))
-              inc(creatures,action.card,run.seed,row.turn);
-          }
-          if(action.type?.includes("activated")||action.type?.includes("trigger")){
-            // Only name abilities where the event itself identifies the source.
-            inc(activations,action.card||action.source,
-                run.seed,row.turn);
-          }
-          if(Number.isFinite(action.destroyed_count)&&action.destroyed_count>0){
-            inc(removal,action.card||action.source,
-                run.seed,row.turn,action.destroyed_count);
-          }
-        }
-      }
-      for(const name of seen)inc(appearances,name,run.seed,null);
-      for(const [name,turns] of held){
-        if(!holding.has(name))holding.set(name,{name,counts:[],seeds:new Set()});
-        const metric=holding.get(name);
-        metric.counts.push(turns);metric.seeds.add(run.seed);
+    const kinds=["played","creature","instant","spell","artifact","enchantment",
+      "land","seen","unplayed","activated","removal","damage","longest","finisher"];
+    const maps=Object.fromEntries(kinds.map(k=>[k,new Map()]));
+    const complete=runs.filter(run=>Array.isArray(run.ui_observations)&&
+      run.ui_observations.length===run.completed_rounds);
+    function basic(name){
+      const printed=lookupCard(name);
+      return BASIC_LANDS.has(String(name||"").trim().toLowerCase())||
+        /\bBasic\b/i.test(String(printed?.type_line||"").split("—")[0]);
+    }
+    function record(kind,name,run,turn,quantity=1,extra={}){
+      if(typeof name!=="string"||!name.trim()||basic(name))return;
+      const map=maps[kind];
+      if(!map.has(name))map.set(name,{name,counts:new Map(),seen:new Set(),
+        events:[],durations:[],turns:[]});
+      const item=map.get(name);
+      if(Number.isFinite(quantity)&&quantity>0)
+        item.counts.set(run.seed,(item.counts.get(run.seed)||0)+quantity);
+      item.seen.add(run.seed);
+      if(Number.isFinite(turn)){
+        item.turns.push(turn);
+        item.events.push({seed:run.seed,turn,run,...extra});
       }
     }
-    const top=map=>[...map.values()].sort((a,b)=>
-      b.count-a.count||b.seeds.size-a.seeds.size||
-      a.name.localeCompare(b.name))[0]||null;
-    const longest=[...holding.values()].filter(x=>x.seeds.size>=5).sort((a,b)=>
-      (b.counts.reduce((t,x)=>t+x,0)/b.counts.length)-
-        (a.counts.reduce((t,x)=>t+x,0)/a.counts.length)||
-      b.seeds.size-a.seeds.size||a.name.localeCompare(b.name))[0]||null;
-    const longestMetric=longest?{
-      name:longest.name,count:longest.counts.reduce((t,x)=>t+x,0)/longest.counts.length,
-      seeds:longest.seeds,turns:longest.counts,held:true
-    }:null;
-    return {
-      seen:top(appearances),played:top(plays),creature:top(creatures),
-      instant:top(instants),spell:top(spells),artifact:top(artifacts),
-      activated:top(activations),removal:top(removal),
-      longest:longestMetric,
-      coverage:runs.filter(run=>Array.isArray(run.ui_observations)&&
-        run.ui_observations.length===run.completed_rounds).length
-    };
+    for(const run of complete){
+      const seen=new Set((run.opening_hand||[]).filter(n=>!basic(n)));
+      const casts=new Set();
+      const held=new Map();
+      // These turn-end snapshots cannot distinguish multiple copies of the
+      // same card name. One card name contributes at most once per round.
+      for(const row of run.ui_observations){
+        for(const name of new Set(row.hand||[])){
+          if(basic(name))continue;
+          seen.add(name);
+          held.set(name,(held.get(name)||0)+1);
+        }
+        for(const [eventIndex,action] of (row.actions||[]).entries()){
+          if(action.type==="draw"&&action.card&&!basic(action.card)){
+            seen.add(action.card);
+            record("seen",action.card,run,row.turn,0,{eventIndex});
+          }
+          const name=action.card;
+          if(CAST_TYPES.has(action.type)&&name&&!basic(name)){
+            casts.add(name);seen.add(name);
+            const card=lookupCard(name);
+            const types=String(card?.type_line||card?.category||"").split("—")[0];
+            record("played",name,run,row.turn,1,{eventIndex});
+            for(const [kind,pattern] of [
+              ["creature",/\bCreature\b/i],["instant",/\bInstant\b/i],
+              ["spell",/\b(Instant|Sorcery)\b/i],["artifact",/\bArtifact\b/i],
+              ["enchantment",/\bEnchantment\b/i],["land",/\bLand\b/i]])
+              if(pattern.test(types))
+                record(kind,name,run,row.turn,1,{eventIndex});
+          }
+          if((/activated|trigger/.test(action.type||""))&&
+              (action.card||action.source))
+            record("activated",action.card||action.source,run,row.turn,1,{eventIndex});
+          if(Number.isFinite(action.destroyed_count)&&action.destroyed_count>0&&
+              (action.card||action.source))
+            record("removal",action.card||action.source,run,row.turn,
+              action.destroyed_count,{eventIndex});
+          // Do not infer player damage/finishing blows from unattributed
+          // life deltas. Both require a named source and explicit provenance.
+          if(action.target_seat>0&&Number.isFinite(action.life_lost)&&
+              action.life_lost>0&&(action.card||action.source))
+            record("damage",action.card||action.source,run,row.turn,
+              action.life_lost,{eventIndex});
+          if(action.type==="reviewed_finishing_blow"&&
+              (action.card||action.source))
+            record("finisher",action.card||action.source,run,row.turn,1,{eventIndex});
+        }
+      }
+      for(const name of seen){
+        record("seen",name,run,null,1);
+        if(!casts.has(name))record("unplayed",name,run,null,1);
+        // A card cast on the draw turn contributes zero held rounds.
+        // Across seen games, include zeros so medians are not inflated.
+        const rounds=held.get(name)||0;
+        record("longest",name,run,null,rounds);
+        maps.longest.get(name).durations.push(rounds);
+      }
+    }
+    const mean=a=>a.length?a.reduce((t,x)=>t+x,0)/a.length:0;
+    function sort(kind){
+      return [...maps[kind].values()].map(item=>{
+        const counts=[...item.counts.values()];
+        const seen=item.seen.size;
+        const score=kind==="longest"?mean(item.durations):
+          kind==="seen"||kind==="unplayed"?seen:
+          kind==="removal"||kind==="damage"?
+            counts.reduce((t,x)=>t+x,0):
+            counts.filter(x=>x>0).length;
+        const perGame=kind==="longest"?item.durations:
+          complete.map(run=>item.counts.get(run.seed)||0);
+        return {...item,score,average:mean(perGame),
+          median:quantile(perGame,.5),
+          games:counts.filter(x=>x>0).length,
+          eventCount:counts.reduce((t,x)=>t+x,0),
+          heldMedian:quantile(item.durations,.5)};
+      }).filter(item=>item.score>0).sort((a,b)=>
+        b.score-a.score||b.average-a.average||
+        b.games-a.games||a.name.localeCompare(b.name));
+    }
+    const ranked=Object.fromEntries(kinds.map(k=>[k,sort(k)]));
+    return {coverage:complete.length,total:runs.length,ranked,
+      ...Object.fromEntries(kinds.map(k=>[k,ranked[k][0]||null]))};
   }
   function renderObservationZones(root,observation,options={}){
     if(!observation)return;
