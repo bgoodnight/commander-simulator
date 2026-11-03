@@ -735,3 +735,55 @@ test('tutor card insight panels only appear for confirmed named search resolutio
       n.textContent.includes('Fabricate → Sol Ring')));
   }finally{global.document=before}
 });
+
+test('selected card insight embeds relevant game turns and real life/zone change glows',()=>{
+  class Node{
+    constructor(tag){this.tag=tag;this.className='';this.textContent='';
+      this.children=[];this.attributes={};this.style={};this.dataset={};this.events={};
+      this.open=false;}
+    append(...items){this.children.push(...items)}
+    appendChild(item){this.children.push(item);return item}
+    replaceChildren(...items){this.children=[...items]}
+    setAttribute(k,v){this.attributes[k]=String(v)}
+    addEventListener(k,cb){this.events[k]=cb}
+    get lastChild(){return this.children.at(-1)}
+  }
+  const before=global.document;
+  global.document={createElement:tag=>new Node(tag),
+    createElementNS:(_,tag)=>new Node(tag)};
+  const walk=n=>[n,...n.children.flatMap(walk)];
+  try{
+    const r={...runUnresolved(),ui_observations:[
+      {turn:1,hand:['Grave Titan'],battlefield:[],graveyard:[],
+        actions:[{type:'draw',card:'Grave Titan',seat:0}]},
+      {turn:2,hand:[],battlefield:['Grave Titan'],graveyard:[],
+        actions:[{type:'creature_cast',card:'Grave Titan',seat:0}]},
+      {turn:3,hand:[],battlefield:[],graveyard:['Grave Titan'],actions:[]}
+    ]};
+    const root=new Node('main'),reviewer=new Node('section');
+    Outcomes.render(root,[batch([r])],{
+      deckKey:'necron_dynasties',deckHash:'a'.repeat(64),reviewerRoot:reviewer,
+      lookupRecordedCard:name=>({name,art:'https://example.com/'+name+'.jpg'})
+    });
+    const insight=walk(root).find(n=>n.className.includes('insight-featured-panel')&&
+      walk(n).some(x=>x.textContent==='Most played card'));
+    assert.ok(insight);
+    const tracker=walk(insight).find(n=>n.className==='insight-inline-tracker');
+    assert.ok(tracker,'relevant recorded seed should have an expandable timeline');
+    assert.equal(walk(tracker).some(n=>n.className==='game-outcome-turn-tile'),false,
+      'tracker must render lazily when expanded');
+    tracker.open=true;tracker.events.toggle();
+    const turns=walk(tracker).filter(n=>n.className.startsWith('game-outcome-turn-tile'));
+    assert.equal(turns.length,4);
+    assert.ok(turns[1].className.includes('is-life-loss'));
+    assert.ok(turns[2].className.includes('is-life-loss'));
+    assert.ok(walk(turns[2]).some(n=>n.className.includes('is-zone-gain')&&
+      n.textContent.includes('Board 1')));
+    assert.ok(walk(turns[2]).some(n=>n.className.includes('is-zone-loss')&&
+      n.textContent.includes('Hand 0')));
+    const first=turns[1];first.onclick();
+    assert.equal(first.attributes['aria-pressed'],'true');
+    assert.ok(walk(tracker).some(n=>n.className.includes('game-outcome-life-stat')&&
+      n.className.includes('is-life-loss')));
+  }finally{global.document=before}
+});
