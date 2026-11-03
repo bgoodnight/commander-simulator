@@ -3,7 +3,9 @@ name: Baseline archetype pacing and seat-behavior smoke test
 on:
   push:
     branches: [experiment/opponent-calibration-baseline-20261103]
-    paths: [.github/workflows/opponent-calibration-baseline.yml]
+    paths:
+      - .github/workflows/opponent-calibration-baseline.yml
+      - tools/report_opponent_calibration.py
 
 permissions:
   contents: write
