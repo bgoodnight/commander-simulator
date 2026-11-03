@@ -64,7 +64,7 @@ jobs:
           make fetch-cards compile-cards
           cp "$GITHUB_WORKSPACE/tools/gorge_commander_probe.go" ./commander_probe.go
           go build -o "$RUNNER_TEMP/gorge-probe" ./commander_probe.go
-      - name: Run four genuine Commander games with 40-life rules and London mulligans
+      - name: Run eight genuine Commander games with 40-life rules and London mulligans
         working-directory: ${{ runner.temp }}/gorge
         run: |
           mkdir -p "$RUNNER_TEMP/results/native"
@@ -72,7 +72,7 @@ jobs:
             --binary "$RUNNER_TEMP/gorge-probe" \
             --corpus "$RUNNER_TEMP/gorge/.cards" --deck-dir "$RUNNER_TEMP/decks" \
             --decks "mortarion_current,magnus_premium,necron_dynasties,wretched_ranks,avengers-assemble,cavalry-charge,deadly-disguise,science-pip" \
-            --pilot bot --games 4 --seed 300 --max-turns 60 \
+            --pilot bot --games 8 --seed 300 --max-turns 60 \
             --native-dir "$RUNNER_TEMP/results/native" --native-limit 2 --jsonl \
             > "$RUNNER_TEMP/results/gorge_runs.jsonl"
       - name: Verify source and publishable projection for 2 enriched samples
@@ -118,7 +118,7 @@ jobs:
               "games":games},indent=2)+"\n")
           with open(os.environ["GITHUB_STEP_SUMMARY"],"a") as f:
               f.write("# Corrected gorge-only smoke run\n\n")
-              f.write("4 complete 40-life Commander games, 2 safe enriched UI replays.\n")
+              f.write("8 complete 40-life Commander games, 2 safe enriched UI replays.\n")
               f.write("Earlier 20-life games are NOT Commander power benchmarks.\n")
           PY
       - name: Keep raw traces in an artifact, never in the public site
