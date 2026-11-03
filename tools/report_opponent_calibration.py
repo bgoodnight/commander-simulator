@@ -27,7 +27,7 @@ def med(values):
 
 
 def summarize(source):
-    paths = sorted(Path(source).glob("*.jsonl"))
+    paths = sorted(Path(source).rglob("*.jsonl"))
     if not paths:
         raise ValueError("No authentic observation files")
     games = []
