@@ -497,6 +497,8 @@ test('featured card insight switches artwork, mana, metrics, and evidence with s
       n.textContent==='Plague Spitter'));
     assert.ok(walk(card).some(n=>n.tag==='summary'&&
       n.textContent==='View example games'));
+    // Grave Titan has two distinct recorded seeds, so cycle through both.
+    buttons[0].onclick();
     const metrics=walk(card).filter(n=>n.className.includes('insight-featured-metric-link'));
     assert.equal(metrics.length,2);
     assert.ok(metrics.some(n=>n.children[0].textContent==='Times played'));
