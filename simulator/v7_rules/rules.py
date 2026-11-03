@@ -197,7 +197,8 @@ class GameKernel:
         Avoid creating counters or persistent modifiers. This implements a
         constrained additive subset of continuous effects, not full MTG layers.
         """
-        if obj.zone!='battlefield' or 'creature' not in obj.types:
+        if (obj.zone!='battlefield' or 'creature' not in obj.types
+                or self.objects.get(obj.object_id) is not obj):
             return 0,0
         power=toughness=0
         for source in self.on_battlefield():
@@ -226,7 +227,8 @@ class GameKernel:
 
     def static_power(self,obj):
         """Combine legacy self-bonus descriptors with generic aura effects."""
-        if obj.zone!='battlefield':return 0
+        if obj.zone!='battlefield' or self.objects.get(obj.object_id) is not obj:
+            return 0
         self_bonus=sum(a.arg('per',1)*len(self.controlled(obj.controller,{a.arg('type')}))
                        for a in obj.card.abilities
                        if a.kind=='static' and a.op=='power_per_controlled_type')
