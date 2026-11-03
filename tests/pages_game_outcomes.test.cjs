@@ -655,8 +655,8 @@ test('full-game reviewer uses same compact turn rows as insight evidence',()=>{
     opened.open=true;
     assert.ok(walk(opened).some(n=>n.className==='insight-action-art'&&
       n.src==='https://example.com/Grave-Titan.jpg'));
-    assert.ok(walk(opened).some(n=>n.className==='insight-seat-summary'));
-    assert.ok(walk(opened).some(n=>n.className.includes('insight-seat-chip is-loss')));
+    assert.equal(walk(opened).filter(n=>n.className==='insight-seat-life').length,4);
+    assert.ok(walk(opened).some(n=>n.className.includes('insight-seat-life is-loss')));
     assert.ok(walk(turns[3]).some(n=>n.textContent==='Swamp'));
     const insight=walk(root).find(n=>n.className.includes('insight-featured-panel')&&
       walk(n).some(x=>x.textContent==='Most played card'));
@@ -794,7 +794,7 @@ test('selected card insight embeds relevant game turns and real life/zone change
     assert.ok(walk(turns[2]).some(n=>n.className==='insight-action-art'&&
       n.src.includes('Grave Titan')));
     assert.ok(walk(turns[2]).some(n=>n.className==='insight-action-phase-heading'&&
-      n.textContent.includes('Your recorded actions')));
+      n.textContent==='Your turn'));
     assert.equal(walk(tracker).some(n=>n.className==='game-outcome-turn-tile'),false);
   }finally{global.document=before}
 });
@@ -841,19 +841,17 @@ test('turn background uses first named card and enemy activity has one condensed
     assert.ok(cover);
     assert.equal(cover.src,'https://example.com/Swamp.jpg');
     const firstBody=walk(turns[1]);
-    const enemy=firstBody.filter(n=>n.className==='insight-action-phase is-opponent');
-    assert.equal(enemy.length,1);
-    assert.equal(walk(enemy[0]).filter(n=>n.className==='insight-action-entry').length,3);
-    assert.ok(firstBody.some(n=>n.textContent.includes('Seat not recorded')));
+    const rest=firstBody.filter(n=>n.className==='insight-rest-of-turn');
+    assert.equal(rest.length,1);
+    assert.ok(walk(rest[0]).some(n=>n.textContent.includes('Enemy activity: 3 recorded events')));
+    assert.equal(firstBody.filter(n=>n.className==='insight-action-phase is-opponent').length,0);
+    assert.ok(!firstBody.some(n=>n.textContent==='Seat not recorded'));
+    const player=firstBody.find(n=>n.className==='insight-action-phase is-player');
+    assert.ok(player);
+    assert.ok(walk(player).some(n=>n.textContent==='Unknown Card'));
+    assert.equal(walk(rest[0]).filter(n=>n.className==='insight-seat-life').length,4);
     const second=walk(turns[2]);
-    const seats=second.filter(n=>n.className==='insight-seat-line');
-    assert.equal(seats.length,4);
-    assert.ok(seats.every(n=>walk(n).some(x=>x.textContent.includes('♥'))));
-    assert.ok(!second.some(n=>n.textContent.includes('◆ L')));
-    assert.ok(!second.some(n=>n.textContent.includes('♟ P')));
-    assert.ok(!second.some(n=>n.textContent.includes('▤ H')));
-    const seat2=seats[2];
-    assert.ok(!walk(seat2).some(n=>n.textContent.includes('—')));
+    assert.equal(second.filter(n=>n.className==='insight-seat-life').length,4);
   }finally{global.document=before}
 });
 
@@ -911,14 +909,24 @@ test('narrated turn summary and expanded actions reuse factual card-linked wordi
     assert.equal(arts.length,4);
     names[2].onclick();arts[2].onclick();
     assert.deepEqual(opened,['Grave Titan','Grave Titan']);
-    const enemy=walk(turn1).find(n=>n.className==='insight-action-phase is-opponent');
-    assert.ok(enemy);
-    assert.ok(walk(enemy).some(n=>n.className==='insight-action-verb'&&
-      n.textContent==='Blocked '));
+    const rest=walk(turn1).find(n=>n.className==='insight-rest-of-turn');
+    assert.ok(rest);
+    assert.ok(walk(rest).some(n=>n.textContent==='Enemy activity: 1 recorded event'));
+    assert.equal(walk(rest).filter(n=>n.className==='insight-seat-life').length,4);
     assert.ok(!walk(turn1).some(n=>n.textContent==='reviewed enter resolved'));
     const third=walk(turns[3]);
     assert.ok(third.some(n=>n.textContent==='Moved from battlefield to graveyard '));
     assert.ok(third.some(n=>n.className.includes('is-text-only')&&
       n.textContent==='Grave Titan'));
   }finally{global.document=before}
+});
+
+test('rest of turn summarizes named enemy casts and keeps unknown-seat pilot actions first',()=>{
+  const source=fs.readFileSync('web/pages/game_outcomes.js','utf8');
+  assert.match(source,/actionSection\("Your turn",own/);
+  assert.match(source,/!Number\.isInteger\(a\.seat\)\|\|Number\(a\.seat\)===0/);
+  assert.match(source,/Enemies played /);
+  assert.doesNotMatch(source,/actionSection\("Seat not recorded"/);
+  assert.doesNotMatch(source,/actionSection\("Enemy activity/);
+  assert.match(source,/insight-seat-life-strip/);
 });
