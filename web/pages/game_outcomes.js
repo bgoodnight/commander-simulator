@@ -505,37 +505,65 @@
     }
     parent.appendChild(bars);
   }
-  function observationCardStats(runs){
-    const appearances=new Map(),plays=new Map(),activations=new Map();
-    const inc=(map,key,seed,turn)=>{
+  function observationCardStats(runs,lookupCard=()=>null){
+    const appearances=new Map(),plays=new Map(),spells=new Map(),
+      artifacts=new Map(),activations=new Map(),removal=new Map(),holding=new Map();
+    const inc=(map,key,seed,turn,weight=1)=>{
       if(typeof key!=="string"||!key.trim())return;
       if(!map.has(key))map.set(key,{name:key,count:0,seeds:new Set(),turns:[]});
-      const item=map.get(key);item.count++;item.seeds.add(seed);
+      const item=map.get(key);item.count+=weight;item.seeds.add(seed);
       if(Number.isFinite(turn))item.turns.push(turn);
     };
     for(const run of runs){
       const seen=new Set(Array.isArray(run.opening_hand)?run.opening_hand:[]);
+      const held=new Map();
       for(const row of run.ui_observations||[]){
+        for(const name of new Set(row.hand||[]))
+          held.set(name,(held.get(name)||0)+1);
         for(const action of row.actions||[]){
           if(action.type==="draw"&&action.card)seen.add(action.card);
-          if(action.type==="land_play"||action.type?.endsWith("_cast")||
-             action.type==="reviewed_commander_cast"){
+          const played=action.type==="land_play"||
+            action.type?.endsWith("_cast")||action.type==="reviewed_commander_cast";
+          if(played){
             inc(plays,action.card,run.seed,row.turn);
+            const kind=lookupCard(action.card)?.category;
+            if(["Instant","Sorcery"].includes(kind))
+              inc(spells,action.card,run.seed,row.turn);
+            if(kind==="Artifact")inc(artifacts,action.card,run.seed,row.turn);
           }
           if(action.type?.includes("activated")||action.type?.includes("trigger")){
             // Only name abilities where the event itself identifies the source.
-            const key=action.card||action.source||action.operation;
-            inc(activations,key,run.seed,row.turn);
+            inc(activations,action.card||action.source||action.operation,
+                run.seed,row.turn);
+          }
+          if(Number.isFinite(action.destroyed_count)&&action.destroyed_count>0){
+            inc(removal,action.card||action.source||action.operation,
+                run.seed,row.turn,action.destroyed_count);
           }
         }
       }
       for(const name of seen)inc(appearances,name,run.seed,null);
+      for(const [name,turns] of held){
+        if(!holding.has(name))holding.set(name,{name,counts:[],seeds:new Set()});
+        const metric=holding.get(name);
+        metric.counts.push(turns);metric.seeds.add(run.seed);
+      }
     }
     const top=map=>[...map.values()].sort((a,b)=>
       b.count-a.count||b.seeds.size-a.seeds.size||
       a.name.localeCompare(b.name))[0]||null;
+    const longest=[...holding.values()].filter(x=>x.seeds.size>=5).sort((a,b)=>
+      (b.counts.reduce((t,x)=>t+x,0)/b.counts.length)-
+        (a.counts.reduce((t,x)=>t+x,0)/a.counts.length)||
+      b.seeds.size-a.seeds.size||a.name.localeCompare(b.name))[0]||null;
+    const longestMetric=longest?{
+      name:longest.name,count:longest.counts.reduce((t,x)=>t+x,0)/longest.counts.length,
+      seeds:longest.seeds,turns:longest.counts,held:true
+    }:null;
     return {
-      seen:top(appearances),played:top(plays),activated:top(activations),
+      seen:top(appearances),played:top(plays),spell:top(spells),
+      artifact:top(artifacts),activated:top(activations),removal:top(removal),
+      longest:longestMetric,
       coverage:runs.filter(run=>Array.isArray(run.ui_observations)&&
         run.ui_observations.length===run.completed_rounds).length
     };
@@ -581,6 +609,19 @@
     const info=create("div","game-outcome-round-detail");
     function showRound(index){
       info.replaceChildren();
+      if(index===0&&run.opening_hand?.length){
+        const hand=create("details","game-outcome-observed-zone");
+        hand.appendChild(create("summary",null,
+          "Kept opening hand · "+run.opening_hand.length+" cards"));
+        const names=create("div","game-outcome-observed-cards");
+        for(const card of run.opening_hand){
+          const button=create("button","game-outcome-recorded-card",card);
+          button.type="button";
+          button.onclick=()=>options.onOpenRecordedCard?.(card);
+          names.appendChild(button);
+        }
+        hand.appendChild(names);info.appendChild(hand);
+      }
       const row=run.life_history[index],previous=run.life_history[index-1];
       info.appendChild(create("strong",null,"Round "+row.round+
         " · "+row.alive_seats.length+" of 4 seats alive"));
@@ -883,12 +924,16 @@
         body=>body.appendChild(create("p","micro",
           "Results will populate from the same complete observation archive used to derive card and turn evidence."))));
     }
-    const signals=observationCardStats(runs);
+    const signals=observationCardStats(runs,options.lookupRecordedCard);
     if(signals.coverage){
       for(const [kind,label,metric] of [
         ["played","Most played card","Casts or land plays"],
         ["seen","Most frequently seen card","Opening hands and recorded draws"],
-        ["activated","Most active ability source","Recorded activations and triggers"]
+        ["activated","Most active ability source","Recorded activations and triggers"],
+        ["spell","Most cast instant or sorcery","Recorded spell casts"],
+        ["artifact","Most cast artifact","Recorded artifact casts"],
+        ["removal","Most recorded creature removal","Recorded destroyed objects, where attributed"],
+        ["longest","Longest-held card","Mean observed turn-end rounds in hand; ties by game coverage"]
       ]){
         const item=signals[kind];
         if(!item)continue;
@@ -898,7 +943,8 @@
               metric+" · "+signals.coverage+" games with recorded turn observations"));
             const medianTurn=quantile(item.turns,.5);
             if(medianTurn!==null)body.appendChild(create("p","micro",
-              "Median recorded event turn: "+nfmt(medianTurn)));
+              item.held?"Median observed rounds held: "+nfmt(medianTurn):
+                "Median recorded event turn: "+nfmt(medianTurn)));
             const button=create("button","game-outcome-recorded-card",item.name);
             button.type="button";button.onclick=()=>options.onOpenRecordedCard?.(item.name);
             body.appendChild(button);
