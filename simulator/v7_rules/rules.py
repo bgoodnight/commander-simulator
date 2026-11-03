@@ -82,6 +82,7 @@ class GameObject:
     counters:Counter=field(default_factory=Counter)
     modifiers:list[Modifier]=field(default_factory=list)
     _power_bonus:Callable|None=field(default=None,repr=False,compare=False)
+    _toughness_bonus:Callable|None=field(default=None,repr=False,compare=False)
     @property
     def types(self):return self.card.types
     @property
@@ -91,7 +92,9 @@ class GameObject:
     @property
     def power(self):return self.card.base_power+self.counters['+1/+1']-self.counters['-1/-1']+sum(m.power for m in self.modifiers)+(self._power_bonus(self) if self._power_bonus else 0)
     @property
-    def toughness(self):return self.card.base_toughness+self.counters['+1/+1']-self.counters['-1/-1']+sum(m.toughness for m in self.modifiers)
+    def toughness(self):return (self.card.base_toughness+self.counters['+1/+1']-self.counters['-1/-1']
+                               +sum(m.toughness for m in self.modifiers)
+                               +(self._toughness_bonus(self) if self._toughness_bonus else 0))
     @property
     def is_creature_token(self):return self.token and self.zone=='battlefield' and 'creature' in self.types
 
@@ -181,17 +184,59 @@ class GameKernel:
         self.guard.guard_objects(len(self.objects)+1)
         obj=GameObject(self.next_object_id,card,owner,owner if controller is None else controller,zone,token)
         obj._power_bonus=self.static_power
+        obj._toughness_bonus=self.static_toughness
         self.next_object_id+=1;self.objects[obj.object_id]=obj;self._dirty()
         return obj
     def get(self,oid):return self.objects[oid]
     def on_battlefield(self):return (o for o in self.objects.values() if o.zone=='battlefield')
     def controlled(self,seat,types=frozenset()):
         return [o for o in self.on_battlefield() if o.controller==seat and (not types or o.types & types)]
+    def static_stat_adjustment(self, obj):
+        """Compute typed battlefield continuous stat effects on demand.
+
+        Avoid creating counters or persistent modifiers. This implements a
+        constrained additive subset of continuous effects, not full MTG layers.
+        """
+        if (obj.zone!='battlefield' or 'creature' not in obj.types
+                or self.objects.get(obj.object_id) is not obj):
+            return 0,0
+        power=toughness=0
+        for source in self.on_battlefield():
+            for ability in source.card.abilities:
+                if ability.kind!='static' or ability.op!='creature_stat_modifier':
+                    continue
+                scope=ability.arg('scope','controller')
+                if scope=='controller' and source.controller!=obj.controller:
+                    continue
+                if scope not in ('controller','all'):
+                    raise ValueError("Unknown static modifier scope")
+                subtype=ability.arg('subtype')
+                if subtype=='chosen':
+                    subtype=getattr(self,'static_choices',{}).get(source.object_id)
+                    if subtype is None:
+                        continue
+                if subtype and subtype not in self.subtypes(obj.object_id):
+                    continue
+                color=ability.arg('color')
+                # Never guess a missing color from a card's name.
+                if color and (obj.card.colors is None or color not in obj.card.colors):
+                    continue
+                power+=ability.arg('power',0)
+                toughness+=ability.arg('toughness',0)
+        return power,toughness
+
     def static_power(self,obj):
-        """Narrow self-bonus descriptors; not a general continuous-effect layer engine."""
-        if obj.zone!='battlefield':return 0
-        return sum(a.arg('per',1)*len(self.controlled(obj.controller,{a.arg('type')}))
-                   for a in obj.card.abilities if a.kind=='static' and a.op=='power_per_controlled_type')
+        """Combine legacy self-bonus descriptors with generic aura effects."""
+        if obj.zone!='battlefield' or self.objects.get(obj.object_id) is not obj:
+            return 0
+        self_bonus=sum(a.arg('per',1)*len(self.controlled(obj.controller,{a.arg('type')}))
+                       for a in obj.card.abilities
+                       if a.kind=='static' and a.op=='power_per_controlled_type')
+        return self_bonus+self.static_stat_adjustment(obj)[0]
+
+    def static_toughness(self,obj):
+        return self.static_stat_adjustment(obj)[1]
+
     def subtypes(self,oid):
         """Derived creature types from declared additive static effects, all zones.
 
@@ -275,10 +320,25 @@ class GameKernel:
             self.events.append(Event('damage_creature',target_id=oid,amount=amount))
             self.check_state_based()
     def check_state_based(self):
-        for o in list(self.on_battlefield()):
-            if 'creature' not in o.types:continue
-            if o.toughness<=0:self.move(o.object_id,'graveyard','state_based')
-            elif o.damage_marked>=o.toughness and 'indestructible' not in o.keywords:self.move(o.object_id,'graveyard','state_based')
+        # Compute deaths against the same snapshot; a <=0 toughness move is
+        # not destruction or damage and ignores indestructible/prevention.
+        # Repeat when an anthem source dying causes further lethal bodies.
+        if getattr(self,'_checking_sba',False):
+            return
+        self._checking_sba=True
+        try:
+            while True:
+                lethal=[o.object_id for o in tuple(self.on_battlefield())
+                        if 'creature' in o.types and (
+                            o.toughness<=0 or (
+                                o.damage_marked>=o.toughness
+                                and 'indestructible' not in o.keywords))]
+                if not lethal:break
+                for oid in lethal:
+                    if oid in self.objects and self.objects[oid].zone=='battlefield':
+                        self.move(oid,'graveyard','state_based')
+        finally:
+            self._checking_sba=False
     def modified_cost(self,seat:int,spell_types:frozenset[str],base_cost:Cost,commander_tax=0):
         """Only generic cost reduction: colored requirements always remain."""
         k=(self.revision,seat,tuple(sorted(spell_types)),base_cost,commander_tax)
