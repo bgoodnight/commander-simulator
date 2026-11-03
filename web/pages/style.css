@@ -1825,3 +1825,20 @@ body:has(#pane-records:not([hidden])) .page-introduction a{font-size:.72rem}
  .insight-featured-panel .game-outcome-summary-copy{padding:6px 9px}
  .insight-turn-row .insight-turn-cover{width:86%;opacity:.98}
 }
+
+/* Override the older, more-specific 152px latest-insight summary minimum.
+   The card artwork is absolutely positioned and must not size the row. */
+.latest-insight-grid .game-outcome-card.insight-featured-panel:not(.game-outcome-hero) > .game-outcome-summary{
+  min-height:68px;
+  height:auto;
+  align-items:center;
+}
+.latest-insight-grid .game-outcome-card.insight-featured-panel:not(.game-outcome-hero) > .game-outcome-summary > .game-outcome-summary-copy{
+  gap:2px;
+  padding:7px 11px;
+}
+@media(max-width:720px){
+  .latest-insight-grid .game-outcome-card.insight-featured-panel:not(.game-outcome-hero) > .game-outcome-summary{
+    min-height:68px;
+  }
+}
