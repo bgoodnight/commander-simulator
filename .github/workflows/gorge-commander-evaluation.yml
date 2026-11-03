@@ -9,6 +9,8 @@ on:
       - "tools/gorge_benchmark.py"
       - "tools/fetch_gorge_precons.py"
       - "tools/gorge_native_replay.py"
+      - "commander_sim/gorge_backend.py"
+      - "tests/test_gorge_backend.py"
       - "tests/test_gorge_precons_and_replay.py"
       - "tests/test_gorge_benchmark.py"
       - ".github/workflows/gorge-commander-evaluation.yml"
@@ -29,6 +31,7 @@ jobs:
         run: |
           python -m unittest discover -s tests -p "test_gorge_benchmark.py" -v
           python -m unittest discover -s tests -p "test_gorge_precons_and_replay.py" -v
+          python -m unittest discover -s tests -p "test_gorge_backend.py" -v
       - name: Export four pinned real Commander decks
         run: |
           mkdir -p "$RUNNER_TEMP/gorge-decks" "$RUNNER_TEMP/results"
@@ -66,11 +69,12 @@ jobs:
         shell: bash
         run: |
           set +e
-          "$RUNNER_TEMP/commander-probe" \
-            -corpus .cards -deck-dir "$RUNNER_TEMP/gorge-decks" \
-            -decks "mortarion_current,magnus_premium,necron_dynasties,wretched_ranks,avengers-assemble,cavalry-charge,deadly-disguise,science-pip" \
-            -pilot bot -games 24 -seed 100 -max-turns 50 -verify=true \
-            -native-dir "$RUNNER_TEMP/results/native" -native-limit 2 \
+          python -m commander_sim.gorge_backend \
+            --binary "$RUNNER_TEMP/commander-probe" \
+            --corpus "$RUNNER_TEMP/gorge/.cards" --deck-dir "$RUNNER_TEMP/gorge-decks" \
+            --decks "mortarion_current,magnus_premium,necron_dynasties,wretched_ranks,avengers-assemble,cavalry-charge,deadly-disguise,science-pip" \
+            --pilot bot --games 24 --seed 100 --max-turns 50 \
+            --native-dir "$RUNNER_TEMP/results/native" --native-limit 2 --jsonl \
             | tee "$RUNNER_TEMP/results/gorge_runs.jsonl"
           status=${PIPESTATUS[0]}
           echo "$status" > "$RUNNER_TEMP/results/gorge_exit_code.txt"
@@ -82,11 +86,12 @@ jobs:
         shell: bash
         run: |
           set +e
-          "$RUNNER_TEMP/commander-probe" \
-            -corpus .cards -deck-dir "$RUNNER_TEMP/gorge-decks" \
-            -decks "mortarion_current,magnus_premium,necron_dynasties,wretched_ranks,avengers-assemble,cavalry-charge,deadly-disguise,science-pip" \
-            -pilot forge-heuristic -hero-pilot lethal-pressure \
-            -games 8 -seed 200 -max-turns 50 -verify=true \
+          python -m commander_sim.gorge_backend \
+            --binary "$RUNNER_TEMP/commander-probe" \
+            --corpus "$RUNNER_TEMP/gorge/.cards" --deck-dir "$RUNNER_TEMP/gorge-decks" \
+            --decks "mortarion_current,magnus_premium,necron_dynasties,wretched_ranks,avengers-assemble,cavalry-charge,deadly-disguise,science-pip" \
+            --pilot forge-heuristic --hero-pilot lethal-pressure \
+            --games 8 --seed 200 --max-turns 50 --jsonl \
             | tee "$RUNNER_TEMP/results/gorge_policy_trial.jsonl"
           status=${PIPESTATUS[0]}
           echo "$status" > "$RUNNER_TEMP/results/policy_exit_code.txt"
