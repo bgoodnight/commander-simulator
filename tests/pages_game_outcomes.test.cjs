@@ -969,3 +969,27 @@ test('card insight removes redundant labels, caps visible bars, and links metric
   assert.match(css,/\.insight-featured-bars\{grid-auto-rows:64px;max-height:204px/);
   assert.match(css,/\.insight-featured-bars::-webkit-scrollbar/);
 });
+
+test('results hero is compact with proportions below percentages and cohort footer',()=>{
+  const source=fs.readFileSync('web/pages/game_outcomes.js','utf8');
+  const app=fs.readFileSync('web/pages/app.js','utf8');
+  const css=fs.readFileSync('web/pages/style.css','utf8');
+  const start=source.indexOf('function outcomeCard(');
+  const end=source.indexOf('function metricTile(',start);
+  const hero=source.slice(start,end);
+  assert.ok(start>=0&&end>start);
+  assert.ok(!hero.includes('Long-game outcomes'));
+  assert.ok(!hero.includes('Explore opponent results'));
+  assert.ok(!hero.includes('modeled games'));
+  assert.ok(hero.indexOf('copy.appendChild(numbers)')<
+    hero.indexOf('copy.appendChild(bar)'));
+  assert.ok(hero.indexOf('copy.appendChild(bar)')<
+    hero.indexOf('if(options.heroHighlights?.length)'));
+  assert.match(hero,/game-outcome-hero-meta/);
+  assert.match(source,/outcomeMeta=total\+" games · "/);
+  assert.match(source,/opponent groups · "\+seedLabel/);
+  assert.match(source,/Seeds "/);
+  assert.ok(!app.includes('intro.appendChild(el("h1","Simulation Results"))'));
+  assert.match(css,/insight-turn-row \.insight-turn-cover/);
+  assert.match(css,/opacity:\.68/);
+});
