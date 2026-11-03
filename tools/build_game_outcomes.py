@@ -101,6 +101,22 @@ def summarize_games(runs, requested_rounds):
     }
 
 
+def recorded_mana_production(events):
+    """Count actual, color-identified mana source activations, not capacity.
+
+    The reviewed mana service records each activation's resolved output
+    in W/U/B/R/G/C pips. An empty dict means no production recorded.
+    """
+    colors = {symbol: 0 for symbol in "WUBRGC"}
+    for action in events or []:
+        if not isinstance(action, dict) or action.get("kind") != "mana_source_activation":
+            continue
+        for symbol in action.get("mana_output", []):
+            if symbol in colors:
+                colors[symbol] += 1
+    return {symbol: count for symbol, count in colors.items() if count}
+
+
 def project_ui_observations(run):
     """Small, source-grounded turn evidence from the same full game observations.
 
@@ -135,6 +151,9 @@ def project_ui_observations(run):
             "hand_size":event.get("hand_size"),
             "resource_start":event.get("resource_start"),
             "resource_end":event.get("resource_end"),
+            "mana_produced_by_color": recorded_mana_production(
+                event.get("mana_payment_events", []))
+                if "mana_payment_events" in event else None,
             "pilot_decisions":event.get("pilot_decisions",[]),
             "unsupported_cards_in_hand":event.get("unsupported_cards_in_hand",[]),
         })
@@ -225,8 +244,8 @@ def generate(deck_key, *, seeds=12, rounds=20, start_seed=0,
         "opponent_composition":sorted(run["opponent_roles"].values()),
         "opening_hand":list(run.get("mulligan",{}).get("opening_hand",[])),
         "mulligan":{
-            "taken":run.get("mulligan",{}).get("taken"),
-            "count":run.get("mulligan",{}).get("count"),
+            "taken":run["mulligan"].get("taken"),
+            "count":run["mulligan"].get("count"),
         },
         "ui_observations":project_ui_observations(run),
         "completed_rounds":run["completed_rounds"],
