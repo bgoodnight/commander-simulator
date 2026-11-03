@@ -190,6 +190,14 @@ test('modeled panels expose distinct outcome, life and matchup disclosures with 
     assert.ok(nodes.some(n=>n.textContent==='Wins · 1/2'));
     assert.ok(nodes.some(n=>n.textContent==='50%'));
     assert.ok(nodes.some(n=>n.textContent==='Game Outcomes'));
+    const hudTiles=nodes.filter(n=>n.className==='results-hud-tile');
+    assert.equal(hudTiles.length,5);
+    assert.equal(hudTiles[0].attributes['aria-pressed'],'true');
+    hudTiles[4].onclick();
+    assert.equal(hudTiles[4].attributes['aria-pressed'],'true');
+    assert.equal(hudTiles[0].attributes['aria-pressed'],'false');
+    assert.equal(nodes.filter(n=>n.className==='results-hud-detail-cards')[0]
+      .children.filter(x=>!x.hidden).length,1);
     assert.ok(nodes.some(n=>String(n.textContent).includes('One opponent type recorded')));
     const rank=nodes.find(n=>n.tag==='button'&&n.className==='game-outcome-rank-row');
     assert.ok(rank);
@@ -272,6 +280,9 @@ test('results page and exporter wire a future published manifest and local JSON'
   const build=fs.readFileSync('tools/build_pages_deck_lab.py','utf8');
   assert.match(html,/id="long-game-panel"/);
   assert.match(html,/id="turn-reviewer-results"/);
+  assert.match(html,/id="results-hud"/);
+  assert.match(html,/id="hud-commander-slot"/);
+  assert.match(html,/data-page="summary" href=".\/summary.html"/);
   assert.doesNotMatch(html,/id="game-outcome-files"/);
   assert.match(html,/game_outcomes\.js/);
   assert.match(app,/loadLongGameFiles/);
