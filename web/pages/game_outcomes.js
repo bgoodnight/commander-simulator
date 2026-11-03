@@ -815,20 +815,38 @@
     const card=typeof a.card==="string"&&a.card.trim()?a.card:
       typeof a.source==="string"&&a.source.trim()?a.source:null;
     const target=typeof a.target_name==="string"&&a.target_name.trim()?a.target_name:null;
+    // Abstract stress events describe modeled outcomes, not identifiable
+    // opposing spells. Never display raw internal event identifiers.
+    if(/abstract_destroy_prevented/.test(type))
+      return {verb:"Destruction prevented",card:null};
+    if(/abstract_blocked_combat/.test(type))
+      return {verb:"Attack blocked",card:null};
+    if(/abstract_unblocked_damage/.test(type))
+      return {verb:"Unblocked combat damage",card:null,
+        detail:Number.isFinite(a.amount)?String(a.amount):null};
+    if(/abstract_combo_loss/.test(type))
+      return {verb:"Modeled combo pressure",card:null};
+    if(/abstract_creature/.test(type))
+      return {verb:"Opponent creature development",card:null};
     if(type==="draw")return {verb:"Drew",card};
     if(type==="land_play")return {verb:"Played",card};
-    if(type==="cleanup_discard"||type==="opponent_abstract_discard")
-      return {verb:"Discarded",card};
+    if(type==="cleanup_discard")return {verb:"Discarded",card};
+    if(type==="opponent_abstract_discard")
+      return {verb:"Opponent discarded a card",card:null};
     if(/countered|counter_spell|spell_counter/.test(type))
       return {verb:"Countered",card};
     if(/returned?_to_hand|bounce/.test(type))
       return {verb:"Returned to hand",card};
     if(/_exile|exiled|exile_/.test(type))
-      return {verb:"Exiled",card};
+      return {verb:type.startsWith("opponent_abstract")?
+        "Opponent exiled a permanent":"Exiled",
+        card:type.startsWith("opponent_abstract")?null:card};
     if(/blocked_combat|combat_blocked|block_declared/.test(type))
       return {verb:"Blocked",card};
     if(/_destroy|destroyed|_dies|died/.test(type))
-      return {verb:"Destroyed",card};
+      return {verb:type.startsWith("opponent_abstract")?
+        "Opponent destroyed a permanent":"Destroyed",
+        card:type.startsWith("opponent_abstract")?null:card};
     if(type==="tutor_resolved")
       return target?{verb:"Found",card:target,detail:card?"with "+card:null}:null;
     if(type==="reviewed_unearth_resolved"||type==="reviewed_attachment_reanimated")
@@ -841,8 +859,9 @@
       return {verb:"Played",card};
     if(type.endsWith("_resolved")||type==="untap"||type==="draw_step"||
        type==="provisional_enter_resolved")return null;
-    // Retain an unfamiliar recorded action without calling it a play.
-    return {verb:type.replaceAll("_"," "),card};
+    // Unrecognized engine bookkeeping cannot be translated faithfully
+    // into player-visible events. Keep it out of the narrative.
+    return null;
   }
   function narratedText(n){
     return [n.verb,n.card,n.detail].filter(Boolean).join(" ");
