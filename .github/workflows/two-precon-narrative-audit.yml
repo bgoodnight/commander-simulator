@@ -28,7 +28,7 @@ jobs:
       - name: Run source-pinned precon and archive real game-turn observations
         run: |
           mkdir -p dist/narratives
-          python tools/audit_two_precon_games.py run \
+          python -m tools.audit_two_precon_games run \
             --deck "${{ matrix.deck }}" --scenario "${{ matrix.scenario }}" \
             --seeds 5 \
             --output "dist/narratives/${{ matrix.deck }}-${{ matrix.scenario }}.jsonl"
@@ -66,7 +66,7 @@ jobs:
         run: |
           mkdir -p dist/report
           test "$(find dist/all -name '*.jsonl' | wc -l)" -eq 4
-          python tools/audit_two_precon_games.py report \
+          python -m tools.audit_two_precon_games report \
             --source dist/all --output dist/report/precon-rule-gaps.json
           python - <<'PY'
           import json
