@@ -178,7 +178,8 @@ class GameBatchTests(unittest.TestCase):
                              ["Swamp"])
             self.assertEqual(len(batch["runs"]),3)
             self.assertNotIn("turn_records",batch["runs"][0])
-            self.assertNotIn("opening_hand",batch["runs"][0])
+            self.assertEqual(batch["runs"][0]["opening_hand"][-1],"Blood Artist")
+            self.assertEqual(batch["runs"][0]["ui_observations"][0]["hand"],["Swamp"])
             self.assertTrue(source.is_file())
 
     def test_observation_export_fails_closed_if_runner_did_not_record_hand(self):
@@ -197,7 +198,7 @@ class GameBatchTests(unittest.TestCase):
                 raise ValueError("inconsistent reviewed interaction")
             return self.fake(deck_key,**kwargs)
         with self.assertRaisesRegex(
-                RuntimeError,r"deck=necron_dynasties scenario=balanced seed=2 rounds=20"):
+                RuntimeError,r"deck=necron_dynasties scenario=random seed=2 rounds=20"):
             generate("necron_dynasties",seeds=3,rounds=20,runner=faulty)
 
     def test_batch_invalid_configuration_fails_closed(self):
