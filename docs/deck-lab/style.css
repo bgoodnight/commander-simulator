@@ -1540,3 +1540,42 @@ body:has(#pane-records:not([hidden])) .page-introduction a{font-size:.72rem}
   .game-outcome-detail-dialog[open]{animation:none}
   .game-outcome-hero-highlight{transition:none}
 }
+
+/* Selected-card evidence: expandable, source-backed turn timeline. */
+.insight-inline-tracker{margin-top:12px;padding:10px;border:1px solid #607b72;
+  border-radius:11px;background:linear-gradient(145deg,#1b3032,#13242a);
+  min-width:0}
+.insight-inline-tracker>summary{cursor:pointer;color:#f0d9aa;font-size:.86rem;
+  font-weight:700;line-height:1.5}
+.insight-inline-tracker[open]>summary{margin-bottom:10px}
+.insight-inline-tracker-controls{display:flex;align-items:center;flex-wrap:wrap;
+  gap:9px;margin:10px 0}
+.insight-inline-tracker-controls select{min-width:0;max-width:100%;flex:1}
+.insight-inline-tracker-review{min-width:0}
+.insight-inline-tracker .game-outcome-turn-strip{grid-template-columns:
+  repeat(auto-fill,minmax(145px,1fr))}
+.game-outcome-turn-zones{display:flex;flex-wrap:wrap;gap:4px;position:relative}
+.game-outcome-turn-zone{font-size:.65rem;background:#173038cc;
+  border:1px solid #58746e;border-radius:5px;padding:2px 5px;color:#d6dfd8}
+.game-outcome-turn-zone.is-zone-gain{color:#b9f1d1;border-color:#83cbaa;
+  box-shadow:0 0 10px #76daa44d}
+.game-outcome-turn-zone.is-zone-loss{color:#ffd0be;border-color:#cf8b81;
+  box-shadow:0 0 10px #e69a8155}
+.game-outcome-life-stat.is-life-gain,
+.game-outcome-turn-tile.is-life-gain{border-color:#83cbaa;
+  box-shadow:0 0 14px #76daa44d,inset 0 0 12px #76daa420}
+.game-outcome-life-stat.is-life-loss,
+.game-outcome-turn-tile.is-life-loss{border-color:#db9b8b;
+  box-shadow:0 0 14px #e69a8155,inset 0 0 12px #e69a811f}
+.game-outcome-life-stat.is-life-gain strong,
+.game-outcome-turn-tile.is-life-gain .game-outcome-turn-life{color:#c5f2d4}
+.game-outcome-life-stat.is-life-loss strong,
+.game-outcome-turn-tile.is-life-loss .game-outcome-turn-life{color:#ffd2c4}
+@media(max-width:650px){
+  .insight-inline-tracker{padding:8px}
+  .insight-inline-tracker .game-outcome-turn-strip{
+    grid-template-columns:repeat(2,minmax(0,1fr))}
+}
+@media(prefers-reduced-motion:reduce){
+  .insight-inline-tracker *{transition:none!important;animation:none!important}
+}
