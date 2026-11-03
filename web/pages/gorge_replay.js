@@ -435,7 +435,7 @@ function init(){
       if(manifest.schema!=="gorge-public-replay-manifest-v1"||
          !Array.isArray(manifest.games))throw Error("Unsupported sample manifest");
       for(const game of manifest.games){
-        if(!/^gorge-seed-[0-9]+\\.ui\\.json$/.test(game.file))continue;
+        if(!/^gorge-seed-[0-9]+\.ui\.json$/.test(game.file))continue;
         available.add(game.file);
         const option=node("option",null,"Seed "+game.seed+" · "+
           game.decks.join(" / "));
