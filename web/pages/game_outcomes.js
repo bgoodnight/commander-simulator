@@ -1110,13 +1110,15 @@
       const hand=index===0?run.opening_hand:observation?.hand;
       if(Array.isArray(hand)){
         const handBadge=textButton("▤ Hand "+hand.length,
-          "insight-turn-metric insight-hand-shortcut",()=>{
+          "insight-turn-metric insight-hand-shortcut",event=>{
+            // Prevent the parent <summary> from toggling itself after we open it.
+            event?.preventDefault?.();
+            event?.stopPropagation?.();
             row.open=true;
             const section=body.querySelector?.(".insight-end-zone");
             if(section)section.open=true;
           });
         handBadge.setAttribute("aria-label","Show "+hand.length+" cards in hand");
-        handBadge.addEventListener("click",e=>e.stopPropagation?.());
         badges.appendChild(handBadge);
       }
       const mana=recordedManaOutput(observation);
