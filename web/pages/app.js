@@ -321,6 +321,17 @@ function updateSelectionBadge(){
   $("active-commander").textContent=deck.commander;
   const hudName=$("hud-commander-name");
   if(hudName)hudName.textContent=deck.commander;
+  const hudBackdrop=$("results-hud-backdrop");
+  if(hudBackdrop){
+    const art=card?.art;
+    if(typeof art==="string"&&/^https:\/\//.test(art)){
+      hudBackdrop.src=art;
+      hudBackdrop.hidden=false;
+    }else{
+      hudBackdrop.removeAttribute("src");
+      hudBackdrop.hidden=true;
+    }
+  }
   $("active-deck-name").textContent=activeDeckTitle();
   const state=$("active-deck-state");
   state.hidden=!isUnsimulatedVersion();
