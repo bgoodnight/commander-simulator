@@ -90,6 +90,8 @@ from .reviewed_escape import (reviewed_breach, escape_candidates,
     cast_reviewed_escape_token_spell, sacrifice_breach_at_end_step)
 from .reviewed_buyback import reviewed_buyback, buyback_total_cost, cast_reviewed_buyback
 from .reviewed_spell_copy import reviewed_copy_spell,cast_reiterate_copy,REITERATE
+from .reviewed_creature_entry import (
+    ReviewedCreatureEntryEngine, reviewed_creature_entry_rule)
 from .reviewed_static_modifiers import (
     reviewed_static_rule, static_abilities, choose_creature_subtype,
     resolve_static_entry)
@@ -224,6 +226,7 @@ def run_bounded_early_game(deck_key, *, seed=0, turns=6, mulligan="one-free", pr
                         rule.oracle_excerpt in raw_by_name[name].get("oracle_text","")
                         for rule in ABILITIES.get(name,())) and bool(ABILITIES.get(name)))
                     or reviewed_creature(deck_key, name, raw_by_name[name])
+                    or reviewed_creature_entry_rule(name,raw_by_name[name]) is not None
                     or reviewed_rock(name, raw_by_name[name], colors) is not None
                     or reviewed_land(name, raw_by_name[name], colors) is not None
                     or (tutor_review is not None
@@ -284,6 +287,7 @@ def run_bounded_early_game(deck_key, *, seed=0, turns=6, mulligan="one-free", pr
     composed_engine = ComposedAbilityEngine(zones, life, raw_by_name,
                                            mana_service, death_engine)
     reactive_engine = ReactiveTriggerEngine(zones,life,raw_by_name)
+    creature_entry_engine=ReviewedCreatureEntryEngine(zones,life,raw_by_name)
     attachment_engine=AttachmentEngine(
         zones,life,raw_by_name,mana_service,death_engine)
     death_engine.attachments=attachment_engine
@@ -427,6 +431,16 @@ def run_bounded_early_game(deck_key, *, seed=0, turns=6, mulligan="one-free", pr
         beginning_creature_ids=frozenset(
             obj.object_id for obj in kernel.on_battlefield()
             if obj.controller==0 and "creature" in obj.types)
+        def resolve_creature_entries():
+            for triggered in creature_entry_engine.resolve():
+                events.append({
+                    "type":"reviewed_creature_entry_trigger",
+                    "source":triggered.source_name,
+                    "source_object_id":triggered.source_id,
+                    "entrant_object_id":triggered.entrant_id,
+                    "operation":triggered.operation,
+                    "amount":triggered.amount,
+                    "fidelity":"bounded_source_pinned_physical_enter_no_priority"})
         def resolve_reactive():
             for triggered in reactive_engine.resolve():
                 events.append({
@@ -685,6 +699,7 @@ def run_bounded_early_game(deck_key, *, seed=0, turns=6, mulligan="one-free", pr
                 raw = raw_by_name[name]
                 provisional=provisional_by_name.get(name)
                 is_creature = bool(reviewed_creature(deck_key, name, raw)
+                                   or reviewed_creature_entry_rule(name,raw) is not None
                                    or (provisional is not None and
                                        provisional.kind=="creature_body"))
                 rock = reviewed_rock(name, raw, colors)
@@ -1335,6 +1350,7 @@ def run_bounded_early_game(deck_key, *, seed=0, turns=6, mulligan="one-free", pr
                     "operation":activated.operation,
                     "fidelity":"bounded_explicit_tap_ready"})
             break
+        resolve_creature_entries()
         resolve_reactive()
         # One reviewed instant spell per turn in the verified main-phase
         # window. Optional buyback is preferred only when fully payable.
@@ -1714,6 +1730,7 @@ def run_bounded_early_game(deck_key, *, seed=0, turns=6, mulligan="one-free", pr
                                    "timing, targets, mandatory abilities, "
                                    "priority and resolution were not assessed")
                 })
+        resolve_creature_entries()
         resolve_reactive()
         attachment_engine.sync(turn=turn)
         zone_engine.expire(turn,active_seat=0)
@@ -1727,6 +1744,7 @@ def run_bounded_early_game(deck_key, *, seed=0, turns=6, mulligan="one-free", pr
             return bool(
                 supported_land(obj.object_id)
                 or reviewed_creature(deck_key, name, raw)
+                or reviewed_creature_entry_rule(name,raw) is not None
                 or reviewed_rock(name, raw, colors) is not None
                 or reviewed_token_spell(name, raw) is not None
                 or reviewed_draw_spell(name,raw) is not None
@@ -1783,6 +1801,7 @@ def run_bounded_early_game(deck_key, *, seed=0, turns=6, mulligan="one-free", pr
                     "object_id":pressure_event.object_id,
                     "target_seat":pressure_event.target_seat,
                     "fidelity":"abstract_opponent_pressure_not_card_exact"})
+            resolve_creature_entries()
             resolve_reactive()
         # An opponent's explicitly abstract non-token creature can be
         # controlled by Mortarion after Nurgle's Conscription. It is not in
