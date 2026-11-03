@@ -149,6 +149,8 @@ jobs:
           for file in dist/incoming-observations/*.jsonl; do
             gzip -c -9 "$file" > "dist/observation-archive/$(basename "$file").gz"
           done
+      - name: Validate elastic-net source extraction and synthetic modeling
+        run: python -m unittest tests.test_game_signal_analysis -v
       - name: Build seed-grouped elastic-net discovery reports
         run: |
           mkdir -p dist/analytics dist/discovery-input
