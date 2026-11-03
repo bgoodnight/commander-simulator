@@ -1698,5 +1698,9 @@ body:has(#pane-records:not([hidden])) .page-introduction a{font-size:.72rem}
 .insight-seat-life.is-gain .insight-seat-life-delta{color:#b9efd0}
 .insight-seat-life.is-loss .insight-seat-life-delta{color:#f6bdb4}
 @media(max-width:650px){
- .insight-seat-life-strip{grid-template-columns:repeat(2,minmax(0,1fr))}
+ .insight-seat-life-strip{grid-template-columns:repeat(4,minmax(0,1fr));gap:3px}
+ .insight-seat-life{flex-direction:column;gap:1px;padding:5px 2px}
+ .insight-seat-life-name{font-size:.59rem}
+ .insight-seat-life-value{font-size:.76rem}
+ .insight-seat-life-delta{font-size:.61rem}
 }
