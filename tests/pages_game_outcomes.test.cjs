@@ -655,8 +655,8 @@ test('full-game reviewer uses same compact turn rows as insight evidence',()=>{
     opened.open=true;
     assert.ok(walk(opened).some(n=>n.className==='insight-action-art'&&
       n.src==='https://example.com/Grave-Titan.jpg'));
-    assert.ok(walk(opened).some(n=>n.className==='insight-turn-seats'));
-    assert.ok(walk(opened).some(n=>n.className==='game-outcome-life-stat is-life-loss'));
+    assert.ok(walk(opened).some(n=>n.className==='insight-seat-summary'));
+    assert.ok(walk(opened).some(n=>n.className.includes('insight-seat-chip is-loss')));
     assert.ok(walk(turns[3]).some(n=>n.textContent==='Swamp'));
     const insight=walk(root).find(n=>n.className.includes('insight-featured-panel')&&
       walk(n).some(x=>x.textContent==='Most played card'));
@@ -666,8 +666,8 @@ test('full-game reviewer uses same compact turn rows as insight evidence',()=>{
     tracker.open=true;tracker.events.toggle();
     const inline=walk(tracker).filter(n=>n.className==='insight-turn-row');
     assert.equal(inline.length,turns.length);
-    assert.deepEqual(inline.map(n=>n.children[0].children[0].textContent),
-      turns.map(n=>n.children[0].children[0].textContent));
+    assert.deepEqual(inline.map(n=>n.children.find(x=>x.tag==='summary').children[0].textContent),
+      turns.map(n=>n.children.find(x=>x.tag==='summary').children[0].textContent));
   }finally{global.document=before}
 });
 
@@ -796,5 +796,65 @@ test('selected card insight embeds relevant game turns and real life/zone change
     assert.ok(walk(turns[2]).some(n=>n.className==='insight-action-phase-heading'&&
       n.textContent.includes('Your recorded actions')));
     assert.equal(walk(tracker).some(n=>n.className==='game-outcome-turn-tile'),false);
+  }finally{global.document=before}
+});
+
+test('turn background uses first named card and enemy activity has one condensed block',()=>{
+  class Node{
+    constructor(tag){this.tag=tag;this.className='';this.textContent='';
+      this.children=[];this.attributes={};this.style={};this.dataset={};this.events={};
+      this.open=false;}
+    append(...items){this.children.push(...items)}
+    appendChild(item){this.children.push(item);return item}
+    replaceChildren(...items){this.children=[...items]}
+    setAttribute(k,v){this.attributes[k]=String(v)}
+    addEventListener(k,handler){this.events[k]=handler}
+    get lastChild(){return this.children.at(-1)}
+  }
+  const before=global.document;
+  global.document={createElement:tag=>new Node(tag),
+    createElementNS:(_,tag)=>new Node(tag)};
+  const walk=n=>[n,...n.children.flatMap(walk)];
+  try{
+    const r={...runUnresolved(),ui_observations:[
+      {turn:1,hand:['Sol Ring'],battlefield:['Sol Ring'],graveyard:[],
+       land_count:1,seat_states:{'1':{lands:2,battlefield:['Token'],hand_size:6}},
+       actions:[
+         {type:'land_play',card:'Swamp',seat:0},
+         {type:'opponent_abstract_damage',seat:1,amount:3},
+         {type:'opponent_abstract_pressure',seat:2,amount:1},
+         {type:'opponent_abstract_attack',seat:1,amount:2},
+         {type:'draw',card:'Unknown Card'}
+       ]},
+      {turn:2,hand:[],battlefield:['Sol Ring'],graveyard:[],
+       land_count:2,seat_states:{'1':{lands:3,battlefield:['Token','Token'],hand_size:5}},
+       actions:[{type:'tutor_resolved',card:'Fabricate',seat:0,target_name:'Sol Ring'}]},
+      {turn:3,hand:[],battlefield:[],graveyard:[],actions:[]}]};
+    const root=new Node('main'),reviewer=new Node('section');
+    Outcomes.render(root,[batch([r])],{
+      deckKey:'necron_dynasties',deckHash:'a'.repeat(64),
+      reviewerRoot:reviewer,
+      lookupRecordedCard:name=>({name,art:'https://example.com/'+name.replaceAll(' ','-')+'.jpg'})
+    });
+    const turns=walk(reviewer).filter(n=>n.className==='insight-turn-row');
+    const cover=turns[1].children.find(n=>n.className==='insight-turn-cover');
+    assert.ok(cover);
+    assert.equal(cover.src,'https://example.com/Swamp.jpg');
+    const firstBody=walk(turns[1]);
+    const enemy=firstBody.filter(n=>n.className==='insight-action-phase is-opponent');
+    assert.equal(enemy.length,1);
+    assert.equal(walk(enemy[0]).filter(n=>n.className==='insight-action-entry').length,3);
+    assert.ok(firstBody.some(n=>n.textContent.includes('Seat not recorded')));
+    const second=walk(turns[2]);
+    const seat1=second.find(n=>n.className==='insight-seat-line'&&
+      n.children[0].textContent==='Seat 2');
+    assert.ok(seat1);
+    assert.ok(walk(seat1).some(n=>n.textContent.includes('◆ L 3 +1')));
+    assert.ok(walk(seat1).some(n=>n.textContent.includes('♟ P 2 +1')));
+    assert.ok(walk(seat1).some(n=>n.textContent.includes('▤ H 5 -1')));
+    const seat2=second.find(n=>n.className==='insight-seat-line'&&
+      n.children[0].textContent==='Seat 3');
+    assert.ok(walk(seat2).some(n=>n.textContent.includes('◆ L —')));
+    assert.ok(!walk(seat2).some(n=>n.textContent.includes('◆ L 0')));
   }finally{global.document=before}
 });
