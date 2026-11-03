@@ -819,7 +819,7 @@ test('selected card insight embeds relevant game turns and real life/zone change
       n.textContent.includes('Hand 0')));
     assert.ok(walk(turns[2]).some(n=>n.className==='insight-end-state'));
     assert.ok(walk(turns[2]).some(n=>n.className==='insight-end-zone'&&
-      n.children.some(c=>c.textContent.includes('Graveyard'))));
+      walk(n).some(c=>c.textContent.includes('Graveyard'))));
     assert.ok(walk(turns[2]).some(n=>n.className==='insight-action-art'&&
       n.src.includes('Grave Titan')));
     assert.ok(walk(turns[2]).some(n=>n.className==='insight-action-phase-heading'&&
