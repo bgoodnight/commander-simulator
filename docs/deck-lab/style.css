@@ -1462,3 +1462,81 @@ body:has(#pane-records:not([hidden])) .page-introduction a{font-size:.72rem}
 @media(prefers-reduced-motion:reduce){
   .game-outcome-turn-tile{scroll-behavior:auto}
 }
+
+
+/* Game overview metric pop-ups: dedicated dashboard drilldowns, not accordion
+   siblings. Native <dialog> handles modal focus, Escape and backdrop. */
+.game-outcome-hero-highlight{
+  appearance:none;-webkit-appearance:none;text-align:left;width:100%;
+  color:inherit;font-family:inherit;cursor:pointer;position:relative;
+  transition:transform .18s ease,border-color .18s ease,background .18s ease
+}
+.game-outcome-hero-highlight:hover{
+  transform:translateY(-3px);border-color:#e2c78b;
+  background:#102a31e3
+}
+.game-outcome-hero-highlight:focus-visible{
+  outline:2px solid #f2d39f;outline-offset:3px
+}
+.game-outcome-hero-highlight-cue{
+  margin-top:auto;font-size:.65rem;color:#e6c996;
+  opacity:.84;letter-spacing:.02em
+}
+.game-outcome-detail-dialog{
+  box-sizing:border-box;position:fixed;
+  width:min(960px,calc(100vw - 28px));
+  max-width:960px;max-height:min(88dvh,920px);
+  padding:0;border:1px solid #bba37b;border-radius:18px;
+  color:#f3e8d3;background:#14252b;
+  box-shadow:0 24px 95px #000c;
+  overflow-y:auto;overscroll-behavior:contain
+}
+.game-outcome-detail-dialog::backdrop{
+  background:#051013c9;backdrop-filter:blur(5px)
+}
+.game-outcome-detail-dialog[open]{
+  animation:game-outcome-dialog-rise .22s ease-out both
+}
+@keyframes game-outcome-dialog-rise{
+  from{opacity:0;transform:translateY(12px) scale(.985)}
+  to{opacity:1;transform:translateY(0) scale(1)}
+}
+.game-outcome-detail-surface{min-width:0;display:grid;gap:0}
+.game-outcome-detail-header{
+  display:flex;align-items:center;justify-content:space-between;gap:16px;
+  position:sticky;top:0;z-index:5;
+  padding:18px 22px;background:#152a2def;
+  border-bottom:1px solid #a38e7059;backdrop-filter:blur(12px)
+}
+.game-outcome-detail-heading{
+  font-family:Cinzel,Georgia,serif;font-weight:700;
+  margin:0;color:#f3dfb8;font-size:clamp(1.15rem,2.2vw,1.5rem)
+}
+.game-outcome-detail-close{
+  appearance:none;font:inherit;font-size:1rem;
+  color:#f5deb8;background:#2b403e;border:1px solid #a6916a;
+  border-radius:50%;min-width:38px;min-height:38px;cursor:pointer
+}
+.game-outcome-detail-close:hover,.game-outcome-detail-close:focus-visible{
+  border-color:#f3dcaa;background:#3c5650
+}
+.game-outcome-detail-content{padding:14px 18px 22px;min-width:0}
+.game-outcome-detail-content>.game-outcome-card{
+  display:block;height:auto;box-shadow:none;border:0;background:transparent
+}
+.game-outcome-detail-content>.game-outcome-card>summary{display:none}
+.game-outcome-detail-content>.game-outcome-card>.game-outcome-body{
+  display:block;padding:8px 3px;color:#e2e8dd
+}
+@media(max-width:720px){
+  .game-outcome-detail-dialog{
+    width:calc(100vw - 12px);max-height:92dvh;border-radius:14px
+  }
+  .game-outcome-detail-header{padding:13px 14px}
+  .game-outcome-detail-content{padding:10px 11px 20px}
+  .game-outcome-hero-highlight-cue{font-size:.62rem}
+}
+@media(prefers-reduced-motion:reduce){
+  .game-outcome-detail-dialog[open]{animation:none}
+  .game-outcome-hero-highlight{transition:none}
+}

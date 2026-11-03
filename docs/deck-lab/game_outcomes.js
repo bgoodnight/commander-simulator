@@ -342,10 +342,20 @@
     if(options.heroHighlights?.length){
       const highlights=create("div","game-outcome-hero-highlights");
       for(const item of options.heroHighlights){
-        const stat=create("div","game-outcome-hero-highlight");
+        const stat=create("button","game-outcome-hero-highlight");
+        stat.type="button";
+        stat.setAttribute("aria-haspopup","dialog");
+        stat.setAttribute("aria-label",item.label+": "+item.value+". Open detailed analysis");
         stat.append(create("span",null,item.label),
           create("strong",null,item.value),
-          create("small",null,item.detail));
+          create("small",null,item.detail),
+          create("span","game-outcome-hero-highlight-cue","Explore ↗"));
+        // The tiles live inside a <summary>; clicking them must not toggle
+        // the surrounding outcome disclosure.
+        stat.addEventListener("click",event=>{
+          event.preventDefault();event.stopPropagation();
+          options.onHighlightClick?.(item.key,stat);
+        });
         highlights.appendChild(stat);
       }
       copy.appendChild(highlights);
@@ -1300,26 +1310,71 @@
     const cards=create("div","board-grid game-outcome-grid latest-insight-grid");
     root.appendChild(cards);
     let jumpToReview=null;
-    const onReviewRun=(id,seed,turn)=>{if(jumpToReview)jumpToReview(id,seed,turn)};
+    const onReviewRun=(id,seed,turn)=>{
+      if(detailDialog.open)closeDialog();
+      if(jumpToReview)jumpToReview(id,seed,turn);
+    };
     const bestMatchup=matchup[0];
     const finishedMedian=quantile(finished.map(run=>run.completed_rounds),.5);
     const finalLifeMedian=quantile(lastLife,.5);
     const heroHighlights=[
-      {label:"Best matchup",value:bestMatchup?
+      {key:"matchup",label:"Best matchup",value:bestMatchup?
         (100*bestMatchup.counts.win/Math.max(1,bestMatchup.games)).toFixed(1)+"%":"—",
        detail:bestMatchup?.title||"No opponent groups"},
-      {label:"Game length",value:finishedMedian===null?"—":nfmt(finishedMedian),
+      {key:"length",label:"Game length",value:finishedMedian===null?"—":nfmt(finishedMedian),
        detail:"Median finished rounds"},
-      {label:"Survival",value:(100*runs.filter(run=>
+      {key:"survival",label:"Survival",value:(100*runs.filter(run=>
           aliveAt(run.life_history.at(-1),0)).length/total).toFixed(1)+"%",
        detail:"Alive at last recorded round"},
-      {label:"Final life",value:finalLifeMedian===null?"—":nfmt(finalLifeMedian),
+      {key:"life",label:"Final life",value:finalLifeMedian===null?"—":nfmt(finalLifeMedian),
        detail:"Median final recorded life"}
     ];
+    // The overview tiles are buttons, not duplicate expanding cards.
+    // Each opens its original detailed analysis in a focus-managed dialog.
+    const detailPanels=new Map();
+    const detailDialog=create("dialog","game-outcome-detail-dialog");
+    detailDialog.setAttribute("aria-label","Game performance details");
+    const detailSurface=create("div","game-outcome-detail-surface");
+    const detailHeader=create("div","game-outcome-detail-header");
+    const detailHeading=create("h2","game-outcome-detail-heading");
+    const closeDetail=textButton("✕","game-outcome-detail-close",()=>closeDialog());
+    closeDetail.setAttribute("aria-label","Close game performance details");
+    detailHeader.append(detailHeading,closeDetail);
+    const detailContent=create("div","game-outcome-detail-content");
+    detailSurface.append(detailHeader,detailContent);
+    detailDialog.appendChild(detailSurface);
+    root.appendChild(detailDialog);
+    let activeTrigger=null;
+    function closeDialog(){
+      if(typeof detailDialog.close==="function"&&detailDialog.open)
+        detailDialog.close();
+      else detailDialog.removeAttribute("open");
+      activeTrigger?.focus?.();
+    }
+    function openDetail(key,trigger){
+      const panel=detailPanels.get(key);
+      if(!panel)return;
+      activeTrigger=trigger;
+      detailHeading.textContent=({
+        matchup:"Opponent Matchups",
+        length:"Game Length",
+        survival:"Eliminations & Survival",
+        life:"Life Progression"
+      })[key];
+      detailContent.replaceChildren(panel);
+      panel.open=true;
+      if(typeof detailDialog.showModal==="function")detailDialog.showModal();
+      else detailDialog.setAttribute("open","");
+      closeDetail.focus?.();
+    }
+    detailDialog.addEventListener("close",()=>activeTrigger?.focus?.());
+    detailDialog.addEventListener("click",event=>{
+      if(event.target===detailDialog)closeDialog();
+    });
     cards.appendChild(outcomeCard({
       counts,total,terminal:finished.length,
       terminalRounds:finished.map(run=>run.completed_rounds)
-    },{...options,heroHighlights},body=>{
+    },{...options,heroHighlights,onHighlightClick:openDetail},body=>{
       const buckets=create("div","game-outcome-buckets");
       for(const state of STATES){
         if(!counts[state])continue;
@@ -1335,7 +1390,7 @@
         groups[0].requestedRounds+"-round horizon"));
     }));
     const best=matchup[0];
-    cards.appendChild(card("Opponent Types","Types & table compositions",
+    detailPanels.set("matchup",card("Opponent Types","Types & table compositions",
       best?(100*best.counts.win/Math.max(1,best.games)).toFixed(1)+"%":"—",
       best?"Win share · "+best.title+" · "+matchup.length+" opponent types":
         "No recorded groups",
@@ -1363,7 +1418,7 @@
         selector.addEventListener("change",redraw);
         redraw();
       }));
-    cards.appendChild(card("Game Length","Finished rounds",
+    detailPanels.set("length",card("Game Length","Finished rounds",
       quantile(finished.map(run=>run.completed_rounds),.5)===null?"—":
         nfmt(quantile(finished.map(run=>run.completed_rounds),.5)),
       "Median · "+finished.length+" finished games",
@@ -1377,7 +1432,7 @@
         body.appendChild(stats);
         histogram(body,finished,groups[0].requestedRounds);
       }));
-    cards.appendChild(card("Eliminations","Survival",
+    detailPanels.set("survival",card("Eliminations","Survival",
       (100*knocked.length/total).toFixed(1)+"%",
       "Our seat eliminated · "+knocked.length+" of "+total+" games",
       body=>{
@@ -1406,7 +1461,7 @@
         }
         body.appendChild(bySeat);
       }));
-    cards.appendChild(card("Life Progression","Four seats",
+    detailPanels.set("life",card("Life Progression","Four seats",
       quantile(lastLife,.5)===null?"—":nfmt(quantile(lastLife,.5)),
       "Your median final recorded life",
       body=>{
@@ -1427,8 +1482,8 @@
         slider.addEventListener("input",displayRound);
         body.append(slider,detail);displayRound();
       }));
-    // Card insights follow the four primary game-performance panels.
-    // Card-specific discoveries precede the statistical interpretation.
+    // Game detail panels are now reached from the four overview tiles.
+    // Card-specific discoveries follow the commander dashboard.
     // Missing named sources never become guessed card-level findings.
     const signals=observationCardStats(runs,options.lookupRecordedCard,
       options.commanderName);
