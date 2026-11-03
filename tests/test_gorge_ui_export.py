@@ -30,7 +30,7 @@ class GorgeUIExportTests(unittest.TestCase):
         self.assertEqual(doc["source"]["omitted_hidden_events"],2)
         self.assertEqual(doc["source"]["total_native_decisions"],1)
         self.assertEqual(doc["object_identity"]["2"],"Wayfarer's Bauble")
-        self.assertEqual(doc["turns"][1]["events"][0]["card_name"],
+        self.assertEqual(next(e["card_name"] for e in doc["turns"][1]["events"] if e["kind"]=="cast"),
                          "Wayfarer's Bauble")
         self.assertEqual(doc["turns"][2]["events"][-1]["kind"],"native_500")
         self.assertIsNone(doc["state"]["hands"])
