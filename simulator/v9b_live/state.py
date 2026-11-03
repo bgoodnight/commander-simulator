@@ -73,6 +73,16 @@ class IndexedKernel(CentralKernel):
             self.resource_names.pop(oid, None)
             self.unearth_pending.pop(oid, None)
             self.flashback_pending.discard(oid)
+            # A continuous effect is active only while its actual source
+            # remains on the battlefield. Recalculate after BOTH entry and
+            # departure; avoid reentering the state-based window.
+            affected = (old_key[1]=='battlefield' or to_zone=='battlefield')
+            is_stat_source=any(a.kind=='static' and a.op=='creature_stat_modifier'
+                               for a in obj.card.abilities)
+            if old_key[1]=='battlefield' and hasattr(self,'static_choices'):
+                self.static_choices.pop(oid,None)
+            if affected and is_stat_source and not getattr(self,'_checking_sba',False):
+                self.check_state_based()
         return result
 
     def remove_owned(self, seat):
