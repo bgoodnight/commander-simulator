@@ -286,6 +286,17 @@ class BoundedOpponentPressure:
                     self.events.append(OpponentEvent(
                         turn,seat,role,"reviewed_attack_keyword_grant",
                         attacker_id,0,defender))
+            if attacker.controller==0:
+                # One source-verified attack trigger resolution per declared
+                # attacker. Resulting tokens enter the physical battlefield;
+                # they are not retroactively added to this attack.
+                from .reviewed_attack_tokens import resolve_attack_tokens
+                created=resolve_attack_tokens(
+                    self.zones,self.catalog,attacker.object_id)
+                if created:
+                    self.events.append(OpponentEvent(
+                        turn,seat,role,"reviewed_attack_tokens",
+                        attacker.object_id,len(created),defender))
             blockers=kernel.legal_blockers(attacker.object_id,defender,frozenset(used))
             # Magic creatures with negative power assign/deal zero combat
             # damage. Their signed power still matters for other effects.
