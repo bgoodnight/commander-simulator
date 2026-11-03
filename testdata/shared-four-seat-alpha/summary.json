@@ -2,14 +2,54 @@
   "format": "shared-kernel-abstract-calibration-alpha-v1",
   "games": 40,
   "resolutions": {
-    "unresolved": 38,
-    "win": 2
+    "win": 30,
+    "unresolved": 10
   },
   "winner_seats": {
-    "1": 1,
-    "2": 1
+    "3": 4,
+    "0": 8,
+    "2": 8,
+    "1": 10
   },
-  "median_rounds": 15,
+  "median_rounds": 27,
+  "actions_by_role": {
+    "aggro": {
+      "draw": 1818,
+      "land_play": 597,
+      "abstract_cast": 1068,
+      "combat_damage": 533,
+      "combat_blocked": 368,
+      "abstract_tokens": 99,
+      "eliminated": 28
+    },
+    "control": {
+      "draw": 3291,
+      "land_play": 919,
+      "abstract_cast": 1743,
+      "combat_blocked": 68,
+      "combat_damage": 136,
+      "abstract_tokens": 33,
+      "eliminated": 32
+    },
+    "combo": {
+      "draw": 2949,
+      "land_play": 777,
+      "abstract_cast": 1606,
+      "abstract_tokens": 59,
+      "eliminated": 36,
+      "combat_blocked": 31,
+      "combat_damage": 48
+    },
+    "midrange": {
+      "draw": 2660,
+      "land_play": 820,
+      "abstract_cast": 1612,
+      "combat_blocked": 427,
+      "combat_damage": 393,
+      "abstract_tokens": 77,
+      "eliminated": 14
+    }
+  },
   "fidelity": "physical kernel and zones, synthetic archetype effects, no printed-card execution",
   "real_deck_matchups": false
 }
