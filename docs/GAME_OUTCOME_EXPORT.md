@@ -112,3 +112,21 @@ Review replacement effects, commander-damage counters, game-loss effects,
 opponent elimination cleanup and attacker choice before promoting these
 modeled results to competitive diagnostics. More games cannot compensate
 for missing rules; keep uncertainty and unmodeled actions visible.
+
+## Full observation archive for feature engineering (next batch)
+
+When invoking `tools/build_game_outcomes.py` with `--observations-output`, the
+runner writes a *separate* JSONL file with one actual recorded game per line:
+kept opening hand and mulligan, exact deck/pilot/opponent cohort, complete
+ordered turn events, actual turn-boundary card-zone snapshots, four-seat life
+history, outcome and fidelity. This is **not** a matrix of predetermined
+statistical predictors. Unknown legality, omitted actor/source IDs and
+unsupported rules must remain explicitly unknown, never imputed.
+
+Both production simulation workflows now capture and validate this sidecar for
+every game, compress it, and attach it to the immutable GitHub Release. The
+existing public UI JSON files remain small and backward compatible; they
+continue to retain only a few full example replays.
+
+See [Observation capture contract](SIMULATION_OBSERVATIONS_CONTRACT.md) for the
+next batch's requirements and downstream time-aware feature engineering.

@@ -89,8 +89,20 @@ jobs:
               --pilot-style "$OUTCOME_PILOT_STYLE" \
               --provisional-mode "$OUTCOME_PROVISIONAL_MODE" \
               --examples 2 \
+              --observations-output "dist/game-observations/$OUTCOME_DECK-$scenario.jsonl" \
               --output "dist/game-outcome-runs/$OUTCOME_DECK-$scenario.json"
           done
+          python tools/validate_game_observations.py \
+            --source dist/game-observations \
+            --expected-games "$OUTCOME_SEEDS" --expected-rounds "$OUTCOME_ROUNDS"
+          # Complete observation records are preserved separately from Pages.
+      - name: Upload complete per-game observations for later feature engineering
+        uses: actions/upload-artifact@v4
+        with:
+          name: observations-${{ matrix.deck }}-${{ github.sha }}
+          path: dist/game-observations/*.jsonl
+          if-no-files-found: error
+          retention-days: 90
       - name: Upload immutable, authentic per-deck simulation results
         uses: actions/upload-artifact@v4
         with:
@@ -117,6 +129,24 @@ jobs:
           pattern: outcome-*-${{ github.sha }}
           path: dist/incoming-outcomes
           merge-multiple: true
+      - name: Retrieve complete per-game observations
+        uses: actions/download-artifact@v4
+        with:
+          pattern: observations-*-${{ github.sha }}
+          path: dist/incoming-observations
+          merge-multiple: true
+      - name: Validate complete observations and compress for immutable release
+        env:
+          EXPECTED_SEEDS: ${{ github.event_name == 'pull_request' && '1' || inputs.seeds }}
+          EXPECTED_ROUNDS: ${{ github.event_name == 'pull_request' && '3' || inputs.rounds }}
+        run: |
+          python tools/validate_game_observations.py \
+            --source dist/incoming-observations \
+            --expected-games "$EXPECTED_SEEDS" --expected-rounds "$EXPECTED_ROUNDS"
+          mkdir -p dist/observation-archive
+          for file in dist/incoming-observations/*.jsonl; do
+            gzip -c -9 "$file" > "dist/observation-archive/$(basename "$file").gz"
+          done
       - name: Verify published provenance and static-page compatibility
         run: |
           python -m unittest tests.test_game_outcome_publishing -v
@@ -132,6 +162,13 @@ jobs:
           PY
           python -m unittest tests.test_pages_export -v
           node --test tests/pages_game_outcomes.test.cjs
+      - name: Keep complete observations with reviewed backup
+        uses: actions/upload-artifact@v4
+        with:
+          name: full-game-observations-${{ github.sha }}
+          path: dist/observation-archive/*.gz
+          if-no-files-found: error
+          retention-days: 90
       - name: Keep a downloadable, verified backup
         uses: actions/upload-artifact@v4
         with:
@@ -147,7 +184,7 @@ jobs:
           # Every completed run gets its own immutable GitHub Release asset
           # before the single live Pages manifest is replaced.
           TAG="modeled-games-${{ github.run_id }}-${{ github.run_attempt }}"
-          gh release create "$TAG" dist/published-game-outcomes/*.json \
+          gh release create "$TAG" dist/published-game-outcomes/*.json dist/observation-archive/*.gz \
             --target "${{ github.sha }}" \
             --title "Modeled simulations · ${{ github.sha }}" \
             --notes "Verified source commit ${{ github.sha }}; workflow run ${{ github.run_id }}. Immutable historical batch. The live Deck Lab displays only the most recently promoted manifest." \
@@ -158,7 +195,8 @@ jobs:
           git fetch origin main
           if ! git diff --quiet HEAD origin/main -- \
             commander_sim/ decklists/ simulator/card_data/ \
-            tools/build_game_outcomes.py tools/publish_game_outcomes.py \
+            tools/build_game_outcomes.py tools/validate_game_observations.py \
+            tools/publish_game_outcomes.py \
             .github/workflows/publish-game-outcomes.yml; then
             echo "Simulator or publishing code changed during batch; rerun on latest main."
             exit 1

@@ -30,6 +30,25 @@ Applies to implementation on this repository's active branch. Read, in this orde
 
 **Do not let individual-card completeness block M1/M2/M3/U0/U1/U2.** Imported = identity recognized; castable = permitted by validated current rules; fully supported = independent per-ability coverage. Keep these different in all reports.
 
+## Next simulation batch: full observation capture
+
+Before dispatching the next sizeable simulated-game cohort, follow
+[Simulation Observation Capture Contract](docs/SIMULATION_OBSERVATIONS_CONTRACT.md).
+Enable `--observations-output` for **every** game, retain opening hand,
+actual turn actions/decisions, card-zone snapshots, four-seat life histories
+and exact seed/deck/pilot/opponent provenance. Validate complete JSONL sidecars
+and archive compressed evidence with the immutable GitHub Release, **separate**
+from the small Pages JSON. A few example replays are NOT sufficient for
+subsequent card/trajectory feature engineering.
+
+Observations are authoritative recorded facts, not invented opportunity
+sets, guessed source attribution or posthoc features. Engineer features in
+the separate analytics layer using strict pregame/landmark timing; the agreed
+discovery method is interaction-aware hierarchical **elastic net**, not a
+required random-forest/tree screen followed by ordinary regression. Explicitly
+smoke-test the capture path and verify it doesn't change game outcomes
+before any 500-game dispatch. Do not modify completed published batches.
+
 ## Usage-efficient working procedure
 
 - Start with [LOW_CREDIT_IMPLEMENTATION_HANDOFF.md](docs/LOW_CREDIT_IMPLEMENTATION_HANDOFF.md) and the latest commit/CI. Scope one current **Slice 2/3 or UI U1/U2/U3/U4**; do not re-audit the entire historical engine, redo already committed foundations, or prioritize the former Slice A card directory over M0 caching.
