@@ -240,6 +240,8 @@ class ReviewedDeathEngine:
         self._handled=set()
         self._once=set()
         self.invocations=[]
+        from .reviewed_artifact_departures import ReviewedArtifactDepartureEngine
+        self.artifact_departures=ReviewedArtifactDepartureEngine(zones,catalog)
 
     def _reviewed_card(self,source):
         row=self.catalog.get(source.name)
@@ -281,6 +283,9 @@ class ReviewedDeathEngine:
         for m in changes:
             if m.object_id not in before:
                 raise ValueError("A dead object was missing from its LKI snapshot")
+        # Artifact departure is independent of whether the moved object was
+        # a creature; the same pre-event LKI prevents shadow-state guesses.
+        self.artifact_departures.resolve(before,move_index=move_index)
         agenda=[]
         pending_once=set()
         for source in before.values():
