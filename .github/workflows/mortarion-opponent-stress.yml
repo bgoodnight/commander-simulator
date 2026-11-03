@@ -1,11 +1,10 @@
-name: Mortarion physical opponent stress and narrative audit
+name: ARCHIVED Python · Mortarion physical opponent stress and narrative audit
 # Rerun narrative audits after global threat-weighted, seat-neutral opponent removal.
+# ARCHIVED: no automatic Python game simulations after gorge-only cutover.
+# Older workflows can be reproduced from the preserved archive branch.
 on:
   workflow_dispatch:
-  push:
-    branches: [main]
-    paths:
-      - ".github/workflows/mortarion-opponent-stress.yml"
+
 permissions:
   contents: read
 jobs:
