@@ -1141,7 +1141,7 @@ test('compact example controls omit selector and repeated run heading',()=>{
   assert.match(js,/insight-example-game-label/);
   assert.match(css,/insight-example-full-link/);
   assert.match(css,/compact-selection\{margin-bottom:3px\}/);
-  assert.ok(!page.includes('id="game-outcome-refresh"'));
+  assert.ok(page.includes('id="game-outcome-refresh"')); // Existing page-wide refresh is separate from compact evidence controls.
 });
 
 test('long turns use natural height and combat remains in expanded evidence',()=>{

@@ -11,6 +11,7 @@
   <script src="./results_insights.js?v=20261101h1" defer></script>
   <script src="./brackets.js?v=20261101bracket" defer></script>
   <script src="./replay.js?v=bounded-evidence-pilot-20261102" defer></script>
+  <script src="./gorge_replay.js?v=native-gorge-local-20261103" defer></script>
   <script src="./insight_catalog.js?v=held-median-20261102" defer></script>
   <script src="./insight_explorer.js?v=held-median-20261102" defer></script>
   <script src="./game_outcomes.js?v=results-cards-restore-20261102" defer></script>
@@ -179,6 +180,25 @@
         <div class="results-kpis" id="results-kpis"></div>
         <div id="results-takeaway" class="results-takeaway" aria-live="polite"></div>
       </section>
+      </details>
+      <details class="panel replay-panel result-takeaway gorge-replay-panel" id="gorge-replay-panel">
+        <summary class="result-takeaway-summary">
+          <span class="eyebrow">Full Commander · Gorge engine</span>
+          <h2 class="result-takeaway-heading">Native four-player game replay</h2>
+          <span class="result-takeaway-description">Open the real event stream with turns, decisions, combat and expandable source details</span>
+          <span class="result-takeaway-open">Inspect gorge replay</span>
+        </summary>
+        <div class="gorge-replay-inner">
+          <p class="small">Choose a <code>gorge-seed-*.json</code> file from the experimental GitHub Actions artifact.
+            The file stays in this browser. Unlike the earlier abstract-opponent replay,
+            this view reads recorded native Commander actions. Hidden card information
+            is masked by default unless you explicitly enable omniscient inspection.</p>
+          <label class="gorge-replay-upload-label" for="gorge-replay-file">Open native gorge replay JSON</label>
+          <input id="gorge-replay-file" type="file" accept=".json,application/json">
+          <div class="gorge-replay-root" id="gorge-replay-root" aria-live="polite">
+            <p class="small">No gorge replay loaded. This does not affect existing Python simulation results.</p>
+          </div>
+        </div>
       </details>
       <!-- The replay engine is also rendered inline, on demand, inside a selected insight. -->
       <details class="panel replay-panel result-takeaway" id="opponent-replay-panel" aria-labelledby="opponent-replay-heading" hidden>
