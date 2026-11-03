@@ -325,6 +325,258 @@
       create("small",null,detail));
     return item;
   }
+
+  // Card diagnostics are computed ONLY from recorded full-action examples.
+  // Most modeled runs currently retain life/outcome history but not card
+  // identities, so never divide these card counts by all modeled games.
+  function cardExamples(groups){
+    return groups.flatMap(group=>[...group.exampleBySeed.values()]
+      .filter(e=>Array.isArray(e.events)&&e.events.length)
+      .map(example=>({example,group,seed:example.seed,
+        id:group.id+"#"+example.seed})));
+  }
+  const HAND_PLAY_TYPES=new Set([
+    "creature_cast","artifact_cast","enchantment_cast","tutor_cast",
+    "token_spell_cast","reviewed_draw_spell_cast","reviewed_ritual_cast",
+    "reviewed_buyback_cast","reviewed_flashback_cast",
+    "reviewed_escape_cast","reviewed_graveyard_spell_cast",
+    "reviewed_graveyard_creature_cast","reviewed_commander_cast",
+    "reviewed_instant_response","reviewed_copy_spell_cast",
+    "reviewed_common_spell_resolved","reviewed_zone_spell_resolved",
+    "provisional_spell_resolved"
+  ]);
+  const ACTIVATIONS=new Set([
+    "reviewed_utility_activated","reviewed_composed_activated",
+    "reviewed_composed_tap_activation","reviewed_generic_activated",
+    "reviewed_sacrifice_activated","reviewed_precast_mana_sacrifice",
+    "reviewed_end_step_mana_sacrifice","reviewed_activated_response"
+  ]);
+  function namedCard(event,objects){
+    if(typeof event.card==="string"&&event.card.trim())return event.card;
+    const id=event.source_object_id??event.object_id;
+    return objects.get(id)||null;
+  }
+  function parseCards(groups,lookup){
+    const samples=cardExamples(groups),candidates=new Map();
+    const sourceById=new Map();
+    const plays=[],activations=[],removals=[],held=[],finishers=[];
+    const resources=new Map();
+    for(const sample of samples){
+      const {example,seed,id}=sample;
+      const byCard=new Map(),seen=new Map();
+      const gamesByName=new Set();
+      const cards=example.events||[];
+      const snaps=example.state_snapshots||[];
+      const objects=new Map(),playsByCard=new Map();
+      for(let ri=0;ri<cards.length;ri++){
+        const row=cards[ri],round=Number(row.turn??row.round??ri+1);
+        if(!Number.isFinite(round))continue;
+        const hand=snaps[ri]?.hand;
+        for(const name of (Array.isArray(hand)?hand:[])){
+          if(typeof name==="string"&&!seen.has(name))seen.set(name,round);
+        }
+        const land=Number(row.land_count),rock=Number(row.mana_rock_count);
+        if(Number.isFinite(land)&&Number.isFinite(rock)){
+          if(!resources.has(round))resources.set(round,[]);
+          resources.get(round).push({land,rock});
+        }
+        for(const [index,event] of (row.events||[]).entries()){
+          const type=String(event.type||"");
+          const rawName=typeof event.card==="string"?event.card:null;
+          if(rawName&&Number.isInteger(event.object_id)&&
+             /(_resolved|commander_cast)$/.test(type))
+            objects.set(event.object_id,rawName);
+          const name=namedCard(event,objects);
+          if(type==="draw"&&rawName&&!seen.has(rawName))seen.set(rawName,round);
+          if(!name||!lookup?.(name))continue;
+          const card=lookup(name);
+          const typeLine=String(card.type_line||"").split("—")[0];
+          const isSpell=/\b(Instant|Sorcery)\b/i.test(typeLine);
+          const actualPlay=HAND_PLAY_TYPES.has(type)||
+            type==="land_play"||
+            /^(creature|artifact|enchantment)_resolved$/.test(type)||
+            /^(creature|artifact|enchantment)_cast$/.test(type);
+          // Deduplicate normal cast + resolve of the same permanent.
+          const perTurn=round+"|"+name;
+          if(actualPlay){
+            if(!seen.has(name))seen.set(name,round);
+            if(!byCard.has(perTurn))byCard.set(perTurn,new Set());
+            const playedTypes=byCard.get(perTurn);
+            const marker=isSpell?"spell":"permanent";
+            if(!playedTypes.has(marker)){
+              playedTypes.add(marker);
+              const hit={name,card,seed,id,round,index,type,sample};
+              plays.push(hit);
+              if(!playsByCard.has(name))playsByCard.set(name,round);
+            }
+          }
+          if(ACTIVATIONS.has(type))
+            activations.push({name,card,seed,id,round,index,type,sample});
+          const kills=Number(event.destroyed_count);
+          if(type==="reviewed_removal_resolved"&&Number.isInteger(kills)&&kills>0)
+            removals.push({name,card,seed,id,round,index,type,kills,sample});
+        }
+      }
+      for(const [name,round] of playsByCard){
+        if(!seen.has(name)||!lookup?.(name))continue;
+        const elapsed=Math.max(0,round-seen.get(name));
+        held.push({name,card:lookup(name),seed,id,round,elapsed,sample});
+      }
+      // The last eliminated opponent has to have a *recorded* named source
+      // and explicit player defeat; no inferred kill source from raw life.
+      const run=sample.group.runs.find(r=>r.seed===seed);
+      if(run?.outcome?.status!=="win")continue;
+      const last=run.life_history?.at(-1);
+      const eliminated=(last?.new_eliminations||[])
+        .filter(e=>[1,2,3].includes(Number(e.seat)));
+      if(!eliminated.length)continue;
+      const finalRound=Number(last.round);
+      const row=cards.find(r=>Number(r.turn??r.round)===finalRound);
+      const finalEvents=row?.events||[];
+      const lastHits=finalEvents.filter(e=>
+        /^(player_unblocked_damage|player_combat_damage|reviewed_.*activated)$/.test(String(e.type))&&
+        Number(e.target_seat)===Number(eliminated.at(-1).seat));
+      const hit=lastHits.at(-1);
+      const source=hit&&namedCard(hit,objects);
+      if(source&&lookup?.(source)){
+        finishers.push({name:source,card:lookup(source),seed,id,
+          round:finalRound,index:finalEvents.indexOf(hit),type:hit.type,sample});
+      }
+    }
+    const tally=(records,{weight}={})=>{
+      const map=new Map();
+      for(const x of records){
+        if(!map.has(x.name))map.set(x.name,{name:x.name,card:x.card,
+          hits:0,games:new Set(),rounds:[],examples:[],held:[]});
+        const entry=map.get(x.name);
+        entry.hits+=weight?weight(x):1;
+        entry.games.add(x.id);entry.rounds.push(x.round);
+        if(Number.isFinite(x.elapsed))entry.held.push(x.elapsed);
+        entry.examples.push(x);
+      }
+      return [...map.values()].sort((a,b)=>
+        b.hits-a.hits||b.games.size-a.games.size||a.name.localeCompare(b.name));
+    };
+    const typed=(records,type)=>records.filter(x=>new RegExp("\\b"+type+"\\b","i")
+      .test(String(x.card?.type_line||"").split("—")[0]));
+    const most=tally(plays),creatures=tally(typed(plays,"Creature"));
+    const artifacts=tally(typed(plays,"Artifact"));
+    const instants=tally(typed(plays,"Instant"));
+    const spells=tally(plays.filter(x=>
+      /\b(Instant|Sorcery)\b/i.test(String(x.card?.type_line||"").split("—")[0])));
+    const abilities=tally(activations);
+    const kills=tally(removals,{weight:x=>x.kills});
+    const lastBlows=tally(finishers);
+    const mostHeld=tally(held);
+    for(const item of mostHeld){
+      item.hits=quantile(item.held,.5)??0;
+    }
+    mostHeld.sort((a,b)=>b.hits-a.hits||
+      b.games.size-a.games.size||a.name.localeCompare(b.name));
+    return {samples,resources,most,creatures,artifacts,instants,spells,
+      abilities,kills,lastBlows,mostHeld};
+  }
+  function cardDiagnostic(parent,label,rows,coverage,options={},kind="plays"){
+    if(!rows.length){
+      if(options.showUnavailable!==true)return;
+      const panel=card(label,"Unrecorded","—",
+        "No named, attributable events in "+coverage+" replay samples",
+        body=>body.appendChild(create("p","micro",
+          "The current export does not record enough evidence for this metric.")));
+      parent.appendChild(panel);
+      return;
+    }
+    const top=rows[0],median=quantile(top.rounds,.5);
+    const sourceTitle=kind==="held"?"Median rounds held · "+top.games.size+" games":
+      top.games.size+" / "+coverage+" recorded example games";
+    const panel=create("details","board-report game-outcome-card game-outcome-card-art");
+    const summary=create("summary","game-outcome-summary game-outcome-art-summary");
+    if(top.card?.art){
+      const art=create("img","game-outcome-diagnostic-art");
+      art.src=top.card.art;art.alt="";art.loading="lazy";
+      art.referrerPolicy="no-referrer";summary.appendChild(art);
+    }
+    const copy=create("div","game-outcome-summary-copy game-outcome-art-copy");
+    copy.append(create("span","board-kicker",label),
+      create("strong","game-outcome-title",top.name),
+      create("span","game-outcome-number",
+        kind==="held"?nfmt(top.hits)+" rounds":String(top.hits)),
+      create("span","game-outcome-caption",sourceTitle),
+      create("span","board-open","Explore →"));
+    summary.appendChild(copy);panel.appendChild(summary);
+    const body=create("div","game-outcome-body");
+    body.appendChild(create("div","game-outcome-insight-grid"));
+    const topMetrics=body.lastChild;
+    topMetrics.append(
+      metricTile(kind==="held"?"Median held":"Median first round",
+        kind==="held"?top.hits:median,top.games.size+" sampled games"),
+      metricTile(kind==="held"?"Games observed":"Total recorded events",
+        kind==="held"?top.games.size:top.hits,
+        coverage+" example games examined"),
+      metricTile("Unique sampled games",top.games.size,
+        "Not all games in the batch include actions"));
+    const ranking=create("div","game-outcome-diagnostic-ranking");
+    body.appendChild(ranking);
+    const evidence=create("div","game-outcome-diagnostic-evidence");
+    body.appendChild(evidence);
+    const rank=rows.slice(0,8);
+    const max=Math.max(1,...rank.map(item=>item.hits));
+    for(const row of rank){
+      const button=textButton("","game-outcome-diagnostic-row",()=>{
+        evidence.replaceChildren();
+        evidence.appendChild(create("strong",null,row.name));
+        const stats=create("div","game-outcome-insight-grid");
+        stats.append(metricTile(kind==="held"?"Median held":"Median first round",
+          kind==="held"?row.hits:quantile(row.rounds,.5),
+          row.games.size+" sampled games"),
+          metricTile("Recorded events",row.examples.length,
+            coverage+" sampled games"));
+        evidence.appendChild(stats);
+        for(const e of row.examples.slice(0,4)){
+          const link=textButton("Seed "+e.seed+" · round "+e.round,
+            "game-outcome-seed",()=>{
+              if(typeof options.onReviewRun==="function")
+                options.onReviewRun(e.sample.group.id,e.seed);
+            });
+          evidence.appendChild(link);
+        }
+        for(const node of ranking.children)
+          node.setAttribute("aria-pressed",String(node===button));
+      });
+      const header=create("div","game-outcome-diagnostic-row-title");
+      header.append(create("strong",null,row.name),
+        create("span",null,nfmt(row.hits)));
+      const track=create("div","game-outcome-rank-track");
+      const fill=create("span","game-outcome-rank-fill");
+      fill.style.width=String(row.hits/max*100)+"%";
+      track.appendChild(fill);button.append(header,track);
+      ranking.appendChild(button);
+    }
+    panel.appendChild(body);
+    parent.appendChild(panel);
+  }
+  function resourcesByRound(parent,resources,count){
+    if(!resources.size){
+      parent.appendChild(create("span","micro","Resource history not captured."));return;
+    }
+    const max=Math.max(1,...[...resources.values()].flatMap(rows=>
+      rows.map(x=>x.land+x.rock)));
+    const plot=create("div","game-outcome-resource-plot");
+    for(const [round,rows] of [...resources].sort((a,b)=>a[0]-b[0])){
+      const lands=rows.reduce((sum,r)=>sum+r.land,0)/rows.length;
+      const rocks=rows.reduce((sum,r)=>sum+r.rock,0)/rows.length;
+      const item=create("div","game-outcome-resource-row");
+      item.append(create("span",null,"R"+round));
+      const bar=create("div","game-outcome-resource-track");
+      const first=create("span","is-land");first.style.width=String(100*lands/max)+"%";
+      const second=create("span","is-rock");second.style.width=String(100*rocks/max)+"%";
+      bar.append(first,second);
+      item.append(bar,create("span",null,(lands+rocks).toFixed(1)));
+      plot.appendChild(item);
+    }
+    parent.append(plot,create("span","micro",
+      "Mean lands + mana rocks · "+count+" recorded example games"));
+  }
   function matchupExplorer(parent,groups,options={}){
     const title=create("div","game-outcome-explorer-intro");
     title.append(create("strong",null,"Most wins → Fewest wins"));
