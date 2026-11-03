@@ -1240,3 +1240,53 @@ body:has(#pane-records:not([hidden])) .page-introduction a{font-size:.72rem}
 .game-outcome-recorded-card{background:rgba(85,113,119,.18);border:1px solid rgba(137,162,165,.35);color:inherit;border-radius:7px;padding:5px 9px;cursor:pointer}
 .game-outcome-recorded-card:hover{background:rgba(128,165,167,.25)}
 .game-outcome-card .game-outcome-summary{background-repeat:no-repeat}
+
+
+/* Current-release card findings: familiar expanding illustrated Results cards. */
+.insight-card-with-evidence .game-outcome-summary{background-repeat:no-repeat}
+.insight-card-with-evidence .game-outcome-body{display:grid;gap:12px}
+.insight-card-leaderboard{display:grid;gap:6px;grid-template-columns:repeat(2,minmax(0,1fr))}
+.insight-card-rank{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:6px 12px;
+ align-items:center;text-align:left;min-width:0;padding:10px 12px;
+ background:#1b2e32;border:1px solid #61766e;border-radius:9px;
+ color:#eee1c8;cursor:pointer;font:inherit}
+.insight-card-rank[aria-pressed="true"],.insight-card-rank:hover{
+ border-color:#d6b678;background:#30463e}
+.insight-card-rank-name{overflow-wrap:anywhere;font-size:.82rem}
+.insight-card-rank strong{font-variant-numeric:tabular-nums;color:#f5d6a2;font-size:.83rem}
+.insight-card-rank-meter{grid-column:1/-1;height:5px;background:#0b1b21;
+ overflow:hidden;border-radius:7px}
+.insight-card-rank-meter i{height:100%;display:block;border-radius:7px;
+ background:linear-gradient(90deg,#72978b,#e1c58d)}
+.insight-card-drilldown{border:1px solid #516d65;border-radius:10px;padding:14px;
+ background:#18272d;display:grid;gap:12px}
+.insight-selected-name{font-family:Cinzel,Georgia,serif;font-size:1.03rem}
+.insight-card-drilldown .game-outcome-recorded-card{justify-self:start}
+.insight-evidence-heading{font-size:.85rem;color:#ead4ac}
+.insight-card-examples{display:flex;flex-wrap:wrap;gap:7px}
+.insight-card-examples .game-outcome-review-link{white-space:normal}
+.elastic-net-panel{grid-column:1/-1}
+.elastic-net-headline{font-size:1.07rem;line-height:1.45;
+ color:#f5e0bc;font-weight:650;margin:0 0 5px}
+.elastic-net-coefficient-chart{display:grid;gap:9px;margin:13px 0}
+.elastic-net-coefficient-row{display:grid;grid-template-columns:minmax(150px,1.3fr)
+ minmax(110px,2fr) 50px 83px;align-items:center;gap:11px;padding:6px 3px;
+ border-bottom:1px solid #54645a55;font-size:.77rem}
+.elastic-net-predictor{overflow-wrap:anywhere;color:#e5dbca}
+.elastic-net-axis{position:relative;height:20px;background:#14262c;border-radius:6px;
+ border:1px solid #536b60;overflow:hidden}
+.elastic-net-axis-center{position:absolute;top:0;bottom:0;width:1px;left:50%;
+ background:#d9c79d77}
+.elastic-net-effect{position:absolute;top:4px;bottom:4px;border-radius:3px}
+.elastic-net-effect.is-positive{background:#8bc7a8}
+.elastic-net-effect.is-negative{background:#d7a29b}
+.elastic-net-effect-label{font-size:.72rem}
+.elastic-net-coefficient-row .micro{margin:0;white-space:nowrap}
+.elastic-net-summary{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:9px}
+@media(max-width:720px){
+ .insight-card-leaderboard{grid-template-columns:1fr}
+ .elastic-net-coefficient-row{grid-template-columns:1fr 1.25fr 43px;
+ gap:8px;font-size:.69rem}
+ .elastic-net-coefficient-row .micro{grid-column:1/-1;text-align:right}
+ .elastic-net-summary{grid-template-columns:1fr}
+}
