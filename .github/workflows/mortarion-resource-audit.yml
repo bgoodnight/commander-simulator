@@ -1,11 +1,10 @@
-name: Audit Mortarion resource-engine and pilot choices
+name: ARCHIVED Python · Audit Mortarion resource-engine and pilot choices
 # Repeat 160-seed 10-turn quality diagnostic with speculative planning fail-closed.
+# ARCHIVED: no automatic Python game simulations after gorge-only cutover.
+# Older workflows can be reproduced from the preserved archive branch.
 on:
   workflow_dispatch:
-  push:
-    branches: [main]
-    paths:
-      - ".github/workflows/mortarion-resource-audit.yml"
+
 permissions:
   contents: read
 jobs:
