@@ -6,12 +6,12 @@
   <meta name="theme-color" content="#182428">
   <meta name="description" content="Commander Deck Lab: explore cached Commander decklists, card art and precomputed early-turn observations.">
   <title>Commander Deck Lab — The Arcane Table</title>
-  <link rel="stylesheet" href="./style.css?v=abbb008ed3fa">
+  <link rel="stylesheet" href="./style.css?v=076fccff4a93">
   <script src="https://cdn.jsdelivr.net/npm/d3@7/dist/d3.min.js" defer></script>
   <script src="./results_insights.js?v=b91291243abb" defer></script>
   <script src="./brackets.js?v=f6d0983728d2" defer></script>
   <script src="./replay.js?v=e4de062be4c2" defer></script>
-  <script src="./gorge_replay.js?v=7c3dbc78a0e0" defer></script>
+  <script src="./gorge_replay.js?v=878768445f9e" defer></script>
   <script src="./insight_catalog.js?v=1fedb0a60e31" defer></script>
   <script src="./insight_explorer.js?v=04df44573fda" defer></script>
   <script src="./game_outcomes.js?v=c4cccfbb6d4d" defer></script>
@@ -111,6 +111,27 @@
       </section>
     </div>
     <div class="tab-pane" id="pane-records" hidden>
+      <section class="gorge-canonical-intro"><strong>Gorge is now our simulation engine.</strong><p>Open a verified four-player replay for authoritative gameplay. Historical Python simulations are archived below.</p></section>
+      <details class="panel replay-panel result-takeaway gorge-replay-panel" id="gorge-replay-panel" open>
+        <summary class="result-takeaway-summary">
+          <span class="eyebrow">Full Commander · Gorge engine</span>
+          <h2 class="result-takeaway-heading">Native four-player game replay</h2>
+          <span class="result-takeaway-description">Open the real event stream with turns, decisions, combat and expandable source details</span>
+          <span class="result-takeaway-open">Inspect gorge replay</span>
+        </summary>
+        <div class="gorge-replay-inner">
+          <p class="small">Choose a <code>gorge-seed-*.json</code> file from the experimental GitHub Actions artifact.
+            The file stays in this browser. Unlike the earlier abstract-opponent replay,
+            this view reads recorded native Commander actions. Hidden card information
+            is masked by default unless you explicitly enable omniscient inspection.</p>
+          <label class="gorge-replay-upload-label" for="gorge-replay-file">Open native gorge replay JSON</label>
+          <input id="gorge-replay-file" type="file" accept=".json,application/json">
+          <div class="gorge-replay-root" id="gorge-replay-root" aria-live="polite">
+            <p class="small">No gorge replay loaded. This does not affect existing Python simulation results.</p>
+          </div>
+        </div>
+      </details>
+      <details class="panel legacy-simulation-archive" id="legacy-simulation-archive"><summary>Historical archive · Python simulations, rules and pilots</summary><p class="small">Earlier outcomes use retired Python rules and abstract opponents; they are not current gorge Commander games.</p><div class="legacy-simulation-archive-inner">
       <section id="simulation-snapshot" class="simulation-snapshot" aria-label="Simulation overview" hidden>
         <div class="simulation-snapshot-heading">
           <span class="eyebrow">Simulation at a glance</span>
@@ -181,25 +202,6 @@
         <div id="results-takeaway" class="results-takeaway" aria-live="polite"></div>
       </section>
       </details>
-      <details class="panel replay-panel result-takeaway gorge-replay-panel" id="gorge-replay-panel">
-        <summary class="result-takeaway-summary">
-          <span class="eyebrow">Full Commander · Gorge engine</span>
-          <h2 class="result-takeaway-heading">Native four-player game replay</h2>
-          <span class="result-takeaway-description">Open the real event stream with turns, decisions, combat and expandable source details</span>
-          <span class="result-takeaway-open">Inspect gorge replay</span>
-        </summary>
-        <div class="gorge-replay-inner">
-          <p class="small">Choose a <code>gorge-seed-*.json</code> file from the experimental GitHub Actions artifact.
-            The file stays in this browser. Unlike the earlier abstract-opponent replay,
-            this view reads recorded native Commander actions. Hidden card information
-            is masked by default unless you explicitly enable omniscient inspection.</p>
-          <label class="gorge-replay-upload-label" for="gorge-replay-file">Open native gorge replay JSON</label>
-          <input id="gorge-replay-file" type="file" accept=".json,application/json">
-          <div class="gorge-replay-root" id="gorge-replay-root" aria-live="polite">
-            <p class="small">No gorge replay loaded. This does not affect existing Python simulation results.</p>
-          </div>
-        </div>
-      </details>
       <!-- The replay engine is also rendered inline, on demand, inside a selected insight. -->
       <details class="panel replay-panel result-takeaway" id="opponent-replay-panel" aria-labelledby="opponent-replay-heading" hidden>
         <summary class="result-takeaway-summary">
@@ -209,6 +211,8 @@
           <span class="result-takeaway-open">Explore replay</span>
         </summary>
         <div class="replay-root" id="opponent-replay-root" aria-live="polite"></div>
+      </details>
+        </div>
       </details>
     </div>
     <div class="tab-pane" id="pane-insights" hidden>
