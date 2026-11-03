@@ -44,6 +44,7 @@ from .reviewed_token_spells import (reviewed_token_spell,
 from .bounded_trigger_effects import resolve_reviewed_spell_triggers
 from .kernel_life import KernelLife
 from .outcome_reporting import LifeOutcomeRecorder
+from .physical_common_effects import EmptyLibraryDraw
 from .reviewed_phase_effects import ReviewedPhaseEngine,reviewed_phase_permanent
 from .composed_abilities import ComposedAbilityEngine, reviewed_composed_permanent, ABILITIES
 from .reviewed_commander_cast import commander_cost, cast_commander
@@ -318,6 +319,55 @@ def run_bounded_early_game(deck_key, *, seed=0, turns=6, mulligan="one-free", pr
         life_ledger_start = len(life.kernel.life_changes)
         turn_kernel_event_index=len(kernel.events)
         events = []
+        def finish_failed_draw(error):
+            """Close this incomplete turn with real observed loss provenance.
+
+            No fake life damage, synthetic actions, or following opponent turns.
+            The game remains an ordinary terminal outcome for the batch/UI.
+            """
+            if error.seat!=0:
+                raise error  # This runner only drives seat-zero mandatory draws.
+            events.append({
+                "type":"mandatory_draw_empty_library",
+                "seat":error.seat,"source_object_id":error.source_id,
+                "attempted_draws":error.attempted,
+                "available_cards":error.available,
+                "phase":error.phase,
+                "fidelity":"bounded_verified_game_loss"})
+            round_life=outcome_recorder.record_round(
+                turn,life.kernel.life_changes[life_ledger_start:],
+                dict(life.kernel.life_totals))
+            outcome_recorder.record_game_loss(
+                turn,0,reason="empty_library_draw",
+                source_object_id=error.source_id)
+            state=project_kernel_turn(zones,0,turn,catalog)
+            states.append(state)
+            resource=assess_resources(kernel,mana_service,0).__dict__
+            actions_by_turn.append({
+                "turn":turn,"events":events,
+                "hand_size":len(zones.ids(0,"hand")),
+                "hand_size_before_cleanup":len(zones.ids(0,"hand")),
+                "maximum_hand_size":None,"cleanup_discard_count":0,
+                "library_size":len(zones.ids(0,"library")),
+                "command_zone_count":len(zones.ids(0,"command")),
+                "land_count":sum("land" in o.types and o.zone=="battlefield"
+                                  for o in kernel.objects.values()),
+                "creature_count":sum("creature" in o.types and
+                                     o.zone=="battlefield" and o.controller==0
+                                     for o in kernel.objects.values()),
+                "mana_rock_count":0,
+                "floating_at_end_of_main":list(mana_service.floating()),
+                "resource_start":resource,"resource_after_precast":resource,
+                "resource_end":resource,
+                "mana_payment_events":list(mana_service.mana_events[mana_ledger_start:]),
+                "life_totals":dict(life.kernel.life_totals),
+                "pilot_combat":None,"pilot_decisions":[],
+                "life_totals_start":dict(outcome_recorder.history[-2]["life_totals"]),
+                "life_changes":list(round_life["life_changes"]),
+                "eliminations":list(outcome_recorder.history[-1]["new_eliminations"]),
+                "alive_seats":list(outcome_recorder.history[-1]["alive_seats"]),
+                "unsupported_cards_in_hand":[],
+                "terminal_phase":error.phase})
         def append_reanimation_entry_chain(ids):
             if not ids:
                 return
@@ -465,8 +515,13 @@ def run_bounded_early_game(deck_key, *, seed=0, turns=6, mulligan="one-free", pr
                            "source_object_id":paid_upkeep.source_id,
                            "target_object_id":paid_upkeep.target_id})
         # Upkeep happens after untap but before the ordinary draw.
-        for triggered in phase_engine.resolve(
-                phase="upkeep",active_seat=0,round_id=turn):
+        try:
+            upkeep_triggers=phase_engine.resolve(
+                phase="upkeep",active_seat=0,round_id=turn)
+        except EmptyLibraryDraw as error:
+            finish_failed_draw(error)
+            break
+        for triggered in upkeep_triggers:
             events.append({
                 "type":"reviewed_phase_resolved","phase":"upkeep",
                 "source":triggered.source_name,"source_object_id":triggered.source_id,
@@ -487,7 +542,9 @@ def run_bounded_early_game(deck_key, *, seed=0, turns=6, mulligan="one-free", pr
         resolve_reactive()
         drawn, okay = zones.draw(0, 1)  # Seat is explicitly not the starting seat.
         if not okay:
-            raise ValueError("Library depleted before supported turn horizon")
+            finish_failed_draw(EmptyLibraryDraw(
+                0,attempted=1,available=0,phase="draw_step"))
+            break
         events.append({"type": "draw", "card": kernel.get(drawn[0]).card.name,
                        "object_id": drawn[0]})
         playable_lands = [oid for oid in zones.ids(0, "hand") if supported_land(oid)]
@@ -1543,9 +1600,14 @@ def run_bounded_early_game(deck_key, *, seed=0, turns=6, mulligan="one-free", pr
                 "created_token_ids":list(composed.created_ids),
                 "death_trigger_count":composed.deaths,
                 "fidelity":"bounded_no_opponent_priority"})
-        for triggered in phase_engine.resolve(
+        try:
+            end_step_triggers=phase_engine.resolve(
                 phase="end_step",active_seat=0,round_id=turn,
-                death_count=death_count):
+                death_count=death_count)
+        except EmptyLibraryDraw as error:
+            finish_failed_draw(error)
+            break
+        for triggered in end_step_triggers:
             events.append({
                 "type":"reviewed_phase_resolved","phase":"end_step",
                 "source":triggered.source_name,"source_object_id":triggered.source_id,
