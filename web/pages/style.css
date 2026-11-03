@@ -2030,3 +2030,13 @@ body:has(#pane-records:not([hidden])) .compact-selection{margin-bottom:3px}
 .gorge-replay-zone{border-top:1px solid rgba(140,160,180,.12);padding:.25rem 0}
 .gorge-replay-zone>summary{cursor:pointer;font-size:.76rem}
 .gorge-replay-card-list{margin:.35rem 0 .1rem;line-height:1.55;font-size:.75rem;overflow-wrap:anywhere}
+
+/* Gorge-only landing controls and safe source-state detail. */
+.gorge-replay-samples{display:flex;align-items:center;flex-wrap:wrap;gap:.65rem;padding:.9rem;border:1px solid var(--edge,#405269);border-radius:.75rem;background:rgba(30,46,56,.55)}
+.gorge-replay-samples[hidden]{display:none}
+.gorge-replay-samples label{font-size:.85rem;font-weight:650}
+.gorge-replay-samples select{flex:1 1 240px;width:auto;max-width:100%;min-width:0}
+.gorge-replay-samples button{padding:.6rem 1rem;border-radius:.6rem;background:var(--mint,#7be0cb);border:0;color:#102126;cursor:pointer}
+.gorge-replay-zone-cards{display:flex;flex-wrap:wrap;gap:.35rem;padding:.5rem}
+.gorge-replay-zone-cards a{font-size:.77rem;border:1px solid rgba(143,171,186,.25);border-radius:.4rem;padding:.35rem .5rem;color:var(--mint,#7be0cb);text-decoration:none}
+.gorge-replay-zone-cards a:hover{text-decoration:underline}
