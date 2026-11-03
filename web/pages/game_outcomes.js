@@ -519,15 +519,19 @@
     "reviewed_commander_cast","reviewed_generic_spell_cast",
     "provisional_spell_cast","reviewed_common_spell_resolved",
     "reviewed_zone_spell_resolved","land_play"]);
-  function observationCardStats(runs,lookupCard=()=>null){
+  function observationCardStats(runs,lookupCard=()=>null,commanderName=null){
     const kinds=["played","creature","instant","spell","artifact","enchantment",
-      "land","seen","unplayed","activated","removal","creatureKills","damage","longest","finisher"];
+      "land","seen","seenCreature","unplayed","activated","removal","creatureKills","damage","longest","finisher"];
     const maps=Object.fromEntries(kinds.map(k=>[k,new Map()]));
     const complete=runs.filter(run=>Array.isArray(run.ui_observations)&&
       run.ui_observations.length===run.completed_rounds);
     function basic(name){
       const printed=lookupCard(name);
-      return BASIC_LANDS.has(String(name||"").trim().toLowerCase())||
+      const normalized=String(name||"").trim().toLowerCase();
+      // Commanders live in the command zone and have guaranteed access:
+      // they are not ordinary draw/play-frequency observations.
+      return (!!commanderName&&normalized===String(commanderName).trim().toLowerCase())||
+        BASIC_LANDS.has(normalized)||
         /\bBasic\b/i.test(String(printed?.type_line||"").split("—")[0]);
     }
     function record(kind,name,run,turn,quantity=1,extra={}){
@@ -601,6 +605,8 @@
       }
       for(const name of seen){
         record("seen",name,run,null,1);
+        const types=String(lookupCard(name)?.type_line||"").split("—")[0];
+        if(/\bCreature\b/i.test(types))record("seenCreature",name,run,null,1);
         if(!casts.has(name))record("unplayed",name,run,null,1);
         // A card cast on the draw turn contributes zero held rounds.
         // Across seen games, include zeros so medians are not inflated.
@@ -615,7 +621,7 @@
         const counts=[...item.counts.values()];
         const seen=item.seen.size;
         const score=kind==="longest"?mean(item.durations):
-          kind==="seen"||kind==="unplayed"?seen:
+          kind==="seen"||kind==="seenCreature"||kind==="unplayed"?seen:
           ["removal","creatureKills","damage"].includes(kind)?
             counts.reduce((t,x)=>t+x,0):
             counts.filter(x=>x>0).length;
@@ -906,6 +912,7 @@
       instant:"Most cast instant",spell:"Most cast instant or sorcery",
       artifact:"Most played artifact",enchantment:"Most played enchantment",
       land:"Most played nonbasic land",seen:"Most frequently seen card",
+      seenCreature:"Most frequently seen creature",
       unplayed:"Most often left unplayed",activated:"Most used ability",
       removal:"Most permanents destroyed",
       creatureKills:"Most creature kills",damage:"Most damage to opponents",
@@ -915,11 +922,15 @@
   function cardPerformancePanel(kind,ranked,coverage,groups,options,onReviewRun){
     const winner=ranked[0];
     if(!winner)return null;
-    const isHeld=kind==="longest",isCount=["seen","unplayed","played",
+    const isHeld=kind==="longest",isCount=["seen","seenCreature","unplayed","played",
       "creature","instant","spell","artifact","enchantment","land"].includes(kind);
-    const displayValue=item=>isHeld?nfmt(item.heldMedian)+" rounds":
-      isCount?item.games+"/"+coverage+" games":
-      nfmt(item.eventCount)+" total";
+    // Headlines should remain comparable across different batch sizes.
+    // Binary access/cast metrics use distinct-game share; repeatable event
+    // metrics use per-game averages (two decimals), never raw totals.
+    const valueFor=item=>isHeld?nfmt(item.heldMedian)+" rounds":
+      isCount?(100*item.games/coverage).toFixed(1)+"%":
+      item.average.toFixed(2)+"/game";
+    const displayValue=item=>valueFor(item);
     const cardData=item=>options.lookupRecordedCard?.(item.name)||null;
     let initialSelect=null;
     const panel=card(insightCategoryLabel(kind),"Card insight",
@@ -1006,7 +1017,8 @@
           create("strong","insight-featured-chart-title","Top cards"),
           create("p","micro",
             isHeld?"Mean rounds held sets bar length; median shown beside each card.":
-            "Bars compare recorded "+(isCount?"games":"totals")+" for this category."));
+            isCount?"Bars compare the share of complete games featuring the card.":
+              "Bars compare recorded actions per complete game."));
         const barList=create("div","insight-featured-bars");
         ranking.appendChild(barList);
         for(const item of ranked.slice(0,10)){
@@ -1017,9 +1029,7 @@
           button.setAttribute("aria-pressed","false");
           const caption=create("span","insight-featured-bar-caption");
           caption.append(create("span",null,item.name),
-            create("strong",null,
-              isHeld?nfmt(item.heldMedian)+" rounds":
-              isCount?item.games+" games":nfmt(item.eventCount)));
+            create("strong",null,valueFor(item)));
           const track=create("span","insight-featured-bar-track");
           const fill=create("span","insight-featured-bar-fill");
           fill.style.width=Math.max(1,100*item.score/maxScore)+"%";
@@ -1217,10 +1227,11 @@
     }));
     // Card-specific discoveries precede the statistical interpretation.
     // Missing named sources never become guessed card-level findings.
-    const signals=observationCardStats(runs,options.lookupRecordedCard);
+    const signals=observationCardStats(runs,options.lookupRecordedCard,
+      options.commanderName);
     if(signals.coverage){
       for(const kind of ["played","creature","artifact","enchantment",
-        "instant","spell","land","seen","unplayed","longest",
+        "instant","spell","land","seen","seenCreature","unplayed","longest",
         "activated","removal","creatureKills","damage","finisher"]){
         const panel=cardPerformancePanel(kind,signals.ranked[kind],
           signals.coverage,groups,options,onReviewRun);
