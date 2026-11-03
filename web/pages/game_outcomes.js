@@ -921,6 +921,7 @@
       isCount?item.games+"/"+coverage+" games":
       nfmt(item.eventCount)+" total";
     const cardData=item=>options.lookupRecordedCard?.(item.name)||null;
+    let initialSelect=null;
     const panel=card(insightCategoryLabel(kind),"Card insight",
       displayValue(winner),winner.name,body=>{
         const sub=create("p","micro",isHeld?
@@ -1026,7 +1027,7 @@
           button.append(caption,track);barList.appendChild(button);
           bars.push(button);
         }
-        select(winner);
+        initialSelect=()=>select(winner);
       });
     panel.className+=" insight-card-with-evidence insight-featured-panel";
     const summary=panel.children[0];
@@ -1062,7 +1063,7 @@
       if(art){cover.src=art;cover.hidden=false}
       else{cover.removeAttribute("src");cover.hidden=true}
     }
-    updateSummary(winner);
+    if(initialSelect)initialSelect();
     return panel;
   }
   function readablePredictor(feature){
