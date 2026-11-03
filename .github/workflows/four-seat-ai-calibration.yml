@@ -1,0 +1,67 @@
+name: Four-active-seat AI calibration (legacy abstract baseline)
+
+on:
+  push:
+    branches: [experiment/four-seat-ai-calibration-revival-20261103]
+    paths:
+      - .github/workflows/four-seat-ai-calibration.yml
+      - tools/four_seat_calibration.py
+
+permissions:
+  contents: write
+
+jobs:
+  calibrate:
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      - name: Check preserved four-player simulator behavior
+        run: |
+          cd simulator/v5_four_player
+          python tests.py
+      - name: Run seat-rotated mirror and mixed archetype games
+        run: |
+          python tools/four_seat_calibration.py \
+            --mirrors 20 --rotations 4 --rounds 30 --seed 20261103 \
+            --output dist/four-seat/calibration.json \
+            --records dist/four-seat/games.jsonl
+          python - <<'PY'
+          import json
+          from pathlib import Path
+          j=json.loads(Path('dist/four-seat/calibration.json').read_text())
+          assert j['games']==7*20+24*4
+          assert j['completed']<=j['games']
+          assert len(j['wins_by_seat'])==4
+          assert len(j['mirror_seat_results'])==7
+          assert len(j['wins_by_archetype'])==7
+          assert all(j['wins_by_seat'][str(s)]['exposures']==j['games'] for s in range(4))
+          print('Verified full active-seat exposure and provenance')
+          PY
+      - uses: actions/upload-artifact@v4
+        with:
+          name: four-seat-calibration-${{ github.sha }}
+          path: dist/four-seat/
+          retention-days: 90
+          if-no-files-found: error
+      - name: Commit reviewable aggregate without touching production
+        run: |
+          git fetch origin experiment/four-seat-ai-calibration-revival-20261103
+          if [ "$(git rev-parse HEAD)" != "$(git rev-parse origin/experiment/four-seat-ai-calibration-revival-20261103)" ]; then
+            echo "Branch changed; preserve run artifacts without publishing stale calibration."
+            exit 0
+          fi
+          mkdir -p testdata/four-seat-calibration
+          cp dist/four-seat/calibration.json testdata/four-seat-calibration/calibration.json
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add testdata/four-seat-calibration/
+          if ! git diff --cached --quiet; then
+            git commit -m 'Record real four-active-seat abstract AI calibration results'
+            git push origin HEAD:experiment/four-seat-ai-calibration-revival-20261103
+          fi
