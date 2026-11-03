@@ -1,0 +1,257 @@
+name: All-deck 500-game observation and analytics batch
+
+# One-off, owner-requested benchmark pinned to an isolated branch.
+# No workflow in this branch can update main or the public Pages website.
+on:
+  push:
+    branches: [batch/all-decks-500-each-20261102]
+    paths: [.github/workflows/all-decks-500-batch.yml]
+
+permissions:
+  contents: write
+  actions: read
+
+concurrency:
+  group: all-decks-500-20261102
+  cancel-in-progress: false
+
+jobs:
+  preflight:
+    name: Preflight fixture and export contracts
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      - name: Run publisher, output, seat and UI tests
+        run: |
+          python -m unittest tests.test_game_outcome_reporting tests.test_game_outcome_publishing tests.test_outcome_ui_coverage -v
+          node --test tests/pages_game_outcomes.test.cjs
+      - name: Prove eight fixtures and five scenario outputs can be generated
+        run: |
+          python - <<'PY'
+          from commander_sim.deck_fixtures import FIXTURES, EXPERIMENTAL_FIXTURES
+          from tools.build_game_outcomes import DECK_KEYS
+          expected={f.key for f in (*FIXTURES,*EXPERIMENTAL_FIXTURES)}
+          assert len(expected)==8 and expected==set(DECK_KEYS)
+          print('Eight validated fixture identities:',', '.join(sorted(expected)))
+          PY
+
+  simulate:
+    needs: preflight
+    name: ${{ matrix.deck }} / ${{ matrix.scenario }} / 100 games
+    runs-on: ubuntu-latest
+    timeout-minutes: 90
+    strategy:
+      fail-fast: false
+      max-parallel: 16
+      matrix:
+        deck:
+          - magnus_premium
+          - magnus_budget
+          - wretched_ranks
+          - mortarion_current
+          - mortarion_ideal
+          - necron_dynasties
+          - magnus_physical_trial
+          - mortarion_physical_final
+        scenario: [balanced, aggressive, control, combo, mixed]
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      - name: Run 100 reproducible games with complete event observations
+        env:
+          DECK: ${{ matrix.deck }}
+          SCENARIO: ${{ matrix.scenario }}
+        run: |
+          mkdir -p dist/outcomes dist/observations
+          python tools/build_game_outcomes.py \
+            --deck "$DECK" --scenario "$SCENARIO" \
+            --seeds 100 --start-seed 0 --rounds 30 \
+            --pilot-style adaptive --pilot-archetype auto \
+            --provisional-mode safe --examples 3 \
+            --observations-output "dist/observations/$DECK-$SCENARIO.jsonl" \
+            --output "dist/outcomes/$DECK-$SCENARIO.json"
+      - name: Validate full observation histories and UI-ready projections
+        run: |
+          python tools/validate_game_observations.py \
+            --source dist/observations --expected-games 100 --expected-rounds 30
+          python tools/validate_outcome_ui_coverage.py \
+            --source dist/outcomes --expected-games 100 --expected-rounds 30
+      - name: Preserve original UI and raw data
+        uses: actions/upload-artifact@v4
+        with:
+          name: modeled-raw-${{ matrix.deck }}-${{ matrix.scenario }}-${{ github.sha }}
+          path: |
+            dist/outcomes/*.json
+            dist/observations/*.jsonl
+          retention-days: 90
+          if-no-files-found: error
+
+  analyze:
+    needs: simulate
+    name: Verify 500 games and analyze ${{ matrix.deck }}
+    runs-on: ubuntu-latest
+    timeout-minutes: 90
+    strategy:
+      fail-fast: false
+      max-parallel: 6
+      matrix:
+        deck:
+          - magnus_premium
+          - magnus_budget
+          - wretched_ranks
+          - mortarion_current
+          - mortarion_ideal
+          - necron_dynasties
+          - magnus_physical_trial
+          - mortarion_physical_final
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      - name: Fetch all five immutable scenario artifacts for this deck
+        uses: actions/download-artifact@v4
+        with:
+          pattern: modeled-raw-${{ matrix.deck }}-*-${{ github.sha }}
+          path: dist/incoming
+          merge-multiple: true
+      - name: Arrange and validate five complete cohorts
+        env:
+          DECK: ${{ matrix.deck }}
+        run: |
+          mkdir -p dist/outcomes dist/observations dist/review
+          mv dist/incoming/*.json dist/outcomes/
+          mv dist/incoming/*.jsonl dist/observations/
+          test "$(find dist/outcomes -maxdepth 1 -name '*.json' | wc -l)" -eq 5
+          test "$(find dist/observations -maxdepth 1 -name '*.jsonl' | wc -l)" -eq 5
+          python tools/validate_game_observations.py \
+            --source dist/observations --expected-games 100 --expected-rounds 30
+          python tools/validate_outcome_ui_coverage.py \
+            --source dist/outcomes --expected-games 100 --expected-rounds 30
+          python tools/review_game_outcomes.py \
+            --source dist/outcomes --deck "$DECK" \
+            --seeds 100 --rounds 30 \
+            --json-output "dist/review/$DECK-review.json" \
+            --markdown-output "dist/review/$DECK-review.md"
+          cat "dist/review/$DECK-review.md" >> "$GITHUB_STEP_SUMMARY"
+      - name: Install analysis dependency and fit source-traced elastic net
+        run: python -m pip install 'scikit-learn>=1.5,<1.9'
+      - name: Create discovery report and compress full observations
+        env:
+          DECK: ${{ matrix.deck }}
+        run: |
+          python -m unittest tests.test_game_signal_analysis -v
+          mkdir -p dist/analytics dist/compressed
+          python tools/discover_game_signals.py \
+            --source dist/observations --output "dist/analytics/$DECK.json" \
+            --engine-commit "${{ github.sha }}"
+          for file in dist/observations/*.jsonl; do
+            gzip -c -9 "$file" > "dist/compressed/$(basename "$file").gz"
+          done
+      - name: Upload audited per-deck release package
+        uses: actions/upload-artifact@v4
+        with:
+          name: modeled-verified-${{ matrix.deck }}-${{ github.sha }}
+          path: |
+            dist/outcomes/*.json
+            dist/compressed/*.gz
+            dist/analytics/*.json
+            dist/review/*.json
+            dist/review/*.md
+          retention-days: 90
+          if-no-files-found: error
+
+  consolidate:
+    needs: analyze
+    name: Validate and archive all 4,000 games for UI handoff
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      - uses: actions/download-artifact@v4
+        with:
+          pattern: modeled-verified-*-${{ github.sha }}
+          path: dist/verified
+          merge-multiple: true
+      - name: Validate complete deck/scenario coverage and source-pinned release
+        run: |
+          mkdir -p dist/incoming-outcomes dist/incoming-analytics dist/archive dist/reports
+          mv dist/verified/*.json.gz dist/archive/ 2>/dev/null || true
+          # Compressed full observations have .jsonl.gz extensions.
+          mv dist/verified/*.jsonl.gz dist/archive/
+          mv dist/verified/*-review.json dist/reports/
+          mv dist/verified/*-review.md dist/reports/
+          mv dist/verified/*.json dist/incoming-outcomes/
+          mv dist/incoming-outcomes/magnus_premium.json dist/incoming-analytics/ 2>/dev/null || true
+          python - <<'PY'
+          from pathlib import Path
+          import json
+          from tools.publish_game_outcomes import validate_batch,_hashes
+          paths=sorted(Path('dist/incoming-outcomes').glob('*.json'))
+          # Eight per-deck analytics files must never be mistaken for outcome batches.
+          analytics=[p for p in paths if p.stem in _hashes()]
+          for path in analytics:
+              target=Path('dist/incoming-analytics')/path.name
+              path.rename(target)
+          paths=sorted(Path('dist/incoming-outcomes').glob('*.json'))
+          assert len(paths)==40,(len(paths),[p.name for p in paths])
+          hashes=_hashes()
+          names=set()
+          for p in paths:
+              obj=json.loads(p.read_text())
+              validate_batch(obj,deck_hashes=hashes)
+              names.add((obj['deck_key'],obj['scenario']))
+              assert len(obj['runs'])==100 and obj['requested_rounds']==30
+          assert len(names)==40
+          assert len(list(Path('dist/incoming-analytics').glob('*.json')))==8
+          assert len(list(Path('dist/archive').glob('*.jsonl.gz')))==40
+          print('Validated 8 decks x 5 scenarios x 100 games = 4,000 real runs')
+          PY
+          python tools/publish_game_outcomes.py \
+            --source dist/incoming-outcomes \
+            --output dist/published-outcomes \
+            --engine-commit "${{ github.sha }}"
+          python - <<'PY'
+          from pathlib import Path
+          from tools.build_pages_deck_lab import build
+          result=build(Path('dist/pages-validation'),
+                       outcome_source=Path('dist/published-outcomes'))
+          assert len([x for x in result['asset_sha256']
+                      if x.startswith('game-outcomes/')
+                      and not x.endswith('manifest.json')])==40
+          print('Static UI accepted all 40 validated scenario files')
+          PY
+          node --test tests/pages_game_outcomes.test.cjs
+      - name: Retain complete validated handoff
+        uses: actions/upload-artifact@v4
+        with:
+          name: all-eight-decks-4000-games-validated-${{ github.sha }}
+          path: |
+            dist/published-outcomes/*.json
+            dist/incoming-analytics/*.json
+            dist/reports/*
+          retention-days: 90
+          if-no-files-found: error
+      - name: Archive a permanent release without changing main or Pages
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          TAG="all-decks-4000-${{ github.run_id }}-${{ github.run_attempt }}"
+          gh release create "$TAG" \
+            dist/published-outcomes/*.json \
+            dist/incoming-analytics/*.json \
+            dist/archive/*.gz \
+            dist/reports/*.md \
+            --target "${{ github.sha }}" \
+            --title "Source-traced 4,000-game eight-deck benchmark" \
+            --notes "Source commit ${{ github.sha }}. Eight deck fixtures; 100 seeds x five abstract opponent scenarios each, up to 30 rounds. Outcome JSON, complete compressed observations, and exploratory elastic-net reports. Saved for UI handoff. Not deployed to Pages." \
+            --latest=false
