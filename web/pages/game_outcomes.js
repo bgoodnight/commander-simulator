@@ -1278,7 +1278,12 @@
           };
           for(const hit of [...item.events].sort((a,b)=>
             a.turn-b.turn||a.seed-b.seed))addExample(hit.run,hit.turn);
-          for(const run of item.seen)addExample(run,1);
+          // For metrics based on hand presence rather than named actions,
+          // fall back to seen runs. Do not pad a run with a fictitious
+          // second "example" at turn 1 when it already has evidence.
+          const eventRuns=new Set(item.events.map(hit=>hit.run));
+          for(const run of item.seen)
+            if(!eventRuns.has(run))addExample(run,1);
           const examples=relevant.slice(0,12);
           let tracker=null,selectRun=null,detailsRoot=null;
           let exampleIndex=-1;
