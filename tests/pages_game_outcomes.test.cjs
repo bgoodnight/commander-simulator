@@ -846,15 +846,13 @@ test('turn background uses first named card and enemy activity has one condensed
     assert.equal(walk(enemy[0]).filter(n=>n.className==='insight-action-entry').length,3);
     assert.ok(firstBody.some(n=>n.textContent.includes('Seat not recorded')));
     const second=walk(turns[2]);
-    const seat1=second.find(n=>n.className==='insight-seat-line'&&
-      n.children[0].textContent==='Seat 2');
-    assert.ok(seat1);
-    assert.ok(walk(seat1).some(n=>n.textContent.includes('◆ L 3 +1')));
-    assert.ok(walk(seat1).some(n=>n.textContent.includes('♟ P 2 +1')));
-    assert.ok(walk(seat1).some(n=>n.textContent.includes('▤ H 5 -1')));
-    const seat2=second.find(n=>n.className==='insight-seat-line'&&
-      n.children[0].textContent==='Seat 3');
-    assert.ok(walk(seat2).some(n=>n.textContent.includes('◆ L —')));
-    assert.ok(!walk(seat2).some(n=>n.textContent.includes('◆ L 0')));
+    const seats=second.filter(n=>n.className==='insight-seat-line');
+    assert.equal(seats.length,4);
+    assert.ok(seats.every(n=>walk(n).some(x=>x.textContent.includes('♥'))));
+    assert.ok(!second.some(n=>n.textContent.includes('◆ L')));
+    assert.ok(!second.some(n=>n.textContent.includes('♟ P')));
+    assert.ok(!second.some(n=>n.textContent.includes('▤ H')));
+    const seat2=seats[2];
+    assert.ok(!walk(seat2).some(n=>n.textContent.includes('—')));
   }finally{global.document=before}
 });
