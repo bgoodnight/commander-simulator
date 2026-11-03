@@ -507,14 +507,24 @@ test('featured card insight switches artwork, mana, metrics, and evidence with s
     assert.ok(tracker);
     metrics[0].onclick();
     assert.equal(tracker.open,true);
-    const selector=walk(tracker).find(n=>n.tag==='select');
-    assert.ok(selector);
-    assert.equal(selector.value,'0');
+    assert.ok(!walk(tracker).some(n=>n.tag==='select'));
     assert.ok(walk(tracker).some(n=>n.className==='insight-turn-row'));
+    const label=walk(tracker).find(n=>n.className==='insight-example-game-label');
+    assert.ok(label);
+    assert.match(label.textContent,/Seed 1 · Unresolved/);
     metrics[1].onclick();
-    assert.equal(selector.value,'1');
+    assert.match(label.textContent,/Seed 2 · Unresolved/);
     metrics[0].onclick();
-    assert.equal(selector.value,'0');
+    assert.match(label.textContent,/Seed 1 · Unresolved/);
+    const action=walk(tracker).find(n=>n.className.includes('insight-example-full-link'));
+    assert.ok(action);
+    assert.equal(action.textContent,'Open full reviewer ↗');
+    tracker.open=false;tracker.events.toggle();
+    assert.ok(walk(tracker).some(n=>n.tag==='summary'&&
+      n.textContent==='View example games'));
+    tracker.open=true;tracker.events.toggle();
+    assert.ok(walk(tracker).some(n=>n.tag==='summary'&&
+      n.textContent==='Close example games'));
   }finally{global.document=before}
 });
 
@@ -1106,4 +1116,29 @@ test('turn rows expand naturally for multiline summaries while metrics do not sq
   assert.match(rule,/-webkit-line-clamp:3/);
   assert.match(rule,/grid-area:metrics;width:100%;max-width:none/);
   assert.match(rule,/min-height:64px;height:auto/);
+});
+
+test('opening draw row shows actual cards with only sourced mulligan wording',()=>{
+  const js=fs.readFileSync('web/pages/game_outcomes.js','utf8');
+  const exporter=fs.readFileSync('tools/build_game_outcomes.py','utf8');
+  assert.match(js,/index\?"Turn "\+index:"Draw"/);
+  assert.match(js,/index\?synopsis\|\|"No named plays recorded":openingHandDescription\(run\)/);
+  assert.match(js,/count===0\?"Kept initial hand"/);
+  assert.match(js,/count===1\?"Mulliganed once"/);
+  assert.match(js,/count!==null\?"Mulliganed "\+count\+" times"/);
+  assert.match(js,/run\.opening_hand/);
+  assert.match(exporter,/"mulligan":\{/);
+  assert.match(exporter,/"taken":run\["mulligan"\]\.get\("taken"\)/);
+});
+test('compact example controls omit selector and repeated run heading',()=>{
+  const js=fs.readFileSync('web/pages/game_outcomes.js','utf8');
+  const css=fs.readFileSync('web/pages/style.css','utf8');
+  const page=fs.readFileSync('docs/deck-lab/results.html','utf8');
+  assert.ok(!js.includes('Choose a relevant recorded example'));
+  assert.match(js,/Close example games/);
+  assert.match(js,/hideEvidenceHead:true/);
+  assert.match(js,/insight-example-game-label/);
+  assert.match(css,/insight-example-full-link/);
+  assert.match(css,/compact-selection\{margin-bottom:3px\}/);
+  assert.ok(!page.includes('id="game-outcome-refresh"'));
 });
