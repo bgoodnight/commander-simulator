@@ -35,17 +35,18 @@ jobs:
           from itertools import permutations
           games=[]
           for i,names in enumerate(permutations(("aggro","control","combo","midrange"))):
-            t=SharedFourSeatTable(names,seed=100+i,round_limit=15).run()
+            t=SharedFourSeatTable(names,seed=100+i,round_limit=30).run()
             games.append(t.summary())
           for role in ("aggro","control","combo","midrange"):
             for i in range(4):
-              games.append(SharedFourSeatTable((role,)*4,seed=200+i,round_limit=15).run().summary())
+              games.append(SharedFourSeatTable((role,)*4,seed=200+i,round_limit=30).run().summary())
           report={
             "format":"shared-kernel-abstract-calibration-alpha-v1",
             "games":len(games),"resolutions":dict(Counter(x["outcome"]["status"] for x in games)),
             "winner_seats":dict(Counter(x["outcome"]["winner"] for x in games
                                        if x["outcome"]["winner"] is not None)),
             "median_rounds":sorted(x["outcome"]["rounds"] for x in games)[len(games)//2],
+            "actions_by_role":{role:dict(Counter(e["action"] for x in games for e in x["events"] if e["archetype"]==role)) for role in ("aggro","control","combo","midrange")},
             "fidelity":"physical kernel and zones, synthetic archetype effects, no printed-card execution",
             "real_deck_matchups":False}
           Path("dist/four-seat/summary.json").write_text(json.dumps(report,indent=2))
