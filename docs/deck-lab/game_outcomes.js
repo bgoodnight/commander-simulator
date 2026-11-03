@@ -796,7 +796,9 @@
       count+" "+kind+(count===1?"":"s"));
     if(extras.length)parts.push(extras.length+" other recorded "+
       (extras.length===1?"event":"events"));
-    return "Enemies played "+(parts.length?parts.join(", "):"no named cards recorded");
+    return counts.size?"Enemies played "+parts.join(", "):
+      extras.length?"Enemy activity: "+extras.length+" recorded "+
+        (extras.length===1?"event":"events"):null;
   }
   // Single source-grounded narration vocabulary for collapsed and expanded turns.
   // Successful spell resolutions are not repeated after their casts.
@@ -882,8 +884,6 @@
     head.append(create("strong",null,"Seed "+run.seed+" · "+stateLabel(run.outcome.status)),
       create("span","micro",roundLabel(run)));
     root.appendChild(head);
-    root.appendChild(create("p","micro",
-      "Recorded turn actions and life totals."));
     const timeline=create("div","insight-turn-timeline");
     root.appendChild(timeline);
     const life=run.life_history||[];
@@ -947,18 +947,15 @@
           "Action and zone details were not exported for this round."));
       }else{
         const actions=observation.actions||[];
-        if(!actions.length)body.appendChild(create("p","micro",
-          "No individual actions recorded for this round."));
-        // Two stable sections: recorded player activity and a single
-        // condensed enemy block. Never infer intra-round phase ordering.
+        if(!actions.length)body.appendChild(create("p","micro","No recorded plays"));
+        // Missing seat attribution belongs to the pilot, ahead of enemy activity.
         const own=actions.filter(a=>!Number.isInteger(a.seat)||Number(a.seat)===0);
         const enemy=actions.filter(a=>Number.isInteger(a.seat)&&a.seat>0);
         function actionSection(title,events,cssClass,showSeat){
           events=events.filter(a=>narratedAction(a));
           if(!events.length)return;
           const section=create("section","insight-action-phase "+cssClass);
-          section.appendChild(create("h4","insight-action-phase-heading",
-            title+" · "+events.length+" recorded actions"));
+          section.appendChild(create("h4","insight-action-phase-heading",title));
           const items=create("div","insight-action-sequence");
           for(const a of events){
             const spoken=narratedAction(a);
