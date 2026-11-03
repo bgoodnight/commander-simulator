@@ -199,16 +199,21 @@ def analyze(rows,*,landmark=0,min_support=8,bootstrap=16):
         return result
     seeds_train=groups[train]
     splits=min(4,len(set(seeds_train)))
-    baseline=np.full(len(test),float(np.mean(y[train])))
-    # Non-tree baseline: observed opponent composition alone.
-    opp=[i for i,k in enumerate(names) if k.startswith("opponent_count:")]
-    if not opp:
-        opp=[i for i,k in enumerate(names) if k.startswith("opponent_present:")]
-    if opp:
-        with warnings.catch_warnings():
-            warnings.simplefilter("ignore",ConvergenceWarning)
-            control=_model(1.,0.,10).fit(X[train][:,opp],y[train])
-        baseline=control.predict_proba(X[test][:,opp])[:,1]
+    # Transparent, nonparametric opponent-composition baseline: a smoothed
+    # observed training win share for each three-seat composition. No ridge
+    # or second regression model is fitted.
+    prior=float(np.mean(y[train]))
+    table_counts=defaultdict(lambda:[0,0])
+    def composition(row):
+        return tuple(sorted(row["opponent_roles"].values()))
+    for i in train:
+        record=table_counts[composition(cohort[i])]
+        record[0]+=int(y[i])
+        record[1]+=1
+    baseline=np.asarray([
+        (table_counts[composition(cohort[i])][0]+2*prior)/
+        (table_counts[composition(cohort[i])][1]+2)
+        for i in test],dtype=float)
     best=None
     with warnings.catch_warnings():
         warnings.simplefilter("ignore",ConvergenceWarning)
@@ -267,6 +272,7 @@ def analyze(rows,*,landmark=0,min_support=8,bootstrap=16):
         "outer_test_seed_groups":len(set(groups[test])),
         "holdout_brier":round(float(brier_score_loss(y[test],predictions)),5),
         "opponent_baseline_brier":round(float(brier_score_loss(y[test],baseline)),5),
+        "baseline_method":"smoothed empirical win share by three-opponent composition",
         "tuned_C":C,"tuned_l1_ratio":ratio,
         "bootstrap_repetitions":bootstrap,
         "validation":"Whole seed groups held out across scenarios; CV performed only on training seeds",
