@@ -683,7 +683,7 @@ test('full-game reviewer uses same compact turn rows as insight evidence',()=>{
     opened.open=true;
     assert.ok(walk(opened).some(n=>n.className==='insight-action-art'&&
       n.src==='https://example.com/Grave-Titan.jpg'));
-    assert.equal(walk(opened).filter(n=>n.className.startsWith('insight-seat-life')).length,4);
+    assert.equal(walk(opened).filter(n=>n.className==='insight-seat-life'||n.className.startsWith('insight-seat-life ')).length,4);
     assert.ok(walk(opened).some(n=>n.className.includes('insight-seat-life is-loss')));
     assert.ok(walk(turns[3]).some(n=>n.textContent==='Swamp'));
     const insight=walk(root).find(n=>n.className.includes('insight-featured-panel')&&
@@ -881,9 +881,9 @@ test('turn background uses first named card and enemy activity has one condensed
     const player=firstBody.find(n=>n.className==='insight-action-phase is-player');
     assert.ok(player);
     assert.ok(walk(player).some(n=>n.textContent==='Unknown Card'));
-    assert.equal(walk(rest[0]).filter(n=>n.className.startsWith('insight-seat-life')).length,4);
+    assert.equal(walk(rest[0]).filter(n=>n.className==='insight-seat-life'||n.className.startsWith('insight-seat-life ')).length,4);
     const second=walk(turns[2]);
-    assert.equal(second.filter(n=>n.className.startsWith('insight-seat-life')).length,4);
+    assert.equal(second.filter(n=>n.className==='insight-seat-life'||n.className.startsWith('insight-seat-life ')).length,4);
   }finally{global.document=before}
 });
 
@@ -944,7 +944,7 @@ test('narrated turn summary and expanded actions reuse factual card-linked wordi
     const rest=walk(turn1).find(n=>n.className==='insight-rest-of-turn');
     assert.ok(rest);
     assert.ok(walk(rest).some(n=>n.textContent==='1 other recorded event'));
-    assert.equal(walk(rest).filter(n=>n.className.startsWith('insight-seat-life')).length,4);
+    assert.equal(walk(rest).filter(n=>n.className==='insight-seat-life'||n.className.startsWith('insight-seat-life ')).length,4);
     assert.ok(!walk(turn1).some(n=>n.textContent==='reviewed enter resolved'));
     const third=walk(turns[3]);
     assert.ok(third.some(n=>n.textContent==='Moved from battlefield to graveyard '));
