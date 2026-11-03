@@ -1042,7 +1042,13 @@
     for(const [label,cards] of zones){
       if(!Array.isArray(cards))continue;
       const group=create("details","insight-end-zone");
-      group.appendChild(create("summary",null,label+" · "+cards.length));
+      const icon=({Hand:"▤",Creatures:"♟",Lands:"◇",
+        Artifacts:"⚙",Enchantments:"✦","Other permanents":"◈",
+        Graveyard:"◆",Exile:"⊘"})[label]||"◈";
+      const trigger=create("summary","insight-end-zone-label");
+      trigger.append(create("span","insight-end-zone-icon",icon),
+        create("span",null,label+" · "+cards.length));
+      group.appendChild(trigger);
       const list=create("div","insight-action-cards");
       for(const name of cards)list.appendChild(insightActionCard(name,options));
       if(!cards.length)list.appendChild(create("span","micro","None"));
