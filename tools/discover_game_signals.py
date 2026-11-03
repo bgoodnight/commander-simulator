@@ -99,14 +99,18 @@ def design(rows,landmark=0,min_support=8,max_interactions=300):
         filtered.append(r)
     feats=[features(r,landmark) for r in filtered]
     n=len(feats)
+    seed_count=len({r["seed"] for r in filtered})
     candidates=sorted({name for row in feats for name in row})
     keep=[]
     for name in candidates:
         values=[row.get(name,0.) for row in feats]
-        positive=sum(v>0 for v in values)
+        present_seeds={r["seed"] for r,value in zip(filtered,values) if value>0}
         if (name.startswith("opening:") or name.startswith("hand_at_landmark:")
                 or name.startswith("opponent_present:")):
-            if positive<min_support or n-positive<min_support:
+            # Repeated scenarios using the same shuffle are *not* independent
+            # observations for rare-card support.
+            if (len(present_seeds)<min_support
+                    or seed_count-len(present_seeds)<min_support):
                 continue
         elif max(values)-min(values)<1e-12:
             continue
@@ -117,8 +121,10 @@ def design(rows,landmark=0,min_support=8,max_interactions=300):
     pairs=[]
     for a in card:
         for b in other:
-            support=sum(bool(r.get(a,0.)) and bool(r.get(b,0.)) for r in feats)
-            if min_support<=support<=n-min_support:
+            supported={r["seed"] for r,f in zip(filtered,feats)
+                       if bool(f.get(a,0.)) and bool(f.get(b,0.))}
+            support=len(supported)
+            if min_support<=support<=seed_count-min_support:
                 pairs.append((a,b,support))
     pairs.sort(key=lambda row:(-row[2],row[0],row[1]))
     parents={}
@@ -264,6 +270,7 @@ def analyze(rows,*,landmark=0,min_support=8,bootstrap=16):
             "selection_frequency":round(selections[name]/max(bootstrap,1),3),
             "direction_consistency":round(abs(directions[name])/max(selections[name],1),3),
             "observed_games":int(np.count_nonzero(X[:,j])),
+            "observed_seeds":len({r["seed"] for r,v in zip(cohort,X[:,j]) if v>0}),
             "interaction_parents":list(parents[name]) if name in parents else []})
     findings.sort(key=lambda r:(-r["selection_frequency"],
                                 -abs(r["coefficient"]),r["feature"]))
