@@ -22,7 +22,7 @@ class RockEarlyTurnTests(unittest.TestCase):
                                  sum(obj["name"] in {
                                      "Sol Ring", "Mind Stone", "Arcane Signet",
                                      "Charcoal Diamond", "Commander's Sphere",
-                                     "Hedron Archive", "Infernal Idol"
+                                     "Hedron Archive", "Infernal Idol", "Patchwork Banner"
                                  } for obj in state["object_views"]["battlefield"]))
         self.assertGreater(len(rocks), 0)
 
