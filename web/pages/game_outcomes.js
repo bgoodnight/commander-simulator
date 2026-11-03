@@ -761,58 +761,51 @@
   // Inline insight evidence uses the original compact, expandable turn rows.
   // A round is NOT a reconstructed priority/phase transcript: only explicit
   // action metadata permits naming a phase or an opposing seat.
-  function observedSeatMetrics(observation,seat){
-    // Only use explicit seat snapshots. A pilot-only zone list must never
-    // be interpreted as a modeled opponent's battlefield or hand.
-    const record=seat===0?observation:
-      observation?.seat_states?.[String(seat)]||
-      observation?.seat_states?.[seat]||
-      observation?.seats?.[String(seat)]||
-      observation?.seats?.[seat];
-    if(!record||typeof record!=="object")return null;
-    const count=(key,alternate)=>{
-      const raw=record[key]??(alternate?record[alternate]:null);
-      return Array.isArray(raw)?raw.length:
-        Number.isFinite(raw)&&raw>=0?raw:null;
-    };
-    return {
-      lands:count("land_count","lands"),
-      permanents:count("permanent_count","battlefield"),
-      hand:count("hand_size","hand")
-    };
-  }
-  function seatChangeSummary(current,before,observation,previous){
+  function seatChangeSummary(current,before,observation){
     const table=create("section","insight-seat-summary");
     table.appendChild(create("strong","insight-seat-summary-title",
-      "End-of-round table · observed changes since prior round"));
+      "End-of-round life & recorded combat"));
     const strip=create("div","insight-seat-summary-strip");
+    const actions=observation?.actions||[];
+    const changes=current?.life_changes||[];
     for(const seat of SEATS){
-      const now=observedSeatMetrics(observation,seat);
-      const old=observedSeatMetrics(previous,seat);
-      const lifeNow=lifeAt(current,seat),lifeBefore=before?lifeAt(before,seat):lifeNow;
+      const value=lifeAt(current,seat),old=before?lifeAt(before,seat):value;
+      const diff=Number.isFinite(value)&&Number.isFinite(old)?value-old:null;
       const entry=create("div","insight-seat-line");
       entry.appendChild(create("strong","insight-seat-name",
         seat===0?"You":"Seat "+(seat+1)));
       const metrics=create("span","insight-seat-metrics");
-      const item=(symbol,label,value,prior)=>{
-        const delta=Number.isFinite(value)&&Number.isFinite(prior)?value-prior:null;
-        const text=symbol+" "+label+" "+(Number.isFinite(value)?value:"—")+
-          (delta?" "+(delta>0?"+":"")+delta:"");
-        const chip=create("span","insight-seat-chip"+
-          (delta?delta>0?" is-gain":" is-loss":""),text);
-        chip.title=Number.isFinite(value)?label+" recorded at round end":
-          label+" not exported for this seat";
-        metrics.appendChild(chip);
-      };
-      item("♥","",lifeNow,lifeBefore);
-      item("◆","L",now?.lands,old?.lands);
-      item("♟","P",now?.permanents,old?.permanents);
-      item("▤","H",now?.hand,old?.hand);
+      const hp=create("span","insight-seat-chip"+(diff?
+        diff>0?" is-gain":" is-loss":""),"♥ "+nfmt(value)+
+        (diff?" ("+(diff>0?"+":"")+diff+")":""));
+      hp.title="Recorded life total at round end";
+      metrics.appendChild(hp);
+      // This is confirmed damage RECEIVED, not inferred damage dealt by
+      // this player; the source actor is not always available.
+      const taken=changes.filter(change=>Number(change.seat)===seat&&
+        change.kind==="damage"&&Number.isFinite(change.amount))
+        .reduce((sum,change)=>sum+change.amount,0);
+      if(taken){
+        const badge=create("span","insight-seat-chip is-loss","⚔ −"+taken);
+        badge.title="Recorded unprevented damage received this round";
+        metrics.appendChild(badge);
+      }
+      // Blocked combat is shown only when its actor is identified; a
+      // block record is not a numerical measure of toughness or prevention.
+      const blocks=actions.filter(a=>Number(a.seat)===seat&&
+        /blocked_combat|combat_blocked|block_declared/.test(String(a.type||""))).length;
+      if(blocks){
+        const badge=create("span","insight-seat-chip is-defense","◈ "+blocks+" blocked");
+        badge.title="Recorded blocked-combat events, not damage prevented";
+        metrics.appendChild(badge);
+      }
+      if(!aliveAt(current,seat))
+        metrics.appendChild(create("span","insight-seat-chip is-eliminated","Eliminated"));
       entry.appendChild(metrics);strip.appendChild(entry);
     }
     table.appendChild(strip);
     table.appendChild(create("span","micro",
-      "♥ life · ◆ lands · ♟ permanents · ▤ hand. — means unrecorded, not zero. Values are round-end snapshots, not individual opponent-turn states."));
+      "♥ life and round change · ⚔ confirmed damage received · ◈ blocked combat events. Damage dealt by a particular seat and defensive strength are not inferred from life changes."));
     return table;
   }
   function compactInsightTimeline(root,run,options={}){
@@ -927,7 +920,7 @@
         renderObservationZones(zones,observation,options);
         body.appendChild(zones);
       }
-      body.appendChild(seatChangeSummary(current,before,observation,previous));
+      body.appendChild(seatChangeSummary(current,before,observation));
       const recordedChanges=current.life_changes||[];
       if(index&&recordedChanges.length){
         const lifeSection=create("section","insight-action-phase is-life");
