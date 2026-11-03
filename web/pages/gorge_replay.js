@@ -49,6 +49,22 @@ function validate(data){
       throw Error("Malformed or out-of-order gorge event");
     previous=e.seq;
   }
+  if(data.enrichment_schema!==undefined){
+    if(data.enrichment_schema!=="gorge-physical-state-v1"||
+       !Array.isArray(data.objects)||!Array.isArray(data.snapshots))
+      throw Error("Unrecognized gorge physical-state enrichment");
+    const ids=new Set();
+    for(const o of data.objects){
+      if(!o||!Number.isInteger(o.object_id)||o.object_id<1||ids.has(o.object_id)||
+         typeof o.card_name!=="string")throw Error("Invalid per-game card identity crosswalk");
+      ids.add(o.object_id);
+    }
+    for(const snap of data.snapshots){
+      if(!Number.isInteger(snap.turn)||!Array.isArray(snap.players)||snap.players.length!==4||
+         snap.boundary!=="first_pending_decision_of_turn")
+        throw Error("Invalid authoritative gorge turn-boundary snapshot");
+    }
+  }
   return data;
 }
 function turns(data){
@@ -82,9 +98,47 @@ function actor(e,data){
   const seat=Number.isInteger(e.player)?e.player:0;
   return data.decks[seat]+" (seat "+(seat+1)+")";
 }
+function objectName(data,id){
+  if(!Number.isInteger(id)||id<=0)return null;
+  const card=(data.objects||[]).find(o=>o.object_id===id);
+  if(!card)return null;
+  return card.card_name||card.effective_name||null;
+}
+function labelledObject(data,id){
+  if(!Number.isInteger(id)||id<=0)return "";
+  const name=objectName(data,id);
+  return name?name+" (#"+id+")":"object #"+id;
+}
+function snapshotAtTurn(data,turn){
+  return (data.snapshots||[]).find(s=>s.turn===turn)||null;
+}
+function stateForSeat(data,turn,seat,reveal=false){
+  const snap=snapshotAtTurn(data,turn);
+  if(!snap)return null;
+  const rows=snap.players.map((p,i)=>{
+    const zones=p.zones||{};
+    const seatIsVisible=seat===i||reveal;
+    const publicZones=["battlefield","graveyard","exile","command"];
+    const result={seat:i,life:p.life,lost:p.lost,zones:{},
+      hand_size:Array.isArray(zones.hand)?zones.hand.length:null,
+      library_size:Array.isArray(zones.library)?zones.library.length:null,
+      mana_pool:Array.isArray(p.mana_pool)?[...p.mana_pool]:null};
+    for(const zone of publicZones){
+      result.zones[zone]=(zones[zone]||[]).map(id=>({
+        id,name:labelledObject(data,id)}));
+    }
+    // The owner can see their own hand; an opponent's hand identities must
+    // never reach the DOM, even as a hidden JSON detail.
+    result.zones.hand=seatIsVisible?(zones.hand||[]).map(id=>({
+      id,name:labelledObject(data,id)})):null;
+    return result;
+  });
+  return {turn:snap.turn,step:snap.step,after_event_seq:snap.after_event_seq,
+    boundary:snap.boundary,players:rows};
+}
 function eventLine(e,data){
   const seat=actor(e,data);
-  const obj=Number.isInteger(e.obj)?" · object #"+e.obj:"";
+  const obj=Number.isInteger(e.obj)?" · "+labelledObject(data,e.obj):"";
   const amount=Number.isFinite(e.amount)?" · "+e.amount:"";
   const text=typeof e.text==="string"&&e.text.trim()?" · "+e.text.slice(0,160):"";
   if(e.kind===3)return seat+" drew a card"+obj;
@@ -120,10 +174,11 @@ function paint(rootElement,data,options={}){
     " turns · "+summary.events+" native events · "+summary.intents+
     " decisions · chain "+data.chain));
   rootElement.append(header);
+  const enriched=data.enrichment_schema==="gorge-physical-state-v1";
   const caution=node("p","gorge-replay-caution",
-    "This is the original engine event stream, not a reconstructed Python replay. "+
-    "Card IDs are shown when card names cannot be proven; hand contents and "+
-    "full life/mana snapshots are not inferred. Loaded locally in your browser.");
+    enriched?
+      "Live gorge rules and object identities. State panels are taken at the first decision of each turn, NOT at turn end. Mana pools may be empty at this boundary. Hidden hands are masked by seat.":
+      "This older gorge recording contains events only. Card names and exact turn states were not recorded; object IDs cannot be safely inferred. Open a newer enriched trace to inspect zones and hands.");
   rootElement.append(caution);
   const controls=node("div","gorge-replay-controls");
   const seatLabel=node("label",null,"View as player");
@@ -168,6 +223,43 @@ function paint(rootElement,data,options={}){
       if(highlights.length){
         const brief=node("p","gorge-replay-highlights",
           highlights.map(e=>kind(e)).join(" · "));section.append(brief);
+      }
+      if(enriched&&game.number>0){
+        const stateView=stateForSeat(data,game.number,state.seat,state.reveal);
+        if(stateView){
+          const statePanel=node("details","gorge-replay-state");
+          statePanel.append(node("summary",null,
+            "Verified turn-start state · "+stateView.step+" · after event #"+stateView.after_event_seq));
+          const stateBody=node("div","gorge-replay-state-grid");
+          for(const p of stateView.players){
+            const playerBox=node("div","gorge-replay-state-player");
+            playerBox.append(node("strong",null,data.decks[p.seat]),
+              node("span",null,"Life: "+p.life+" · Hand: "+p.hand_size+
+                " · Library: "+p.library_size+(p.lost?" · Eliminated":"")));
+            if(Array.isArray(p.mana_pool)){
+              const letters=["{W}","{U}","{B}","{R}","{G}","{C}"];
+              const mana=p.mana_pool.map((x,i)=>x>0?letters[i]+"×"+x:null).filter(Boolean);
+              playerBox.append(node("small",null,
+                "Unspent mana at observation: "+(mana.join(" ")||"none")));
+            }
+            for(const zone of ["hand","battlefield","graveyard","exile","command"]){
+              const cards=p.zones[zone];
+              const details=node("details","gorge-replay-zone");
+              details.append(node("summary",null,
+                zone==="hand"&&cards===null?
+                  "Hand · "+p.hand_size+" hidden cards":
+                  zone[0].toUpperCase()+zone.slice(1)+" · "+(cards||[]).length));
+              if(cards!==null){
+                details.append(node("p","gorge-replay-card-list",
+                  cards.length?cards.map(x=>x.name).join(" · "):"Empty"));
+              }
+              playerBox.append(details);
+            }
+            stateBody.append(playerBox);
+          }
+          statePanel.append(stateBody);
+          section.append(statePanel);
+        }
       }
       const body=node("div","gorge-replay-event-list");
       section.append(body);
@@ -226,5 +318,5 @@ if(typeof document!=="undefined"){
   if(document.readyState==="loading")document.addEventListener("DOMContentLoaded",init);
   else init();
 }
-return {SCHEMA,KINDS,validate,turns,accessibleEvents,eventLine,stats,paint};
+return {SCHEMA,KINDS,validate,turns,accessibleEvents,eventLine,stats,paint,objectName,stateForSeat};
 });
