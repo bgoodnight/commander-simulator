@@ -1366,6 +1366,7 @@
         onShowRecordedActions:options.onShowRecordedActions,
         onOpenRecordedCard:options.onOpenRecordedCard,
         lookupRecordedCard:options.lookupRecordedCard,
+        renderMana:options.renderMana,
         focusTurn:focusTurn});
     }
     function showGroup(seed,turn=null){
@@ -1493,6 +1494,7 @@
               focusTurn:entry.turn,
               hideEvidenceHead:true,
               lookupRecordedCard:options.lookupRecordedCard,
+              renderMana:options.renderMana,
               onOpenRecordedCard:options.onOpenRecordedCard,
               example:entry.group.exampleBySeed?.get(entry.run.seed),
               onShowRecordedActions:options.onShowRecordedActions
