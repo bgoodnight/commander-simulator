@@ -507,7 +507,8 @@
   }
   function observationCardStats(runs,lookupCard=()=>null){
     const appearances=new Map(),plays=new Map(),spells=new Map(),
-      artifacts=new Map(),activations=new Map(),removal=new Map(),holding=new Map();
+      creatures=new Map(),instants=new Map(),artifacts=new Map(),
+      activations=new Map(),removal=new Map(),holding=new Map();
     const inc=(map,key,seed,turn,weight=1)=>{
       if(typeof key!=="string"||!key.trim())return;
       if(!map.has(key))map.set(key,{name:key,count:0,seeds:new Set(),turns:[]});
@@ -526,18 +527,24 @@
             action.type?.endsWith("_cast")||action.type==="reviewed_commander_cast";
           if(played){
             inc(plays,action.card,run.seed,row.turn);
-            const kind=lookupCard(action.card)?.category;
-            if(["Instant","Sorcery"].includes(kind))
+            const card=lookupCard(action.card);
+            const types=String(card?.type_line||card?.category||"").split("—")[0];
+            if(/\b(Instant|Sorcery)\b/i.test(types))
               inc(spells,action.card,run.seed,row.turn);
-            if(kind==="Artifact")inc(artifacts,action.card,run.seed,row.turn);
+            if(/\bInstant\b/i.test(types))
+              inc(instants,action.card,run.seed,row.turn);
+            if(/\bArtifact\b/i.test(types))
+              inc(artifacts,action.card,run.seed,row.turn);
+            if(/\bCreature\b/i.test(types))
+              inc(creatures,action.card,run.seed,row.turn);
           }
           if(action.type?.includes("activated")||action.type?.includes("trigger")){
             // Only name abilities where the event itself identifies the source.
-            inc(activations,action.card||action.source||action.operation,
+            inc(activations,action.card||action.source,
                 run.seed,row.turn);
           }
           if(Number.isFinite(action.destroyed_count)&&action.destroyed_count>0){
-            inc(removal,action.card||action.source||action.operation,
+            inc(removal,action.card||action.source,
                 run.seed,row.turn,action.destroyed_count);
           }
         }
@@ -561,8 +568,9 @@
       seeds:longest.seeds,turns:longest.counts,held:true
     }:null;
     return {
-      seen:top(appearances),played:top(plays),spell:top(spells),
-      artifact:top(artifacts),activated:top(activations),removal:top(removal),
+      seen:top(appearances),played:top(plays),creature:top(creatures),
+      instant:top(instants),spell:top(spells),artifact:top(artifacts),
+      activated:top(activations),removal:top(removal),
       longest:longestMetric,
       coverage:runs.filter(run=>Array.isArray(run.ui_observations)&&
         run.ui_observations.length===run.completed_rounds).length
@@ -980,9 +988,11 @@
     if(signals.coverage){
       for(const [kind,label,metric] of [
         ["played","Most played card","Casts or land plays"],
+        ["creature","Most played creature","Recorded creature casts"],
         ["seen","Most frequently seen card","Opening hands and recorded draws"],
         ["activated","Most active ability source","Recorded activations and triggers"],
         ["spell","Most cast instant or sorcery","Recorded spell casts"],
+        ["instant","Most cast instant","Recorded instant casts"],
         ["artifact","Most cast artifact","Recorded artifact casts"],
         ["removal","Most recorded creature removal","Recorded destroyed objects, where attributed"],
         ["longest","Longest-held card","Mean observed turn-end rounds in hand; ties by game coverage"]
@@ -1019,10 +1029,8 @@
         insightCards.appendChild(panel);
       }
     }else{
-      insightCards.appendChild(card("Card diagnostics","Data coverage","Unavailable",
-        "The historical outcome exports omit complete turn/card observations.",
-        body=>body.appendChild(create("p","micro",
-          "Next publication will provide recorded card plays, draws and zone histories for each game."))));
+      insightCards.appendChild(create("p","game-outcome-empty",
+        "Card insights will appear when a current simulation batch with complete turn-by-turn card observations is published."));
     }
     const best=matchup[0];
     gameCards.appendChild(card("Opponent Types","Types & table compositions",
