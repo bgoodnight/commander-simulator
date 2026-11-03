@@ -993,3 +993,18 @@ test('results hero is compact with proportions below percentages and cohort foot
   assert.match(css,/insight-turn-row \.insight-turn-cover/);
   assert.match(css,/opacity:\.68/);
 });
+
+test('compact insight density retains three scrollable ranks and no duplicated expanded mana',()=>{
+  const js=fs.readFileSync('web/pages/game_outcomes.js','utf8');
+  const css=fs.readFileSync('web/pages/style.css','utf8');
+  const start=js.indexOf('function cardPerformancePanel(');
+  const end=js.indexOf('function readablePredictor(',start);
+  const panel=js.slice(start,end);
+  assert.ok(start>=0&&end>start);
+  assert.doesNotMatch(panel,/featured\.appendChild\(cost\)/);
+  assert.match(panel,/const cost=manaCost\(item\)/); // The header still shows mana.
+  assert.match(panel,/ranked\.slice\(0,10\)/);
+  assert.match(css,/\.insight-featured-bars\{grid-auto-rows:43px;max-height:137px/);
+  assert.match(css,/\.insight-featured-panel \.game-outcome-summary\{min-height:86px/);
+  assert.match(css,/\.insight-featured-card-art\{width:min\(100%,138px\)/);
+});
