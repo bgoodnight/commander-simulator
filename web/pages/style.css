@@ -1977,3 +1977,25 @@ body:has(#pane-records:not([hidden])) .compact-selection{margin-bottom:3px}
 .insight-end-zone>.insight-action-cards{margin-top:7px}
 .insight-end-mana{display:flex;align-items:center;flex-wrap:wrap;gap:5px;
  font-size:.75rem}
+
+/* Compact summary uses genuine mana symbol images from the shared renderer.
+   Do not override its generic .mana-symbol rules elsewhere on the site. */
+.insight-turn-mana{display:inline-flex;align-items:center;flex-wrap:wrap;gap:3px}
+.insight-color-mana-pip{display:inline-flex;align-items:center;gap:2px;white-space:nowrap}
+.insight-turn-mana .mana-symbols,.insight-end-mana .mana-symbols{
+  display:inline-flex;align-items:center;gap:0}
+.insight-turn-mana img.mana-symbol,.insight-end-mana img.mana-symbol{
+  display:inline-block;width:17px;height:17px;min-width:17px;min-height:17px;
+  padding:0;border:0;border-radius:50%;object-fit:contain;background:none}
+.insight-mana-count{font-size:.66rem;color:#e5d8bf}
+.insight-fallback-mana{display:inline-flex;justify-content:center;
+  align-items:center;width:17px;height:17px;border-radius:50%;
+  background:#3d4b4a;border:1px solid #b9c9c2;font-weight:700}
+.insight-mana-unavailable{color:#c8cecc}
+.insight-end-state{gap:7px;padding-top:8px}
+.insight-end-zone-label{display:flex;align-items:center;gap:8px}
+.insight-end-zone-icon{font-size:.82rem;min-width:18px;text-align:center;
+  color:#e7c78a}
+.insight-end-zone>.insight-action-cards{gap:6px}
+.insight-hand-shortcut{font:inherit}
+.insight-end-mana .micro{margin-left:6px}
