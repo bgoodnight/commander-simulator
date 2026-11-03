@@ -29,7 +29,8 @@ class ReviewedRemovalTests(unittest.TestCase):
     def add(self,name,types,zone="battlefield",seat=0,power=2,toughness=2):
         raw=self.catalog.get(name,{})
         return self.zones.add(self.C(raw.get("oracle_id","test:"+name),name,
-             frozenset(types),base_power=power,base_toughness=toughness,
+             frozenset(types),subtypes=frozenset({"Swamp"}) if name=="Swamp" else frozenset(),
+             base_power=power,base_toughness=toughness,
              coverage="approx"),seat,zone)
     def lands(self,n):
         for _ in range(n):self.add("Swamp",("land",))
