@@ -2201,8 +2201,6 @@ function registerEvents(){
   $("quiet-files").addEventListener("change",loadQuietFiles);
   const outcomeFiles=$("game-outcome-files");
   if(outcomeFiles)outcomeFiles.addEventListener("change",loadLongGameFiles);
-  const outcomeRefresh=$("game-outcome-refresh");
-  if(outcomeRefresh)outcomeRefresh.onclick=refreshPublishedLongGame;
   $("commander-medallion").onclick=toggleCommanderPicker;
   document.addEventListener("click",e=>{
     if(!e.target.closest(".selector-anchor"))closeCommanderPicker();
