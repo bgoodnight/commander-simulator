@@ -1,10 +1,9 @@
-name: Publish pinned Mortarion opponent replay artifact
+name: ARCHIVED Python · Publish pinned Mortarion opponent replay artifact
+# ARCHIVED: no automatic Python game simulations after gorge-only cutover.
+# Older workflows can be reproduced from the preserved archive branch.
 on:
-  push:
-    branches: [main]
-    paths:
-      - ".github/workflows/publish-mortarion-replay.yml"
   workflow_dispatch:
+
 permissions:
   contents: write
   actions: write
