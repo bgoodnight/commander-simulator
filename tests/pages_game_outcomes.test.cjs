@@ -523,25 +523,65 @@ test('commander and basic lands are excluded while seen-creature and use metrics
     assert.ok(!result.ranked[category].some(item=>item.name==='Swamp'));
   }
 });
-test('results overview places four game cards before card metrics and uses normalized headlines',()=>{
-  const source=fs.readFileSync('web/pages/game_outcomes.js','utf8');
-  const css=fs.readFileSync('web/pages/style.css','utf8');
-  const app=fs.readFileSync('web/pages/app.js','utf8');
-  const hero=source.indexOf('cards.appendChild(outcomeCard(');
-  const matchup=source.indexOf('cards.appendChild(card("Opponent Types"');
-  const length=source.indexOf('cards.appendChild(card("Game Length"');
-  const eliminations=source.indexOf('cards.appendChild(card("Eliminations"');
-  const life=source.indexOf('cards.appendChild(card("Life Progression"');
-  const cardInsights=source.indexOf('const signals=observationCardStats(');
-  assert.ok(hero<matchup&&matchup<length&&length<eliminations&&eliminations<life);
-  assert.ok(life<cardInsights);
-  assert.match(source,/game-outcome-hero-highlights/);
-  assert.match(css,/\.game-outcome-hero-highlight/);
-  assert.match(source,/\(100\*item\.games\/coverage\)\.toFixed\(1\)\+"%"/);
-  assert.match(source,/item\.average\.toFixed\(2\)\+"\/game"/);
-  assert.match(app,/commanderName:selectedDeck\(\)\.commander/);
+test('hero performance metrics open original details as modal panels, not grid duplicates',()=>{
+  class Node{
+    constructor(tag){this.tag=tag;this.className='';this.textContent='';
+      this.children=[];this.attributes={};this.dataset={};this.style={};
+      this.events={};this.open=false;this.focused=false;}
+    append(...items){this.children.push(...items)}
+    appendChild(item){this.children.push(item);return item}
+    replaceChildren(...items){this.children=[...items]}
+    setAttribute(k,v){this.attributes[k]=String(v);if(k==='open')this.open=true}
+    removeAttribute(k){delete this.attributes[k];if(k==='open')this.open=false}
+    addEventListener(k,handler){this.events[k]=handler}
+    showModal(){this.open=true}
+    close(){this.open=false;this.events.close?.()}
+    focus(){this.focused=true}
+    get lastChild(){return this.children.at(-1)}
+  }
+  const before=global.document;
+  global.document={createElement:tag=>new Node(tag),
+    createElementNS:(_,tag)=>new Node(tag)};
+  try{
+    const root=new Node('main'),reviewer=new Node('section');
+    Outcomes.render(root,[batch([runWon(),runUnresolved(),runLost()])],{
+      deckKey:'necron_dynasties',deckHash:'a'.repeat(64),
+      reviewerRoot:reviewer
+    });
+    const walk=n=>[n,...n.children.flatMap(walk)];
+    const grid=root.children.find(n=>n.className.includes('latest-insight-grid'));
+    const dialog=root.children.find(n=>n.tag==='dialog');
+    assert.ok(dialog);
+    const cards=grid.children.filter(n=>n.className.includes('game-outcome-card'));
+    assert.equal(cards.length,0);
+    const tiles=walk(grid).filter(n=>n.className==='game-outcome-hero-highlight');
+    assert.deepEqual(tiles.map(n=>n.children[0].textContent),
+      ['Best matchup','Game length','Survival','Final life']);
+    const headings=['Opponent Types','Game Length','Eliminations','Life Progression'];
+    for(const [i,tile] of tiles.entries()){
+      assert.equal(tile.tag,'button');
+      assert.equal(tile.attributes['aria-haspopup'],'dialog');
+      let stopped=false,prevented=false;
+      tile.events.click({preventDefault(){prevented=true},stopPropagation(){stopped=true}});
+      assert.ok(stopped&&prevented);
+      assert.equal(dialog.open,true);
+      const inDialog=walk(dialog);
+      assert.ok(inDialog.some(n=>n.className==='game-outcome-title'&&n.textContent===headings[i]));
+      assert.ok(inDialog.some(n=>n.className==='game-outcome-body'));
+      const close=walk(dialog).find(n=>n.className==='game-outcome-detail-close');
+      close.onclick();
+      assert.equal(dialog.open,false);
+      assert.equal(tile.focused,true);
+    }
+    assert.ok(walk(dialog).some(n=>n.className==='game-outcome-round-slider'));
+  }finally{global.document=before}
 });
-
+test('dashboard modal CSS respects motion preferences and mobile size',()=>{
+  const css=fs.readFileSync('web/pages/style.css','utf8');
+  assert.match(css,/game-outcome-detail-dialog::backdrop/);
+  assert.match(css,/prefers-reduced-motion:reduce/);
+  assert.match(css,/game-outcome-detail-content/);
+});
 test('turn spotlight prioritizes real own plays and never invents drawn/opposing art',()=>{
   const art=name=>({name,art:'https://example.com/'+encodeURIComponent(name)+'.jpg'});
   const row={turn:2,actions:[
