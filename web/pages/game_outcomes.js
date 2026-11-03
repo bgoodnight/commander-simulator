@@ -724,7 +724,9 @@
     const slider=create("input","game-outcome-round-slider");
     slider.type="range";slider.min="0";
     slider.max=String(run.life_history.length-1);
-    slider.value=String(run.life_history.length-1);
+    slider.value=String(Number.isFinite(options.focusTurn)?
+      Math.min(Math.max(0,options.focusTurn),run.life_history.length-1):
+      run.life_history.length-1);
     const readout=create("span","micro","Round "+slider.value);
     slider.addEventListener("input",()=>{
       readout.textContent="Round "+slider.value;showRound(Number(slider.value));
@@ -855,14 +857,17 @@
     const evidence=create("div","game-outcome-evidence game-outcome-review-evidence");
     root.append(choices,evidence);
     let active=available[0];
+    let focusTurn=null;
     function showSeed(){
       const run=active.runs.find(r=>String(r.seed)===String(seedSelect.value));
       if(!run)return;
       runDetails(evidence,run,{example:active.exampleBySeed.get(run.seed),
         onShowRecordedActions:options.onShowRecordedActions,
-        onOpenRecordedCard:options.onOpenRecordedCard});
+        onOpenRecordedCard:options.onOpenRecordedCard,
+        focusTurn:focusTurn});
     }
-    function showGroup(seed){
+    function showGroup(seed,turn=null){
+      focusTurn=turn;
       active=available.find(g=>g.id===scenarioSelect.value)||available[0];
       seedSelect.replaceChildren();
       for(const run of active.runs){
@@ -878,11 +883,11 @@
     scenarioSelect.addEventListener("change",()=>showGroup());
     seedSelect.addEventListener("change",showSeed);
     showGroup();
-    return function jump(id,seed){
+    return function jump(id,seed,turn=null){
       const group=available.find(g=>g.id===id);
       if(!group)return;
       scenarioSelect.value=id;
-      showGroup(seed);
+      showGroup(seed,turn);
       if(options.reviewerPanel?.scrollIntoView)
         options.reviewerPanel.scrollIntoView({behavior:"smooth",block:"start"});
     };
@@ -928,7 +933,7 @@
     const cards=create("div","board-grid game-outcome-grid latest-insight-grid");
     root.appendChild(cards);
     let jumpToReview=null;
-    const onReviewRun=(id,seed)=>{if(jumpToReview)jumpToReview(id,seed)};
+    const onReviewRun=(id,seed,turn)=>{if(jumpToReview)jumpToReview(id,seed,turn)};
     cards.appendChild(outcomeCard({
       counts,total,terminal:finished.length,
       terminalRounds:finished.map(run=>run.completed_rounds)
