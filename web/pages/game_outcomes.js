@@ -542,10 +542,14 @@
     "reviewed_zone_spell_resolved","land_play"]);
   function observationCardStats(runs,lookupCard=()=>null,commanderName=null){
     const kinds=["played","creature","instant","spell","artifact","enchantment",
-      "land","seen","seenCreature","unplayed","activated","removal","creatureKills","damage","longest","finisher"];
+      "land","seen","seenCreature","unplayed","activated","removal","creatureKills","damage","longest","finisher","tutorFound","tutorUsed"];
     const maps=Object.fromEntries(kinds.map(k=>[k,new Map()]));
     const complete=runs.filter(run=>Array.isArray(run.ui_observations)&&
       run.ui_observations.length===run.completed_rounds);
+    let confirmedTutors=0;
+    // Only actual resolved searches with an explicitly named found card
+    // count. A cast alone, ambiguous search, or old stripped projection
+    // cannot establish a successfully resolved tutor search.
     function basic(name){
       const printed=lookupCard(name);
       const normalized=String(name||"").trim().toLowerCase();
@@ -556,7 +560,8 @@
         /\bBasic\b/i.test(String(printed?.type_line||"").split("—")[0]);
     }
     function record(kind,name,run,turn,quantity=1,extra={}){
-      if(typeof name!=="string"||!name.trim()||basic(name))return;
+      if(typeof name!=="string"||!name.trim()||
+         (!["tutorFound","tutorUsed"].includes(kind)&&basic(name)))return;
       const map=maps[kind];
       if(!map.has(name))map.set(name,{name,counts:new Map(),seen:new Set(),
         events:[],durations:[],turns:[]});
@@ -582,6 +587,18 @@
           held.set(name,(held.get(name)||0)+1);
         }
         for(const [eventIndex,action] of (row.actions||[]).entries()){
+          if(action.type==="tutor_resolved"&&
+             (action.seat===undefined||Number(action.seat)===0)&&
+             typeof action.card==="string"&&action.card.trim()&&
+             typeof action.target_name==="string"&&action.target_name.trim()){
+            confirmedTutors++;
+            const provenance={eventIndex,tutor:action.card,
+              target:action.target_name,destination:action.destination||null};
+            // The target may be a basic land, which is entirely legitimate
+            // for an unrestricted tutor. Do not apply ordinary-card exclusions.
+            record("tutorFound",action.target_name,run,row.turn,1,provenance);
+            record("tutorUsed",action.card,run,row.turn,1,provenance);
+          }
           if(action.type==="draw"&&action.card&&!basic(action.card)){
             seen.add(action.card);
             record("seen",action.card,run,row.turn,0,{eventIndex});
@@ -643,7 +660,7 @@
         const seen=item.seen.size;
         const score=kind==="longest"?mean(item.durations):
           kind==="seen"||kind==="seenCreature"||kind==="unplayed"?seen:
-          ["removal","creatureKills","damage"].includes(kind)?
+          ["removal","creatureKills","damage","tutorFound","tutorUsed"].includes(kind)?
             counts.reduce((t,x)=>t+x,0):
             counts.filter(x=>x>0).length;
         const perGame=kind==="longest"?item.durations:
@@ -658,7 +675,8 @@
         b.games-a.games||a.name.localeCompare(b.name));
     }
     const ranked=Object.fromEntries(kinds.map(k=>[k,sort(k)]));
-    return {coverage:complete.length,total:runs.length,ranked,
+    return {coverage:complete.length,total:runs.length,
+      confirmedTutors,ranked,
       ...Object.fromEntries(kinds.map(k=>[k,ranked[k][0]||null]))};
   }
   function renderObservationZones(root,observation,options={}){
@@ -1020,7 +1038,8 @@
       unplayed:"Most often left unplayed",activated:"Most used ability",
       removal:"Most permanents destroyed",
       creatureKills:"Most creature kills",damage:"Most damage to opponents",
-      longest:"Longest held in hand",finisher:"Finishing blow"
+      longest:"Longest held in hand",finisher:"Finishing blow",
+      tutorFound:"Most tutored card",tutorUsed:"Most used tutor"
     })[kind]||kind;
   }
   function cardPerformancePanel(kind,ranked,coverage,groups,options,onReviewRun){
@@ -1031,7 +1050,11 @@
     // Headlines should remain comparable across different batch sizes.
     // Binary access/cast metrics use distinct-game share; repeatable event
     // metrics use per-game averages (two decimals), never raw totals.
-    const valueFor=item=>isHeld?nfmt(item.heldMedian)+" rounds":
+    const isTutor=kind==="tutorFound"||kind==="tutorUsed";
+    const tutorCount=options.tutorSearchCount||0;
+    const valueFor=item=>isTutor?
+      (100*item.eventCount/Math.max(1,tutorCount)).toFixed(1)+"%":
+      isHeld?nfmt(item.heldMedian)+" rounds":
       isCount?(100*item.games/coverage).toFixed(1)+"%":
       item.average.toFixed(2)+"/game";
     const displayValue=item=>valueFor(item);
@@ -1039,8 +1062,9 @@
     let initialSelect=null;
     const panel=card(insightCategoryLabel(kind),"Card insight",
       displayValue(winner),winner.name,body=>{
-        const sub=create("p","micro",isHeld?
-          "Ranked by mean rounds held when seen; the displayed duration is the median.":
+        const sub=create("p","micro",isTutor?
+          "Percentage of confirmed, named tutor resolutions. Select a card to inspect the search and its recorded turn.":
+          isHeld?"Ranked by mean rounds held when seen; the displayed duration is the median.":
           "Select a bar to explore that card's stats and recorded turns.");
         body.appendChild(sub);
         const compare=create("div","insight-featured-compare");
@@ -1085,7 +1109,8 @@
               isHeld?nfmt(item.heldMedian):nfmt(item.median),
               isHeld?item.seen.size+" games seen":coverage+" games"),
             metricTile("Games recorded",item.games,coverage+" games"),
-            metricTile("Total recorded",item.eventCount,"Relevant actions"),
+            metricTile(isTutor?"Confirmed searches":"Total recorded",item.eventCount,
+              isTutor?tutorCount+" total searches":"Relevant actions"),
             metricTile("Median event turn",quantile(item.turns,.5),
               "When individually recorded"));
           stats.appendChild(tileSet);
@@ -1099,7 +1124,9 @@
               const parent=groups.find(g=>g.runs.includes(hit.run));
               if(!parent)continue;
               examples.appendChild(textButton(
-                "Seed "+hit.seed+" · Turn "+hit.turn,
+                "Seed "+hit.seed+" · Turn "+hit.turn+
+                  (isTutor?" · "+(kind==="tutorFound"?hit.tutor+" → "+item.name:
+                    item.name+" → "+hit.target):""),
                 "game-outcome-review-link",
                 ()=>onReviewRun(parent.id,hit.seed,hit.turn)));
             }
@@ -1120,6 +1147,7 @@
         ranking.append(
           create("strong","insight-featured-chart-title","Top cards"),
           create("p","micro",
+            isTutor?"Bars compare the share of confirmed searches for each card.":
             isHeld?"Mean rounds held sets bar length; median shown beside each card.":
             isCount?"Bars compare the share of complete games featuring the card.":
               "Bars compare recorded actions per complete game."));
@@ -1490,9 +1518,11 @@
     if(signals.coverage){
       for(const kind of ["played","creature","artifact","enchantment",
         "instant","spell","land","seen","seenCreature","unplayed","longest",
-        "activated","removal","creatureKills","damage","finisher"]){
+        "activated","removal","creatureKills","damage","finisher",
+        ...(signals.confirmedTutors?["tutorFound","tutorUsed"]:[])]){
         const panel=cardPerformancePanel(kind,signals.ranked[kind],
-          signals.coverage,groups,options,onReviewRun);
+          signals.coverage,groups,
+          {...options,tutorSearchCount:signals.confirmedTutors},onReviewRun);
         if(panel)cards.appendChild(panel);
       }
     }else{
