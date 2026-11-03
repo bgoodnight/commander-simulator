@@ -885,6 +885,58 @@
     }
     return changes;
   }
+
+  function turnArtManaValue(card){
+    const explicit=card?.mana_value??card?.cmc;
+    if(Number.isFinite(Number(explicit))&&explicit!==null&&explicit!==undefined)
+      return Number(explicit);
+    const cost=card?.mana_cost;
+    if(typeof cost!=="string")return null;
+    const symbols=[...cost.matchAll(/\{([^}]+)\}/g)].map(m=>m[1].trim().toUpperCase());
+    if(!symbols.length)return null;
+    return symbols.reduce((sum,symbol)=>{
+      if(/^\d+$/.test(symbol))return sum+Number(symbol);
+      if(symbol==="X"||symbol==="Y"||symbol==="Z")return sum;
+      if(/^\d+\//.test(symbol))return sum+Number(symbol.split("/")[0]);
+      return sum+1;
+    },0);
+  }
+  function turnArtCard(observation,openingHand,lookup){
+    const hasArt=name=>{
+      if(typeof name!=="string"||!name.trim())return false;
+      const card=lookup?.(name);
+      return typeof (card?.art||card?.image)==="string";
+    };
+    if(!observation)return (openingHand||[]).find(hasArt)||null;
+    const plays=(observation.actions||[]).filter(a=>
+      a&&typeof a.card==="string"&&a.card.trim()&&
+      (a.seat===undefined||Number(a.seat)===0)&&
+      !String(a.type||"").startsWith("opponent_")&&
+      (a.type==="land_play"||a.type==="reviewed_instant_response"||
+       String(a.type||"").endsWith("_cast"))&&hasArt(a.card));
+    const nonlands=plays.filter(a=>{
+      const card=lookup?.(a.card);
+      const type=String(card?.type_line||"").split("—")[0];
+      return a.type!=="land_play"&&!/\bLand\b/i.test(type)&&
+        !BASIC_LANDS.has(a.card.trim().toLowerCase());
+    });
+    // Highest printed mana value is a visual spotlight, not mana spent.
+    // Keep the first eligible play when values are equal or unavailable.
+    if(nonlands.length){
+      let best=nonlands[0],value=turnArtManaValue(lookup?.(best.card));
+      for(const candidate of nonlands.slice(1)){
+        const next=turnArtManaValue(lookup?.(candidate.card));
+        if(next!==null&&(value===null||next>value)){
+          best=candidate;value=next;
+        }
+      }
+      return best.card;
+    }
+    if(plays.length)return plays[0].card;
+    // When no cards were played, a named observed event still gives the
+    // header a real image without inventing a cast.
+    return (observation.actions||[]).map(a=>a?.card||a?.source).find(hasArt)||null;
+  }
   function compactInsightTimeline(root,run,options={}){
     root.replaceChildren();
     const head=create("div","game-outcome-evidence-head");
@@ -899,15 +951,8 @@
       const previous=index>1?run.ui_observations?.[index-2]:null;
       const current=life[index],before=index?life[index-1]:null;
       const row=create("details","insight-turn-row");
-      // Use the first explicitly named card with available artwork.
-      // Never infer artwork for anonymous or abstract opponent events.
-      const referenced=index===0?(run.opening_hand||[]):
-        (observation?.actions||[]).map(a=>a?.card||a?.source);
-      const firstCard=referenced.find(name=>{
-        if(typeof name!=="string"||!name.trim())return false;
-        const card=options.lookupRecordedCard?.(name);
-        return typeof (card?.art||card?.image)==="string";
-      });
+      const firstCard=turnArtCard(observation,run.opening_hand,
+        options.lookupRecordedCard);
       const firstArt=firstCard&&options.lookupRecordedCard?.(firstCard);
       const image=firstArt?.art||firstArt?.image;
       let cover=null;
