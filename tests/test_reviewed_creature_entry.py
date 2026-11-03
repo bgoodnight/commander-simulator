@@ -92,6 +92,36 @@ class CreatureEntryTests(unittest.TestCase):
         self.assertEqual(self.engine.resolve(),())
         self.assertTrue(self.zones.assert_consistent())
 
+
+    def test_noxious_ghoul_affects_all_non_zombies_even_indestructible(self):
+        # Its Zombie-enter predicate is GLOBAL, not limited to own creatures.
+        ghoul=self.zones.move(self.source("Noxious Ghoul"),"battlefield")
+        self.engine.resolve()
+        other=self.body(1,name="Protected Elf",subtypes=("Elf",),
+                        colors=("G",))
+        self.kernel.get(other).card=self.C(
+            "test:protected","Protected Elf",frozenset({"creature"}),
+            subtypes=frozenset({"Elf"}),colors=frozenset({"G"}),
+            base_power=1,base_toughness=2,
+            keywords=frozenset({"indestructible","hexproof"}),
+            coverage="approx")
+        own=self.body(0,name="Other Elf",subtypes=("Elf",),colors=("G",))
+        zombie=self.body(1,name="Enemy Zombie",subtypes=("Zombie",))
+        events=self.engine.resolve(turn=2)
+        self.assertEqual(sum(e.operation=="temporary_debuff" for e in events),1)
+        self.assertEqual(self.kernel.get(other).toughness,1)
+        self.assertEqual(self.kernel.get(own).toughness,1)
+        self.assertEqual(self.kernel.get(zombie).toughness,2)
+        self.assertEqual(self.kernel.get(ghoul).toughness,3)
+        self.body(1,name="Second Zombie",subtypes=("Zombie",))
+        self.engine.resolve(turn=2)
+        self.assertNotIn(other,self.kernel.objects)
+        self.assertNotIn(own,self.kernel.objects)
+        self.assertIn(ghoul,self.kernel.objects)
+        self.assertTrue(self.zones.assert_consistent())
+        self.kernel.cleanup()
+        self.assertEqual(self.kernel.get(zombie).toughness,2)
+
     def test_reviewed_identity_and_source_lifetime(self):
         raw=self.catalog["Champion of the Perished"]
         self.assertIsNone(reviewed_creature_entry_rule("Champion of the Perished",
