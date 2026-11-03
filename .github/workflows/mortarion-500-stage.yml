@@ -1,19 +1,10 @@
-name: Stage and review 500 Mortarion modeled games
+name: ARCHIVED Python · Stage and review 500 Mortarion modeled games
 
 # Run the full batch explicitly after the pilot / rules baseline is approved.
 # Workflow edits should not silently trigger 500 new games on main.
+# ARCHIVED: no automatic Python game simulations after gorge-only cutover.
+# Older workflows can be reproduced from the preserved archive branch.
 on:
-  pull_request:
-    paths:
-      - ".github/workflows/mortarion-500-stage.yml"
-      - "tools/review_game_outcomes.py"
-      - "tools/validate_outcome_ui_coverage.py"
-  # Only an explicit new one-time request file triggers a production batch.
-  # Normal pushes and UI changes will not rerun 500 games.
-  push:
-    branches: [main]
-    paths:
-      - ".github/simulation-requests/mortarion-500-*.json"
   workflow_dispatch:
 
 permissions:
