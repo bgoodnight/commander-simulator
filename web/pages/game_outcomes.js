@@ -792,13 +792,13 @@
       if(found)counts.set(found[0],(counts.get(found[0])||0)+1);
       else if(narratedAction(action))extras.push(action);
     }
-    const parts=[...counts].map(([kind,count])=>
+    const played=[...counts].map(([kind,count])=>
       count+" "+kind+(count===1?"":"s"));
-    if(extras.length)parts.push(extras.length+" other recorded "+
+    const fragments=[];
+    if(played.length)fragments.push("Enemies played "+played.join(", "));
+    if(extras.length)fragments.push(extras.length+" other recorded "+
       (extras.length===1?"event":"events"));
-    return counts.size?"Enemies played "+parts.join(", "):
-      extras.length?"Enemy activity: "+extras.length+" recorded "+
-        (extras.length===1?"event":"events"):null;
+    return fragments.length?fragments.join(" · "):null;
   }
   // Single source-grounded narration vocabulary for collapsed and expanded turns.
   // Successful spell resolutions are not repeated after their casts.
