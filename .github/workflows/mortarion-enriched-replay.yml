@@ -1,9 +1,9 @@
-name: Publish enriched Mortarion replay sample
+name: ARCHIVED Python · Publish enriched Mortarion replay sample
+# ARCHIVED: no automatic Python game simulations after gorge-only cutover.
+# Older workflows can be reproduced from the preserved archive branch.
 on:
-  push:
-    branches: [main]
-    paths: [".github/workflows/mortarion-enriched-replay.yml"]
   workflow_dispatch:
+
 permissions:
   contents: write
   actions: write
