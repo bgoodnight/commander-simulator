@@ -4,6 +4,7 @@ on:
     branches: [feature/typed-creature-entry-triggers-20261103]
     paths:
       - commander_sim/reviewed_creature_entry.py
+      - simulator/v9b_live/state.py
       - commander_sim/early_game_runner.py
       - commander_sim/named_effect_coverage.py
       - tests/test_reviewed_creature_entry.py
