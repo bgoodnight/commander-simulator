@@ -507,6 +507,7 @@ function renderLongGamePanel(){
         r?.engine_commit===outcomeManifest?.engine_commit?r:null;
     })(),
     lookupRecordedCard:cardInfo,
+    renderMana:manaSymbols,
     onOpenRecordedCard:name=>{const card=cardInfo(name);if(card?.oracle_id)showCard(card.oracle_id)},
     onShowRecordedActions:(target,example,run)=>{
       try{
