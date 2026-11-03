@@ -89,7 +89,7 @@ def resolve_combat_damage_player(zones, catalog, source_id, damaged_player,
     if (source is None or source.zone != "battlefield"
             or "creature" not in source.types
             or type(damaged_player) is not int
-            or damaged_player not in kernel.life_totals
+            or not 0 <= damaged_player < zones.seats
             or damaged_player == source.controller
             or type(damage) is not int or damage <= 0):
         return None
