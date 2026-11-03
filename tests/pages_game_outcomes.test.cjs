@@ -171,7 +171,11 @@ test('modeled panels expose distinct outcome, life and matchup disclosures with 
     append(...n){this.children.push(...n)}
     appendChild(n){this.children.push(n);return n}
     replaceChildren(...n){this.children=[...n]}
-    setAttribute(k,v){this.attributes[k]=String(v)}
+    setAttribute(k,v){this.attributes[k]=String(v);if(k==='open')this.open=true}
+    removeAttribute(k){delete this.attributes[k];if(k==='open')this.open=false}
+    showModal(){this.open=true}
+    close(){this.open=false}
+    focus(){}
     addEventListener(k,fn){this.events[k]=fn}
     get lastChild(){return this.children.at(-1)}
   }
@@ -185,7 +189,11 @@ test('modeled panels expose distinct outcome, life and matchup disclosures with 
     const walk=n=>[n,...n.children.flatMap(walk)];
     let nodes=walk(root);
     assert.equal(report.totalGames,2);
-    assert.ok(nodes.filter(n=>String(n.className).includes('game-outcome-card')).length>=5);
+    assert.ok(nodes.some(n=>n.tag==='dialog'));
+    assert.ok(nodes.some(n=>n.className==='game-outcome-hero-highlight'));
+    const matchupTile=nodes.find(n=>n.className==='game-outcome-hero-highlight');
+    matchupTile.events.click({preventDefault(){},stopPropagation(){}});
+    nodes=walk(root);
     assert.ok(nodes.some(n=>n.tag==='svg'&&n.attributes.role==='img'));
     assert.ok(nodes.some(n=>n.textContent==='Wins · 1/2'));
     assert.ok(nodes.some(n=>n.textContent==='50%'));
@@ -211,6 +219,9 @@ test('modeled panels expose distinct outcome, life and matchup disclosures with 
     nodes=walk(root);
     // The headline selects one compatible rules/pilot cohort, not both.
     assert.equal(nodes.filter(n=>n.className==='game-outcome-hero-stat is-win').length,1);
+    const newMatchupTile=nodes.find(n=>n.className==='game-outcome-hero-highlight');
+    newMatchupTile.events.click({preventDefault(){},stopPropagation(){}});
+    nodes=walk(root);
     assert.ok(nodes.some(n=>String(n.textContent).includes('One opponent type recorded')));
     assert.ok(!nodes.some(n=>String(n.textContent).includes(
       'Highest observed modeled win share')));
@@ -247,6 +258,9 @@ test('selecting an opponent scroll entry changes the one shown art card and per-
     assert.ok(nodes.some(n=>n.textContent==='Wins · 1/2'));
     assert.ok(nodes.some(n=>n.textContent==='Losses · 1/2'));
     assert.ok(nodes.some(n=>n.className==='game-outcome-limits'));
+    const matchupTile=nodes.find(n=>n.className==='game-outcome-hero-highlight');
+    matchupTile.events.click({preventDefault(){},stopPropagation(){}});
+    nodes=walk(root);
     const rank=nodes.filter(n=>n.className==='game-outcome-rank-row');
     assert.equal(rank.length,2);
     assert.equal(rank[0].attributes['aria-pressed'],'true');
