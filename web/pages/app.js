@@ -442,6 +442,7 @@ let outcomeManifestPromise=null;
 let outcomeManifest=null;
 let longGameSourceNote="Checking the published simulation library…";
 function outcomeOpponentPortrait(bucket){
+  if(bucket.kind==="composition"||bucket.kind==="named_pod")return null;
   if(bucket.kind==="named"){
     // Real opposing names are used only when the batch actually records them.
     const card=cardInfo(bucket.portraitName||"");

@@ -167,21 +167,64 @@
     }
     return result;
   }
-  function matchupRows(groups){
-    // In a four-player pod, a pilot outcome belongs to the WHOLE table.
-    // Even with named opponents, these are conditional associations, not
-    // head-to-head win probabilities or individual-opponent attribution.
+  function displayRole(role){
+    return String(role).split(/[-_ ]+/)
+      .map(part=>part?part[0].toUpperCase()+part.slice(1):"").join(" ");
+  }
+  function matchupRows(groups,mode="types"){
+    // The result is always a four-player TABLE outcome, never a head-to-head.
+    // A type appearing in two opposing seats counts once per game in 'types'.
+    // A 'composition' is a sorted multiset: seat order has no significance.
+    if(!["types","compositions","scenarios"].includes(mode))
+      throw new RangeError("Unknown opponent comparison mode");
     const buckets=new Map();
     for(const group of groups){
       for(const run of group.runs){
         const opponents=opponentDecks(run,run.batch);
-        const names=opponents.length?
-          opponents.map(d=>({id:"deck:"+d.id+":"+d.version,label:d.name+" · present in pod",
-            title:d.name,kind:"named",portraitName:d.name})):
-          [{id:"scenario:"+group.id,label:group.label,kind:"abstract",
-            title:group.scenario[0].toUpperCase()+group.scenario.slice(1)+" pod",
-            archetype:group.scenario}];
-        for(const named of names){
+        let names;
+        if(opponents.length){
+          if(mode==="compositions"&&opponents.length===3){
+            names=[{id:"named-pod:"+rosterIdentity(opponents.map(d=>({...d,seat:0}))
+              .sort((a,b)=>a.id.localeCompare(b.id)||a.version.localeCompare(b.version))),
+              label:opponents.map(d=>d.name).join(" / ")+" · recorded pod",
+              title:opponents.map(d=>d.name).join(" / ")+" pod",
+              kind:"named_pod"}];
+          }else{
+            names=opponents.map(d=>({id:"deck:"+d.id+":"+d.version,
+              label:d.name+" · present in pod",title:d.name,
+              kind:"named",portraitName:d.name}));
+          }
+        }else if(mode==="scenarios"){
+          names=[{id:"scenario:"+group.id,label:group.label,kind:"abstract",
+            title:displayRole(group.scenario)+" pod",archetype:group.scenario}];
+        }else{
+          const roles=[1,2,3].map(seat=>run.opponent_roles?.[seat]||
+            run.opponent_roles?.[String(seat)]).filter(role=>
+              typeof role==="string"&&role.trim());
+          if(roles.length!==3){
+            // Historical exports without seat provenance cannot be attributed
+            // to a type. Keep their scenario label rather than inventing one.
+            names=[{id:"legacy:"+group.id,label:group.label,
+              title:displayRole(group.scenario)+" pod",
+              kind:"abstract",archetype:group.scenario}];
+          }else if(mode==="types"){
+            names=[...new Set(roles)].map(role=>({
+              id:"type:"+role,label:displayRole(role)+" · present in pod",
+              title:displayRole(role),kind:"type",archetype:role
+            }));
+          }else{
+            const sorted=[...roles].sort();
+            const counts=new Map();
+            for(const role of sorted)counts.set(role,(counts.get(role)||0)+1);
+            const title=[...counts].map(([role,count])=>
+              displayRole(role)+(count>1?" × "+count:"")).join(" / ");
+            names=[{id:"composition:"+sorted.join("|"),
+              label:title+" · table composition",title:title+" pod",
+              kind:"composition",archetype:null}];
+          }
+        }
+        // A pod with two copies of the same named deck/type is ONE game.
+        for(const named of new Map(names.map(row=>[row.id,row])).values()){
           if(!buckets.has(named.id))buckets.set(named.id,{
             id:named.id,label:named.label,title:named.title,kind:named.kind,
             portraitName:named.portraitName||null,archetype:named.archetype||null,
@@ -708,7 +751,7 @@
     const lastLife=runs.map(run=>lifeAt(run.life_history.at(-1),0))
       .filter(Number.isFinite);
     const life=lifeTrend(runs,groups[0].requestedRounds);
-    const matchup=matchupRows(groups);
+    const matchup=matchupRows(groups,"types");
     const cards=create("div","board-grid game-outcome-grid latest-insight-grid");
     root.appendChild(cards);
     let jumpToReview=null;
@@ -732,12 +775,33 @@
         groups[0].requestedRounds+"-round horizon"));
     }));
     const best=matchup[0];
-    cards.appendChild(card("Opponent Types","Matchups",
+    cards.appendChild(card("Opponent Types","Types & table compositions",
       matchup.length+" types",
       best?best.counts.win+" wins · "+best.title:"No recorded groups",
-      body=>matchupExplorer(body,matchup,{
-        ...options,onReviewRun
-      })));
+      body=>{
+        const selector=create("select","game-outcome-matchup-mode");
+        selector.setAttribute("aria-label","Group opponent outcomes by");
+        for(const [value,label] of [
+          ["types","Opponent types present in pod"],
+          ["compositions","Whole-table compositions"]
+        ]){
+          const item=create("option",null,label);
+          item.value=value;selector.appendChild(item);
+        }
+        body.appendChild(create("p","micro",
+          "A type is counted once per game when present; wins belong to the whole table."));
+        body.appendChild(selector);
+        const view=create("div","game-outcome-matchup-view");
+        body.appendChild(view);
+        const redraw=()=>{
+          view.replaceChildren();
+          matchupExplorer(view,matchupRows(groups,selector.value),{
+            ...options,onReviewRun
+          });
+        };
+        selector.addEventListener("change",redraw);
+        redraw();
+      }));
     cards.appendChild(card("Game Length","Finished rounds",
       quantile(finished.map(run=>run.completed_rounds),.5)===null?"—":
         nfmt(quantile(finished.map(run=>run.completed_rounds),.5)),

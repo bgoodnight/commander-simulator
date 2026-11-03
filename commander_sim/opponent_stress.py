@@ -11,13 +11,35 @@ from random import Random
 from .reviewed_death_effects import capture_battlefield
 from .pilot_policy import choose_combat_posture
 
+# Registry of assignable abstract opponent types. Add a pressure behavior
+# for any new role and register it here; seat selection itself never changes.
+OPPONENT_TYPES = ("aggro", "control", "value", "combo")
+
 SCENARIOS = {
+    "random": None,  # independently sample each seat with replacement
     "balanced": ("aggro", "control", "value"),
     "aggressive": ("aggro", "aggro", "value"),
     "control": ("control", "control", "value"),
     "combo": ("value", "control", "combo"),
     "mixed": ("aggro", "control", "combo"),
 }
+
+
+def assign_opponent_roles(scenario, rng):
+    """Assign three seeded seat policies independently or use a test preset.
+
+    Random pods draw with replacement, allowing repeated types. Presets
+    retain their fixed composition but randomize seat order.
+    """
+    if scenario not in SCENARIOS:
+        raise ValueError("Unknown opponent stress scenario")
+    preset = SCENARIOS[scenario]
+    if preset is None:
+        picks = [rng.choice(OPPONENT_TYPES) for _ in range(3)]
+    else:
+        picks = list(preset)
+        rng.shuffle(picks)
+    return dict(zip((1, 2, 3), picks))
 
 
 @dataclass(frozen=True)
@@ -35,7 +57,7 @@ class BoundedOpponentPressure:
     """Simulate between-turn pressure, not an unsupported multiplayer priority stack."""
 
     def __init__(self, zones, life, catalog, death_engine, phase_engine,
-                 card_definition, *, seed=0, scenario="balanced",
+                 card_definition, *, seed=0, scenario="random",
                  attachment_engine=None):
         if scenario not in SCENARIOS:
             raise ValueError("Unknown opponent stress scenario")
@@ -52,9 +74,7 @@ class BoundedOpponentPressure:
         self.before_removal = None
         self.zone_spells = None
         self.rng = Random(seed * 1009 + 617)
-        roles = list(SCENARIOS[scenario])
-        self.rng.shuffle(roles)
-        self.roles = dict(zip(range(1,4), roles))
+        self.roles = assign_opponent_roles(scenario, self.rng)
         self.events = []
         self._defeated = False
         self._eliminated_seats = set()
@@ -266,10 +286,10 @@ class BoundedOpponentPressure:
                     self.events.append(OpponentEvent(
                         turn,seat,role,"reviewed_attack_keyword_grant",
                         attacker_id,0,defender))
+            blockers=kernel.legal_blockers(attacker.object_id,defender,frozenset(used))
             # Magic creatures with negative power assign/deal zero combat
             # damage. Their signed power still matters for other effects.
             attacker_damage=max(0,attacker.power)
-            blockers=kernel.legal_blockers(attacker.object_id,defender,frozenset(used))
             # Keep priority engine creatures unless a trade is productive or
             # survival demands blocking. Tokens are the preferred expendables.
             def worth_blocking(o):
