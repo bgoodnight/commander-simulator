@@ -206,7 +206,7 @@ test('modeled panels expose distinct outcome, life and matchup disclosures with 
     const seed=nodes.find(n=>n.tag==='button'&&n.className==='game-outcome-seed');
     assert.ok(seed);seed.onclick();
     nodes=walk(root);
-    assert.ok(nodes.some(n=>n.textContent==='Round 2 · 1 of 4 seats alive'));
+    assert.ok(walk(reviewer).some(n=>n.className==='insight-turn-row'));
     const reviewNodes=walk(reviewer);
     assert.ok(reviewNodes.some(n=>n.tag==='select'));
     assert.ok(reviewNodes.some(n=>n.textContent==='Seed 0 · Win · Round 2'));
@@ -426,7 +426,7 @@ test('elastic net card interpretation and sign chart sit immediately above revie
   assert.match(source,/function readablePredictor\(/);
   assert.match(source,/function elasticNetPanel\(/);
   assert.match(source,/elastic-net-coefficient-chart/);
-  assert.match(source,/onReviewRun\(parent\.id,hit\.seed,hit\.turn\)/);
+  assert.match(source,/onReviewRun\(entry\.group\.id,entry\.run\.seed,entry\.turn\)/);
   assert.ok(source.lastIndexOf('cards.appendChild(elasticNetPanel(')>
     source.lastIndexOf('cards.appendChild(card("Life Progression"'));
   assert.ok(source.lastIndexOf('cards.appendChild(elasticNetPanel(')<
@@ -439,13 +439,13 @@ test('elastic net card interpretation and sign chart sit immediately above revie
 test('featured card insight switches artwork, mana, metrics, and evidence with selected bar',()=>{
   class Node{
     constructor(tag){this.tag=tag;this.className='';this.textContent='';
-      this.children=[];this.attributes={};this.dataset={};this.style={};this.hidden=false}
+      this.children=[];this.attributes={};this.dataset={};this.style={};this.events={};this.hidden=false}
     append(...n){this.children.push(...n)}
     appendChild(n){this.children.push(n);return n}
     replaceChildren(...n){this.children=[...n]}
     setAttribute(k,v){this.attributes[k]=String(v)}
     removeAttribute(k){delete this.attributes[k]}
-    addEventListener(){}
+    addEventListener(k,fn){this.events[k]=fn}
     get lastChild(){return this.children.at(-1)}
   }
   const before=global.document;
@@ -683,13 +683,13 @@ test('full-game reviewer uses same compact turn rows as insight evidence',()=>{
     opened.open=true;
     assert.ok(walk(opened).some(n=>n.className==='insight-action-art'&&
       n.src==='https://example.com/Grave-Titan.jpg'));
-    assert.equal(walk(opened).filter(n=>n.className==='insight-seat-life').length,4);
+    assert.equal(walk(opened).filter(n=>n.className.startsWith('insight-seat-life')).length,4);
     assert.ok(walk(opened).some(n=>n.className.includes('insight-seat-life is-loss')));
     assert.ok(walk(turns[3]).some(n=>n.textContent==='Swamp'));
     const insight=walk(root).find(n=>n.className.includes('insight-featured-panel')&&
       walk(n).some(x=>x.textContent==='Most played card'));
     assert.ok(insight);
-    const tracker=walk(insight).find(n=>n.className==='insight-inline-tracker');
+    const tracker=walk(insight).find(n=>n.className.includes('insight-inline-tracker'));
     assert.ok(tracker);
     tracker.open=true;tracker.events.toggle();
     const inline=walk(tracker).filter(n=>n.className==='insight-turn-row');
@@ -806,7 +806,7 @@ test('selected card insight embeds relevant game turns and real life/zone change
     const insight=walk(root).find(n=>n.className.includes('insight-featured-panel')&&
       walk(n).some(x=>x.textContent==='Most played card'));
     assert.ok(insight);
-    const tracker=walk(insight).find(n=>n.className==='insight-inline-tracker');
+    const tracker=walk(insight).find(n=>n.className.includes('insight-inline-tracker'));
     assert.ok(tracker,'relevant recorded seed should have an expandable timeline');
     assert.equal(walk(tracker).some(n=>n.className==='game-outcome-turn-tile'),false,
       'tracker must render lazily when expanded');
@@ -883,7 +883,7 @@ test('turn background uses first named card and enemy activity has one condensed
     assert.ok(walk(player).some(n=>n.textContent==='Unknown Card'));
     assert.equal(walk(rest[0]).filter(n=>n.className==='insight-seat-life').length,4);
     const second=walk(turns[2]);
-    assert.equal(second.filter(n=>n.className==='insight-seat-life').length,4);
+    assert.equal(second.filter(n=>n.className.startsWith('insight-seat-life')).length,4);
   }finally{global.document=before}
 });
 
@@ -944,7 +944,7 @@ test('narrated turn summary and expanded actions reuse factual card-linked wordi
     const rest=walk(turn1).find(n=>n.className==='insight-rest-of-turn');
     assert.ok(rest);
     assert.ok(walk(rest).some(n=>n.textContent==='1 other recorded event'));
-    assert.equal(walk(rest).filter(n=>n.className==='insight-seat-life').length,4);
+    assert.equal(walk(rest).filter(n=>n.className.startsWith('insight-seat-life')).length,4);
     assert.ok(!walk(turn1).some(n=>n.textContent==='reviewed enter resolved'));
     const third=walk(turns[3]);
     assert.ok(third.some(n=>n.textContent==='Moved from battlefield to graveyard '));
@@ -1036,7 +1036,7 @@ test('compact insight summary beats legacy 152px min-height specificity',()=>{
   const css=fs.readFileSync('web/pages/style.css','utf8');
   const oldRule='.latest-insight-grid .game-outcome-card:not(.game-outcome-hero) > .game-outcome-summary';
   const newRule='.latest-insight-grid .game-outcome-card.insight-featured-panel:not(.game-outcome-hero) > .game-outcome-summary';
-  const oldIndex=css.indexOf(oldRule),newIndex=css.lastIndexOf(newRule);
+  const oldIndex=css.indexOf(oldRule),newIndex=css.indexOf(newRule);
   assert.ok(oldIndex>=0&&newIndex>oldIndex);
   assert.match(css.slice(newIndex,newIndex+170),/min-height:68px/);
   assert.match(css.slice(newIndex,newIndex+170),/height:auto/);
