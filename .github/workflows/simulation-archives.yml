@@ -1,41 +1,8 @@
-name: Generate bounded simulation archives (isolated)
+name: ARCHIVED Python · Generate bounded simulation archives (isolated)
+# ARCHIVED PYTHON SIMULATION: disabled automatic triggers after gorge cutover.
+# Reproduce old results from archive/python-rules-pilots-simulations-20261103.
 on:
-  push:
-    branches: [main]
-    paths:
-      # Recompute results whenever rules, pilot decisions or pinned decks change.
-      # Archive data and generated Pages files are deliberately excluded, so
-      # the archive and Pages publishing commits cannot retrigger this job.
-      - "commander_sim/**"
-      - "decklists/**"
-      - "simulator/card_data/**"
-      - "tools/build_simulation_archive.py"
-      - "tools/publish_simulation_archive.py"
-      - "tools/build_pages_deck_lab.py"
-      - ".github/workflows/simulation-archives.yml"
-  pull_request:
-    paths:
-      - "commander_sim/**"
-      - "decklists/**"
-      - "simulator/card_data/**"
-      - "tools/build_simulation_archive.py"
-      - "tests/test_simulation_archive.py"
-      - "tests/test_simulation_publishing.py"
-      - "tools/publish_simulation_archive.py"
-      - "tools/build_pages_deck_lab.py"
-      - ".github/workflows/simulation-archives.yml"
   workflow_dispatch:
-    inputs:
-      seeds:
-        description: "Seeds per deck (1–1000)"
-        required: true
-        default: "100"
-        type: string
-      turns:
-        description: "Turns (1–10)"
-        required: true
-        default: "6"
-        type: string
 
 permissions:
   contents: write
