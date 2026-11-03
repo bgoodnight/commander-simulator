@@ -1142,3 +1142,18 @@ test('compact example controls omit selector and repeated run heading',()=>{
   assert.match(css,/compact-selection\{margin-bottom:3px\}/);
   assert.ok(!page.includes('id="game-outcome-refresh"'));
 });
+
+test('long turns use natural height and combat remains in expanded evidence',()=>{
+  const css=fs.readFileSync('web/pages/style.css','utf8');
+  const js=fs.readFileSync('web/pages/game_outcomes.js','utf8');
+  const newer=css.slice(css.lastIndexOf('/* Adaptive turn lengths'));
+  assert.match(newer,/-webkit-line-clamp:unset/);
+  assert.match(newer,/overflow:visible;white-space:normal/);
+  assert.match(newer,/insight-turn-row \.insight-turn-row-summary\{min-height:58px;height:auto/);
+  const narration=js.slice(js.indexOf('function turnNarration('),
+    js.indexOf('function observedZoneChanges('));
+  assert.match(narration,/damage\|attack\|block\|prevented\|combo_loss/);
+  assert.match(js,/function actionEvidenceDetail\(action\)/);
+  assert.match(js,/insight-rest-combat/);
+  assert.match(js,/actionEvidenceDetail\(a\)/);
+});
