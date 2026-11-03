@@ -49,3 +49,44 @@ assert.match(html,/gorge_replay\.js/);
 const build=fs.readFileSync(path.join(__dirname,"../tools/build_pages_deck_lab.py"),"utf8");
 assert.match(build,/gorge_replay\.js/);
 console.log("Gorge native replay viewer: schema, actual-format events, privacy filtering, turn grouping and static route wiring PASS");
+
+
+const enriched={
+  ...original,
+  enrichment_schema:"gorge-physical-state-v1",
+  objects:[
+    {object_id:8,card_name:"Swamp",effective_name:"Swamp",owner:0},
+    {object_id:20,card_name:"Sol Ring",effective_name:"Sol Ring",owner:0},
+    {object_id:122,card_name:"Counterspell",effective_name:"Counterspell",owner:1}
+  ],
+  snapshots:[{
+    turn:1,active_seat:0,step:"main1",after_event_seq:5,
+    boundary:"first_pending_decision_of_turn",
+    players:[
+      {seat:0,life:40,lost:false,mana_pool:[0,0,1,0,0,0],
+       zones:{hand:[20],library:[8],battlefield:[8],graveyard:[],exile:[],command:[]}},
+      {seat:1,life:39,lost:false,mana_pool:[0,1,0,0,0,0],
+       zones:{hand:[122],library:[],battlefield:[],graveyard:[],exile:[],command:[]}},
+      {seat:2,life:40,lost:false,mana_pool:[0,0,0,0,0,0],
+       zones:{hand:[],library:[],battlefield:[],graveyard:[],exile:[],command:[]}},
+      {seat:3,life:40,lost:false,mana_pool:[0,0,0,0,0,0],
+       zones:{hand:[],library:[],battlefield:[],graveyard:[],exile:[],command:[]}}
+    ]
+  }]
+};
+assert.equal(Gorge.validate(enriched),enriched);
+assert.equal(Gorge.objectName(enriched,20),"Sol Ring");
+assert.equal(Gorge.objectName(enriched,1000),null);
+assert.match(Gorge.eventLine(enriched.log.events[6],enriched),/Sol Ring/);
+const seat0=Gorge.stateForSeat(enriched,1,0);
+assert.equal(seat0.players[0].zones.hand[0].name,"Sol Ring (#20)");
+assert.equal(seat0.players[1].zones.hand,null,"Opponent hand identities must stay hidden");
+assert.equal(seat0.players[1].hand_size,1);
+assert.deepEqual(seat0.players[0].mana_pool,[0,0,1,0,0,0]);
+const seat1=Gorge.stateForSeat(enriched,1,1);
+assert.equal(seat1.players[1].zones.hand[0].name,"Counterspell (#122)");
+assert.equal(seat1.players[0].zones.hand,null);
+assert.equal(Gorge.stateForSeat(enriched,1,0,true).players[1].zones.hand[0].name,"Counterspell (#122)");
+assert.equal(Gorge.stateForSeat(enriched,2,0),null);
+assert.throws(()=>Gorge.validate({...enriched,objects:[enriched.objects[0],enriched.objects[0]]}),/crosswalk/);
+console.log("Gorge source-backed card identity and turn-start state privacy PASS");

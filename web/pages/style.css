@@ -2020,3 +2020,13 @@ body:has(#pane-records:not([hidden])) .compact-selection{margin-bottom:3px}
 .gorge-replay-raw{white-space:pre-wrap;overflow-wrap:anywhere;max-height:21rem;overflow:auto;font-size:.7rem;background:#0d1420;padding:.7rem;border-radius:.4rem;color:#cfdfdf}
 .gorge-replay-error{color:#f3b2a9}
 @media(max-width:650px){.gorge-replay-event-count{display:block;float:none;margin-top:.2rem}.gorge-replay-seat{width:100%;min-width:0}}
+
+/* Gorge-authoritative state at the first decision of each turn. */
+.gorge-replay-state{margin:.45rem .9rem .7rem;border:1px solid var(--edge,#43515c);border-radius:.65rem;background:rgba(105,143,156,.08)}
+.gorge-replay-state>summary{cursor:pointer;padding:.65rem .8rem;color:var(--mint,#7be0cb);font-size:.8rem}
+.gorge-replay-state-grid{padding:.4rem .7rem .75rem;display:grid;grid-template-columns:repeat(auto-fit,minmax(190px,1fr));gap:.65rem}
+.gorge-replay-state-player{display:grid;align-content:start;gap:.4rem;min-width:0;border:1px solid rgba(140,160,180,.22);border-radius:.5rem;padding:.7rem;font-size:.8rem}
+.gorge-replay-state-player>small{color:var(--muted,#aab);font-size:.75rem;overflow-wrap:anywhere}
+.gorge-replay-zone{border-top:1px solid rgba(140,160,180,.12);padding:.25rem 0}
+.gorge-replay-zone>summary{cursor:pointer;font-size:.76rem}
+.gorge-replay-card-list{margin:.35rem 0 .1rem;line-height:1.55;font-size:.75rem;overflow-wrap:anywhere}
