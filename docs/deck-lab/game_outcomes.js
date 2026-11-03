@@ -1102,8 +1102,8 @@
           const combat=create("div","insight-rest-combat");
           for(const event of damage){
             const described=narratedAction(event);
-            const label=[described.verb,described.detail,
-              actionEvidenceDetail(event)].filter(Boolean).join(" · ");
+            const label=[described.verb,
+              actionEvidenceDetail(event)||described.detail].filter(Boolean).join(" · ");
             combat.appendChild(create("p","insight-rest-event",label));
           }
           rest.appendChild(combat);
@@ -1453,7 +1453,7 @@
             const setLabel=()=>{
               const entry=examples[Math.max(0,exampleIndex)]||examples[0];
               exampleLabel.textContent=
-                entry.group.scenario+" · Seed "+entry.run.seed+
+                "Scenario "+entry.group.scenario+" · Seed "+entry.run.seed+
                 " · "+stateLabel(entry.run.outcome.status);
             };
             const previousDraw=draw;
