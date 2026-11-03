@@ -1030,3 +1030,54 @@ test('compact insight summary beats legacy 152px min-height specificity',()=>{
   assert.match(css.slice(newIndex,newIndex+170),/min-height:68px/);
   assert.match(css.slice(newIndex,newIndex+170),/height:auto/);
 });
+
+test('turn header art prefers highest-value nonland play, ties first, and falls back to land',()=>{
+  class Node{
+    constructor(tag){this.tag=tag;this.className='';this.textContent='';
+      this.children=[];this.attributes={};this.style={};this.dataset={};this.events={};
+      this.open=false;}
+    append(...items){this.children.push(...items)}
+    appendChild(item){this.children.push(item);return item}
+    replaceChildren(...items){this.children=[...items]}
+    setAttribute(k,v){this.attributes[k]=String(v)}
+    addEventListener(k,handler){this.events[k]=handler}
+    get lastChild(){return this.children.at(-1)}
+  }
+  const before=global.document;
+  global.document={createElement:tag=>new Node(tag),
+    createElementNS:(_,tag)=>new Node(tag)};
+  const walk=n=>[n,...n.children.flatMap(walk)];
+  try{
+    const r={...runUnresolved(),ui_observations:[
+      {turn:1,hand:[],battlefield:[],graveyard:[],
+       actions:[{type:'land_play',card:'Swamp',seat:0},
+         {type:'artifact_cast',card:'Sol Ring',seat:0},
+         {type:'creature_cast',card:'Grave Titan',seat:0},
+         {type:'creature_cast',card:'Other Six',seat:0},
+         {type:'creature_cast',card:'Tiny Creature',seat:1}]},
+      {turn:2,hand:[],battlefield:[],graveyard:[],
+       actions:[{type:'land_play',card:'Swamp',seat:0},
+         {type:'draw',card:'Grave Titan',seat:0}]},
+      {turn:3,hand:[],battlefield:[],graveyard:[],
+       actions:[{type:'draw',card:'Sol Ring',seat:0}]}]};
+    const cards={
+      'Swamp':{type_line:'Basic Land — Swamp',mana_cost:''},
+      'Sol Ring':{type_line:'Artifact',mana_cost:'{1}'},
+      'Grave Titan':{type_line:'Creature — Giant',mana_cost:'{4}{B}{B}'},
+      'Other Six':{type_line:'Creature — Horror',cmc:6},
+      'Tiny Creature':{type_line:'Creature',mana_cost:'{9}'}
+    };
+    const root=new Node('main'),reviewer=new Node('section');
+    Outcomes.render(root,[batch([r])],{
+      deckKey:'necron_dynasties',deckHash:'a'.repeat(64),reviewerRoot:reviewer,
+      lookupRecordedCard:name=>({...cards[name],
+        art:'https://example.com/'+name.replaceAll(' ','-')+'.jpg'})
+    });
+    const rows=walk(reviewer).filter(n=>n.className==='insight-turn-row');
+    const image=index=>rows[index].children.find(n=>n.tag==='summary')
+      .children.find(n=>n.className==='insight-turn-cover')?.src;
+    assert.equal(image(1),'https://example.com/Grave-Titan.jpg');
+    assert.equal(image(2),'https://example.com/Swamp.jpg');
+    assert.equal(image(3),'https://example.com/Sol-Ring.jpg');
+  }finally{global.document=before}
+});
