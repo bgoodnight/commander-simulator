@@ -1,0 +1,40 @@
+name: General continuous creature effects and state-based actions
+
+on:
+  push:
+    branches: [feature/generic-continuous-stat-effects-20261103]
+    paths:
+      - simulator/v7_rules/rules.py
+      - simulator/v9b_live/state.py
+      - commander_sim/reviewed_static_modifiers.py
+      - commander_sim/reviewed_rocks.py
+      - commander_sim/early_game_runner.py
+      - tests/test_static_creature_effects.py
+      - .github/workflows/continuous-creature-effects.yml
+
+permissions:
+  contents: read
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      - name: Test continuous effect legality and shared engine regressions
+        run: |
+          python -m unittest tests.test_static_creature_effects -v
+          python -m unittest tests.test_kernel_life tests.test_reviewed_removal_spells tests.test_reviewed_phase_effects tests.test_opponent_stress -v
+      - name: Smoke test both source-pinned precons
+        run: |
+          python - <<'PY'
+          from commander_sim.early_game_runner import run_bounded_early_game
+          for deck in ('wretched_ranks','necron_dynasties'):
+              run=run_bounded_early_game(deck,seed=1,turns=6,
+                       provisional_mode='safe',opponent_scenario='mixed')
+              assert run['completed_rounds']>=1
+              print(deck,run['completed_rounds'])
+          PY
