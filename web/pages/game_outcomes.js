@@ -1105,9 +1105,12 @@
             ()=>options.onOpenRecordedCard?.(item.name)));
           const tileSet=create("div","game-outcome-insight-grid");
           tileSet.append(
-            metricTile(isHeld?"Median rounds held":"Median per game",
-              isHeld?nfmt(item.heldMedian):nfmt(item.median),
-              isHeld?item.seen.size+" games seen":coverage+" games"),
+            metricTile(isTutor?"Share of tutor searches":
+              isHeld?"Median rounds held":"Median per game",
+              isTutor?valueFor(item):
+                isHeld?nfmt(item.heldMedian):nfmt(item.median),
+              isTutor?tutorCount+" confirmed searches":
+                isHeld?item.seen.size+" games seen":coverage+" games"),
             metricTile("Games recorded",item.games,coverage+" games"),
             metricTile(isTutor?"Confirmed searches":"Total recorded",item.eventCount,
               isTutor?tutorCount+" total searches":"Relevant actions"),
