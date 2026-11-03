@@ -1731,3 +1731,9 @@ body:has(#pane-records:not([hidden])) .page-introduction a{font-size:.72rem}
   .insight-featured-metric-link{padding:7px}
   .insight-featured-metric-link strong{font-size:1.05rem}
 }
+
+.insight-inline-tracker-compact>summary{list-style:none}
+.insight-inline-tracker-compact>summary::-webkit-details-marker{display:none}
+.insight-inline-tracker-compact>summary::marker{content:""}
+.insight-inline-tracker-compact>summary:hover,
+.insight-inline-tracker-compact>summary:focus-visible{color:#fff0cb}
