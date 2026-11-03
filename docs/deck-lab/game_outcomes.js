@@ -1012,13 +1012,13 @@
     const zones=[
       ["Hand",observation.hand],
       ["Creatures",(observation.battlefield||[]).filter(n=>
-        /\\bcreature\\b/.test(recordedCardTypes(n,options.lookupRecordedCard)))],
+        /\bcreature\b/.test(recordedCardTypes(n,options.lookupRecordedCard)))],
       ["Lands",(observation.battlefield||[]).filter(n=>
-        /\\bland\\b/.test(recordedCardTypes(n,options.lookupRecordedCard)))],
+        /\bland\b/.test(recordedCardTypes(n,options.lookupRecordedCard)))],
       ["Artifacts",(observation.battlefield||[]).filter(n=>
-        /\\bartifact\\b/.test(recordedCardTypes(n,options.lookupRecordedCard)))],
+        /\bartifact\b/.test(recordedCardTypes(n,options.lookupRecordedCard)))],
       ["Enchantments",(observation.battlefield||[]).filter(n=>
-        /\\benchantment\\b/.test(recordedCardTypes(n,options.lookupRecordedCard)))],
+        /\benchantment\b/.test(recordedCardTypes(n,options.lookupRecordedCard)))],
       ["Graveyard",observation.graveyard],
       ["Exile",observation.exile]
     ];
