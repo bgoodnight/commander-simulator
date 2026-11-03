@@ -319,6 +319,7 @@ def run_bounded_early_game(deck_key, *, seed=0, turns=6, mulligan="one-free", pr
         life_ledger_start = len(life.kernel.life_changes)
         turn_kernel_event_index=len(kernel.events)
         events = []
+        pilot_decisions=[]
         def finish_failed_draw(error):
             """Close this incomplete turn with real observed loss provenance.
 
@@ -355,19 +356,28 @@ def run_bounded_early_game(deck_key, *, seed=0, turns=6, mulligan="one-free", pr
                 "creature_count":sum("creature" in o.types and
                                      o.zone=="battlefield" and o.controller==0
                                      for o in kernel.objects.values()),
-                "mana_rock_count":0,
+                "mana_rock_count":sum(
+                    "artifact" in o.types and o.zone=="battlefield"
+                    and not o.token and o.card.name in raw_by_name
+                    and (reviewed_rock(o.card.name,raw_by_name[o.card.name],colors)
+                         is not None or
+                         (provisional_by_name.get(o.card.name) is not None
+                          and provisional_by_name[o.card.name].kind=="artifact_mana"))
+                    for o in kernel.objects.values()),
                 "floating_at_end_of_main":list(mana_service.floating()),
                 "resource_start":resource,"resource_after_precast":resource,
                 "resource_end":resource,
                 "mana_payment_events":list(mana_service.mana_events[mana_ledger_start:]),
                 "life_totals":dict(life.kernel.life_totals),
-                "pilot_combat":None,"pilot_decisions":[],
+                "pilot_combat":None,"pilot_decisions":list(pilot_decisions),
                 "life_totals_start":dict(outcome_recorder.history[-2]["life_totals"]),
                 "life_changes":list(round_life["life_changes"]),
                 "eliminations":list(outcome_recorder.history[-1]["new_eliminations"]),
                 "alive_seats":list(outcome_recorder.history[-1]["alive_seats"]),
                 "unsupported_cards_in_hand":[],
-                "terminal_phase":error.phase})
+                "terminal_phase":error.phase,
+                "terminal_partial_turn":True,
+                "unobserved_fields":["unsupported_cards_in_hand"]})
         def append_reanimation_entry_chain(ids):
             if not ids:
                 return
