@@ -53,7 +53,7 @@ jobs:
         run: python tools/build_pages_deck_lab.py --output ./dist/pages
       - name: Validate export contracts and Javascript syntax
         run: |
-          python -m unittest tests.test_pages_export tests.test_gorge_ui_export -v
+          python -m unittest tests.test_pages_export tests.test_gorge_ui_export tests.test_gorge_public_state -v
           node --check web/pages/app.js
           node --check web/pages/replay.js
           node --check web/pages/gorge_replay.js
