@@ -360,3 +360,46 @@ test('published outcome loader fetches only the selected deck and refreshes the 
   assert.equal(calls.filter(x=>x.includes('mortarion-current.json')).length,2);
   assert.ok(renders>=4);
 });
+
+test('current-run card diagnostics distinguish creatures and instants without legacy fallback',()=>{
+  const lookup=name=>({
+    'Grave Titan':{type_line:'Creature — Giant'},
+    'Sol Ring':{type_line:'Artifact'},
+    'Go for the Throat':{type_line:'Instant'},
+    'Animate Dead':{type_line:'Enchantment — Aura'}
+  })[name]||null;
+  const observations=[
+    {turn:1,hand:['Grave Titan'],actions:[
+      {type:'artifact_cast',card:'Sol Ring'},
+      {type:'reviewed_instant_response',card:'Go for the Throat'}
+    ]},
+    {turn:2,hand:[],actions:[
+      {type:'creature_cast',card:'Grave Titan'},
+      {type:'reviewed_removal_resolved',card:'Go for the Throat',destroyed_count:1}
+    ]}
+  ];
+  const complete={seed:1,completed_rounds:2,opening_hand:['Grave Titan'],
+    ui_observations:observations};
+  const result=Outcomes.observationCardStats([complete],lookup);
+  assert.equal(result.coverage,1);
+  assert.equal(result.creature.name,'Grave Titan');
+  assert.equal(result.instant.name,'Go for the Throat');
+  assert.equal(result.artifact.name,'Sol Ring');
+  assert.equal(result.removal.name,'Go for the Throat');
+  assert.equal(result.longest,null); // minimum coverage guard
+  const old={seed:2,completed_rounds:2,opening_hand:['Grave Titan']};
+  const missing=Outcomes.observationCardStats([old],lookup);
+  assert.equal(missing.coverage,0);
+  assert.equal(missing.creature,null);
+  assert.equal(missing.instant,null);
+});
+test('single commander-art HUD has accessible overlaid tile labels',()=>{
+  const html=fs.readFileSync('web/pages/index.html','utf8');
+  const css=fs.readFileSync('web/pages/style.css','utf8');
+  const app=fs.readFileSync('web/pages/app.js','utf8');
+  assert.match(html,/id="results-hud-backdrop"/);
+  assert.match(html,/id="hud-commander-slot"/);
+  assert.match(css,/\.results-hud-backdrop\{/);
+  assert.match(css,/\.results-hud-tile-label\{/);
+  assert.match(app,/hudBackdrop\.src=art/);
+});
