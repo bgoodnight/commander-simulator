@@ -537,8 +537,8 @@
         events:[],durations:[],turns:[]});
       const item=map.get(name);
       if(Number.isFinite(quantity)&&quantity>0)
-        item.counts.set(run.seed,(item.counts.get(run.seed)||0)+quantity);
-      item.seen.add(run.seed);
+        item.counts.set(run,(item.counts.get(run)||0)+quantity);
+      item.seen.add(run);
       if(Number.isFinite(turn)){
         item.turns.push(turn);
         item.events.push({seed:run.seed,turn,run,...extra});
@@ -613,7 +613,7 @@
             counts.reduce((t,x)=>t+x,0):
             counts.filter(x=>x>0).length;
         const perGame=kind==="longest"?item.durations:
-          complete.map(run=>item.counts.get(run.seed)||0);
+          complete.map(run=>item.counts.get(run)||0);
         return {...item,score,average:mean(perGame),
           median:quantile(perGame,.5),
           games:counts.filter(x=>x>0).length,
@@ -950,7 +950,7 @@
               "Jump to recorded turn"));
             const examples=create("div","insight-card-examples");
             for(const hit of samples){
-              const parent=groups.find(g=>g.runs.some(r=>r.seed===hit.seed));
+              const parent=groups.find(g=>g.runs.includes(hit.run));
               if(!parent)continue;
               examples.appendChild(textButton(
                 "Seed "+hit.seed+" · Turn "+hit.turn,
@@ -962,12 +962,12 @@
             // The corresponding turn can still be inspected when there is
             // no named play event, using the earliest recorded hand.
             const examples=create("div","insight-card-examples");
-            for(const seed of [...item.seen].slice(0,8)){
-              const parent=groups.find(g=>g.runs.some(r=>r.seed===seed));
+            for(const matchingRun of [...item.seen].slice(0,8)){
+              const parent=groups.find(g=>g.runs.includes(matchingRun));
               if(parent)examples.appendChild(textButton(
-                "Seed "+seed+" · Inspect hand",
+                "Seed "+matchingRun.seed+" · Inspect hand",
                 "game-outcome-review-link",
-                ()=>onReviewRun(parent.id,seed,1)));
+                ()=>onReviewRun(parent.id,matchingRun.seed,1)));
             }
             detail.appendChild(examples);
           }
