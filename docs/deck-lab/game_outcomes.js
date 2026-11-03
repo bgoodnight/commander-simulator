@@ -956,6 +956,17 @@
     // header a real image without inventing a cast.
     return (observation.actions||[]).map(a=>a?.card||a?.source).find(hasArt)||null;
   }
+  function openingHandDescription(run){
+    const hand=Array.isArray(run.opening_hand)?run.opening_hand:[];
+    const mulligan=run.mulligan;
+    const count=Number.isInteger(mulligan?.count)&&mulligan.count>=0?
+      mulligan.count:typeof mulligan?.taken==="boolean"?(mulligan.taken?1:0):null;
+    const prefix=count===0?"Kept initial hand":
+      count===1?"Mulliganed once":
+      count!==null?"Mulliganed "+count+" times":
+      "Opening hand";
+    return prefix+(hand.length?", drew "+hand.join(", "):"");
+  }
   function compactInsightTimeline(root,run,options={}){
     root.replaceChildren();
     const head=create("div","game-outcome-evidence-head");
@@ -987,12 +998,12 @@
       const summary=create("summary","insight-turn-row-summary");
       if(cover)summary.appendChild(cover);
       summary.appendChild(create("strong","insight-turn-label",
-        index?"Turn "+index:"Opening"));
+        index?"Turn "+index:"Draw"));
       const pilot=(observation?.actions||[]).filter(a=>
         a.seat===undefined||Number(a.seat)===0);
       const synopsis=turnNarration(pilot);
       summary.appendChild(create("span","insight-turn-activity",
-        index?synopsis||"No named plays recorded":"Kept opening hand"));
+        index?synopsis||"No named plays recorded":openingHandDescription(run)));
       const badges=create("span","insight-turn-metrics");
       const now=lifeAt(current,0),was=before?lifeAt(before,0):now;
       const delta=now-was;
@@ -1016,8 +1027,7 @@
       const body=create("div","insight-turn-row-body");
       if(index===0){
         const initial=run.opening_hand||[];
-        body.appendChild(create("p","micro",
-          initial.length+" cards in recorded opening hand"));
+        body.appendChild(create("p","micro",openingHandDescription(run)));
         const cards=create("div","insight-action-cards");
         for(const name of initial)cards.appendChild(insightActionCard(name,options));
         body.appendChild(cards);
@@ -1356,11 +1366,11 @@
           for(const run of item.seen)
             if(!eventRuns.has(run))addExample(run,1);
           const examples=relevant.slice(0,12);
-          let tracker=null,selectRun=null,detailsRoot=null;
+          let tracker=null,detailsRoot=null;
           let exampleIndex=-1;
-          const draw=()=>{
-            if(!tracker||!selectRun||!detailsRoot)return;
-            const entry=examples[Number(selectRun.value)]||examples[0];
+          let draw=()=>{
+            if(!tracker||!detailsRoot)return;
+            const entry=examples[Math.max(0,exampleIndex)]||examples[0];
             if(!entry)return;
             runDetails(detailsRoot,entry.run,{
               focusTurn:entry.turn,
@@ -1374,7 +1384,6 @@
             if(!examples.length)return;
             exampleIndex=(exampleIndex+1)%examples.length;
             tracker.open=true;
-            selectRun.value=String(exampleIndex);
             draw();
           };
           const tileSet=create("div","game-outcome-insight-grid insight-featured-metrics");
@@ -1394,29 +1403,27 @@
           stats.appendChild(tileSet);
           if(examples.length){
             tracker=create("details","insight-inline-tracker insight-inline-tracker-compact");
-            tracker.appendChild(create("summary",null,"View example games"));
-            const controls=create("div","insight-inline-tracker-controls");
-            selectRun=create("select","game-outcome-scenario-select");
-            selectRun.setAttribute("aria-label","Choose a relevant recorded example");
-            examples.forEach((entry,index)=>{
-              const option=create("option",null,entry.group.scenario+
-                " · Seed "+entry.run.seed+" · Turn "+entry.turn);
-              option.value=String(index);selectRun.appendChild(option);
-            });
-            detailsRoot=create("div","insight-inline-tracker-review");
-            controls.append(selectRun);
+            const trigger=create("summary",null,"View example games");
+            tracker.appendChild(trigger);
             const full=textButton("Open full reviewer ↗",
-              "game-outcome-review-link",()=>{
-                const entry=examples[Number(selectRun.value)]||examples[0];
+              "game-outcome-review-link insight-example-full-link",()=>{
+                const entry=examples[Math.max(0,exampleIndex)]||examples[0];
                 onReviewRun(entry.group.id,entry.run.seed,entry.turn);
               });
-            controls.appendChild(full);
-            tracker.append(controls,detailsRoot);
-            selectRun.addEventListener("change",()=>{
-              exampleIndex=Number(selectRun.value);
-              draw();
-            });
+            tracker.appendChild(full);
+            const exampleLabel=create("div","insight-example-game-label");
+            detailsRoot=create("div","insight-inline-tracker-review");
+            tracker.append(exampleLabel,detailsRoot);
+            const setLabel=()=>{
+              const entry=examples[Math.max(0,exampleIndex)]||examples[0];
+              exampleLabel.textContent=
+                entry.group.scenario+" · Seed "+entry.run.seed+
+                " · "+stateLabel(entry.run.outcome.status);
+            };
+            const previousDraw=draw;
+            draw=()=>{setLabel();previousDraw()};
             tracker.addEventListener("toggle",()=>{
+              trigger.textContent=tracker.open?"Close example games":"View example games";
               if(tracker.open)draw();
             });
             evidence.appendChild(tracker);
