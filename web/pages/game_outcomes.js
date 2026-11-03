@@ -547,6 +547,7 @@
     const complete=runs.filter(run=>Array.isArray(run.ui_observations)&&
       run.ui_observations.length===run.completed_rounds);
     let confirmedTutors=0;
+    const playCounts=new Map();
     // Only actual resolved searches with an explicitly named found card
     // count. A cast alone, ambiguous search, or old stripped projection
     // cannot establish a successfully resolved tutor search.
@@ -604,6 +605,11 @@
             record("seen",action.card,run,row.turn,0,{eventIndex});
           }
           const name=action.card;
+          if(name&&!basic(name)&&
+             (action.type==="land_play"||action.type==="reviewed_instant_response"||
+              String(action.type||"").endsWith("_cast"))&&
+             (action.seat===undefined||Number(action.seat)===0))
+            playCounts.set(name,(playCounts.get(name)||0)+1);
           if(CAST_TYPES.has(action.type)&&name&&!basic(name)){
             casts.add(name);seen.add(name);
             const card=lookupCard(name);
@@ -665,7 +671,7 @@
             counts.filter(x=>x>0).length;
         const perGame=kind==="longest"?item.durations:
           complete.map(run=>item.counts.get(run)||0);
-        return {...item,score,average:mean(perGame),
+        return {...item,score,timesPlayed:playCounts.get(item.name)||0,average:mean(perGame),
           median:quantile(perGame,.5),
           games:counts.filter(x=>x>0).length,
           eventCount:counts.reduce((t,x)=>t+x,0),
@@ -1223,11 +1229,6 @@
     let initialSelect=null;
     const panel=card(insightCategoryLabel(kind),"Card insight",
       displayValue(winner),winner.name,body=>{
-        const sub=create("p","micro",isTutor?
-          "Percentage of confirmed, named tutor resolutions. Select a card to inspect the search and its recorded turn.":
-          isHeld?"Ranked by mean rounds held when seen; the displayed duration is the median.":
-          "Select a bar to explore that card's stats and recorded turns.");
-        body.appendChild(sub);
         const compare=create("div","insight-featured-compare");
         const featured=create("div","insight-featured-selected");
         const ranking=create("div","insight-featured-ranking");
@@ -1261,109 +1262,91 @@
           featured.appendChild(create("strong","insight-featured-card-name",item.name));
           const cost=manaCost(item);
           if(cost)featured.appendChild(cost);
-          featured.appendChild(textButton("View card details ↗",
-            "game-outcome-recorded-card",
-            ()=>options.onOpenRecordedCard?.(item.name)));
-          const tileSet=create("div","game-outcome-insight-grid");
-          tileSet.append(
-            metricTile(isTutor?"Share of tutor searches":
-              isHeld?"Median rounds held":"Median per game",
-              isTutor?valueFor(item):
-                isHeld?nfmt(item.heldMedian):nfmt(item.median),
-              isTutor?tutorCount+" confirmed searches":
-                isHeld?item.seen.size+" games seen":coverage+" games"),
-            metricTile("Games recorded",item.games,coverage+" games"),
-            metricTile(isTutor?"Confirmed searches":"Total recorded",item.eventCount,
-              isTutor?tutorCount+" total searches":"Relevant actions"),
-            metricTile("Median event turn",quantile(item.turns,.5),
-              "When individually recorded"));
-          stats.appendChild(tileSet);
-          const samples=[...item.events].sort((a,b)=>
-            a.turn-b.turn||a.seed-b.seed).slice(0,12);
-          const examples=create("div","insight-card-examples");
-          if(samples.length){
-            evidence.appendChild(create("strong","insight-evidence-heading",
-              "Jump to recorded turn"));
-            for(const hit of samples){
-              const parent=groups.find(g=>g.runs.includes(hit.run));
-              if(!parent)continue;
-              examples.appendChild(textButton(
-                "Seed "+hit.seed+" · Turn "+hit.turn+
-                  (isTutor?" · "+(kind==="tutorFound"?hit.tutor+" → "+item.name:
-                    item.name+" → "+hit.target):""),
-                "game-outcome-review-link",
-                ()=>onReviewRun(parent.id,hit.seed,hit.turn)));
-            }
-          }else if(["unplayed","longest","seen"].includes(kind)){
-            evidence.appendChild(create("strong","insight-evidence-heading",
-              "Inspect a recorded hand"));
-            for(const matchingRun of [...item.seen].slice(0,8)){
-              const parent=groups.find(g=>g.runs.includes(matchingRun));
-              if(!parent)continue;
-              examples.appendChild(textButton(
-                "Seed "+matchingRun.seed+" · Inspect hand",
-                "game-outcome-review-link",
-                ()=>onReviewRun(parent.id,matchingRun.seed,1)));
-            }
+          // Selecting a card resets the example cycle, without expanding
+          // the full game reviewer or forcing a scroll away from this card.
+          const relevant=[];
+          const used=new Set();
+          const addExample=(run,turn)=>{
+            if(!Array.isArray(run?.life_history)||run.life_history.length<2)return;
+            const group=groups.find(g=>g.runs.includes(run));
+            if(!group)return;
+            const focus=Number.isInteger(turn)&&turn>=1?turn:1;
+            const key=group.id+":"+run.seed+":"+focus;
+            if(used.has(key))return;
+            used.add(key);
+            relevant.push({run,turn:focus,group});
+          };
+          for(const hit of [...item.events].sort((a,b)=>
+            a.turn-b.turn||a.seed-b.seed))addExample(hit.run,hit.turn);
+          for(const run of item.seen)addExample(run,1);
+          const examples=relevant.slice(0,12);
+          let tracker=null,selectRun=null,detailsRoot=null;
+          let exampleIndex=-1;
+          const draw=()=>{
+            if(!tracker||!selectRun||!detailsRoot)return;
+            const entry=examples[Number(selectRun.value)]||examples[0];
+            if(!entry)return;
+            runDetails(detailsRoot,entry.run,{
+              focusTurn:entry.turn,
+              lookupRecordedCard:options.lookupRecordedCard,
+              onOpenRecordedCard:options.onOpenRecordedCard,
+              example:entry.group.exampleBySeed?.get(entry.run.seed),
+              onShowRecordedActions:options.onShowRecordedActions
+            });
+          };
+          const openExample=()=>{
+            if(!examples.length)return;
+            exampleIndex=(exampleIndex+1)%examples.length;
+            tracker.open=true;
+            selectRun.value=String(exampleIndex);
+            draw();
+          };
+          const tileSet=create("div","game-outcome-insight-grid insight-featured-metrics");
+          for(const [label,value] of [
+            ["Times played",item.timesPlayed||0],
+            ["Median event turn",quantile(item.turns,.5)]
+          ]){
+            const metric=create("button","game-outcome-insight-metric insight-featured-metric-link");
+            metric.type="button";
+            metric.setAttribute("aria-label",label+" · view next example game");
+            metric.append(create("span",null,label),
+              create("strong",null,value===null?"—":nfmt(value)));
+            metric.disabled=!examples.length;
+            metric.onclick=openExample;
+            tileSet.appendChild(metric);
           }
-          if(examples.children.length)evidence.appendChild(examples);
-          // The inline tracker uses the exact same runDetails projection as
-          // the full reviewer; neither hand nor life changes are inferred.
-          const relevant=[...new Map([
-            ...item.events.map(hit=>[hit.run,hit.turn]),
-            ...[...item.seen].map(run=>[run,1])
-          ]).entries()].filter(([run])=>
-            Array.isArray(run?.life_history)&&run.life_history.length>1)
-            .slice(0,12).map(([run,turn])=>({
-              run,turn,group:groups.find(g=>g.runs.includes(run))
-            })).filter(entry=>entry.group);
-          if(relevant.length){
-            const tracker=create("details","insight-inline-tracker");
-            const summary=create("summary",null,
-              "Relevant games & turn tracker · "+relevant.length+
-              (relevant.length===1?" game":" games"));
-            tracker.appendChild(summary);
+          stats.appendChild(tileSet);
+          if(examples.length){
+            tracker=create("details","insight-inline-tracker insight-inline-tracker-compact");
+            tracker.appendChild(create("summary",null,"View example games"));
             const controls=create("div","insight-inline-tracker-controls");
-            const selectRun=create("select","game-outcome-scenario-select");
-            selectRun.setAttribute("aria-label","Choose a relevant recorded game");
-            relevant.forEach((entry,index)=>{
+            selectRun=create("select","game-outcome-scenario-select");
+            selectRun.setAttribute("aria-label","Choose a relevant recorded example");
+            examples.forEach((entry,index)=>{
               const option=create("option",null,entry.group.scenario+
-                " · Seed "+entry.run.seed+" · "+stateLabel(entry.run.outcome.status));
+                " · Seed "+entry.run.seed+" · Turn "+entry.turn);
               option.value=String(index);selectRun.appendChild(option);
             });
-            const detailsRoot=create("div","insight-inline-tracker-review");
+            detailsRoot=create("div","insight-inline-tracker-review");
             controls.append(selectRun);
-            const full=textButton("Open in full reviewer ↗",
+            const full=textButton("Open full reviewer ↗",
               "game-outcome-review-link",()=>{
-                const entry=relevant[Number(selectRun.value)]||relevant[0];
+                const entry=examples[Number(selectRun.value)]||examples[0];
                 onReviewRun(entry.group.id,entry.run.seed,entry.turn);
               });
             controls.appendChild(full);
             tracker.append(controls,detailsRoot);
-            const draw=()=>{
-              const entry=relevant[Number(selectRun.value)]||relevant[0];
-              runDetails(detailsRoot,entry.run,{
-                focusTurn:entry.turn,
-                lookupRecordedCard:options.lookupRecordedCard,
-                onOpenRecordedCard:options.onOpenRecordedCard,
-                example:entry.group.exampleBySeed?.get(entry.run.seed),
-                onShowRecordedActions:options.onShowRecordedActions
-              });
-            };
-            selectRun.addEventListener("change",draw);
+            selectRun.addEventListener("change",()=>{
+              exampleIndex=Number(selectRun.value);
+              draw();
+            });
             tracker.addEventListener("toggle",()=>{
               if(tracker.open)draw();
             });
             evidence.appendChild(tracker);
           }
         }
-        ranking.append(
-          create("strong","insight-featured-chart-title","Top cards"),
-          create("p","micro",
-            isTutor?"Bars compare the share of confirmed searches for each card.":
-            isHeld?"Mean rounds held sets bar length; median shown beside each card.":
-            isCount?"Bars compare the share of complete games featuring the card.":
-              "Bars compare recorded actions per complete game."));
+        ranking.appendChild(create("strong","insight-featured-chart-title","Top cards"));
         const barList=create("div","insight-featured-bars");
         ranking.appendChild(barList);
         for(const item of ranked.slice(0,10)){
@@ -1393,8 +1376,7 @@
     const costSlot=create("span","insight-head-mana");
     subtitle.append(featuredName,costSlot);
     const number=create("span","game-outcome-number",displayValue(winner));
-    copy.replaceChildren(create("span","board-kicker","Card insight"),
-      title,subtitle,number,create("span","board-open","Compare cards and evidence →"));
+    copy.replaceChildren(title,subtitle,number);
     const cover=create("img","insight-featured-cover");
     cover.alt="";cover.loading="lazy";cover.referrerPolicy="no-referrer";
     summary.appendChild(cover);
