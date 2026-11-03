@@ -76,3 +76,69 @@ Only consider a selectable gorge backend once the following are demonstrated:
 
 Do not replace our shared-effects catalog or delete the custom kernel before
 these gates pass. It remains a useful reference implementation and fallback.
+
+
+## Curated precon opponents and AI pilot options
+
+`python -m tools.fetch_gorge_precons --out /tmp/gorge-decks` downloads four
+pinned stock precon lists into the temporary gorge deck pool. Combined with
+the existing owned Necron Dynasties and Wretched Ranks fixtures, the
+experimental pool contains **six stock precons and two user-built decks**
+(Mortarion Current and Magnus Premium). Source provenance and commander
+information are recorded in `library_manifest.json`.
+
+The current curated gorge source set includes:
+
+| Key | Commander | Classification |
+|---|---|---|
+| `avengers-assemble` | Captain America, Team Leader | Stock precon as recorded in upstream sources |
+| `cavalry-charge` | Sidar Jabari of Zhalfir | Stock precon |
+| `deadly-disguise` | Kaust, Eyes of the Glade | Stock precon |
+| `science-pip` | Dr. Madison Li | Stock precon |
+| `necron_dynasties` | Szarekh, the Silent King | Existing locally pinned stock precon |
+| `wretched_ranks` | Ghoulcaller Gisa | Existing locally pinned stock precon |
+
+Two additional lists (`ulalek-eldrazi` and
+`valgavoth-endless-punishment`) are available only through the explicit
+`--include-community` option. They are **not** classified as stock:
+the first is community-built and the second an upgraded precon. Several
+upstream Foundation lists are explicitly *interim approximations* and
+are intentionally not included in the stock opponent pool.
+
+The Go probe accepts `-decks` as a comma-separated pool of four or more
+loaded keys and rotates them through four seats across seeds. The
+`-pilot` flag selects a native gorge AI strategy for every player;
+`-hero-pilot` optionally chooses a different native policy for seat 0.
+Supported Commander policies at this upstream pin are `bot`,
+`forge-heuristic`, `forge-heuristic-hold`, and `lethal-pressure`.
+This uses gorge's *actual legal-action-driven AI*, not a transcription
+of its heuristics into our Python kernel.
+
+### Native replay contract
+
+With `-native-dir /tmp/results/native -native-limit 2`, the Go driver
+writes the **entire gorge event log and player intents** for the first two
+games, tagged `gorge-native-trace-v1`. These are source-of-truth
+records rather than inferred Python action strings.
+
+`python -m tools.gorge_native_replay --native-dir ... --out ...`
+writes a lightweight, versioned `gorge-native-index-v1` segment index.
+Its event-kind labels use the pinned gorge enum and unknown kinds retain
+their original numeric identifier. Every index contains ranges into the
+unchanged raw event sequence. Future UI panels can read these records
+natively, rendering only supported fields and leaving unavailable fields
+unknown. This avoids inventing hand contents, mana source names or
+card actions based on incomplete records.
+
+**Privacy/provenance:** raw match logs contain hands, libraries and other
+hidden information. Keep them as restricted per-run artifacts and never
+commit them into the public decklab assets. The current workflow uploads
+the raw logs as GitHub Actions artifacts for developer testing only.
+The UI does *not* automatically publish or load these replay logs yet.
+
+**Simulation results:** the new workflow exercises a 24-game `bot`
+baseline across the eight-deck pool and eight additional games using
+`forge-heuristic` opponents with a `lethal-pressure` seat-zero pilot.
+Its report includes two pilot outputs and the first two native replays.
+These runs are still experimental evidence; they do not claim calibrated
+deck bracket or competitively optimized bot play.

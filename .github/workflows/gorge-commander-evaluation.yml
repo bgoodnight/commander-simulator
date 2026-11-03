@@ -7,6 +7,11 @@ on:
       - "tools/export_gorge_decks.py"
       - "tools/gorge_commander_probe.go"
       - "tools/gorge_benchmark.py"
+      - "tools/fetch_gorge_precons.py"
+      - "tools/gorge_native_replay.py"
+      - "commander_sim/gorge_backend.py"
+      - "tests/test_gorge_backend.py"
+      - "tests/test_gorge_precons_and_replay.py"
       - "tests/test_gorge_benchmark.py"
       - ".github/workflows/gorge-commander-evaluation.yml"
 
@@ -23,11 +28,17 @@ jobs:
         with:
           python-version: "3.12"
       - name: Verify offline deck export and result schema
-        run: python -m unittest discover -s tests -p "test_gorge_benchmark.py" -v
+        run: |
+          python -m unittest discover -s tests -p "test_gorge_benchmark.py" -v
+          python -m unittest discover -s tests -p "test_gorge_precons_and_replay.py" -v
+          python -m unittest discover -s tests -p "test_gorge_backend.py" -v
       - name: Export four pinned real Commander decks
         run: |
           mkdir -p "$RUNNER_TEMP/gorge-decks" "$RUNNER_TEMP/results"
           python -m tools.export_gorge_decks --out "$RUNNER_TEMP/gorge-decks" --decks mortarion_current magnus_premium necron_dynasties wretched_ranks
+      - name: Fetch stock Commander precon opponent decks
+        run: |
+          python -m tools.fetch_gorge_precons --out "$RUNNER_TEMP/gorge-decks"
       - name: Clone pinned gorge release (not a vendored dependency)
         env:
           GORGE_COMMIT: b78e4c8b16078f6decbc48875bba953ce5535b85
@@ -52,20 +63,45 @@ jobs:
       - name: Measure current Python bounded-pressure baseline
         run: |
           python -m tools.gorge_benchmark baseline --games 24 --turns 10 --seed 100 --output "$RUNNER_TEMP/results/python_baseline.json"
-      - name: Run 24 real four-player Commander games on gorge
+      - name: Run 24 full Commander games across eight decks using gorge bot AI
         id: gorge_run
         working-directory: ${{ runner.temp }}/gorge
         shell: bash
         run: |
           set +e
-          "$RUNNER_TEMP/commander-probe" \
-            -corpus .cards -deck-dir "$RUNNER_TEMP/gorge-decks" \
-            -games 24 -seed 100 -max-turns 50 -verify=true \
+          PYTHONPATH="$GITHUB_WORKSPACE" python -m commander_sim.gorge_backend \
+            --binary "$RUNNER_TEMP/commander-probe" \
+            --corpus "$RUNNER_TEMP/gorge/.cards" --deck-dir "$RUNNER_TEMP/gorge-decks" \
+            --decks "mortarion_current,magnus_premium,necron_dynasties,wretched_ranks,avengers-assemble,cavalry-charge,deadly-disguise,science-pip" \
+            --pilot bot --games 24 --seed 100 --max-turns 50 \
+            --native-dir "$RUNNER_TEMP/results/native" --native-limit 2 --jsonl \
             | tee "$RUNNER_TEMP/results/gorge_runs.jsonl"
           status=${PIPESTATUS[0]}
           echo "$status" > "$RUNNER_TEMP/results/gorge_exit_code.txt"
           echo "gorge_exit_code=$status" >> "$GITHUB_OUTPUT"
           exit 0
+      - name: Run eight trials of alternate gorge AI policies
+        id: policy_trial
+        working-directory: ${{ runner.temp }}/gorge
+        shell: bash
+        run: |
+          set +e
+          PYTHONPATH="$GITHUB_WORKSPACE" python -m commander_sim.gorge_backend \
+            --binary "$RUNNER_TEMP/commander-probe" \
+            --corpus "$RUNNER_TEMP/gorge/.cards" --deck-dir "$RUNNER_TEMP/gorge-decks" \
+            --decks "mortarion_current,magnus_premium,necron_dynasties,wretched_ranks,avengers-assemble,cavalry-charge,deadly-disguise,science-pip" \
+            --pilot forge-heuristic --hero-pilot lethal-pressure \
+            --games 8 --seed 200 --max-turns 50 --jsonl \
+            | tee "$RUNNER_TEMP/results/gorge_policy_trial.jsonl"
+          status=${PIPESTATUS[0]}
+          echo "$status" > "$RUNNER_TEMP/results/policy_exit_code.txt"
+          exit 0
+      - name: Build native gorge replay indexes without flattening events
+        if: steps.gorge_run.outcome == 'success'
+        run: |
+          python -m tools.gorge_native_replay \
+            --native-dir "$RUNNER_TEMP/results/native" \
+            --out "$RUNNER_TEMP/results/native_indexes"
       - name: Compare measured run characteristics and limitations
         if: steps.gorge_run.outcome == 'success'
         run: |
@@ -86,6 +122,17 @@ jobs:
                   f.write(f'| {key} | {d["baseline"].get(key)} | {d["gorge"].get(key)} |\n')
               f.write("\n**These are not equivalent workloads:** Python simulates three abstract opponent seats; gorge runs real four-deck Commander. Do not compare win rates.\n")
               f.write("\nGorge probe exit code: "+(p.parent/"gorge_exit_code.txt").read_text().strip()+"\n")
+          PY
+          test "$(cat "$RUNNER_TEMP/results/gorge_exit_code.txt")" = 0
+          test "$(cat "$RUNNER_TEMP/results/policy_exit_code.txt")" = 0
+          python - <<'PY'
+          import json,os
+          from pathlib import Path
+          p=Path(os.environ["RUNNER_TEMP"])/"results"/"gorge_policy_trial.jsonl"
+          rows=[json.loads(line) for line in p.read_text().splitlines() if line.strip().startswith("{")]
+          assert len(rows)==8 and all(r["finished"] and r["replay_verified"] for r in rows)
+          with open(os.environ["GITHUB_STEP_SUMMARY"],"a") as f:
+              f.write("\nEight alternative gorge AI runs: all finished and replay-verified.\n")
           PY
       - name: Upload evidence without redistributing Forge scripts
         if: always()
