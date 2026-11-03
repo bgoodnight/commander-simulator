@@ -87,7 +87,10 @@ def convert(source, *, include_hidden=False):
             for row in turn["events"]
             if row["kind"] in ("draw","cast","land_played","token_created","damage","game_over")
         ][:12]
+    safe_snapshots=project(source) if not include_hidden else []
     return {
+        "snapshots":safe_snapshots,
+        "snapshot_definition":"first_pending_decision_of_turn" if safe_snapshots else None,
         "schema":SCHEMA,"engine":"gorge","seed":source.get("seed"),
         "chain":source.get("chain"),"decks":source["decks"],
         "policies":source["policies"],"turns":turns,
