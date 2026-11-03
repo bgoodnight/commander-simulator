@@ -371,7 +371,8 @@ class BoundedOpponentPressure:
                     from .reviewed_combat_damage import resolve_combat_damage_player
                     triggered=resolve_combat_damage_player(
                         self.zones,self.catalog,attacker.object_id,
-                        defender,attacker_damage)
+                        defender,attacker_damage,life=self.life,
+                        death_engine=self.death_engine,turn=turn)
                     if triggered is not None:
                         if triggered.token_ids:
                             self.events.append(OpponentEvent(
@@ -381,6 +382,14 @@ class BoundedOpponentPressure:
                             self.events.append(OpponentEvent(
                                 turn,seat,role,"reviewed_combat_damage_discard",
                                 attacker.object_id,len(triggered.discarded_ids),defender))
+                        if triggered.sacrificed_ids:
+                            self.events.append(OpponentEvent(
+                                turn,seat,role,"reviewed_combat_damage_sacrifice",
+                                attacker.object_id,len(triggered.sacrificed_ids),defender))
+                        if triggered.life_lost:
+                            self.events.append(OpponentEvent(
+                                turn,seat,role,"reviewed_combat_damage_life_loss",
+                                attacker.object_id,triggered.life_lost,defender))
                     if "lifelink" in attacker.keywords:
                         self.life.gain(seat,attacker_damage,attacker.object_id)
                 self.events.append(OpponentEvent(
