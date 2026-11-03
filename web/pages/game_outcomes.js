@@ -682,6 +682,53 @@
     box.appendChild(actions);
     root.appendChild(box);
   }
+  function turnSpotlight(observation,lookupCard=()=>null){
+    // The backdrop represents an actual named pilot action in THIS round.
+    // Opposing or unattributed events must not become implied pilot plays.
+    if(!observation||!Array.isArray(observation.actions))return null;
+    const actions=observation.actions.filter(action=>
+      action&&typeof action.card==="string"&&action.card.trim()&&
+      (action.seat===undefined||Number(action.seat)===0)&&
+      !String(action.type||"").startsWith("opponent_")&&
+      (CAST_TYPES.has(action.type)||String(action.type||"").endsWith("_cast")||
+       /activated|trigger|resolved|removal|damage/.test(String(action.type||""))));
+    const weight=action=>{
+      const type=String(action.type||"");
+      if(type==="reviewed_commander_cast")return 5;
+      if(type==="land_play")return 1;
+      if(CAST_TYPES.has(type)||type.endsWith("_cast"))return 4;
+      if(/removal|damage|activated|trigger|resolved/.test(type))return 3;
+      return 2;
+    };
+    const ordered=[...actions].sort((a,b)=>weight(b)-weight(a));
+    for(const action of ordered){
+      const card=lookupCard(action.card);
+      const art=card?.art||card?.image;
+      if(typeof art==="string"&&/^https:\/\//.test(art)){
+        return {name:action.card,art,action:action.type};
+      }
+    }
+    return null;
+  }
+  function turnActionHighlight(observation,spotlight){
+    if(!observation)return "Starting life and opening hand";
+    const actions=(observation.actions||[]).filter(a=>
+      (a.seat===undefined||Number(a.seat)===0)&&
+      !String(a.type||"").startsWith("opponent_"));
+    const drew=actions.filter(a=>a.type==="draw").length;
+    const played=actions.filter(a=>a.card&&
+      (CAST_TYPES.has(a.type)||String(a.type||"").endsWith("_cast")));
+    const parts=[];
+    if(drew)parts.push("Drew "+drew);
+    if(spotlight)parts.push(
+      (spotlight.action==="land_play"?"Played ":"Cast or activated ")+spotlight.name);
+    else if(played.length)parts.push("Played "+played.length+" named card"+
+      (played.length===1?"":"s"));
+    if(played.length>1)parts.push(played.length+" plays");
+    if(!parts.length)parts.push(actions.length?
+      actions.length+" recorded actions":"No named plays recorded");
+    return parts.join(" · ");
+  }
   function runDetails(root,run,options={}){
     root.replaceChildren();
     const heading=create("div","game-outcome-evidence-head");
@@ -689,9 +736,15 @@
       create("span","micro",roundLabel(run)));
     root.appendChild(heading);
     const select=create("div","game-outcome-round-options");
+    const strip=create("div","game-outcome-turn-strip");
+    strip.setAttribute("role","group");
+    strip.setAttribute("aria-label","Select a recorded game turn");
     const info=create("div","game-outcome-round-detail");
+    const turnButtons=[];
     function showRound(index){
       info.replaceChildren();
+      for(let i=0;i<turnButtons.length;i++)
+        turnButtons[i].setAttribute("aria-pressed",String(i===index));
       if(index===0&&run.opening_hand?.length){
         const hand=create("details","game-outcome-observed-zone");
         hand.appendChild(create("summary",null,
@@ -745,6 +798,35 @@
         info.appendChild(create("p","game-outcome-elimination",
           "Seat "+(Number(eliminated.seat)+1)+" eliminated · "+eliminated.cause));
     }
+    // An illustrated, selectable turn strip echoes the original replay
+    // design, while retaining the more detailed life/zone evidence below.
+    for(let index=0;index<run.life_history.length;index++){
+      const row=index>0?run.ui_observations?.[index-1]:null;
+      const spotlight=turnSpotlight(row,options.lookupRecordedCard);
+      const button=textButton("","game-outcome-turn-tile",()=>{
+        slider.value=String(index);
+        readout.textContent="Round "+index;
+        showRound(index);
+      });
+      button.setAttribute("aria-label","Review round "+index+
+        (spotlight?" featuring "+spotlight.name:""));
+      button.setAttribute("aria-pressed","false");
+      if(spotlight?.art){
+        const image=create("img","game-outcome-turn-art");
+        image.src=spotlight.art;image.alt="";image.loading="lazy";
+        image.referrerPolicy="no-referrer";
+        button.appendChild(image);
+      }
+      const number=create("strong","game-outcome-turn-number",
+        index===0?"Start":"Turn "+index);
+      const highlight=create("span","game-outcome-turn-highlight",
+        turnActionHighlight(row,spotlight));
+      const state=create("span","game-outcome-turn-life",
+        nfmt(lifeAt(run.life_history[index],0))+" life");
+      button.append(number,highlight,state);
+      strip.appendChild(button);
+      turnButtons.push(button);
+    }
     const slider=create("input","game-outcome-round-slider");
     slider.type="range";slider.min="0";
     slider.max=String(run.life_history.length-1);
@@ -755,7 +837,7 @@
     slider.addEventListener("input",()=>{
       readout.textContent="Round "+slider.value;showRound(Number(slider.value));
     });
-    select.append(slider,readout);root.append(select,info);
+    select.append(slider,readout);root.append(strip,select,info);
     showRound(Number(slider.value));
     const example=options.example;
     if(example?.events?.length&&
@@ -888,6 +970,7 @@
       runDetails(evidence,run,{example:active.exampleBySeed.get(run.seed),
         onShowRecordedActions:options.onShowRecordedActions,
         onOpenRecordedCard:options.onOpenRecordedCard,
+        lookupRecordedCard:options.lookupRecordedCard,
         focusTurn:focusTurn});
     }
     function showGroup(seed,turn=null){
@@ -1370,5 +1453,5 @@
     return report;
   }
   return {FORMAT,STATES,validate,model,lifeTrend,matchupRows,matchupMetrics,
-    knockoutRound,opponentDecks,observationCardStats,render};
+    knockoutRound,opponentDecks,observationCardStats,turnSpotlight,render};
 });

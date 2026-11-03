@@ -1423,3 +1423,42 @@ body:has(#pane-records:not([hidden])) .page-introduction a{font-size:.72rem}
   }
   .game-outcome-hero-highlight{padding:9px 10px}
 }
+
+
+/* Illustrated turn navigator, derived only from named cards played or
+   activated by the selected pilot in each recorded game round. */
+.game-outcome-turn-strip{display:grid;grid-template-columns:repeat(auto-fill,minmax(165px,1fr));
+  gap:9px;margin:13px 0 15px}
+.game-outcome-turn-tile{position:relative;isolation:isolate;display:flex;
+  flex-direction:column;justify-content:space-between;text-align:left;
+  gap:8px;min-width:0;min-height:120px;overflow:hidden;
+  padding:12px 13px;border:1px solid #6b766c;border-radius:12px;
+  background:linear-gradient(130deg,#263839,#15262b);color:#eee0c7;
+  cursor:pointer;font:inherit;box-shadow:0 2px 9px #0004}
+.game-outcome-turn-art{position:absolute;z-index:-1;inset:0 0 0 auto;
+  width:100%;height:100%;object-fit:cover;object-position:center 30%;
+  opacity:.43;mask-image:linear-gradient(90deg,transparent 0%,#000 55%);
+  pointer-events:none}
+.game-outcome-turn-tile:before{content:"";position:absolute;z-index:-1;
+  inset:0;background:linear-gradient(90deg,#0c1c20f1 0%,#13242bd0 55%,#13242b64 100%)}
+.game-outcome-turn-number{font-family:Cinzel,Georgia,serif;
+  font-size:1.04rem;color:#f3d9a9}
+.game-outcome-turn-highlight{font-size:.77rem;line-height:1.45;
+  color:#ede6d8;overflow-wrap:anywhere}
+.game-outcome-turn-life{font-size:.7rem;color:#bdd3c9;
+  font-variant-numeric:tabular-nums}
+.game-outcome-turn-tile:hover,.game-outcome-turn-tile:focus-visible,
+.game-outcome-turn-tile[aria-pressed="true"]{
+  border-color:#e3c188;background:#304543}
+.game-outcome-turn-tile[aria-pressed="true"]{
+  box-shadow:inset 0 0 0 2px #d7b27a,0 4px 15px #0007}
+.game-outcome-turn-tile:focus-visible{outline:2px solid #eccb98;outline-offset:2px}
+@media(max-width:650px){
+  .game-outcome-turn-strip{grid-template-columns:repeat(2,minmax(0,1fr));gap:7px}
+  .game-outcome-turn-tile{min-height:116px;padding:10px}
+  .game-outcome-turn-number{font-size:.92rem}
+  .game-outcome-turn-highlight{font-size:.71rem}
+}
+@media(prefers-reduced-motion:reduce){
+  .game-outcome-turn-tile{scroll-behavior:auto}
+}
