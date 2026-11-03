@@ -1680,3 +1680,27 @@ body:has(#pane-records:not([hidden])) .page-introduction a{font-size:.72rem}
 .insight-action-card.is-art-only:hover .insight-action-art{filter:brightness(1.15)}
 .insight-action-verb{color:#e1e3d5}
 .insight-action-phase.is-zone-changes{border-left-color:#bdab8a}
+
+/* Compact combined enemy events and four-seat life totals. */
+.insight-rest-of-turn{display:grid;gap:6px;padding:9px 10px;border:1px solid #51645d;
+  border-radius:8px;background:#17272b}
+.insight-rest-title{font-size:.79rem;color:#edcf9e;margin:0}
+.insight-rest-event{font-size:.75rem;color:#dce2d8;margin:0;line-height:1.45}
+.insight-seat-life-strip{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:6px}
+.insight-seat-life{display:flex;align-items:center;justify-content:center;gap:5px;
+  padding:6px 4px;min-width:0;border:1px solid #527166;border-radius:7px;
+  background:#13272b;font-variant-numeric:tabular-nums}
+.insight-seat-life-name{font-size:.64rem;color:#d0d7cd;white-space:nowrap}
+.insight-seat-life-value{font-size:.84rem;color:#f0dec0;white-space:nowrap}
+.insight-seat-life-delta{font-size:.66rem;color:#d0d7cd;white-space:nowrap}
+.insight-seat-life.is-gain{border-color:#81c5a2;box-shadow:0 0 8px #78dca53b}
+.insight-seat-life.is-loss{border-color:#cf9285;box-shadow:0 0 8px #df9b8c3b}
+.insight-seat-life.is-gain .insight-seat-life-delta{color:#b9efd0}
+.insight-seat-life.is-loss .insight-seat-life-delta{color:#f6bdb4}
+@media(max-width:650px){
+ .insight-seat-life-strip{grid-template-columns:repeat(4,minmax(0,1fr));gap:3px}
+ .insight-seat-life{flex-direction:column;gap:1px;padding:5px 2px}
+ .insight-seat-life-name{font-size:.59rem}
+ .insight-seat-life-value{font-size:.76rem}
+ .insight-seat-life-delta{font-size:.61rem}
+}

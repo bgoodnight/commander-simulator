@@ -761,52 +761,44 @@
   // Inline insight evidence uses the original compact, expandable turn rows.
   // A round is NOT a reconstructed priority/phase transcript: only explicit
   // action metadata permits naming a phase or an opposing seat.
-  function seatChangeSummary(current,before,observation){
-    const table=create("section","insight-seat-summary");
-    table.appendChild(create("strong","insight-seat-summary-title",
-      "End-of-round life & recorded combat"));
-    const strip=create("div","insight-seat-summary-strip");
-    const actions=observation?.actions||[];
-    const changes=current?.life_changes||[];
+  function seatChangeSummary(current,before){
+    const strip=create("div","insight-seat-life-strip");
     for(const seat of SEATS){
       const value=lifeAt(current,seat),old=before?lifeAt(before,seat):value;
-      const diff=Number.isFinite(value)&&Number.isFinite(old)?value-old:null;
-      const entry=create("div","insight-seat-line");
-      entry.appendChild(create("strong","insight-seat-name",
-        seat===0?"You":"Seat "+(seat+1)));
-      const metrics=create("span","insight-seat-metrics");
-      const hp=create("span","insight-seat-chip"+(diff?
-        diff>0?" is-gain":" is-loss":""),"♥ "+nfmt(value)+
-        (diff?" ("+(diff>0?"+":"")+diff+")":""));
-      hp.title="Recorded life total at round end";
-      metrics.appendChild(hp);
-      // This is confirmed damage RECEIVED, not inferred damage dealt by
-      // this player; the source actor is not always available.
-      const taken=changes.filter(change=>Number(change.seat)===seat&&
-        change.kind==="damage"&&Number.isFinite(change.amount))
-        .reduce((sum,change)=>sum+change.amount,0);
-      if(taken){
-        const badge=create("span","insight-seat-chip is-loss","⚔ −"+taken);
-        badge.title="Recorded unprevented damage received this round";
-        metrics.appendChild(badge);
-      }
-      // Blocked combat is shown only when its actor is identified; a
-      // block record is not a numerical measure of toughness or prevention.
-      const blocks=actions.filter(a=>Number(a.seat)===seat&&
-        /blocked_combat|combat_blocked|block_declared/.test(String(a.type||""))).length;
-      if(blocks){
-        const badge=create("span","insight-seat-chip is-defense","◈ "+blocks+" blocked");
-        badge.title="Recorded blocked-combat events, not damage prevented";
-        metrics.appendChild(badge);
-      }
-      if(!aliveAt(current,seat))
-        metrics.appendChild(create("span","insight-seat-chip is-eliminated","Eliminated"));
-      entry.appendChild(metrics);strip.appendChild(entry);
+      const delta=Number.isFinite(value)&&Number.isFinite(old)?value-old:null;
+      const item=create("div","insight-seat-life"+(delta?
+        delta>0?" is-gain":" is-loss":""));
+      item.append(create("span","insight-seat-life-name",seat===0?"You":"Seat "+(seat+1)),
+        create("strong","insight-seat-life-value","♥ "+nfmt(value)),
+        create("span","insight-seat-life-delta",
+          delta?(delta>0?"+":"")+delta:!aliveAt(current,seat)?"Out":""));
+      strip.appendChild(item);
     }
-    table.appendChild(strip);
-    table.appendChild(create("span","micro",
-      "♥ life and round change · ⚔ confirmed damage received · ◈ blocked combat events. Damage dealt by a particular seat and defensive strength are not inferred from life changes."));
-    return table;
+    return strip;
+  }
+  function enemyActivitySummary(actions){
+    const enemy=(actions||[]).filter(a=>Number.isInteger(a.seat)&&a.seat>0);
+    if(!enemy.length)return null;
+    const kinds=[
+      ["creature",a=>a.type==="creature_cast"||a.type==="reviewed_graveyard_creature_cast"],
+      ["enchantment",a=>a.type==="enchantment_cast"],
+      ["artifact",a=>a.type==="artifact_cast"],
+      ["land",a=>a.type==="land_play"],
+      ["spell",a=>typeof a.type==="string"&&a.type.endsWith("_cast")]
+    ];
+    const counts=new Map(),extras=[];
+    for(const action of enemy){
+      const found=kinds.find(([,test])=>test(action));
+      if(found)counts.set(found[0],(counts.get(found[0])||0)+1);
+      else if(narratedAction(action))extras.push(action);
+    }
+    const played=[...counts].map(([kind,count])=>
+      count+" "+kind+(count===1?"":"s"));
+    const fragments=[];
+    if(played.length)fragments.push("Enemies played "+played.join(", "));
+    if(extras.length)fragments.push(extras.length+" other recorded "+
+      (extras.length===1?"event":"events"));
+    return fragments.length?fragments.join(" · "):null;
   }
   // Single source-grounded narration vocabulary for collapsed and expanded turns.
   // Successful spell resolutions are not repeated after their casts.
@@ -892,8 +884,6 @@
     head.append(create("strong",null,"Seed "+run.seed+" · "+stateLabel(run.outcome.status)),
       create("span","micro",roundLabel(run)));
     root.appendChild(head);
-    root.appendChild(create("p","micro",
-      "Player and enemy activity grouped from recorded events. Opponent pressure is abstract; round-end changes do not identify individual enemy turns."));
     const timeline=create("div","insight-turn-timeline");
     root.appendChild(timeline);
     const life=run.life_history||[];
@@ -957,19 +947,15 @@
           "Action and zone details were not exported for this round."));
       }else{
         const actions=observation.actions||[];
-        if(!actions.length)body.appendChild(create("p","micro",
-          "No individual actions recorded for this round."));
-        // Two stable sections: recorded player activity and a single
-        // condensed enemy block. Never infer intra-round phase ordering.
-        const own=actions.filter(a=>Number(a.seat)===0);
+        if(!actions.length)body.appendChild(create("p","micro","No recorded plays"));
+        // Missing seat attribution belongs to the pilot, ahead of enemy activity.
+        const own=actions.filter(a=>!Number.isInteger(a.seat)||Number(a.seat)===0);
         const enemy=actions.filter(a=>Number.isInteger(a.seat)&&a.seat>0);
-        const unknown=actions.filter(a=>!Number.isInteger(a.seat));
         function actionSection(title,events,cssClass,showSeat){
           events=events.filter(a=>narratedAction(a));
           if(!events.length)return;
           const section=create("section","insight-action-phase "+cssClass);
-          section.appendChild(create("h4","insight-action-phase-heading",
-            title+" · "+events.length+" recorded actions"));
+          section.appendChild(create("h4","insight-action-phase-heading",title));
           const items=create("div","insight-action-sequence");
           for(const a of events){
             const spoken=narratedAction(a);
@@ -991,44 +977,28 @@
           }
           section.appendChild(items);body.appendChild(section);
         }
-        actionSection("Your recorded actions",own,"is-player",false);
-        actionSection("Enemy activity (consolidated)",enemy,"is-opponent",true);
-        actionSection("Seat not recorded",unknown,"is-unattributed",false);
+        actionSection("Your turn",own,"is-player",false);
+        // Keep the rest of the round to a single small evidence block.
+        // Opponent cards are counted only from explicit cast/land events.
+        const rest=create("section","insight-rest-of-turn");
+        rest.appendChild(create("h4","insight-rest-title","Rest of turn"));
+        const enemyText=enemyActivitySummary(enemy);
+        if(enemyText)rest.appendChild(create("p","insight-rest-event",enemyText));
         const moves=observedZoneChanges(previous,observation);
-        if(moves.length){
-          const section=create("section","insight-action-phase is-zone-changes");
-          section.appendChild(create("h4","insight-action-phase-heading",
-            "Observed zone movement · "+moves.length));
-          const items=create("div","insight-action-sequence");
-          for(const move of moves){
-            const line=create("div","insight-action-entry");
-            line.appendChild(insightActionCard(move.card,options,{artOnly:true}));
-            const description=create("span","insight-action-description");
-            description.appendChild(create("span",null,move.verb+" "));
-            description.appendChild(insightActionCard(move.card,options,{textOnly:true}));
-            line.appendChild(description);items.appendChild(line);
-          }
-          section.appendChild(items);body.appendChild(section);
+        for(const move of moves){
+          const line=create("p","insight-rest-event");
+          line.appendChild(create("span",null,move.verb+" "));
+          line.appendChild(insightActionCard(move.card,options,{textOnly:true}));
+          rest.appendChild(line);
         }
-        const zones=create("details","insight-turn-zones");
-        zones.appendChild(create("summary",null,"End-of-round hand, battlefield and graveyard"));
-        renderObservationZones(zones,observation,options);
-        body.appendChild(zones);
+        rest.appendChild(seatChangeSummary(current,before));
+        body.appendChild(rest);
       }
-      body.appendChild(seatChangeSummary(current,before,observation));
-      const recordedChanges=current.life_changes||[];
-      if(index&&recordedChanges.length){
-        const lifeSection=create("section","insight-action-phase is-life");
-        lifeSection.appendChild(create("h4","insight-action-phase-heading",
-          "Recorded life changes · "+recordedChanges.length));
-        for(const entry of recordedChanges){
-          const seat=Number(entry.seat);
-          lifeSection.appendChild(create("p","micro",
-            (seat===0?"You":"Seat "+(seat+1))+" · "+
-            String(entry.kind||"life event").replaceAll("_"," ")+" · "+
-            (entry.delta>0?"+":"")+nfmt(entry.delta)+" life"));
-        }
-        body.appendChild(lifeSection);
+      if(!observation){
+        const rest=create("section","insight-rest-of-turn");
+        rest.appendChild(create("h4","insight-rest-title","Rest of turn"));
+        rest.appendChild(seatChangeSummary(current,before));
+        body.appendChild(rest);
       }
       for(const eliminated of current.new_eliminations||[])
         body.appendChild(create("p","game-outcome-elimination",
