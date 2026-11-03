@@ -1167,3 +1167,66 @@ body:has(#pane-records:not([hidden])) .page-introduction a{font-size:.72rem}
 @media(prefers-reduced-motion:reduce){
   .game-outcome-ranking,.game-outcome-rank-row{scroll-behavior:auto;transition:none}
 }
+
+
+/* Latest-only Results: one card feed, then a recorded-game reviewer. */
+#pane-records{display:grid;gap:18px}
+#pane-records > :not(#long-game-panel):not(#turn-reviewer-panel){display:none!important}
+#pane-records > #long-game-panel{background:transparent;border:0;border-radius:0;
+  padding:0;margin:0;box-shadow:none;overflow:visible}
+#pane-records > #turn-reviewer-panel{display:block}
+.latest-results-topline{display:flex;align-items:center;justify-content:space-between;
+  gap:12px;min-height:28px;margin:0 0 7px;color:#b8c9bc;font-size:.74rem;
+  font-variant-numeric:tabular-nums}
+.latest-results-topline .game-outcome-refresh{font-size:1.1rem;line-height:1;
+  width:33px;height:33px;border-radius:999px;padding:0;flex-shrink:0}
+.latest-insight-grid{grid-template-columns:repeat(2,minmax(0,1fr));gap:14px;
+  margin:8px 0 0;align-items:start}
+.latest-insight-grid .game-outcome-hero-frame{grid-column:1/-1}
+.latest-insight-grid .game-outcome-card:not(.game-outcome-hero){height:100%;
+  min-width:0;border-color:#596c61;box-shadow:0 4px 14px #020a0b40}
+.latest-insight-grid .game-outcome-card:not(.game-outcome-hero) > .game-outcome-summary{
+  background:radial-gradient(ellipse at 100% 0%,#6c66574d,transparent 56%),
+    linear-gradient(145deg,#243638,#111f26);
+  min-height:152px;border-radius:13px}
+.latest-insight-grid .game-outcome-summary-copy{gap:8px}
+.latest-insight-grid .game-outcome-title{font-size:clamp(1.05rem,1.9vw,1.32rem)}
+.latest-insight-grid .game-outcome-number{font-size:clamp(1.75rem,3vw,2.4rem)}
+.latest-insight-grid .game-outcome-caption{font-size:.76rem;color:#d3d6c9}
+.latest-insight-grid .board-open{color:#d4bc8b}
+.latest-insight-grid .game-outcome-card[open]{grid-column:1/-1;height:auto}
+.latest-insight-grid .game-outcome-card[open] > summary{min-height:110px}
+.latest-insight-grid .game-outcome-hero{box-shadow:0 5px 18px #0005}
+.latest-insight-grid .game-outcome-hero-frame{min-height:0}
+.latest-insight-grid .game-outcome-hero-stats{max-width:550px}
+.latest-insight-grid .game-outcome-limits{right:9px;top:9px}
+.game-outcome-finish-bars,.game-outcome-seat-bars{display:grid;gap:7px}
+.game-outcome-finish-row,.game-outcome-seat-bar{display:grid;
+  grid-template-columns:44px minmax(0,1fr) 52px;gap:10px;align-items:center;
+  font-size:.78rem;font-variant-numeric:tabular-nums}
+.game-outcome-seat-bar{grid-template-columns:56px minmax(0,1fr) 64px}
+.game-outcome-finish-track{height:11px;background:#3b504e;border-radius:10px;overflow:hidden}
+.game-outcome-finish-fill{height:100%;display:block;background:linear-gradient(90deg,#83b8a5,#dec39b);
+  border-radius:inherit}
+.game-outcome-finish-row strong,.game-outcome-seat-bar strong{text-align:right;color:#e9d2aa}
+.game-outcome-review-link{border:1px solid #a88d67;background:#3b4a3e;
+  border-radius:8px;padding:9px 11px;color:#f3ddba;text-align:left;cursor:pointer;
+  font:inherit;font-size:.76rem}
+.game-outcome-review-link:hover,.game-outcome-review-link:focus-visible{border-color:#f2d39f}
+.game-outcome-portrait-kind{font-size:.66rem;color:#cfc7ac}
+.latest-turn-reviewer{margin:5px 0 15px;padding:18px;
+  border:1px solid #5a6e65;border-radius:15px;
+  background:linear-gradient(150deg,#1e3031,#121f24)}
+.latest-turn-reviewer h2{font-family:Cinzel,Georgia,serif;font-size:1.16rem;
+  color:#edd5a7;margin:0 0 13px}
+.game-outcome-review-controls{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));
+  gap:10px;margin:0 0 14px}
+.game-outcome-review-controls select{width:100%;max-width:none}
+.game-outcome-review-evidence{display:grid;gap:10px}
+.game-outcome-review-evidence .game-outcome-evidence-head{padding-top:2px}
+@media(max-width:720px){
+  .latest-insight-grid{grid-template-columns:1fr}
+  .latest-insight-grid .game-outcome-card[open]{grid-column:1}
+  .game-outcome-review-controls{grid-template-columns:1fr}
+  .latest-turn-reviewer{padding:12px}
+}
