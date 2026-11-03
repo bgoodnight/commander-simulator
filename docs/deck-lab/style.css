@@ -1917,13 +1917,14 @@ body:has(#pane-records:not([hidden])) .page-introduction a{font-size:.72rem}
 body:has(#pane-records:not([hidden])) .compact-selection{margin-bottom:3px}
 #pane-records{gap:8px}
 #pane-records > #long-game-panel{margin-top:0}
-#long-game-panel .latest-results-topline{display:none}
+#long-game-panel .latest-results-topline{width:1px;height:1px;
+  overflow:hidden;clip-path:inset(50%);padding:0;margin:0}
 .insight-inline-tracker-compact{position:relative;padding:4px 8px}
 .insight-inline-tracker-compact>summary{max-width:52%;width:max-content}
 .insight-inline-tracker-compact>.insight-example-full-link{
   display:none;position:absolute;right:8px;top:4px;
   padding:0;border:0;border-radius:0;box-shadow:none;
-  color:#efd6a6;background:none;font:600 .7rem/1.6 inherit;
+  color:#efd6a6;background:none;font-size:.7rem;font-weight:600;line-height:1.6;
   text-decoration:underline;text-underline-offset:3px;
   text-decoration-color:#d1b47a99
 }
