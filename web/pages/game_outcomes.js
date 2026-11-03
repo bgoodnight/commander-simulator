@@ -339,6 +339,17 @@
       numbers.appendChild(metric);
     }
     copy.appendChild(numbers);
+    if(options.heroHighlights?.length){
+      const highlights=create("div","game-outcome-hero-highlights");
+      for(const item of options.heroHighlights){
+        const stat=create("div","game-outcome-hero-highlight");
+        stat.append(create("span",null,item.label),
+          create("strong",null,item.value),
+          create("small",null,item.detail));
+        highlights.appendChild(stat);
+      }
+      copy.appendChild(highlights);
+    }
     const bar=create("div","game-outcome-stacked-bar");
     bar.setAttribute("role","img");
     bar.setAttribute("aria-label",STATES.map(state=>
@@ -1207,10 +1218,25 @@
     root.appendChild(cards);
     let jumpToReview=null;
     const onReviewRun=(id,seed,turn)=>{if(jumpToReview)jumpToReview(id,seed,turn)};
+    const bestMatchup=matchup[0];
+    const finishedMedian=quantile(finished.map(run=>run.completed_rounds),.5);
+    const finalLifeMedian=quantile(lastLife,.5);
+    const heroHighlights=[
+      {label:"Best matchup",value:bestMatchup?
+        (100*bestMatchup.counts.win/Math.max(1,bestMatchup.games)).toFixed(1)+"%":"—",
+       detail:bestMatchup?.title||"No opponent groups"},
+      {label:"Game length",value:finishedMedian===null?"—":nfmt(finishedMedian),
+       detail:"Median finished rounds"},
+      {label:"Survival",value:(100*runs.filter(run=>
+          aliveAt(run.life_history.at(-1),0)).length/total).toFixed(1)+"%",
+       detail:"Alive at last recorded round"},
+      {label:"Final life",value:finalLifeMedian===null?"—":nfmt(finalLifeMedian),
+       detail:"Median final recorded life"}
+    ];
     cards.appendChild(outcomeCard({
       counts,total,terminal:finished.length,
       terminalRounds:finished.map(run=>run.completed_rounds)
-    },options,body=>{
+    },{...options,heroHighlights},body=>{
       const buckets=create("div","game-outcome-buckets");
       for(const state of STATES){
         if(!counts[state])continue;
@@ -1225,22 +1251,6 @@
       body.appendChild(create("div","micro",groups.length+" opponent groups · "+
         groups[0].requestedRounds+"-round horizon"));
     }));
-    // Card-specific discoveries precede the statistical interpretation.
-    // Missing named sources never become guessed card-level findings.
-    const signals=observationCardStats(runs,options.lookupRecordedCard,
-      options.commanderName);
-    if(signals.coverage){
-      for(const kind of ["played","creature","artifact","enchantment",
-        "instant","spell","land","seen","seenCreature","unplayed","longest",
-        "activated","removal","creatureKills","damage","finisher"]){
-        const panel=cardPerformancePanel(kind,signals.ranked[kind],
-          signals.coverage,groups,options,onReviewRun);
-        if(panel)cards.appendChild(panel);
-      }
-    }else{
-      cards.appendChild(create("p","game-outcome-empty",
-        "Card insights require named card and hand observations from the current published batch."));
-    }
     const best=matchup[0];
     cards.appendChild(card("Opponent Types","Types & table compositions",
       matchup.length+" types",
@@ -1333,6 +1343,23 @@
         slider.addEventListener("input",displayRound);
         body.append(slider,detail);displayRound();
       }));
+    // Card insights follow the four primary game-performance panels.
+    // Card-specific discoveries precede the statistical interpretation.
+    // Missing named sources never become guessed card-level findings.
+    const signals=observationCardStats(runs,options.lookupRecordedCard,
+      options.commanderName);
+    if(signals.coverage){
+      for(const kind of ["played","creature","artifact","enchantment",
+        "instant","spell","land","seen","seenCreature","unplayed","longest",
+        "activated","removal","creatureKills","damage","finisher"]){
+        const panel=cardPerformancePanel(kind,signals.ranked[kind],
+          signals.coverage,groups,options,onReviewRun);
+        if(panel)cards.appendChild(panel);
+      }
+    }else{
+      cards.appendChild(create("p","game-outcome-empty",
+        "Card insights require named card and hand observations from the current published batch."));
+    }
     // The regression story belongs after every game/card panel, immediately
     // above the independent turn reviewer.
     cards.appendChild(elasticNetPanel(options.discoveryReport,options));
