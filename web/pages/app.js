@@ -508,6 +508,7 @@ function renderLongGamePanel(){
     hudTiles:$("hud-performance-tiles"),
     hudPanel:$("hud-metric-panel"),
     deckKey:selected,deckHash:selectedDeck().deck_sha256,
+    commanderName:selectedDeck().commander,
     commanderArt:commanderCard(selectedDeck())?.art||null,
     portraitFor:outcomeOpponentPortrait,
     reviewerRoot:reviewer,
