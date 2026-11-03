@@ -910,17 +910,18 @@
       });
       const firstArt=firstCard&&options.lookupRecordedCard?.(firstCard);
       const image=firstArt?.art||firstArt?.image;
+      let cover=null;
       if(typeof image==="string"&&/^https:\/\//.test(image)){
-        const cover=create("img","insight-turn-cover");
+        cover=create("img","insight-turn-cover");
         cover.src=image;cover.alt="";cover.loading="lazy";
         cover.referrerPolicy="no-referrer";
         // Attach art to the summary itself so it is visible while the
         // native details element is collapsed, not only when expanded.
-        row.__turnCover=cover;
+
       }
       if(Number.isInteger(options.focusTurn)&&options.focusTurn===index)row.open=true;
       const summary=create("summary","insight-turn-row-summary");
-      if(row.__turnCover){summary.appendChild(row.__turnCover);delete row.__turnCover}
+      if(cover)summary.appendChild(cover);
       summary.appendChild(create("strong","insight-turn-label",
         index?"Turn "+index:"Opening"));
       const pilot=(observation?.actions||[]).filter(a=>
