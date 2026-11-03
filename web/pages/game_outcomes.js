@@ -1027,7 +1027,6 @@
       const body=create("div","insight-turn-row-body");
       if(index===0){
         const initial=run.opening_hand||[];
-        body.appendChild(create("p","micro",openingHandDescription(run)));
         const cards=create("div","insight-action-cards");
         for(const name of initial)cards.appendChild(insightActionCard(name,options));
         body.appendChild(cards);
