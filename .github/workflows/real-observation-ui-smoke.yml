@@ -75,8 +75,10 @@ jobs:
           assert total==20
           print("Verified 20 actual games with full seat mappings and turn observations")
           PY
+          mkdir -p dist/smoke-input
+          cp testdata/real-ui-smoke/outcomes-*.json dist/smoke-input/
           python tools/publish_game_outcomes.py \
-            --source testdata/real-ui-smoke/outcomes-mixed.json \
+            --source dist/smoke-input \
             --output dist/unpublished-smoke-check \
             --engine-commit "${{ github.sha }}"
       - name: Check browser-side reader consumes real batches
