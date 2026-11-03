@@ -420,3 +420,68 @@ test('elastic net card interpretation and sign chart sit immediately above revie
   assert.match(css,/\.elastic-net-effect\.is-positive/);
   assert.match(css,/\.elastic-net-effect\.is-negative/);
 });
+
+
+test('featured card insight switches artwork, mana, metrics, and evidence with selected bar',()=>{
+  class Node{
+    constructor(tag){this.tag=tag;this.className='';this.textContent='';
+      this.children=[];this.attributes={};this.dataset={};this.style={};this.hidden=false}
+    append(...n){this.children.push(...n)}
+    appendChild(n){this.children.push(n);return n}
+    replaceChildren(...n){this.children=[...n]}
+    setAttribute(k,v){this.attributes[k]=String(v)}
+    removeAttribute(k){delete this.attributes[k]}
+    addEventListener(){}
+    get lastChild(){return this.children.at(-1)}
+  }
+  const before=global.document;
+  global.document={createElement:t=>new Node(t),createElementNS:(_,t)=>new Node(t)};
+  try{
+    const make=(seed,card)=>run(seed,'unresolved',[
+      [40,40,40,40],[40,40,40,40],[40,40,40,40],[40,40,40,40]
+    ],undefined,{
+      opening_hand:[card],
+      ui_observations:[
+        {turn:1,hand:[card],actions:[]},
+        {turn:2,hand:[],actions:[{type:'creature_cast',card}]},
+        {turn:3,hand:[],actions:[]}
+      ]
+    });
+    const lookup=name=>({
+      'Grave Titan':{name,art:'https://example.com/grave-art.jpg',
+        image:'https://example.com/grave-full.jpg',mana_cost:'{4}{B}{B}',
+        type_line:'Creature — Giant'},
+      'Plague Spitter':{name,art:'https://example.com/plague-art.jpg',
+        image:'https://example.com/plague-full.jpg',mana_cost:'{2}{B}',
+        type_line:'Creature — Horror'}
+    })[name]||null;
+    const root=new Node('main'),reviewer=new Node('section');
+    Outcomes.render(root,[batch([
+      make(1,'Grave Titan'),make(2,'Grave Titan'),
+      make(3,'Plague Spitter')
+    ])],{
+      deckKey:'necron_dynasties',deckHash:'a'.repeat(64),
+      lookupRecordedCard:lookup,reviewerRoot:reviewer,
+      renderMana:cost=>{const n=new Node('span');n.textContent='mana:'+cost;return n}
+    });
+    const walk=n=>[n,...n.children.flatMap(walk)];
+    const card=walk(root).find(n=>n.className.includes('insight-featured-panel')&&
+      walk(n).some(x=>x.textContent==='Most played creature'));
+    assert.ok(card);
+    const buttons=walk(card).filter(n=>n.className==='insight-featured-bar');
+    assert.equal(buttons.length,2);
+    const cover=walk(card).find(n=>n.className==='insight-featured-cover');
+    assert.equal(cover.src,'https://example.com/grave-art.jpg');
+    assert.ok(walk(card).some(n=>n.textContent==='mana:{4}{B}{B}'));
+    buttons[1].onclick();
+    assert.equal(buttons[1].attributes['aria-pressed'],'true');
+    assert.equal(buttons[0].attributes['aria-pressed'],'false');
+    assert.equal(cover.src,'https://example.com/plague-art.jpg');
+    assert.ok(walk(card).some(n=>n.textContent==='mana:{2}{B}'));
+    assert.ok(walk(card).some(n=>n.tag==='img'&&n.src==='https://example.com/plague-full.jpg'));
+    assert.ok(walk(card).some(n=>n.className==='insight-featured-card-name'&&
+      n.textContent==='Plague Spitter'));
+    assert.ok(walk(card).some(n=>n.className==='game-outcome-review-link'&&
+      n.textContent==='Seed 3 · Turn 2'));
+  }finally{global.document=before}
+});
