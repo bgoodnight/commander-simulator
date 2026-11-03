@@ -1,5 +1,6 @@
 """Static GitHub Pages release gate: no Python backend or unverified results."""
 import json
+import hashlib
 from pathlib import Path
 import tempfile
 import unittest
@@ -136,6 +137,18 @@ class StaticPagesTests(unittest.TestCase):
         self.assertIn("localStorage",script)
         self.assertNotIn("/api/observation",script)
         self.assertNotIn("eval(",script)
+
+    def test_ui_asset_urls_are_fingerprinted_from_contents(self):
+        self.run_build()
+        shell=(self.destination/"index.html").read_text(encoding="utf-8")
+        for name in ("app.js","results_insights.js","brackets.js","replay.js",
+                     "insight_explorer.js","insight_catalog.js","game_outcomes.js",
+                     "style.css"):
+            digest=hashlib.sha256((self.destination/name).read_bytes()).hexdigest()[:12]
+            self.assertIn("./"+name+"?v="+digest+'"',shell)
+            self.assertEqual(shell.count("./"+name+"?v="),1)
+        for name in ("summary.html","results.html","editor.html"):
+            self.assertEqual(shell,(self.destination/name).read_text(encoding="utf-8"))
 
     def test_default_results_and_separate_shareable_summary_editor_pages(self):
         manifest=self.run_build()
