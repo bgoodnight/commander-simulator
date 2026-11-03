@@ -113,6 +113,8 @@ class LiveZones(KernelZones):
         super().__init__(kernel, seed=seed)
         self.order = kernel.order
         self.specs = {}
+        # Separate ETB journal; legacy zone operations remain replay-compatible.
+        self.entry_operations = []
 
     def register(self, spec, detailed=False):
         def freeze(value):
@@ -146,7 +148,10 @@ class LiveZones(KernelZones):
         self._checkseat(owner)
         if zone not in self.valid_zones or token and zone != 'battlefield':
             raise ValueError('Invalid initial card zone')
-        return self.kernel.add(definition, owner, zone=zone, token=token).object_id
+        oid=self.kernel.add(definition, owner, zone=zone, token=token).object_id
+        if zone=='battlefield':
+            self.entry_operations.append(('add',owner,oid,zone))
+        return oid
 
     @property
     def valid_zones(self):
@@ -162,7 +167,10 @@ class LiveZones(KernelZones):
         transition = self.kernel.move(oid, to_zone, reason, commander_choice)
         if transition is None:
             return oid
-        self.operations.append((reason, owner, oid, transition.new_object_id, source, transition.new_zone))
+        operation=(reason,owner,oid,transition.new_object_id,source,transition.new_zone)
+        self.operations.append(operation)
+        if source!='battlefield' and transition.new_zone=='battlefield':
+            self.entry_operations.append(operation)
         return transition.new_object_id
 
     def views(self, seat, zone):

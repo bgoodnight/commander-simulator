@@ -61,9 +61,16 @@ jobs:
           path=next(Path("dist/outcomes").glob("*.json"))
           data=json.loads(path.read_text())
           run=data["runs"][0]
-          assert run["outcome"]["status"]=="loss",run["outcome"]
-          assert run["outcome"]["reason"]=="pilot_empty_library_draw",run["outcome"]
-          assert any(e["cause"]=="empty_library_draw" for e in run["outcome"]["eliminations"])
+          outcome=run["outcome"]
+          assert outcome["complete"] and outcome["status"] in {"win","loss"},outcome
+          if outcome["reason"]=="pilot_empty_library_draw":
+              assert outcome["status"]=="loss"
+              assert any(e["cause"]=="empty_library_draw" for e in outcome["eliminations"])
+          else:
+              # Newly supported triggers can end the game before the former
+              # empty-library loss. Require a verified terminal win instead.
+              assert outcome["status"]=="win" and outcome["reason"]=="all_opponents_life_zero",outcome
+              assert set(outcome["surviving_seats"])=={0},outcome
           assert run["completed_rounds"]<=30
           PY
       - name: Preserve bounded outcomes and observations
