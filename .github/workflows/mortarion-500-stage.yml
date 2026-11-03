@@ -1,10 +1,8 @@
 name: Stage and review 500 Mortarion modeled games
 
-# Re-run after excluding paid sacrifice victims from mana-source selection.
+# Run the full batch explicitly after the pilot / rules baseline is approved.
+# Workflow edits should not silently trigger 500 new games on main.
 on:
-  push:
-    branches: [main]
-    paths: [".github/workflows/mortarion-500-stage.yml"]
   pull_request:
     paths:
       - ".github/workflows/mortarion-500-stage.yml"
