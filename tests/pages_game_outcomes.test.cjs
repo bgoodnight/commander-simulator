@@ -856,3 +856,69 @@ test('turn background uses first named card and enemy activity has one condensed
     assert.ok(!walk(seat2).some(n=>n.textContent.includes('—')));
   }finally{global.document=before}
 });
+
+test('narrated turn summary and expanded actions reuse factual card-linked wording',()=>{
+  class Node{
+    constructor(tag){this.tag=tag;this.className='';this.textContent='';
+      this.children=[];this.attributes={};this.style={};this.dataset={};this.events={};
+      this.open=false;}
+    append(...items){this.children.push(...items)}
+    appendChild(item){this.children.push(item);return item}
+    replaceChildren(...items){this.children=[...items]}
+    setAttribute(k,v){this.attributes[k]=String(v)}
+    addEventListener(k,handler){this.events[k]=handler}
+    get lastChild(){return this.children.at(-1)}
+  }
+  const before=global.document;
+  global.document={createElement:tag=>new Node(tag),
+    createElementNS:(_,tag)=>new Node(tag)};
+  const walk=n=>[n,...n.children.flatMap(walk)];
+  const opened=[];
+  try{
+    const r={...runUnresolved(),ui_observations:[
+      {turn:1,hand:['Swamp','Grave Titan'],battlefield:[],graveyard:[],exile:[],
+       actions:[
+         {type:'draw',card:'Swamp',seat:0},
+         {type:'land_play',card:'Swamp',seat:0},
+         {type:'creature_cast',card:'Grave Titan',seat:0},
+         {type:'reviewed_enter_resolved',card:'Grave Titan',seat:0},
+         {type:'opponent_abstract_blocked_combat',seat:1},
+         {type:'cleanup_discard',card:'Swamp',seat:0}
+       ]},
+      {turn:2,hand:['Swamp'],battlefield:['Grave Titan'],graveyard:['Swamp'],exile:[],
+       actions:[{type:'draw',card:'Sol Ring',seat:0}]},
+      {turn:3,hand:[],battlefield:[],graveyard:['Swamp','Grave Titan'],exile:[],
+       actions:[]}
+    ]};
+    const root=new Node('main'),reviewer=new Node('section');
+    Outcomes.render(root,[batch([r])],{
+      deckKey:'necron_dynasties',deckHash:'a'.repeat(64),reviewerRoot:reviewer,
+      lookupRecordedCard:name=>({name,art:'https://example.com/'+name.replaceAll(' ','-')+'.jpg'}),
+      onOpenRecordedCard:name=>opened.push(name)
+    });
+    const turns=walk(reviewer).filter(n=>n.className==='insight-turn-row');
+    const turn1=turns[1];
+    const heading=walk(turn1).find(n=>n.className==='insight-turn-activity');
+    assert.equal(heading.textContent,
+      'Drew Swamp, Played Swamp, Grave Titan, Discarded Swamp');
+    const player=walk(turn1).find(n=>n.className==='insight-action-phase is-player');
+    const labels=walk(player).filter(n=>n.className==='insight-action-verb');
+    assert.deepEqual(labels.map(n=>n.textContent),
+      ['Drew ','Played ','Played ','Discarded ']);
+    const names=walk(player).filter(n=>n.className.includes('is-text-only'));
+    const arts=walk(player).filter(n=>n.className.includes('is-art-only'));
+    assert.equal(names.length,4);
+    assert.equal(arts.length,4);
+    names[2].onclick();arts[2].onclick();
+    assert.deepEqual(opened,['Grave Titan','Grave Titan']);
+    const enemy=walk(turn1).find(n=>n.className==='insight-action-phase is-opponent');
+    assert.ok(enemy);
+    assert.ok(walk(enemy).some(n=>n.className==='insight-action-verb'&&
+      n.textContent==='Blocked '));
+    assert.ok(!walk(turn1).some(n=>n.textContent==='reviewed enter resolved'));
+    const third=walk(turns[3]);
+    assert.ok(third.some(n=>n.textContent==='Moved from battlefield to graveyard '));
+    assert.ok(third.some(n=>n.className.includes('is-text-only')&&
+      n.textContent==='Grave Titan'));
+  }finally{global.document=before}
+});

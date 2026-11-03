@@ -1662,3 +1662,21 @@ body:has(#pane-records:not([hidden])) .page-introduction a{font-size:.72rem}
   .insight-seat-line{align-items:flex-start}
   .insight-seat-name{padding-top:3px}
 }
+
+/* Narrated turns: artwork and card names are separate unobtrusive links. */
+.insight-action-entry{gap:9px;align-items:center}
+.insight-action-card.is-art-only,.insight-action-card.is-text-only{
+  padding:0;border:0;background:transparent;box-shadow:none;
+  border-radius:0;color:#f0d8a9;min-width:0;max-width:100%}
+.insight-action-card.is-art-only{flex:none}
+.insight-action-card.is-text-only{display:inline;vertical-align:baseline;
+  text-decoration:underline;text-decoration-color:#c3ac795e;
+  text-underline-offset:2px;font:inherit}
+.insight-action-card.is-text-only:hover{text-decoration-color:#f1d4a2;
+  color:#fff0cc;background:transparent}
+.insight-action-card.is-art-only .insight-action-art{
+  width:35px;height:48px;object-fit:cover;border-radius:4px;
+  box-shadow:0 2px 8px #0008}
+.insight-action-card.is-art-only:hover .insight-action-art{filter:brightness(1.15)}
+.insight-action-verb{color:#e1e3d5}
+.insight-action-phase.is-zone-changes{border-left-color:#bdab8a}
