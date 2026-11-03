@@ -793,6 +793,8 @@
       for(const seat of SEATS){
         const stat=create("div","game-outcome-life-stat");
         const current=lifeAt(row,seat),before=previous?lifeAt(previous,seat):current;
+        if(previous&&current!==before)
+          stat.className+=current>before?" is-life-gain":" is-life-loss";
         stat.append(create("span",null,seat===0?"Your life":"Seat "+(seat+1)),
           create("strong",null,nfmt(current)),
           create("small",null,(current-before<0?"":current-before>0?"+":"")+
@@ -849,8 +851,30 @@
         index===0?"Start":"Turn "+index);
       const highlight=create("span","game-outcome-turn-highlight",
         turnActionHighlight(row,spotlight));
+      const lifeNow=lifeAt(run.life_history[index],0);
+      const lifeBefore=index?lifeAt(run.life_history[index-1],0):lifeNow;
+      const delta=lifeNow-lifeBefore;
+      if(index&&delta)button.className+=delta>0?" is-life-gain":" is-life-loss";
       const state=create("span","game-outcome-turn-life",
-        nfmt(lifeAt(run.life_history[index],0))+" life");
+        nfmt(lifeNow)+" life"+(delta?" ("+(delta>0?"+":"")+nfmt(delta)+")":""));
+      if(index&&run.ui_observations?.[index-1]){
+        const current=run.ui_observations[index-1];
+        const prior=index>1?run.ui_observations[index-2]:null;
+        const changes=create("span","game-outcome-turn-zones");
+        const indicators=[];
+        for(const [label,key] of [["Hand","hand"],["Board","battlefield"],
+          ["Grave","graveyard"]]){
+          const now=Array.isArray(current[key])?current[key].length:null;
+          const old=prior&&Array.isArray(prior[key])?prior[key].length:null;
+          if(now===null)continue;
+          const difference=old===null?null:now-old;
+          const chip=create("span","game-outcome-turn-zone",
+            label+" "+now+(difference?" ("+(difference>0?"+":"")+difference+")":""));
+          if(difference)chip.className+=difference>0?" is-zone-gain":" is-zone-loss";
+          indicators.push(chip);
+        }
+        if(indicators.length){changes.append(...indicators);button.appendChild(changes)}
+      }
       button.append(number,highlight,state);
       strip.appendChild(button);
       turnButtons.push(button);
@@ -1146,6 +1170,55 @@
             }
           }
           if(examples.children.length)evidence.appendChild(examples);
+          // The inline tracker uses the exact same runDetails projection as
+          // the full reviewer; neither hand nor life changes are inferred.
+          const relevant=[...new Map([
+            ...item.events.map(hit=>[hit.run,hit.turn]),
+            ...[...item.seen].map(run=>[run,1])
+          ]).entries()].filter(([run])=>
+            Array.isArray(run?.life_history)&&run.life_history.length>1)
+            .slice(0,12).map(([run,turn])=>({
+              run,turn,group:groups.find(g=>g.runs.includes(run))
+            })).filter(entry=>entry.group);
+          if(relevant.length){
+            const tracker=create("details","insight-inline-tracker");
+            const summary=create("summary",null,
+              "Relevant games & turn tracker · "+relevant.length+
+              (relevant.length===1?" game":" games"));
+            tracker.appendChild(summary);
+            const controls=create("div","insight-inline-tracker-controls");
+            const selectRun=create("select","game-outcome-scenario-select");
+            selectRun.setAttribute("aria-label","Choose a relevant recorded game");
+            relevant.forEach((entry,index)=>{
+              const option=create("option",null,entry.group.scenario+
+                " · Seed "+entry.run.seed+" · "+stateLabel(entry.run.outcome.status));
+              option.value=String(index);selectRun.appendChild(option);
+            });
+            const detailsRoot=create("div","insight-inline-tracker-review");
+            controls.append(selectRun);
+            const full=textButton("Open in full reviewer ↗",
+              "game-outcome-review-link",()=>{
+                const entry=relevant[Number(selectRun.value)]||relevant[0];
+                onReviewRun(entry.group.id,entry.run.seed,entry.turn);
+              });
+            controls.appendChild(full);
+            tracker.append(controls,detailsRoot);
+            const draw=()=>{
+              const entry=relevant[Number(selectRun.value)]||relevant[0];
+              runDetails(detailsRoot,entry.run,{
+                focusTurn:entry.turn,
+                lookupRecordedCard:options.lookupRecordedCard,
+                onOpenRecordedCard:options.onOpenRecordedCard,
+                example:entry.group.exampleBySeed?.get(entry.run.seed),
+                onShowRecordedActions:options.onShowRecordedActions
+              });
+            };
+            selectRun.addEventListener("change",draw);
+            tracker.addEventListener("toggle",()=>{
+              if(tracker.open)draw();
+            });
+            evidence.appendChild(tracker);
+          }
         }
         ranking.append(
           create("strong","insight-featured-chart-title","Top cards"),
