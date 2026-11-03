@@ -171,7 +171,7 @@
     return String(role).split(/[-_ ]+/)
       .map(part=>part?part[0].toUpperCase()+part.slice(1):"").join(" ");
   }
-  function matchupRows(groups,mode="types"){
+  function matchupRows(groups,mode="scenarios"){
     // The result is always a four-player TABLE outcome, never a head-to-head.
     // A type appearing in two opposing seats counts once per game in 'types'.
     // A 'composition' is a sorted multiset: seat order has no significance.
