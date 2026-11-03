@@ -1,0 +1,15 @@
+{
+  "format": "shared-kernel-abstract-calibration-alpha-v1",
+  "games": 40,
+  "resolutions": {
+    "unresolved": 38,
+    "win": 2
+  },
+  "winner_seats": {
+    "1": 1,
+    "2": 1
+  },
+  "median_rounds": 15,
+  "fidelity": "physical kernel and zones, synthetic archetype effects, no printed-card execution",
+  "real_deck_matchups": false
+}
