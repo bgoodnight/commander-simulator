@@ -1,0 +1,119 @@
+name: Baseline archetype pacing and seat-behavior smoke test
+
+on:
+  push:
+    branches: [experiment/opponent-calibration-baseline-20261103]
+    paths: [.github/workflows/opponent-calibration-baseline.yml]
+
+permissions:
+  contents: write
+
+jobs:
+  simulate:
+    name: ${{ matrix.deck }} / ${{ matrix.scenario }} / 10 narrative games
+    runs-on: ubuntu-latest
+    timeout-minutes: 65
+    strategy:
+      fail-fast: false
+      max-parallel: 8
+      matrix:
+        deck: [mortarion_physical_final, magnus_physical_trial, wretched_ranks, necron_dynasties]
+        scenario: [mixed, random]
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      - name: Produce real 30-round source-traced games
+        run: |
+          mkdir -p dist/outcomes dist/observations
+          python tools/build_game_outcomes.py \
+            --deck "${{ matrix.deck }}" \
+            --scenario "${{ matrix.scenario }}" \
+            --seeds 10 --start-seed 0 --rounds 30 \
+            --pilot-style adaptive --pilot-archetype auto --provisional-mode safe \
+            --examples 3 \
+            --output "dist/outcomes/${{ matrix.deck }}-${{ matrix.scenario }}.json" \
+            --observations-output "dist/observations/${{ matrix.deck }}-${{ matrix.scenario }}.jsonl"
+      - name: Verify complete outcome and observation records
+        run: |
+          python tools/validate_game_observations.py \
+            --source dist/observations --expected-games 10 --expected-rounds 30
+          python tools/validate_outcome_ui_coverage.py \
+            --source dist/outcomes --expected-games 10 --expected-rounds 30
+      - uses: actions/upload-artifact@v4
+        with:
+          name: calibration-${{ matrix.deck }}-${{ matrix.scenario }}-${{ github.sha }}
+          path: |
+            dist/outcomes/*.json
+            dist/observations/*.jsonl
+          if-no-files-found: error
+          retention-days: 90
+
+  report:
+    needs: simulate
+    name: Aggregate empirical pacing and role evidence
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      - uses: actions/download-artifact@v4
+        with:
+          pattern: calibration-*-${{ github.sha }}
+          path: dist/samples
+          merge-multiple: true
+      - name: Summarize actual archetype turn histories, not synthetic wins
+        run: |
+          mkdir -p dist/report
+          test "$(find dist/samples -name '*.jsonl' | wc -l)" -eq 8
+          test "$(find dist/samples -name '*.json' | wc -l)" -eq 8
+          python tools/report_opponent_calibration.py \
+            --source dist/samples --output dist/report/calibration.json > dist/report/calibration-console.json
+          python - <<'PY'
+          import json
+          from pathlib import Path
+          j=json.loads(Path('dist/report/calibration.json').read_text())
+          assert j['total_games']==80
+          assert len(j['decks'])==4
+          assert set(j['opponent_archetypes'])=={'aggro','control','value','combo'}
+          Path('dist/report/README.md').write_text(
+            '# Calibration baseline — real observed games\n\n'
+            '80 games, four different physical deck fixtures, 10 seeds each '
+            'against mixed and randomized three-opponent compositions. '
+            '30-round horizon, adaptive pilot, safe provisional mode.\n\n'
+            'The opponent roles are abstract: no four-equivalent-AI fairness '
+            'claim is possible from these data. See calibration.json for '
+            'source-recorded first creature, second creature, combat damage, '
+            'removal, combo clock, and terminal-turn summary, conditioned '
+            'on observation when the event was not universal.\n\n'
+            'Original JSON outcome batches and full JSONL records remain '
+            'attached to the GitHub Actions run.\n',encoding='utf8')
+          print('Validated',j['total_games'],'games and all four archetypes')
+          PY
+      - uses: actions/upload-artifact@v4
+        with:
+          name: opponent-calibration-report-${{ github.sha }}
+          path: dist/report/
+          retention-days: 90
+          if-no-files-found: error
+      - name: Publish report to isolated calibration branch
+        run: |
+          git fetch origin experiment/opponent-calibration-baseline-20261103
+          if [ "$(git rev-parse HEAD)" != "$(git rev-parse origin/experiment/opponent-calibration-baseline-20261103)" ]; then
+            echo 'Branch advanced; report remains safely in Actions artifacts.'
+            exit 0
+          fi
+          mkdir -p testdata/opponent-calibration
+          cp dist/report/calibration.json dist/report/README.md testdata/opponent-calibration/
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add testdata/opponent-calibration/
+          if ! git diff --cached --quiet; then
+            git commit -m 'Record actual 80-game archetype-pacing calibration baseline'
+            git push origin HEAD:experiment/opponent-calibration-baseline-20261103
+          fi
