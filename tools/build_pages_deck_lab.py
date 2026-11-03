@@ -229,7 +229,7 @@ def build(output, *, catalog_path=SHARED_CATALOG, name_catalog_path=DEFAULT_NAME
                      "insight_explorer.js","insight_catalog.js","game_outcomes.js",
                      "style.css"):
         digest=hashlib.sha256((static / filename).read_bytes()).hexdigest()[:12]
-        pattern=r'(?P<asset>\\./'+re.escape(filename)+r')(?:\\?v=[^"]*)?(?=")'
+        pattern=r'(?P<asset>\./'+re.escape(filename)+r')(?:\?v=[^"]*)?(?=")'
         shell,count=re.subn(pattern,
                            lambda match: match.group("asset")+"?v="+digest,
                            shell)
