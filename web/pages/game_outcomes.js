@@ -1224,5 +1224,5 @@
     return report;
   }
   return {FORMAT,STATES,validate,model,lifeTrend,matchupRows,matchupMetrics,
-    knockoutRound,opponentDecks,render};
+    knockoutRound,opponentDecks,observationCardStats,render};
 });
