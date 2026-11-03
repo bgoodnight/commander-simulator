@@ -111,3 +111,15 @@ Connect the existing offline name suggestions and `prepare_theorycraft_deck` fir
 - Do not run a giant 1,000+ game campaign before one convincing, source-paid seed narrative; leave performance optimization for measured hotspots.
 - Use focused file paths and latest diffs rather than reading every historical engine version.
 - On failing CI, inspect **the failing job log and targeted test first**. Distinguish test-count bookkeeping failures from semantic bugs and fix only the relevant issue.
+
+## New simulation observation export requirement (November 2, 2026)
+
+For the **next** large simulation, use
+[SIMULATION_OBSERVATIONS_CONTRACT.md](SIMULATION_OBSERVATIONS_CONTRACT.md):
+record every game's opening hand, complete existing turn-level events,
+state snapshots, opponent assignments, decisions and outcomes in a separate
+validated JSONL archive. The new `--observations-output` option is a
+separate sidecar, not a Pages payload. Preserve compressed archives with
+permanent GitHub Releases, and retain the concise browser outcomes.
+Never infer unavailable opportunities or missing fidelity. Prefer one
+interaction-aware hierarchical elastic-net discovery model downstream.
