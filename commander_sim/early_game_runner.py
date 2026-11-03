@@ -287,7 +287,8 @@ def run_bounded_early_game(deck_key, *, seed=0, turns=6, mulligan="one-free", pr
     composed_engine = ComposedAbilityEngine(zones, life, raw_by_name,
                                            mana_service, death_engine)
     reactive_engine = ReactiveTriggerEngine(zones,life,raw_by_name)
-    creature_entry_engine=ReviewedCreatureEntryEngine(zones,life,raw_by_name)
+    creature_entry_engine=ReviewedCreatureEntryEngine(zones,life,raw_by_name,
+                                               death_engine=death_engine)
     attachment_engine=AttachmentEngine(
         zones,life,raw_by_name,mana_service,death_engine)
     death_engine.attachments=attachment_engine
@@ -432,7 +433,7 @@ def run_bounded_early_game(deck_key, *, seed=0, turns=6, mulligan="one-free", pr
             obj.object_id for obj in kernel.on_battlefield()
             if obj.controller==0 and "creature" in obj.types)
         def resolve_creature_entries():
-            for triggered in creature_entry_engine.resolve():
+            for triggered in creature_entry_engine.resolve(turn=turn):
                 events.append({
                     "type":"reviewed_creature_entry_trigger",
                     "source":triggered.source_name,
