@@ -58,7 +58,7 @@ class BoundedOpponentPressure:
 
     def __init__(self, zones, life, catalog, death_engine, phase_engine,
                  card_definition, *, seed=0, scenario="random",
-                 attachment_engine=None):
+                 attachment_engine=None, mana_service=None):
         if scenario not in SCENARIOS:
             raise ValueError("Unknown opponent stress scenario")
         if zones.kernel is not life.kernel:
@@ -71,6 +71,7 @@ class BoundedOpponentPressure:
         self.definition = card_definition
         self.scenario = scenario
         self.attachments = attachment_engine
+        self.mana_service = mana_service
         self.before_removal = None
         self.zone_spells = None
         self.rng = Random(seed * 1009 + 617)
@@ -313,6 +314,21 @@ class BoundedOpponentPressure:
                         self.events.append(OpponentEvent(
                             turn,seat,role,"reviewed_attack_retrieve",
                             milled.returned_id,1,defender))
+            if attacker.controller==0:
+                from .reviewed_attack_zones import resolve_attack_zone
+                outcome=resolve_attack_zone(
+                    self.zones,self.life,self.catalog,attacker.object_id,
+                    mana_service=self.mana_service,
+                    death_engine=self.death_engine,turn=turn)
+                if outcome is not None:
+                    if outcome.returned_id is not None:
+                        self.events.append(OpponentEvent(
+                            turn,seat,role,"reviewed_attack_recursion",
+                            outcome.returned_id,1,defender))
+                    if outcome.sacrificed_old_ids:
+                        self.events.append(OpponentEvent(
+                            turn,seat,role,"reviewed_attack_sacrifice",
+                            attacker.object_id,len(outcome.sacrificed_old_ids),defender))
             blockers=kernel.legal_blockers(attacker.object_id,defender,frozenset(used))
             # Magic creatures with negative power assign/deal zero combat
             # damage. Their signed power still matters for other effects.
