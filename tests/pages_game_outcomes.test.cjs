@@ -881,7 +881,7 @@ test('turn background uses first named card and enemy activity has one condensed
     const player=firstBody.find(n=>n.className==='insight-action-phase is-player');
     assert.ok(player);
     assert.ok(walk(player).some(n=>n.textContent==='Unknown Card'));
-    assert.equal(walk(rest[0]).filter(n=>n.className==='insight-seat-life').length,4);
+    assert.equal(walk(rest[0]).filter(n=>n.className.startsWith('insight-seat-life')).length,4);
     const second=walk(turns[2]);
     assert.equal(second.filter(n=>n.className.startsWith('insight-seat-life')).length,4);
   }finally{global.document=before}
