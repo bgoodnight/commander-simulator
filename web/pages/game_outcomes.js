@@ -524,7 +524,11 @@
         for(const action of row.actions||[]){
           if(action.type==="draw"&&action.card)seen.add(action.card);
           const played=action.type==="land_play"||
-            action.type?.endsWith("_cast")||action.type==="reviewed_commander_cast";
+            action.type?.endsWith("_cast")||
+            action.type==="reviewed_instant_response"||
+            action.type==="reviewed_common_spell_resolved"||
+            action.type==="reviewed_zone_spell_resolved"||
+            action.type==="reviewed_commander_cast";
           if(played){
             inc(plays,action.card,run.seed,row.turn);
             const card=lookupCard(action.card);
