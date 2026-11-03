@@ -203,6 +203,15 @@ class SharedFourSeatTable:
                         self.zones.move(c.object_id,"graveyard","destroy")
         if p.kind=="draw":
             self._draw(seat,2,turn)
+        if p.kind=="tokens":
+            for number in range(2):
+                token=self.CardDefinition(
+                    f"calibration:{seat}:token:{turn}:{ticket.object_id}:{number}",
+                    "Abstract creature token",frozenset({"creature"}),
+                    base_power=1,base_toughness=1,coverage="approx")
+                tid=self.zones.add(token,seat,"battlefield",token=True)
+                self.entered[tid]=turn
+            self._log(turn,seat,"abstract_tokens",count=2)
         if p.kind=="burn":
             other=self._target(seat)
             if other is not None:self.life.damage(other,3)
@@ -226,7 +235,21 @@ class SharedFourSeatTable:
     def _target(self,seat):
         others=[s for s in range(4) if s!=seat and s not in self.eliminated]
         if not others:return None
-        return self.rng.choice(others)
+        # Weighted stochastic selection based on PUBLIC physical board and life.
+        # Avoid any privileged human seat or reading other players' hidden cards.
+        weights=[]
+        for other in others:
+            board=self._creatures(other)
+            threat=sum(max(0,o.power) for o in board)+2*len(
+                [o for o in self._role_objects(other)
+                 if o.card.card_id.split(":")[2] in ("engine","combo_piece")])
+            if self.roles[seat]=="aggro":
+                weight=2+max(0,40-self.life.total(other))/6
+                weight/=1+len([o for o in board if not o.tapped])*.75
+            else:
+                weight=2+threat*.5+max(0,40-self.life.total(other))*.08
+            weights.append(max(.25,weight))
+        return self.rng.choices(others,weights=weights,k=1)[0]
 
     def _combat(self,seat,turn):
         role=self.roles[seat]
@@ -269,6 +292,13 @@ class SharedFourSeatTable:
                 for obj in self._role_objects(seat):
                     obj.tapped=False
                 if not self._draw(seat,1,turn):continue
+                # A previously played synthetic engine may grant one additional
+                # physical draw. This is explicit bounded profile behavior, not
+                # a claimed printed triggered ability.
+                engine_count=sum(o.card.card_id.split(":")[2]=="engine"
+                                 for o in self._role_objects(seat))
+                if engine_count and not self._draw(seat,min(2,engine_count),turn):
+                    continue
                 lands=[oid for oid in self.zones.ids(seat,"hand")
                        if self.profiles[self.kernel.get(oid).card.card_id].kind=="land"]
                 if lands:
