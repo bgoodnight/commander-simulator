@@ -1020,3 +1020,13 @@ test('collapsed turn art and compact insight height have foreground-safe styles'
   assert.match(css,/\.insight-turn-row \.insight-turn-cover\{/);
   assert.match(css,/\.insight-featured-panel \.game-outcome-summary\{min-height:64px\}/);
 });
+
+test('compact insight summary beats legacy 152px min-height specificity',()=>{
+  const css=fs.readFileSync('web/pages/style.css','utf8');
+  const oldRule='.latest-insight-grid .game-outcome-card:not(.game-outcome-hero) > .game-outcome-summary';
+  const newRule='.latest-insight-grid .game-outcome-card.insight-featured-panel:not(.game-outcome-hero) > .game-outcome-summary';
+  const oldIndex=css.indexOf(oldRule),newIndex=css.lastIndexOf(newRule);
+  assert.ok(oldIndex>=0&&newIndex>oldIndex);
+  assert.match(css.slice(newIndex,newIndex+170),/min-height:68px/);
+  assert.match(css.slice(newIndex,newIndex+170),/height:auto/);
+});
