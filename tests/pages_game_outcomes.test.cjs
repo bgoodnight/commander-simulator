@@ -773,17 +773,18 @@ test('selected card insight embeds relevant game turns and real life/zone change
     assert.equal(walk(tracker).some(n=>n.className==='game-outcome-turn-tile'),false,
       'tracker must render lazily when expanded');
     tracker.open=true;tracker.events.toggle();
-    const turns=walk(tracker).filter(n=>n.className.startsWith('game-outcome-turn-tile'));
+    const turns=walk(tracker).filter(n=>n.className==='insight-turn-row');
     assert.equal(turns.length,4);
-    assert.ok(turns[1].className.includes('is-life-loss'));
-    assert.ok(turns[2].className.includes('is-life-loss'));
-    assert.ok(walk(turns[2]).some(n=>n.className.includes('is-zone-gain')&&
-      n.textContent.includes('Board 1')));
-    assert.ok(walk(turns[2]).some(n=>n.className.includes('is-zone-loss')&&
-      n.textContent.includes('Hand 0')));
-    const first=turns[1];first.onclick();
-    assert.equal(first.attributes['aria-pressed'],'true');
-    assert.ok(walk(tracker).some(n=>n.className.includes('game-outcome-life-stat')&&
-      n.className.includes('is-life-loss')));
+    assert.ok(walk(turns[1]).some(n=>n.className.includes('is-loss')&&
+      n.textContent.includes('♥')));
+    assert.ok(walk(turns[2]).some(n=>n.className.includes('is-gain')&&
+      n.textContent.includes('♟ 1')));
+    assert.ok(walk(turns[2]).some(n=>n.className.includes('is-loss')&&
+      n.textContent.includes('▤ 0')));
+    assert.ok(walk(turns[2]).some(n=>n.className==='insight-action-art'&&
+      n.src.includes('Grave Titan')));
+    assert.ok(walk(turns[2]).some(n=>n.className==='insight-action-phase-heading'&&
+      n.textContent.includes('Your recorded actions')));
+    assert.equal(walk(tracker).some(n=>n.className==='game-outcome-turn-tile'),false);
   }finally{global.document=before}
 });
