@@ -843,7 +843,7 @@ test('turn background uses first named card and enemy activity has one condensed
     const firstBody=walk(turns[1]);
     const rest=firstBody.filter(n=>n.className==='insight-rest-of-turn');
     assert.equal(rest.length,1);
-    assert.ok(walk(rest[0]).some(n=>n.textContent.includes('Enemy activity: 3 recorded events')));
+    assert.ok(walk(rest[0]).some(n=>n.textContent.includes('3 other recorded events')));
     assert.equal(firstBody.filter(n=>n.className==='insight-action-phase is-opponent').length,0);
     assert.ok(!firstBody.some(n=>n.textContent==='Seat not recorded'));
     const player=firstBody.find(n=>n.className==='insight-action-phase is-player');
@@ -911,7 +911,7 @@ test('narrated turn summary and expanded actions reuse factual card-linked wordi
     assert.deepEqual(opened,['Grave Titan','Grave Titan']);
     const rest=walk(turn1).find(n=>n.className==='insight-rest-of-turn');
     assert.ok(rest);
-    assert.ok(walk(rest).some(n=>n.textContent==='Enemy activity: 1 recorded event'));
+    assert.ok(walk(rest).some(n=>n.textContent==='1 other recorded event'));
     assert.equal(walk(rest).filter(n=>n.className==='insight-seat-life').length,4);
     assert.ok(!walk(turn1).some(n=>n.textContent==='reviewed enter resolved'));
     const third=walk(turns[3]);
