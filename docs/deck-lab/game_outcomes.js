@@ -327,8 +327,7 @@
       summary.appendChild(art);
     }
     const copy=create("div","game-outcome-hero-copy");
-    copy.append(create("span","board-kicker","Long-game outcomes"),
-      create("strong","game-outcome-title","Game Outcomes"));
+    copy.appendChild(create("strong","game-outcome-title","Game Outcomes"));
     const numbers=create("div","game-outcome-hero-stats");
     const short=[["win","Wins"],["loss","Losses"],["unresolved","Unresolved"]];
     for(const [state,label] of short){
@@ -339,6 +338,18 @@
       numbers.appendChild(metric);
     }
     copy.appendChild(numbers);
+    // Keep the outcome proportions with the percentages they describe.
+    const bar=create("div","game-outcome-stacked-bar");
+    bar.setAttribute("role","img");
+    bar.setAttribute("aria-label",STATES.map(state=>
+      stateLabel(state)+" "+group.counts[state]+" of "+group.total).join(", "));
+    for(const state of STATES){
+      if(!group.counts[state])continue;
+      const segment=create("span","is-"+state);
+      segment.style.width=(100*group.counts[state]/group.total)+"%";
+      bar.appendChild(segment);
+    }
+    copy.appendChild(bar);
     if(options.heroHighlights?.length){
       const highlights=create("div","game-outcome-hero-highlights");
       for(const item of options.heroHighlights){
@@ -360,18 +371,8 @@
       }
       copy.appendChild(highlights);
     }
-    const bar=create("div","game-outcome-stacked-bar");
-    bar.setAttribute("role","img");
-    bar.setAttribute("aria-label",STATES.map(state=>
-      stateLabel(state)+" "+group.counts[state]+" of "+group.total).join(", "));
-    for(const state of STATES){
-      if(!group.counts[state])continue;
-      const segment=create("span","is-"+state);
-      segment.style.width=(100*group.counts[state]/group.total)+"%";
-      bar.appendChild(segment);
-    }
-    copy.append(bar,create("span","board-open",
-      group.total+" modeled games · Explore opponent results →"));
+    copy.appendChild(create("span","game-outcome-hero-meta",
+      options.outcomeMeta||group.total+" games"));
     summary.appendChild(copy);
     panel.appendChild(summary);
     const body=create("div","game-outcome-body");
@@ -1599,10 +1600,17 @@
     detailDialog.addEventListener("click",event=>{
       if(event.target===detailDialog)closeDialog();
     });
+    const seedList=[...new Set(runs.map(run=>run.seed))]
+      .filter(Number.isInteger).sort((a,b)=>a-b);
+    const seedLabel=seedList.length?
+      "Seeds "+(seedList[0]===seedList.at(-1)?seedList[0]:
+        seedList[0]+"–"+seedList.at(-1)):"Seeds unavailable";
+    const outcomeMeta=total+" games · "+groups[0].requestedRounds+
+      " rounds · "+groups.length+" opponent groups · "+seedLabel;
     cards.appendChild(outcomeCard({
       counts,total,terminal:finished.length,
       terminalRounds:finished.map(run=>run.completed_rounds)
-    },{...options,heroHighlights,onHighlightClick:openDetail},body=>{
+    },{...options,heroHighlights,outcomeMeta,onHighlightClick:openDetail},body=>{
       const buckets=create("div","game-outcome-buckets");
       for(const state of STATES){
         if(!counts[state])continue;
@@ -1614,8 +1622,7 @@
         row.appendChild(bar);buckets.appendChild(row);
       }
       body.appendChild(buckets);
-      body.appendChild(create("div","micro",groups.length+" opponent groups · "+
-        groups[0].requestedRounds+"-round horizon"));
+
     }));
     const best=matchup[0];
     detailPanels.set("matchup",card("Opponent Types","Types & table compositions",
