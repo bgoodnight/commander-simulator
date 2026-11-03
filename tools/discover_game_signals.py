@@ -105,12 +105,20 @@ def design(rows,landmark=0,min_support=8,max_interactions=300):
     for name in candidates:
         values=[row.get(name,0.) for row in feats]
         present_seeds={r["seed"] for r,value in zip(filtered,values) if value>0}
-        if (name.startswith("opening:") or name.startswith("hand_at_landmark:")
-                or name.startswith("opponent_present:")):
-            # Repeated scenarios using the same shuffle are *not* independent
-            # observations for rare-card support.
+        if name.startswith("opening:"):
+            # Kept-hand access repeats across matched scenarios. Require
+            # independently sampled seeds on both sides of the indicator.
             if (len(present_seeds)<min_support
                     or seed_count-len(present_seeds)<min_support):
+                continue
+        elif (name.startswith("hand_at_landmark:")
+              or name.startswith("opponent_present:")):
+            # Opponent types and later card access can vary *within* a seed
+            # across scenarios, so do not mistake per-seed presence for a
+            # constant row-level predictor.
+            if (len(present_seeds)<min_support
+                    or sum(v>0 for v in values)<min_support
+                    or sum(v<=0 for v in values)<min_support):
                 continue
         elif max(values)-min(values)<1e-12:
             continue
