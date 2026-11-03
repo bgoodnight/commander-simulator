@@ -1,0 +1,18 @@
+{
+  "request": "mortarion-500",
+  "deck": "mortarion_physical_final",
+  "scenarios": [
+    "balanced",
+    "aggressive",
+    "control",
+    "combo",
+    "mixed"
+  ],
+  "games_per_scenario": 100,
+  "total_games": 500,
+  "max_rounds": 30,
+  "pilot_style": "adaptive",
+  "provisional_mode": "safe",
+  "required_validation": "all-run UI observations plus full archived per-seed records",
+  "publish_after_validation": true
+}
