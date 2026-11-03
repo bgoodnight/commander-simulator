@@ -404,6 +404,49 @@ function paintView(rootElement,data){
 function init(){
   const input=$("gorge-replay-file"),rootElement=$("gorge-replay-root");
   if(!input||!rootElement)return;
+  // Only load versions explicitly named by the validated public manifest.
+  // No hidden gorge native log is fetched or published by this control.
+  const samples=$("gorge-replay-samples");
+  const select=$("gorge-replay-sample-select");
+  const loadButton=$("gorge-replay-load");
+  const available=new Set();
+  async function openPublicSample(name){
+    if(!available.has(name))throw Error("Replay not in public manifest");
+    rootElement.replaceChildren(node("p","small","Loading verified gorge game…"));
+    const response=await fetch("./gorge-data/"+encodeURIComponent(name));
+    if(!response.ok)throw Error("Public gorge replay unavailable");
+    const data=await response.json();
+    if(data.schema!=="gorge-ui-replay-v1"||
+       data.visibility!=="public_events_only"||
+       !Array.isArray(data.snapshots)||!data.snapshots.length)
+      throw Error("Unverified public gorge replay");
+    paintView(rootElement,data);
+  }
+  if(samples&&select&&loadButton){
+    loadButton.addEventListener("click",()=>{
+      openPublicSample(select.value).catch(err=>
+        rootElement.replaceChildren(node("p","gorge-replay-error",
+          "Unable to display gorge replay: "+String(err.message||err))));
+    });
+    fetch("./gorge-data/manifest.json").then(response=>{
+      if(!response.ok)throw Error("No published gorge sample yet");
+      return response.json();
+    }).then(manifest=>{
+      if(manifest.schema!=="gorge-public-replay-manifest-v1"||
+         !Array.isArray(manifest.games))throw Error("Unsupported sample manifest");
+      for(const game of manifest.games){
+        if(!/^gorge-seed-[0-9]+\\.ui\\.json$/.test(game.file))continue;
+        available.add(game.file);
+        const option=node("option",null,"Seed "+game.seed+" · "+
+          game.decks.join(" / "));
+        option.value=game.file;
+        select.append(option);
+      }
+      if(!available.size)return;
+      samples.hidden=false;
+      return openPublicSample(select.value);
+    }).catch(()=>{/* Keep local-file import available while examples are unpublished. */});
+  }
   input.addEventListener("change",async()=>{
     const file=input.files&&input.files[0];
     if(!file)return;
