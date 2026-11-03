@@ -1842,3 +1842,30 @@ body:has(#pane-records:not([hidden])) .page-introduction a{font-size:.72rem}
     min-height:68px;
   }
 }
+
+/* Turn evidence is subordinate to the 68px key insight summaries. Keep
+   collapsed turns one compact line, with all detail in the expansion. */
+.insight-turn-timeline{gap:4px;margin-top:7px}
+.insight-turn-row{border-radius:7px}
+.insight-turn-row .insight-turn-row-summary{
+  min-height:48px;padding:5px 9px;gap:5px 8px;
+  flex-wrap:nowrap;align-items:center}
+.insight-turn-label{font-size:.77rem;min-width:51px;flex:none;white-space:nowrap}
+.insight-turn-activity{font-size:.72rem;min-width:0;line-height:1.25;
+  white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.insight-turn-metrics{flex:none;flex-wrap:nowrap;gap:3px;min-width:0;
+  max-width:44%;overflow-x:auto;scrollbar-width:none}
+.insight-turn-metrics::-webkit-scrollbar{display:none}
+.insight-turn-metric{font-size:.65rem;padding:2px 4px;border-radius:5px}
+.insight-turn-expand{font-size:.65rem;white-space:nowrap;flex:none}
+.insight-turn-row-body{padding:8px;gap:7px}
+.insight-turn-row .insight-turn-cover{height:100%;max-height:none}
+@media(max-width:650px){
+  .insight-turn-row .insight-turn-row-summary{
+    padding:5px 7px;min-height:48px;flex-wrap:nowrap;align-items:center}
+  .insight-turn-label{font-size:.72rem;min-width:47px}
+  .insight-turn-activity{font-size:.69rem}
+  .insight-turn-metrics{width:auto;max-width:38%;gap:2px}
+  .insight-turn-metric{font-size:.62rem;padding:2px 3px}
+  .insight-turn-expand{font-size:.61rem}
+}
