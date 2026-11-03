@@ -972,7 +972,7 @@
     const head=create("div","game-outcome-evidence-head");
     head.append(create("strong",null,"Seed "+run.seed+" · "+stateLabel(run.outcome.status)),
       create("span","micro",roundLabel(run)));
-    root.appendChild(head);
+    if(!options.hideEvidenceHead)root.appendChild(head);
     const timeline=create("div","insight-turn-timeline");
     root.appendChild(timeline);
     const life=run.life_history||[];
@@ -1374,6 +1374,7 @@
             if(!entry)return;
             runDetails(detailsRoot,entry.run,{
               focusTurn:entry.turn,
+              hideEvidenceHead:true,
               lookupRecordedCard:options.lookupRecordedCard,
               onOpenRecordedCard:options.onOpenRecordedCard,
               example:entry.group.exampleBySeed?.get(entry.run.seed),
