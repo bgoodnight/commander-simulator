@@ -1,0 +1,79 @@
+name: Physical-kernel four-seat integration smoke
+
+on:
+  push:
+    branches: [feature/shared-physical-four-seat-host-20261103]
+    paths:
+      - commander_sim/four_seat_alpha.py
+      - tests/test_four_seat_alpha.py
+      - .github/workflows/physical-four-seat-alpha.yml
+
+permissions:
+  contents: write
+
+jobs:
+  four-seat:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      - name: Validate physical zone, mana, life and all four seats
+        run: python -m unittest tests.test_four_seat_alpha -v
+      - name: Run small source-traced shared-kernel matchups and mirrors
+        run: |
+          mkdir -p dist/four-seat
+          python - <<'PY'
+          from commander_sim.four_seat_alpha import SharedFourSeatTable
+          import json
+          from collections import Counter
+          from pathlib import Path
+          from itertools import permutations
+          games=[]
+          for i,names in enumerate(permutations(("aggro","control","combo","midrange"))):
+            t=SharedFourSeatTable(names,seed=100+i,round_limit=15).run()
+            games.append(t.summary())
+          for role in ("aggro","control","combo","midrange"):
+            for i in range(4):
+              games.append(SharedFourSeatTable((role,)*4,seed=200+i,round_limit=15).run().summary())
+          report={
+            "format":"shared-kernel-abstract-calibration-alpha-v1",
+            "games":len(games),"resolutions":dict(Counter(x["outcome"]["status"] for x in games)),
+            "winner_seats":dict(Counter(x["outcome"]["winner"] for x in games
+                                       if x["outcome"]["winner"] is not None)),
+            "median_rounds":sorted(x["outcome"]["rounds"] for x in games)[len(games)//2],
+            "fidelity":"physical kernel and zones, synthetic archetype effects, no printed-card execution",
+            "real_deck_matchups":False}
+          Path("dist/four-seat/summary.json").write_text(json.dumps(report,indent=2))
+          Path("dist/four-seat/replays.jsonl").write_text(
+              "\n".join(json.dumps(x,separators=(",",":")) for x in games)+"\n")
+          assert len(games)==40
+          assert all(len(x["history"])>0 for x in games)
+          print(json.dumps(report,indent=2))
+          PY
+      - uses: actions/upload-artifact@v4
+        with:
+          name: physical-kernel-four-seat-alpha-${{ github.sha }}
+          path: dist/four-seat/
+          if-no-files-found: error
+          retention-days: 90
+      - name: Save provisional metrics on isolated branch only
+        run: |
+          git fetch origin feature/shared-physical-four-seat-host-20261103
+          if [ "$(git rev-parse HEAD)" != "$(git rev-parse origin/feature/shared-physical-four-seat-host-20261103)" ]; then
+            echo "Branch changed; artifact remains available."
+            exit 0
+          fi
+          mkdir -p testdata/shared-four-seat-alpha
+          cp dist/four-seat/summary.json testdata/shared-four-seat-alpha/summary.json
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add testdata/shared-four-seat-alpha/
+          if ! git diff --cached --quiet; then
+            git commit -m 'Save experimental four-seat physical-kernel smoke metrics'
+            git push origin HEAD:feature/shared-physical-four-seat-host-20261103
+          fi
