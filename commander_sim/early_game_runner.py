@@ -90,6 +90,9 @@ from .reviewed_escape import (reviewed_breach, escape_candidates,
     cast_reviewed_escape_token_spell, sacrifice_breach_at_end_step)
 from .reviewed_buyback import reviewed_buyback, buyback_total_cost, cast_reviewed_buyback
 from .reviewed_spell_copy import reviewed_copy_spell,cast_reiterate_copy,REITERATE
+from .reviewed_static_modifiers import (
+    reviewed_static_rule, static_abilities, choose_creature_subtype,
+    resolve_static_entry)
 
 ROOT = Path(__file__).resolve().parents[1]
 
@@ -157,6 +160,15 @@ def run_bounded_early_game(deck_key, *, seed=0, turns=6, mulligan="one-free", pr
     registry = CardRegistry(snapshot)
     colors = registry.get(fixture.commander).color_identity
     raw_by_name = {entry["deck_name"]: entry["card"] for entry in pinned}
+    # Pick a physical, actually represented creature subtype for "choose a
+    # creature type" effects; this is deck-derived policy, never card-name AI.
+    subtype_counts=Counter()
+    for section,card_name,quantity in snapshot.deck.cards:
+        raw_type=raw_by_name[card_name].get("type_line","")
+        if section!="Commander" and "Creature" in raw_type.split(" — ",1)[0] and " — " in raw_type:
+            subtype_counts.update({word:quantity for word in raw_type.split(" — ",1)[1].split()})
+    preferred_subtype=(min(subtype_counts,key=lambda t:(-subtype_counts[t],t))
+                       if subtype_counts else None)
     pilot_signals=infer_deck_signals(snapshot.deck.cards,raw_by_name)
     pilot_strategy=infer_pilot_archetype(pilot_signals,pilot_archetype)
     if provisional_mode not in {'off','safe'}:
@@ -223,6 +235,7 @@ def run_bounded_early_game(deck_key, *, seed=0, turns=6, mulligan="one-free", pr
                     or reviewed_flashback(name, raw_by_name[name]) is not None
                     or reviewed_graveyard_creature(name, raw_by_name[name]) is not None
                     or reviewed_phase_permanent(name, raw_by_name[name])
+                    or reviewed_static_rule(name,raw_by_name[name]) is not None
                     or reviewed_composed_permanent(name,raw_by_name[name])
                     or reviewed_attachment(name,raw_by_name[name]) is not None
                     or reviewed_zone_spell(name,raw_by_name[name]) is not None
@@ -248,6 +261,7 @@ def run_bounded_early_game(deck_key, *, seed=0, turns=6, mulligan="one-free", pr
                 commander=(section=="Commander")),
             base_power=power, base_toughness=toughness,
             keywords=keywords, colors=colors_printed,
+            abilities=static_abilities(name,raw_by_name[name]),
             coverage="approx" if reviewed else "unimplemented")
         for _ in range(quantity):
             zones.add(definition, 0, "command" if section == "Commander" else "library")
@@ -620,6 +634,7 @@ def run_bounded_early_game(deck_key, *, seed=0, turns=6, mulligan="one-free", pr
                 reviewed_creature(deck_key,name,raw)
                 or reviewed_rock(name,raw,colors) is not None
                 or reviewed_phase_permanent(name,raw)
+                or reviewed_static_rule(name,raw) is not None
                 or approved_enter_hand_cast(name)
                 or reviewed_ramp(name,raw) is not None))
         for _ in range(4):
@@ -1124,6 +1139,20 @@ def run_bounded_early_game(deck_key, *, seed=0, turns=6, mulligan="one-free", pr
             })
             resolved_id = zones.resolve(committed.ticket)
             entered_on_turn[resolved_id]=turn
+            static_rule=reviewed_static_rule(name,raw_by_name[name])
+            if static_rule is not None:
+                if static_rule.requires_choice:
+                    if preferred_subtype is None:
+                        raise ValueError("No verified creature type available for choice")
+                    choose_creature_subtype(kernel,resolved_id,preferred_subtype)
+                    events.append({"type":"reviewed_static_choice","card":name,
+                                   "source_object_id":resolved_id,
+                                   "chosen_creature_type":preferred_subtype})
+                created=resolve_static_entry(zones,resolved_id,raw_by_name)
+                events.append({"type":"reviewed_static_resolved","card":name,
+                               "source_object_id":resolved_id,
+                               "token_ids":list(created),
+                               "fidelity":"typed_continuous_stats_and_reviewed_etb"})
             selected_attachment=reviewed_attachment(name,raw_by_name[name])
             if kind=="enchantment" and selected_attachment is not None and selected_attachment.scope=="opponent_aura":
                 attached=attachment_engine.bind(
