@@ -230,12 +230,12 @@ test('modeled panels expose distinct outcome, life and matchup disclosures with 
 test('selecting an opponent scroll entry changes the one shown art card and per-opponent metrics',()=>{
   class Node{
     constructor(tag){this.tag=tag;this.className='';this.textContent='';
-      this.children=[];this.style={};this.attributes={};}
+      this.children=[];this.style={};this.attributes={};this.events={};}
     append(...a){this.children.push(...a)}
     appendChild(a){this.children.push(a);return a}
     replaceChildren(...a){this.children=a}
     setAttribute(k,v){this.attributes[k]=String(v)}
-    addEventListener(){}
+    addEventListener(k,fn){this.events[k]=fn}
     get lastChild(){return this.children.at(-1)}
   }
   const before=global.document;
