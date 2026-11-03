@@ -8,6 +8,7 @@ import argparse
 from collections import Counter
 import json
 from pathlib import Path
+from tools.gorge_public_state import project
 
 SCHEMA="gorge-ui-replay-v1"
 KINDS={0:"game_start",1:"shuffle",2:"zone_change",3:"draw",
@@ -97,9 +98,9 @@ def convert(source, *, include_hidden=False):
                   "exported_events":emitted,
                   "omitted_hidden_events":hidden,
                   "event_seq_preserved":True},
-        "state":{"life":None,"hands":None,"battlefields":None,
+        "state":{"life":"turn_entry_snapshots" if safe_snapshots else None,"hands":None,"battlefields":"public_snapshots" if safe_snapshots else None,
                  "graveyards":None,"mana_pools":None,"counters":None,
-                 "reason":"Complete authoritative snapshots require a gorge engine export."},
+                 "reason":"Turn-entry snapshots from gorge; no end-turn or private hand identity." if safe_snapshots else "Complete authoritative snapshots require a gorge engine export."},
         "visibility":"omniscient" if include_hidden else "public_events_only",
         "limitations":[
             "Card names require explicit native card identity evidence.",
