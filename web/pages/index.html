@@ -124,10 +124,16 @@
             The file stays in this browser. Unlike the earlier abstract-opponent replay,
             this view reads recorded native Commander actions. Hidden card information
             is masked by default unless you explicitly enable omniscient inspection.</p>
+          <div class="gorge-replay-samples" id="gorge-replay-samples" hidden>
+            <label for="gorge-replay-sample-select">Verified gorge game</label>
+            <select id="gorge-replay-sample-select" aria-label="Select verified gorge game"></select>
+            <button id="gorge-replay-load" type="button">View game</button>
+            <span class="small">Source: 40-life Commander · gorge engine</span>
+          </div>
           <label class="gorge-replay-upload-label" for="gorge-replay-file">Open native gorge replay JSON</label>
           <input id="gorge-replay-file" type="file" accept=".json,application/json">
           <div class="gorge-replay-root" id="gorge-replay-root" aria-live="polite">
-            <p class="small">No gorge replay loaded. This does not affect existing Python simulation results.</p>
+            <p class="small">No gorge game loaded yet. Select a verified source game or open a gorge replay file.</p>
           </div>
         </div>
       </details>
