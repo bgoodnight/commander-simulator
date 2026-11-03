@@ -847,6 +847,42 @@
       body.appendChild(create("div","micro",groups.length+" opponent groups · "+
         groups[0].requestedRounds+"-round horizon"));
     }));
+    const analysis=options.discoveryReport;
+    if(analysis?.status==="ready"&&analysis.findings?.length){
+      const top=analysis.findings.slice(0,8);
+      cards.appendChild(card("Statistical signals","Exploratory elastic net",
+        analysis.selected_predictors+" selected",
+        analysis.independent_seeds+" independent seeds · "+analysis.games+" games",
+        body=>{
+          body.appendChild(create("p","micro",
+            "Held-out Brier "+analysis.holdout_brier+
+            " · opponent-only "+analysis.opponent_baseline_brier+
+            " · coefficients are penalized and exploratory"));
+          for(const finding of top){
+            const detail=create("details","game-outcome-observed-zone");
+            const direction=finding.direction==="positive"?"Positive":"Negative";
+            detail.appendChild(create("summary",null,
+              finding.feature+" · "+direction+" · "+
+              Math.round(100*finding.selection_frequency)+"% selected"));
+            detail.appendChild(create("p","micro",
+              finding.observed_games+" observed games · direction consistency "+
+              Math.round(100*finding.direction_consistency)+"%"+
+              (finding.interaction_parents?.length?
+                " · interaction parents: "+finding.interaction_parents.join(" and "):"")));
+            body.appendChild(detail);
+          }
+          body.appendChild(create("p","micro",analysis.limitations||
+            "These are simulated-game associations, not card causal effects."));
+        }));
+    }else{
+      cards.appendChild(card("Statistical signals","Elastic-net discovery",
+        "Not available",
+        analysis?.status==="insufficient_data"?
+          "Not enough independent games or outcome variation":
+          "The current historical batch lacks complete observations",
+        body=>body.appendChild(create("p","micro",
+          "Results will populate from the same complete observation archive used to derive card and turn evidence."))));
+    }
     const signals=observationCardStats(runs);
     if(signals.coverage){
       for(const [kind,label,metric] of [
