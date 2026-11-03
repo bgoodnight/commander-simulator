@@ -521,7 +521,7 @@
     "reviewed_zone_spell_resolved","land_play"]);
   function observationCardStats(runs,lookupCard=()=>null){
     const kinds=["played","creature","instant","spell","artifact","enchantment",
-      "land","seen","unplayed","activated","removal","damage","longest","finisher"];
+      "land","seen","unplayed","activated","removal","creatureKills","damage","longest","finisher"];
     const maps=Object.fromEntries(kinds.map(k=>[k,new Map()]));
     const complete=runs.filter(run=>Array.isArray(run.ui_observations)&&
       run.ui_observations.length===run.completed_rounds);
@@ -581,6 +581,10 @@
               (action.card||action.source))
             record("removal",action.card||action.source,run,row.turn,
               action.destroyed_count,{eventIndex});
+          if(Number.isFinite(action.creatures_killed)&&action.creatures_killed>0&&
+              (action.card||action.source))
+            record("creatureKills",action.card||action.source,run,row.turn,
+              action.creatures_killed,{eventIndex});
           // Do not infer player damage/finishing blows from unattributed
           // life deltas. Both require a named source and explicit provenance.
           if(action.target_seat>0&&Number.isFinite(action.life_lost)&&
@@ -609,7 +613,7 @@
         const seen=item.seen.size;
         const score=kind==="longest"?mean(item.durations):
           kind==="seen"||kind==="unplayed"?seen:
-          kind==="removal"||kind==="damage"?
+          ["removal","creatureKills","damage"].includes(kind)?
             counts.reduce((t,x)=>t+x,0):
             counts.filter(x=>x>0).length;
         const perGame=kind==="longest"?item.durations:
@@ -900,7 +904,8 @@
       artifact:"Most played artifact",enchantment:"Most played enchantment",
       land:"Most played nonbasic land",seen:"Most frequently seen card",
       unplayed:"Most often left unplayed",activated:"Most used ability",
-      removal:"Most creature kills or removals",damage:"Most damage to opponents",
+      removal:"Most permanents destroyed",
+      creatureKills:"Most creature kills",damage:"Most damage to opponents",
       longest:"Longest held in hand",finisher:"Finishing blow"
     })[kind]||kind;
   }
@@ -939,8 +944,8 @@
             metricTile("Games recorded",item.games,coverage+" games"),
             metricTile("Total recorded",item.eventCount,
               "All relevant actions"),
-            metricTile("Mean (ranking)",nfmt(item.average),
-              "For resolving tied medians")
+            metricTile("Median event turn",quantile(item.turns,.5),
+              "Where individually recorded")
           );
           detail.appendChild(row);
           const samples=[...item.events].sort((a,b)=>
@@ -1153,7 +1158,7 @@
     if(signals.coverage){
       for(const kind of ["played","creature","artifact","enchantment",
         "instant","spell","land","seen","unplayed","longest",
-        "activated","removal","damage","finisher"]){
+        "activated","removal","creatureKills","damage","finisher"]){
         const panel=cardPerformancePanel(kind,signals.ranked[kind],
           signals.coverage,groups,options,onReviewRun);
         if(panel)cards.appendChild(panel);
