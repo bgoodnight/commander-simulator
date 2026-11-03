@@ -1,13 +1,8 @@
-name: Regression — previously failing bounded-game seeds
+name: ARCHIVED Python · Regression — previously failing bounded-game seeds
 
+# ARCHIVED: no automatic Python game simulations after gorge-only cutover.
+# Older workflows can be reproduced from the preserved archive branch.
 on:
-  pull_request:
-    paths:
-      - "commander_sim/early_game_runner.py"
-      - "commander_sim/outcome_reporting.py"
-      - "commander_sim/reviewed_phase_effects.py"
-      - "commander_sim/template_resources.py"
-      - ".github/workflows/failing-game-seed-regressions.yml"
   workflow_dispatch:
 
 permissions:
