@@ -128,6 +128,8 @@ jobs:
           pattern: mortarion-observations-*-${{ github.sha }}
           path: dist/observations
           merge-multiple: true
+      - name: Install offline analysis dependency
+        run: python -m pip install "scikit-learn>=1.5,<1.9"
       - name: Validate observations and prepare permanent compressed records
         run: |
           python tools/validate_game_observations.py \
@@ -136,6 +138,13 @@ jobs:
           for file in dist/observations/*.jsonl; do
             gzip -c -9 "$file" > "dist/observation-archive/$(basename "$file").gz"
           done
+      - name: Fit exploratory elastic-net on complete observation archive
+        run: |
+          mkdir -p dist/analytics
+          python tools/discover_game_signals.py \
+            --source dist/observations \
+            --output dist/analytics/mortarion_physical_final.json \
+            --engine-commit "${{ github.sha }}"
       - name: Verify 500 runs and audit outcome and pilot evidence
         run: |
           python tools/review_game_outcomes.py \
@@ -170,6 +179,7 @@ jobs:
             dist/review/*.json
             dist/review/*.md
             dist/observation-archive/*.gz
+            dist/analytics/*.json
           if-no-files-found: error
           retention-days: 90
       - name: Archive verified simulation release permanently
@@ -180,7 +190,7 @@ jobs:
           # Every completed run gets its own immutable GitHub Release asset
           # before the single live Pages manifest is replaced.
           TAG="modeled-games-${{ github.run_id }}-${{ github.run_attempt }}"
-          gh release create "$TAG" dist/published-game-outcomes/*.json dist/observation-archive/*.gz \
+          gh release create "$TAG" dist/published-game-outcomes/*.json dist/observation-archive/*.gz dist/analytics/*.json \
             --target "${{ github.sha }}" \
             --title "Modeled simulations · ${{ github.sha }}" \
             --notes "Verified source commit ${{ github.sha }}; workflow run ${{ github.run_id }}. Immutable historical batch. The live Deck Lab displays only the most recently promoted manifest." \
@@ -190,7 +200,8 @@ jobs:
           git fetch origin main
           if ! git diff --quiet HEAD origin/main -- \
             commander_sim/ decklists/ simulator/card_data/ \
-            tools/build_game_outcomes.py tools/validate_game_observations.py \
+            tools/build_game_outcomes.py tools/discover_game_signals.py \
+            tools/validate_game_observations.py \
             tools/review_game_outcomes.py \
             tools/publish_game_outcomes.py \
             .github/workflows/mortarion-500-stage.yml; then
@@ -200,9 +211,11 @@ jobs:
           git switch -C mortarion-outcome-release origin/main
           mkdir -p web/pages/data/game-outcomes
           rsync -a --delete dist/published-game-outcomes/ web/pages/data/game-outcomes/
+          mkdir -p web/pages/data/analytics
+          rsync -a --delete dist/analytics/ web/pages/data/analytics/
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git add -A web/pages/data/game-outcomes/
+          git add -A web/pages/data/game-outcomes/ web/pages/data/analytics/
           if ! git diff --cached --quiet; then
             git commit -m "Publish reviewed Mortarion 500-game outcome cohort"
             git push origin HEAD:main

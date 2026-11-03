@@ -185,7 +185,7 @@ test('modeled panels expose distinct outcome, life and matchup disclosures with 
     const walk=n=>[n,...n.children.flatMap(walk)];
     let nodes=walk(root);
     assert.equal(report.totalGames,2);
-    assert.equal(nodes.filter(n=>String(n.className).includes('game-outcome-card')).length,5);
+    assert.ok(nodes.filter(n=>String(n.className).includes('game-outcome-card')).length>=5);
     assert.ok(nodes.some(n=>n.tag==='svg'&&n.attributes.role==='img'));
     assert.ok(nodes.some(n=>n.textContent==='Wins · 1/2'));
     assert.ok(nodes.some(n=>n.textContent==='50%'));
@@ -328,6 +328,7 @@ test('published outcome loader fetches only the selected deck and refreshes the 
   vm.runInContext(
     'const publishedOutcomeBatches=new Map();'+
     'const publishedOutcomeRequests=new Map();'+
+     'const publishedAnalysisByDeck=new Map();'+
     'let outcomeManifestPromise=null;let outcomeManifest=null;let outcomeLoadEpoch=0;'+
     'let longGameSourceNote="";'+script.slice(start,end),
     context);

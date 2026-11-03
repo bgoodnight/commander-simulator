@@ -437,11 +437,13 @@ function showPage(){
 const longGameBatches=[];
 const publishedOutcomeBatches=new Map();
 const publishedOutcomeRequests=new Map();
+const publishedAnalysisByDeck=new Map();
 let outcomeLoadEpoch=0;
 let outcomeManifestPromise=null;
 let outcomeManifest=null;
 let longGameSourceNote="Checking the published simulation library…";
 function outcomeOpponentPortrait(bucket){
+  if(bucket.kind==="composition"||bucket.kind==="named_pod")return null;
   if(bucket.kind==="named"){
     // Real opposing names are used only when the batch actually records them.
     const card=cardInfo(bucket.portraitName||"");
@@ -499,6 +501,13 @@ function renderLongGamePanel(){
     portraitFor:outcomeOpponentPortrait,
     reviewerRoot:reviewer,
     reviewerPanel:$("turn-reviewer-panel"),
+    discoveryReport:(()=>{
+      const r=publishedAnalysisByDeck.get(selected);
+      return r?.deck_sha256===selectedDeck()?.deck_sha256&&
+        r?.engine_commit===outcomeManifest?.engine_commit?r:null;
+    })(),
+    lookupRecordedCard:cardInfo,
+    onOpenRecordedCard:name=>{const card=cardInfo(name);if(card?.oracle_id)showCard(card.oracle_id)},
     onShowRecordedActions:(target,example,run)=>{
       try{
         if(!window.CommanderReplay?.renderBoundedEvidence)
@@ -617,6 +626,28 @@ async function loadPublishedLongGame(){
       return publishedOutcomeRequests.get(file);
     }));
     if(epoch!==outcomeLoadEpoch)return;
+    // Analytics is an optional verified companion to the exact outcome release.
+    // Never infer results from a stale deck or simulator revision.
+    try{
+      const response=await fetch("./analytics/"+deckKey+".json"+
+        (index.engine_commit?"?rev="+index.engine_commit:""),{cache:"no-store"});
+      if(response.ok){
+        const report=await response.json();
+        if(report.format==="commander-elastic-net-discovery-v1"&&
+          report.deck_key===deckKey&&report.deck_sha256===deckHash&&
+          report.engine_commit===index.engine_commit&&
+          ["ready","insufficient_data"].includes(report.status)&&
+          Array.isArray(report.findings)&&epoch===outcomeLoadEpoch){
+          publishedAnalysisByDeck.set(deckKey,report);
+        }
+      }else if(response.status!==404){
+        throw Error("Discovery report returned "+response.status);
+      }
+    }catch(error){
+      // Failure to load optional statistical discovery must not hide results.
+      console.warn("Discovery panel unavailable",error);
+    }
+    if(epoch!==outcomeLoadEpoch)return;
     if(deckKey===selected&&deckHash===selectedDeck()?.deck_sha256){
       const loaded=[...publishedOutcomeBatches.values()].filter(batch=>
         batch.deck_key===deckKey&&batch.deck_sha256===deckHash).length;
@@ -636,6 +667,7 @@ function refreshPublishedLongGame(){
   outcomeManifest=null;
   publishedOutcomeRequests.clear();
   publishedOutcomeBatches.clear();
+  publishedAnalysisByDeck.clear();
   longGameSourceNote="Loading latest results…";
   renderLongGamePanel();
   void loadPublishedLongGame();

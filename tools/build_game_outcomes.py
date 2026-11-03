@@ -19,7 +19,7 @@ if str(ROOT) not in sys.path:
 
 from commander_sim.deck_fixtures import FIXTURES, EXPERIMENTAL_FIXTURES
 from commander_sim.early_game_runner import run_bounded_early_game
-from commander_sim.opponent_stress import SCENARIOS
+from commander_sim.opponent_stress import SCENARIOS, OPPONENT_TYPES
 from commander_sim.pilot_policy import STYLES,ARCHETYPES
 
 FORMAT = "commander-modeled-outcomes-v1"
@@ -101,8 +101,49 @@ def summarize_games(runs, requested_rounds):
     }
 
 
+def project_ui_observations(run):
+    """Small, source-grounded turn evidence from the same full game observations.
+
+    Keep exact event ordering and actual recorded zone names; do not reconstruct
+    hands from draw-minus-cast, infer availability, or fabricate attribution.
+    Full evidence stays in the private JSONL release archive.
+    """
+    result=[]
+    for event, state in zip(run["events"],run["state_snapshots"],strict=True):
+        if event.get("turn")!=state.get("turn"):
+            raise ValueError("Observed turn and state chronology disagree")
+        actions=[]
+        for action in event.get("events",[]):
+            if not isinstance(action,dict):
+                continue
+            # A bounded, typed projection: source values only, no inferred effects.
+            keep=("type","card","operation","source","source_object_id",
+                  "object_id","seat","target_seat","amount","fidelity",
+                  "destroyed_count","life_lost","mana_added")
+            actions.append({k:action[k] for k in keep if k in action})
+        result.append({
+            "turn":event["turn"],
+            "hand":list(state.get("hand",[])),
+            "battlefield":list(state.get("battlefield",[])),
+            "graveyard":list(state.get("graveyard",[])),
+            "exile":list(state.get("exile",[])),
+            "actions":actions,
+            "land_count":event.get("land_count"),
+            "creature_count":event.get("creature_count"),
+            "mana_rock_count":event.get("mana_rock_count"),
+            "hand_size":event.get("hand_size"),
+            "resource_start":event.get("resource_start"),
+            "resource_end":event.get("resource_end"),
+            "pilot_decisions":event.get("pilot_decisions",[]),
+            "unsupported_cards_in_hand":event.get("unsupported_cards_in_hand",[]),
+        })
+    if len(result)!=run["completed_rounds"]:
+        raise ValueError("Missing UI observations for one or more completed turns")
+    return result
+
+
 def generate(deck_key, *, seeds=12, rounds=20, start_seed=0,
-             scenario="balanced", provisional_mode="off",
+             scenario="random", provisional_mode="off",
              pilot_style="adaptive",pilot_archetype="auto",examples=0,
              runner=run_bounded_early_game, observation_rows=None):
     if (deck_key not in DECK_KEYS
@@ -180,6 +221,9 @@ def generate(deck_key, *, seeds=12, rounds=20, start_seed=0,
     records=[{
         "seed":run["seed"],
         "opponent_roles":run["opponent_roles"],
+        "opponent_composition":sorted(run["opponent_roles"].values()),
+        "opening_hand":list(run.get("mulligan",{}).get("opening_hand",[])),
+        "ui_observations":project_ui_observations(run),
         "completed_rounds":run["completed_rounds"],
         "outcome":run["outcome"],
         "life_history":run["life_history"],
@@ -187,6 +231,7 @@ def generate(deck_key, *, seeds=12, rounds=20, start_seed=0,
     replays=[{
         "seed":run["seed"],
         "opponent_roles":run["opponent_roles"],
+        "opponent_composition":sorted(run["opponent_roles"].values()),
         "outcome":run["outcome"],
         "events":run["events"],
         "state_snapshots":run["state_snapshots"],
@@ -197,7 +242,8 @@ def generate(deck_key, *, seeds=12, rounds=20, start_seed=0,
         "deck_key":deck_key,"deck_sha256":revision,
         "seed_start":start_seed,"seed_count":seeds,
         "requested_rounds":rounds,
-        "scenario":scenario,"provisional_mode":provisional_mode,
+        "scenario":scenario,"opponent_type_pool":list(OPPONENT_TYPES),
+        "provisional_mode":provisional_mode,
         "pilot_style":pilot_style,
         "pilot_archetype":raw[0].get("pilot_archetype"),
         "pilot_signals":raw[0].get("pilot_signals"),
@@ -241,7 +287,7 @@ def main(argv=None):
     parser.add_argument("--rounds",type=int,default=20)
     parser.add_argument("--start-seed",type=int,default=0)
     parser.add_argument("--scenario",choices=sorted(SCENARIOS),
-                        default="balanced")
+                        default="random")
     parser.add_argument("--provisional-mode",choices=("off","safe"),
                         default="off")
     parser.add_argument("--pilot-style",choices=STYLES,default="adaptive")
