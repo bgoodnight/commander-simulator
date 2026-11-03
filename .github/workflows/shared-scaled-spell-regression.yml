@@ -1,0 +1,39 @@
+name: Shared subtype-scaled spell regression
+on:
+  push:
+    branches: [feature/reusable-swamp-scaled-effects-20261103]
+    paths:
+      - commander_sim/reviewed_removal_spells.py
+      - commander_sim/resource_pilot.py
+      - tests/test_reviewed_removal_spells.py
+      - .github/workflows/shared-scaled-spell-regression.yml
+permissions:
+  contents: read
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      - name: Run shared printed removal and subtype-count regressions
+        run: |
+          python -m unittest tests.test_reviewed_removal_spells -v
+          python -m unittest tests.test_resource_pilot tests.test_kernel_life tests.test_physical_common_effects -v
+      - name: Check both precons admit the new rules through the same registry
+        run: |
+          python - <<'PY'
+          import json
+          from commander_sim.deck_fixtures import FIXTURES
+          from commander_sim.reviewed_removal_spells import reviewed_removal
+          for key,name in (("necron_dynasties","Mutilate"),
+                           ("wretched_ranks","Consuming Corruption")):
+            fixture=next(f for f in FIXTURES if f.key==key)
+            cards={c["deck_name"]:c["card"] for c in
+                   json.loads(fixture.snapshot_path.read_text())["cards"]}
+            rule=reviewed_removal(name,cards[name])
+            assert rule is not None and rule.amount_basis=="swamps_controlled"
+            print(key,name,rule.operation,rule.amount_basis)
+          PY

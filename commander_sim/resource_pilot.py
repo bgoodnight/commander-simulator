@@ -507,7 +507,7 @@ def choose_reviewed_removal(zones, seat, life, rule, *, turn=1):
     marginal one-for-ones and unfavorable sweepers.
     Returns (target_id, x) or None. None never authorizes a cast.
     """
-    from .reviewed_removal_spells import valid_removal_target
+    from .reviewed_removal_spells import valid_removal_target, reviewed_amount
     kernel=zones.kernel
     own=[o for o in kernel.on_battlefield()
          if o.controller==seat and "creature" in o.types]
@@ -518,13 +518,19 @@ def choose_reviewed_removal(zones, seat, life, rule, *, turn=1):
         return None
     danger=life.total(seat)<=18
     if rule.operation=="debuff_all":
-        if life.total(seat)<=4:
-            return None
-        for x in range(min(5,life.total(seat)-5),0,-1):
-            foe=sum(o.toughness<=x for o in opponents)
-            friendly=sum(o.toughness<=x for o in own)
+        if rule.x_life_cost:
+            if life.total(seat)<=4:
+                return None
+            magnitudes=range(min(5,life.total(seat)-5),0,-1)
+        else:
+            magnitudes=(reviewed_amount(kernel,seat,rule),)
+        for magnitude in magnitudes:
+            if magnitude<=0:
+                continue
+            foe=sum(o.toughness<=magnitude for o in opponents)
+            friendly=sum(o.toughness<=magnitude for o in own)
             if foe>=2 and foe>=friendly+1 and (danger or foe>=3):
-                return None,x
+                return None,magnitude if rule.x_life_cost else 0
         return None
     if rule.operation=="destroy_below_power":
         options=[]
@@ -565,6 +571,8 @@ def choose_reviewed_removal(zones, seat, life, rule, *, turn=1):
             if not group:
                 continue
             threat+=2*(group-1)
+        if rule.operation=="damage_gain" and (not creature or reviewed_amount(kernel,seat,rule)<=0):
+            continue
         if rule.operation=="destroy" and not danger and threat<6:
             continue
         if rule.operation=="debuff_same_name" and threat<4 and not danger:

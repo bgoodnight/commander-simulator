@@ -23,16 +23,18 @@ class RemovalRule:
     amount: int = 0
     x_life_cost: bool = False
     life_cost: str = ""
+    amount_basis: str = "fixed"
     def __post_init__(self):
         if (not self.oracle_id or not self.oracle_text
                 or self.spell_type not in {"instant","sorcery"}
                 or self.operation not in {"destroy","destroy_and_debuff",
                                           "debuff_same_name","debuff_all",
-                                          "destroy_below_power"}
+                                          "destroy_below_power","damage_gain"}
                 or self.target not in {"none","creature","nonartifact_creature",
                                        "opponent_creature_or_enchantment",
                                        "creature_or_enchantment","own_creature"}
-                or self.life_cost not in {"","two","target_mana_value"}):
+                or self.life_cost not in {"","two","target_mana_value"}
+                or self.amount_basis not in {"fixed","swamps_controlled"}):
             raise ValueError("Invalid registered removal recipe")
 
 
@@ -67,6 +69,15 @@ RULES={
         "ae24b863-974c-4efa-ab41-23cfa1906c54",
         "Destroy target creature.\nAll creatures get -3/-3 until end of turn.",
         "{4}{B}","sorcery","destroy_and_debuff","creature",amount=3),
+    "Mutilate":RemovalRule(
+        "698e79ec-c2bc-4973-a095-f3c57b50e39c",
+        "All creatures get -1/-1 until end of turn for each Swamp you control.",
+        "{2}{B}{B}","sorcery","debuff_all",amount_basis="swamps_controlled"),
+    "Consuming Corruption":RemovalRule(
+        "3bc0bd36-70be-4180-9fb3-b10ce054107b",
+        "Consuming Corruption deals X damage to target creature or planeswalker and you gain X life, where X is the number of Swamps you control.",
+        "{B}{B}","instant","damage_gain","creature",
+        amount_basis="swamps_controlled"),
     "Toxic Deluge":RemovalRule(
         "afaef788-34d1-460b-b884-9d7ae6ddeb18",
         "As an additional cost to cast this spell, pay X life.\nAll creatures get -X/-X until end of turn.",
@@ -84,6 +95,16 @@ def reviewed_removal(name,raw):
         return None
     return rule
 
+
+def reviewed_amount(kernel, seat, rule):
+    """Count current physical source characteristics, not card-name shortcuts."""
+    if rule.amount_basis=="fixed":
+        return rule.amount
+    if rule.amount_basis=="swamps_controlled":
+        return sum("land" in obj.types and
+                   "Swamp" in kernel.subtypes(obj.object_id)
+                   for obj in kernel.controlled(seat))
+    raise ValueError("Unknown reviewed magnitude basis")
 
 def valid_removal_target(zones,seat,rule,target_id):
     if rule.target=="none":
@@ -180,8 +201,16 @@ def cast_removal(zones,life,seat,spell_id,catalog,colors,mana_service, *,
                 if body.object_id!=target_id and body.power<threshold:
                     kernel.destroy(body.object_id)
                     affected.append(body.object_id)
+        if rule.operation=="damage_gain":
+            # Partial target coverage: creature only until planeswalker loyalty
+            # damage is represented by the shared kernel.
+            magnitude=reviewed_amount(kernel,seat,rule)
+            if target_id in kernel.objects:
+                kernel.mark_damage(target_id,magnitude)
+                affected.append(target_id)
+            life.gain(seat,magnitude,spell_id)
         if rule.operation in {"debuff_all","debuff_same_name","destroy_and_debuff"}:
-            n=x if rule.x_life_cost else rule.amount
+            n=x if rule.x_life_cost else reviewed_amount(kernel,seat,rule)
             if rule.operation=="debuff_same_name":
                 name=target.card.name
                 eligible=[o for o in creatures if o.card.name==name]
