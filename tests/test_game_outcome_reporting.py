@@ -8,7 +8,27 @@ from commander_sim.early_game_runner import _load_live_kernel, run_bounded_early
 from commander_sim.kernel_life import LifeChange, KernelLife
 from commander_sim.opponent_stress import BoundedOpponentPressure
 from commander_sim.outcome_reporting import LifeOutcomeRecorder
-from tools.build_game_outcomes import generate, summarize_games, write_batch, FORMAT, project_ui_observations
+from tools.build_game_outcomes import generate, summarize_games, write_batch, FORMAT, project_ui_observations, recorded_mana_production
+
+
+class ManaProductionProjectionTests(unittest.TestCase):
+    def test_counts_only_actual_mana_activations_by_color(self):
+        self.assertEqual(recorded_mana_production([
+            {"kind":"mana_source_activation","source_name":"Swamp",
+             "mana_output":["B"]},
+            {"kind":"mana_source_activation","source_name":"Sol Ring",
+             "mana_output":["C","C"]},
+            {"kind":"black_life_substitution","substituted_symbols":["B"]},
+            {"kind":"mana_source_activation","mana_output":["B","G"]}
+        ]), {"B":2,"G":1,"C":2})
+
+    def test_turn_projection_distinguishes_missing_from_zero(self):
+        base={"completed_rounds":1,"state_snapshots":[{
+            "turn":1,"hand":[],"battlefield":[],"graveyard":[],"exile":[]}],
+            "events":[{"turn":1,"events":[],"mana_payment_events":[]}]}
+        self.assertEqual(project_ui_observations(base)[0]["mana_produced_by_color"],{})
+        del base["events"][0]["mana_payment_events"]
+        self.assertIsNone(project_ui_observations(base)[0]["mana_produced_by_color"])
 
 
 class TutorProjectionTests(unittest.TestCase):
