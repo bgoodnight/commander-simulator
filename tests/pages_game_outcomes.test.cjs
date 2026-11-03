@@ -815,10 +815,11 @@ test('selected card insight embeds relevant game turns and real life/zone change
     assert.equal(turns.length,4);
     assert.ok(walk(turns[1]).some(n=>n.className.includes('is-loss')&&
       n.textContent.includes('♥')));
-    assert.ok(walk(turns[2]).some(n=>n.className.includes('is-gain')&&
-      n.textContent.includes('♟ 1')));
-    assert.ok(walk(turns[2]).some(n=>n.className.includes('is-loss')&&
-      n.textContent.includes('▤ 0')));
+    assert.ok(walk(turns[2]).some(n=>n.className.includes('insight-hand-shortcut')&&
+      n.textContent.includes('Hand 0')));
+    assert.ok(walk(turns[2]).some(n=>n.className==='insight-end-state'));
+    assert.ok(walk(turns[2]).some(n=>n.className==='insight-end-zone'&&
+      n.children.some(c=>c.textContent.includes('Graveyard'))));
     assert.ok(walk(turns[2]).some(n=>n.className==='insight-action-art'&&
       n.src.includes('Grave Titan')));
     assert.ok(walk(turns[2]).some(n=>n.className==='insight-action-phase-heading'&&
@@ -1156,4 +1157,18 @@ test('long turns use natural height and combat remains in expanded evidence',()=
   assert.match(js,/function actionEvidenceDetail\(action\)/);
   assert.match(js,/insight-rest-combat/);
   assert.match(js,/actionEvidenceDetail\(a\)/);
+});
+
+test('turn summary only shows supported mana colors and hand, not battlefield/graveyard badges',()=>{
+  const js=fs.readFileSync('web/pages/game_outcomes.js','utf8');
+  const css=fs.readFileSync('web/pages/style.css','utf8');
+  assert.match(js,/function recordedManaOutput\(observation\)/);
+  assert.match(js,/mana_produced_by_color/);
+  assert.match(js,/insight-hand-shortcut/);
+  assert.match(js,/function endStatePanel\(observation,options\)/);
+  assert.match(js,/\["Artifacts",/);
+  assert.match(js,/\["Enchantments",/);
+  assert.match(js,/\["Hand",observation.hand\]/);
+  assert.match(css,/\.insight-end-zone/);
+  assert.ok(!js.includes('[["▤","hand"],["♟","battlefield"],["◆","graveyard"]]'));
 });
