@@ -45,7 +45,7 @@ from .bounded_trigger_effects import resolve_reviewed_spell_triggers
 from .kernel_life import KernelLife
 from .outcome_reporting import LifeOutcomeRecorder
 from .physical_common_effects import EmptyLibraryDraw
-from .reviewed_phase_effects import ReviewedPhaseEngine,reviewed_phase_permanent
+from .reviewed_phase_effects import ReviewedPhaseEngine,reviewed_phase_permanent,reviewed_phase_creature
 from .composed_abilities import ComposedAbilityEngine, reviewed_composed_permanent, ABILITIES
 from .reviewed_commander_cast import commander_cost, cast_commander
 from .reviewed_reactive_triggers import ReactiveTriggerEngine
@@ -238,6 +238,7 @@ def run_bounded_early_game(deck_key, *, seed=0, turns=6, mulligan="one-free", pr
                     or reviewed_flashback(name, raw_by_name[name]) is not None
                     or reviewed_graveyard_creature(name, raw_by_name[name]) is not None
                     or reviewed_phase_permanent(name, raw_by_name[name])
+                    or reviewed_phase_creature(name, raw_by_name[name])
                     or reviewed_static_rule(name,raw_by_name[name]) is not None
                     or reviewed_composed_permanent(name,raw_by_name[name])
                     or reviewed_attachment(name,raw_by_name[name]) is not None
@@ -284,6 +285,7 @@ def run_bounded_early_game(deck_key, *, seed=0, turns=6, mulligan="one-free", pr
     phase_engine = ReviewedPhaseEngine(zones, life, raw_by_name)
     death_engine = ReviewedDeathEngine(
         zones, life, raw_by_name, provisional_mode=provisional_mode)
+    phase_engine.death_engine=death_engine
     composed_engine = ComposedAbilityEngine(zones, life, raw_by_name,
                                            mana_service, death_engine)
     reactive_engine = ReactiveTriggerEngine(zones,life,raw_by_name)

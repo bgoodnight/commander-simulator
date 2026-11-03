@@ -173,7 +173,9 @@ class ReviewedPhaseEffectsTests(unittest.TestCase):
         self.draw_cards(2)
         self.assertEqual(self.phase(),())
         self.assertEqual(self.life.total(0),40)
-        self.assertEqual(len(PHASE_RULES),8)
+        self.assertEqual(len(PHASE_RULES),10)
+        self.assertIn("Midnight Banshee",PHASE_RULES)
+        self.assertIn("Crumbling Ashes",PHASE_RULES)
 
     def test_empty_library_mandatory_draw_prevents_partial_life_change(self):
         self.card("Phyrexian Arena",types=("enchantment",))
