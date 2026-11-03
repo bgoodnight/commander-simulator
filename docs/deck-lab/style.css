@@ -1955,3 +1955,25 @@ body:has(#pane-records:not([hidden])) .compact-selection{margin-bottom:3px}
     display:block;-webkit-line-clamp:unset;overflow:visible;white-space:normal}
   .insight-turn-row .insight-turn-row-summary{min-height:56px}
 }
+
+.insight-hand-shortcut{cursor:pointer;font:inherit}
+.insight-hand-shortcut:hover{border-color:#cbbd91;color:#fff3ce}
+.insight-turn-mana{display:inline-flex;align-items:center;gap:4px}
+.mana-symbol{display:inline-flex;align-items:center;justify-content:center;
+ min-width:1.25em;min-height:1.25em;padding:1px 3px;
+ border-radius:50%;border:1px solid #b8c4b9;background:#33413e;
+ font-size:.72rem;font-weight:700;white-space:nowrap}
+.mana-w{background:#e6dfca;color:#302b21}
+.mana-u{background:#a9d8e8;color:#15374b}
+.mana-b{background:#55505d;color:#f4e7ef}
+.mana-r{background:#dd9880;color:#42271f}
+.mana-g{background:#a6cba5;color:#1b3d2c}
+.mana-c{background:#d3c7ae;color:#2f2b27}
+.insight-end-state{display:grid;gap:6px;border-top:1px solid #526a61;
+ padding-top:10px}
+.insight-end-state-title{font-size:.82rem}
+.insight-end-zone{border:1px solid #4c665e;border-radius:6px;padding:5px 8px}
+.insight-end-zone>summary{font-size:.77rem;font-weight:600;cursor:pointer}
+.insight-end-zone>.insight-action-cards{margin-top:7px}
+.insight-end-mana{display:flex;align-items:center;flex-wrap:wrap;gap:5px;
+ font-size:.75rem}
