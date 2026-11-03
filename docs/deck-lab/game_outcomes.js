@@ -761,6 +761,60 @@
   // Inline insight evidence uses the original compact, expandable turn rows.
   // A round is NOT a reconstructed priority/phase transcript: only explicit
   // action metadata permits naming a phase or an opposing seat.
+  function observedSeatMetrics(observation,seat){
+    // Only use explicit seat snapshots. A pilot-only zone list must never
+    // be interpreted as a modeled opponent's battlefield or hand.
+    const record=seat===0?observation:
+      observation?.seat_states?.[String(seat)]||
+      observation?.seat_states?.[seat]||
+      observation?.seats?.[String(seat)]||
+      observation?.seats?.[seat];
+    if(!record||typeof record!=="object")return null;
+    const count=(key,alternate)=>{
+      const raw=record[key]??(alternate?record[alternate]:null);
+      return Array.isArray(raw)?raw.length:
+        Number.isFinite(raw)&&raw>=0?raw:null;
+    };
+    return {
+      lands:count("land_count","lands"),
+      permanents:count("permanent_count","battlefield"),
+      hand:count("hand_size","hand")
+    };
+  }
+  function seatChangeSummary(current,before,observation,previous){
+    const table=create("section","insight-seat-summary");
+    table.appendChild(create("strong","insight-seat-summary-title",
+      "End-of-round table · observed changes since prior round"));
+    const strip=create("div","insight-seat-summary-strip");
+    for(const seat of SEATS){
+      const now=observedSeatMetrics(observation,seat);
+      const old=observedSeatMetrics(previous,seat);
+      const lifeNow=lifeAt(current,seat),lifeBefore=before?lifeAt(before,seat):lifeNow;
+      const entry=create("div","insight-seat-line");
+      entry.appendChild(create("strong","insight-seat-name",
+        seat===0?"You":"Seat "+(seat+1)));
+      const metrics=create("span","insight-seat-metrics");
+      const item=(symbol,label,value,prior)=>{
+        const delta=Number.isFinite(value)&&Number.isFinite(prior)?value-prior:null;
+        const text=symbol+" "+label+" "+(Number.isFinite(value)?value:"—")+
+          (delta?" "+(delta>0?"+":"")+delta:"");
+        const chip=create("span","insight-seat-chip"+
+          (delta?delta>0?" is-gain":" is-loss":""),text);
+        chip.title=Number.isFinite(value)?label+" recorded at round end":
+          label+" not exported for this seat";
+        metrics.appendChild(chip);
+      };
+      item("♥","",lifeNow,lifeBefore);
+      item("◆","L",now?.lands,old?.lands);
+      item("♟","P",now?.permanents,old?.permanents);
+      item("▤","H",now?.hand,old?.hand);
+      entry.appendChild(metrics);strip.appendChild(entry);
+    }
+    table.appendChild(strip);
+    table.appendChild(create("span","micro",
+      "♥ life · ◆ lands · ♟ permanents · ▤ hand. — means unrecorded, not zero. Values are round-end snapshots, not individual opponent-turn states."));
+    return table;
+  }
   function compactInsightTimeline(root,run,options={}){
     root.replaceChildren();
     const head=create("div","game-outcome-evidence-head");
@@ -768,7 +822,7 @@
       create("span","micro",roundLabel(run)));
     root.appendChild(head);
     root.appendChild(create("p","micro",
-      "Recorded action order within each round. Exact phases and opponent turns are shown only when exported; abstract opponent activity is not a reconstructed enemy turn."));
+      "Player and enemy activity grouped from recorded events. Opponent pressure is abstract; round-end changes do not identify individual enemy turns."));
     const timeline=create("div","insight-turn-timeline");
     root.appendChild(timeline);
     const life=run.life_history||[];
@@ -777,6 +831,19 @@
       const previous=index>1?run.ui_observations?.[index-2]:null;
       const current=life[index],before=index?life[index-1]:null;
       const row=create("details","insight-turn-row");
+      const firstCard=index===0?(run.opening_hand||[])[0]:
+        (observation?.actions||[]).find(a=>
+          typeof (a.card||a.source)==="string"&&
+          (a.card||a.source).trim())?.card||
+        (observation?.actions||[]).find(a=>
+          typeof a.source==="string"&&a.source.trim())?.source;
+      const firstArt=firstCard&&options.lookupRecordedCard?.(firstCard);
+      const image=firstArt?.art||firstArt?.image;
+      if(typeof image==="string"&&/^https:\/\//.test(image)){
+        const cover=create("img","insight-turn-cover");
+        cover.src=image;cover.alt="";cover.loading="lazy";
+        cover.referrerPolicy="no-referrer";row.appendChild(cover);
+      }
       if(Number.isInteger(options.focusTurn)&&options.focusTurn===index)row.open=true;
       const summary=create("summary","insight-turn-row-summary");
       summary.appendChild(create("strong","insight-turn-label",
@@ -827,54 +894,40 @@
         const actions=observation.actions||[];
         if(!actions.length)body.appendChild(create("p","micro",
           "No individual actions recorded for this round."));
-        let priorKey=null,section=null,items=null;
-        for(const a of actions){
-          // Do not infer phase from card type or assume all seatless actions
-          // occurred on the pilot's turn.
-          const actor=Number.isInteger(a.seat)?
-            (Number(a.seat)===0?"Your recorded actions":"Seat "+(Number(a.seat)+1)+" activity"):
-            "Unattributed recorded actions";
-          const phase=typeof a.phase==="string"&&a.phase.trim()?a.phase.trim():null;
-          const key=actor+"|"+(phase||"");
-          if(key!==priorKey){
-            section=create("section","insight-action-phase"+(
-              Number.isInteger(a.seat)&&Number(a.seat)!==0?" is-opponent":""));
-            section.appendChild(create("h4","insight-action-phase-heading",
-              actor+(phase?" · "+phase:" · phase not recorded")));
-            items=create("div","insight-action-sequence");
-            section.appendChild(items);body.appendChild(section);priorKey=key;
+        // Two stable sections: recorded player activity and a single
+        // condensed enemy block. Never infer intra-round phase ordering.
+        const own=actions.filter(a=>Number(a.seat)===0);
+        const enemy=actions.filter(a=>Number.isInteger(a.seat)&&a.seat>0);
+        const unknown=actions.filter(a=>!Number.isInteger(a.seat));
+        function actionSection(title,events,cssClass,showSeat){
+          if(!events.length)return;
+          const section=create("section","insight-action-phase "+cssClass);
+          section.appendChild(create("h4","insight-action-phase-heading",
+            title+" · "+events.length+" recorded actions"));
+          const items=create("div","insight-action-sequence");
+          for(const a of events){
+            const line=create("div","insight-action-entry");
+            if(showSeat)line.appendChild(create("strong","insight-action-seat-label",
+              "Seat "+(Number(a.seat)+1)));
+            const name=a.card||a.source||null;
+            if(name)line.appendChild(insightActionCard(name,options));
+            const wording=[String(a.type||"action").replaceAll("_"," "),
+              a.operation,a.target_name?"→ "+a.target_name:null,
+              a.amount!==undefined?"amount "+a.amount:null].filter(Boolean).join(" · ");
+            line.appendChild(create("span","insight-action-description",wording));
+            items.appendChild(line);
           }
-          const line=create("div","insight-action-entry");
-          const name=a.card||a.source||null;
-          if(name)line.appendChild(insightActionCard(name,options));
-          const wording=[String(a.type||"action").replaceAll("_"," "),
-            a.operation,a.target_name?"→ "+a.target_name:null,
-            a.target_seat!==undefined?"target Seat "+(Number(a.target_seat)+1):null,
-            a.amount!==undefined?"amount "+a.amount:null].filter(Boolean).join(" · ");
-          line.appendChild(create("span","insight-action-description",wording));
-          items.appendChild(line);
+          section.appendChild(items);body.appendChild(section);
         }
+        actionSection("Your recorded actions",own,"is-player",false);
+        actionSection("Enemy activity (consolidated)",enemy,"is-opponent",true);
+        actionSection("Seat not recorded",unknown,"is-unattributed",false);
         const zones=create("details","insight-turn-zones");
         zones.appendChild(create("summary",null,"End-of-round hand, battlefield and graveyard"));
         renderObservationZones(zones,observation,options);
         body.appendChild(zones);
       }
-      // Shared four-seat state view, previously available only in the
-      // standalone reviewer. Preserve both values and real round deltas.
-      const seatTotals=create("details","insight-turn-seats");
-      seatTotals.appendChild(create("summary",null,"Life totals · all four seats"));
-      const totals=create("div","game-outcome-life-stats");
-      for(const seat of SEATS){
-        const value=lifeAt(current,seat),old=before?lifeAt(before,seat):value;
-        const diff=value-old;
-        const stat=create("div","game-outcome-life-stat");
-        if(before&&diff)stat.className+=diff>0?" is-life-gain":" is-life-loss";
-        stat.append(create("span",null,seat===0?"Your life":"Seat "+(seat+1)),
-          create("strong",null,nfmt(value)),
-          create("small",null,(diff>0?"+":"")+(diff||"±0")+" this round"));
-        totals.appendChild(stat);
-      }
-      seatTotals.appendChild(totals);body.appendChild(seatTotals);
+      body.appendChild(seatChangeSummary(current,before,observation,previous));
       const recordedChanges=current.life_changes||[];
       if(index&&recordedChanges.length){
         const lifeSection=create("section","insight-action-phase is-life");
