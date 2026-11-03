@@ -1040,7 +1040,7 @@
       line.appendChild(create("strong",null,"Recorded mana production"));
       for(const {symbol,count} of mana)
         line.appendChild(create("span","mana-symbol mana-"+symbol.toLowerCase(),
-          "{"+symbol+"} ×"+count));
+          symbol+" ×"+count));
       panel.appendChild(line);
     }else panel.appendChild(create("p","micro",
       "Mana production by color was not recorded for this turn."));
@@ -1108,7 +1108,7 @@
         display.appendChild(create("span",null,"Mana "));
         for(const {symbol,count} of mana)
           display.appendChild(create("span","mana-symbol mana-"+symbol.toLowerCase(),
-            "{"+symbol+"}"+(count>1?"×"+count:"")));
+            symbol+(count>1?"×"+count:"")));
         badges.appendChild(display);
       }
       summary.appendChild(badges);
