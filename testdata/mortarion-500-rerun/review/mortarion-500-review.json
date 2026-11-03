@@ -1,0 +1,383 @@
+{
+  "deck_key": "mortarion_physical_final",
+  "deck_sha256": "303562ea9325e36f7031840ef1b902eafae321ec4a4ecc4e3bf28259b4141ba6",
+  "format": "commander-modeled-outcome-review-v1",
+  "limitations": [
+    "Opponent seats use abstract pressure policies, not full Commander decks",
+    "Only life-zero modeled endgames are measured",
+    "Unresolved games are right-censored, never losses",
+    "Pilot action counts summarize the limited example replays, not all games"
+  ],
+  "max_rounds": 30,
+  "pilot_style": "adaptive",
+  "provisional_mode": "safe",
+  "replay_samples": 15,
+  "review_warnings": [],
+  "sampled_game_events_by_type": {
+    "artifact_cast": 31,
+    "artifact_resolved": 31,
+    "creature_cast": 101,
+    "creature_resolved": 101,
+    "draw": 198,
+    "enchantment_cast": 13,
+    "enchantment_resolved": 13,
+    "land_play": 130,
+    "opponent_abstract_blocked_combat": 109,
+    "opponent_abstract_combo_loss": 28,
+    "opponent_abstract_creature": 204,
+    "opponent_abstract_destroy": 18,
+    "opponent_abstract_discard": 62,
+    "opponent_abstract_exile": 13,
+    "opponent_abstract_unblocked_damage": 297,
+    "opponent_life_zero": 41,
+    "opponent_reviewed_opponent_upkeep": 42,
+    "player_abstract_blocked_combat": 29,
+    "player_abstract_unblocked_damage": 208,
+    "reviewed_attachment_equipped": 21,
+    "reviewed_cast_reaction": 7,
+    "reviewed_commander_cast": 29,
+    "reviewed_common_spell_resolved": 24,
+    "reviewed_composed_activated": 3,
+    "reviewed_composed_end_step": 9,
+    "reviewed_composed_upkeep": 6,
+    "reviewed_enter_ramp": 7,
+    "reviewed_enter_resolved": 7,
+    "reviewed_generic_activated": 8,
+    "reviewed_land_entry": 14,
+    "reviewed_land_ramp": 9,
+    "reviewed_phase_resolved": 32,
+    "reviewed_reactive_trigger": 68,
+    "reviewed_removal_resolved": 10,
+    "reviewed_ritual_cast": 6,
+    "reviewed_utility_activated": 7,
+    "reviewed_zone_spell_resolved": 5,
+    "untap": 1001
+  },
+  "sampled_pilot_decisions_by_role": {
+    "artifact": 17,
+    "commander": 29,
+    "creature": 52,
+    "draw": 10,
+    "enchantment": 8,
+    "engine": 54,
+    "other": 19,
+    "ramp": 14,
+    "removal": 10,
+    "ritual": 6
+  },
+  "scenarios": {
+    "aggressive": {
+      "example_replays": 3,
+      "games": 100,
+      "life_snapshots": {
+        "10": {
+          "games_observed": 96,
+          "median_own_life": 28.0
+        },
+        "20": {
+          "games_observed": 5,
+          "median_own_life": 24
+        },
+        "30": {
+          "games_observed": 0,
+          "median_own_life": null
+        },
+        "6": {
+          "games_observed": 100,
+          "median_own_life": 31.0
+        }
+      },
+      "median_pilot_elimination_round": 10.5,
+      "median_terminal_round": 13.0,
+      "median_victory_round": 13.5,
+      "modeled_win_share": 0.92,
+      "outcomes": {
+        "draw": 0,
+        "loss": 8,
+        "not_evaluated": 0,
+        "unresolved": 0,
+        "win": 92
+      },
+      "pilot_archetype": {
+        "evidence": {
+          "artifacts": 9,
+          "combat": 4,
+          "death_triggers": 10,
+          "graveyard": 7,
+          "recursion": 10,
+          "removal": 8,
+          "sacrifice": 19,
+          "spell_engine": 0,
+          "spells": 13,
+          "tokens": 12
+        },
+        "primary": "aristocrats",
+        "scores": {
+          "aristocrats": 121,
+          "artifacts": 36,
+          "combat": 20,
+          "control": 32,
+          "graveyard": 51,
+          "spellslinger": 26,
+          "tokens": 52
+        },
+        "selected": "auto"
+      },
+      "pilot_knockout_games": 8,
+      "terminal_games": 100,
+      "victory_games": 92
+    },
+    "balanced": {
+      "example_replays": 3,
+      "games": 100,
+      "life_snapshots": {
+        "10": {
+          "games_observed": 95,
+          "median_own_life": 29
+        },
+        "20": {
+          "games_observed": 6,
+          "median_own_life": 36.0
+        },
+        "30": {
+          "games_observed": 0,
+          "median_own_life": null
+        },
+        "6": {
+          "games_observed": 100,
+          "median_own_life": 32.0
+        }
+      },
+      "median_pilot_elimination_round": 14,
+      "median_terminal_round": 14.0,
+      "median_victory_round": 15,
+      "modeled_win_share": 0.93,
+      "outcomes": {
+        "draw": 0,
+        "loss": 7,
+        "not_evaluated": 0,
+        "unresolved": 0,
+        "win": 93
+      },
+      "pilot_archetype": {
+        "evidence": {
+          "artifacts": 9,
+          "combat": 4,
+          "death_triggers": 10,
+          "graveyard": 7,
+          "recursion": 10,
+          "removal": 8,
+          "sacrifice": 19,
+          "spell_engine": 0,
+          "spells": 13,
+          "tokens": 12
+        },
+        "primary": "aristocrats",
+        "scores": {
+          "aristocrats": 121,
+          "artifacts": 36,
+          "combat": 20,
+          "control": 32,
+          "graveyard": 51,
+          "spellslinger": 26,
+          "tokens": 52
+        },
+        "selected": "auto"
+      },
+      "pilot_knockout_games": 7,
+      "terminal_games": 100,
+      "victory_games": 93
+    },
+    "combo": {
+      "example_replays": 3,
+      "games": 100,
+      "life_snapshots": {
+        "10": {
+          "games_observed": 98,
+          "median_own_life": 26.0
+        },
+        "20": {
+          "games_observed": 0,
+          "median_own_life": null
+        },
+        "30": {
+          "games_observed": 0,
+          "median_own_life": null
+        },
+        "6": {
+          "games_observed": 100,
+          "median_own_life": 38.0
+        }
+      },
+      "median_pilot_elimination_round": 12.5,
+      "median_terminal_round": 13.0,
+      "median_victory_round": 14.0,
+      "modeled_win_share": 0.78,
+      "outcomes": {
+        "draw": 0,
+        "loss": 22,
+        "not_evaluated": 0,
+        "unresolved": 0,
+        "win": 78
+      },
+      "pilot_archetype": {
+        "evidence": {
+          "artifacts": 9,
+          "combat": 4,
+          "death_triggers": 10,
+          "graveyard": 7,
+          "recursion": 10,
+          "removal": 8,
+          "sacrifice": 19,
+          "spell_engine": 0,
+          "spells": 13,
+          "tokens": 12
+        },
+        "primary": "aristocrats",
+        "scores": {
+          "aristocrats": 121,
+          "artifacts": 36,
+          "combat": 20,
+          "control": 32,
+          "graveyard": 51,
+          "spellslinger": 26,
+          "tokens": 52
+        },
+        "selected": "auto"
+      },
+      "pilot_knockout_games": 22,
+      "terminal_games": 100,
+      "victory_games": 78
+    },
+    "control": {
+      "example_replays": 3,
+      "games": 100,
+      "life_snapshots": {
+        "10": {
+          "games_observed": 100,
+          "median_own_life": 35.5
+        },
+        "20": {
+          "games_observed": 16,
+          "median_own_life": 35.5
+        },
+        "30": {
+          "games_observed": 0,
+          "median_own_life": null
+        },
+        "6": {
+          "games_observed": 100,
+          "median_own_life": 38.0
+        }
+      },
+      "median_pilot_elimination_round": 15.0,
+      "median_terminal_round": 16.0,
+      "median_victory_round": 16.0,
+      "modeled_win_share": 0.98,
+      "outcomes": {
+        "draw": 0,
+        "loss": 2,
+        "not_evaluated": 0,
+        "unresolved": 0,
+        "win": 98
+      },
+      "pilot_archetype": {
+        "evidence": {
+          "artifacts": 9,
+          "combat": 4,
+          "death_triggers": 10,
+          "graveyard": 7,
+          "recursion": 10,
+          "removal": 8,
+          "sacrifice": 19,
+          "spell_engine": 0,
+          "spells": 13,
+          "tokens": 12
+        },
+        "primary": "aristocrats",
+        "scores": {
+          "aristocrats": 121,
+          "artifacts": 36,
+          "combat": 20,
+          "control": 32,
+          "graveyard": 51,
+          "spellslinger": 26,
+          "tokens": 52
+        },
+        "selected": "auto"
+      },
+      "pilot_knockout_games": 2,
+      "terminal_games": 100,
+      "victory_games": 98
+    },
+    "mixed": {
+      "example_replays": 3,
+      "games": 100,
+      "life_snapshots": {
+        "10": {
+          "games_observed": 94,
+          "median_own_life": 19.0
+        },
+        "20": {
+          "games_observed": 0,
+          "median_own_life": null
+        },
+        "30": {
+          "games_observed": 0,
+          "median_own_life": null
+        },
+        "6": {
+          "games_observed": 100,
+          "median_own_life": 32.5
+        }
+      },
+      "median_pilot_elimination_round": 12,
+      "median_terminal_round": 12.0,
+      "median_victory_round": 13,
+      "modeled_win_share": 0.57,
+      "outcomes": {
+        "draw": 0,
+        "loss": 43,
+        "not_evaluated": 0,
+        "unresolved": 0,
+        "win": 57
+      },
+      "pilot_archetype": {
+        "evidence": {
+          "artifacts": 9,
+          "combat": 4,
+          "death_triggers": 10,
+          "graveyard": 7,
+          "recursion": 10,
+          "removal": 8,
+          "sacrifice": 19,
+          "spell_engine": 0,
+          "spells": 13,
+          "tokens": 12
+        },
+        "primary": "aristocrats",
+        "scores": {
+          "aristocrats": 121,
+          "artifacts": 36,
+          "combat": 20,
+          "control": 32,
+          "graveyard": 51,
+          "spellslinger": 26,
+          "tokens": 52
+        },
+        "selected": "auto"
+      },
+      "pilot_knockout_games": 43,
+      "terminal_games": 100,
+      "victory_games": 57
+    }
+  },
+  "total_games": 500,
+  "totals": {
+    "draw": 0,
+    "loss": 82,
+    "not_evaluated": 0,
+    "unresolved": 0,
+    "win": 418
+  }
+}
