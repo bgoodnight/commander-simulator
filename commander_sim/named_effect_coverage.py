@@ -9,102 +9,10 @@ from collections import defaultdict
 import json
 
 from .deck_fixtures import FIXTURES
-from .reviewed_rocks import ROCKS
-from .reviewed_tutors import TUTORS
-from .reviewed_token_spells import TOKEN_SPELLS
-from .bounded_trigger_effects import REVIEWED_CAST_TRIGGERS
-from .reviewed_death_effects import DEATH_RULES
-from .reviewed_sacrifice_actions import SACRIFICE_MODES
-from .reviewed_phase_effects import PHASE_RULES
-from .reviewed_unearth import UNEARTH
-from .reviewed_flashback import FLASHBACK
-from .reviewed_enter_effects import ENTER_RULES
-from .reviewed_cost_reduction import REDUCERS
-from .reviewed_graveyard_creatures import GRAVEYARD_CREATURES
-from .reviewed_nonhand_cast_triggers import NONHAND_CAST_TRIGGERS
-from .reviewed_escape import BREACH_REVIEWS
-from .reviewed_buyback import BUYBACK
-from .reviewed_spell_copy import REVIEWED_COPY_SPELLS
-from .reviewed_draw_spells import DRAW_SPELLS
-from .reviewed_common_spells import RECIPES as COMMON_SPELLS
-from .reviewed_removal_spells import RULES as REMOVAL_SPELLS
-from .reviewed_lands import LANDS
-from .reviewed_land_entry import RULES as LAND_ENTRIES
-from .reviewed_zone_spells import RULES as ZONE_SPELLS
-from .reviewed_graveyard_spells import RULES as GRAVEYARD_SPELLS
-from .reviewed_attachments import RULES as ATTACHMENTS
-from .reviewed_utility_activations import RULES as UTILITY_ACTIVATIONS
-from .reviewed_activated_utilities import RULES as ACTIVATED_UTILITIES
-from .reviewed_reactive_triggers import RULES as REACTIVE_TRIGGERS
-from .reviewed_attack_triggers import RULES as ATTACK_TRIGGERS
-from .reviewed_static_modifiers import RULES as STATIC_CREATURE_RULES
-from .reviewed_creature_entry import RULES as CREATURE_ENTRY_RULES
-from .reviewed_attack_tokens import RULES as ATTACK_TOKEN_RULES
-from .reviewed_attack_mill import RULES as ATTACK_MILL_RULES
-from .reviewed_attack_zones import RULES as ATTACK_ZONE_RULES
-from .reviewed_artifact_departures import RULES as ARTIFACT_DEPARTURE_RULES
-from .reviewed_combat_damage import RULES as COMBAT_DAMAGE_RULES
+from .shared_effect_registry import named_registrations, EFFECT_FAMILIES, effect_registrations
 
 
-def _named_sources():
-    catalog=defaultdict(list)
-    for kind,source in (
-        ("mana",ROCKS),
-        ("search",TUTORS),
-        ("fixed_token_spell",TOKEN_SPELLS),
-        ("cast_trigger",REVIEWED_CAST_TRIGGERS),
-        ("death_trigger",DEATH_RULES),
-        ("sacrifice_activation",SACRIFICE_MODES),
-        ("phase_trigger",PHASE_RULES),
-        ("unearth",UNEARTH),
-        ("flashback",FLASHBACK),
-        ("enter_trigger",ENTER_RULES),
-        ("cost_reduction",REDUCERS),
-        ("graveyard_creature_cast",GRAVEYARD_CREATURES),
-        ("nonhand_cast_trigger",NONHAND_CAST_TRIGGERS),
-        ("escape_grant",BREACH_REVIEWS),
-        ("buyback",BUYBACK),
-        ("spell_copy",REVIEWED_COPY_SPELLS),
-        # Maintain named audit parity with the physical turn driver's other
-        # exact source-reviewed handlers. This is suboperation coverage only.
-        ("draw_spell",DRAW_SPELLS),
-        ("common_spell",COMMON_SPELLS),
-        ("removal_spell",REMOVAL_SPELLS),
-        ("land_mana",LANDS),
-        ("land_entry",LAND_ENTRIES),
-        ("zone_spell",ZONE_SPELLS),
-        ("graveyard_spell",GRAVEYARD_SPELLS),
-        ("attachment",ATTACHMENTS),
-        ("utility_activation",UTILITY_ACTIVATIONS),
-        ("activated_utility",ACTIVATED_UTILITIES),
-        ("reactive_trigger",REACTIVE_TRIGGERS),
-        ("attack_trigger",ATTACK_TRIGGERS),
-        ("attack_token_trigger",ATTACK_TOKEN_RULES),
-        ("attack_mill_trigger",ATTACK_MILL_RULES),
-        ("attack_zone_trigger",ATTACK_ZONE_RULES),
-        ("artifact_departure_trigger",ARTIFACT_DEPARTURE_RULES),
-        ("combat_damage_player_trigger",COMBAT_DAMAGE_RULES),
-        ("static_creature_modifier",STATIC_CREATURE_RULES),
-        ("creature_entry_trigger",CREATURE_ENTRY_RULES),
-    ):
-        for name,row in source.items():
-            if kind in {"mana","search"}:
-                oracle_id=row["review"].oracle_id
-            elif kind=="cast_trigger":
-                for spec in row:
-                    catalog[name].append((kind,spec.card.oracle_id))
-                continue
-            elif isinstance(row,tuple):
-                for item in row:
-                    catalog[name].append((kind,item.oracle_id))
-                continue
-            else:
-                oracle_id=row.oracle_id
-            catalog[name].append((kind,oracle_id))
-    return {key:tuple(values) for key,values in catalog.items()}
-
-
-REGISTRATIONS=_named_sources()
+REGISTRATIONS=named_registrations()
 
 
 def named_effect_coverage(fixtures=FIXTURES):
@@ -163,7 +71,25 @@ def named_effect_coverage(fixtures=FIXTURES):
     for oracle,kinds in requested.items():
         for kind in kinds:
             by_operation[kind]=by_operation.get(kind,0)+1
+    # The catalog is shared: describe actual cross-deck registrations, not
+    # invented card coverage or inferred text-only capabilities.
+    shared_families={}
+    for family in EFFECT_FAMILIES:
+        oracle_ids={record.oracle_id for record in effect_registrations()
+                    if record.family==family}
+        in_decks=tuple(sorted(key for key,deck in by_deck.items()
+            if any(entry["oracle_id"] in oracle_ids
+                   for entry in deck["cards"].values())))
+        shared_families[family]={
+            "registered_oracle_cards":len(oracle_ids),
+            "deck_variants":in_decks,
+            "deck_variant_count":len(in_decks),
+        }
     return {
+        "shared_effect_families":shared_families,
+        "shared_effect_family_count":len(shared_families),
+        "shared_effect_operation_count":len({
+            record.operation for record in effect_registrations()}),
         "deck_count":len(by_deck),
         "deck_card_entries":sum(row["named_cards"] for row in by_deck.values()),
         "distinct_oracle_cards":len(all_oracles),
