@@ -13,6 +13,7 @@ from .physical_common_effects import (
     CardQuantity,draw_physical_cards,EmptyLibraryDraw)
 from .graveyard_recipes import GraveyardRecipe, resolve_graveyard_recipe
 from .reviewed_token_spells import TokenBlueprint,create_reviewed_token_batches
+from .reviewed_counter_phase_ops import put_counter_on_creatures_by_color,destroy_creature_with_counter
 
 
 _ZOMBIE=TokenBlueprint("Zombie",frozenset({"creature"}),
@@ -45,7 +46,7 @@ class PhaseRule:
                     "draw_lose_one","zombies_half","zombie_draw_lose",
                     "snake_if_none","decayed_zombie_if_none",
                     "opponent_loss_plaguebearers","death_draw_lose",
-                    "graveyard_creature_to_hand"}):
+                    "graveyard_creature_to_hand","counter_each_nonblack_creature","destroy_countered_creature"}):
             raise ValueError("Invalid reviewed phase trigger")
 
 
@@ -54,6 +55,14 @@ def _rule(oid,excerpt,phase,op,*,each=False):
 
 
 PHASE_RULES={
+    "Midnight Banshee":(_rule(
+        "dd8b6067-a97f-402f-bba1-70ebc6ee1599",
+        "At the beginning of your upkeep, put a -1/-1 counter on each nonblack creature.",
+        "upkeep","counter_each_nonblack_creature"),),
+    "Crumbling Ashes":(_rule(
+        "2e4030eb-c74f-4f81-8d35-8f1d080b15cf",
+        "At the beginning of your upkeep, destroy target creature with a -1/-1 counter on it.",
+        "upkeep","destroy_countered_creature"),),
     "Phyrexian Arena":(_rule("ee579a32-a048-4335-b966-231ba731cdea",
         "At the beginning of your upkeep, you draw a card and lose 1 life.",
         "upkeep","draw_lose_one"),),
@@ -89,7 +98,7 @@ def reviewed_phase_permanent(name,raw):
     creatures and artifact effects need separate hand-cast safety review.
     """
     if name not in {"Phyrexian Arena","Endless Ranks of the Dead",
-                    "Oversold Cemetery"}:
+                    "Oversold Cemetery","Crumbling Ashes"}:
         return False
     if (not isinstance(raw,dict) or raw.get("layout")!="normal"
             or raw.get("type_line")!="Enchantment"):
@@ -97,6 +106,17 @@ def reviewed_phase_permanent(name,raw):
     return any(raw.get("oracle_id")==rule.oracle_id
                and rule.excerpt in raw.get("oracle_text","")
                for rule in PHASE_RULES[name])
+
+
+def reviewed_phase_creature(name,raw):
+    """Approve independently reviewed no-ETB upkeep creature bodies."""
+    if name!="Midnight Banshee" or not isinstance(raw,dict):
+        return False
+    return (raw.get("layout")=="normal"
+            and "Creature" in raw.get("type_line","").split(" — ",1)[0]
+            and any(raw.get("oracle_id")==rule.oracle_id
+                    and rule.excerpt in raw.get("oracle_text","")
+                    for rule in PHASE_RULES[name]))
 
 
 @dataclass(frozen=True)
@@ -108,16 +128,19 @@ class PhaseResolution:
     created_token_ids: tuple[int,...] = ()
     drawn_ids: tuple[int,...] = ()
     returned_id: int | None = None
+    countered_ids: tuple[int,...] = ()
+    destroyed_old_id: int | None = None
 
 
 class ReviewedPhaseEngine:
     """Idempotent execution for externally authorized phase events."""
-    def __init__(self,zones,life:KernelLife,catalog):
+    def __init__(self,zones,life:KernelLife,catalog,death_engine=None):
         if life.kernel is not zones.kernel:
             raise ValueError("Life and zones must share an authoritative kernel")
         self.zones=zones
         self.life=life
         self.catalog=catalog
+        self.death_engine=death_engine
         self._handled=set()
         self.invocations=[]
 
@@ -181,6 +204,8 @@ class ReviewedPhaseEngine:
                 tokens=()
                 drawn=()
                 returned=None
+                countered=()
+                destroyed=None
                 if operation.operation in {"draw_lose_one","zombie_draw_lose",
                                          "death_draw_lose"}:
                     n=(1 if operation.operation=="draw_lose_one" else
@@ -216,6 +241,17 @@ class ReviewedPhaseEngine:
                     if count:
                         tokens=create_reviewed_token_batches(
                             self.zones,seat,(replace(_PLAGUEBEARER,count=count),))
+                elif operation.operation=="counter_each_nonblack_creature":
+                    result=put_counter_on_creatures_by_color(
+                        self.zones,source.object_id,
+                        death_engine=self.death_engine,turn=round_id)
+                    countered=result.affected_ids
+                elif operation.operation=="destroy_countered_creature":
+                    result=destroy_creature_with_counter(
+                        self.zones,source.object_id,
+                        target_id=decisions.get(source.object_id),
+                        death_engine=self.death_engine,turn=round_id)
+                    destroyed=result.destroyed_old_id
                 elif operation.operation=="graveyard_creature_to_hand":
                     creature_ids=tuple(oid for oid in self.zones.ids(seat,"graveyard")
                         if "creature" in kernel.get(oid).types)
@@ -230,12 +266,14 @@ class ReviewedPhaseEngine:
                                                 frozenset({"creature"})))[0].new_id
                 else:
                     raise NotImplementedError("Unregistered phase effect")
-                return tuple(tokens),tuple(drawn),returned
-            tokens,drawn,returned=dispatcher.invoke(rule.slot_id,source.object_id,execute)
+                return tuple(tokens),tuple(drawn),returned,tuple(countered),destroyed
+            tokens,drawn,returned,countered,destroyed=dispatcher.invoke(
+                rule.slot_id,source.object_id,execute)
             self.invocations.extend(dispatcher.events)
             self._handled.add(key)
             outcomes.append(PhaseResolution(source.object_id,source.card.name,
-                rule.slot_id,rule.operation,tokens,drawn,returned))
+                rule.slot_id,rule.operation,tokens,drawn,returned,
+                countered,destroyed))
         return tuple(outcomes)
 
     def _creature_count(self,seat,subtype):
