@@ -495,8 +495,24 @@ test('featured card insight switches artwork, mana, metrics, and evidence with s
     assert.ok(walk(card).some(n=>n.tag==='img'&&n.src==='https://example.com/plague-full.jpg'));
     assert.ok(walk(card).some(n=>n.className==='insight-featured-card-name'&&
       n.textContent==='Plague Spitter'));
-    assert.ok(walk(card).some(n=>n.className==='game-outcome-review-link'&&
-      n.textContent==='Seed 3 · Turn 2'));
+    assert.ok(walk(card).some(n=>n.tag==='summary'&&
+      n.textContent==='View example games'));
+    const metrics=walk(card).filter(n=>n.className.includes('insight-featured-metric-link'));
+    assert.equal(metrics.length,2);
+    assert.ok(metrics.some(n=>n.children[0].textContent==='Times played'));
+    assert.ok(metrics.some(n=>n.children[0].textContent==='Median event turn'));
+    const tracker=walk(card).find(n=>n.className.includes('insight-inline-tracker'));
+    assert.ok(tracker);
+    metrics[0].onclick();
+    assert.equal(tracker.open,true);
+    const selector=walk(tracker).find(n=>n.tag==='select');
+    assert.ok(selector);
+    assert.equal(selector.value,'0');
+    assert.ok(walk(tracker).some(n=>n.className==='insight-turn-row'));
+    metrics[1].onclick();
+    assert.equal(selector.value,'1');
+    metrics[0].onclick();
+    assert.equal(selector.value,'0');
   }finally{global.document=before}
 });
 
@@ -741,8 +757,8 @@ test('tutor card insight panels only appear for confirmed named search resolutio
       walk(n).some(x=>x.textContent==='Most tutored card'));
     assert.ok(targetPanel);
     assert.ok(walk(targetPanel).some(n=>n.className==='game-outcome-number'&&n.textContent==='100.0%'));
-    assert.ok(walk(targetPanel).some(n=>n.className==='game-outcome-review-link'&&
-      n.textContent.includes('Fabricate → Sol Ring')));
+    assert.ok(walk(targetPanel).some(n=>n.tag==='summary'&&
+      n.textContent==='View example games'));
   }finally{global.document=before}
 });
 
@@ -929,4 +945,25 @@ test('rest of turn summarizes named enemy casts and keeps unknown-seat pilot act
   assert.doesNotMatch(source,/actionSection\("Seat not recorded"/);
   assert.doesNotMatch(source,/actionSection\("Enemy activity/);
   assert.match(source,/insight-seat-life-strip/);
+});
+
+test('card insight removes redundant labels, caps visible bars, and links metrics to examples',()=>{
+  const source=fs.readFileSync('web/pages/game_outcomes.js','utf8');
+  const css=fs.readFileSync('web/pages/style.css','utf8');
+  const start=source.indexOf('function cardPerformancePanel(');
+  const end=source.indexOf('function readablePredictor(',start);
+  const panel=source.slice(start,end);
+  assert.ok(start>=0&&end>start);
+  for(const phrase of ['Compare cards and evidence','View card details ↗',
+    'Select a bar','Bars compare','Jump to recorded turn','Games recorded',
+    'Median per game']){
+    assert.ok(!panel.includes(phrase),phrase+' should be absent');
+  }
+  assert.match(panel,/Times played/);
+  assert.match(panel,/Median event turn/);
+  assert.match(panel,/View example games/);
+  assert.match(panel,/exampleIndex=\(exampleIndex\+1\)%examples.length/);
+  assert.match(panel,/ranked.slice\(0,10\)/);
+  assert.match(css,/\.insight-featured-bars\{grid-auto-rows:64px;max-height:204px/);
+  assert.match(css,/\.insight-featured-bars::-webkit-scrollbar/);
 });
