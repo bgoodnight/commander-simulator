@@ -1912,3 +1912,46 @@ body:has(#pane-records:not([hidden])) .page-introduction a{font-size:.72rem}
     width:100%;max-width:none;gap:3px;
   }
 }
+
+/* Compact Results spacing and native example-game navigation. */
+body:has(#pane-records:not([hidden])) .compact-selection{margin-bottom:3px}
+#pane-records{gap:8px}
+#pane-records > #long-game-panel{margin-top:0}
+#long-game-panel .latest-results-topline{width:1px;height:1px;
+  overflow:hidden;clip-path:inset(50%);padding:0;margin:0}
+.insight-inline-tracker-compact{position:relative;padding:4px 8px}
+.insight-inline-tracker-compact>summary{max-width:52%;width:max-content}
+.insight-inline-tracker-compact>.insight-example-full-link{
+  display:none;position:absolute;right:8px;top:4px;
+  padding:0;border:0;border-radius:0;box-shadow:none;
+  color:#efd6a6;background:none;font-size:.7rem;font-weight:600;line-height:1.6;
+  text-decoration:underline;text-underline-offset:3px;
+  text-decoration-color:#d1b47a99
+}
+.insight-inline-tracker-compact[open]>.insight-example-full-link{display:inline-block}
+.insight-inline-tracker-compact>.insight-example-full-link:hover{color:#fff4d3;background:none}
+.insight-example-game-label{font-size:.75rem;font-weight:700;
+  color:#efddba;line-height:1.4;margin:8px 0 3px}
+@media(max-width:650px){
+ .insight-inline-tracker-compact>summary{max-width:51%}
+ .insight-inline-tracker-compact>.insight-example-full-link{right:5px;font-size:.66rem}
+}
+
+/* Adaptive turn lengths: the summary shows all recorded draws and plays.
+   Combat/damage remain in expanded event details, never clipped at 3 lines. */
+.insight-turn-row-summary .insight-turn-activity{
+  display:block;-webkit-line-clamp:unset;
+  overflow:visible;white-space:normal;text-overflow:clip;
+  overflow-wrap:anywhere;
+}
+.insight-turn-row .insight-turn-row-summary{min-height:58px;height:auto}
+.insight-action-description{min-width:0}
+.insight-action-facts{display:block;margin-top:3px;font-size:.69rem;
+  color:#c3d5ca;line-height:1.3}
+.insight-rest-combat{display:grid;gap:3px;border-left:2px solid #b9907a;
+  padding:3px 0 3px 8px}
+@media(max-width:650px){
+  .insight-turn-row-summary .insight-turn-activity{
+    display:block;-webkit-line-clamp:unset;overflow:visible;white-space:normal}
+  .insight-turn-row .insight-turn-row-summary{min-height:56px}
+}
