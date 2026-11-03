@@ -497,6 +497,7 @@ function renderLongGamePanel(){
     longGameSourceNote;
   window.DeckGameOutcomes.render(root,exact,{
     deckKey:selected,deckHash:selectedDeck().deck_sha256,
+    commanderName:selectedDeck().commander,
     commanderArt:commanderCard(selectedDeck())?.art||null,
     portraitFor:outcomeOpponentPortrait,
     reviewerRoot:reviewer,
