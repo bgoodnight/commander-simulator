@@ -1,10 +1,8 @@
 name: Stage and review 500 Mortarion modeled games
 
-# Re-run after excluding paid sacrifice victims from mana-source selection.
+# Run the full batch explicitly after the pilot / rules baseline is approved.
+# Workflow edits should not silently trigger 500 new games on main.
 on:
-  push:
-    branches: [main]
-    paths: [".github/workflows/mortarion-500-stage.yml"]
   pull_request:
     paths:
       - ".github/workflows/mortarion-500-stage.yml"
@@ -146,6 +144,19 @@ jobs:
             dist/review/*.md
           if-no-files-found: error
           retention-days: 90
+      - name: Archive verified simulation release permanently
+        if: github.event_name != 'pull_request' && github.ref == 'refs/heads/main'
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          # Every completed run gets its own immutable GitHub Release asset
+          # before the single live Pages manifest is replaced.
+          TAG="modeled-games-${{ github.run_id }}-${{ github.run_attempt }}"
+          gh release create "$TAG" dist/published-game-outcomes/*.json \
+            --target "${{ github.sha }}" \
+            --title "Modeled simulations · ${{ github.sha }}" \
+            --notes "Verified source commit ${{ github.sha }}; workflow run ${{ github.run_id }}. Immutable historical batch. The live Deck Lab displays only the most recently promoted manifest." \
+            --latest=false
       - name: Publish only this Mortarion cohort
         run: |
           git fetch origin main

@@ -250,7 +250,7 @@
       create("strong","game-outcome-title",title),
       create("span","game-outcome-number",number),
       create("span","game-outcome-caption",detail),
-      create("span","board-open","Explore rounds and seeds →"));
+      create("span","board-open","Explore →"));
     summary.appendChild(copy);panel.appendChild(summary);
     const body=create("div","game-outcome-body");
     childBuilder(body);
@@ -327,15 +327,14 @@
   }
   function matchupExplorer(parent,groups,options={}){
     const title=create("div","game-outcome-explorer-intro");
-    title.append(create("strong",null,"Opponent types · most wins → fewest"),
-      create("span","micro","Select or scroll through ranked opponent groups"));
+    title.append(create("strong",null,"Most wins → Fewest wins"));
     parent.appendChild(title);
     if(!groups.length){
       parent.appendChild(create("p","micro","No recorded opposing groups yet."));
       return;
     }
     if(groups.length===1)parent.appendChild(create("p","micro",
-      "Only one opponent group has been sampled. Other types appear when matching simulations are loaded."));
+      "One opponent type recorded"));
     const layout=create("div","game-outcome-explorer");
     const portrait=create("div","game-outcome-opponent-portrait");
     const rankSide=create("div","game-outcome-ranking-side");
@@ -400,35 +399,44 @@
             " · illustrative archetype portrait"):
           "No cached commander art"));
       portrait.appendChild(caption);
-      const groupsTogether=create("p","micro",
-        bucket.kind==="named"?
-          "Named commander appeared in a four-player pod. The outcome is not a one-on-one result.":
-          "Result against a modeled opponent-policy pod, not the pictured commander's deck.");
-      caption.appendChild(groupsTogether);
+      caption.appendChild(create("span","game-outcome-portrait-kind",
+        bucket.kind==="named"?"Observed in pod":"Illustrative portrait"));
       metrics.replaceChildren(
-        metricTile("Games",values.games,"Recorded in matching simulations"),
+        metricTile("Games",values.games,"Observed"),
         metricTile("Win share",Math.round(values.winShare*100)+"%",
           values.wins+" win · "+values.losses+" loss · "+values.unresolved+" unresolved"+
           (values.draws?" · "+values.draws+" draw":"")),
-        metricTile("Median finished round",values.medianFinishRound,
-          values.finishedGames+" finished game(s), excluding unresolved"),
-        metricTile("Median our knockout round",values.medianPilotKnockoutRound,
-          values.pilotKnockouts+" recorded knockout(s)"),
-        metricTile("Median victory round",values.medianVictoryRound,
-          values.victoryGames+" modeled win(s)"),
-        metricTile("First opponent knockout",values.medianFirstOpponentKnockoutRound,
-          values.gamesWithOpponentKnockout+" game(s) with a recorded opponent elimination"),
-        metricTile("Median last life",values.medianLastPilotLife,
-          "Your life at each game's last observed round")
+        metricTile("Median finish",values.medianFinishRound,
+          values.finishedGames+" completed"),
+        metricTile("Our knockout round",values.medianPilotKnockoutRound,
+          values.pilotKnockouts+" knockouts"),
+        metricTile("Victory round",values.medianVictoryRound,
+          values.victoryGames+" wins"),
+        metricTile("First opponent out",values.medianFirstOpponentKnockoutRound,
+          values.gamesWithOpponentKnockout+" games"),
+        metricTile("Final life",values.medianLastPilotLife,
+          "Median recorded")
       );
       seeds.replaceChildren();evidence.replaceChildren();
-      for(const {run,group} of bucket.runs){
-        const button=textButton("Seed "+run.seed+" · "+stateLabel(run.outcome.status)+
-          " · "+roundLabel(run),"game-outcome-seed",()=>runDetails(evidence,run,{
+      const samples=[
+        ...bucket.runs.filter(({run,group})=>group.exampleBySeed.has(run.seed)),
+        ...bucket.runs.filter(({run,group})=>!group.exampleBySeed.has(run.seed))
+      ].slice(0,6);
+      for(const {run,group} of samples){
+        const button=textButton("Seed "+run.seed+" · "+stateLabel(run.outcome.status),
+          "game-outcome-seed",()=>runDetails(evidence,run,{
             example:group.exampleBySeed.get(run.seed),
             onShowRecordedActions:options.onShowRecordedActions
           }));
         seeds.appendChild(button);
+      }
+      if(bucket.runs.length>samples.length)
+        seeds.appendChild(create("span","micro",bucket.runs.length+
+          " games · All seeds in Turn reviewer"));
+      if(typeof options.onReviewRun==="function"){
+        const {run,group}=bucket.runs[0];
+        seeds.appendChild(textButton("Open turn reviewer ↓",
+          "game-outcome-review-link",()=>options.onReviewRun(group.id,run.seed)));
       }
     }
     pick(0);
@@ -589,123 +597,214 @@
     }
     root.appendChild(stats);
   }
+  function histogram(root,runs,maxRound){
+    const counts=new Map();
+    for(const run of runs){
+      if(!run.outcome.complete)continue;
+      counts.set(run.completed_rounds,(counts.get(run.completed_rounds)||0)+1);
+    }
+    if(!counts.size){
+      root.appendChild(create("span","micro","No finished games"));return;
+    }
+    const highest=Math.max(...counts.values());
+    const plot=create("div","game-outcome-finish-bars");
+    const all=[...counts].sort((a,b)=>a[0]-b[0]);
+    for(const [round,count] of all){
+      const bar=create("div","game-outcome-finish-row");
+      bar.appendChild(create("span",null,"R"+round));
+      const track=create("div","game-outcome-finish-track");
+      const fill=create("span","game-outcome-finish-fill");
+      fill.style.width=(count/highest*100)+"%";
+      track.appendChild(fill);
+      bar.append(track,create("strong",null,count));
+      plot.appendChild(bar);
+    }
+    root.appendChild(plot);
+  }
+  function turnReviewer(root,groups,options={}){
+    root.replaceChildren();
+    const choices=create("div","game-outcome-review-controls");
+    const scenarioSelect=create("select","game-outcome-scenario-select");
+    scenarioSelect.setAttribute("aria-label","Choose opponent scenario");
+    const seedSelect=create("select","game-outcome-scenario-select");
+    seedSelect.setAttribute("aria-label","Choose recorded game seed");
+    const available=groups.filter(g=>g.runs.length);
+    if(!available.length){root.textContent="No recorded games.";return}
+    for(const group of available){
+      const option=create("option",null,group.scenario+" · "+
+        group.runs.length+" games");
+      option.value=group.id;
+      scenarioSelect.appendChild(option);
+    }
+    choices.append(scenarioSelect,seedSelect);
+    const evidence=create("div","game-outcome-evidence game-outcome-review-evidence");
+    root.append(choices,evidence);
+    let active=available[0];
+    function showSeed(){
+      const run=active.runs.find(r=>String(r.seed)===String(seedSelect.value));
+      if(!run)return;
+      runDetails(evidence,run,{example:active.exampleBySeed.get(run.seed),
+        onShowRecordedActions:options.onShowRecordedActions});
+    }
+    function showGroup(seed){
+      active=available.find(g=>g.id===scenarioSelect.value)||available[0];
+      seedSelect.replaceChildren();
+      for(const run of active.runs){
+        const option=create("option",null,"Seed "+run.seed+" · "+
+          stateLabel(run.outcome.status)+" · Round "+run.completed_rounds);
+        option.value=String(run.seed);
+        seedSelect.appendChild(option);
+      }
+      const firstExample=active.runs.find(run=>active.exampleBySeed.has(run.seed));
+      seedSelect.value=String(seed??(firstExample||active.runs[0]).seed);
+      showSeed();
+    }
+    scenarioSelect.addEventListener("change",()=>showGroup());
+    seedSelect.addEventListener("change",showSeed);
+    showGroup();
+    return function jump(id,seed){
+      const group=available.find(g=>g.id===id);
+      if(!group)return;
+      scenarioSelect.value=id;
+      showGroup(seed);
+      if(options.reviewerPanel?.scrollIntoView)
+        options.reviewerPanel.scrollIntoView({behavior:"smooth",block:"start"});
+    };
+  }
   function render(root,batches,options={}){
     root.replaceChildren();
+    if(options.reviewerRoot)options.reviewerRoot.replaceChildren();
     const report=model(batches,options.deckKey,options.deckHash);
     if(!report.groups.length){
       root.appendChild(create("p","game-outcome-empty",
-        "No matching long-game outcome batches are loaded for this exact deck revision. "+
-        "Import JSON from the 20-round workflow to preview these charts; "+
-        "a published long-game batch will appear here automatically when available."));
+        "No current published simulations for this exact deck."));
+      if(options.reviewerRoot)
+        options.reviewerRoot.appendChild(create("span","micro","No recorded turns."));
       return report;
     }
-    let active=0;
-    const toolbar=create("div","game-outcome-toolbar");
-    const choice=create("select","game-outcome-scenario-select");
-    choice.setAttribute("aria-label","Select modeled game scenario");
-    for(let i=0;i<report.groups.length;i++){
-      const g=report.groups[i],option=create("option",null,
-        g.label+" · "+g.total+" games · "+g.requestedRounds+" rounds max");
-      option.value=String(i);choice.appendChild(option);
+    // Never silently mix rules, pilot profiles or simulation horizons.
+    // The newest manifest represents one source engine revision; among its
+    // compatible groups, prefer the cohort with the most recorded games.
+    const cohorts=new Map();
+    for(const group of report.groups){
+      const key=[group.pilotStyle,group.provisionalMode,group.requestedRounds].join("|");
+      if(!cohorts.has(key))cohorts.set(key,{key,groups:[],games:0});
+      const entry=cohorts.get(key);
+      entry.groups.push(group);entry.games+=group.total;
     }
-    if(report.groups.length>1)toolbar.appendChild(choice);
-    const info=create("p","micro");
-    toolbar.appendChild(info);root.appendChild(toolbar);
-    const cards=create("div","board-grid game-outcome-grid");
+    const cohort=[...cohorts.values()].sort((a,b)=>
+      b.games-a.games||a.key.localeCompare(b.key))[0];
+    const groups=cohort.groups;
+    const all=groups.flatMap(group=>group.runs.map(run=>({run,group})));
+    const runs=all.map(x=>x.run);
+    const total=runs.length;
+    const counts=Object.fromEntries(STATES.map(state=>
+      [state,runs.filter(run=>run.outcome.status===state).length]));
+    const finished=runs.filter(run=>run.outcome.complete);
+    const wins=runs.filter(run=>run.outcome.status==="win");
+    const knocked=runs.map(run=>knockoutRound(run,0)).filter(Number.isFinite);
+    const enemyOut=runs.flatMap(run=>[1,2,3]
+      .map(seat=>knockoutRound(run,seat)).filter(Number.isFinite));
+    const lastLife=runs.map(run=>lifeAt(run.life_history.at(-1),0))
+      .filter(Number.isFinite);
+    const life=lifeTrend(runs,groups[0].requestedRounds);
+    const matchup=matchupRows(groups);
+    const cards=create("div","board-grid game-outcome-grid latest-insight-grid");
     root.appendChild(cards);
-    function showGroup(){
-      cards.replaceChildren();
-      const group=report.groups[active];
-      // Opposing tables can be compared across scenarios, but only with
-      // the same pilot personality, rule approximations and round horizon.
-      const peers=report.groups.filter(g=>
-        g.pilotStyle===group.pilotStyle&&
-        g.provisionalMode===group.provisionalMode&&
-        g.requestedRounds===group.requestedRounds);
-      const matchup=matchupRows(peers);
-      const outcomeGames=peers.flatMap(source=>
-        source.runs.map(run=>({run,source})));
-      const outcomeGroup={
-        total:outcomeGames.length,
-        counts:Object.fromEntries(STATES.map(state=>[state,
-          peers.reduce((n,g)=>n+g.counts[state],0)])),
-        terminal:peers.reduce((n,g)=>n+g.terminal,0),
-        terminalRounds:peers.flatMap(g=>g.terminalRounds)
-      };
-      info.textContent=outcomeGroup.total+" modeled games · "+group.requestedRounds+
-        "-round horizon · "+peers.length+" opposing group(s)"+
-        " · pilot "+group.pilotStyle+" · provisional "+group.provisionalMode+
-        " · abstract opponent policies, not competitive multiplayer win rates";
-      // Headline combines matching opponent scenarios, but never mismatched
-      // pilot, approximation, deck revision or simulation horizon.
-      cards.appendChild(outcomeCard(outcomeGroup,options,body=>{
-        const evidence=create("div","game-outcome-evidence");
-        const examples=create("div","game-outcome-seeds");
-        let picked=null;
-        function showSeeds(status){
-          examples.replaceChildren();evidence.replaceChildren();
-          const found=outcomeGames.filter(({run})=>
-            !status||run.outcome.status===status);
-          for(const {run,source} of found){
-            const key=source.id+":"+run.seed;
-            const button=textButton(source.scenario+" · seed "+run.seed+
-              " · "+stateLabel(run.outcome.status)+" · "+roundLabel(run),
-              "game-outcome-seed",()=>{
-              picked=key;showSeeds(status);
-              runDetails(evidence,run,{example:source.exampleBySeed.get(run.seed),
-                onShowRecordedActions:options.onShowRecordedActions});
-            });
-            button.setAttribute("aria-pressed",String(key===picked));
-            examples.appendChild(button);
-          }
-          if(!found.length)examples.appendChild(create("p","micro",
-            "No recorded games for this outcome."));
-        }
-        countsChart(body,outcomeGroup,showSeeds);
-        const median=quantile(outcomeGroup.terminalRounds,.5);
-        body.appendChild(create("p","micro",
-          "Median finished round: "+(median===null?"—":nfmt(median))+
-          " · "+outcomeGroup.terminal+" finished / "+outcomeGroup.total+
-          " modeled games."));
-        body.append(examples,evidence);showSeeds(null);
+    let jumpToReview=null;
+    const onReviewRun=(id,seed)=>{if(jumpToReview)jumpToReview(id,seed)};
+    cards.appendChild(outcomeCard({
+      counts,total,terminal:finished.length,
+      terminalRounds:finished.map(run=>run.completed_rounds)
+    },options,body=>{
+      const buckets=create("div","game-outcome-buckets");
+      for(const state of STATES){
+        if(!counts[state])continue;
+        const row=create("div","game-outcome-bucket is-"+state);
+        row.append(create("strong",null,stateLabel(state)),
+          create("span",null,counts[state]+" / "+total));
+        const bar=create("span","game-outcome-bucket-bar");
+        bar.style.width=(counts[state]/total*100)+"%";
+        row.appendChild(bar);buckets.appendChild(row);
+      }
+      body.appendChild(buckets);
+      body.appendChild(create("div","micro",groups.length+" opponent groups · "+
+        groups[0].requestedRounds+"-round horizon"));
+    }));
+    const best=matchup[0];
+    cards.appendChild(card("Opponent Types","Matchups",
+      matchup.length+" types",
+      best?best.counts.win+" wins · "+best.title:"No recorded groups",
+      body=>matchupExplorer(body,matchup,{
+        ...options,onReviewRun
+      })));
+    cards.appendChild(card("Game Length","Finished rounds",
+      quantile(finished.map(run=>run.completed_rounds),.5)===null?"—":
+        nfmt(quantile(finished.map(run=>run.completed_rounds),.5)),
+      "Median · "+finished.length+" finished games",
+      body=>{
+        const stats=create("div","game-outcome-insight-grid");
+        stats.append(
+          metricTile("Finished",finished.length,total+" games"),
+          metricTile("Victory round",quantile(wins.map(r=>r.completed_rounds),.5),
+            wins.length+" wins"),
+          metricTile("Unresolved",counts.unresolved,total+" games"));
+        body.appendChild(stats);
+        histogram(body,finished,groups[0].requestedRounds);
       }));
-      cards.appendChild(card("Life progression","Four-seat life history",
-        group.life.at(-1)?.seats[0]?.median?.toFixed(1).replace(/\.0$/,"")||"—",
-        "Your median life at last observed round · "+group.life.length+" observed rounds",
-        body=>{
-          body.appendChild(create("p","micro",
-            "Median life per seat; translucent bands show the middle 50%. "+
-            "Games that finish stop contributing in later rounds—check the sample size."));
-          const legend=create("div","game-outcome-legend");
-          for(const seat of SEATS){
-            const chip=create("span",null,seat===0?"You":"Seat "+(seat+1));
-            chip.style.borderColor=SEAT_COLORS[seat];legend.appendChild(chip);
-          }
-          body.append(legend,lifePlot(group.life));
-          const slider=create("input","game-outcome-round-slider");
-          slider.type="range";slider.min="0";
-          slider.max=String(group.life.length-1);
-          slider.value=String(Math.min(6,group.life.length-1));
-          const detail=create("div","game-outcome-round-detail");
-          const displayRound=()=>{
-            roundTrendDetail(detail,{...group.life[Number(slider.value)],total:group.total});
-          };
-          slider.addEventListener("input",displayRound);
-          body.append(slider,detail);displayRound();
-        }));
-      const opponents=matchup.filter(x=>x.kind===
-        (matchup.some(x=>x.kind==="named")?"named":"abstract"));
-      const leader=opponents[0]||null;
-      cards.appendChild(card("Opponent types","Matchup explorer",
-        leader?leader.counts.win+"/"+leader.games+" wins":"No results",
-        leader?"Most observed wins · "+(leader.title||leader.label):
-          "Load additional scenarios to compare",body=>{
-          matchupExplorer(body,opponents,options);
-        }));
-
+    cards.appendChild(card("Eliminations","Survival",
+      knocked.length+" / "+total,
+      "Our seat eliminated",
+      body=>{
+        const stats=create("div","game-outcome-insight-grid");
+        stats.append(
+          metricTile("Our knockout",quantile(knocked,.5),
+            knocked.length+" recorded"),
+          metricTile("Opponent knockouts",enemyOut.length,
+            "Across all three seats"),
+          metricTile("Opponent knockout round",quantile(enemyOut,.5),
+            enemyOut.length+" eliminations"),
+          metricTile("Still alive",runs.filter(run=>
+            aliveAt(run.life_history.at(-1),0)).length,total+" runs"));
+        body.appendChild(stats);
+        const bySeat=create("div","game-outcome-seat-bars");
+        for(const seat of SEATS){
+          const n=runs.filter(run=>knockoutRound(run,seat)!==null).length;
+          const bar=create("div","game-outcome-seat-bar");
+          bar.append(create("span",null,seat===0?"You":"Seat "+(seat+1)));
+          const track=create("div","game-outcome-finish-track");
+          const fill=create("span","game-outcome-finish-fill");
+          fill.style.width=(n/total*100)+"%";
+          track.appendChild(fill);
+          bar.append(track,create("strong",null,n+"/"+total));
+          bySeat.appendChild(bar);
+        }
+        body.appendChild(bySeat);
+      }));
+    cards.appendChild(card("Life Progression","Four seats",
+      quantile(lastLife,.5)===null?"—":nfmt(quantile(lastLife,.5)),
+      "Your median final recorded life",
+      body=>{
+        const legend=create("div","game-outcome-legend");
+        for(const seat of SEATS){
+          const chip=create("span",null,seat===0?"You":"Seat "+(seat+1));
+          chip.style.borderColor=SEAT_COLORS[seat];legend.appendChild(chip);
+        }
+        body.append(legend,lifePlot(life));
+        const slider=create("input","game-outcome-round-slider");
+        slider.type="range";slider.min="0";
+        slider.max=String(life.length-1);
+        slider.value=String(Math.min(6,life.length-1));
+        const detail=create("div","game-outcome-round-detail");
+        const displayRound=()=>roundTrendDetail(detail,{
+          ...life[Number(slider.value)],total
+        });
+        slider.addEventListener("input",displayRound);
+        body.append(slider,detail);displayRound();
+      }));
+    if(options.reviewerRoot){
+      jumpToReview=turnReviewer(options.reviewerRoot,groups,options);
     }
-    choice.onchange=()=>{active=Number(choice.value);showGroup()};
-    showGroup();
     return report;
   }
   return {FORMAT,STATES,validate,model,lifeTrend,matchupRows,matchupMetrics,
