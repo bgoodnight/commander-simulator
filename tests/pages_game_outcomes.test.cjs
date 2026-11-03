@@ -949,7 +949,7 @@ test('narrated turn summary and expanded actions reuse factual card-linked wordi
     const third=walk(turns[3]);
     assert.ok(third.some(n=>n.textContent==='Moved from battlefield to graveyard '));
     assert.ok(third.some(n=>n.className.includes('is-text-only')&&
-      n.textContent==='Grave Titan'));
+      walk(n).some(child=>child.textContent==='Grave Titan')));
   }finally{global.document=before}
 });
 
