@@ -297,6 +297,74 @@ function paint(rootElement,data,options={}){
   });
   draw();
 }
+/* Compact, source-evidenced gorge-ui-replay-v1 for the permanent UI.
+ * Full game-state panels remain explicitly unavailable until gorge exports
+ * authoritative snapshots. No reconstructed life totals or card identity.
+ */
+function paintView(rootElement,data){
+  if(!data||data.schema!=="gorge-ui-replay-v1"||data.engine!=="gorge"||
+     !Array.isArray(data.turns)||!Array.isArray(data.decks)||
+     data.decks.length!==4||data.visibility!=="public_events_only")
+    throw Error("Expected a public gorge-ui-replay-v1 export");
+  rootElement.replaceChildren();
+  const header=node("div","gorge-replay-header");
+  header.append(node("h3",null,"Gorge Commander · Game "+data.seed));
+  header.append(node("p","small",data.decks.join(" · ")));
+  header.append(node("p","small",data.source.total_native_events+
+    " source events · "+data.source.total_native_decisions+
+    " decisions · "+data.source.exported_events+" public display events"));
+  rootElement.append(header);
+  rootElement.append(node("p","gorge-replay-caution",
+    "Recorded events only. Complete hands, battlefield, graveyard, life and mana "+
+    "snapshots are unavailable until gorge exports authoritative state. "+
+    "Card identities are shown only when directly established by gorge."));
+  const roster=node("div","gorge-replay-roster");
+  data.decks.forEach((name,i)=>{
+    const box=node("div","gorge-replay-player");
+    box.append(node("strong",null,"Seat "+(i+1)),node("span",null,name),
+      node("small",null,"AI: "+data.policies[i]));
+    roster.append(box);
+  });
+  rootElement.append(roster);
+  const list=node("div","gorge-replay-turns");
+  rootElement.append(list);
+  data.turns.forEach((turn,index)=>{
+    const section=node("details","gorge-replay-turn");
+    if(index===1)section.open=true;
+    const heading=turn.turn===0?"Game setup":
+      "Turn "+turn.turn+" · "+(data.decks[turn.seat]||"Seat unknown");
+    const summary=node("summary",null,heading);
+    summary.append(node("span","gorge-replay-event-count",
+      turn.event_count+" recorded events"));
+    section.append(summary);
+    const highlight=turn.highlights.map(e=>
+      e.kind.replace(/_/g," ")+(e.card_name?" · "+e.card_name:
+      e.text?" · "+e.text:"")).slice(0,10);
+    if(highlight.length)section.append(node("p","gorge-replay-highlights",
+      highlight.join(" · ")));
+    const body=node("div","gorge-replay-event-list");
+    section.append(body);
+    let filled=false;
+    const fill=()=>{
+      if(filled)return;
+      filled=true;
+      for(const event of turn.events){
+        const item=node("details","gorge-replay-event");
+        const label="#"+event.seq+" · "+event.kind.replace(/_/g," ")+
+          (event.card_name?" · "+event.card_name:"")+
+          (event.text&&event.text!==event.card_name?" · "+event.text:"")+
+          (event.counter?" · "+event.counter:"")+
+          (event.amount!==undefined?" · "+event.amount:"");
+        item.append(node("summary",null,label));
+        item.append(node("pre","gorge-replay-raw",JSON.stringify(event,null,2)));
+        body.append(item);
+      }
+    };
+    section.addEventListener("toggle",()=>{if(section.open)fill();});
+    if(section.open)fill();
+    list.append(section);
+  });
+}
 function init(){
   const input=$("gorge-replay-file"),rootElement=$("gorge-replay-root");
   if(!input||!rootElement)return;
@@ -307,7 +375,8 @@ function init(){
     try{
       if(file.size>60*1024*1024)throw Error("Replay exceeds the 60 MB local viewer limit");
       const data=JSON.parse(await file.text());
-      paint(rootElement,data);
+      if(data.schema==="gorge-ui-replay-v1")paintView(rootElement,data);
+      else paint(rootElement,data);
     }catch(err){
       rootElement.replaceChildren(node("p","gorge-replay-error",
         "Unable to display replay: "+String(err.message||err)));
