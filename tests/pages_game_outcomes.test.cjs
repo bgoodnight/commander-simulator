@@ -375,3 +375,48 @@ test('rich current-run observations restore most played creature and instant car
   assert.equal(missing.coverage,0);
   assert.equal(missing.creature,null);
 });
+
+test('current-batch card rankings exclude basics, retain distinct scenario runs and use medians',()=>{
+  const lookup=name=>({type_line:{
+    'Grave Titan':'Creature — Giant','Sol Ring':'Artifact',
+    'Go for the Throat':'Instant','Swamp':'Basic Land — Swamp',
+    'Damnation':'Sorcery','Island':'Basic Land — Island'
+  }[name]||'Artifact'});
+  const example=(seed,cast)=>({seed,completed_rounds:2,
+    opening_hand:['Swamp','Grave Titan','Go for the Throat'],
+    ui_observations:[
+      {turn:1,hand:['Grave Titan','Swamp'],actions:[
+        {type:'land_play',card:'Swamp'},
+        {type:'artifact_cast',card:'Sol Ring'}]},
+      {turn:2,hand:[],actions:cast?
+        [{type:'creature_cast',card:'Grave Titan'},
+         {type:'reviewed_instant_response',card:'Go for the Throat'}]:
+        [{type:'reviewed_instant_response',card:'Go for the Throat'}]}]});
+  // Same seed in two different table scenarios represents two games.
+  const stats=Outcomes.observationCardStats([example(2,true),example(2,false)],lookup);
+  assert.equal(stats.coverage,2);
+  assert.equal(stats.creature.name,'Grave Titan');
+  assert.equal(stats.creature.games,1);
+  assert.equal(stats.creature.median,0.5);
+  assert.equal(stats.instant.name,'Go for the Throat');
+  assert.equal(stats.instant.games,2);
+  assert.equal(stats.longest.name,'Grave Titan');
+  assert.equal(stats.longest.heldMedian,1);
+  assert.ok(stats.ranked.played.every(x=>x.name!=='Swamp'));
+  assert.ok(stats.ranked.seen.every(x=>x.name!=='Swamp'));
+  assert.ok(stats.ranked.longest.every(x=>x.name!=='Swamp'));
+});
+test('elastic net card interpretation and sign chart sit immediately above reviewer',()=>{
+  const source=fs.readFileSync('web/pages/game_outcomes.js','utf8');
+  const css=fs.readFileSync('web/pages/style.css','utf8');
+  assert.match(source,/function readablePredictor\(/);
+  assert.match(source,/function elasticNetPanel\(/);
+  assert.match(source,/elastic-net-coefficient-chart/);
+  assert.match(source,/onReviewRun\(parent\.id,hit\.seed,hit\.turn\)/);
+  assert.ok(source.lastIndexOf('cards.appendChild(elasticNetPanel(')>
+    source.lastIndexOf('cards.appendChild(card("Life Progression"'));
+  assert.ok(source.lastIndexOf('cards.appendChild(elasticNetPanel(')<
+    source.lastIndexOf('jumpToReview=turnReviewer('));
+  assert.match(css,/\.elastic-net-effect\.is-positive/);
+  assert.match(css,/\.elastic-net-effect\.is-negative/);
+});
