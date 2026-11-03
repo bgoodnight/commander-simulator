@@ -1052,8 +1052,6 @@
     if(mana===null)
       line.appendChild(create("span","micro","Not recorded for this game"));
     panel.appendChild(line);
-    }else panel.appendChild(create("p","micro",
-      "Mana production by color was not recorded for this turn."));
     return panel;
   }
   function compactInsightTimeline(root,run,options={}){
