@@ -659,3 +659,79 @@ test('turn reviewer builds illustrated selectable turns using actual recorded ev
     assert.ok(walk(reviewer).some(n=>n.textContent==='Round 1 · 4 of 4 seats alive'));
   }finally{global.document=before}
 });
+
+
+test('resolved tutor insights count found targets and tutor sources, not merely casts',()=>{
+  const observed=(seed,actions)=>({seed,completed_rounds:1,
+    opening_hand:[],ui_observations:[{turn:1,hand:[],actions}]});
+  const r1=observed(1,[
+    {type:'tutor_cast',card:'Fabricate'},
+    {type:'tutor_resolved',card:'Fabricate',target_name:'Sol Ring',destination:'hand'},
+    {type:'tutor_resolved',card:'Mystical Tutor',target_name:'Damnation',destination:'library_top'}]);
+  const r2=observed(2,[
+    {type:'tutor_cast',card:'Fabricate'},
+    {type:'tutor_resolved',card:'Fabricate',target_name:'Sol Ring',destination:'hand'},
+    {type:'tutor_resolved',card:'Fabricate'}, // Older, target-less projection
+    {type:'tutor_resolved',card:'Opponent Tutor',target_name:'Swamp',seat:1}]);
+  const r3=observed(3,[
+    {type:'tutor_cast',card:'Fabricate'}, // Cast is not a successful find
+    {type:'tutor_resolved',card:'Unresolved Search',destination:'hand'}]);
+  const stats=Outcomes.observationCardStats([r1,r2,r3],()=>null);
+  assert.equal(stats.confirmedTutors,3);
+  assert.equal(stats.tutorFound.name,'Sol Ring');
+  assert.equal(stats.tutorFound.eventCount,2);
+  assert.equal(stats.tutorFound.games,2);
+  assert.equal(stats.tutorUsed.name,'Fabricate');
+  assert.equal(stats.tutorUsed.eventCount,2);
+  assert.equal(stats.tutorUsed.games,2);
+  assert.equal(stats.ranked.tutorFound[1].name,'Damnation');
+  assert.equal(stats.ranked.tutorUsed[1].name,'Mystical Tutor');
+  assert.equal(stats.tutorFound.events[0].tutor,'Fabricate');
+  assert.equal(stats.tutorFound.events[0].target,'Sol Ring');
+  assert.equal(stats.tutorFound.events[0].destination,'hand');
+  assert.equal(stats.ranked.tutorFound.some(x=>x.name==='Swamp'),false);
+  const absent=Outcomes.observationCardStats([r3],()=>null);
+  assert.equal(absent.confirmedTutors,0);
+  assert.equal(absent.tutorFound,null);
+  assert.equal(absent.tutorUsed,null);
+});
+test('tutor card insight panels only appear for confirmed named search resolutions',()=>{
+  class Node{
+    constructor(tag){this.tag=tag;this.className='';this.textContent='';
+      this.children=[];this.attributes={};this.style={};this.dataset={};this.events={};}
+    append(...items){this.children.push(...items)}
+    appendChild(item){this.children.push(item);return item}
+    replaceChildren(...items){this.children=[...items]}
+    setAttribute(k,v){this.attributes[k]=String(v)}
+    addEventListener(k,cb){this.events[k]=cb}
+    get lastChild(){return this.children.at(-1)}
+  }
+  const before=global.document;
+  global.document={createElement:tag=>new Node(tag),
+    createElementNS:(_,tag)=>new Node(tag)};
+  const make=actions=>({...runUnresolved(),ui_observations:[
+    {turn:1,hand:[],actions},{turn:2,hand:[],actions:[]},
+    {turn:3,hand:[],actions:[]}]});
+  const walk=n=>[n,...n.children.flatMap(walk)];
+  const seen=root=>walk(root).filter(n=>n.className==='game-outcome-title').map(n=>n.textContent);
+  try{
+    const root=new Node('main'),reviewer=new Node('section');
+    const options={deckKey:'necron_dynasties',deckHash:'a'.repeat(64),
+      reviewerRoot:reviewer,lookupRecordedCard:name=>({
+        name,art:'https://example.com/'+name+'.jpg',type_line:'Artifact'})};
+    Outcomes.render(root,[batch([make([{type:'tutor_cast',card:'Fabricate'}])])],options);
+    assert.ok(!seen(root).includes('Most tutored card'));
+    assert.ok(!seen(root).includes('Most used tutor'));
+    Outcomes.render(root,[batch([make([
+      {type:'tutor_resolved',card:'Fabricate',target_name:'Sol Ring',destination:'hand'}
+    ])])],options);
+    assert.ok(seen(root).includes('Most tutored card'));
+    assert.ok(seen(root).includes('Most used tutor'));
+    const targetPanel=walk(root).find(n=>n.className.includes('insight-featured-panel')&&
+      walk(n).some(x=>x.textContent==='Most tutored card'));
+    assert.ok(targetPanel);
+    assert.ok(walk(targetPanel).some(n=>n.className==='game-outcome-number'&&n.textContent==='100.0%'));
+    assert.ok(walk(targetPanel).some(n=>n.className==='game-outcome-review-link'&&
+      n.textContent.includes('Fabricate → Sol Ring')));
+  }finally{global.document=before}
+});

@@ -8,7 +8,30 @@ from commander_sim.early_game_runner import _load_live_kernel, run_bounded_early
 from commander_sim.kernel_life import LifeChange, KernelLife
 from commander_sim.opponent_stress import BoundedOpponentPressure
 from commander_sim.outcome_reporting import LifeOutcomeRecorder
-from tools.build_game_outcomes import generate, summarize_games, write_batch, FORMAT
+from tools.build_game_outcomes import generate, summarize_games, write_batch, FORMAT, project_ui_observations
+
+
+class TutorProjectionTests(unittest.TestCase):
+    def test_named_resolved_tutor_target_survives_public_projection(self):
+        run={
+            "completed_rounds":1,
+            "events":[{"turn":1,"events":[
+                {"type":"tutor_cast","card":"Fabricate"},
+                {"type":"tutor_resolved","card":"Fabricate",
+                 "target_name":"Sol Ring","destination":"hand",
+                 "fidelity":"bounded_reviewed_search"},
+                {"type":"tutor_resolved","card":"Unconfirmed Tutor",
+                 "destination":"hand"}]}],
+            "state_snapshots":[{"turn":1,"hand":["Sol Ring"],
+                                "battlefield":[],"graveyard":[],"exile":[]}]
+        }
+        projected=project_ui_observations(run)
+        actions=projected[0]["actions"]
+        self.assertEqual(actions[0],{"type":"tutor_cast","card":"Fabricate"})
+        self.assertEqual(actions[1]["target_name"],"Sol Ring")
+        self.assertEqual(actions[1]["destination"],"hand")
+        self.assertNotIn("target_name",actions[2])
+        self.assertEqual(projected[0]["hand"],["Sol Ring"])
 
 
 class LifeOutcomeTests(unittest.TestCase):

@@ -119,7 +119,8 @@ def project_ui_observations(run):
             # A bounded, typed projection: source values only, no inferred effects.
             keep=("type","card","operation","source","source_object_id",
                   "object_id","seat","target_seat","amount","fidelity",
-                  "destroyed_count","life_lost","mana_added")
+                  "destroyed_count","life_lost","mana_added",
+                  "target_name","destination")
             actions.append({k:action[k] for k in keep if k in action})
         result.append({
             "turn":event["turn"],
