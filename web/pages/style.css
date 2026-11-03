@@ -1760,3 +1760,39 @@ body:has(#pane-records:not([hidden])) .page-introduction a{font-size:.72rem}
 @media(max-width:650px){
   .insight-turn-row .insight-turn-cover{width:77%;height:130px;opacity:.61}
 }
+
+/* Denser Results card insights: same functionality in less vertical space. */
+.latest-insight-grid{gap:10px}
+.insight-featured-panel .game-outcome-summary{min-height:86px}
+.insight-featured-panel .game-outcome-summary-copy{padding:9px 13px;gap:2px}
+.insight-featured-panel .game-outcome-title{font-size:clamp(.94rem,1.65vw,1.16rem);line-height:1.15}
+.insight-featured-panel .insight-head-name{font-size:.78rem;line-height:1.2}
+.insight-featured-panel .game-outcome-number{font-size:1.3rem;line-height:1.1}
+.insight-featured-panel .game-outcome-body{padding:10px;gap:8px}
+.insight-featured-compare{grid-template-columns:minmax(100px,138px) minmax(0,1fr);gap:10px}
+.insight-featured-selected{gap:4px}
+.insight-featured-card-art{width:min(100%,138px)}
+.insight-featured-card-art img{border-radius:6px;box-shadow:0 3px 12px #0007}
+.insight-featured-card-name{font-size:.78rem;line-height:1.2}
+.insight-featured-ranking{gap:4px}
+.insight-featured-chart-title{font-size:.81rem}
+.insight-featured-bars{grid-auto-rows:43px;max-height:137px;gap:4px}
+.insight-featured-bar{height:43px;min-height:0;padding:4px 7px;gap:3px;border-radius:6px}
+.insight-featured-bar-caption{font-size:.68rem;line-height:1.1;gap:5px}
+.insight-featured-bar-caption strong{font-size:.67rem}
+.insight-featured-bar-track{height:4px}
+.insight-featured-stats{padding-top:7px}
+.insight-featured-evidence{padding-top:6px;gap:4px}
+.insight-featured-metric-link{padding:6px 8px;gap:2px}
+.insight-featured-metric-link strong{font-size:1.04rem;line-height:1.15}
+.insight-inline-tracker-compact{padding:3px 5px}
+.insight-inline-tracker-compact>summary{font-size:.7rem}
+@media(max-width:720px){
+  .insight-featured-panel .game-outcome-summary{min-height:80px}
+  .insight-featured-compare{grid-template-columns:minmax(84px,108px) minmax(0,1fr);gap:8px}
+  .insight-featured-card-art{width:100%}
+  .insight-featured-bars{grid-auto-rows:43px;max-height:137px;gap:4px}
+  .insight-featured-bar{height:43px;min-height:0;padding:4px 5px}
+  .insight-featured-panel .game-outcome-body{padding:8px;gap:7px}
+  .insight-featured-panel .game-outcome-summary-copy{padding:8px 11px}
+}

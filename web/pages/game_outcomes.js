@@ -1261,8 +1261,6 @@
             featured.appendChild(imageButton);
           }
           featured.appendChild(create("strong","insight-featured-card-name",item.name));
-          const cost=manaCost(item);
-          if(cost)featured.appendChild(cost);
           // Selecting a card resets the example cycle, without expanding
           // the full game reviewer or forcing a scroll away from this card.
           const relevant=[];
