@@ -105,6 +105,48 @@ class ReviewedPhaseEffectsTests(unittest.TestCase):
         self.assertTrue(all(self.kernel.get(x).card.name=="Plaguebearer of Nurgle"
                              for x in result[0].created_token_ids))
 
+    def test_eliminated_opponents_do_not_supply_plaguebearer_tokens(self):
+        self.card("Great Unclean One")
+        # Life totals remain in the historical ledger after elimination.
+        self.life.lose(1,40)
+        self.life.lose(2,40)
+        self.assertEqual(self.life.active_opponents(0),(3,))
+        first=self.phase("end_step")
+        self.assertEqual(len(first[0].created_token_ids),1)
+        self.assertEqual([self.life.total(s) for s in range(4)],
+                         [40,0,0,38])
+        self.assertEqual(len(self.phase("end_step",round_id=2)[0].created_token_ids),1)
+        self.assertTrue(self.zones.assert_consistent())
+
+    def test_opponent_eliminated_by_drain_not_counted_for_tokens(self):
+        self.card("Great Unclean One")
+        self.life.lose(1,39)  # One life, will lose game as effect resolves.
+        self.life.lose(2,40)
+        result=self.phase("end_step")
+        self.assertEqual(self.life.total(1),-1)
+        self.assertEqual(self.life.total(2),0)
+        self.assertEqual(self.life.total(3),38)
+        self.assertEqual(len(result[0].created_token_ids),1)
+        self.assertEqual(self.life.active_opponents(0),(3,))
+
+    def test_eliminated_controller_cannot_trigger_phase_abilities(self):
+        self.card("Great Unclean One",controller=1)
+        self.card("Ophiomancer",controller=1)
+        self.life.lose(1,40)
+        self.assertEqual(self.phase("end_step",seat=1),())
+        self.assertEqual(self.phase("upkeep",seat=2),())
+        self.assertEqual([self.life.total(s) for s in range(4)],
+                         [40,0,40,40])
+        self.assertTrue(self.zones.assert_consistent())
+
+    def test_shared_life_targets_only_active_opponents(self):
+        self.life.lose(2,40)
+        self.assertEqual(self.life.active_seats(),(0,1,3))
+        self.assertEqual(self.life.each_opponent_loses(0,2),
+                         ((1,38),(3,38)))
+        self.assertEqual(self.life.total(2),0)
+        self.assertEqual(self.life.active_opponents(2),())
+
     def test_tallyman_one_or_seven_cards_based_on_death_count(self):
         self.card("Tallyman of Nurgle")
         self.draw_cards(10)

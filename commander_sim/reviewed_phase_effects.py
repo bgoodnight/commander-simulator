@@ -140,6 +140,8 @@ class ReviewedPhaseEngine:
                 if (rule.oracle_id!=source.card.card_id
                         or rule.excerpt not in row.get("oracle_text","")
                         or rule.phase!=phase
+                        or source.controller not in self.life.active_seats()
+                        or active_seat not in self.life.active_seats()
                         or not (rule.every_player or source.controller==active_seat)):
                     continue
                 key=(round_id,active_seat,phase,source.object_id,rule.slot_id)
@@ -207,8 +209,10 @@ class ReviewedPhaseEngine:
                             self.zones,seat,(_DECAYED_ZOMBIE,))
                 elif operation.operation=="opponent_loss_plaguebearers":
                     self.life.each_opponent_loses(seat,2,source.object_id)
-                    count=sum(1 for opponent in self.life.kernel.life_totals
-                        if opponent!=seat and self.life.total(opponent)<self.life.total(seat))
+                    # Recompute after the 2-life loss: an opponent who
+                    # just left the game must not supply a token.
+                    count=sum(self.life.total(opponent)<self.life.total(seat)
+                        for opponent in self.life.active_opponents(seat))
                     if count:
                         tokens=create_reviewed_token_batches(
                             self.zones,seat,(replace(_PLAGUEBEARER,count=count),))
