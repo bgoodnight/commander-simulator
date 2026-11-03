@@ -151,7 +151,7 @@ func main() {
     hooks:=bench.Hooks{EnvSeats:true,HonestRoot:true}
     if capture {
       hooks.Guard=func(engine *rules.Engine)(string,string) {
-        if engine.G.Turn!=lastTurn {
+        if engine.G.Turn>0&&engine.G.Turn!=lastTurn {
           lastTurn=engine.G.Turn
           observations=append(observations,snapshot(engine))
         }
