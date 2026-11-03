@@ -120,7 +120,7 @@ def project_ui_observations(run):
             keep=("type","card","operation","source","source_object_id",
                   "object_id","seat","target_seat","amount","fidelity",
                   "destroyed_count","life_lost","mana_added",
-                  "target_name","destination")
+                  "target_name","destination","phase","turn_seat")
             actions.append({k:action[k] for k in keep if k in action})
         result.append({
             "turn":event["turn"],
