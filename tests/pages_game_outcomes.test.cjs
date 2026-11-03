@@ -178,19 +178,19 @@ test('modeled panels expose distinct outcome, life and matchup disclosures with 
   const before=global.document;
   global.document={createElement:t=>new Node(t),createElementNS:(_,t)=>new Node(t)};
   try{
-    const root=new Node('main');
+    const root=new Node('main'),reviewer=new Node('section');
     const report=Outcomes.render(root,[batch([runWon(),runUnresolved()])],{
-      deckKey:'necron_dynasties',deckHash:'a'.repeat(64)
+      deckKey:'necron_dynasties',deckHash:'a'.repeat(64),reviewerRoot:reviewer
     });
     const walk=n=>[n,...n.children.flatMap(walk)];
     let nodes=walk(root);
     assert.equal(report.totalGames,2);
-    assert.equal(nodes.filter(n=>String(n.className).includes('game-outcome-card')).length,3);
+    assert.equal(nodes.filter(n=>String(n.className).includes('game-outcome-card')).length,5);
     assert.ok(nodes.some(n=>n.tag==='svg'&&n.attributes.role==='img'));
     assert.ok(nodes.some(n=>n.textContent==='Wins · 1/2'));
     assert.ok(nodes.some(n=>n.textContent==='50%'));
     assert.ok(nodes.some(n=>n.textContent==='Game Outcomes'));
-    assert.ok(nodes.some(n=>String(n.textContent).includes('Only one opponent group')));
+    assert.ok(nodes.some(n=>String(n.textContent).includes('One opponent type recorded')));
     const rank=nodes.find(n=>n.tag==='button'&&n.className==='game-outcome-rank-row');
     assert.ok(rank);
     assert.equal(rank.attributes['aria-pressed'],'true');
@@ -199,15 +199,19 @@ test('modeled panels expose distinct outcome, life and matchup disclosures with 
     assert.ok(seed);seed.onclick();
     nodes=walk(root);
     assert.ok(nodes.some(n=>n.textContent==='Round 2 · 1 of 4 seats alive'));
+    const reviewNodes=walk(reviewer);
+    assert.ok(reviewNodes.some(n=>n.tag==='select'));
+    assert.ok(reviewNodes.some(n=>n.textContent==='Seed 1 · Win · Round 2'));
+
     // Scenario comparison must not silently cross pilot personalities.
     Outcomes.render(root,[
       batch([runWon()],'balanced',{pilot_style:'adaptive',provisional_mode:'safe'}),
       batch([runLost()],'aggressive',{pilot_style:'engine',provisional_mode:'safe'})
     ],{deckKey:'necron_dynasties',deckHash:'a'.repeat(64)});
     nodes=walk(root);
-    assert.ok(nodes.some(n=>String(n.textContent).includes('pilot engine')));
-    assert.ok(nodes.some(n=>String(n.textContent).includes(
-      'Only one opponent group has been sampled')));
+    // The headline selects one compatible rules/pilot cohort, not both.
+    assert.equal(nodes.filter(n=>n.className==='game-outcome-hero-stat is-win').length,1);
+    assert.ok(nodes.some(n=>String(n.textContent).includes('One opponent type recorded')));
     assert.ok(!nodes.some(n=>String(n.textContent).includes(
       'Highest observed modeled win share')));
   }finally{global.document=before}
@@ -256,7 +260,7 @@ test('selecting an opponent scroll entry changes the one shown art card and per-
       n.src.endsWith('/control.jpg')));
     const labels=nodes.filter(n=>n.className==='game-outcome-insight-metric')
       .flatMap(walk).map(n=>n.textContent);
-    assert.ok(labels.includes('Median our knockout round'));
+    assert.ok(labels.includes('Our knockout round'));
     assert.ok(labels.includes('2'));
     assert.ok(labels.includes('0%'));
     assert.equal(nodes.filter(n=>n.className==='game-outcome-opponent-art').length,1);
@@ -267,7 +271,8 @@ test('results page and exporter wire a future published manifest and local JSON'
   const app=fs.readFileSync('web/pages/app.js','utf8');
   const build=fs.readFileSync('tools/build_pages_deck_lab.py','utf8');
   assert.match(html,/id="long-game-panel"/);
-  assert.match(html,/id="game-outcome-files"/);
+  assert.match(html,/id="turn-reviewer-results"/);
+  assert.doesNotMatch(html,/id="game-outcome-files"/);
   assert.match(html,/game_outcomes\.js/);
   assert.match(app,/loadLongGameFiles/);
   assert.match(app,/loadPublishedLongGame/);
@@ -323,7 +328,7 @@ test('published outcome loader fetches only the selected deck and refreshes the 
   vm.runInContext(
     'const publishedOutcomeBatches=new Map();'+
     'const publishedOutcomeRequests=new Map();'+
-    'let outcomeManifestPromise=null;let outcomeManifest=null;'+
+    'let outcomeManifestPromise=null;let outcomeManifest=null;let outcomeLoadEpoch=0;'+
     'let longGameSourceNote="";'+script.slice(start,end),
     context);
   await vm.runInContext('loadPublishedLongGame()',context);
