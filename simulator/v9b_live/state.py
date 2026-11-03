@@ -146,7 +146,11 @@ class LiveZones(KernelZones):
         self._checkseat(owner)
         if zone not in self.valid_zones or token and zone != 'battlefield':
             raise ValueError('Invalid initial card zone')
-        return self.kernel.add(definition, owner, zone=zone, token=token).object_id
+        oid=self.kernel.add(definition, owner, zone=zone, token=token).object_id
+        # Direct physical token/battlefield creation must be visible to
+        # entry-trigger consumers just like hand-to-battlefield zone changes.
+        self.operations.append(('add',owner,oid,zone))
+        return oid
 
     @property
     def valid_zones(self):
