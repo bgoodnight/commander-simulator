@@ -1,11 +1,10 @@
-name: Publish Mortarion Physical 100-Seed UI Batch
+name: ARCHIVED Python · Publish Mortarion Physical 100-Seed UI Batch
 # Manual refresh following reusable Mortarion mana and tutor engine integration.
+# ARCHIVED: no automatic Python game simulations after gorge-only cutover.
+# Older workflows can be reproduced from the preserved archive branch.
 on:
-  push:
-    branches: [main]
-    paths:
-      - ".github/workflows/mortarion-physical-ui-batch.yml"
   workflow_dispatch:
+
 permissions:
   contents: write
   actions: write
