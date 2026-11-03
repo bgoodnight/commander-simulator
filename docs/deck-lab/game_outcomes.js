@@ -989,6 +989,63 @@
       "Opening hand";
     return prefix+(hand.length?", drew "+hand.join(", "):"");
   }
+  function recordedManaOutput(observation){
+    // Only claim colored production when it is explicitly exported.
+    const colors=observation?.mana_produced_by_color;
+    if(colors&&typeof colors==="object"){
+      return Object.entries(colors).filter(([k,v])=>
+        ["W","U","B","R","G","C"].includes(k)&&Number.isFinite(v)&&v>0)
+        .map(([symbol,count])=>({symbol,count}));
+    }
+    // The legacy resource_end is a capacity estimate, not actual generated
+    // mana; do not misrepresent it as colored or produced mana.
+    return [];
+  }
+  function recordedCardTypes(name,lookup){
+    const card=lookup?.(name);
+    return String(card?.type_line||card?.type||"")
+      .split("—")[0].toLowerCase();
+  }
+  function endStatePanel(observation,options){
+    const panel=create("section","insight-end-state");
+    panel.appendChild(create("strong","insight-end-state-title","End-of-turn state"));
+    const zones=[
+      ["Hand",observation.hand],
+      ["Creatures",(observation.battlefield||[]).filter(n=>
+        /\\bcreature\\b/.test(recordedCardTypes(n,options.lookupRecordedCard)))],
+      ["Lands",(observation.battlefield||[]).filter(n=>
+        /\\bland\\b/.test(recordedCardTypes(n,options.lookupRecordedCard)))],
+      ["Artifacts",(observation.battlefield||[]).filter(n=>
+        /\\bartifact\\b/.test(recordedCardTypes(n,options.lookupRecordedCard)))],
+      ["Enchantments",(observation.battlefield||[]).filter(n=>
+        /\\benchantment\\b/.test(recordedCardTypes(n,options.lookupRecordedCard)))],
+      ["Graveyard",observation.graveyard],
+      ["Exile",observation.exile]
+    ];
+    const typed=zones.slice(1,5).reduce((n,z)=>n+z[1].length,0);
+    if((observation.battlefield||[]).length&&!typed)
+      panel.appendChild(create("p","micro","Card types unavailable for recorded battlefield"));
+    for(const [label,cards] of zones){
+      if(!Array.isArray(cards))continue;
+      const group=create("details","insight-end-zone");
+      group.appendChild(create("summary",null,label+" · "+cards.length+" cards"));
+      const list=create("div","insight-action-cards");
+      for(const name of cards)list.appendChild(insightActionCard(name,options));
+      if(!cards.length)list.appendChild(create("span","micro","None"));
+      group.appendChild(list);panel.appendChild(group);
+    }
+    const mana=recordedManaOutput(observation);
+    if(mana.length){
+      const line=create("div","insight-end-mana");
+      line.appendChild(create("strong",null,"Recorded mana production"));
+      for(const {symbol,count} of mana)
+        line.appendChild(create("span","mana-symbol mana-"+symbol.toLowerCase(),
+          "{"+symbol+"} ×"+count));
+      panel.appendChild(line);
+    }else panel.appendChild(create("p","micro",
+      "Mana production by color was not recorded for this turn."));
+    return panel;
+  }
   function compactInsightTimeline(root,run,options={}){
     root.replaceChildren();
     const head=create("div","game-outcome-evidence-head");
@@ -1033,14 +1090,26 @@
         delta>0?" is-gain":" is-loss":""),"♥ "+nfmt(now)+
         (before&&delta?" ("+(delta>0?"+":"")+nfmt(delta)+")":""));
       badges.appendChild(hp);
-      for(const [label,key] of [["▤","hand"],["♟","battlefield"],["◆","graveyard"]]){
-        const present=observation?.[key];
-        if(!Array.isArray(present))continue;
-        const earlier=previous?.[key];
-        const diff=Array.isArray(earlier)?present.length-earlier.length:null;
-        badges.appendChild(create("span","insight-turn-metric"+(diff?
-          diff>0?" is-gain":" is-loss":""),label+" "+present.length+
-          (diff?" ("+(diff>0?"+":"")+diff+")":"")));
+      const hand=index===0?run.opening_hand:observation?.hand;
+      if(Array.isArray(hand)){
+        const handBadge=textButton("▤ Hand "+hand.length,
+          "insight-turn-metric insight-hand-shortcut",()=>{
+            row.open=true;
+            const section=body.querySelector?.(".insight-end-zone");
+            if(section)section.open=true;
+          });
+        handBadge.setAttribute("aria-label","Show "+hand.length+" cards in hand");
+        handBadge.addEventListener("click",e=>e.stopPropagation?.());
+        badges.appendChild(handBadge);
+      }
+      const mana=recordedManaOutput(observation);
+      if(mana.length){
+        const display=create("span","insight-turn-metric insight-turn-mana");
+        display.appendChild(create("span",null,"Mana "));
+        for(const {symbol,count} of mana)
+          display.appendChild(create("span","mana-symbol mana-"+symbol.toLowerCase(),
+            "{"+symbol+"}"+(count>1?"×"+count:"")));
+        badges.appendChild(display);
       }
       summary.appendChild(badges);
       const arrow=create("span","insight-turn-expand","Explore ▾");
@@ -1108,6 +1177,7 @@
           }
           rest.appendChild(combat);
         }
+        body.appendChild(endStatePanel(observation,options));
         const moves=observedZoneChanges(previous,observation);
         for(const move of moves){
           const line=create("p","insight-rest-event");
