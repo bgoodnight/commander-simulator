@@ -6,15 +6,15 @@
   <meta name="theme-color" content="#182428">
   <meta name="description" content="Commander Deck Lab: explore cached Commander decklists, card art and precomputed early-turn observations.">
   <title>Commander Deck Lab — The Arcane Table</title>
-  <link rel="stylesheet" href="./style.css?v=latest-card-feed-20261102">
+  <link rel="stylesheet" href="./style.css?v=center-hud-20261102">
   <script src="https://cdn.jsdelivr.net/npm/d3@7/dist/d3.min.js" defer></script>
   <script src="./results_insights.js?v=20261101h1" defer></script>
   <script src="./brackets.js?v=20261101bracket" defer></script>
   <script src="./replay.js?v=bounded-evidence-pilot-20261102" defer></script>
   <script src="./insight_catalog.js?v=held-median-20261102" defer></script>
   <script src="./insight_explorer.js?v=held-median-20261102" defer></script>
-  <script src="./game_outcomes.js?v=latest-card-feed-20261102" defer></script>
-  <script src="./app.js?v=latest-card-feed-20261102" defer></script>
+  <script src="./game_outcomes.js?v=center-hud-20261102" defer></script>
+  <script src="./app.js?v=center-hud-20261102" defer></script>
 </head>
 <body>
 <main class="wide-wrap" id="app">
@@ -35,10 +35,11 @@
   </header>
   <nav class="site-navigation" aria-label="Main pages">
     <a class="site-link" data-page="results" href="./results.html">✧ Simulation Results</a>
-    <a class="site-link" data-page="summary" href="./index.html">◈ Deck Summary</a>
+    <a class="site-link" data-page="summary" href="./summary.html">◈ Deck Summary</a>
     <a class="site-link" data-page="editor" href="./editor.html">⚒ Card List &amp; Editor</a>
   </nav>
   <section class="compact-selection" aria-label="Commander and deck selection">
+    <div id="selector-home">
     <div class="selector-anchor">
       <button type="button" id="commander-medallion" class="commander-medallion"
         aria-expanded="false" aria-controls="commander-picker"
@@ -50,6 +51,7 @@
         <div class="picker-heading">Choose a commander</div>
         <div id="commander-rail" class="commander-rail" role="group" aria-label="Available commanders"></div>
       </div>
+    </div>
     </div>
     <div class="selection-copy">
       <span class="eyebrow">Tap portrait to change commander</span>
@@ -110,6 +112,19 @@
       </section>
     </div>
     <div class="tab-pane" id="pane-records" hidden>
+      <section id="results-hud" class="results-hud" aria-label="Game performance dashboard">
+        <div class="results-hud-heading"><span class="eyebrow">Game performance</span><span id="hud-source-label" class="micro"></span></div>
+        <div class="results-hud-orbit">
+          <div id="hud-performance-tiles" class="results-hud-tiles" aria-label="Explore performance metrics"></div>
+          <div class="results-hud-center">
+            <div id="hud-commander-slot" class="results-hud-portrait"></div>
+            <strong id="hud-commander-name"></strong>
+            <span class="micro">Select commander</span>
+          </div>
+        </div>
+        <div id="hud-metric-panel" class="results-hud-metric-panel" aria-live="polite"></div>
+      </section>
+      <div id="results-insight-heading" class="results-insight-heading"><span class="eyebrow">Key insights</span></div>
       <section id="simulation-snapshot" class="simulation-snapshot" aria-label="Simulation overview" hidden>
         <div class="simulation-snapshot-heading">
           <span class="eyebrow">Simulation at a glance</span>
