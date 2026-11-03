@@ -194,7 +194,7 @@ test('modeled panels expose distinct outcome, life and matchup disclosures with 
     const matchupTile=nodes.find(n=>n.className==='game-outcome-hero-highlight');
     matchupTile.events.click({preventDefault(){},stopPropagation(){}});
     nodes=walk(root);
-    assert.ok(nodes.some(n=>n.tag==='svg'&&n.attributes.role==='img'));
+    assert.ok(nodes.some(n=>n.className==='game-outcome-matchup-view'));
     assert.ok(nodes.some(n=>n.textContent==='Wins · 1/2'));
     assert.ok(nodes.some(n=>n.textContent==='50%'));
     assert.ok(nodes.some(n=>n.textContent==='Game Outcomes'));
