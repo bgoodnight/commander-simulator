@@ -1,0 +1,118 @@
+name: Capture real 20-game UI observation smoke cohort
+
+on:
+  push:
+    branches:
+      - experiment/real-observation-ui-smoke-20261102
+    paths:
+      - .github/workflows/real-observation-ui-smoke.yml
+
+permissions:
+  contents: write
+
+concurrency:
+  group: real-ui-smoke-${{ github.ref }}
+  cancel-in-progress: false
+
+jobs:
+  smoke:
+    name: Validate real exported turn and opponent observations
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      - name: Run exporter and UI regression tests
+        run: |
+          python -m unittest tests.test_game_outcome_reporting tests.test_game_outcome_publishing -v
+          node --test tests/pages_game_outcomes.test.cjs
+      - name: Generate genuine 30-round Mortarion outcome and full-observation samples
+        run: |
+          mkdir -p testdata/real-ui-smoke
+          for scenario in mixed random; do
+            python tools/build_game_outcomes.py \
+              --deck mortarion_physical_final \
+              --scenario "$scenario" --rounds 30 --seeds 10 --start-seed 0 \
+              --pilot-style adaptive --pilot-archetype auto --provisional-mode safe \
+              --examples 2 \
+              --observations-output "testdata/real-ui-smoke/observations-$scenario.jsonl" \
+              --output "testdata/real-ui-smoke/outcomes-$scenario.json"
+          done
+      - name: Validate every raw observation, public batch and seat assignment
+        run: |
+          python tools/validate_game_observations.py \
+            --source testdata/real-ui-smoke \
+            --expected-games 10 --expected-rounds 30
+          python - <<'PY'
+          import json
+          from pathlib import Path
+          from tools.publish_game_outcomes import validate_batch, _hashes
+          from commander_sim.opponent_stress import OPPONENT_TYPES
+          root=Path("testdata/real-ui-smoke")
+          hashes=_hashes()
+          roles=set(OPPONENT_TYPES)
+          total=0
+          for scenario in ("mixed","random"):
+              batch=json.loads((root/f"outcomes-{scenario}.json").read_text())
+              validate_batch(batch,deck_hashes=hashes)
+              rows=[json.loads(line) for line in (root/f"observations-{scenario}.jsonl").read_text().splitlines()]
+              assert len(rows)==len(batch["runs"])==10
+              for run,obs in zip(batch["runs"],rows,strict=True):
+                  assert run["seed"]==obs["seed"]
+                  assert run["opponent_roles"]==obs["opponent_roles"]
+                  assert set(map(int,run["opponent_roles"]))=={1,2,3}
+                  assert set(run["opponent_roles"].values())<=roles
+                  assert run["opponent_composition"]==sorted(run["opponent_roles"].values())
+                  assert len(run["ui_observations"])==run["completed_rounds"]
+                  assert len(obs["turn_records"])==len(obs["state_snapshots"])==run["completed_rounds"]
+                  assert len(obs["life_history"])==run["completed_rounds"]+1
+                  assert run["ui_observations"][-1]["turn"]==run["completed_rounds"]
+                  total+=1
+          assert total==20
+          print("Verified 20 actual games with full seat mappings and turn observations")
+          PY
+          python tools/publish_game_outcomes.py \
+            --source testdata/real-ui-smoke/outcomes-mixed.json \
+            --output dist/unpublished-smoke-check \
+            --engine-commit "${{ github.sha }}"
+      - name: Check browser-side reader consumes real batches
+        run: |
+          node - <<'JS'
+          const fs=require('fs');
+          const assert=require('node:assert/strict');
+          const ui=require('./web/pages/game_outcomes.js');
+          const batches=['mixed','random'].map(s=>
+            JSON.parse(fs.readFileSync('testdata/real-ui-smoke/outcomes-'+s+'.json','utf8')));
+          for(const batch of batches)assert.ok(ui.validate(batch));
+          const view=ui.model(batches,batches[0].deck_key,batches[0].deck_sha256);
+          assert.equal(view.totalGames,20);
+          assert.equal(view.groups.length>=2,true);
+          const rows=ui.matchupRows(view.groups,'compositions');
+          assert.ok(rows.length>=2);
+          console.log('Browser accepted',view.totalGames,'authentic games;',rows.length,'opponent compositions');
+          JS
+      - name: Upload source observations and UI-ready batches for easy retrieval
+        uses: actions/upload-artifact@v4
+        with:
+          name: real-ui-observations-20-games-${{ github.sha }}
+          path: testdata/real-ui-smoke/
+          retention-days: 90
+          if-no-files-found: error
+      - name: Commit reproducible fixtures to isolated branch only
+        run: |
+          git fetch origin experiment/real-observation-ui-smoke-20261102
+          if [ "$(git rev-parse HEAD)" != "$(git rev-parse origin/experiment/real-observation-ui-smoke-20261102)" ]; then
+            echo "Fixture branch changed during run; preserving artifact but not pushing stale samples."
+            exit 0
+          fi
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add testdata/real-ui-smoke/
+          if ! git diff --cached --quiet; then
+            git commit -m "Stage 20 actual 30-round UI and full-observation smoke games"
+            git push origin HEAD:experiment/real-observation-ui-smoke-20261102
+          fi
