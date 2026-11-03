@@ -59,3 +59,12 @@ The opposing-table explorer orders its scrollable bar list by **observed modeled
 Selecting a group shows recorded win/loss/unresolved shares, median round of modeled terminal outcomes (unresolved excluded), median observed pilot life-zero knockout round (losses only), median win round (wins only), median first opponent elimination round when observed, and median last observed pilot life. Each median states its contributing sample size; absent events are shown as a dash, not imputed. Click a seed to open exact life history and an optional existing replay. Abstract-policy scenario groups and named-deck presence groups are not treated as causal head-to-head results. The currently selected pilot style, provisional mode, deck revision and maximum round horizon still gate cross-scenario comparisons.
 
 When only one scenario exists, the single illustrated result is still useful, with a short note that additional samples and opponent types will populate the chart. No fake opponent decks, outcome counts or placeholder simulations are published.
+
+## Observation archive (next batch; separate from Pages)
+
+The sidecar `commander-game-observations-v1` JSONL contains **every** game's
+actual mulligan, actions, pilot decisions, resource events, turn-end card-zone
+states and life record. The archive is collected separately for feature
+engineering and compressed into the GitHub Release. It is not fetched by the
+Deck Lab UI, which continues to consume the bounded, checksummed outcome JSON.
+See [Observation capture contract](SIMULATION_OBSERVATIONS_CONTRACT.md).

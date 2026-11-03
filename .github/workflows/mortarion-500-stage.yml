@@ -122,6 +122,20 @@ jobs:
           pattern: mortarion-500-*-${{ github.sha }}
           path: dist/incoming-outcomes
           merge-multiple: true
+      - name: Retrieve all per-game observation histories
+        uses: actions/download-artifact@v4
+        with:
+          pattern: mortarion-observations-*-${{ github.sha }}
+          path: dist/observations
+          merge-multiple: true
+      - name: Validate observations and prepare permanent compressed records
+        run: |
+          python tools/validate_game_observations.py \
+            --source dist/observations --expected-games 100 --expected-rounds 30
+          mkdir -p dist/observation-archive
+          for file in dist/observations/*.jsonl; do
+            gzip -c -9 "$file" > "dist/observation-archive/$(basename "$file").gz"
+          done
       - name: Verify 500 runs and audit outcome and pilot evidence
         run: |
           python tools/review_game_outcomes.py \
@@ -155,6 +169,7 @@ jobs:
             dist/published-game-outcomes/*.json
             dist/review/*.json
             dist/review/*.md
+            dist/observation-archive/*.gz
           if-no-files-found: error
           retention-days: 90
       - name: Archive verified simulation release permanently
@@ -165,7 +180,7 @@ jobs:
           # Every completed run gets its own immutable GitHub Release asset
           # before the single live Pages manifest is replaced.
           TAG="modeled-games-${{ github.run_id }}-${{ github.run_attempt }}"
-          gh release create "$TAG" dist/published-game-outcomes/*.json \
+          gh release create "$TAG" dist/published-game-outcomes/*.json dist/observation-archive/*.gz \
             --target "${{ github.sha }}" \
             --title "Modeled simulations · ${{ github.sha }}" \
             --notes "Verified source commit ${{ github.sha }}; workflow run ${{ github.run_id }}. Immutable historical batch. The live Deck Lab displays only the most recently promoted manifest." \
@@ -175,7 +190,8 @@ jobs:
           git fetch origin main
           if ! git diff --quiet HEAD origin/main -- \
             commander_sim/ decklists/ simulator/card_data/ \
-            tools/build_game_outcomes.py tools/review_game_outcomes.py \
+            tools/build_game_outcomes.py tools/validate_game_observations.py \
+            tools/review_game_outcomes.py \
             tools/publish_game_outcomes.py \
             .github/workflows/mortarion-500-stage.yml; then
             echo "Engine or deck changed during this batch; refusing stale publication."
