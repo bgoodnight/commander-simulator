@@ -1172,3 +1172,63 @@ test('turn summary shows explicit hand and mana, while end state exposes clickab
   assert.match(css,/\.insight-turn-zone-heading\{/);
   assert.match(css,/\.insight-mana-symbol\.is-W/);
 });
+
+test('end-state categories reveal actual cards, with color mana only when recorded',()=>{
+  class Node{
+    constructor(tag){this.tag=tag;this.className='';this.textContent='';
+      this.children=[];this.attributes={};this.style={};this.dataset={};this.events={};
+      this.open=false;}
+    append(...items){this.children.push(...items)}
+    appendChild(item){this.children.push(item);return item}
+    replaceChildren(...items){this.children=[...items]}
+    setAttribute(k,v){this.attributes[k]=String(v)}
+    addEventListener(k,handler){this.events[k]=handler}
+    get lastChild(){return this.children.at(-1)}
+  }
+  const before=global.document;
+  global.document={createElement:tag=>new Node(tag),
+    createElementNS:(_,tag)=>new Node(tag)};
+  const walk=n=>[n,...n.children.flatMap(walk)];
+  const opened=[];
+  try{
+    const r={...runUnresolved(),ui_observations:[
+      {turn:1,hand:['Sol Ring'],battlefield:['Myr Enforcer','Swamp'],
+       graveyard:['Grave Titan'],exile:[],
+       resource_end:{mana_by_color:{B:2,R:1}},
+       actions:[{type:'land_play',card:'Swamp',seat:0}]},
+      {turn:2,hand:[],battlefield:['Myr Enforcer'],graveyard:[],exile:[],
+       resource_end:{available_fixed_mana:4},actions:[]},
+      {turn:3,hand:[],battlefield:[],graveyard:[],exile:[],actions:[]}]};
+    const names={
+      'Myr Enforcer':{type_line:'Artifact Creature — Myr'},
+      'Swamp':{type_line:'Basic Land — Swamp'},
+      'Sol Ring':{type_line:'Artifact'},
+      'Grave Titan':{type_line:'Creature — Giant'}
+    };
+    const root=new Node('main'),reviewer=new Node('section');
+    Outcomes.render(root,[batch([r])],{
+      deckKey:'necron_dynasties',deckHash:'a'.repeat(64),
+      reviewerRoot:reviewer,
+      lookupRecordedCard:name=>({...names[name],art:'https://example.com/'+name+'.jpg'}),
+      onOpenRecordedCard:name=>opened.push(name)
+    });
+    const turns=walk(reviewer).filter(n=>n.className==='insight-turn-row');
+    const first=walk(turns[1]);
+    const getZone=label=>first.find(n=>n.className==='insight-turn-zone'&&
+      walk(n).some(x=>x.className==='insight-turn-zone-label'&&x.textContent===label));
+    for(const label of ['Hand','Creatures','Lands','Artifacts','Enchantments',
+      'Graveyard','Exile'])assert.ok(getZone(label),label);
+    const artifact=getZone('Artifacts');
+    assert.ok(walk(artifact).some(n=>n.className==='insight-turn-zone-count'&&
+      n.textContent==='1'));
+    const link=walk(artifact).find(n=>n.className.includes('is-text-only'));
+    link.onclick();
+    assert.deepEqual(opened,['Myr Enforcer']);
+    assert.ok(first.some(n=>n.textContent==='▤ Hand 1'));
+    assert.ok(first.some(n=>n.className==='insight-mana-symbol is-B'));
+    assert.ok(first.some(n=>n.className==='insight-mana-symbol is-R'));
+    const next=walk(turns[2]);
+    assert.ok(next.some(n=>n.className==='insight-mana-symbol is-generic'));
+    assert.ok(!next.some(n=>n.className==='insight-mana-symbol is-C'));
+  }finally{global.document=before}
+});
