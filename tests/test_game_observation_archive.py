@@ -24,7 +24,7 @@ class ObservationValidationTests(unittest.TestCase):
     def test_complete_cohort_passes_and_early_terminal_is_accepted(self):
         with TemporaryDirectory() as d:
             p=Path(d)/"balanced.jsonl"
-            p.write_text("".join(json.dumps(record(i))+"\\n" for i in range(3)))
+            p.write_text("".join(json.dumps(record(i))+"\n" for i in range(3)))
             result=validate([p],expected_games=3,expected_rounds=6)
             self.assertEqual(result,{"files":1,"games":3,"cohorts":1})
 
@@ -33,12 +33,12 @@ class ObservationValidationTests(unittest.TestCase):
             p=Path(d)/"balanced.jsonl"
             row=record(1)
             del row["mulligan"]["opening_hand"]
-            p.write_text(json.dumps(row)+"\\n")
+            p.write_text(json.dumps(row)+"\n")
             with self.assertRaisesRegex(ValueError,"Invalid or incomplete"):
                 validate([p],expected_games=1,expected_rounds=6)
             row=record(1)
             row["state_snapshots"][1]["turn"]=7
-            p.write_text(json.dumps(row)+"\\n")
+            p.write_text(json.dumps(row)+"\n")
             with self.assertRaisesRegex(ValueError,"Invalid or incomplete"):
                 validate([p],expected_games=1,expected_rounds=6)
 
