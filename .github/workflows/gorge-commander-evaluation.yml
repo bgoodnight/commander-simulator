@@ -1,0 +1,96 @@
+name: Gorge Commander backend evaluation (experimental)
+
+on:
+  workflow_dispatch:
+  pull_request:
+    paths:
+      - "tools/export_gorge_decks.py"
+      - "tools/gorge_commander_probe.go"
+      - "tools/gorge_benchmark.py"
+      - "tests/test_gorge_benchmark.py"
+      - ".github/workflows/gorge-commander-evaluation.yml"
+
+permissions:
+  contents: read
+
+jobs:
+  benchmark:
+    runs-on: ubuntu-latest
+    timeout-minutes: 40
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Verify offline deck export and result schema
+        run: python -m unittest discover -s tests -p "test_gorge_benchmark.py" -v
+      - name: Export four pinned real Commander decks
+        run: |
+          mkdir -p "$RUNNER_TEMP/gorge-decks" "$RUNNER_TEMP/results"
+          python -m tools.export_gorge_decks --out "$RUNNER_TEMP/gorge-decks" --decks mortarion_current magnus_premium necron_dynasties wretched_ranks
+      - name: Clone pinned gorge release (not a vendored dependency)
+        env:
+          GORGE_COMMIT: b78e4c8b16078f6decbc48875bba953ce5535b85
+        run: |
+          git clone --filter=blob:none https://github.com/adams-shaun/gorge.git "$RUNNER_TEMP/gorge"
+          git -C "$RUNNER_TEMP/gorge" checkout --detach "$GORGE_COMMIT"
+          echo "Pinned gorge: $(git -C "$RUNNER_TEMP/gorge" rev-parse HEAD)"
+      - uses: actions/setup-go@v5
+        with:
+          go-version-file: ${{ runner.temp }}/gorge/go.mod
+          cache: false
+      - name: Prepare Forge corpus separately from measured runs
+        working-directory: ${{ runner.temp }}/gorge
+        run: |
+          make fetch-cards compile-cards
+          make report | head -30
+      - name: Build gorge Commander driver
+        working-directory: ${{ runner.temp }}/gorge
+        run: |
+          cp "$GITHUB_WORKSPACE/tools/gorge_commander_probe.go" ./commander_probe.go
+          go build -o "$RUNNER_TEMP/commander-probe" ./commander_probe.go
+      - name: Measure current Python bounded-pressure baseline
+        run: |
+          python -m tools.gorge_benchmark baseline --games 24 --turns 10 --seed 100 --output "$RUNNER_TEMP/results/python_baseline.json"
+      - name: Run 24 real four-player Commander games on gorge
+        id: gorge_run
+        working-directory: ${{ runner.temp }}/gorge
+        shell: bash
+        run: |
+          set +e
+          "$RUNNER_TEMP/commander-probe" \
+            -corpus .cards -deck-dir "$RUNNER_TEMP/gorge-decks" \
+            -games 24 -seed 100 -max-turns 50 -verify=true \
+            | tee "$RUNNER_TEMP/results/gorge_runs.jsonl"
+          status=${PIPESTATUS[0]}
+          echo "$status" > "$RUNNER_TEMP/results/gorge_exit_code.txt"
+          echo "gorge_exit_code=$status" >> "$GITHUB_OUTPUT"
+          exit 0
+      - name: Compare measured run characteristics and limitations
+        if: steps.gorge_run.outcome == 'success'
+        run: |
+          python -m tools.gorge_benchmark collect \
+            --gorge "$RUNNER_TEMP/results/gorge_runs.jsonl" \
+            --baseline "$RUNNER_TEMP/results/python_baseline.json" \
+            --output "$RUNNER_TEMP/results/comparison.json"
+          python - <<'PY'
+          import json,os
+          from pathlib import Path
+          p=Path(os.environ["RUNNER_TEMP"])/"results"/"comparison.json"
+          d=json.loads(p.read_text())
+          with open(os.environ["GITHUB_STEP_SUMMARY"],"a") as f:
+              f.write("# Experimental gorge vs Python simulation runs\n\n")
+              f.write("| Metric | Current Python (abstract pressure) | Gorge (four real decks) |\n")
+              f.write("| --- | ---: | ---: |\n")
+              for key in ("attempted","completed","failed","stalled_or_horizon_reached","elapsed_seconds","seconds_per_attempt","games_per_minute","median_turns_or_rounds","average_events"):
+                  f.write(f'| {key} | {d["baseline"].get(key)} | {d["gorge"].get(key)} |\n')
+              f.write("\n**These are not equivalent workloads:** Python simulates three abstract opponent seats; gorge runs real four-deck Commander. Do not compare win rates.\n")
+              f.write("\nGorge probe exit code: "+(p.parent/"gorge_exit_code.txt").read_text().strip()+"\n")
+          PY
+      - name: Upload evidence without redistributing Forge scripts
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: gorge-commander-evaluation
+          path: ${{ runner.temp }}/results/
+          if-no-files-found: warn
