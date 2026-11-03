@@ -777,7 +777,7 @@
       const previous=index>1?run.ui_observations?.[index-2]:null;
       const current=life[index],before=index?life[index-1]:null;
       const row=create("details","insight-turn-row");
-      if(Number(options.focusTurn)===index)row.open=true;
+      if(Number.isInteger(options.focusTurn)&&options.focusTurn===index)row.open=true;
       const summary=create("summary","insight-turn-row-summary");
       summary.appendChild(create("strong","insight-turn-label",
         index?"Turn "+index:"Opening"));
@@ -859,6 +859,22 @@
         renderObservationZones(zones,observation,options);
         body.appendChild(zones);
       }
+      // Shared four-seat state view, previously available only in the
+      // standalone reviewer. Preserve both values and real round deltas.
+      const seatTotals=create("details","insight-turn-seats");
+      seatTotals.appendChild(create("summary",null,"Life totals · all four seats"));
+      const totals=create("div","game-outcome-life-stats");
+      for(const seat of SEATS){
+        const value=lifeAt(current,seat),old=before?lifeAt(before,seat):value;
+        const diff=value-old;
+        const stat=create("div","game-outcome-life-stat");
+        if(before&&diff)stat.className+=diff>0?" is-life-gain":" is-life-loss";
+        stat.append(create("span",null,seat===0?"Your life":"Seat "+(seat+1)),
+          create("strong",null,nfmt(value)),
+          create("small",null,(diff>0?"+":"")+(diff||"±0")+" this round"));
+        totals.appendChild(stat);
+      }
+      seatTotals.appendChild(totals);body.appendChild(seatTotals);
       const recordedChanges=current.life_changes||[];
       if(index&&recordedChanges.length){
         const lifeSection=create("section","insight-action-phase is-life");
@@ -879,6 +895,20 @@
       row.appendChild(body);
       timeline.appendChild(row);
     }
+    if(options.example?.events?.length&&
+       typeof options.onShowRecordedActions==="function"){
+      const full=create("details","story-drilldown game-outcome-actions");
+      full.appendChild(create("summary",null,
+        "Source-level play-by-play (available example)"));
+      const container=create("div","replay-root");
+      full.appendChild(container);
+      full.addEventListener("toggle",()=>{
+        if(!full.open||full.dataset.rendered)return;
+        full.dataset.rendered="1";
+        options.onShowRecordedActions(container,options.example,run);
+      });
+      root.appendChild(full);
+    }
   }
   function insightActionCard(name,options){
     const card=options.lookupRecordedCard?.(name);
@@ -893,155 +923,10 @@
     button.appendChild(create("span","insight-action-name",name));
     return button;
   }
+  // Canonical turn viewer used by card insights and the full-game reviewer.
+  // Keep all rendering in one place to prevent divergent evidence semantics.
   function runDetails(root,run,options={}){
-    if(options.compactTimeline)return compactInsightTimeline(root,run,options);
-    root.replaceChildren();
-    const heading=create("div","game-outcome-evidence-head");
-    heading.append(create("strong",null,"Seed "+run.seed+" · "+stateLabel(run.outcome.status)),
-      create("span","micro",roundLabel(run)));
-    root.appendChild(heading);
-    const select=create("div","game-outcome-round-options");
-    const strip=create("div","game-outcome-turn-strip");
-    strip.setAttribute("role","group");
-    strip.setAttribute("aria-label","Select a recorded game turn");
-    const info=create("div","game-outcome-round-detail");
-    const turnButtons=[];
-    function showRound(index){
-      info.replaceChildren();
-      for(let i=0;i<turnButtons.length;i++)
-        turnButtons[i].setAttribute("aria-pressed",String(i===index));
-      if(index===0&&run.opening_hand?.length){
-        const hand=create("details","game-outcome-observed-zone");
-        hand.appendChild(create("summary",null,
-          "Kept opening hand · "+run.opening_hand.length+" cards"));
-        const names=create("div","game-outcome-observed-cards");
-        for(const card of run.opening_hand){
-          const button=create("button","game-outcome-recorded-card",card);
-          button.type="button";
-          button.onclick=()=>options.onOpenRecordedCard?.(card);
-          names.appendChild(button);
-        }
-        hand.appendChild(names);info.appendChild(hand);
-      }
-      const row=run.life_history[index],previous=run.life_history[index-1];
-      info.appendChild(create("strong",null,"Round "+row.round+
-        " · "+row.alive_seats.length+" of 4 seats alive"));
-      const totals=create("div","game-outcome-life-stats");
-      for(const seat of SEATS){
-        const stat=create("div","game-outcome-life-stat");
-        const current=lifeAt(row,seat),before=previous?lifeAt(previous,seat):current;
-        if(previous&&current!==before)
-          stat.className+=current>before?" is-life-gain":" is-life-loss";
-        stat.append(create("span",null,seat===0?"Your life":"Seat "+(seat+1)),
-          create("strong",null,nfmt(current)),
-          create("small",null,(current-before<0?"":current-before>0?"+":"")+
-            (current-before||"±0")+" this round"));
-        totals.appendChild(stat);
-      }
-      info.appendChild(totals);
-      if(index>0&&run.ui_observations?.[index-1]){
-        renderObservationZones(info,run.ui_observations[index-1],options);
-      }else if(index>0){
-        info.appendChild(create("p","micro",
-          "Detailed card and action observations were not exported for this historical game."));
-      }
-      const changes=row.life_changes||[];
-      if(!changes.length){
-        info.appendChild(create("p","micro","No life changes recorded this round."));
-      }else{
-        const actions=create("div","game-outcome-life-events");
-        for(const change of changes){
-          const seat=Number(change.seat),dir=change.delta>0?"+":"";
-          actions.appendChild(create("p","micro",
-            (seat===0?"Your seat":"Seat "+(seat+1))+
-            " · "+change.kind+" "+nfmt(change.amount)+
-            " ("+dir+nfmt(change.delta)+" life)"+
-            (Number.isInteger(change.source_object_id)?
-              " · recorded source #"+change.source_object_id:" · unattributed")));
-        }
-        info.appendChild(actions);
-      }
-      for(const eliminated of row.new_eliminations||[])
-        info.appendChild(create("p","game-outcome-elimination",
-          "Seat "+(Number(eliminated.seat)+1)+" eliminated · "+eliminated.cause));
-    }
-    // An illustrated, selectable turn strip echoes the original replay
-    // design, while retaining the more detailed life/zone evidence below.
-    for(let index=0;index<run.life_history.length;index++){
-      const row=index>0?run.ui_observations?.[index-1]:null;
-      const spotlight=turnSpotlight(row,options.lookupRecordedCard);
-      const button=textButton("","game-outcome-turn-tile",()=>{
-        slider.value=String(index);
-        readout.textContent="Round "+index;
-        showRound(index);
-      });
-      button.setAttribute("aria-label","Review round "+index+
-        (spotlight?" featuring "+spotlight.name:""));
-      button.setAttribute("aria-pressed","false");
-      if(spotlight?.art){
-        const image=create("img","game-outcome-turn-art");
-        image.src=spotlight.art;image.alt="";image.loading="lazy";
-        image.referrerPolicy="no-referrer";
-        button.appendChild(image);
-      }
-      const number=create("strong","game-outcome-turn-number",
-        index===0?"Start":"Turn "+index);
-      const highlight=create("span","game-outcome-turn-highlight",
-        turnActionHighlight(row,spotlight));
-      const lifeNow=lifeAt(run.life_history[index],0);
-      const lifeBefore=index?lifeAt(run.life_history[index-1],0):lifeNow;
-      const delta=lifeNow-lifeBefore;
-      if(index&&delta)button.className+=delta>0?" is-life-gain":" is-life-loss";
-      const state=create("span","game-outcome-turn-life",
-        nfmt(lifeNow)+" life"+(delta?" ("+(delta>0?"+":"")+nfmt(delta)+")":""));
-      if(index&&run.ui_observations?.[index-1]){
-        const current=run.ui_observations[index-1];
-        const prior=index>1?run.ui_observations[index-2]:null;
-        const changes=create("span","game-outcome-turn-zones");
-        const indicators=[];
-        for(const [label,key] of [["Hand","hand"],["Board","battlefield"],
-          ["Grave","graveyard"]]){
-          const now=Array.isArray(current[key])?current[key].length:null;
-          const old=prior&&Array.isArray(prior[key])?prior[key].length:null;
-          if(now===null)continue;
-          const difference=old===null?null:now-old;
-          const chip=create("span","game-outcome-turn-zone",
-            label+" "+now+(difference?" ("+(difference>0?"+":"")+difference+")":""));
-          if(difference)chip.className+=difference>0?" is-zone-gain":" is-zone-loss";
-          indicators.push(chip);
-        }
-        if(indicators.length){changes.append(...indicators);button.appendChild(changes)}
-      }
-      button.append(number,highlight,state);
-      strip.appendChild(button);
-      turnButtons.push(button);
-    }
-    const slider=create("input","game-outcome-round-slider");
-    slider.type="range";slider.min="0";
-    slider.max=String(run.life_history.length-1);
-    slider.value=String(Number.isFinite(options.focusTurn)?
-      Math.min(Math.max(0,options.focusTurn),run.life_history.length-1):
-      run.life_history.length-1);
-    const readout=create("span","micro","Round "+slider.value);
-    slider.addEventListener("input",()=>{
-      readout.textContent="Round "+slider.value;showRound(Number(slider.value));
-    });
-    select.append(slider,readout);root.append(strip,select,info);
-    showRound(Number(slider.value));
-    const example=options.example;
-    if(example?.events?.length&&
-       typeof options.onShowRecordedActions==="function"){
-      const details=create("details","story-drilldown game-outcome-actions");
-      details.appendChild(create("summary",null,"Inspect recorded actions (available example)"));
-      const target=create("div","replay-root");
-      details.appendChild(target);
-      details.addEventListener("toggle",()=>{
-        if(!details.open||details.dataset.rendered)return;
-        details.dataset.rendered="1";
-        options.onShowRecordedActions(target,example,run);
-      });
-      root.appendChild(details);
-    }
+    return compactInsightTimeline(root,run,options);
   }
   function svgNode(name,attrs={}){
     const node=document.createElementNS("http://www.w3.org/2000/svg",name);
@@ -1343,7 +1228,7 @@
             const draw=()=>{
               const entry=relevant[Number(selectRun.value)]||relevant[0];
               runDetails(detailsRoot,entry.run,{
-                compactTimeline:true,focusTurn:entry.turn,
+                focusTurn:entry.turn,
                 lookupRecordedCard:options.lookupRecordedCard,
                 onOpenRecordedCard:options.onOpenRecordedCard,
                 example:entry.group.exampleBySeed?.get(entry.run.seed),
