@@ -300,7 +300,7 @@ def build(output, *, catalog_path=SHARED_CATALOG, name_catalog_path=DEFAULT_NAME
         validated = []
         for row in games:
             filename = row.get("file", "")
-            if not re.fullmatch(r"gorge-seed-[0-9]+\\.ui\\.json", filename):
+            if not re.fullmatch(r"gorge-seed-[0-9]+\.ui\.json", filename):
                 raise ValueError("Unsafe gorge replay filename")
             source_file = public_gorge / filename
             if not source_file.is_file():
