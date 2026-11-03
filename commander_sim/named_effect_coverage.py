@@ -42,6 +42,7 @@ from .reviewed_creature_entry import RULES as CREATURE_ENTRY_RULES
 from .reviewed_attack_tokens import RULES as ATTACK_TOKEN_RULES
 from .reviewed_attack_mill import RULES as ATTACK_MILL_RULES
 from .reviewed_attack_zones import RULES as ATTACK_ZONE_RULES
+from .reviewed_artifact_departures import RULES as ARTIFACT_DEPARTURE_RULES
 
 
 def _named_sources():
@@ -80,6 +81,7 @@ def _named_sources():
         ("attack_token_trigger",ATTACK_TOKEN_RULES),
         ("attack_mill_trigger",ATTACK_MILL_RULES),
         ("attack_zone_trigger",ATTACK_ZONE_RULES),
+        ("artifact_departure_trigger",ARTIFACT_DEPARTURE_RULES),
         ("static_creature_modifier",STATIC_CREATURE_RULES),
         ("creature_entry_trigger",CREATURE_ENTRY_RULES),
     ):
