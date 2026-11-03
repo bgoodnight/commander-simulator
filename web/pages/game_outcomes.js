@@ -892,6 +892,201 @@
         options.reviewerPanel.scrollIntoView({behavior:"smooth",block:"start"});
     };
   }
+
+  function insightCategoryLabel(kind){
+    return ({
+      played:"Most played card",creature:"Most played creature",
+      instant:"Most cast instant",spell:"Most cast instant or sorcery",
+      artifact:"Most played artifact",enchantment:"Most played enchantment",
+      land:"Most played nonbasic land",seen:"Most frequently seen card",
+      unplayed:"Most often left unplayed",activated:"Most used ability",
+      removal:"Most creature kills or removals",damage:"Most damage to opponents",
+      longest:"Longest held in hand",finisher:"Finishing blow"
+    })[kind]||kind;
+  }
+  function cardPerformancePanel(kind,ranked,coverage,groups,options,onReviewRun){
+    const winner=ranked[0];
+    if(!winner)return null;
+    const isHeld=kind==="longest",isCount=kind==="seen"||
+      kind==="unplayed"||kind==="played"||
+      ["creature","instant","spell","artifact","enchantment","land"].includes(kind);
+    const headline=isHeld?nfmt(winner.heldMedian)+" rounds":
+      isCount?winner.games+"/"+coverage+" games":
+      nfmt(winner.eventCount)+" total";
+    const panel=card(insightCategoryLabel(kind),"Card insight",
+      headline,winner.name+" · "+winner.games+" games",body=>{
+        const sub=create("p","micro",
+          isHeld?"Ranked by average rounds in hand when seen; median displayed.":
+          "Select a card for its distribution and recorded turns.");
+        body.appendChild(sub);
+        const choices=create("div","insight-card-leaderboard");
+        const detail=create("div","insight-card-drilldown");
+        body.append(choices,detail);
+        function select(item){
+          for(const button of choices.children){
+            button.setAttribute("aria-pressed",String(button.dataset.card===item.name));
+          }
+          detail.replaceChildren();
+          const cardName=create("strong","insight-selected-name",item.name);
+          const openCard=textButton("View card ↗","game-outcome-recorded-card",
+            ()=>options.onOpenRecordedCard?.(item.name));
+          detail.append(cardName,openCard);
+          const row=create("div","game-outcome-insight-grid");
+          row.append(
+            metricTile(isHeld?"Median rounds held":"Median per game",
+              isHeld?nfmt(item.heldMedian):nfmt(item.median),
+              isHeld?item.seen.size+" games seen":coverage+" games"),
+            metricTile("Games recorded",item.games,coverage+" games"),
+            metricTile("Total recorded",item.eventCount,
+              "All relevant actions"),
+            metricTile("Mean (ranking)",nfmt(item.average),
+              "For resolving tied medians")
+          );
+          detail.appendChild(row);
+          const samples=[...item.events].sort((a,b)=>
+            a.turn-b.turn||a.seed-b.seed).slice(0,12);
+          if(samples.length){
+            detail.appendChild(create("strong","insight-evidence-heading",
+              "Jump to recorded turn"));
+            const examples=create("div","insight-card-examples");
+            for(const hit of samples){
+              const parent=groups.find(g=>g.runs.some(r=>r.seed===hit.seed));
+              if(!parent)continue;
+              examples.appendChild(textButton(
+                "Seed "+hit.seed+" · Turn "+hit.turn,
+                "game-outcome-review-link",
+                ()=>onReviewRun(parent.id,hit.seed,hit.turn)));
+            }
+            detail.appendChild(examples);
+          }else if(kind==="unplayed"||kind==="longest"||kind==="seen"){
+            // The corresponding turn can still be inspected when there is
+            // no named play event, using the earliest recorded hand.
+            const examples=create("div","insight-card-examples");
+            for(const seed of [...item.seen].slice(0,8)){
+              const parent=groups.find(g=>g.runs.some(r=>r.seed===seed));
+              if(parent)examples.appendChild(textButton(
+                "Seed "+seed+" · Inspect hand",
+                "game-outcome-review-link",
+                ()=>onReviewRun(parent.id,seed,1)));
+            }
+            detail.appendChild(examples);
+          }
+        }
+        for(const item of ranked.slice(0,8)){
+          const row=textButton("","insight-card-rank",()=>select(item));
+          row.dataset.card=item.name;
+          const name=create("span","insight-card-rank-name",item.name);
+          const count=create("strong",null,
+            isHeld?nfmt(item.heldMedian)+" turns":
+              isCount?item.games+" games":nfmt(item.eventCount));
+          const bar=create("span","insight-card-rank-meter");
+          const fill=create("i",null);
+          fill.style.width=(Math.max(1,100*item.score/Math.max(1,winner.score)))+"%";
+          bar.appendChild(fill);
+          row.append(name,count,bar);choices.appendChild(row);
+        }
+        select(winner);
+      });
+    panel.className+=" insight-card-with-evidence";
+    const art=options.lookupRecordedCard?.(winner.name)?.art;
+    if(art){
+      const summary=panel.querySelector("summary");
+      summary.style.backgroundImage=
+        "linear-gradient(90deg, rgba(17,23,28,.96),rgba(17,23,28,.70)),url("+JSON.stringify(art)+")";
+      summary.style.backgroundSize="cover";
+      summary.style.backgroundPosition="right center";
+    }
+    return panel;
+  }
+  function readablePredictor(feature){
+    const name=String(feature||"");
+    if(name.includes(" × ")){
+      return name.split(" × ").map(readablePredictor).join(" when facing ");
+    }
+    if(name.startsWith("opening:"))
+      return name.slice(8)+" in the opening hand";
+    if(name.startsWith("hand_at_landmark:"))
+      return name.slice(17)+" in hand at the landmark round";
+    if(name.startsWith("opponent_count:"))
+      return name.slice(15)+" opponents at the table";
+    if(name.startsWith("opponent_present:"))
+      return "Facing a "+name.slice(17)+" opponent";
+    return name.replaceAll("_"," ").replaceAll(":"," · ");
+  }
+  function elasticNetPanel(analysis,options={}){
+    if(analysis?.status!=="ready"||!Array.isArray(analysis.findings)||
+       !analysis.findings.length)
+      return card("Performance patterns","Exploratory elastic net","Unavailable",
+        "Not enough supported outcome variation for this model",
+        body=>body.appendChild(create("p","micro",
+          "This analysis is available when the current batch supports a validated regression.")));
+    // Duplicate presence/count encodings of the same singleton opponent
+    // represent one story, not two distinct substantive discoveries.
+    const seen=new Set();
+    const findings=analysis.findings.filter(f=>{
+      const key=String(f.feature||"").replace(/^opponent_count:/,"opponent:")
+        .replace(/^opponent_present:/,"opponent:");
+      if(seen.has(key))return false;
+      seen.add(key);return Number.isFinite(f.coefficient);
+    }).slice(0,12);
+    const positive=findings.filter(f=>f.coefficient>0);
+    const negative=findings.filter(f=>f.coefficient<0);
+    const firstCard=findings.find(f=>/^(opening:|hand_at_landmark:)/.test(f.feature));
+    const headline=firstCard?
+      readablePredictor(firstCard.feature)+" was associated with "+
+      (firstCard.coefficient>0?"better":"worse")+" modeled outcomes.":
+      "Opponent composition was associated with modeled outcomes.";
+    const panel=card("What predicted performance?","Exploratory elastic net",
+      findings.length+" signals",
+      "Associations across "+analysis.games+" simulated games",body=>{
+        body.appendChild(create("p","elastic-net-headline",headline));
+        body.appendChild(create("p","micro",
+          "Positive coefficients indicate higher modeled win likelihood; negative coefficients indicate lower likelihood. These are exploratory associations, not causal card effects."));
+        const chart=create("div","elastic-net-coefficient-chart");
+        const max=Math.max(.01,...findings.map(f=>Math.abs(f.coefficient)));
+        for(const finding of findings){
+          const row=create("div","elastic-net-coefficient-row");
+          const title=create("span","elastic-net-predictor",readablePredictor(finding.feature));
+          const axis=create("div","elastic-net-axis");
+          const line=create("span","elastic-net-axis-center");
+          axis.appendChild(line);
+          const bar=create("span","elastic-net-effect "+(
+            finding.coefficient>=0?"is-positive":"is-negative"));
+          bar.style.width=Math.max(2,48*Math.abs(finding.coefficient)/max)+"%";
+          bar.style.left=finding.coefficient>=0?"50%":(
+            50-48*Math.abs(finding.coefficient)/max)+"%";
+          axis.appendChild(bar);
+          const sign=create("strong","elastic-net-effect-label",
+            finding.coefficient>=0?"Higher":"Lower");
+          const reliability=create("span","micro",
+            Math.round(100*(finding.selection_frequency||0))+
+            "% of model refits");
+          row.append(title,axis,sign,reliability);
+          chart.appendChild(row);
+        }
+        body.appendChild(chart);
+        const summary=create("div","elastic-net-summary");
+        summary.append(
+          metricTile("Higher likelihood",positive.length,"Positive associations"),
+          metricTile("Lower likelihood",negative.length,"Negative associations"),
+          metricTile("Model gain",
+            Number.isFinite(analysis.holdout_brier)&&
+            Number.isFinite(analysis.opponent_baseline_brier)?
+              nfmt(analysis.opponent_baseline_brier-analysis.holdout_brier):"—",
+            "Brier reduction vs opponent-only baseline")
+        );
+        body.appendChild(summary);
+        const details=create("details","game-outcome-observed-zone");
+        details.appendChild(create("summary",null,"How to interpret these findings"));
+        details.appendChild(create("p","micro",
+          "Bars show relative signed penalized regression coefficients, not absolute changes in win probability. Results are correlated with game outcomes after adjustment for included predictors; selected cards were not randomized. Selection percentages describe consistency across refits, not statistical confidence or causation."));
+        details.appendChild(create("p","micro",
+          analysis.limitations||"Exploratory model on simulated games."));
+        body.appendChild(details);
+      });
+    panel.className+=" elastic-net-panel";
+    return panel;
+  }
   function render(root,batches,options={}){
     root.replaceChildren();
     if(options.reviewerRoot)options.reviewerRoot.replaceChildren();
