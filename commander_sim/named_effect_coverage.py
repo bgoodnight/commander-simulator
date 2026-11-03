@@ -39,6 +39,8 @@ from .reviewed_reactive_triggers import RULES as REACTIVE_TRIGGERS
 from .reviewed_attack_triggers import RULES as ATTACK_TRIGGERS
 from .reviewed_static_modifiers import RULES as STATIC_CREATURE_RULES
 from .reviewed_creature_entry import RULES as CREATURE_ENTRY_RULES
+from .reviewed_attack_tokens import RULES as ATTACK_TOKEN_RULES
+from .reviewed_attack_mill import RULES as ATTACK_MILL_RULES
 
 
 def _named_sources():
@@ -74,6 +76,8 @@ def _named_sources():
         ("activated_utility",ACTIVATED_UTILITIES),
         ("reactive_trigger",REACTIVE_TRIGGERS),
         ("attack_trigger",ATTACK_TRIGGERS),
+        ("attack_token_trigger",ATTACK_TOKEN_RULES),
+        ("attack_mill_trigger",ATTACK_MILL_RULES),
         ("static_creature_modifier",STATIC_CREATURE_RULES),
         ("creature_entry_trigger",CREATURE_ENTRY_RULES),
     ):
