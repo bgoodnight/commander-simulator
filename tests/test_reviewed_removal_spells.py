@@ -107,4 +107,54 @@ class ReviewedRemovalTests(unittest.TestCase):
                           dict(self.catalog["Withering Torment"],
                                oracle_id="mismatched-source")))
         self.assertTrue(self.zones.assert_consistent())
+
+    def test_mutilate_uses_actual_swamp_subtypes_not_global_land_count(self):
+        self.lands(4)
+        self.add("Island",("land",))
+        self.add("Swamp",("land",),seat=1)
+        a=self.add("Small foe",("creature",),seat=1,toughness=3)
+        b=self.add("Big foe",("creature",),seat=2,toughness=6)
+        ally=self.add("Friendly",("creature",),seat=0,toughness=5)
+        rule=reviewed_removal("Mutilate",self.catalog["Mutilate"])
+        self.assertIsNotNone(rule)
+        # Mutilate uses four controlled Swamps and does not require a target.
+        result=self.cast("Mutilate")
+        self.assertIn(a,result.affected_ids)
+        self.assertNotIn(a,self.kernel.objects)
+        self.assertIn(b,self.kernel.objects)
+        self.assertEqual(self.kernel.get(b).toughness,2)
+        self.assertEqual(self.kernel.get(ally).toughness,1)
+        self.assertEqual(self.life.total(0),40)
+        self.kernel.cleanup()
+        self.assertEqual(self.kernel.get(b).toughness,6)
+        self.assertTrue(self.zones.assert_consistent())
+
+    def test_consuming_corruption_pays_sources_damages_creature_and_gains_life(self):
+        self.lands(3)
+        self.add("Swamp",("land",),seat=1)
+        self.add("Island",("land",))
+        target=self.add("Enemy",("creature",),seat=1,toughness=2)
+        self.life.lose(0,8)
+        rule=reviewed_removal("Consuming Corruption",
+                              self.catalog["Consuming Corruption"])
+        self.assertIsNotNone(rule)
+        self.assertIsNone(reviewed_removal("Consuming Corruption",
+                    dict(self.catalog["Consuming Corruption"],mana_cost="{B}")))
+        self.assertEqual(choose_reviewed_removal(
+            self.zones,0,self.life,rule),(target,0))
+        result=self.cast("Consuming Corruption",target)
+        self.assertEqual(result.destroyed_count,1)
+        self.assertNotIn(target,self.kernel.objects)
+        self.assertEqual(self.life.total(0),35)
+        self.assertTrue(self.zones.assert_consistent())
+
+    def test_swamp_scaled_damage_zero_without_swamps(self):
+        self.add("Island",("land",))
+        enemy=self.add("Enemy",("creature",),seat=1,toughness=2)
+        rule=reviewed_removal("Consuming Corruption",self.catalog["Consuming Corruption"])
+        self.assertIsNone(choose_reviewed_removal(self.zones,0,self.life,rule))
+        self.assertIsNone(self.cast("Consuming Corruption",enemy))
+        self.assertIn(enemy,self.kernel.objects)
+        self.assertTrue(self.zones.assert_consistent())
+
 if __name__=="__main__":unittest.main()
