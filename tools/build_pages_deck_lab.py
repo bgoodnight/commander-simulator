@@ -220,8 +220,23 @@ def build(output, *, catalog_path=SHARED_CATALOG, name_catalog_path=DEFAULT_NAME
     # The same source shell selects content by pathname without a server.
     for filename in ("app.js", "results_insights.js", "brackets.js", "replay.js", "insight_explorer.js", "insight_catalog.js", "game_outcomes.js", "style.css", "game-changers.json"):
         shutil.copy2(static / filename, output / filename)
+    # Cache-bust every local JS/CSS asset from its actual content hash.
+    # GitHub Pages and browsers may cache a script despite a fresh HTML
+    # deployment when its manually maintained ?v= token stays unchanged.
+    # Render the *same* versioned shell on all four static routes.
+    shell=(static / "index.html").read_text(encoding="utf-8")
+    for filename in ("app.js","results_insights.js","brackets.js","replay.js",
+                     "insight_explorer.js","insight_catalog.js","game_outcomes.js",
+                     "style.css"):
+        digest=hashlib.sha256((static / filename).read_bytes()).hexdigest()[:12]
+        pattern=r'(?P<asset>\\./'+re.escape(filename)+r')(?:\\?v=[^"]*)?(?=")'
+        shell,count=re.subn(pattern,
+                           lambda match: match.group("asset")+"?v="+digest,
+                           shell)
+        if count!=1:
+            raise ValueError("Expected one cache-busted asset reference: "+filename)
     for filename in ("index.html", "summary.html", "results.html", "editor.html"):
-        shutil.copy2(static / "index.html", output / filename)
+        (output / filename).write_text(shell,encoding="utf-8")
     (output / ".nojekyll").write_text("", encoding="utf-8")
     def write_json(name, obj):
         (output / name).write_text(
