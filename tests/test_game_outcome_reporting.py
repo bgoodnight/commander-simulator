@@ -14,6 +14,7 @@ from tools.build_game_outcomes import generate, summarize_games, write_batch, FO
 class TutorProjectionTests(unittest.TestCase):
     def test_named_resolved_tutor_target_survives_public_projection(self):
         run={
+            "completed_rounds":1,
             "events":[{"turn":1,"events":[
                 {"type":"tutor_cast","card":"Fabricate"},
                 {"type":"tutor_resolved","card":"Fabricate",
