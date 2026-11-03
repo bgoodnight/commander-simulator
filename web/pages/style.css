@@ -1955,3 +1955,41 @@ body:has(#pane-records:not([hidden])) .compact-selection{margin-bottom:3px}
     display:block;-webkit-line-clamp:unset;overflow:visible;white-space:normal}
   .insight-turn-row .insight-turn-row-summary{min-height:56px}
 }
+
+/* Compact summary: life, explicit end-of-turn hand, mana output if recorded. */
+.insight-turn-mana{display:inline-flex;align-items:center;gap:5px;max-width:100%}
+.insight-turn-mana-label{color:#dce4d9;font-size:.65rem}
+.insight-mana-part{display:inline-flex;align-items:center;gap:2px}
+.insight-mana-symbol{display:inline-grid;place-items:center;width:17px;height:17px;
+  border-radius:50%;border:1px solid #77897d;background:#e2e5db;
+  color:#18222c;font-size:.64rem;font-weight:800;line-height:1}
+.insight-mana-symbol.is-W{background:#f7ecd0;color:#473f29}
+.insight-mana-symbol.is-U{background:#70b6ec;color:#12344f}
+.insight-mana-symbol.is-B{background:#756282;color:#fff0ff}
+.insight-mana-symbol.is-R{background:#d98671;color:#461d19}
+.insight-mana-symbol.is-G{background:#7fb99b;color:#143c2b}
+.insight-mana-symbol.is-C{background:#c4bbb0;color:#363332}
+.insight-mana-symbol.is-generic{background:#202d31;color:#eee0c0}
+.insight-mana-symbol.is-generic::first-letter{font-size:.65rem}
+.insight-mana-symbol.is-generic{font-size:0}
+.insight-mana-symbol.is-generic::after{content:"◇";font-size:.83rem}
+.insight-mana-count{font-size:.66rem;font-variant-numeric:tabular-nums}
+.insight-turn-end-state{display:grid;gap:7px;padding:8px 9px;
+  border:1px solid #526d61;border-radius:8px;background:#17292b}
+.insight-turn-end-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:5px}
+.insight-turn-zone{min-width:0;border:1px solid #547064;
+  border-radius:7px;background:#142429}
+.insight-turn-zone-heading{display:flex;align-items:center;gap:6px;
+  min-height:34px;padding:6px 8px;cursor:pointer;list-style:none;font-size:.75rem}
+.insight-turn-zone-heading::-webkit-details-marker{display:none}
+.insight-turn-zone-symbol{flex:none;width:18px;text-align:center;color:#ddc59c}
+.insight-turn-zone-label{flex:1;min-width:0;color:#e4e8dc}
+.insight-turn-zone-count{font-size:.78rem;color:#f1dcaf}
+.insight-turn-zone-contents{display:flex;flex-wrap:wrap;gap:6px;
+  padding:7px 9px;border-top:1px solid #476157}
+.insight-turn-zone-contents .insight-action-card.is-text-only{
+  display:inline-flex;padding:3px 5px;border-radius:5px;
+  border:1px solid #506c60;font-size:.73rem;text-align:left}
+.insight-turn-end-mana{display:flex;flex-wrap:wrap;gap:5px}
+.insight-turn-end-mana .insight-turn-metric{display:inline-flex;flex-wrap:wrap;gap:5px}
+@media(min-width:800px){.insight-turn-end-grid{grid-template-columns:repeat(4,minmax(0,1fr))}}
