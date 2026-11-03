@@ -757,7 +757,144 @@
       actions.length+" recorded actions":"No named plays recorded");
     return parts.join(" · ");
   }
+
+  // Inline insight evidence uses the original compact, expandable turn rows.
+  // A round is NOT a reconstructed priority/phase transcript: only explicit
+  // action metadata permits naming a phase or an opposing seat.
+  function compactInsightTimeline(root,run,options={}){
+    root.replaceChildren();
+    const head=create("div","game-outcome-evidence-head");
+    head.append(create("strong",null,"Seed "+run.seed+" · "+stateLabel(run.outcome.status)),
+      create("span","micro",roundLabel(run)));
+    root.appendChild(head);
+    root.appendChild(create("p","micro",
+      "Recorded action order within each round. Exact phases and opponent turns are shown only when exported; abstract opponent activity is not a reconstructed enemy turn."));
+    const timeline=create("div","insight-turn-timeline");
+    root.appendChild(timeline);
+    const life=run.life_history||[];
+    for(let index=0;index<life.length;index++){
+      const observation=index?run.ui_observations?.[index-1]:null;
+      const previous=index>1?run.ui_observations?.[index-2]:null;
+      const current=life[index],before=index?life[index-1]:null;
+      const row=create("details","insight-turn-row");
+      if(Number(options.focusTurn)===index)row.open=true;
+      const summary=create("summary","insight-turn-row-summary");
+      summary.appendChild(create("strong","insight-turn-label",
+        index?"Turn "+index:"Opening"));
+      const eventParts=[];
+      const ownActions=(observation?.actions||[]).filter(a=>
+        a.seat===undefined||Number(a.seat)===0);
+      const draws=ownActions.filter(a=>a.type==="draw").length;
+      const named=ownActions.filter(a=>a.card&&(
+        CAST_TYPES.has(a.type)||String(a.type||"").endsWith("_cast")||
+        a.type==="land_play"));
+      if(draws)eventParts.push("Drew "+draws);
+      if(named.length)eventParts.push(named.map(a=>a.card).join(", "));
+      summary.appendChild(create("span","insight-turn-activity",
+        index?eventParts.join(" · ")||"Inspect recorded actions":"Kept opening hand"));
+      const badges=create("span","insight-turn-metrics");
+      const now=lifeAt(current,0),was=before?lifeAt(before,0):now;
+      const delta=now-was;
+      const hp=create("span","insight-turn-metric"+(before&&delta?
+        delta>0?" is-gain":" is-loss":""),"♥ "+nfmt(now)+
+        (before&&delta?" ("+(delta>0?"+":"")+nfmt(delta)+")":""));
+      badges.appendChild(hp);
+      for(const [label,key] of [["▤","hand"],["♟","battlefield"],["◆","graveyard"]]){
+        const present=observation?.[key];
+        if(!Array.isArray(present))continue;
+        const earlier=previous?.[key];
+        const diff=Array.isArray(earlier)?present.length-earlier.length:null;
+        badges.appendChild(create("span","insight-turn-metric"+(diff?
+          diff>0?" is-gain":" is-loss":""),label+" "+present.length+
+          (diff?" ("+(diff>0?"+":"")+diff+")":"")));
+      }
+      summary.appendChild(badges);
+      const arrow=create("span","insight-turn-expand","Explore ▾");
+      summary.appendChild(arrow);
+      row.appendChild(summary);
+      const body=create("div","insight-turn-row-body");
+      if(index===0){
+        const initial=run.opening_hand||[];
+        body.appendChild(create("p","micro",
+          initial.length+" cards in recorded opening hand"));
+        const cards=create("div","insight-action-cards");
+        for(const name of initial)cards.appendChild(insightActionCard(name,options));
+        body.appendChild(cards);
+      }else if(!observation){
+        body.appendChild(create("p","micro",
+          "Action and zone details were not exported for this round."));
+      }else{
+        const actions=observation.actions||[];
+        if(!actions.length)body.appendChild(create("p","micro",
+          "No individual actions recorded for this round."));
+        let priorKey=null,section=null,items=null;
+        for(const a of actions){
+          // Do not infer phase from card type or assume all seatless actions
+          // occurred on the pilot's turn.
+          const actor=Number.isInteger(a.seat)?
+            (Number(a.seat)===0?"Your recorded actions":"Seat "+(Number(a.seat)+1)+" activity"):
+            "Unattributed recorded actions";
+          const phase=typeof a.phase==="string"&&a.phase.trim()?a.phase.trim():null;
+          const key=actor+"|"+(phase||"");
+          if(key!==priorKey){
+            section=create("section","insight-action-phase"+(
+              Number.isInteger(a.seat)&&Number(a.seat)!==0?" is-opponent":""));
+            section.appendChild(create("h4","insight-action-phase-heading",
+              actor+(phase?" · "+phase:" · phase not recorded")));
+            items=create("div","insight-action-sequence");
+            section.appendChild(items);body.appendChild(section);priorKey=key;
+          }
+          const line=create("div","insight-action-entry");
+          const name=a.card||a.source||null;
+          if(name)line.appendChild(insightActionCard(name,options));
+          const wording=[String(a.type||"action").replaceAll("_"," "),
+            a.operation,a.target_name?"→ "+a.target_name:null,
+            a.target_seat!==undefined?"target Seat "+(Number(a.target_seat)+1):null,
+            a.amount!==undefined?"amount "+a.amount:null].filter(Boolean).join(" · ");
+          line.appendChild(create("span","insight-action-description",wording));
+          items.appendChild(line);
+        }
+        const zones=create("details","insight-turn-zones");
+        zones.appendChild(create("summary",null,"End-of-round hand, battlefield and graveyard"));
+        renderObservationZones(zones,observation,options);
+        body.appendChild(zones);
+      }
+      const recordedChanges=current.life_changes||[];
+      if(index&&recordedChanges.length){
+        const lifeSection=create("section","insight-action-phase is-life");
+        lifeSection.appendChild(create("h4","insight-action-phase-heading",
+          "Recorded life changes · "+recordedChanges.length));
+        for(const entry of recordedChanges){
+          const seat=Number(entry.seat);
+          lifeSection.appendChild(create("p","micro",
+            (seat===0?"You":"Seat "+(seat+1))+" · "+
+            String(entry.kind||"life event").replaceAll("_"," ")+" · "+
+            (entry.delta>0?"+":"")+nfmt(entry.delta)+" life"));
+        }
+        body.appendChild(lifeSection);
+      }
+      for(const eliminated of current.new_eliminations||[])
+        body.appendChild(create("p","game-outcome-elimination",
+          "Seat "+(Number(eliminated.seat)+1)+" eliminated · "+eliminated.cause));
+      row.appendChild(body);
+      timeline.appendChild(row);
+    }
+  }
+  function insightActionCard(name,options){
+    const card=options.lookupRecordedCard?.(name);
+    const button=textButton("","insight-action-card",()=>options.onOpenRecordedCard?.(name));
+    button.setAttribute("aria-label","View card "+name);
+    const art=card?.art||card?.image;
+    if(typeof art==="string"&&/^https:\/\//.test(art)){
+      const img=create("img","insight-action-art");
+      img.src=art;img.alt="";img.loading="lazy";img.referrerPolicy="no-referrer";
+      button.appendChild(img);
+    }
+    button.appendChild(create("span","insight-action-name",name));
+    return button;
+  }
   function runDetails(root,run,options={}){
+    if(options.compactTimeline)return compactInsightTimeline(root,run,options);
     root.replaceChildren();
     const heading=create("div","game-outcome-evidence-head");
     heading.append(create("strong",null,"Seed "+run.seed+" · "+stateLabel(run.outcome.status)),
@@ -1206,7 +1343,7 @@
             const draw=()=>{
               const entry=relevant[Number(selectRun.value)]||relevant[0];
               runDetails(detailsRoot,entry.run,{
-                focusTurn:entry.turn,
+                compactTimeline:true,focusTurn:entry.turn,
                 lookupRecordedCard:options.lookupRecordedCard,
                 onOpenRecordedCard:options.onOpenRecordedCard,
                 example:entry.group.exampleBySeed?.get(entry.run.seed),
