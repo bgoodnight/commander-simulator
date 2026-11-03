@@ -981,7 +981,11 @@
             text.appendChild(create("span","insight-action-verb",spoken.verb+" "));
             if(spoken.card)text.appendChild(insightActionCard(spoken.card,options,{textOnly:true}));
             if(spoken.detail)text.appendChild(create("span",null," "+spoken.detail));
-            if(spoken.card)line.appendChild(insightActionCard(spoken.card,options,{artOnly:true}));
+            if(spoken.card){
+              const printed=options.lookupRecordedCard?.(spoken.card);
+              if(typeof (printed?.art||printed?.image)==="string")
+                line.appendChild(insightActionCard(spoken.card,options,{artOnly:true}));
+            }
             line.appendChild(text);
             items.appendChild(line);
           }
