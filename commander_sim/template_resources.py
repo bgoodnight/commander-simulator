@@ -263,6 +263,19 @@ class TemplateManaService:
         # exponentially many smaller source subsets. Heuristic ordering does
         # not authorize payment: every cost is still checked by _spend().
         required=tuple(cost.colored.count(color) for color in ORDER)
+        # An optimistic upper bound ignores all source activation costs.
+        # If even that cannot supply the requested colors/total, the
+        # payment is demonstrably impossible; do not exhaust the search.
+        upper=[initial[i]+sum(
+            max((mode.output.count(color) for mode in modes),default=0)
+            for _,modes in candidates)
+            for i,color in enumerate(ORDER)]
+        upper_total=sum(initial)+sum(
+            max((len(mode.output) for mode in modes),default=0)
+            for _,modes in candidates)
+        if (any(upper[i]<need for i,need in enumerate(required))
+                or upper_total<cost.generic+len(cost.colored)):
+            return None
         def deficit(pool):
             missing=sum(max(0,need-have) for need,have in zip(required,pool))
             residual=sum(max(0,have-need) for need,have in zip(required,pool))
