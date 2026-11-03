@@ -868,7 +868,7 @@
       .filter(Number.isFinite);
     const life=lifeTrend(runs,groups[0].requestedRounds);
     const matchup=matchupRows(groups,"types");
-    const cards=create("div","latest-insight-strips");
+    const cards=create("div","latest-insight-grid latest-insight-strips");
     const insightCards=create("div","latest-insight-strips");
     cards.appendChild(insightCards);
     root.appendChild(cards);
