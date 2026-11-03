@@ -586,8 +586,10 @@ function publishedOutcomeIndex(){
 async function loadPublishedLongGame(){
   if(pageName!=="results"||!data||!selectedDeck()||isUnsimulatedVersion())return;
   const deckKey=selected,deckHash=selectedDeck().deck_sha256;
+  const epoch=outcomeLoadEpoch;
   try{
     const index=await publishedOutcomeIndex();
+    if(epoch!==outcomeLoadEpoch)return;
     outcomeManifest=index;
     if(!index){
       longGameSourceNote="No published long-game simulations yet.";
@@ -608,13 +610,14 @@ async function loadPublishedLongGame(){
             if(!window.DeckGameOutcomes?.validate(batch)||
                (index.by_deck&&batch.deck_key!==deckKey))
               throw Error("Invalid published outcome batch "+file);
-            publishedOutcomeBatches.set(file,batch);
+            if(epoch===outcomeLoadEpoch)publishedOutcomeBatches.set(file,batch);
             return batch;
           }).catch(error=>{publishedOutcomeRequests.delete(file);throw error});
         publishedOutcomeRequests.set(file,request);
       }
       return publishedOutcomeRequests.get(file);
     }));
+    if(epoch!==outcomeLoadEpoch)return;
     if(deckKey===selected&&deckHash===selectedDeck()?.deck_sha256){
       const loaded=[...publishedOutcomeBatches.values()].filter(batch=>
         batch.deck_key===deckKey&&batch.deck_sha256===deckHash).length;
@@ -623,17 +626,18 @@ async function loadPublishedLongGame(){
         "Published files do not match this exact deck revision.";
     }
   }catch(error){
-    if(deckKey===selected)
-      longGameSourceNote="Could not load published results: "+error.message;
+    if(epoch===outcomeLoadEpoch&&deckKey===selected)
+      longGameSourceNote="Results unavailable · "+error.message;
   }
-  if(deckKey===selected)renderLongGamePanel();
+  if(epoch===outcomeLoadEpoch&&deckKey===selected)renderLongGamePanel();
 }
 function refreshPublishedLongGame(){
+  outcomeLoadEpoch++;
   outcomeManifestPromise=null;
   outcomeManifest=null;
   publishedOutcomeRequests.clear();
   publishedOutcomeBatches.clear();
-  longGameSourceNote="Refreshing published results…";
+  longGameSourceNote="Loading latest results…";
   renderLongGamePanel();
   void loadPublishedLongGame();
 }
