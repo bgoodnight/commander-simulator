@@ -689,7 +689,9 @@
     const actions=observation.actions.filter(action=>
       action&&typeof action.card==="string"&&action.card.trim()&&
       (action.seat===undefined||Number(action.seat)===0)&&
-      !String(action.type||"").startsWith("opponent_"));
+      !String(action.type||"").startsWith("opponent_")&&
+      (CAST_TYPES.has(action.type)||String(action.type||"").endsWith("_cast")||
+       /activated|trigger|resolved|removal|damage/.test(String(action.type||""))));
     const weight=action=>{
       const type=String(action.type||"");
       if(type==="reviewed_commander_cast")return 5;
