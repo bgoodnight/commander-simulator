@@ -1579,3 +1579,52 @@ body:has(#pane-records:not([hidden])) .page-introduction a{font-size:.72rem}
 @media(prefers-reduced-motion:reduce){
   .insight-inline-tracker *{transition:none!important;animation:none!important}
 }
+
+/* Compact, proof-point turn explorer inside selected insight cards. */
+.insight-turn-timeline{display:grid;gap:7px;margin-top:12px}
+.insight-turn-row{border:1px solid #566d66;border-radius:10px;overflow:hidden;
+  background:linear-gradient(110deg,#17292d,#1b3030)}
+.insight-turn-row[open]{border-color:#cfb58a}
+.insight-turn-row-summary{cursor:pointer;display:flex;flex-wrap:wrap;gap:8px 11px;
+  align-items:center;padding:10px 12px;list-style:none}
+.insight-turn-row-summary::-webkit-details-marker{display:none}
+.insight-turn-label{font:700 .9rem Cinzel,Georgia,serif;color:#f0d7a7;min-width:60px}
+.insight-turn-activity{flex:1;min-width:130px;font-size:.78rem;color:#e0e3d9}
+.insight-turn-metrics{display:flex;gap:5px;flex-wrap:wrap}
+.insight-turn-metric{font-size:.73rem;white-space:nowrap;border:1px solid #58756b;
+  border-radius:7px;background:#15282c;padding:4px 7px;color:#dedfd4;
+  font-variant-numeric:tabular-nums}
+.insight-turn-metric.is-gain{border-color:#8ccdaf;color:#bff0d4;
+  box-shadow:0 0 12px #8cddaf60}
+.insight-turn-metric.is-loss{border-color:#d89991;color:#ffd0c8;
+  box-shadow:0 0 12px #e69a925c}
+.insight-turn-expand{color:#d5b781;font-size:.7rem}
+.insight-turn-row[open] .insight-turn-expand{color:#f2d6a7}
+.insight-turn-row-body{padding:12px;border-top:1px solid #526a61;
+  display:grid;gap:11px}
+.insight-action-phase{border-left:3px solid #9eab98;background:#182b2c;
+  padding:8px 11px;border-radius:0 8px 8px 0;min-width:0}
+.insight-action-phase.is-opponent{border-left-color:#d49e85;
+  background:linear-gradient(95deg,#35282d,#18272d)}
+.insight-action-phase.is-life{border-left-color:#d9b873}
+.insight-action-phase-heading{color:#ebd6b7;font-size:.79rem;margin:0 0 9px}
+.insight-action-phase.is-opponent .insight-action-phase-heading{color:#f0bca5}
+.insight-action-sequence{display:grid;gap:6px}
+.insight-action-entry{display:flex;align-items:center;gap:10px;padding:6px 8px;
+  border:1px solid #435b56;border-radius:7px;min-width:0}
+.insight-action-description{font-size:.74rem;line-height:1.5;overflow-wrap:anywhere}
+.insight-action-card{display:flex;align-items:center;gap:7px;
+  border:1px solid #647b73;border-radius:7px;background:#243a3a;
+  color:#f1dec2;cursor:pointer;text-align:left;padding:4px 7px;
+  font-size:.73rem;max-width:100%;min-width:0}
+.insight-action-art{width:32px;height:43px;object-fit:cover;border-radius:4px;flex:none}
+.insight-action-name{overflow-wrap:anywhere}
+.insight-action-cards{display:flex;flex-wrap:wrap;gap:7px}
+.insight-turn-zones>summary{font-size:.78rem;cursor:pointer;color:#e5ceaa}
+.insight-turn-row-summary:focus-visible,.insight-action-card:focus-visible{
+  outline:2px solid #f5d89e;outline-offset:2px}
+@media(max-width:650px){
+  .insight-turn-row-summary{align-items:flex-start}
+  .insight-turn-metrics{width:100%}
+  .insight-turn-activity{min-width:0}
+}
