@@ -808,6 +808,84 @@
       "♥ life and round change · ⚔ confirmed damage received · ◈ blocked combat events. Damage dealt by a particular seat and defensive strength are not inferred from life changes."));
     return table;
   }
+  // Single source-grounded narration vocabulary for collapsed and expanded turns.
+  // Successful spell resolutions are not repeated after their casts.
+  function narratedAction(a){
+    if(!a||typeof a!=="object")return null;
+    const type=String(a.type||"");
+    const card=typeof a.card==="string"&&a.card.trim()?a.card:
+      typeof a.source==="string"&&a.source.trim()?a.source:null;
+    const target=typeof a.target_name==="string"&&a.target_name.trim()?a.target_name:null;
+    if(type==="draw")return {verb:"Drew",card};
+    if(type==="land_play")return {verb:"Played",card};
+    if(type==="cleanup_discard"||type==="opponent_abstract_discard")
+      return {verb:"Discarded",card};
+    if(/countered|counter_spell|spell_counter/.test(type))
+      return {verb:"Countered",card};
+    if(/returned?_to_hand|bounce/.test(type))
+      return {verb:"Returned to hand",card};
+    if(/_exile|exiled|exile_/.test(type))
+      return {verb:"Exiled",card};
+    if(/blocked_combat|combat_blocked|block_declared/.test(type))
+      return {verb:"Blocked",card};
+    if(/_destroy|destroyed|_dies|died/.test(type))
+      return {verb:"Destroyed",card};
+    if(type==="tutor_resolved")
+      return target?{verb:"Found",card:target,detail:card?"with "+card:null}:null;
+    if(type==="reviewed_unearth_resolved"||type==="reviewed_attachment_reanimated")
+      return {verb:"Returned to battlefield",card};
+    if(type==="reviewed_removal_resolved")
+      return {verb:"Used removal",card};
+    if(type==="reviewed_instant_response")
+      return {verb:"Played",card};
+    if(type.endsWith("_cast")||type==="reviewed_graveyard_creature_cast")
+      return {verb:"Played",card};
+    if(type.endsWith("_resolved")||type==="untap"||type==="draw_step"||
+       type==="provisional_enter_resolved")return null;
+    // Retain an unfamiliar recorded action without calling it a play.
+    return {verb:type.replaceAll("_"," "),card};
+  }
+  function narratedText(n){
+    return [n.verb,n.card,n.detail].filter(Boolean).join(" ");
+  }
+  function turnNarration(actions){
+    const list=(actions||[]).map(narratedAction).filter(Boolean);
+    const parts=[];
+    for(const a of list){
+      if(a.verb==="Played"&&parts.length&&parts[parts.length-1].verb==="Played"&&
+         a.card&&!a.detail){
+        parts[parts.length-1].names.push(a.card);
+      }else parts.push({verb:a.verb,names:a.card?[a.card]:[],detail:a.detail});
+    }
+    return parts.map(p=>p.verb+(p.names.length?" "+p.names.join(", "):"")+
+      (p.detail?" "+p.detail:"")).join(", ");
+  }
+  function observedZoneChanges(previous,current){
+    if(!previous||!current)return [];
+    // Exact names seen departing one zone and arriving in another.
+    // No claim about cause, controller, timing, or a particular spell.
+    const changes=[];
+    const counts=arr=>{
+      const tally=new Map();
+      for(const name of arr)if(typeof name==="string")
+        tally.set(name,(tally.get(name)||0)+1);
+      return tally;
+    };
+    for(const [from,to] of [
+      ["battlefield","graveyard"],["battlefield","exile"],
+      ["battlefield","hand"],["hand","graveyard"]]){
+      if(![previous[from],previous[to],current[from],current[to]].every(Array.isArray))
+        continue;
+      const bFrom=counts(previous[from]),bTo=counts(previous[to]);
+      const aFrom=counts(current[from]),aTo=counts(current[to]);
+      for(const [name,number] of bFrom){
+        if(number-(aFrom.get(name)||0)>0 &&
+           (aTo.get(name)||0)-(bTo.get(name)||0)>0)
+          changes.push({verb:"Moved from "+from+" to "+to,card:name});
+      }
+    }
+    return changes;
+  }
   function compactInsightTimeline(root,run,options={}){
     root.replaceChildren();
     const head=create("div","game-outcome-evidence-head");
@@ -841,17 +919,11 @@
       const summary=create("summary","insight-turn-row-summary");
       summary.appendChild(create("strong","insight-turn-label",
         index?"Turn "+index:"Opening"));
-      const eventParts=[];
-      const ownActions=(observation?.actions||[]).filter(a=>
+      const pilot=(observation?.actions||[]).filter(a=>
         a.seat===undefined||Number(a.seat)===0);
-      const draws=ownActions.filter(a=>a.type==="draw").length;
-      const named=ownActions.filter(a=>a.card&&(
-        CAST_TYPES.has(a.type)||String(a.type||"").endsWith("_cast")||
-        a.type==="land_play"));
-      if(draws)eventParts.push("Drew "+draws);
-      if(named.length)eventParts.push(named.map(a=>a.card).join(", "));
+      const synopsis=turnNarration(pilot);
       summary.appendChild(create("span","insight-turn-activity",
-        index?eventParts.join(" · ")||"Inspect recorded actions":"Kept opening hand"));
+        index?synopsis||"No named plays recorded":"Kept opening hand"));
       const badges=create("span","insight-turn-metrics");
       const now=lifeAt(current,0),was=before?lifeAt(before,0):now;
       const delta=now-was;
@@ -893,21 +965,24 @@
         const enemy=actions.filter(a=>Number.isInteger(a.seat)&&a.seat>0);
         const unknown=actions.filter(a=>!Number.isInteger(a.seat));
         function actionSection(title,events,cssClass,showSeat){
+          events=events.filter(a=>narratedAction(a));
           if(!events.length)return;
           const section=create("section","insight-action-phase "+cssClass);
           section.appendChild(create("h4","insight-action-phase-heading",
             title+" · "+events.length+" recorded actions"));
           const items=create("div","insight-action-sequence");
           for(const a of events){
+            const spoken=narratedAction(a);
+            if(!spoken)continue;
             const line=create("div","insight-action-entry");
             if(showSeat)line.appendChild(create("strong","insight-action-seat-label",
               "Seat "+(Number(a.seat)+1)));
-            const name=a.card||a.source||null;
-            if(name)line.appendChild(insightActionCard(name,options));
-            const wording=[String(a.type||"action").replaceAll("_"," "),
-              a.operation,a.target_name?"→ "+a.target_name:null,
-              a.amount!==undefined?"amount "+a.amount:null].filter(Boolean).join(" · ");
-            line.appendChild(create("span","insight-action-description",wording));
+            const text=create("span","insight-action-description");
+            text.appendChild(create("span","insight-action-verb",spoken.verb+" "));
+            if(spoken.card)text.appendChild(insightActionCard(spoken.card,options,{textOnly:true}));
+            if(spoken.detail)text.appendChild(create("span",null," "+spoken.detail));
+            if(spoken.card)line.appendChild(insightActionCard(spoken.card,options,{artOnly:true}));
+            line.appendChild(text);
             items.appendChild(line);
           }
           section.appendChild(items);body.appendChild(section);
@@ -915,6 +990,22 @@
         actionSection("Your recorded actions",own,"is-player",false);
         actionSection("Enemy activity (consolidated)",enemy,"is-opponent",true);
         actionSection("Seat not recorded",unknown,"is-unattributed",false);
+        const moves=observedZoneChanges(previous,observation);
+        if(moves.length){
+          const section=create("section","insight-action-phase is-zone-changes");
+          section.appendChild(create("h4","insight-action-phase-heading",
+            "Observed zone movement · "+moves.length));
+          const items=create("div","insight-action-sequence");
+          for(const move of moves){
+            const line=create("div","insight-action-entry");
+            line.appendChild(insightActionCard(move.card,options,{artOnly:true}));
+            const description=create("span","insight-action-description");
+            description.appendChild(create("span",null,move.verb+" "));
+            description.appendChild(insightActionCard(move.card,options,{textOnly:true}));
+            line.appendChild(description);items.appendChild(line);
+          }
+          section.appendChild(items);body.appendChild(section);
+        }
         const zones=create("details","insight-turn-zones");
         zones.appendChild(create("summary",null,"End-of-round hand, battlefield and graveyard"));
         renderObservationZones(zones,observation,options);
@@ -956,17 +1047,21 @@
       root.appendChild(full);
     }
   }
-  function insightActionCard(name,options){
+  function insightActionCard(name,options,display={}){
     const card=options.lookupRecordedCard?.(name);
-    const button=textButton("","insight-action-card",()=>options.onOpenRecordedCard?.(name));
-    button.setAttribute("aria-label","View card "+name);
+    const button=textButton("","insight-action-card"+
+      (display.artOnly?" is-art-only":"")+
+      (display.textOnly?" is-text-only":""),
+      ()=>options.onOpenRecordedCard?.(name));
+    button.setAttribute("aria-label","View "+name+" card details");
     const art=card?.art||card?.image;
-    if(typeof art==="string"&&/^https:\/\//.test(art)){
+    if(!display.textOnly&&typeof art==="string"&&/^https:\/\//.test(art)){
       const img=create("img","insight-action-art");
       img.src=art;img.alt="";img.loading="lazy";img.referrerPolicy="no-referrer";
       button.appendChild(img);
     }
-    button.appendChild(create("span","insight-action-name",name));
+    if(!display.artOnly||!(typeof art==="string"&&/^https:\/\//.test(art)))
+      button.appendChild(create("span","insight-action-name",name));
     return button;
   }
   // Canonical turn viewer used by card insights and the full-game reviewer.
