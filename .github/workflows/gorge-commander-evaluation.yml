@@ -51,8 +51,8 @@ jobs:
           go build -o "$RUNNER_TEMP/commander-probe" ./commander_probe.go
       - name: Measure current Python bounded-pressure baseline
         run: |
-          python -m tools.gorge_benchmark baseline --games 4 --turns 10 --seed 100 --output "$RUNNER_TEMP/results/python_baseline.json"
-      - name: Run three real four-player Commander games on gorge
+          python -m tools.gorge_benchmark baseline --games 24 --turns 10 --seed 100 --output "$RUNNER_TEMP/results/python_baseline.json"
+      - name: Run 24 real four-player Commander games on gorge
         id: gorge_run
         working-directory: ${{ runner.temp }}/gorge
         shell: bash
@@ -60,7 +60,7 @@ jobs:
           set +e
           "$RUNNER_TEMP/commander-probe" \
             -corpus .cards -deck-dir "$RUNNER_TEMP/gorge-decks" \
-            -games 3 -seed 100 -max-turns 35 -verify=true \
+            -games 24 -seed 100 -max-turns 50 -verify=true \
             | tee "$RUNNER_TEMP/results/gorge_runs.jsonl"
           status=${PIPESTATUS[0]}
           echo "$status" > "$RUNNER_TEMP/results/gorge_exit_code.txt"
