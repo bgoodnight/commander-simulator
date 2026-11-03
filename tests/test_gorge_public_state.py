@@ -47,7 +47,9 @@ class PublicGorgeStateTest(unittest.TestCase):
         output=convert(fixture())
         self.assertEqual(output["snapshot_definition"],"first_pending_decision_of_turn")
         self.assertIn("snapshots",output)
-        self.assertFalse(any(card["name"]=="Card 2"\n            for snap in output["snapshots"] for player in snap["players"]\n            for cards in player["zones"].values() for card in cards))
+        self.assertFalse(any(card["name"]=="Card 2"
+            for snap in output["snapshots"] for player in snap["players"]
+            for cards in player["zones"].values() for card in cards))
 
     def test_20_life_game_is_not_valid_commander_benchmark(self):
         data=fixture()
