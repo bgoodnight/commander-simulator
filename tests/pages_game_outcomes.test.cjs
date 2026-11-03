@@ -552,8 +552,8 @@ test('hero performance metrics open original details as modal panels, not grid d
     const grid=root.children.find(n=>n.className.includes('latest-insight-grid'));
     const dialog=root.children.find(n=>n.tag==='dialog');
     assert.ok(dialog);
-    const cards=grid.children.filter(n=>n.className.includes('game-outcome-card'));
-    assert.equal(cards.length,0);
+    assert.ok(!walk(grid).some(n=>n.className==='game-outcome-title'&&
+      ['Opponent Types','Game Length','Eliminations','Life Progression'].includes(n.textContent)));
     const tiles=walk(grid).filter(n=>n.className==='game-outcome-hero-highlight');
     assert.deepEqual(tiles.map(n=>n.children[0].textContent),
       ['Best matchup','Game length','Survival','Final life']);
