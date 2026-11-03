@@ -20,6 +20,7 @@ import (
   "github.com/adams-shaun/gorge/engine/replay"
   "github.com/adams-shaun/gorge/engine/rules"
   "github.com/adams-shaun/gorge/engine/seat"
+  "github.com/adams-shaun/gorge/engine/state"
   "github.com/adams-shaun/gorge/testkit/bench"
   "github.com/adams-shaun/gorge/testkit/testutil"
 )
@@ -40,6 +41,47 @@ type Result struct {
   Policies []string `json:"policies"`
   ReplayChain string `json:"replay_chain,omitempty"`
   NativeTrace string `json:"native_trace,omitempty"`
+}
+
+// Snapshots are captured at the first pending decision of each turn.
+// They are NOT end-of-turn snapshots. Every field comes from gorge's state.
+func snapshot(e *rules.Engine) map[string]any {
+  players:=make([]any,len(e.G.Players))
+  for i,p:=range e.G.Players {
+    zones:=map[string]any{}
+    for _,z:=range []state.Zone{state.ZHand,state.ZBattlefield,
+      state.ZLibrary,state.ZGraveyard,state.ZExile,state.ZCommand} {
+      ids:=make([]uint32,0,len(e.G.Zone(z,state.PlayerID(i))))
+      for _,id:=range e.G.Zone(z,state.PlayerID(i)){ids=append(ids,uint32(id))}
+      zones[z.String()]=ids
+    }
+    players[i]=map[string]any{"seat":i,"life":p.Life,"lost":p.Lost,
+      "mana_pool":p.Pool,"zones":zones}
+  }
+  return map[string]any{"turn":e.G.Turn,"active_seat":e.G.Active,
+    "step":e.G.Step.String(),"after_event_seq":len(e.L.Events)-1,
+    "boundary":"first_pending_decision_of_turn","players":players}
+}
+
+// Card identity is stable in the pinned corpus, but the numeric object
+// identifier is scoped to one game. Record minted objects as well as cards.
+func objectCrosswalk(e *rules.Engine) []any {
+  rows:=make([]any,0,len(e.G.Objs))
+  for i:=range e.G.Objs {
+    o:=&e.G.Objs[i]
+    name:=""
+    printed:=""
+    types:=[]string{}
+    if f:=o.Face();f!=nil{name=f.Name;types=append(types,f.Types...)}
+    if o.Card!=nil&&len(o.Card.Faces)>0&&o.Card.Faces[0]!=nil {
+      printed=o.Card.Faces[0].Name
+    }
+    rows=append(rows,map[string]any{
+      "object_id":o.ID,"card_name":printed,"effective_name":name,
+      "owner":o.Owner,"controller_at_end":o.Controller,
+      "is_token":o.IsToken,"is_copy":o.IsCopy,"types_at_end":types})
+  }
+  return rows
 }
 
 func main() {
@@ -103,8 +145,20 @@ func main() {
     cfg:=rules.Config{Seed:gs,Names:ids,Decks:ds,Commanders:cs,
       Format:rules.FormatCommander,Tokens:reg.Tokens,NameUniverse:reg.Universe()}
     start:=time.Now()
-    o,e,playErr:=bench.PlayGame(cfg,players,*maxTurns,400000,
-      bench.Hooks{EnvSeats:true,HonestRoot:true})
+    capture:=*nativeDir!=""&&g<*nativeLimit
+    observations:=[]any{}
+    lastTurn:=int32(-1)
+    hooks:=bench.Hooks{EnvSeats:true,HonestRoot:true}
+    if capture {
+      hooks.Guard=func(engine *rules.Engine)(string,string) {
+        if engine.G.Turn!=lastTurn {
+          lastTurn=engine.G.Turn
+          observations=append(observations,snapshot(engine))
+        }
+        return "",""
+      }
+    }
+    o,e,playErr:=bench.PlayGame(cfg,players,*maxTurns,400000,hooks)
     rec:=Result{Seed:gs,Decks:ids,Turns:o.Turns,Intents:o.Intents,
       Draw:o.Draw,StallReason:o.StallOn,ElapsedSeconds:time.Since(start).Seconds(),Policies:policies}
     if e!=nil {rec.Events=len(e.L.Events)}
@@ -130,6 +184,11 @@ func main() {
         "seed":gs,"decks":ids,"policies":policies,
         "format":"commander","chain":e.L.Head(),
         "log":e.L,
+        "enrichment_schema":"gorge-physical-state-v1",
+        "objects":objectCrosswalk(e),
+        "snapshots":observations,
+        "snapshots_are":"first_pending_decision_of_turn",
+        "object_identity_scope":"one_game_only",
       }
       data,marshalErr:=json.Marshal(payload)
       if marshalErr!=nil{
