@@ -62,7 +62,6 @@ def static_abilities(name, raw):
     """Declared reusable stat operation attached to original physical card."""
     rule=reviewed_static_rule(name,raw)
     if rule is None:return ()
-    from .early_game_runner import _load_live_kernel
     # Import the current physical Ability definition, never a second ruleset.
     from pathlib import Path
     import sys
