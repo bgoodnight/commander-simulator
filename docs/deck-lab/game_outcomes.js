@@ -990,16 +990,27 @@
     return prefix+(hand.length?", drew "+hand.join(", "):"");
   }
   function recordedManaOutput(observation){
-    // Only claim colored production when it is explicitly exported.
+    // null is unavailable in historical exports; [] is recorded zero.
     const colors=observation?.mana_produced_by_color;
-    if(colors&&typeof colors==="object"){
-      return Object.entries(colors).filter(([k,v])=>
-        ["W","U","B","R","G","C"].includes(k)&&Number.isFinite(v)&&v>0)
-        .map(([symbol,count])=>({symbol,count}));
+    if(!colors||typeof colors!=="object")return null;
+    return ["W","U","B","R","G","C"].filter(k=>
+      Number.isInteger(colors[k])&&colors[k]>0)
+      .map(symbol=>({symbol,count:colors[symbol]}));
+  }
+  function manaPips(target,mana,options){
+    if(mana===null){
+      target.appendChild(create("span","insight-mana-unavailable","—"));
+      return;
     }
-    // The legacy resource_end is a capacity estimate, not actual generated
-    // mana; do not misrepresent it as colored or produced mana.
-    return [];
+    if(!mana.length){target.appendChild(create("span",null,"0"));return}
+    for(const {symbol,count} of mana){
+      const pip=create("span","insight-color-mana-pip");
+      const art=options.renderMana?.("{"+symbol+"}");
+      if(art)pip.appendChild(art);
+      else pip.appendChild(create("span","insight-fallback-mana",symbol));
+      if(count>1)pip.appendChild(create("span","insight-mana-count","×"+count));
+      target.appendChild(pip);
+    }
   }
   function recordedCardTypes(name,lookup){
     const card=lookup?.(name);
@@ -1035,13 +1046,12 @@
       group.appendChild(list);panel.appendChild(group);
     }
     const mana=recordedManaOutput(observation);
-    if(mana.length){
-      const line=create("div","insight-end-mana");
-      line.appendChild(create("strong",null,"Recorded mana production"));
-      for(const {symbol,count} of mana)
-        line.appendChild(create("span","mana-symbol mana-"+symbol.toLowerCase(),
-          symbol+" ×"+count));
-      panel.appendChild(line);
+    const line=create("div","insight-end-mana");
+    line.appendChild(create("strong",null,"Mana generated"));
+    manaPips(line,mana,options);
+    if(mana===null)
+      line.appendChild(create("span","micro","Not recorded for this game"));
+    panel.appendChild(line);
     }else panel.appendChild(create("p","micro",
       "Mana production by color was not recorded for this turn."));
     return panel;
@@ -1103,14 +1113,11 @@
         badges.appendChild(handBadge);
       }
       const mana=recordedManaOutput(observation);
-      if(mana.length){
-        const display=create("span","insight-turn-metric insight-turn-mana");
-        display.appendChild(create("span",null,"Mana "));
-        for(const {symbol,count} of mana)
-          display.appendChild(create("span","mana-symbol mana-"+symbol.toLowerCase(),
-            symbol+(count>1?"×"+count:"")));
-        badges.appendChild(display);
-      }
+      const display=create("span","insight-turn-metric insight-turn-mana");
+      display.setAttribute("aria-label","Mana generated"+(mana===null?": not recorded":""));
+      display.appendChild(create("span",null,"Mana "));
+      manaPips(display,mana,options);
+      badges.appendChild(display);
       summary.appendChild(badges);
       const arrow=create("span","insight-turn-expand","Explore ▾");
       summary.appendChild(arrow);
