@@ -1290,3 +1290,73 @@ body:has(#pane-records:not([hidden])) .page-introduction a{font-size:.72rem}
  .elastic-net-coefficient-row .micro{grid-column:1/-1;text-align:right}
  .elastic-net-summary{grid-template-columns:1fr}
 }
+
+
+/* Full-game card insight gallery: restore the older featured-card layout. */
+.insight-featured-panel{grid-column:span 1}
+.insight-featured-panel .game-outcome-summary{position:relative;isolation:isolate;
+ min-height:122px;overflow:hidden;background:linear-gradient(110deg,#243539,#122028)!important}
+.insight-featured-panel .game-outcome-summary-copy{z-index:2;position:relative;
+ width:78%;max-width:78%;gap:5px}
+.insight-featured-panel .game-outcome-title{font-family:Cinzel,Georgia,serif;
+ font-size:clamp(1.05rem,1.9vw,1.36rem)}
+.insight-featured-panel .insight-head-subtitle{display:flex;align-items:center;
+ flex-wrap:wrap;gap:5px 10px}
+.insight-featured-panel .insight-head-name{font-size:.87rem;
+ font-weight:650;color:#f7e5c7}
+.insight-featured-panel .insight-head-mana{display:inline-flex;align-items:center;
+ min-height:20px}
+.insight-featured-panel .insight-head-mana .mana-symbols{display:inline-flex;
+ align-items:center;gap:2px;flex-wrap:nowrap}
+.insight-featured-panel .insight-head-mana .mana-symbol{width:1.2em;height:1.2em}
+.insight-featured-cover{position:absolute;inset:0 0 0 auto;width:54%;height:100%;
+ object-fit:cover;object-position:center 28%;z-index:0;opacity:.82;
+ mask-image:linear-gradient(90deg,transparent 0%,#000 48%)}
+.insight-featured-cover[hidden]{display:none}
+.insight-featured-panel .game-outcome-body{display:grid;gap:12px}
+.insight-featured-compare{display:grid;
+ grid-template-columns:minmax(125px,190px) minmax(0,1fr);
+ gap:18px;align-items:start}
+.insight-featured-selected{display:grid;gap:9px;align-content:start;
+ min-width:0;justify-items:start}
+.insight-featured-card-art{width:min(100%,190px);border:0;border-radius:9px;
+ padding:0;background:transparent;cursor:pointer}
+.insight-featured-card-art img{width:100%;height:auto;display:block;
+ aspect-ratio:63/88;object-fit:contain;border-radius:9px;
+ box-shadow:0 6px 18px #0008}
+.insight-featured-card-name{color:#f1dfbd;font-size:.89rem;
+ overflow-wrap:anywhere}
+.insight-featured-card-art:focus-visible{outline:2px solid #f3d693;outline-offset:3px}
+.insight-featured-ranking{min-width:0;display:grid;gap:7px}
+.insight-featured-chart-title{color:#efd4a4;font-size:.97rem}
+.insight-featured-ranking>.micro{margin:0;font-size:.73rem}
+.insight-featured-bars{display:grid;gap:6px;max-height:345px;overflow:auto}
+.insight-featured-bar{min-width:0;display:grid;gap:5px;text-align:left;
+ padding:8px 10px;border:1px solid #50665f;border-radius:8px;
+ color:#e9e5d9;background:#1b3031;cursor:pointer;font:inherit}
+.insight-featured-bar:hover,.insight-featured-bar:focus-visible,
+.insight-featured-bar[aria-pressed="true"]{border-color:#ebcc8e;background:#37483e}
+.insight-featured-bar-caption{display:flex;gap:9px;justify-content:space-between;
+ align-items:center;font-size:.76rem}
+.insight-featured-bar-caption>span{min-width:0;overflow-wrap:anywhere}
+.insight-featured-bar-caption strong{font-size:.72rem;white-space:nowrap;
+ color:#f4d8a9;font-variant-numeric:tabular-nums}
+.insight-featured-bar-track{height:8px;background:#425650;border-radius:5px;
+ overflow:hidden}
+.insight-featured-bar-fill{height:100%;display:block;background:#88b2a5;
+ border-radius:inherit}
+.insight-featured-bar[aria-pressed="true"] .insight-featured-bar-fill{
+ background:linear-gradient(90deg,#a9aa7c,#f1ce8f)}
+.insight-featured-stats{border-top:1px solid #51665f;padding-top:12px}
+.insight-featured-evidence{display:grid;gap:9px;border-top:1px solid #51665f;
+ padding-top:12px}
+.insight-featured-evidence:empty{display:none}
+@media(max-width:720px){
+ .insight-featured-compare{grid-template-columns:minmax(98px,125px) minmax(0,1fr);gap:10px}
+ .insight-featured-panel .game-outcome-summary{min-height:117px}
+ .insight-featured-panel .game-outcome-summary-copy{width:82%;max-width:82%}
+ .insight-featured-cover{width:60%;opacity:.67}
+ .insight-featured-bar{padding:7px}
+ .insight-featured-bar-caption{font-size:.7rem;align-items:start}
+ .insight-featured-card-art{width:100%}
+}
