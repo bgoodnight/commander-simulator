@@ -1253,8 +1253,9 @@
     }));
     const best=matchup[0];
     cards.appendChild(card("Opponent Types","Types & table compositions",
-      matchup.length+" types",
-      best?best.counts.win+" wins · "+best.title:"No recorded groups",
+      best?(100*best.counts.win/Math.max(1,best.games)).toFixed(1)+"%":"—",
+      best?"Win share · "+best.title+" · "+matchup.length+" opponent types":
+        "No recorded groups",
       body=>{
         const selector=create("select","game-outcome-matchup-mode");
         selector.setAttribute("aria-label","Group opponent outcomes by");
@@ -1294,8 +1295,8 @@
         histogram(body,finished,groups[0].requestedRounds);
       }));
     cards.appendChild(card("Eliminations","Survival",
-      knocked.length+" / "+total,
-      "Our seat eliminated",
+      (100*knocked.length/total).toFixed(1)+"%",
+      "Our seat eliminated · "+knocked.length+" of "+total+" games",
       body=>{
         const stats=create("div","game-outcome-insight-grid");
         stats.append(
