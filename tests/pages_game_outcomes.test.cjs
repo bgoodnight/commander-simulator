@@ -485,3 +485,59 @@ test('featured card insight switches artwork, mana, metrics, and evidence with s
       n.textContent==='Seed 3 · Turn 2'));
   }finally{global.document=before}
 });
+
+test('commander and basic lands are excluded while seen-creature and use metrics are normalized',()=>{
+  const lookup=name=>({type_line:{
+    'Ghoulcaller Gisa':'Legendary Creature — Human Wizard',
+    'Grave Titan':'Creature — Giant',
+    'Sol Ring':'Artifact',
+    'Swamp':'Basic Land — Swamp'
+  }[name]||'Artifact'});
+  function sample(seed,withTitan){
+    return {seed,completed_rounds:2,
+      opening_hand:['Swamp','Grave Titan'],
+      ui_observations:[
+        {turn:1,hand:['Grave Titan'],actions:[
+          {type:'land_play',card:'Swamp'},
+          {type:'reviewed_commander_cast',card:'Ghoulcaller Gisa'},
+          {type:'artifact_cast',card:'Sol Ring'},
+          {type:'reviewed_activated_ability',card:'Sol Ring'}]},
+        {turn:2,hand:[],actions:[
+          ...(withTitan?[{type:'creature_cast',card:'Grave Titan'}]:[]),
+          {type:'reviewed_activated_ability',card:'Sol Ring'}]}
+      ]};
+  }
+  const result=Outcomes.observationCardStats(
+    [sample(1,true),sample(2,false)],lookup,'Ghoulcaller Gisa');
+  assert.equal(result.coverage,2);
+  assert.equal(result.played.name,'Sol Ring');
+  assert.equal(result.creature.name,'Grave Titan');
+  assert.equal(result.creature.games,1);
+  assert.equal(result.creature.average,0.5);
+  assert.equal(result.seenCreature.name,'Grave Titan');
+  assert.equal(result.seenCreature.games,2);
+  assert.equal(result.activated.name,'Sol Ring');
+  assert.equal(result.activated.average,2);
+  for(const category of ['played','seen','seenCreature','creature','longest','activated']){
+    assert.ok(!result.ranked[category].some(item=>item.name==='Ghoulcaller Gisa'));
+    assert.ok(!result.ranked[category].some(item=>item.name==='Swamp'));
+  }
+});
+test('results overview places four game cards before card metrics and uses normalized headlines',()=>{
+  const source=fs.readFileSync('web/pages/game_outcomes.js','utf8');
+  const css=fs.readFileSync('web/pages/style.css','utf8');
+  const app=fs.readFileSync('web/pages/app.js','utf8');
+  const hero=source.indexOf('cards.appendChild(outcomeCard(');
+  const matchup=source.indexOf('cards.appendChild(card("Opponent Types"');
+  const length=source.indexOf('cards.appendChild(card("Game Length"');
+  const eliminations=source.indexOf('cards.appendChild(card("Eliminations"');
+  const life=source.indexOf('cards.appendChild(card("Life Progression"');
+  const cardInsights=source.indexOf('const signals=observationCardStats(');
+  assert.ok(hero<matchup&&matchup<length&&length<eliminations&&eliminations<life);
+  assert.ok(life<cardInsights);
+  assert.match(source,/game-outcome-hero-highlights/);
+  assert.match(css,/\.game-outcome-hero-highlight/);
+  assert.match(source,/\(100\*item\.games\/coverage\)\.toFixed\(1\)\+"%"/);
+  assert.match(source,/item\.average\.toFixed\(2\)\+"\/game"/);
+  assert.match(app,/commanderName:selectedDeck\(\)\.commander/);
+});
