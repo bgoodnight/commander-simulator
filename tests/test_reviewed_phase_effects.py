@@ -135,8 +135,13 @@ class ReviewedPhaseEffectsTests(unittest.TestCase):
 
     def test_empty_library_mandatory_draw_prevents_partial_life_change(self):
         self.card("Phyrexian Arena",types=("enchantment",))
-        with self.assertRaises(NotImplementedError):
+        from commander_sim.physical_common_effects import EmptyLibraryDraw
+        with self.assertRaises(EmptyLibraryDraw) as raised:
             self.phase()
+        self.assertEqual(raised.exception.seat,0)
+        self.assertEqual(raised.exception.source_id,
+                         next(iter(self.kernel.on_battlefield())).object_id)
+        self.assertEqual(raised.exception.attempted,1)
         self.assertEqual(self.life.total(0),40)
         self.assertFalse(self.engine.invocations)
 
