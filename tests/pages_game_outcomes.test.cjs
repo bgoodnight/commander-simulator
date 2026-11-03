@@ -1097,3 +1097,13 @@ test('compact turn display does not leak internal abstract event identifiers',()
   assert.match(css,/\.insight-turn-row \.insight-turn-row-summary\{\s*min-height:48px/);
   assert.match(css,/\.insight-turn-activity\{font-size:\.72rem;min-width:0/);
 });
+
+test('turn rows expand naturally for multiline summaries while metrics do not squeeze the text',()=>{
+  const css=fs.readFileSync('web/pages/style.css','utf8');
+  const rule=css.slice(css.lastIndexOf('/* Turn height follows the action narrative'));
+  assert.match(rule,/grid-template-areas:"turn narrative expand" "\. metrics metrics"/);
+  assert.match(rule,/white-space:normal/);
+  assert.match(rule,/-webkit-line-clamp:3/);
+  assert.match(rule,/grid-area:metrics;width:100%;max-width:none/);
+  assert.match(rule,/min-height:64px;height:auto/);
+});
