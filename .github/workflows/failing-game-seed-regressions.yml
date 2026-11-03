@@ -1,0 +1,76 @@
+name: Regression — previously failing bounded-game seeds
+
+on:
+  pull_request:
+    paths:
+      - "commander_sim/early_game_runner.py"
+      - "commander_sim/outcome_reporting.py"
+      - "commander_sim/reviewed_phase_effects.py"
+      - "commander_sim/template_resources.py"
+      - ".github/workflows/failing-game-seed-regressions.yml"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  reproduce:
+    name: ${{ matrix.deck }} / ${{ matrix.scenario }} / seed ${{ matrix.seed }}
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - deck: wretched_ranks
+            scenario: control
+            seed: 21
+          - deck: wretched_ranks
+            scenario: aggressive
+            seed: 89
+          - deck: necron_dynasties
+            scenario: control
+            seed: 57
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+      - name: Generate exact previously failing seed with full observations
+        env:
+          DECK: ${{ matrix.deck }}
+          SCENARIO: ${{ matrix.scenario }}
+          SEED: ${{ matrix.seed }}
+        run: |
+          mkdir -p dist/outcomes dist/observations
+          python tools/build_game_outcomes.py \
+            --deck "$DECK" --scenario "$SCENARIO" \
+            --start-seed "$SEED" --seeds 1 --rounds 30 \
+            --pilot-style adaptive --pilot-archetype auto \
+            --provisional-mode safe --examples 1 \
+            --observations-output "dist/observations/$DECK-$SCENARIO-$SEED.jsonl" \
+            --output "dist/outcomes/$DECK-$SCENARIO-$SEED.json"
+          python tools/validate_game_observations.py \
+            --source dist/observations --expected-games 1 --expected-rounds 30
+      - name: Check normal terminal outcome and observed loss provenance
+        if: matrix.deck == 'wretched_ranks'
+        run: |
+          python - <<'PY'
+          import json
+          from pathlib import Path
+          path=next(Path("dist/outcomes").glob("*.json"))
+          data=json.loads(path.read_text())
+          run=data["runs"][0]
+          assert run["outcome"]["status"]=="loss",run["outcome"]
+          assert run["outcome"]["reason"]=="pilot_empty_library_draw",run["outcome"]
+          assert any(e["cause"]=="empty_library_draw" for e in run["outcome"]["eliminations"])
+          assert run["completed_rounds"]<=30
+          PY
+      - name: Preserve bounded outcomes and observations
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: failing-seed-${{ matrix.deck }}-${{ matrix.scenario }}-${{ matrix.seed }}
+          path: dist/
+          if-no-files-found: ignore
+          retention-days: 30
