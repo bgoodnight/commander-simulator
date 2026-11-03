@@ -427,8 +427,7 @@ function showPage(){
   renderPageIntro();
   document.title=PAGE_INFO[pageName]+" | Commander Deck Lab";
   if(pageName==="results"){
-    renderLongGamePanel();
-    void loadPublishedLongGame();
+    refreshPublishedLongGame();
   }
 }
 
@@ -2214,7 +2213,7 @@ async function boot(){
     if(pageName==="results"){
       // Do not request older observations, cached six-turn runs, archive
       // replays or backfilled snapshots for the latest-only Results page.
-      const response=await fetch("./decks.json?v=physical-decks-20261101-1");
+      const response=await fetch("./decks.json",{cache:"no-store"});
       if(!response.ok)throw Error("Deck metadata is unavailable.");
       data=await response.json();
       archives={};allNames=[];boundedBatches={decks:{}};gameChangers=null;
@@ -2273,8 +2272,7 @@ async function boot(){
       choice={key:latest.key,version:latest.version};
     }
     summon(choice.key,{versionId:choice.version});
-    if(pageName==="results")void loadPublishedLongGame();
-  }catch(err){
+     }catch(err){
     const rail=$("commander-rail");clear(rail);
     rail.appendChild(el("p","Unable to open the archive: "+err.message));
     note("Deck archive unavailable. Verify the static data build.",true);
