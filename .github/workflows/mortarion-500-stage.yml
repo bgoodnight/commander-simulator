@@ -7,6 +7,13 @@ on:
     paths:
       - ".github/workflows/mortarion-500-stage.yml"
       - "tools/review_game_outcomes.py"
+      - "tools/validate_outcome_ui_coverage.py"
+  # Only an explicit new one-time request file triggers a production batch.
+  # Normal pushes and UI changes will not rerun 500 games.
+  push:
+    branches: [main]
+    paths:
+      - ".github/simulation-requests/mortarion-500-*.json"
   workflow_dispatch:
 
 permissions:
@@ -55,8 +62,10 @@ jobs:
             --source dist/mortarion-smoke --seeds 20 --rounds 30 \
             --json-output dist/mortarion-smoke-review.json \
             --markdown-output dist/mortarion-smoke-review.md
+          python tools/validate_outcome_ui_coverage.py \
+            --source dist/mortarion-smoke --expected-games 20 --expected-rounds 30
       - name: Validate production publisher contracts
-        run: python -m unittest tests.test_game_outcome_publishing -v
+        run: python -m unittest tests.test_game_outcome_publishing tests.test_outcome_ui_coverage -v
 
   simulate:
     if: github.event_name != 'pull_request'
@@ -95,6 +104,10 @@ jobs:
           python tools/validate_game_observations.py \
             --source dist/observations \
             --expected-games 100 --expected-rounds 30
+      - name: Require complete card/hand/mana UI coverage for all 100 games
+        run: |
+          python tools/validate_outcome_ui_coverage.py \
+            --source dist/outcomes --expected-games 100 --expected-rounds 30
       - name: Preserve immutable original batch
         uses: actions/upload-artifact@v4
         with:
@@ -152,6 +165,8 @@ jobs:
             --seeds 100 --rounds 30 \
             --json-output dist/review/mortarion-500-review.json \
             --markdown-output dist/review/mortarion-500-review.md
+          python tools/validate_outcome_ui_coverage.py \
+            --source dist/incoming-outcomes --expected-games 100 --expected-rounds 30
           cat dist/review/mortarion-500-review.md >> "$GITHUB_STEP_SUMMARY"
           python -m unittest tests.test_game_outcome_publishing -v
       - name: Build verified Pages-compatible outcome files
@@ -202,6 +217,7 @@ jobs:
             commander_sim/ decklists/ simulator/card_data/ \
             tools/build_game_outcomes.py tools/discover_game_signals.py \
             tools/validate_game_observations.py \
+            tools/validate_outcome_ui_coverage.py \
             tools/review_game_outcomes.py \
             tools/publish_game_outcomes.py \
             .github/workflows/mortarion-500-stage.yml; then
