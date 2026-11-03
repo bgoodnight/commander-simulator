@@ -1,0 +1,73 @@
+name: One-game regression replay — Mortarion Ideal seed 3
+
+on:
+  pull_request:
+    paths:
+      - ".github/workflows/unclean-one-seed3-replay.yml"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  replay:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+      - name: Replay exact seed without publishing or replacing any existing results
+        run: |
+          mkdir -p dist/observations dist/outcomes
+          python tools/build_game_outcomes.py \
+            --deck mortarion_ideal --scenario control \
+            --seeds 1 --start-seed 3 --rounds 25 \
+            --pilot-style adaptive --pilot-archetype auto \
+            --provisional-mode safe --examples 1 \
+            --observations-output dist/observations/mortarion_ideal-control-seed3.jsonl \
+            --output dist/outcomes/mortarion_ideal-control-seed3.json
+          python tools/validate_game_observations.py \
+            --source dist/observations --expected-games 1 --expected-rounds 25
+      - name: Audit surviving opponents and token creation at every Great Unclean One trigger
+        run: |
+          python - <<'PY'
+          import json
+          from pathlib import Path
+          record=json.loads(next(Path("dist/observations").glob("*.jsonl")).read_text().strip())
+          previous=set((0,1,2,3))
+          violations=[]
+          report=[]
+          for turn in record["turn_records"]:
+              active=set(turn["alive_seats"])
+              assert active <= previous, (turn["turn"], "eliminated seat returned")
+              previous=active
+              for event in turn["events"]:
+                  if event.get("type")!="reviewed_phase_resolved" or event.get("source")!="Great Unclean One":
+                      continue
+                  created=len(event.get("created_token_ids",[]))
+                  alive_opponents=len(active-{0})
+                  item={"turn":turn["turn"],"created_tokens":created,
+                        "alive_opponents_at_turn_end":alive_opponents,
+                        "alive_seats_at_turn_end":sorted(active),
+                        "life_totals_at_turn_end":turn["life_totals"]}
+                  report.append(item)
+                  if created>alive_opponents:
+                      violations.append(item)
+          output={"deck_key":record["deck_key"],"seed":record["seed"],
+                  "scenario":record["scenario"],"outcome":record["outcome"]["status"],
+                  "completed_rounds":record["completed_rounds"],"great_unclean_one_events":report,
+                  "violations":violations}
+          Path("dist/one-game-audit.json").write_text(json.dumps(output,indent=2))
+          print(json.dumps(output,indent=2))
+          assert not violations,violations
+          PY
+      - name: Retain independent, source-pinned replay and audit
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: unclean-one-seed3-postfix-replay
+          path: dist/
+          if-no-files-found: ignore
+          retention-days: 30
