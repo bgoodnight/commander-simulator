@@ -69,7 +69,7 @@ jobs:
         shell: bash
         run: |
           set +e
-          python -m commander_sim.gorge_backend \
+          PYTHONPATH="$GITHUB_WORKSPACE" python -m commander_sim.gorge_backend \
             --binary "$RUNNER_TEMP/commander-probe" \
             --corpus "$RUNNER_TEMP/gorge/.cards" --deck-dir "$RUNNER_TEMP/gorge-decks" \
             --decks "mortarion_current,magnus_premium,necron_dynasties,wretched_ranks,avengers-assemble,cavalry-charge,deadly-disguise,science-pip" \
@@ -86,7 +86,7 @@ jobs:
         shell: bash
         run: |
           set +e
-          python -m commander_sim.gorge_backend \
+          PYTHONPATH="$GITHUB_WORKSPACE" python -m commander_sim.gorge_backend \
             --binary "$RUNNER_TEMP/commander-probe" \
             --corpus "$RUNNER_TEMP/gorge/.cards" --deck-dir "$RUNNER_TEMP/gorge-decks" \
             --decks "mortarion_current,magnus_premium,necron_dynasties,wretched_ranks,avengers-assemble,cavalry-charge,deadly-disguise,science-pip" \
