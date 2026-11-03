@@ -10,6 +10,20 @@ from types import SimpleNamespace
 from .legacy_common_ops import ZoneTransfer, transfer_physical_object
 
 
+class EmptyLibraryDraw(Exception):
+    """Mandatory draw failed; the game host must resolve the resulting loss.
+
+    Preserve the attempted draw and source instead of fabricating life damage.
+    """
+    def __init__(self,seat,*,attempted,available,source_id=None,phase=None):
+        self.seat=seat
+        self.attempted=attempted
+        self.available=available
+        self.source_id=source_id
+        self.phase=phase
+        super().__init__("Attempted mandatory draw from an empty library")
+
+
 @dataclass(frozen=True)
 class CardQuantity:
     count: int
