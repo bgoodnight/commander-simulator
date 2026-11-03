@@ -154,6 +154,10 @@ jobs:
           mkdir -p dist/analytics dist/discovery-input
           for deck in magnus_premium magnus_budget wretched_ranks mortarion_current mortarion_ideal necron_dynasties magnus_physical_trial mortarion_physical_final; do
             mkdir -p "dist/discovery-input/$deck"
+            if ! compgen -G "dist/incoming-observations/$deck-*.jsonl" >/dev/null; then
+              echo "No observations for $deck in scoped PR smoke run; skipping discovery."
+              continue
+            fi
             cp dist/incoming-observations/"$deck"-*.jsonl "dist/discovery-input/$deck/"
             python tools/discover_game_signals.py \
               --source "dist/discovery-input/$deck" \
