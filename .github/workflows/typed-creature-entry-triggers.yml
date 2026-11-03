@@ -1,0 +1,37 @@
+name: Typed physical creature-entry ability regression
+on:
+  push:
+    branches: [feature/typed-creature-entry-triggers-20261103]
+    paths:
+      - commander_sim/reviewed_creature_entry.py
+      - commander_sim/early_game_runner.py
+      - commander_sim/named_effect_coverage.py
+      - tests/test_reviewed_creature_entry.py
+      - .github/workflows/typed-creature-entry-triggers.yml
+permissions:
+  contents: read
+jobs:
+  tests:
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      - name: Regression tests for entry trigger and existing stat layers
+        run: |
+          python -m unittest tests.test_reviewed_creature_entry tests.test_static_creature_effects tests.test_reviewed_enter_effects tests.test_named_effect_coverage tests.test_kernel_life -v
+      - name: Run actual precon event smoke seeds
+        run: |
+          python - <<'PY'
+          from commander_sim.early_game_runner import run_bounded_early_game
+          from collections import Counter
+          for deck in ('wretched_ranks','necron_dynasties'):
+            for seed in (0,1,2):
+              r=run_bounded_early_game(deck,seed=seed,turns=10,
+                   provisional_mode='safe',opponent_scenario='mixed')
+              c=Counter(e['type'] for turn in r['events'] for e in turn['events'])
+              assert r['completed_rounds']>=1
+              print(deck,seed,r['outcome']['status'],c['reviewed_creature_entry_trigger'])
+          PY
