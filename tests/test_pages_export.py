@@ -142,21 +142,23 @@ class StaticPagesTests(unittest.TestCase):
                 self.assertIn('d3@7',page)
                 self.assertIn(name,manifest["asset_sha256"])
         js=(self.destination/"app.js").read_text(encoding="utf-8")
-        self.assertIn('location.pathname.endsWith("/results.html")?"results"',js)
+        self.assertIn('location.pathname.endsWith("/summary.html")?"summary":"results"',js)
         self.assertIn("function showPage()",js)
+        self.assertIn('id="results-hud"',(self.destination/"results.html").read_text())
+        self.assertIn('id="hud-commander-slot"',(self.destination/"results.html").read_text())
         self.assertIn("function renderScrollStory()",js)
         self.assertIn("IntersectionObserver",js)
         self.assertIn("window.d3",js)
         self.assertIn("window.history.replaceState",js)
 
-    def test_summary_is_default_and_results_has_dedicated_url(self):
+    def test_results_is_default_and_summary_has_dedicated_url(self):
         self.run_build()
         page=(self.destination/"index.html").read_text()
         app=(self.destination/"app.js").read_text()
         self.assertIn('data-page="results" href="./results.html"',page)
-        self.assertIn('data-page="summary" href="./index.html"',page)
-        self.assertIn('location.pathname.endsWith("/results.html")?"results"',app)
-        self.assertIn('location.pathname.endsWith("/editor.html")?"editor":"summary"',app)
+        self.assertIn('data-page="summary" href="./summary.html"',page)
+        self.assertIn('location.pathname.endsWith("/summary.html")?"summary":"results"',app)
+        self.assertIn('location.pathname.endsWith("/editor.html")?"editor"',app)
         self.assertTrue((self.destination/"results.html").is_file())
         self.assertEqual(
             (self.destination/"index.html").read_bytes(),
