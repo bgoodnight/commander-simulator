@@ -1230,3 +1230,13 @@ body:has(#pane-records:not([hidden])) .page-introduction a{font-size:.72rem}
   .game-outcome-review-controls{grid-template-columns:1fr}
   .latest-turn-reviewer{padding:12px}
 }
+
+/* Recorded turn evidence is a projection of the same canonical game
+   observations used by offline feature engineering. */
+.game-outcome-observed-zones{margin-top:12px;display:grid;gap:7px}
+.game-outcome-observed-zone{border:1px solid var(--line,#47535a);border-radius:8px;padding:7px 10px}
+.game-outcome-observed-zone summary{cursor:pointer}
+.game-outcome-observed-cards{display:flex;flex-wrap:wrap;gap:6px;padding-top:8px}
+.game-outcome-recorded-card{background:rgba(85,113,119,.18);border:1px solid rgba(137,162,165,.35);color:inherit;border-radius:7px;padding:5px 9px;cursor:pointer}
+.game-outcome-recorded-card:hover{background:rgba(128,165,167,.25)}
+.game-outcome-card .game-outcome-summary{background-repeat:no-repeat}

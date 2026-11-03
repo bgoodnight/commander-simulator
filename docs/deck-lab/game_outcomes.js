@@ -167,21 +167,64 @@
     }
     return result;
   }
-  function matchupRows(groups){
-    // In a four-player pod, a pilot outcome belongs to the WHOLE table.
-    // Even with named opponents, these are conditional associations, not
-    // head-to-head win probabilities or individual-opponent attribution.
+  function displayRole(role){
+    return String(role).split(/[-_ ]+/)
+      .map(part=>part?part[0].toUpperCase()+part.slice(1):"").join(" ");
+  }
+  function matchupRows(groups,mode="scenarios"){
+    // The result is always a four-player TABLE outcome, never a head-to-head.
+    // A type appearing in two opposing seats counts once per game in 'types'.
+    // A 'composition' is a sorted multiset: seat order has no significance.
+    if(!["types","compositions","scenarios"].includes(mode))
+      throw new RangeError("Unknown opponent comparison mode");
     const buckets=new Map();
     for(const group of groups){
       for(const run of group.runs){
         const opponents=opponentDecks(run,run.batch);
-        const names=opponents.length?
-          opponents.map(d=>({id:"deck:"+d.id+":"+d.version,label:d.name+" · present in pod",
-            title:d.name,kind:"named",portraitName:d.name})):
-          [{id:"scenario:"+group.id,label:group.label,kind:"abstract",
-            title:group.scenario[0].toUpperCase()+group.scenario.slice(1)+" pod",
-            archetype:group.scenario}];
-        for(const named of names){
+        let names;
+        if(opponents.length){
+          if(mode==="compositions"&&opponents.length===3){
+            names=[{id:"named-pod:"+rosterIdentity(opponents.map(d=>({...d,seat:0}))
+              .sort((a,b)=>a.id.localeCompare(b.id)||a.version.localeCompare(b.version))),
+              label:opponents.map(d=>d.name).join(" / ")+" · recorded pod",
+              title:opponents.map(d=>d.name).join(" / ")+" pod",
+              kind:"named_pod"}];
+          }else{
+            names=opponents.map(d=>({id:"deck:"+d.id+":"+d.version,
+              label:d.name+" · present in pod",title:d.name,
+              kind:"named",portraitName:d.name}));
+          }
+        }else if(mode==="scenarios"){
+          names=[{id:"scenario:"+group.id,label:group.label,kind:"abstract",
+            title:displayRole(group.scenario)+" pod",archetype:group.scenario}];
+        }else{
+          const roles=[1,2,3].map(seat=>run.opponent_roles?.[seat]||
+            run.opponent_roles?.[String(seat)]).filter(role=>
+              typeof role==="string"&&role.trim());
+          if(roles.length!==3){
+            // Historical exports without seat provenance cannot be attributed
+            // to a type. Keep their scenario label rather than inventing one.
+            names=[{id:"legacy:"+group.id,label:group.label,
+              title:displayRole(group.scenario)+" pod",
+              kind:"abstract",archetype:group.scenario}];
+          }else if(mode==="types"){
+            names=[...new Set(roles)].map(role=>({
+              id:"type:"+role,label:displayRole(role)+" · present in pod",
+              title:displayRole(role),kind:"type",archetype:role
+            }));
+          }else{
+            const sorted=[...roles].sort();
+            const counts=new Map();
+            for(const role of sorted)counts.set(role,(counts.get(role)||0)+1);
+            const title=[...counts].map(([role,count])=>
+              displayRole(role)+(count>1?" × "+count:"")).join(" / ");
+            names=[{id:"composition:"+sorted.join("|"),
+              label:title+" · table composition",title:title+" pod",
+              kind:"composition",archetype:null}];
+          }
+        }
+        // A pod with two copies of the same named deck/type is ONE game.
+        for(const named of new Map(names.map(row=>[row.id,row])).values()){
           if(!buckets.has(named.id))buckets.set(named.id,{
             id:named.id,label:named.label,title:named.title,kind:named.kind,
             portraitName:named.portraitName||null,archetype:named.archetype||null,
@@ -462,6 +505,100 @@
     }
     parent.appendChild(bars);
   }
+  function observationCardStats(runs,lookupCard=()=>null){
+    const appearances=new Map(),plays=new Map(),spells=new Map(),
+      artifacts=new Map(),activations=new Map(),removal=new Map(),holding=new Map();
+    const inc=(map,key,seed,turn,weight=1)=>{
+      if(typeof key!=="string"||!key.trim())return;
+      if(!map.has(key))map.set(key,{name:key,count:0,seeds:new Set(),turns:[]});
+      const item=map.get(key);item.count+=weight;item.seeds.add(seed);
+      if(Number.isFinite(turn))item.turns.push(turn);
+    };
+    for(const run of runs){
+      const seen=new Set(Array.isArray(run.opening_hand)?run.opening_hand:[]);
+      const held=new Map();
+      for(const row of run.ui_observations||[]){
+        for(const name of new Set(row.hand||[]))
+          held.set(name,(held.get(name)||0)+1);
+        for(const action of row.actions||[]){
+          if(action.type==="draw"&&action.card)seen.add(action.card);
+          const played=action.type==="land_play"||
+            action.type?.endsWith("_cast")||action.type==="reviewed_commander_cast";
+          if(played){
+            inc(plays,action.card,run.seed,row.turn);
+            const kind=lookupCard(action.card)?.category;
+            if(["Instant","Sorcery"].includes(kind))
+              inc(spells,action.card,run.seed,row.turn);
+            if(kind==="Artifact")inc(artifacts,action.card,run.seed,row.turn);
+          }
+          if(action.type?.includes("activated")||action.type?.includes("trigger")){
+            // Only name abilities where the event itself identifies the source.
+            inc(activations,action.card||action.source||action.operation,
+                run.seed,row.turn);
+          }
+          if(Number.isFinite(action.destroyed_count)&&action.destroyed_count>0){
+            inc(removal,action.card||action.source||action.operation,
+                run.seed,row.turn,action.destroyed_count);
+          }
+        }
+      }
+      for(const name of seen)inc(appearances,name,run.seed,null);
+      for(const [name,turns] of held){
+        if(!holding.has(name))holding.set(name,{name,counts:[],seeds:new Set()});
+        const metric=holding.get(name);
+        metric.counts.push(turns);metric.seeds.add(run.seed);
+      }
+    }
+    const top=map=>[...map.values()].sort((a,b)=>
+      b.count-a.count||b.seeds.size-a.seeds.size||
+      a.name.localeCompare(b.name))[0]||null;
+    const longest=[...holding.values()].filter(x=>x.seeds.size>=5).sort((a,b)=>
+      (b.counts.reduce((t,x)=>t+x,0)/b.counts.length)-
+        (a.counts.reduce((t,x)=>t+x,0)/a.counts.length)||
+      b.seeds.size-a.seeds.size||a.name.localeCompare(b.name))[0]||null;
+    const longestMetric=longest?{
+      name:longest.name,count:longest.counts.reduce((t,x)=>t+x,0)/longest.counts.length,
+      seeds:longest.seeds,turns:longest.counts,held:true
+    }:null;
+    return {
+      seen:top(appearances),played:top(plays),spell:top(spells),
+      artifact:top(artifacts),activated:top(activations),removal:top(removal),
+      longest:longestMetric,
+      coverage:runs.filter(run=>Array.isArray(run.ui_observations)&&
+        run.ui_observations.length===run.completed_rounds).length
+    };
+  }
+  function renderObservationZones(root,observation,options={}){
+    if(!observation)return;
+    const box=create("div","game-outcome-observed-zones");
+    box.appendChild(create("strong",null,"Recorded hand, board and actions"));
+    const zones=[["Hand",observation.hand],["Battlefield",observation.battlefield],
+      ["Graveyard",observation.graveyard]];
+    for(const [label,names] of zones){
+      const details=create("details","game-outcome-observed-zone");
+      details.appendChild(create("summary",null,label+" · "+(names?.length||0)));
+      const list=create("div","game-outcome-observed-cards");
+      if(!names?.length)list.appendChild(create("span","micro","None recorded"));
+      for(const name of names||[]){
+        const button=create("button","game-outcome-recorded-card",name);
+        button.type="button";button.onclick=()=>options.onOpenRecordedCard?.(name);
+        list.appendChild(button);
+      }
+      details.appendChild(list);box.appendChild(details);
+    }
+    const actions=create("details","game-outcome-observed-zone");
+    actions.appendChild(create("summary",null,
+      "Ordered actions · "+(observation.actions?.length||0)));
+    for(const a of observation.actions||[]){
+      if(a.type==="untap")continue;
+      const label=[a.type?.replaceAll("_"," "),a.card||a.source||a.operation,
+        a.seat===undefined?"":"seat "+(Number(a.seat)+1)]
+        .filter(Boolean).join(" · ");
+      actions.appendChild(create("p","micro",label));
+    }
+    box.appendChild(actions);
+    root.appendChild(box);
+  }
   function runDetails(root,run,options={}){
     root.replaceChildren();
     const heading=create("div","game-outcome-evidence-head");
@@ -472,6 +609,19 @@
     const info=create("div","game-outcome-round-detail");
     function showRound(index){
       info.replaceChildren();
+      if(index===0&&run.opening_hand?.length){
+        const hand=create("details","game-outcome-observed-zone");
+        hand.appendChild(create("summary",null,
+          "Kept opening hand · "+run.opening_hand.length+" cards"));
+        const names=create("div","game-outcome-observed-cards");
+        for(const card of run.opening_hand){
+          const button=create("button","game-outcome-recorded-card",card);
+          button.type="button";
+          button.onclick=()=>options.onOpenRecordedCard?.(card);
+          names.appendChild(button);
+        }
+        hand.appendChild(names);info.appendChild(hand);
+      }
       const row=run.life_history[index],previous=run.life_history[index-1];
       info.appendChild(create("strong",null,"Round "+row.round+
         " · "+row.alive_seats.length+" of 4 seats alive"));
@@ -486,6 +636,12 @@
         totals.appendChild(stat);
       }
       info.appendChild(totals);
+      if(index>0&&run.ui_observations?.[index-1]){
+        renderObservationZones(info,run.ui_observations[index-1],options);
+      }else if(index>0){
+        info.appendChild(create("p","micro",
+          "Detailed card and action observations were not exported for this historical game."));
+      }
       const changes=row.life_changes||[];
       if(!changes.length){
         info.appendChild(create("p","micro","No life changes recorded this round."));
@@ -644,7 +800,8 @@
       const run=active.runs.find(r=>String(r.seed)===String(seedSelect.value));
       if(!run)return;
       runDetails(evidence,run,{example:active.exampleBySeed.get(run.seed),
-        onShowRecordedActions:options.onShowRecordedActions});
+        onShowRecordedActions:options.onShowRecordedActions,
+        onOpenRecordedCard:options.onOpenRecordedCard});
     }
     function showGroup(seed){
       active=available.find(g=>g.id===scenarioSelect.value)||available[0];
@@ -708,7 +865,7 @@
     const lastLife=runs.map(run=>lifeAt(run.life_history.at(-1),0))
       .filter(Number.isFinite);
     const life=lifeTrend(runs,groups[0].requestedRounds);
-    const matchup=matchupRows(groups);
+    const matchup=matchupRows(groups,"types");
     const cards=create("div","board-grid game-outcome-grid latest-insight-grid");
     root.appendChild(cards);
     let jumpToReview=null;
@@ -731,13 +888,111 @@
       body.appendChild(create("div","micro",groups.length+" opponent groups · "+
         groups[0].requestedRounds+"-round horizon"));
     }));
+    const analysis=options.discoveryReport;
+    if(analysis?.status==="ready"&&analysis.findings?.length){
+      const top=analysis.findings.slice(0,8);
+      cards.appendChild(card("Statistical signals","Exploratory elastic net",
+        analysis.selected_predictors+" selected",
+        analysis.independent_seeds+" independent seeds · "+analysis.games+" games",
+        body=>{
+          body.appendChild(create("p","micro",
+            "Held-out Brier "+analysis.holdout_brier+
+            " · opponent-only "+analysis.opponent_baseline_brier+
+            " · coefficients are penalized and exploratory"));
+          for(const finding of top){
+            const detail=create("details","game-outcome-observed-zone");
+            const direction=finding.direction==="positive"?"Positive":"Negative";
+            detail.appendChild(create("summary",null,
+              finding.feature+" · "+direction+" · "+
+              Math.round(100*finding.selection_frequency)+"% selected"));
+            detail.appendChild(create("p","micro",
+              finding.observed_games+" observed games · direction consistency "+
+              Math.round(100*finding.direction_consistency)+"%"+
+              (finding.interaction_parents?.length?
+                " · interaction parents: "+finding.interaction_parents.join(" and "):"")));
+            body.appendChild(detail);
+          }
+          body.appendChild(create("p","micro",analysis.limitations||
+            "These are simulated-game associations, not card causal effects."));
+        }));
+    }else{
+      cards.appendChild(card("Statistical signals","Elastic-net discovery",
+        "Not available",
+        analysis?.status==="insufficient_data"?
+          "Not enough independent games or outcome variation":
+          "The current historical batch lacks complete observations",
+        body=>body.appendChild(create("p","micro",
+          "Results will populate from the same complete observation archive used to derive card and turn evidence."))));
+    }
+    const signals=observationCardStats(runs,options.lookupRecordedCard);
+    if(signals.coverage){
+      for(const [kind,label,metric] of [
+        ["played","Most played card","Casts or land plays"],
+        ["seen","Most frequently seen card","Opening hands and recorded draws"],
+        ["activated","Most active ability source","Recorded activations and triggers"],
+        ["spell","Most cast instant or sorcery","Recorded spell casts"],
+        ["artifact","Most cast artifact","Recorded artifact casts"],
+        ["removal","Most recorded creature removal","Recorded destroyed objects, where attributed"],
+        ["longest","Longest-held card","Mean observed turn-end rounds in hand; ties by game coverage"]
+      ]){
+        const item=signals[kind];
+        if(!item)continue;
+        const panel=card(label,"Observed card evidence",String(item.count),
+          item.name+" · "+item.seeds.size+" games",body=>{
+            body.appendChild(create("p","micro",
+              metric+" · "+signals.coverage+" games with recorded turn observations"));
+            const medianTurn=quantile(item.turns,.5);
+            if(medianTurn!==null)body.appendChild(create("p","micro",
+              item.held?"Median observed rounds held: "+nfmt(medianTurn):
+                "Median recorded event turn: "+nfmt(medianTurn)));
+            const button=create("button","game-outcome-recorded-card",item.name);
+            button.type="button";button.onclick=()=>options.onOpenRecordedCard?.(item.name);
+            body.appendChild(button);
+          });
+        const art=options.lookupRecordedCard?.(item.name)?.art;
+        if(art){
+          const summary=panel.querySelector("summary");
+          summary.style.backgroundImage=
+            "linear-gradient(90deg, rgba(17,23,28,.96),rgba(17,23,28,.68)),url("+JSON.stringify(art)+")";
+          summary.style.backgroundSize="cover";
+          summary.style.backgroundPosition="center";
+        }
+        cards.appendChild(panel);
+      }
+    }else{
+      cards.appendChild(card("Card diagnostics","Data coverage","Unavailable",
+        "The historical outcome exports omit complete turn/card observations.",
+        body=>body.appendChild(create("p","micro",
+          "Next publication will provide recorded card plays, draws and zone histories for each game."))));
+    }
     const best=matchup[0];
-    cards.appendChild(card("Opponent Types","Matchups",
+    cards.appendChild(card("Opponent Types","Types & table compositions",
       matchup.length+" types",
       best?best.counts.win+" wins · "+best.title:"No recorded groups",
-      body=>matchupExplorer(body,matchup,{
-        ...options,onReviewRun
-      })));
+      body=>{
+        const selector=create("select","game-outcome-matchup-mode");
+        selector.setAttribute("aria-label","Group opponent outcomes by");
+        for(const [value,label] of [
+          ["types","Opponent types present in pod"],
+          ["compositions","Whole-table compositions"]
+        ]){
+          const item=create("option",null,label);
+          item.value=value;selector.appendChild(item);
+        }
+        body.appendChild(create("p","micro",
+          "A type is counted once per game when present; wins belong to the whole table."));
+        body.appendChild(selector);
+        const view=create("div","game-outcome-matchup-view");
+        body.appendChild(view);
+        const redraw=()=>{
+          view.replaceChildren();
+          matchupExplorer(view,matchupRows(groups,selector.value),{
+            ...options,onReviewRun
+          });
+        };
+        selector.addEventListener("change",redraw);
+        redraw();
+      }));
     cards.appendChild(card("Game Length","Finished rounds",
       quantile(finished.map(run=>run.completed_rounds),.5)===null?"—":
         nfmt(quantile(finished.map(run=>run.completed_rounds),.5)),
