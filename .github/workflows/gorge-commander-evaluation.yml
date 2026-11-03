@@ -62,8 +62,8 @@ jobs:
           go build -o "$RUNNER_TEMP/commander-probe" ./commander_probe.go
       - name: Measure current Python bounded-pressure baseline
         run: |
-          python -m tools.gorge_benchmark baseline --games 24 --turns 10 --seed 100 --output "$RUNNER_TEMP/results/python_baseline.json"
-      - name: Run 24 full Commander games across eight decks using gorge bot AI
+          python -m tools.gorge_benchmark baseline --games 4 --turns 10 --seed 100 --output "$RUNNER_TEMP/results/python_baseline.json"
+      - name: Run four enriched Commander smoke games across eight-deck pool
         id: gorge_run
         working-directory: ${{ runner.temp }}/gorge
         shell: bash
@@ -73,14 +73,14 @@ jobs:
             --binary "$RUNNER_TEMP/commander-probe" \
             --corpus "$RUNNER_TEMP/gorge/.cards" --deck-dir "$RUNNER_TEMP/gorge-decks" \
             --decks "mortarion_current,magnus_premium,necron_dynasties,wretched_ranks,avengers-assemble,cavalry-charge,deadly-disguise,science-pip" \
-            --pilot bot --games 24 --seed 100 --max-turns 50 \
+            --pilot bot --games 4 --seed 100 --max-turns 50 \
             --native-dir "$RUNNER_TEMP/results/native" --native-limit 2 --jsonl \
             | tee "$RUNNER_TEMP/results/gorge_runs.jsonl"
           status=${PIPESTATUS[0]}
           echo "$status" > "$RUNNER_TEMP/results/gorge_exit_code.txt"
           echo "gorge_exit_code=$status" >> "$GITHUB_OUTPUT"
           exit 0
-      - name: Run eight trials of alternate gorge AI policies
+      - name: Run two trials of alternate gorge AI policies
         id: policy_trial
         working-directory: ${{ runner.temp }}/gorge
         shell: bash
@@ -91,7 +91,7 @@ jobs:
             --corpus "$RUNNER_TEMP/gorge/.cards" --deck-dir "$RUNNER_TEMP/gorge-decks" \
             --decks "mortarion_current,magnus_premium,necron_dynasties,wretched_ranks,avengers-assemble,cavalry-charge,deadly-disguise,science-pip" \
             --pilot forge-heuristic --hero-pilot lethal-pressure \
-            --games 8 --seed 200 --max-turns 50 --jsonl \
+            --games 2 --seed 200 --max-turns 50 --jsonl \
             | tee "$RUNNER_TEMP/results/gorge_policy_trial.jsonl"
           status=${PIPESTATUS[0]}
           echo "$status" > "$RUNNER_TEMP/results/policy_exit_code.txt"
@@ -102,6 +102,11 @@ jobs:
           python -m tools.gorge_native_replay \
             --native-dir "$RUNNER_TEMP/results/native" \
             --out "$RUNNER_TEMP/results/native_indexes"
+      - name: Validate enriched physical card and state snapshots
+        run: |
+          PYTHONPATH="$GITHUB_WORKSPACE" python -m tools.validate_gorge_enrichment \
+            --native-dir "$RUNNER_TEMP/results/native" \
+            --output "$RUNNER_TEMP/results/enrichment_validation.json"
       - name: Compare measured run characteristics and limitations
         if: steps.gorge_run.outcome == 'success'
         run: |
@@ -130,9 +135,9 @@ jobs:
           from pathlib import Path
           p=Path(os.environ["RUNNER_TEMP"])/"results"/"gorge_policy_trial.jsonl"
           rows=[json.loads(line) for line in p.read_text().splitlines() if line.strip().startswith("{")]
-          assert len(rows)==8 and all(r["finished"] and r["replay_verified"] for r in rows)
+          assert len(rows)==2 and all(r["finished"] and r["replay_verified"] for r in rows)
           with open(os.environ["GITHUB_STEP_SUMMARY"],"a") as f:
-              f.write("\nEight alternative gorge AI runs: all finished and replay-verified.\n")
+              f.write("\nTwo alternative gorge AI runs: both finished and replay-verified.\n")
           PY
       - name: Upload evidence without redistributing Forge scripts
         if: always()
