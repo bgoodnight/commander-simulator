@@ -286,6 +286,26 @@ def build(output, *, catalog_path=SHARED_CATALOG, name_catalog_path=DEFAULT_NAME
             target.parent.mkdir(parents=True, exist_ok=True)
             shutil.copy2(outcome_source / filename, target)
             outcome_assets.append("game-outcomes/" + filename)
+    # Optional discovery reports are small *derived* artifacts from the
+    # canonical full game observation archives. They are never fitted in the UI.
+    analytics_assets=[]
+    analytics_source=static / "data" / "analytics"
+    if analytics_source.is_dir():
+        known={d["key"]:d["deck_sha256"] for d in decks}
+        for path in sorted(analytics_source.glob("*.json")):
+            report=json.loads(path.read_text(encoding="utf-8"))
+            key=report.get("deck_key")
+            if (report.get("format")!="commander-elastic-net-discovery-v1"
+                    or report.get("schema_version")!=1
+                    or key not in known or report.get("deck_sha256")!=known[key]
+                    or path.name!=key+".json"
+                    or report.get("status") not in ("ready","insufficient_data")
+                    or not isinstance(report.get("findings"),list)):
+                raise ValueError("Invalid or mismatched statistical discovery report")
+            dest=output / "analytics" / path.name
+            dest.parent.mkdir(parents=True,exist_ok=True)
+            shutil.copy2(path,dest)
+            analytics_assets.append("analytics/"+path.name)
     # Results are precomputed separately and must match the exported deck revisions.
     batches = json.loads((static / "data" / "bounded-batches.json").read_text(encoding="utf-8"))
     for key, batch in batches["decks"].items():
@@ -313,7 +333,7 @@ def build(output, *, catalog_path=SHARED_CATALOG, name_catalog_path=DEFAULT_NAME
                                       "app.js", "results_insights.js", "brackets.js", "replay.js", "insight_explorer.js", "insight_catalog.js", "game_outcomes.js", "style.css", "game-changers.json",
                                       *(f"bounded-runs-{key}.json" for key in batches["decks"]),
                                       *(f"simulation-data/{relative}" for relative in archive_files),
-                                      *replay_assets, *outcome_assets)},
+                                      *replay_assets, *outcome_assets, *analytics_assets)},
         "note": "Six canonical decks, two verified physical trials, and one exact but unverified owned source list; observations are per verified deck only.",
     }
     write_json("build-manifest.json", manifest)

@@ -135,6 +135,8 @@ jobs:
           pattern: observations-*-${{ github.sha }}
           path: dist/incoming-observations
           merge-multiple: true
+      - name: Install offline analysis dependency
+        run: python -m pip install "scikit-learn>=1.5,<1.9"
       - name: Validate complete observations and compress for immutable release
         env:
           EXPECTED_SEEDS: ${{ github.event_name == 'pull_request' && '1' || inputs.seeds }}
@@ -146,6 +148,17 @@ jobs:
           mkdir -p dist/observation-archive
           for file in dist/incoming-observations/*.jsonl; do
             gzip -c -9 "$file" > "dist/observation-archive/$(basename "$file").gz"
+          done
+      - name: Build seed-grouped elastic-net discovery reports
+        run: |
+          mkdir -p dist/analytics dist/discovery-input
+          for deck in magnus_premium magnus_budget wretched_ranks mortarion_current mortarion_ideal necron_dynasties magnus_physical_trial mortarion_physical_final; do
+            mkdir -p "dist/discovery-input/$deck"
+            cp dist/incoming-observations/"$deck"-*.jsonl "dist/discovery-input/$deck/"
+            python tools/discover_game_signals.py \
+              --source "dist/discovery-input/$deck" \
+              --output "dist/analytics/$deck.json" \
+              --engine-commit "${{ github.sha }}"
           done
       - name: Verify published provenance and static-page compatibility
         run: |
@@ -166,7 +179,9 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: full-game-observations-${{ github.sha }}
-          path: dist/observation-archive/*.gz
+          path: |
+            dist/observation-archive/*.gz
+            dist/analytics/*.json
           if-no-files-found: error
           retention-days: 90
       - name: Keep a downloadable, verified backup
@@ -184,7 +199,7 @@ jobs:
           # Every completed run gets its own immutable GitHub Release asset
           # before the single live Pages manifest is replaced.
           TAG="modeled-games-${{ github.run_id }}-${{ github.run_attempt }}"
-          gh release create "$TAG" dist/published-game-outcomes/*.json dist/observation-archive/*.gz \
+          gh release create "$TAG" dist/published-game-outcomes/*.json dist/observation-archive/*.gz dist/analytics/*.json \
             --target "${{ github.sha }}" \
             --title "Modeled simulations · ${{ github.sha }}" \
             --notes "Verified source commit ${{ github.sha }}; workflow run ${{ github.run_id }}. Immutable historical batch. The live Deck Lab displays only the most recently promoted manifest." \
@@ -195,7 +210,8 @@ jobs:
           git fetch origin main
           if ! git diff --quiet HEAD origin/main -- \
             commander_sim/ decklists/ simulator/card_data/ \
-            tools/build_game_outcomes.py tools/validate_game_observations.py \
+            tools/build_game_outcomes.py tools/discover_game_signals.py \
+            tools/validate_game_observations.py \
             tools/publish_game_outcomes.py \
             .github/workflows/publish-game-outcomes.yml; then
             echo "Simulator or publishing code changed during batch; rerun on latest main."
@@ -204,9 +220,11 @@ jobs:
           git switch -C publish-game-outcomes origin/main
           mkdir -p web/pages/data/game-outcomes
           rsync -a --delete dist/published-game-outcomes/ web/pages/data/game-outcomes/
+          mkdir -p web/pages/data/analytics
+          rsync -a --delete dist/analytics/ web/pages/data/analytics/
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git add -A web/pages/data/game-outcomes/
+          git add -A web/pages/data/game-outcomes/ web/pages/data/analytics/
           if ! git diff --cached --quiet; then
             git commit -m "Publish validated long-game outcomes from ${{ github.sha }}"
             git push origin HEAD:main

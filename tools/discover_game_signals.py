@@ -281,12 +281,17 @@ def main(argv=None):
     parser.add_argument("--landmark",type=int,default=0)
     parser.add_argument("--min-support",type=int,default=8)
     parser.add_argument("--bootstrap",type=int,default=16)
+    parser.add_argument("--engine-commit",default=None)
     args=parser.parse_args(argv)
     if args.landmark<0 or args.min_support<2 or args.bootstrap<1:
         parser.error("Nonnegative landmark and positive support/bootstrap required")
     rows=read_observations(args.source)
     report=analyze(rows,landmark=args.landmark,
                    min_support=args.min_support,bootstrap=args.bootstrap)
+    if args.engine_commit is not None:
+        if len(args.engine_commit)!=40 or any(c not in "0123456789abcdef" for c in args.engine_commit):
+            parser.error("Engine commit must be a 40-character Git SHA")
+        report["engine_commit"]=args.engine_commit
     args.output.parent.mkdir(parents=True,exist_ok=True)
     args.output.write_text(json.dumps(report,sort_keys=True,indent=2)+"\n",
                            encoding="utf-8")
