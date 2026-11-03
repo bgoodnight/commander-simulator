@@ -1,0 +1,393 @@
+{
+  "causes": {
+    "burn": 5,
+    "combat": 152,
+    "empty_library": 1,
+    "persistent_finisher": 19,
+    "resolved_combo": 44,
+    "spell_burst": 4,
+    "turn_limit": 11
+  },
+  "completed": 225,
+  "format": "four-active-abstract-calibration-v1",
+  "games": 236,
+  "limitations": [
+    "No printed-card accuracy; deck entries are synthetic 99-card action categories",
+    "No real physical Commander decks are injected; this tests four-seat AI policies only",
+    "The old v5 rules engine has simplified generic mana, stack and combat",
+    "Mirror equality tests seat bias, not strategy parity; archetype parity is diagnostic, not forced",
+    "Early-terminated games do not contribute later-round development observations"
+  ],
+  "median_completion_round": 19,
+  "median_development_by_role": {
+    "aggro": {
+      "round_10_combo": 0,
+      "round_10_creatures": 1,
+      "round_10_engines": 0,
+      "round_10_hand": 1,
+      "round_10_power": 4,
+      "round_10_public_threat": 12.4,
+      "round_10_sources": 7,
+      "round_3_combo": 0.0,
+      "round_3_creatures": 1.0,
+      "round_3_engines": 0.0,
+      "round_3_hand": 5.0,
+      "round_3_power": 3.0,
+      "round_3_public_threat": 9.2,
+      "round_3_sources": 3.0,
+      "round_5_combo": 0.0,
+      "round_5_creatures": 1.0,
+      "round_5_engines": 0.0,
+      "round_5_hand": 3.5,
+      "round_5_power": 4.0,
+      "round_5_public_threat": 10.850000000000001,
+      "round_5_sources": 4.0,
+      "round_8_combo": 0.0,
+      "round_8_creatures": 1.0,
+      "round_8_engines": 0.0,
+      "round_8_hand": 2.0,
+      "round_8_power": 4.0,
+      "round_8_public_threat": 11.0,
+      "round_8_sources": 6.0
+    },
+    "combo": {
+      "round_10_combo": 1,
+      "round_10_creatures": 2,
+      "round_10_engines": 2,
+      "round_10_hand": 3,
+      "round_10_power": 3,
+      "round_10_public_threat": 22.3,
+      "round_10_sources": 11,
+      "round_3_combo": 0.0,
+      "round_3_creatures": 0.0,
+      "round_3_engines": 0.0,
+      "round_3_hand": 6.0,
+      "round_3_power": 0.0,
+      "round_3_public_threat": 8.05,
+      "round_3_sources": 4.0,
+      "round_5_combo": 0.0,
+      "round_5_creatures": 1.0,
+      "round_5_engines": 1.0,
+      "round_5_hand": 5.0,
+      "round_5_power": 1.0,
+      "round_5_public_threat": 13.25,
+      "round_5_sources": 6.0,
+      "round_8_combo": 1.0,
+      "round_8_creatures": 1.5,
+      "round_8_engines": 2.0,
+      "round_8_hand": 4.0,
+      "round_8_power": 3.0,
+      "round_8_public_threat": 19.3,
+      "round_8_sources": 9.0
+    },
+    "control": {
+      "round_10_combo": 0,
+      "round_10_creatures": 1,
+      "round_10_engines": 1,
+      "round_10_hand": 2,
+      "round_10_power": 1,
+      "round_10_public_threat": 16.4,
+      "round_10_sources": 11,
+      "round_3_combo": 0.0,
+      "round_3_creatures": 0.0,
+      "round_3_engines": 0.0,
+      "round_3_hand": 6.0,
+      "round_3_power": 0.0,
+      "round_3_public_threat": 8.1,
+      "round_3_sources": 4.0,
+      "round_5_combo": 0.0,
+      "round_5_creatures": 1.0,
+      "round_5_engines": 1.0,
+      "round_5_hand": 5.0,
+      "round_5_power": 1.0,
+      "round_5_public_threat": 12.5,
+      "round_5_sources": 6.0,
+      "round_8_combo": 0.0,
+      "round_8_creatures": 1.0,
+      "round_8_engines": 1.0,
+      "round_8_hand": 2.0,
+      "round_8_power": 3.0,
+      "round_8_public_threat": 15.8,
+      "round_8_sources": 9.0
+    },
+    "midrange": {
+      "round_10_combo": 0,
+      "round_10_creatures": 1,
+      "round_10_engines": 0,
+      "round_10_hand": 1,
+      "round_10_power": 4,
+      "round_10_public_threat": 14.6,
+      "round_10_sources": 10,
+      "round_3_combo": 0.0,
+      "round_3_creatures": 1.0,
+      "round_3_engines": 0.0,
+      "round_3_hand": 5.0,
+      "round_3_power": 2.0,
+      "round_3_public_threat": 9.1,
+      "round_3_sources": 4.0,
+      "round_5_combo": 0.0,
+      "round_5_creatures": 2.0,
+      "round_5_engines": 0.0,
+      "round_5_hand": 4.0,
+      "round_5_power": 5.0,
+      "round_5_public_threat": 13.35,
+      "round_5_sources": 5.0,
+      "round_8_combo": 0.0,
+      "round_8_creatures": 1.0,
+      "round_8_engines": 0.0,
+      "round_8_hand": 2.0,
+      "round_8_power": 5.0,
+      "round_8_public_threat": 13.75,
+      "round_8_sources": 8.0
+    },
+    "ramp_stompy": {
+      "round_10_combo": 0.0,
+      "round_10_creatures": 1.0,
+      "round_10_engines": 1.0,
+      "round_10_hand": 1.0,
+      "round_10_power": 5.0,
+      "round_10_public_threat": 16.8,
+      "round_10_sources": 11.0,
+      "round_3_combo": 0.0,
+      "round_3_creatures": 0.0,
+      "round_3_engines": 0.0,
+      "round_3_hand": 6.0,
+      "round_3_power": 0.0,
+      "round_3_public_threat": 7.5,
+      "round_3_sources": 4.0,
+      "round_5_combo": 0.0,
+      "round_5_creatures": 1.0,
+      "round_5_engines": 0.0,
+      "round_5_hand": 4.0,
+      "round_5_power": 4.0,
+      "round_5_public_threat": 14.8,
+      "round_5_sources": 6.5,
+      "round_8_combo": 0.0,
+      "round_8_creatures": 1.0,
+      "round_8_engines": 0.0,
+      "round_8_hand": 2.0,
+      "round_8_power": 5.5,
+      "round_8_public_threat": 15.95,
+      "round_8_sources": 10.0
+    },
+    "spellslinger": {
+      "round_10_combo": 0.0,
+      "round_10_creatures": 2.5,
+      "round_10_engines": 2.0,
+      "round_10_hand": 2.0,
+      "round_10_power": 5.5,
+      "round_10_public_threat": 22.75,
+      "round_10_sources": 11.0,
+      "round_3_combo": 0.0,
+      "round_3_creatures": 0.0,
+      "round_3_engines": 0.0,
+      "round_3_hand": 6.0,
+      "round_3_power": 0.0,
+      "round_3_public_threat": 8.9,
+      "round_3_sources": 4.0,
+      "round_5_combo": 0.0,
+      "round_5_creatures": 1.0,
+      "round_5_engines": 1.0,
+      "round_5_hand": 5.0,
+      "round_5_power": 2.0,
+      "round_5_public_threat": 14.899999999999999,
+      "round_5_sources": 6.0,
+      "round_8_combo": 0.0,
+      "round_8_creatures": 2.0,
+      "round_8_engines": 2.0,
+      "round_8_hand": 3.5,
+      "round_8_power": 5.0,
+      "round_8_public_threat": 20.1,
+      "round_8_sources": 9.0
+    },
+    "tokens": {
+      "round_10_combo": 0.0,
+      "round_10_creatures": 2.0,
+      "round_10_engines": 1.0,
+      "round_10_hand": 1.0,
+      "round_10_power": 5.0,
+      "round_10_public_threat": 16.700000000000003,
+      "round_10_sources": 9.0,
+      "round_3_combo": 0.0,
+      "round_3_creatures": 1.0,
+      "round_3_engines": 0.0,
+      "round_3_hand": 6.0,
+      "round_3_power": 2.0,
+      "round_3_public_threat": 9.4,
+      "round_3_sources": 3.0,
+      "round_5_combo": 0.0,
+      "round_5_creatures": 2.0,
+      "round_5_engines": 1.0,
+      "round_5_hand": 4.0,
+      "round_5_power": 4.5,
+      "round_5_public_threat": 15.149999999999999,
+      "round_5_sources": 5.0,
+      "round_8_combo": 0.0,
+      "round_8_creatures": 3.0,
+      "round_8_engines": 1.0,
+      "round_8_hand": 2.0,
+      "round_8_power": 6.0,
+      "round_8_public_threat": 17.799999999999997,
+      "round_8_sources": 8.0
+    }
+  },
+  "mirror_seat_results": {
+    "aggro": {
+      "exposure_0": 20,
+      "exposure_1": 20,
+      "exposure_2": 20,
+      "exposure_3": 20,
+      "win_0": 4,
+      "win_1": 3,
+      "win_2": 4,
+      "win_3": 9
+    },
+    "combo": {
+      "exposure_0": 20,
+      "exposure_1": 20,
+      "exposure_2": 20,
+      "exposure_3": 20,
+      "win_0": 3,
+      "win_1": 6,
+      "win_2": 5,
+      "win_3": 6
+    },
+    "control": {
+      "exposure_0": 20,
+      "exposure_1": 20,
+      "exposure_2": 20,
+      "exposure_3": 20,
+      "win_0": 7,
+      "win_1": 3,
+      "win_2": 4,
+      "win_3": 1
+    },
+    "midrange": {
+      "exposure_0": 20,
+      "exposure_1": 20,
+      "exposure_2": 20,
+      "exposure_3": 20,
+      "win_0": 7,
+      "win_1": 6,
+      "win_2": 3,
+      "win_3": 4
+    },
+    "ramp_stompy": {
+      "exposure_0": 20,
+      "exposure_1": 20,
+      "exposure_2": 20,
+      "exposure_3": 20,
+      "win_0": 2,
+      "win_1": 7,
+      "win_2": 6,
+      "win_3": 5
+    },
+    "spellslinger": {
+      "exposure_0": 20,
+      "exposure_1": 20,
+      "exposure_2": 20,
+      "exposure_3": 20,
+      "win_0": 6,
+      "win_2": 5,
+      "win_3": 9
+    },
+    "tokens": {
+      "exposure_0": 20,
+      "exposure_1": 20,
+      "exposure_2": 20,
+      "exposure_3": 20,
+      "win_0": 7,
+      "win_1": 6,
+      "win_2": 5,
+      "win_3": 2
+    }
+  },
+  "parameters": {
+    "games_per_mirror": 20,
+    "games_per_rotation": 4,
+    "max_rounds": 30,
+    "seed": 20261103
+  },
+  "provenance": "legacy simulator/v5_four_player; all seats are synthetic archetypes",
+  "wins_by_archetype": {
+    "aggro": {
+      "exposures": 176,
+      "win_rate": 0.1932,
+      "wins": 34
+    },
+    "combo": {
+      "exposures": 176,
+      "win_rate": 0.25,
+      "wins": 44
+    },
+    "control": {
+      "exposures": 176,
+      "win_rate": 0.2273,
+      "wins": 40
+    },
+    "midrange": {
+      "exposures": 176,
+      "win_rate": 0.267,
+      "wins": 47
+    },
+    "ramp_stompy": {
+      "exposures": 80,
+      "win_rate": 0.25,
+      "wins": 20
+    },
+    "spellslinger": {
+      "exposures": 80,
+      "win_rate": 0.25,
+      "wins": 20
+    },
+    "tokens": {
+      "exposures": 80,
+      "win_rate": 0.25,
+      "wins": 20
+    }
+  },
+  "wins_by_seat": {
+    "0": {
+      "exposures": 236,
+      "win_rate": 0.25,
+      "wins": 59
+    },
+    "1": {
+      "exposures": 236,
+      "win_rate": 0.1949,
+      "wins": 46
+    },
+    "2": {
+      "exposures": 236,
+      "win_rate": 0.2542,
+      "wins": 60
+    },
+    "3": {
+      "exposures": 236,
+      "win_rate": 0.2542,
+      "wins": 60
+    }
+  },
+  "wins_by_turn_order": {
+    "0": {
+      "exposures": 236,
+      "win_rate": 0.2203,
+      "wins": 52
+    },
+    "1": {
+      "exposures": 236,
+      "win_rate": 0.2034,
+      "wins": 48
+    },
+    "2": {
+      "exposures": 236,
+      "win_rate": 0.2627,
+      "wins": 62
+    },
+    "3": {
+      "exposures": 236,
+      "win_rate": 0.2669,
+      "wins": 63
+    }
+  }
+}
