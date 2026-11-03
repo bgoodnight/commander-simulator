@@ -855,9 +855,12 @@ test('turn background uses first named card and enemy activity has one condensed
       lookupRecordedCard:name=>({name,art:'https://example.com/'+name.replaceAll(' ','-')+'.jpg'})
     });
     const turns=walk(reviewer).filter(n=>n.className==='insight-turn-row');
-    const cover=turns[1].children.find(n=>n.className==='insight-turn-cover');
-    assert.ok(cover);
+    const header=turns[1].children.find(n=>n.tag==='summary');
+    assert.ok(header,'turn header must render while the row is closed');
+    const cover=header.children.find(n=>n.className==='insight-turn-cover');
+    assert.ok(cover,'art belongs inside the collapsed summary');
     assert.equal(cover.src,'https://example.com/Swamp.jpg');
+    assert.equal(turns[1].open,false);
     const firstBody=walk(turns[1]);
     const rest=firstBody.filter(n=>n.className==='insight-rest-of-turn');
     assert.equal(rest.length,1);
@@ -991,7 +994,7 @@ test('results hero is compact with proportions below percentages and cohort foot
   assert.match(source,/Seeds "/);
   assert.ok(!app.includes('intro.appendChild(el("h1","Simulation Results"))'));
   assert.match(css,/insight-turn-row \.insight-turn-cover/);
-  assert.match(css,/opacity:\.68/);
+  assert.match(css,/opacity:\.95/);
 });
 
 test('compact insight density retains three scrollable ranks and no duplicated expanded mana',()=>{
@@ -1007,4 +1010,13 @@ test('compact insight density retains three scrollable ranks and no duplicated e
   assert.match(css,/\.insight-featured-bars\{grid-auto-rows:43px;max-height:137px/);
   assert.match(css,/\.insight-featured-panel \.game-outcome-summary\{min-height:86px/);
   assert.match(css,/\.insight-featured-card-art\{width:min\(100%,138px\)/);
+});
+
+test('collapsed turn art and compact insight height have foreground-safe styles',()=>{
+  const js=fs.readFileSync('web/pages/game_outcomes.js','utf8');
+  const css=fs.readFileSync('web/pages/style.css','utf8');
+  assert.match(js,/if\(cover\)summary\.appendChild\(cover\)/);
+  assert.match(css,/\.insight-turn-row \.insight-turn-row-summary::before/);
+  assert.match(css,/\.insight-turn-row \.insight-turn-cover\{/);
+  assert.match(css,/\.insight-featured-panel \.game-outcome-summary\{min-height:64px\}/);
 });
