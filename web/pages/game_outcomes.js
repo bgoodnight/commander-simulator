@@ -915,48 +915,70 @@
   function cardPerformancePanel(kind,ranked,coverage,groups,options,onReviewRun){
     const winner=ranked[0];
     if(!winner)return null;
-    const isHeld=kind==="longest",isCount=kind==="seen"||
-      kind==="unplayed"||kind==="played"||
-      ["creature","instant","spell","artifact","enchantment","land"].includes(kind);
-    const headline=isHeld?nfmt(winner.heldMedian)+" rounds":
-      isCount?winner.games+"/"+coverage+" games":
-      nfmt(winner.eventCount)+" total";
+    const isHeld=kind==="longest",isCount=["seen","unplayed","played",
+      "creature","instant","spell","artifact","enchantment","land"].includes(kind);
+    const displayValue=item=>isHeld?nfmt(item.heldMedian)+" rounds":
+      isCount?item.games+"/"+coverage+" games":
+      nfmt(item.eventCount)+" total";
+    const cardData=item=>options.lookupRecordedCard?.(item.name)||null;
     const panel=card(insightCategoryLabel(kind),"Card insight",
-      headline,winner.name+" · "+winner.games+" games",body=>{
-        const sub=create("p","micro",
-          isHeld?"Ranked by average rounds in hand when seen; median displayed.":
-          "Select a card for its distribution and recorded turns.");
+      displayValue(winner),winner.name,body=>{
+        const sub=create("p","micro",isHeld?
+          "Ranked by mean rounds held when seen; the displayed duration is the median.":
+          "Select a bar to explore that card's stats and recorded turns.");
         body.appendChild(sub);
-        const choices=create("div","insight-card-leaderboard");
-        const detail=create("div","insight-card-drilldown");
-        body.append(choices,detail);
+        const compare=create("div","insight-featured-compare");
+        const featured=create("div","insight-featured-selected");
+        const ranking=create("div","insight-featured-ranking");
+        compare.append(featured,ranking);body.appendChild(compare);
+        const stats=create("div","insight-featured-stats");
+        const evidence=create("div","insight-featured-evidence");
+        body.append(stats,evidence);
+        const bars=[];
+        const maxScore=Math.max(1,...ranked.slice(0,10).map(item=>item.score));
         function select(item){
-          for(const button of choices.children){
-            button.setAttribute("aria-pressed",String(button.dataset.card===item.name));
+          // The summary and the full-card preview always reflect the exact
+          // selected contender, never a fixed image of the original winner.
+          updateSummary(item);
+          for(const button of bars)
+            button.setAttribute("aria-pressed",
+              String(button.dataset.card===item.name));
+          featured.replaceChildren();stats.replaceChildren();
+          evidence.replaceChildren();
+          const printed=cardData(item);
+          const art=printed?.image||printed?.art;
+          if(art){
+            const imageButton=textButton("","insight-featured-card-art",
+              ()=>options.onOpenRecordedCard?.(item.name));
+            imageButton.setAttribute("aria-label","View "+item.name+" card details");
+            const image=create("img",null);
+            image.src=art;image.alt=item.name+" card artwork";
+            image.loading="lazy";image.referrerPolicy="no-referrer";
+            imageButton.appendChild(image);
+            featured.appendChild(imageButton);
           }
-          detail.replaceChildren();
-          const cardName=create("strong","insight-selected-name",item.name);
-          const openCard=textButton("View card ↗","game-outcome-recorded-card",
-            ()=>options.onOpenRecordedCard?.(item.name));
-          detail.append(cardName,openCard);
-          const row=create("div","game-outcome-insight-grid");
-          row.append(
+          featured.appendChild(create("strong","insight-featured-card-name",item.name));
+          const cost=manaCost(item);
+          if(cost)featured.appendChild(cost);
+          featured.appendChild(textButton("View card details ↗",
+            "game-outcome-recorded-card",
+            ()=>options.onOpenRecordedCard?.(item.name)));
+          const tileSet=create("div","game-outcome-insight-grid");
+          tileSet.append(
             metricTile(isHeld?"Median rounds held":"Median per game",
               isHeld?nfmt(item.heldMedian):nfmt(item.median),
               isHeld?item.seen.size+" games seen":coverage+" games"),
             metricTile("Games recorded",item.games,coverage+" games"),
-            metricTile("Total recorded",item.eventCount,
-              "All relevant actions"),
+            metricTile("Total recorded",item.eventCount,"Relevant actions"),
             metricTile("Median event turn",quantile(item.turns,.5),
-              "Where individually recorded")
-          );
-          detail.appendChild(row);
+              "When individually recorded"));
+          stats.appendChild(tileSet);
           const samples=[...item.events].sort((a,b)=>
             a.turn-b.turn||a.seed-b.seed).slice(0,12);
+          const examples=create("div","insight-card-examples");
           if(samples.length){
-            detail.appendChild(create("strong","insight-evidence-heading",
+            evidence.appendChild(create("strong","insight-evidence-heading",
               "Jump to recorded turn"));
-            const examples=create("div","insight-card-examples");
             for(const hit of samples){
               const parent=groups.find(g=>g.runs.includes(hit.run));
               if(!parent)continue;
@@ -965,45 +987,82 @@
                 "game-outcome-review-link",
                 ()=>onReviewRun(parent.id,hit.seed,hit.turn)));
             }
-            detail.appendChild(examples);
-          }else if(kind==="unplayed"||kind==="longest"||kind==="seen"){
-            // The corresponding turn can still be inspected when there is
-            // no named play event, using the earliest recorded hand.
-            const examples=create("div","insight-card-examples");
+          }else if(["unplayed","longest","seen"].includes(kind)){
+            evidence.appendChild(create("strong","insight-evidence-heading",
+              "Inspect a recorded hand"));
             for(const matchingRun of [...item.seen].slice(0,8)){
               const parent=groups.find(g=>g.runs.includes(matchingRun));
-              if(parent)examples.appendChild(textButton(
+              if(!parent)continue;
+              examples.appendChild(textButton(
                 "Seed "+matchingRun.seed+" · Inspect hand",
                 "game-outcome-review-link",
                 ()=>onReviewRun(parent.id,matchingRun.seed,1)));
             }
-            detail.appendChild(examples);
           }
+          if(examples.children.length)evidence.appendChild(examples);
         }
-        for(const item of ranked.slice(0,8)){
-          const row=textButton("","insight-card-rank",()=>select(item));
-          row.dataset.card=item.name;
-          const name=create("span","insight-card-rank-name",item.name);
-          const count=create("strong",null,
-            isHeld?nfmt(item.heldMedian)+" turns":
-              isCount?item.games+" games":nfmt(item.eventCount));
-          const bar=create("span","insight-card-rank-meter");
-          const fill=create("i",null);
-          fill.style.width=(Math.max(1,100*item.score/Math.max(1,winner.score)))+"%";
-          bar.appendChild(fill);
-          row.append(name,count,bar);choices.appendChild(row);
+        ranking.append(
+          create("strong","insight-featured-chart-title","Top cards"),
+          create("p","micro",
+            isHeld?"Mean rounds held sets bar length; median shown beside each card.":
+            "Bars compare recorded "+(isCount?"games":"totals")+" for this category."));
+        const barList=create("div","insight-featured-bars");
+        ranking.appendChild(barList);
+        for(const item of ranked.slice(0,10)){
+          const button=textButton("","insight-featured-bar",
+            ()=>select(item));
+          button.dataset.card=item.name;
+          button.setAttribute("aria-label","Show "+item.name+" performance");
+          button.setAttribute("aria-pressed","false");
+          const caption=create("span","insight-featured-bar-caption");
+          caption.append(create("span",null,item.name),
+            create("strong",null,
+              isHeld?nfmt(item.heldMedian)+" rounds":
+              isCount?item.games+" games":nfmt(item.eventCount)));
+          const track=create("span","insight-featured-bar-track");
+          const fill=create("span","insight-featured-bar-fill");
+          fill.style.width=Math.max(1,100*item.score/maxScore)+"%";
+          track.appendChild(fill);
+          button.append(caption,track);barList.appendChild(button);
+          bars.push(button);
         }
         select(winner);
       });
-    panel.className+=" insight-card-with-evidence";
-    const art=options.lookupRecordedCard?.(winner.name)?.art;
-    if(art){
-      const summary=panel.children[0];
-      summary.style.backgroundImage=
-        "linear-gradient(90deg, rgba(17,23,28,.96),rgba(17,23,28,.70)),url("+JSON.stringify(art)+")";
-      summary.style.backgroundSize="cover";
-      summary.style.backgroundPosition="right center";
+    panel.className+=" insight-card-with-evidence insight-featured-panel";
+    const summary=panel.children[0];
+    const copy=summary.children[0];
+    const title=create("strong","game-outcome-title",insightCategoryLabel(kind));
+    const subtitle=create("span","insight-head-subtitle");
+    const featuredName=create("span","insight-head-name",winner.name);
+    const costSlot=create("span","insight-head-mana");
+    subtitle.append(featuredName,costSlot);
+    const number=create("span","game-outcome-number",displayValue(winner));
+    copy.replaceChildren(create("span","board-kicker","Card insight"),
+      title,subtitle,number,create("span","board-open","Compare cards and evidence →"));
+    const cover=create("img","insight-featured-cover");
+    cover.alt="";cover.loading="lazy";cover.referrerPolicy="no-referrer";
+    summary.appendChild(cover);
+    function manaCost(item){
+      const value=cardData(item)?.mana_cost;
+      if(!value)return null;
+      const holder=create("span","insight-head-mana");
+      const rendered=options.renderMana?.(value);
+      if(rendered)holder.appendChild(rendered);
+      else holder.textContent=value;
+      return holder;
     }
+    function updateSummary(item){
+      featuredName.textContent=item.name;
+      number.textContent=displayValue(item);
+      costSlot.replaceChildren();
+      const cost=manaCost(item);
+      if(cost)for(const child of cost.children.length?cost.children:[cost])
+        costSlot.appendChild(child);
+      const art=cardData(item)?.art||cardData(item)?.image;
+      if(art){cover.src=art;cover.hidden=false}
+      else{cover.removeAttribute("src");cover.hidden=true}
+    }
+    updateSummary(winner);
     return panel;
   }
   function readablePredictor(feature){
