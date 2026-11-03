@@ -1,8 +1,13 @@
 name: Stage and review 500 Mortarion modeled games
 
-# Run the full batch explicitly after the pilot / rules baseline is approved.
-# Workflow edits should not silently trigger 500 new games on main.
+# One-time manually authorized 500-game batch on this isolated branch.
+# Only edits to this workflow on the batch branch trigger the run; main is untouched.
 on:
+  push:
+    branches:
+      - batch/mortarion-500-observation-rerun-20261102
+    paths:
+      - ".github/workflows/mortarion-500-stage.yml"
   pull_request:
     paths:
       - ".github/workflows/mortarion-500-stage.yml"
@@ -182,45 +187,22 @@ jobs:
             dist/analytics/*.json
           if-no-files-found: error
           retention-days: 90
-      - name: Archive verified simulation release permanently
-        if: github.event_name != 'pull_request' && github.ref == 'refs/heads/main'
-        env:
-          GH_TOKEN: ${{ github.token }}
+      - name: Stage validated data exclusively on this isolated branch
+        if: github.ref == 'refs/heads/batch/mortarion-500-observation-rerun-20261102'
         run: |
-          # Every completed run gets its own immutable GitHub Release asset
-          # before the single live Pages manifest is replaced.
-          TAG="modeled-games-${{ github.run_id }}-${{ github.run_attempt }}"
-          gh release create "$TAG" dist/published-game-outcomes/*.json dist/observation-archive/*.gz dist/analytics/*.json \
-            --target "${{ github.sha }}" \
-            --title "Modeled simulations · ${{ github.sha }}" \
-            --notes "Verified source commit ${{ github.sha }}; workflow run ${{ github.run_id }}. Immutable historical batch. The live Deck Lab displays only the most recently promoted manifest." \
-            --latest=false
-      - name: Publish only this Mortarion cohort
-        run: |
-          git fetch origin main
-          if ! git diff --quiet HEAD origin/main -- \
-            commander_sim/ decklists/ simulator/card_data/ \
-            tools/build_game_outcomes.py tools/discover_game_signals.py \
-            tools/validate_game_observations.py \
-            tools/review_game_outcomes.py \
-            tools/publish_game_outcomes.py \
-            .github/workflows/mortarion-500-stage.yml; then
-            echo "Engine or deck changed during this batch; refusing stale publication."
-            exit 1
+          git fetch origin batch/mortarion-500-observation-rerun-20261102
+          if [ "$(git rev-parse HEAD)" != "$(git rev-parse origin/batch/mortarion-500-observation-rerun-20261102)" ]; then
+            echo "Batch branch moved; preserving artifacts without pushing stale files."
+            exit 0
           fi
-          git switch -C mortarion-outcome-release origin/main
-          mkdir -p web/pages/data/game-outcomes
-          rsync -a --delete dist/published-game-outcomes/ web/pages/data/game-outcomes/
-          mkdir -p web/pages/data/analytics
-          rsync -a --delete dist/analytics/ web/pages/data/analytics/
-          git config user.name "github-actions[bot]"
-          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git add -A web/pages/data/game-outcomes/ web/pages/data/analytics/
+          mkdir -p testdata/mortarion-500-rerun/outcomes testdata/mortarion-500-rerun/analytics testdata/mortarion-500-rerun/review
+          cp dist/published-game-outcomes/*.json testdata/mortarion-500-rerun/outcomes/
+          cp dist/analytics/*.json testdata/mortarion-500-rerun/analytics/
+          cp dist/review/*.json dist/review/*.md testdata/mortarion-500-rerun/review/
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add -A testdata/mortarion-500-rerun/
           if ! git diff --cached --quiet; then
-            git commit -m "Publish reviewed Mortarion 500-game outcome cohort"
-            git push origin HEAD:main
+            git commit -m 'Stage reviewed 500-game observation-rich Mortarion batch'
+            git push origin HEAD:batch/mortarion-500-observation-rerun-20261102
           fi
-      - name: Trigger verified static site publisher
-        env:
-          GH_TOKEN: ${{ github.token }}
-        run: gh workflow run deck-lab-pages.yml --ref main
