@@ -83,6 +83,54 @@ class CombatDamageTests(unittest.TestCase):
         self.assertIsNone(self.hit(fake))
         self.assertFalse(any(o.token for o in self.k.on_battlefield()))
 
+    def test_tomb_blade_sacrifices_one_opponent_creature(self):
+        from commander_sim.kernel_life import KernelLife
+        from commander_sim.reviewed_death_effects import ReviewedDeathEngine
+        blade = self.add("Tomb Blade")
+        a = self.add("Opposing creature A", owner=1)
+        b = self.add("Opposing creature B", owner=1)
+        life = KernelLife(self.k)
+        deaths = ReviewedDeathEngine(self.z, life, self.catalog)
+        out = self.hit(blade, life=life, death_engine=deaths)
+        self.assertEqual(out.sacrificed_ids, (a,))
+        self.assertNotIn(a, self.k.objects)
+        self.assertIn(b, self.k.objects)
+        self.assertEqual(out.life_lost, 0)
+        self.assertTrue(self.z.assert_consistent())
+
+    def test_tomb_blade_player_can_choose_life_loss_instead(self):
+        from commander_sim.kernel_life import KernelLife
+        blade = self.add("Tomb Blade")
+        self.add("Opposing creature A", owner=1)
+        self.add("Opposing creature B", owner=1)
+        life = KernelLife(self.k)
+        out = self.hit(blade, life=life,
+                       choose_sacrifice=lambda seat, options: None)
+        self.assertEqual(out.sacrificed_ids, ())
+        self.assertEqual(out.life_lost, 2)
+        self.assertEqual(life.total(1), 38)
+        self.assertTrue(self.z.assert_consistent())
+
+    def test_tomb_blade_invalid_choice_does_not_mutate_board(self):
+        from commander_sim.kernel_life import KernelLife
+        blade = self.add("Tomb Blade")
+        creature = self.add("Opposing creature", owner=1)
+        life = KernelLife(self.k)
+        with self.assertRaises(ValueError):
+            self.hit(blade, life=life,
+                     choose_sacrifice=lambda seat, options: blade)
+        self.assertIn(creature, self.k.objects)
+        self.assertEqual(life.total(1), 40)
+
+    def test_tomb_blade_no_creatures_means_no_life_loss(self):
+        from commander_sim.kernel_life import KernelLife
+        blade = self.add("Tomb Blade")
+        life = KernelLife(self.k)
+        out = self.hit(blade, life=life)
+        self.assertEqual(out.sacrificed_ids, ())
+        self.assertEqual(out.life_lost, 0)
+        self.assertEqual(life.total(1), 40)
+
     def test_changed_oracle_revision_disables_reviewed_recipe(self):
         raw = dict(self.catalog["Magnus the Red"])
         raw["oracle_text"] = "unreviewed new text"
