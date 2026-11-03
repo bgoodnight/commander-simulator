@@ -1,25 +1,9 @@
-name: Generic provisional import and partial simulation regression
+name: ARCHIVED Python · Generic provisional import and partial simulation regression
+# ARCHIVED: no automatic Python game simulations after gorge-only cutover.
+# Older workflows can be reproduced from the preserved archive branch.
 on:
-  push:
-    branches: [main]
-    paths:
-      - ".github/workflows/provisional-import-audit.yml"
-      - "commander_sim/provisional_import.py"
-      - "commander_sim/provisional_actions.py"
-      - "commander_sim/library_actions.py"
-      - "commander_sim/reviewed_draw_spells.py"
-      - "commander_sim/reviewed_flashback.py"
-      - "commander_sim/reviewed_sacrifice_actions.py"
-      - "tests/test_library_actions.py"
-      - "tools/audit_library_recipes.py"
-      - "commander_sim/early_game_runner.py"
-      - "commander_sim/template_resources.py"
-      - "tests/test_provisional_import.py"
-      - "tools/audit_provisional_import.py"
-      - "tools/run_provisional_four_decks.py"
-      - "commander_sim/deck_lab_api.py"
-      - "tools/import_deck_fixtures.py"
   workflow_dispatch:
+
 permissions:
   contents: read
 jobs:
