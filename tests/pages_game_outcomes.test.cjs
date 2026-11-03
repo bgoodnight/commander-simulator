@@ -1172,3 +1172,15 @@ test('turn summary only shows supported mana colors and hand, not battlefield/gr
   assert.match(css,/\.insight-end-zone/);
   assert.ok(!js.includes('[["▤","hand"],["♟","battlefield"],["◆","graveyard"]]'));
 });
+
+test('recorded colored mana uses shared symbol renderer and distinguishes missing records',()=>{
+  const js=fs.readFileSync('web/pages/game_outcomes.js','utf8');
+  const exporter=fs.readFileSync('tools/build_game_outcomes.py','utf8');
+  assert.match(js,/options\.renderMana\?\.\("\{"\+symbol\+"\}"\)/);
+  assert.match(js,/if\(mana===null\)/);
+  assert.match(js,/insight-mana-unavailable/);
+  assert.match(js,/function manaPips\(target,mana,options\)/);
+  assert.match(exporter,/def recorded_mana_production\(events\)/);
+  assert.match(exporter,/"kind"\) != "mana_source_activation"/);
+  assert.match(exporter,/"mana_produced_by_color":recorded_mana_production/);
+});
