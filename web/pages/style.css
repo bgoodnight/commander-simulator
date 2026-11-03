@@ -1704,3 +1704,30 @@ body:has(#pane-records:not([hidden])) .page-introduction a{font-size:.72rem}
  .insight-seat-life-value{font-size:.76rem}
  .insight-seat-life-delta{font-size:.61rem}
 }
+
+/* Compact card-insight rank list: three visible rows, up to ten scrollable. */
+.insight-featured-bars{grid-auto-rows:64px;max-height:204px;overflow-y:auto;
+  overflow-x:hidden;scrollbar-width:none;overscroll-behavior:contain}
+.insight-featured-bars::-webkit-scrollbar{width:0;height:0;display:none}
+.insight-featured-bar{min-height:0;height:64px;overflow:hidden}
+.insight-featured-bar-caption>span{display:-webkit-box;-webkit-line-clamp:2;
+  -webkit-box-orient:vertical;overflow:hidden}
+.insight-featured-metrics{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px}
+.insight-featured-metric-link{text-align:left;cursor:pointer;color:inherit;font:inherit}
+.insight-featured-metric-link:hover,.insight-featured-metric-link:focus-visible{
+  border-color:#d9bd86;background:#2d4140}
+.insight-featured-metric-link:focus-visible{outline:2px solid #e8c88e;outline-offset:2px}
+.insight-featured-metric-link:disabled{opacity:.6;cursor:default}
+.insight-featured-metric-link:disabled:hover{background:#213535;border-color:#50685d}
+.insight-inline-tracker-compact{margin-top:0;padding:5px 9px;background:transparent;
+  border:0;border-top:1px solid #50655d;border-radius:0}
+.insight-inline-tracker-compact>summary{display:inline-block;font-size:.75rem;
+  font-weight:600;text-decoration:underline;text-underline-offset:3px;
+  text-decoration-color:#d1b47a99}
+.insight-inline-tracker-compact[open]>summary{margin-bottom:7px}
+@media(max-width:720px){
+  .insight-featured-bar{height:64px;min-height:0}
+  .insight-featured-metrics{gap:5px}
+  .insight-featured-metric-link{padding:7px}
+  .insight-featured-metric-link strong{font-size:1.05rem}
+}
