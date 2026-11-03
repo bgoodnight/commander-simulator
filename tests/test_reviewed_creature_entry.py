@@ -36,6 +36,7 @@ class CreatureEntryTests(unittest.TestCase):
         raw=self.catalog[name]
         return self.zones.add(self.C(
             raw["oracle_id"],name,frozenset({"creature"}),
+            subtypes=frozenset(raw["type_line"].split(" — ",1)[1].split()),
             colors=frozenset(raw["colors"]),base_power=int(raw["power"]),
             base_toughness=int(raw["toughness"]),coverage="approx"),seat,zone)
 
