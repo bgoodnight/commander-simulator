@@ -1172,3 +1172,66 @@ test('turn summary only shows supported mana colors and hand, not battlefield/gr
   assert.match(css,/\.insight-end-zone/);
   assert.ok(!js.includes('[["▤","hand"],["♟","battlefield"],["◆","graveyard"]]'));
 });
+
+test('turn summaries and end state use actual mana pips and clickable typed cards',()=>{
+  class Node{
+    constructor(tag){this.tag=tag;this.className='';this.textContent='';
+      this.children=[];this.attributes={};this.style={};this.dataset={};this.events={};this.open=false}
+    append(...items){this.children.push(...items)}
+    appendChild(item){this.children.push(item);return item}
+    replaceChildren(...items){this.children=[...items]}
+    setAttribute(k,v){this.attributes[k]=String(v)}
+    addEventListener(k,handler){this.events[k]=handler}
+    get lastChild(){return this.children.at(-1)}
+    querySelector(selector){
+      if(selector==='.insight-end-zone')return this.children.flatMap(
+        function walk(n){return [n,...n.children.flatMap(walk)]}
+      ).find(n=>n.className==='insight-end-zone')||null;
+      return null;
+    }
+  }
+  const old=global.document;global.document={
+    createElement:tag=>new Node(tag),createElementNS:(_,tag)=>new Node(tag)};
+  const walk=n=>[n,...n.children.flatMap(walk)];
+  try{
+    const run0={...runUnresolved(),opening_hand:['Swamp','Sol Ring'],
+      ui_observations:[
+        {turn:1,hand:['Swamp','Dark Ritual'],battlefield:[
+          'Swamp','Sol Ring','Baleful Strix','Phyrexian Arena'],
+         graveyard:['Dead Card'],exile:[],actions:[],
+         mana_produced_by_color:{B:2,C:2}},
+        {turn:2,hand:[],battlefield:[],graveyard:[],exile:[],actions:[]},
+        {turn:3,hand:[],battlefield:[],graveyard:[],exile:[],actions:[]}
+      ]};
+    const types={'Swamp':'Basic Land — Swamp','Sol Ring':'Artifact',
+      'Baleful Strix':'Artifact Creature — Bird',
+      'Phyrexian Arena':'Enchantment','Dark Ritual':'Instant','Dead Card':'Sorcery'};
+    const root=new Node('main'),reviewer=new Node('section');
+    Outcomes.render(root,[batch([run0])],{
+      deckKey:'necron_dynasties',deckHash:'a'.repeat(64),reviewerRoot:reviewer,
+      lookupRecordedCard:name=>({type_line:types[name]||'',name,
+        art:'https://example.com/card.jpg'}),
+      renderMana:cost=>{const n=new Node('span');n.className='test-mana';
+        n.textContent=cost;return n}
+    });
+    const turn=walk(reviewer).find(n=>n.className==='insight-turn-row'&&
+      walk(n).some(x=>x.textContent==='Turn 1'));
+    assert.ok(turn);
+    const summary=turn.children.find(n=>n.tag==='summary');
+    assert.ok(walk(summary).some(n=>n.textContent==='▤ Hand 2'));
+    assert.ok(walk(summary).some(n=>n.textContent==='{B}'));
+    assert.ok(walk(summary).some(n=>n.textContent==='{C}'));
+    assert.ok(!walk(summary).some(n=>String(n.textContent).includes('◆ 1')));
+    const zones=walk(turn).filter(n=>n.className==='insight-end-zone');
+    const labels=zones.map(z=>walk(z.children[0]).map(n=>n.textContent).join(''));
+    for(const text of ['Hand · 2','Creatures · 1','Lands · 1',
+      'Artifacts · 2','Enchantments · 1','Graveyard · 1'])
+      assert.ok(labels.some(x=>x.includes(text)),text);
+    const hand=walk(summary).find(n=>n.className.includes('insight-hand-shortcut'));
+    hand.onclick();
+    assert.equal(turn.open,true);
+    assert.equal(zones[0].open,true);
+    assert.ok(walk(zones[0]).some(n=>n.tag==='button'&&
+      String(n.attributes['aria-label']).includes('Dark Ritual')));
+  }finally{global.document=old}
+});
