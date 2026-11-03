@@ -1628,3 +1628,37 @@ body:has(#pane-records:not([hidden])) .page-introduction a{font-size:.72rem}
   .insight-turn-metrics{width:100%}
   .insight-turn-activity{min-width:0}
 }
+
+/* A single, muted card-art wash behind each compact turn heading. */
+.insight-turn-row{position:relative;isolation:isolate}
+.insight-turn-cover{position:absolute;top:0;right:0;width:58%;height:65px;
+  object-fit:cover;object-position:center 30%;opacity:.28;z-index:-1;
+  mask-image:linear-gradient(90deg,transparent,#000 55%);pointer-events:none}
+.insight-turn-row-summary{position:relative;isolation:isolate;
+  background:linear-gradient(90deg,#152629ed 0%,#192c2bd1 67%,#15252a90)}
+.insight-turn-row[open] .insight-turn-row-summary{border-bottom:1px solid #53665d}
+.insight-action-phase.is-player{border-left-color:#8fb9a7}
+.insight-action-phase.is-unattributed{border-left-color:#9d9b9e;background:#22282c}
+.insight-action-seat-label{flex:none;font-size:.69rem;color:#f4c3ad}
+.insight-seat-summary{min-width:0;display:grid;gap:8px;
+  border:1px solid #526c62;border-radius:9px;padding:10px;background:#182b2d}
+.insight-seat-summary-title{font-size:.81rem;color:#ebd3a8}
+.insight-seat-summary-strip{display:grid;gap:5px}
+.insight-seat-line{display:flex;align-items:center;gap:8px;
+  min-width:0;padding:5px 7px;border-bottom:1px solid #52655b5c}
+.insight-seat-line:last-child{border-bottom:0}
+.insight-seat-name{width:54px;flex:none;font-size:.73rem;color:#f3dbb5}
+.insight-seat-metrics{display:flex;gap:5px;flex-wrap:wrap;align-items:center}
+.insight-seat-chip{font-size:.71rem;line-height:1.4;font-variant-numeric:tabular-nums;
+  border:1px solid #516d65;border-radius:6px;padding:3px 6px;
+  background:#142429;color:#e2e4d8;white-space:nowrap}
+.insight-seat-chip.is-gain{color:#bdf0d1;border-color:#85cda9;
+  box-shadow:0 0 9px #86d9ac4c}
+.insight-seat-chip.is-loss{color:#fbd0c5;border-color:#da988d;
+  box-shadow:0 0 9px #e19a8c4c}
+.insight-seat-summary .micro{font-size:.67rem;line-height:1.45;margin:0}
+@media(max-width:650px){
+  .insight-turn-cover{height:90px;width:62%}
+  .insight-seat-line{align-items:flex-start}
+  .insight-seat-name{padding-top:3px}
+}
