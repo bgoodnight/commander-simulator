@@ -319,8 +319,6 @@ function updateSelectionBadge(){
   clear(portrait);portrait.appendChild(imageNode(card,true,"medallion-art"));
   $("commander-medallion").setAttribute("aria-label","Change commander from "+deck.commander);
   $("active-commander").textContent=deck.commander;
-  const hudName=$("hud-commander-name");
-  if(hudName)hudName.textContent=deck.commander;
   $("active-deck-name").textContent=activeDeckTitle();
   const state=$("active-deck-state");
   state.hidden=!isUnsimulatedVersion();
@@ -413,11 +411,6 @@ function physicalArchive(){
   return archive?.deck_sha256===selectedDeck()?.deck_sha256?archive:null;
 }
 function showPage(){
-  const portrait=document.querySelector(".selector-anchor");
-  const home=$("selector-home"),center=$("hud-commander-slot");
-  const mount=pageName==="results"?center:home;
-  if(portrait&&mount&&portrait.parentElement!==mount)
-    mount.appendChild(portrait);
   const enabled={
     results:["records"],
     summary:["overview"],
@@ -502,13 +495,8 @@ function renderLongGamePanel(){
       " · "+exact.length+" opponent groups"+
       (outcomeManifest?.engine_commit?" · "+outcomeManifest.engine_commit.slice(0,8):""):
     longGameSourceNote;
-  const hudSource=$("hud-source-label");
-  if(hudSource)hudSource.textContent=n?n+" games":"";
   window.DeckGameOutcomes.render(root,exact,{
-    hudTiles:$("hud-performance-tiles"),
-    hudPanel:$("hud-metric-panel"),
     deckKey:selected,deckHash:selectedDeck().deck_sha256,
-    commanderName:selectedDeck().commander,
     commanderArt:commanderCard(selectedDeck())?.art||null,
     portraitFor:outcomeOpponentPortrait,
     reviewerRoot:reviewer,
@@ -772,6 +760,7 @@ function bracketLink(){
 function renderPageIntro(){
   const intro=$("page-introduction");clear(intro);
   if(pageName==="results"){
+    intro.appendChild(el("h1","Simulation Results"));
     return;
   }
   const facts=deckFacts();
