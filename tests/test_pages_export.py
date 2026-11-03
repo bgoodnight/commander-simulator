@@ -98,9 +98,17 @@ class StaticPagesTests(unittest.TestCase):
             permitted.add("game-outcomes")
             for p in long_game_dir.glob("*.json"):
                 self.assertTrue(p.is_file())
+        analytics_dir=self.destination/"analytics"
+        if analytics_dir.is_dir():
+            permitted.add("analytics")
+            # Only vetted published JSON reports, never raw observation archives.
+            self.assertTrue(list(analytics_dir.glob("*.json")))
+            self.assertTrue(all(p.is_file() and p.suffix==".json"
+                                for p in analytics_dir.iterdir()))
         self.assertEqual({p.name for p in self.destination.iterdir()},permitted)
         self.assertNotIn("shared_scryfall_catalog.json",permitted)
-        self.assertFalse(any(p.is_dir() and p.name not in ("simulation-data","replay-data","game-outcomes")
+        self.assertFalse(any(p.is_dir() and p.name not in
+                             ("simulation-data","replay-data","game-outcomes","analytics")
                              for p in self.destination.iterdir()))
         page=(self.destination/"index.html").read_text()
         script=(self.destination/"app.js").read_text()
