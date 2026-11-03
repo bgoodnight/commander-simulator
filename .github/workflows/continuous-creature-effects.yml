@@ -7,6 +7,7 @@ on:
       - simulator/v7_rules/rules.py
       - simulator/v9b_live/state.py
       - commander_sim/reviewed_static_modifiers.py
+      - commander_sim/named_effect_coverage.py
       - commander_sim/reviewed_rocks.py
       - commander_sim/early_game_runner.py
       - tests/test_static_creature_effects.py
@@ -27,7 +28,7 @@ jobs:
       - name: Test continuous effect legality and shared engine regressions
         run: |
           python -m unittest tests.test_static_creature_effects -v
-          python -m unittest tests.test_kernel_life tests.test_reviewed_removal_spells tests.test_reviewed_phase_effects tests.test_opponent_stress -v
+          python -m unittest tests.test_kernel_life tests.test_reviewed_removal_spells tests.test_reviewed_phase_effects tests.test_opponent_stress tests.test_named_effect_coverage -v
       - name: Smoke test both source-pinned precons
         run: |
           python - <<'PY'
