@@ -1116,6 +1116,53 @@
         slider.addEventListener("input",displayRound);
         body.append(slider,detail);displayRound();
       }));
+    // Include progression only when the current release has real end-of-turn
+    // observations. Mana is explicitly lands + rocks, not inferred production.
+    const observedRounds=new Map();
+    for(const run of runs)for(const row of run.ui_observations||[]){
+      if(!Number.isInteger(row.turn)||row.turn<1)continue;
+      const values=observedRounds.get(row.turn)||[];
+      values.push(row);observedRounds.set(row.turn,values);
+    }
+    const progression=[...observedRounds].sort((a,b)=>a[0]-b[0]);
+    const avg=(rows,key)=>{
+      const values=rows.map(x=>x[key]).filter(Number.isFinite);
+      return values.length?values.reduce((a,b)=>a+b,0)/values.length:null;
+    };
+    function progressionCard(title,subtitle,readValue,format){
+      const points=progression.map(([turn,rows])=>({
+        turn,observed:rows.length,value:readValue(rows)
+      })).filter(x=>Number.isFinite(x.value));
+      if(!points.length)return null;
+      const atSix=points.find(x=>x.turn===6)||points.at(-1);
+      return card(title,subtitle,format(atSix.value),
+        "Round "+atSix.turn+" · "+atSix.observed+" recorded games",body=>{
+        const max=Math.max(1,...points.map(x=>x.value));
+        const chart=create("div","game-outcome-finish-bars");
+        for(const point of points){
+          const row=create("div","game-outcome-finish-row");
+          row.appendChild(create("span",null,"R"+point.turn));
+          const track=create("div","game-outcome-finish-track");
+          const bar=create("span","game-outcome-finish-fill");
+          bar.style.width=(point.value/max*100)+"%";
+          track.appendChild(bar);
+          row.append(track,create("strong",null,format(point.value)));
+          chart.appendChild(row);
+        }
+        body.append(chart,create("p","micro",
+          "Observed runs at each round · unfinished games stop contributing."));
+      });
+    }
+    const mana=progressionCard("Mana development","Lands + mana rocks",
+      rows=>{
+        const valid=rows.filter(x=>Number.isFinite(x.land_count)&&
+          Number.isFinite(x.mana_rock_count));
+        return valid.length?valid.reduce((n,x)=>n+x.land_count+x.mana_rock_count,0)/valid.length:null;
+      },x=>x.toFixed(1));
+    if(mana)gameCards.appendChild(mana);
+    const board=progressionCard("Board development","Creatures in play",
+      rows=>avg(rows,"creature_count"),x=>x.toFixed(1));
+    if(board)gameCards.appendChild(board);
     // The HUD is one fixed-area explorer. All existing charts and drilldowns
     // stay attached but only the selected metric is visible.
     const hudCards=[...gameCards.children];
@@ -1124,7 +1171,20 @@
       ["⚔","Opponents",String(matchup.length)],
       ["◷","Game length",nfmt(quantile(finished.map(r=>r.completed_rounds),.5))],
       ["♟","Eliminations",String(knocked.length)],
-      ["♥","Life",nfmt(quantile(lastLife,.5))]
+      ["♥","Life",nfmt(quantile(lastLife,.5))],
+      ["✦","Mana",mana?(
+        (()=>{
+          const rows=observedRounds.get(6)||progression.at(-1)?.[1]||[];
+          const valid=rows.filter(x=>Number.isFinite(x.land_count)&&
+            Number.isFinite(x.mana_rock_count));
+          return valid.length?(valid.reduce((n,x)=>n+x.land_count+x.mana_rock_count,0)/valid.length).toFixed(1):"—";
+        })()):"—"],
+      ["♟","Board",board?(
+        (()=>{
+          const rows=observedRounds.get(6)||progression.at(-1)?.[1]||[];
+          const value=avg(rows,"creature_count");
+          return value===null?"—":value.toFixed(1);
+        })()):"—"]
     ];
     let chosen=0;
     const buttons=[];
