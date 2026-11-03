@@ -10,7 +10,7 @@ from .ability_composition import (
     AbilitySlot,AbilityHandler,ComposedCard,AbilityDispatcher)
 from .kernel_life import KernelLife
 from .physical_common_effects import (
-    CardQuantity,draw_physical_cards)
+    CardQuantity,draw_physical_cards,EmptyLibraryDraw)
 from .graveyard_recipes import GraveyardRecipe, resolve_graveyard_recipe
 from .reviewed_token_spells import TokenBlueprint,create_reviewed_token_batches
 
@@ -145,8 +145,8 @@ class ReviewedPhaseEngine:
                 key=(round_id,active_seat,phase,source.object_id,rule.slot_id)
                 if key in self._handled:continue
                 planned.append((source,rule,key))
-        # No early mutation if this bounded no-loss-SBA environment cannot
-        # fulfill a mandatory draw. Optional returns require explicit choice.
+        # Preflight all mandatory draws before this phase mutates the kernel.
+        # The bounded host resolves a failed draw as a terminal game loss.
         required_draws={}
         for source,rule,_ in planned:
             controller=source.controller
@@ -156,10 +156,13 @@ class ReviewedPhaseEngine:
             elif rule.operation=="death_draw_lose":
                 n=7 if death_count>=7 else 1 if death_count>0 else 0
             else:n=0
-            required_draws[controller]=required_draws.get(controller,0)+n
-        if any(len(self.zones.ids(seat,"library"))<n
-               for seat,n in required_draws.items()):
-            raise NotImplementedError("Empty-library draw loss requires full game host")
+            previous=required_draws.get(controller,0)
+            available=len(self.zones.ids(controller,"library"))
+            if previous+n>available:
+                raise EmptyLibraryDraw(
+                    controller,attempted=n,available=max(0,available-previous),
+                    source_id=source.object_id,phase=phase)
+            required_draws[controller]=previous+n
         outcomes=[]
         for source,rule,key in planned:
             slot=AbilitySlot(source.card.card_id,"front",rule.slot_id,

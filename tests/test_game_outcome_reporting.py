@@ -72,6 +72,22 @@ class LifeOutcomeTests(unittest.TestCase):
         self.assertEqual(result["reason"],"round_limit")
         self.assertFalse(result["complete"])
 
+    def test_failed_mandatory_draw_is_a_nonlife_terminal_loss(self):
+        self.record(1,(1,4,"damage",71))
+        self.record(2,(0,3,"gain",72))
+        defeat=self.observer.record_game_loss(
+            2,0,reason="empty_library_draw",source_object_id=82)
+        self.assertEqual(defeat.life_after,43)
+        self.assertEqual(defeat.source_object_id,82)
+        self.assertEqual(self.observer.history[-1]["new_eliminations"][0]["cause"],
+                         "empty_library_draw")
+        self.assertNotIn(0,self.observer.history[-1]["alive_seats"])
+        outcome=self.observer.outcome(requested_rounds=30)
+        self.assertEqual(outcome["status"],"loss")
+        self.assertEqual(outcome["reason"],"pilot_empty_library_draw")
+        self.assertTrue(outcome["complete"])
+        self.assertIsNone(outcome["winner_seat"])
+
     def test_goldfish_must_not_report_a_win_even_if_opponents_lose_life(self):
         recorder=LifeOutcomeRecorder({0:40,1:40,2:40,3:40})
         recorder.record_round(1,

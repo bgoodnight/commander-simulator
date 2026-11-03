@@ -259,32 +259,58 @@ class TemplateManaService:
         candidates = [(oid, modes) for oid, modes in candidates if modes]
         initial = self.floating(seat)
         serial = count()
-        heap = [(0, next(serial), 0, initial, ())]
-        visited = set()
-        states = 0
+        # Favor resource states closest to a legal payment before exploring
+        # exponentially many smaller source subsets. Heuristic ordering does
+        # not authorize payment: every cost is still checked by _spend().
+        required=tuple(cost.colored.count(color) for color in ORDER)
+        # An optimistic upper bound ignores all source activation costs.
+        # If even that cannot supply the requested colors/total, the
+        # payment is demonstrably impossible; do not exhaust the search.
+        upper=[initial[i]+sum(
+            max((mode.output.count(color) for mode in modes),default=0)
+            for _,modes in candidates)
+            for i,color in enumerate(ORDER)]
+        upper_total=sum(initial)+sum(
+            max((len(mode.output) for mode in modes),default=0)
+            for _,modes in candidates)
+        if (any(upper[i]<need for i,need in enumerate(required))
+                or upper_total<cost.generic+len(cost.colored)):
+            return None
+        def deficit(pool):
+            missing=sum(max(0,need-have) for need,have in zip(required,pool))
+            residual=sum(max(0,have-need) for need,have in zip(required,pool))
+            return missing+max(0,cost.generic-residual)
+        heap=[(deficit(initial),0,next(serial),0,initial,())]
+        frontiers={}
+        states=0
         while heap:
-            depth, _, used, pool, actions = heappop(heap)
-            if (used, pool) in visited:
+            _,depth,_,used,pool,actions=heappop(heap)
+            # With the same sources already consumed, a componentwise larger
+            # mana pool is never less capable of funding a further action.
+            existing=frontiers.get(used,())
+            if any(all(a>=b for a,b in zip(other,pool))
+                   for other in existing):
                 continue
-            visited.add((used, pool))
-            states += 1
-            if states > self.max_states:
+            frontiers[used]=[other for other in existing
+                            if not all(a>=b for a,b in zip(pool,other))]+[pool]
+            states+=1
+            if states>self.max_states:
                 raise ValueError("Bounded mana search exhausted; no action committed")
-            paid = _spend(pool, cost)
+            paid=_spend(pool,cost)
             if paid:
                 return ResourcePayment(tuple(action.object_id for action in actions),
-                                       actions, paid[0], states)
-            for idx, (oid, modes) in enumerate(candidates):
-                if used & (1 << idx):
+                                       actions,paid[0],states)
+            for idx,(oid,modes) in enumerate(candidates):
+                if used & (1<<idx):
                     continue
                 for mode in modes:
-                    activation_cost = FixedManaCost(mode.activation_generic,
-                                                    mode.activation_colors)
-                    for funded in _spend(pool, activation_cost):
-                        next_pool = _add(funded, mode.output)
-                        heappush(heap, (depth+1, next(serial),
-                                        used | (1 << idx), next_pool,
-                                        actions + (PlannedActivation(oid, mode),)))
+                    activation_cost=FixedManaCost(mode.activation_generic,
+                                                  mode.activation_colors)
+                    for funded in _spend(pool,activation_cost):
+                        next_pool=_add(funded,mode.output)
+                        heappush(heap,(deficit(next_pool),depth+1,next(serial),
+                                       used | (1<<idx),next_pool,
+                                       actions+(PlannedActivation(oid,mode),)))
         return None
 
     def pay(self, seat, mana_cost, *, excluded_source_ids=()):

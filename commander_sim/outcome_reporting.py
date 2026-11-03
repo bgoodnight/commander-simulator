@@ -34,10 +34,30 @@ class LifeOutcomeRecorder:
         self.current=dict(initial_totals)
         self.opponent_model=opponent_model
         self.eliminations={}
+        self.game_losses={}
         self.post_elimination_effects=[]
         self.history=[{"round":0,"life_totals":dict(initial_totals),
                        "alive_seats":list(range(4)),
                        "new_eliminations":[],"life_changes":[]}]
+
+    def record_game_loss(self,round_id,seat,*,reason,source_object_id=None):
+        """Complete a recorded round with a verified non-life game loss."""
+        if (type(round_id) is not int or round_id!=len(self.history)-1
+                or type(seat) is not int or seat not in self.initial
+                or reason!="empty_library_draw"
+                or (source_object_id is not None
+                    and type(source_object_id) is not int)):
+            raise ValueError("Unsupported game-loss observation")
+        if seat in self.eliminations:
+            return None
+        defeated=Elimination(seat,round_id,reason,source_object_id,
+                             self.current[seat])
+        self.eliminations[seat]=defeated
+        self.game_losses[seat]=defeated
+        last=self.history[-1]
+        last["new_eliminations"].append(defeated.as_dict())
+        last["alive_seats"]=[s for s in last["alive_seats"] if s!=seat]
+        return defeated
 
     def record_round(self, round_id, life_changes, final_totals):
         """Verify ordered ledger continuity and persist every physical delta."""
@@ -98,7 +118,10 @@ class LifeOutcomeRecorder:
         elif not living:
             status,reason,winner="draw","all_seats_reached_zero_life",None
         elif 0 not in living:
-            status,reason,winner="loss","pilot_life_zero",living[0] if len(living)==1 else None
+            status="loss"
+            reason=("pilot_empty_library_draw" if 0 in self.game_losses
+                    else "pilot_life_zero")
+            winner=living[0] if len(living)==1 else None
         elif living==[0]:
             status,reason,winner="win","all_opponents_life_zero",0
         else:
@@ -112,6 +135,7 @@ class LifeOutcomeRecorder:
             "requested_rounds":requested_rounds,
             "completed_rounds":len(self.history)-1,
             "surviving_seats":living,
+            "game_losses":[entry.as_dict() for entry in self.game_losses.values()],
             "eliminations":[self.eliminations[s].as_dict()
                             for s in sorted(self.eliminations,
                                             key=lambda key:(
@@ -120,7 +144,7 @@ class LifeOutcomeRecorder:
             "fidelity":("abstract_opponent_pressure_not_real_decks"
                         if self.opponent_model else "goldfish_no_opponents"),
             "rules_limits":[
-                "Only life-zero eliminations are detected",
+                "Life-zero and failed mandatory empty-library draws are modeled",
                 "No commander-damage, poison, concession or alternate-win checks",
                 "Abstract opponents are not playable 100-card decks",
                 "No complete priority/stack or simultaneous elimination rules",

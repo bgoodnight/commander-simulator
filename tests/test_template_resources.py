@@ -90,6 +90,22 @@ class TemplateResourceTests(unittest.TestCase):
             self.r.plan(0, "{X}")
         self.assertFalse(self.k.get(1).tapped)
 
+    def test_high_resource_board_finds_real_payment_within_budget(self):
+        for i in range(1,15):
+            self.source(i,"Island" if i%3==0 else "Mountain")
+        self.source(20,"Arcane Signet")
+        plan=self.r.plan(0,"{U}{R}{5}")
+        self.assertIsNotNone(plan)
+        self.assertLess(plan.search_states,16000)
+        self.assertEqual(self.k.revision,0)
+        self.assertTrue(all(not o.tapped for o in self.k.objects.values()))
+
+    def test_high_resource_search_does_not_invent_color(self):
+        for i in range(1,15):
+            self.source(i,"Island")
+        self.assertIsNone(self.r.plan(0,"{B}{5}"))
+        self.assertEqual(self.k.revision,0)
+
     def test_undocumented_rock_cannot_generate_mana(self):
         self.source(1, "Mysterious Rock")
         self.assertIsNone(self.r.plan(0, "{1}"))

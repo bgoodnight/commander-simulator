@@ -95,7 +95,7 @@ def summarize_games(runs, requested_rounds):
         "round_counts_by_outcome":terminal_rounds,
         "life_by_round":trend,
         "interpretation":(
-            "Outcomes use modeled life-zero elimination only, with "
+            "Outcomes include modeled life-zero eliminations and failed mandatory empty-library draws, with "
             "three abstract opponents. Unresolved runs are right-censored. "
             "No validated Commander multiplayer win rate is estimated."),
     }
