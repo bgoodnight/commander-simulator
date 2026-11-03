@@ -1320,7 +1320,8 @@ body:has(#pane-records:not([hidden])) .page-introduction{display:none!important}
 .latest-insight-grid .game-outcome-card > .game-outcome-summary:has(.insight-strip-art):before{
  content:"";position:absolute;inset:0;z-index:1;pointer-events:none;
  background:linear-gradient(90deg,#16252afa 20%,#16252ade 53%,#16252a2e)}
-.latest-insight-grid .game-outcome-card[open] > .game-outcome-summary{min-height:100px}
+.latest-insight-grid .game-outcome-card:not(.game-outcome-hero) > .game-outcome-summary,
+.latest-insight-grid .game-outcome-card[open] > .game-outcome-summary{min-height:100px!important}
 @media(max-width:720px){
  .results-hud{padding:10px}
  .results-hud-orbit{display:flex;flex-direction:column;gap:14px}
