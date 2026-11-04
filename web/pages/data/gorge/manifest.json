@@ -1,6 +1,8 @@
 {
-  "schema": "gorge-public-replay-manifest-v1",
-  "source_commit": "8c1c01eb42cd38c6ce81fe92c48add0a2ce100be",
+  "schema": "gorge-omniscient-replay-manifest-v1",
+  "visibility": "omniscient",
+  "synthetic_simulation_only": true,
+  "source_commit": "8dee9b1ba431a09c3213525b87518fd7e0de1b2e",
   "games": [
     {
       "file": "gorge-seed-300.ui.json",
