@@ -2459,65 +2459,65 @@ body:has(#pane-records:not([hidden])) .compact-selection{margin-bottom:3px}
   .insight-board-life-values .insight-seat-life-delta{font-size:.72rem}
 }
 
-/* Gorge cohort headline panels: authoritative complete-game denominators.
-   Detailed cards and replay timelines follow in the original layout. */
-.gorge-full-cohort-dashboard {
-  border: 1px solid var(--line, rgba(140, 140, 140, .28));
-  border-radius: 16px;
-  padding: clamp(14px, 2.5vw, 24px);
-  margin: 0 0 16px;
-  background: var(--panel, rgba(128,128,128,.06));
+/* Full-cohort Gorge panels reuse the original Results card system.
+   They are rendered once, from the verified full-cohort report. */
+.latest-insight-grid > .gorge-full-cohort-groups,
+.latest-insight-grid > .gorge-full-cohort-regressions{
+  min-width:0;
+  border-color:#596c61;
+  box-shadow:0 4px 14px #020a0b40;
 }
-.gorge-full-cohort-title h3 { margin: 0 0 5px; font-size: 1.23rem; }
-.gorge-full-cohort-title p { margin: 0 0 16px; }
-.gorge-full-cohort-metrics {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(min(150px, 100%), 1fr));
-  gap: 12px;
+.gorge-full-cohort-groups .game-outcome-body,
+.gorge-full-cohort-regressions .game-outcome-body{
+  min-width:0;
+  max-width:100%;
 }
-.gorge-full-cohort-metric {
-  padding: 12px;
-  display: flex;
-  gap: 3px;
-  flex-direction: column;
-  border-radius: 12px;
-  background: rgba(120,120,120,.09);
+.gorge-full-cohort-select{
+  display:block;
+  max-width:100%;
+  width:100%;
+  margin:8px 0;
 }
-.gorge-full-cohort-metric strong { font-size: clamp(1.3rem, 2.8vw, 1.9rem); }
-.gorge-full-cohort-groups, .gorge-full-cohort-regressions {
-  border: 1px solid var(--line, rgba(140,140,140,.28));
-  border-radius: 13px;
-  margin-bottom: 14px;
-  padding: 12px 16px;
+.gorge-full-cohort-table-wrap,
+.gorge-regression-results{
+  max-width:100%;
+  min-width:0;
+  overflow-x:auto;
 }
-.gorge-full-cohort-groups > summary,
-.gorge-full-cohort-regressions > summary {
-  cursor: pointer;
-  font-weight: 700;
-  padding: 5px 0;
+.gorge-full-cohort-table{
+  border-collapse:collapse;
+  width:100%;
+  font-size:.77rem;
 }
-.gorge-full-cohort-select {
-  display: block;
-  max-width: 100%;
-  width: min(440px, 100%);
-  margin: 12px 0;
-}
-.gorge-full-cohort-table-wrap, .gorge-regression-results {
-  max-width: 100%;
-  overflow-x: auto;
-}
-.gorge-full-cohort-table { border-collapse: collapse; width: 100%; font-size: .87rem; }
 .gorge-full-cohort-table th,
-.gorge-full-cohort-table td {
-  padding: 9px 10px;
-  border-bottom: 1px solid rgba(128,128,128,.19);
-  text-align: left;
-  white-space: nowrap;
+.gorge-full-cohort-table td{
+  padding:9px 10px;
+  border-bottom:1px solid #61736555;
+  text-align:left;
+  white-space:nowrap;
+  font-variant-numeric:tabular-nums;
 }
 .gorge-full-cohort-table th:first-child,
-.gorge-full-cohort-table td:first-child { white-space: normal; min-width: 145px; }
-.gorge-sampled-insights-label {
-  grid-column: 1 / -1;
-  font-weight: 650;
-  margin: 8px 0 4px;
+.gorge-full-cohort-table td:first-child{
+  white-space:normal;
+  min-width:130px;
+  color:#ecd3a2;
+}
+.gorge-sampled-insights-label{
+  grid-column:1/-1;
+  margin:6px 0 0;
+  padding:11px 13px;
+  border-left:3px solid #bb9a69;
+  border-radius:5px;
+  background:#213232;
+  color:#e6d7be;
+  font-size:.79rem;
+  font-weight:650;
+}
+.gorge-full-cohort-groups[open],
+.gorge-full-cohort-regressions[open]{
+  grid-column:1/-1;
+}
+@media(max-width:720px){
+  .gorge-full-cohort-table{font-size:.74rem}
 }
