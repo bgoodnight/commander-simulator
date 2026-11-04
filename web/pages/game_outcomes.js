@@ -810,6 +810,46 @@
   // Inline insight evidence uses the original compact, expandable turn rows.
   // A round is NOT a reconstructed priority/phase transcript: only explicit
   // action metadata permits naming a phase or an opposing seat.
+  // Prefer Scryfall-derived color identity from the cached commander card.
+  // The accent can vary slightly by seat so mono-black pods remain readable.
+  function commanderBoardTheme(name,seat,lookup){
+    const identity=lookup?.(name)?.color_identity;
+    const colors=Array.isArray(identity)?
+      ["W","U","B","R","G"].filter(c=>identity.includes(c)):[];
+    const key=colors.join("");
+    const mono={
+      W:["#dbcda4","#332f29"],U:["#76b8e3","#1c3447"],
+      B:["#a998c6","#302939"],R:["#e99b80","#432a2a"],
+      G:["#90c59a","#203a30"]
+    };
+    if(colors.length===0)
+      return {accent:"#829d97",wash:"#213234",identity:"Colorless or unavailable"};
+    if(key==="B"){
+      const variations=[
+        ["#b39ac9","#30263a"],["#9a9eb8","#292b3b"],
+        ["#bd91ae","#392634"],["#ac99bb","#30293b"]
+      ];
+      const [accent,wash]=variations[seat%variations.length];
+      return {accent,wash,identity:"Black"};
+    }
+    if(colors.length===1){
+      const [accent,wash]=mono[key];
+      return {accent,wash,identity:({W:"White",U:"Blue",B:"Black",
+        R:"Red",G:"Green"})[key]};
+    }
+    const scheme=colors.map(c=>mono[c][0]);
+    return {
+      accent:scheme[0],wash:"#29303e",
+      gradient:"linear-gradient(105deg,"+scheme.join(",")+")",
+      identity:colors.join("/")
+    };
+  }
+  function setCommanderTheme(element,theme){
+    element.style.setProperty("--commander-accent",theme.accent);
+    element.style.setProperty("--commander-wash",theme.wash);
+    element.style.setProperty("--commander-stripe",
+      theme.gradient||"linear-gradient(90deg,"+theme.accent+","+theme.accent+")");
+  }
   function seatChangeSummary(current,before){
     const strip=create("div","insight-seat-life-strip");
     for(const seat of SEATS){
@@ -1464,9 +1504,12 @@
           states?.find(p=>p.seat===0)?.command?.[0]||
           run.batch?.commander_name||"Your commander";
         roster.set(0,ownCommander);
+        const themes=new Map(SEATS.map(seat=>
+          [seat,commanderBoardTheme(roster.get(seat)||"",seat,options.lookupRecordedCard)]));
         let chosenSeat=0;
         const seatTiles=create("div","insight-seat-life-strip insight-board-seats");
         const paintBoard=()=>{
+          setCommanderTheme(board,themes.get(chosenSeat));
           const selected=states?.find(p=>p.seat===chosenSeat);
           const state=selected|| (chosenSeat===0?observation:null);
           boardContent.replaceChildren();
@@ -1488,10 +1531,28 @@
             chosenSeat=seat;paintBoard();
           });
           tile.dataset.seat=String(seat);
+          setCommanderTheme(tile,themes.get(seat));
+          tile.title=name+" · "+themes.get(seat).identity+
+            " · click to inspect this board";
           tile.appendChild(create("span","insight-seat-life-name",
             name+(seat===0?" (You)":"")));
-          tile.appendChild(create("strong","insight-seat-life-value",
-            "♥ "+nfmt(lifeAt(current,seat))));
+          const value=lifeAt(current,seat);
+          const old=before?lifeAt(before,seat):value;
+          const change=Number.isFinite(value)&&Number.isFinite(old)?
+            value-old:null;
+          const totals=create("span","insight-board-life-values");
+          totals.appendChild(create("strong","insight-seat-life-value",
+            "♥ "+nfmt(value)));
+          if(change!==null&&change!==0){
+            const delta=create("span","insight-seat-life-delta "+
+              (change>0?"is-gain":"is-loss"),
+              (change>0?"+":"−")+nfmt(Math.abs(change)));
+            delta.title="Net life change since the previous recorded state";
+            delta.setAttribute("aria-label",
+              (change>0?"Gained ":"Lost ")+nfmt(Math.abs(change))+" life");
+            totals.appendChild(delta);
+          }
+          tile.appendChild(totals);
           seatTiles.appendChild(tile);
         }
         board.appendChild(seatTiles);
