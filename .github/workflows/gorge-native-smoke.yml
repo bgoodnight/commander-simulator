@@ -75,7 +75,7 @@ jobs:
             --pilot bot --games 8 --seed 300 --max-turns 60 \
             --native-dir "$RUNNER_TEMP/results/native" --native-limit 2 --jsonl \
             > "$RUNNER_TEMP/results/gorge_runs.jsonl"
-      - name: Verify source and publishable projection for 2 enriched samples
+      - name: Verify source and explicitly omniscient projection for 2 synthetic games
         run: |
           python -m tools.validate_gorge_enrichment \
             --native-dir "$RUNNER_TEMP/results/native" \
@@ -83,22 +83,28 @@ jobs:
           python -m tools.gorge_ui_export \
             "$RUNNER_TEMP/results/native/gorge-seed-300.json" \
             "$RUNNER_TEMP/results/native/gorge-seed-301.json" \
-            --out "$RUNNER_TEMP/results/public_ui"
+            --include-hidden --out "$RUNNER_TEMP/results/public_ui"
           python - <<'PY'
           import json,os
           from pathlib import Path
           root=Path(os.environ["RUNNER_TEMP"])/"results"/"public_ui"
           for p in sorted(root.glob("*.json")):
               d=json.loads(p.read_text())
-              assert d["visibility"]=="public_events_only"
+              assert d["visibility"]=="omniscient"
+              assert d["synthetic_simulation_only"] is True
               assert d["schema"]=="gorge-ui-replay-v1"
               assert d["snapshots"]
               assert all(v["life"]==40 for v in d["snapshots"][0]["players"])
-              assert all(set(v["zones"])=={"battlefield","graveyard","exile","command"}
+              assert all(set(v["zones"])=={"hand","library","battlefield","graveyard","exile","command"}
+                         for s in d["snapshots"] for v in s["players"])
+              assert all(len(v["zones"]["hand"])==v["hand_count"]
+                         for s in d["snapshots"] for v in s["players"])
+              assert all(len(v["zones"]["library"])==v["library_count"]
                          for s in d["snapshots"] for v in s["players"])
               assert "objects" not in d and "log" not in d and "intents" not in d
-              assert not any(e.get("secret") for t in d["turns"] for e in t["events"])
-              print("Safe public sample",p.name,len(d["snapshots"]),"state observations")
+              assert any(e["kind"]=="draw" and e.get("card_name")
+                         for t in d["turns"] for e in t["events"])
+              print("Synthetic omniscient sample",p.name,len(d["snapshots"]),"state observations")
           PY
       - name: Record sample manifest with provenance
         run: |
@@ -113,15 +119,17 @@ jobs:
                             "chain":d["chain"],"turns":len(d["snapshots"]),
                             "source":"gorge-40-life"})
           (root/"manifest.json").write_text(json.dumps({
-              "schema":"gorge-public-replay-manifest-v1",
+              "schema":"gorge-omniscient-replay-manifest-v1",
+              "visibility":"omniscient",
+              "synthetic_simulation_only":True,
               "source_commit":os.environ["GITHUB_SHA"],
               "games":games},indent=2)+"\n")
           with open(os.environ["GITHUB_STEP_SUMMARY"],"a") as f:
               f.write("# Corrected gorge-only smoke run\n\n")
-              f.write("8 complete 40-life Commander games, 2 safe enriched UI replays.\n")
+              f.write("8 complete 40-life Commander games, 2 deliberately omniscient synthetic AI replays.\n")
               f.write("Earlier 20-life games are NOT Commander power benchmarks.\n")
           PY
-      - name: Keep raw traces in an artifact, never in the public site
+      - name: Retain native logs and intents in an artifact, never publish them to Pages
         if: always()
         uses: actions/upload-artifact@v4
         with:
@@ -129,7 +137,7 @@ jobs:
           path: ${{ runner.temp }}/results/
           if-no-files-found: warn
           retention-days: 14
-      - name: Commit only validated public replay examples for the Deck Lab
+      - name: Publish only verified synthetic omniscient UI projections to Deck Lab
         if: github.event_name != 'pull_request'
         run: |
           git fetch origin main
