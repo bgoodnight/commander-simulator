@@ -813,8 +813,7 @@ test('selected card insight embeds relevant game turns and real life/zone change
     tracker.open=true;tracker.events.toggle();
     const turns=walk(tracker).filter(n=>n.className==='insight-turn-row');
     assert.equal(turns.length,4);
-    assert.ok(walk(turns[1]).some(n=>n.className.includes('is-loss')&&
-      n.textContent.includes('♥')));
+    assert.ok(walk(turns[1]).some(n=>n.className.includes('insight-seat-life-delta is-loss')));
     assert.ok(walk(turns[2]).some(n=>n.className.includes('insight-hand-shortcut')&&
       n.textContent.includes('▤ 0')));
     assert.ok(walk(turns[2]).some(n=>n.className==='insight-end-state'));
@@ -1230,8 +1229,10 @@ test('turn summaries and end state use actual mana pips and clickable typed card
     const hand=walk(summary).find(n=>n.className.includes('insight-hand-shortcut'));
     hand.onclick();
     assert.equal(turn.open,true);
-    assert.equal(zones[0].open,true);
-    assert.ok(walk(zones[0]).some(n=>n.tag==='button'&&
+    const handZone=zones.find(z=>z.className.includes('insight-board-hand'));
+    assert.ok(handZone);
+    assert.equal(handZone.open,true);
+    assert.ok(walk(handZone).some(n=>n.tag==='button'&&
       String(n.attributes['aria-label']).includes('Dark Ritual')));
   }finally{global.document=old}
 });
