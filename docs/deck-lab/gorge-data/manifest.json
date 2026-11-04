@@ -1,0 +1,32 @@
+{
+  "schema": "gorge-public-replay-manifest-v1",
+  "source_commit": "8c1c01eb42cd38c6ce81fe92c48add0a2ce100be",
+  "games": [
+    {
+      "file": "gorge-seed-300.ui.json",
+      "seed": 300,
+      "decks": [
+        "mortarion_current",
+        "magnus_premium",
+        "necron_dynasties",
+        "wretched_ranks"
+      ],
+      "chain": "55bb57d40b07fb26",
+      "turns": 38,
+      "source": "gorge-40-life"
+    },
+    {
+      "file": "gorge-seed-301.ui.json",
+      "seed": 301,
+      "decks": [
+        "magnus_premium",
+        "necron_dynasties",
+        "wretched_ranks",
+        "avengers-assemble"
+      ],
+      "chain": "3765be39ec551c51",
+      "turns": 38,
+      "source": "gorge-40-life"
+    }
+  ]
+}
