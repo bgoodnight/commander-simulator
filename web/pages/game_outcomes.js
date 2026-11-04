@@ -1528,7 +1528,7 @@
             if(!entry)return;
             runDetails(detailsRoot,entry.run,{
               focusTurn:entry.turn,
-              hideEvidenceHead:true,
+              hideEvidenceHead:!options.isGorge,
               lookupRecordedCard:options.lookupRecordedCard,
               renderMana:options.renderMana,
               onOpenRecordedCard:options.onOpenRecordedCard,
