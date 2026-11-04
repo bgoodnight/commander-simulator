@@ -521,9 +521,18 @@ function init(){
     return frame;
   }
   function cohortGroupPanel(stats){
-    const details=node("details","gorge-full-cohort-groups");
-    details.append(node("summary",null,"Matchups and archetypes · all "+
-      stats.n+" verified games"));
+    const details=node("details",
+      "board-report game-outcome-card gorge-full-cohort-groups");
+    const title=node("summary","game-outcome-summary");
+    const copy=node("div","game-outcome-summary-copy");
+    copy.append(node("span","board-kicker","Full verified cohort"),
+      node("strong","game-outcome-title","Opponent Matchups"),
+      node("span","game-outcome-number",String(stats.n)),
+      node("span","game-outcome-caption",
+        "Precons, archetypes and colors · all verified games"),
+      node("span","board-open","Explore ▾"));
+    title.append(copy);details.append(title);
+    const bodyPanel=node("div","game-outcome-body");
     const chooser=node("select","gorge-full-cohort-select");
     chooser.setAttribute("aria-label","Compare full-cohort performance by");
     for(const [name,label] of [
@@ -560,17 +569,27 @@ function init(){
       dataRoot.append(table);
     };
     chooser.addEventListener("change",paint);
-    details.append(node("p","micro","A precon, archetype or color is counted once "+
+    bodyPanel.append(node("p","micro","A precon, archetype or color is counted once "+
       "when present among the three opponents. Win rates describe the whole "+
       "four-player game, not isolated head-to-head effects."),
       chooser,dataRoot);
+    details.append(bodyPanel);
     paint();
     return details;
   }
   function cohortRegressionPanel(stats){
-    const details=node("details","gorge-full-cohort-regressions");
-    details.append(node("summary",null,
-      "Exploratory elastic-net regressions · full verified cohort"));
+    const details=node("details",
+      "board-report game-outcome-card gorge-full-cohort-regressions");
+    const title=node("summary","game-outcome-summary");
+    const copy=node("div","game-outcome-summary-copy");
+    copy.append(node("span","board-kicker","Full verified cohort"),
+      node("strong","game-outcome-title","Performance Patterns"),
+      node("span","game-outcome-number","Elastic net"),
+      node("span","game-outcome-caption",
+        "Opponent deck, archetype and color models · "+stats.n+" games"),
+      node("span","board-open","Explore ▾"));
+    title.append(copy);details.append(title);
+    const bodyPanel=node("div","game-outcome-body");
     const chooser=node("select","gorge-full-cohort-select");
     chooser.setAttribute("aria-label","Regression predictor family");
     for(const [value,label] of [
@@ -616,7 +635,8 @@ function init(){
         "Exploratory penalized coefficients, not causal effects."));
     };
     chooser.addEventListener("change",paint);
-    details.append(chooser,display);
+    bodyPanel.append(chooser,display);
+    details.append(bodyPanel);
     paint();
     return details;
   }
