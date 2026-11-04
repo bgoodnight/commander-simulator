@@ -220,6 +220,11 @@ def project_batch(*, native_dir, summaries, out, existing_dir=None,
             "source": "gorge-40-life",
             "native_sha256": digest(raw),
             "converter_version": CONVERTER_VERSION,
+            **({"player_seat": hero_seat, "player_deck": hero,
+                "simulated_at": summary.get("simulated_at") or
+                    summary.get("run_at") or __import__("datetime").datetime.now(
+                        __import__("datetime").timezone.utc).isoformat()}
+               if seat_metadata is not None else {}),
         }
         if not public_replay_is_safe(view, entry):
             raise ValueError(f"Game {seed} conversion failed provenance validation")
