@@ -28,6 +28,7 @@ import (
 type Result struct {
   Seed uint64 `json:"seed"`
   Decks []string `json:"decks"`
+  HeroSeat *int `json:"hero_seat,omitempty"`
   Finished bool `json:"finished"`
   Draw bool `json:"draw"`
   WinnerSeat *int `json:"winner_seat,omitempty"`
@@ -92,6 +93,8 @@ func main() {
   maxTurns:=flag.Int("max-turns",50,"cap for complete Commander game")
   verify:=flag.Bool("verify",true,"replay each completed game")
   deckPool:=flag.String("decks","mortarion_current,magnus_premium,necron_dynasties,wretched_ranks","comma-separated pool of four or more Commander deck names")
+  heroDeck:=flag.String("hero-deck","","fixed player deck, never placed in opponent seats")
+  opponentPool:=flag.String("opponents","","comma-separated pool of stock precon opponents (>=3); requires -hero-deck")
   policy:=flag.String("pilot","bot","gorge-native AI: bot, forge-heuristic, forge-heuristic-hold, lethal-pressure")
   firstSeatPolicy:=flag.String("hero-pilot","","optional policy for seat zero")
   nativeDir:=flag.String("native-dir","","directory for gorge-native raw event/intent logs")
@@ -100,6 +103,16 @@ func main() {
   if *directory==""||*games<=0||*games>1000||*maxTurns<=0 { panic("invalid probe arguments") }
   names:=strings.Split(*deckPool,",")
   for i:=range names {names[i]=strings.TrimSpace(names[i])}
+  restricted:=*heroDeck!=""||*opponentPool!=""
+  if restricted {
+    if *heroDeck==""||*opponentPool=="" {
+      panic("Player-vs-precon mode requires both -hero-deck and -opponents")
+    }
+    opponents:=strings.Split(*opponentPool,",")
+    if len(opponents)<3 {panic("Need at least 3 distinct precon opponents")}
+    for i:=range opponents {opponents[i]=strings.TrimSpace(opponents[i])}
+    names=append([]string{strings.TrimSpace(*heroDeck)},opponents...)
+  }
   if len(names)<4 {panic("Need at least four unique deck names")}
   unique:=map[string]bool{}
   for _,name:=range names {
@@ -133,11 +146,23 @@ func main() {
     ids:=make([]string,4); ds:=make([][]*cards.Card,4); cs:=make([][]int,4)
     policies:=make([]string,4)
     players:=make([]seat.Seat,4)
+    heroSeat:=0
+    if restricted {heroSeat=g%4}
     for i:=0;i<4;i++ {
       k:=(i+g)%len(names)
+      if restricted {
+        if i==heroSeat {
+          k=0
+        }else{
+          // Three distinct precons per pod; rotate pool and seating.
+          before:=i
+          if i>heroSeat {before--}
+          k=1+(before+g)% (len(names)-1)
+        }
+      }
       ids[i]=names[k];ds[i]=decks[k];cs[i]=commanders[k]
       policies[i]=*policy
-      if i==0&&*firstSeatPolicy!=""{policies[i]=*firstSeatPolicy}
+      if i==heroSeat&&*firstSeatPolicy!=""{policies[i]=*firstSeatPolicy}
       players[i],err=bots.New(policies[i],bots.Options{
         Seed:gs^uint64(i+1),AutoPayMana:true,Deps:bots.Deps{Cards:reg}})
       if err!=nil {panic(err)}
@@ -162,6 +187,7 @@ func main() {
     o,e,playErr:=bench.PlayGame(cfg,players,*maxTurns,400000,hooks)
     rec:=Result{Seed:gs,Decks:ids,Turns:o.Turns,Intents:o.Intents,
       Draw:o.Draw,StallReason:o.StallOn,ElapsedSeconds:time.Since(start).Seconds(),Policies:policies}
+    if restricted {rec.HeroSeat=&heroSeat}
     if e!=nil {rec.Events=len(e.L.Events)}
     if playErr!=nil {rec.Error=playErr.Error()}
     rec.Finished=playErr==nil&&!o.IsStalled()&&e!=nil&&e.G.Over
@@ -183,6 +209,7 @@ func main() {
       payload:=map[string]any{
         "schema":"gorge-native-trace-v1","engine":"gorge",
         "seed":gs,"decks":ids,"policies":policies,
+        "hero_seat":heroSeat,"opponent_mode":restricted,
         "format":"commander","chain":e.L.Head(),
         "log":e.L,
         "enrichment_schema":"gorge-physical-state-v1",
