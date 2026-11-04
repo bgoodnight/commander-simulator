@@ -30,5 +30,6 @@
       "turns": 38,
       "source": "gorge-40-life"
     }
-  ]
+  ],
+  "privacy_notice": "Omniscient card identities are published for synthetic AI-only Commander simulations. Native event logs, bot intents, and raw engine object data are not published."
 }
