@@ -448,8 +448,10 @@ function summon(key,{versionId=null,remember=true}={}){
   }
   renderGlobalDeckSelector();
   showPage();syncPageNavigation();
-  if(pageName==="results"&&window.GorgeDashboard)
+  if(pageName==="results"&&window.GorgeDashboard){
     window.GorgeDashboard.render(window.__gorgeLoadedGames||[],window.__gorgeActiveGame?.seed,key);
+    window.GorgeDeckLabRefreshSamples?.();
+  }
 }
 function physicalArchive(){
   if(selected!=="mortarion_physical_final"||isUnsimulatedVersion())return null;
