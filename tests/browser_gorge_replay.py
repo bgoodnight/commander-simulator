@@ -60,7 +60,7 @@ def check():
             turn=page.locator("#turn-reviewer-results .insight-turn-row").first
             assert turn.locator(".insight-turn-row-summary").is_visible()
             assert turn.locator(".insight-turn-activity").is_visible()
-            turn.locator("summary").click()
+            turn.locator(".insight-turn-row-summary").click()
             assert turn.locator(".insight-action-phase.is-player").is_visible()
             assert "not turn end" in turn.inner_text().lower() or \
                 "not end" in turn.inner_text().lower()
