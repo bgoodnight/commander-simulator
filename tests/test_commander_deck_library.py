@@ -20,15 +20,25 @@ class DeckRoleTests(unittest.TestCase):
         })
         self.assertTrue(all("mortarion" not in x and "magnus" not in x
                             for x in opponent_keys(self.library)))
-        self.assertTrue(all("mortarion" in x or "magnus" in x
-                            for x in player_keys(self.library)))
+        self.assertEqual(set(player_keys(self.library)), {
+            "mortarion_current", "mortarion_ideal", "mortarion_physical_final",
+            "magnus_premium", "magnus_budget", "magnus_physical_trial",
+            "magnus_physical_owned", "necron_dynasties", "wretched_ranks"
+        })
 
     def test_legal_player_and_opponent_roles(self):
         validate_pod(self.library,"mortarion_current",
                      ["necron_dynasties","wretched_ranks","science-pip"])
+        validate_pod(self.library,"necron_dynasties",
+                     ["wretched_ranks","science-pip","cavalry-charge"])
+        validate_pod(self.library,"wretched_ranks",
+                     ["necron_dynasties","science-pip","cavalry-charge"])
         with self.assertRaises(ValueError):
             validate_pod(self.library,"necron_dynasties",
-                         ["wretched_ranks","science-pip","cavalry-charge"])
+                         ["necron_dynasties","science-pip","cavalry-charge"])
+        with self.assertRaises(ValueError):
+            validate_pod(self.library,"science-pip",
+                         ["necron_dynasties","wretched_ranks","cavalry-charge"])
         with self.assertRaises(ValueError):
             validate_pod(self.library,"magnus_premium",
                          ["mortarion_current","science-pip","cavalry-charge"])
@@ -46,6 +56,10 @@ class DeckRoleTests(unittest.TestCase):
         self.assertEqual(items[0]["colors_present"],
                          {"W":False,"U":True,"B":False,"R":True,"G":False})
         self.assertEqual(items[1]["primary_archetype"],"artifacts")
+        dual=matchup_annotations(self.library,["necron_dynasties",
+            "wretched_ranks","science-pip","cavalry-charge"],hero="necron_dynasties")
+        self.assertEqual([r["role"] for r in dual],
+                         ["player","opponent","opponent","opponent"])
 
     def test_source_deck_identity_guard(self):
         with tempfile.TemporaryDirectory() as tmp:
