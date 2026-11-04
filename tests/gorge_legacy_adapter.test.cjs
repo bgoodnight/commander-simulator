@@ -5,16 +5,24 @@ const fs=require("node:fs");
 const path=require("node:path");
 const adapt=require("../web/pages/gorge_legacy_adapter.js");
 const old=require("../web/pages/game_outcomes.js");
-const root=path.join(__dirname,"../web/pages/data/gorge");
-const game=seed=>JSON.parse(fs.readFileSync(path.join(root,
-  "gorge-seed-"+seed+".ui.json"),"utf8"));
+const root=path.join(__dirname,"fixtures/gorge");
+const game=seed=>{
+  const g=JSON.parse(fs.readFileSync(path.join(root,
+    "gorge-seed-"+seed+".ui.json"),"utf8"));
+  // Archived recordings did not declare designated player roles. Assign
+  // explicit roles only to controlled test fixtures, never public results.
+  g.player_deck=seed===300?"mortarion_current":"magnus_premium";
+  g.player_seat=0;
+  return g;
+};
 const a=game(300),b=game(301);
+const magnusA={...a,player_deck:"magnus_premium",player_seat:1};
 const hashes={
   mortarion_current:"a".repeat(64),magnus_premium:"b".repeat(64),
   necron_dynasties:"c".repeat(64),wretched_ranks:"d".repeat(64),
   "avengers-assemble":"e".repeat(64),
 };
-test("actual public or omniscient Gorge games become valid original-renderer batches",()=>{
+test("explicit player-seat games become valid original-renderer batches",()=>{
   const batch=adapt.adapt([a,b],"mortarion_current",hashes);
   assert.equal(batch.format,"commander-gorge-outcomes-v1");
   assert.equal(batch.engine,"gorge");
@@ -61,7 +69,7 @@ test("actual public or omniscient Gorge games become valid original-renderer bat
     "magnus_premium","necron_dynasties","wretched_ranks"]);
 });
 test("player seats rotate so the selected deck is always the old UI's seat zero",()=>{
-  const batch=adapt.adapt([a,b],"magnus_premium",hashes);
+  const batch=adapt.adapt([magnusA,b],"magnus_premium",hashes);
   assert.equal(old.validate(batch),true);
   assert.equal(batch.runs.length,2);
   for(const run of batch.runs){
@@ -75,6 +83,12 @@ test("player seats rotate so the selected deck is always the old UI's seat zero"
         action.seat===0&&action.card==="Preordain")));
     assert.equal(run.life_history[0].life_totals[0],40);
   }
+});
+test("a deck appearing only as an opponent is not a player result",()=>{
+  assert.equal(adapt.adapt([a],"magnus_premium",hashes),null);
+  assert.equal(adapt.adapt([b],"mortarion_current",hashes),null);
+  const unmarked={...a,player_seat:undefined,player_deck:undefined};
+  assert.equal(adapt.adapt([unmarked],"mortarion_current",hashes),null);
 });
 test("winner is sourced only from an exact native game-over identifier",()=>{
   assert.equal(adapt.realWinner(a),0);
