@@ -3,6 +3,10 @@ name: Publish verified Gorge UI artifact to Pages data
 # Deliberately separate from simulation execution and conversion. A publication
 # retry never reruns a game; only independently verified converted data ships.
 on:
+  workflow_run:
+    workflows: ["Convert verified Gorge recordings to public replay artifact"]
+    branches: [main]
+    types: [completed]
   workflow_dispatch:
     inputs:
       conversion_run_id:
@@ -20,6 +24,7 @@ concurrency:
 
 jobs:
   publish:
+    if: github.event_name == 'workflow_dispatch' || github.event.workflow_run.conclusion == 'success'
     runs-on: ubuntu-latest
     timeout-minutes: 20
     steps:
@@ -34,7 +39,7 @@ jobs:
         env:
           GH_TOKEN: ${{ github.token }}
           GH_REPO: ${{ github.repository }}
-          RUN_ID: ${{ inputs.conversion_run_id }}
+          RUN_ID: ${{ inputs.conversion_run_id || github.event.workflow_run.id }}
         run: |
           case "$RUN_ID" in *[!0-9]*|'') echo "Invalid conversion run ID"; exit 1;; esac
           gh run download "$RUN_ID" --name gorge-ui-publication --dir "$RUNNER_TEMP/public_ui"
