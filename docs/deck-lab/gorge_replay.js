@@ -444,17 +444,13 @@ function init(){
     return String(b.simulated_at||"").localeCompare(String(a.simulated_at||""))||
       Number(b.seed||0)-Number(a.seed||0);
   }
-  async function openPublicSample(name){
-    if(!available.has(name))throw Error("Replay is not a player-seat game for this deck");
-    const ticket=++requestId;
-    rootElement.replaceChildren(node("p","small","Loading verified Gorge game…"));
+  async function loadVerifiedReplay(name){
     let data=loadedGames.get(name);
-    if(!data){
-      const response=await fetch("./gorge-data/"+encodeURIComponent(name),
-        {cache:"no-store"});
-      if(!response.ok)throw Error("Public Gorge replay unavailable");
-      data=await response.json();
-    }
+    if(data)return data;
+    const response=await fetch("./gorge-data/"+encodeURIComponent(name),
+      {cache:"no-store"});
+    if(!response.ok)throw Error("Public Gorge replay unavailable: "+name);
+    data=await response.json();
     const entry=catalog.find(row=>row.file===name);
     if(data.schema!=="gorge-ui-replay-v1"||
        data.visibility!==manifestVisibility||
@@ -472,13 +468,50 @@ function init(){
       Number.isInteger(entry.source_player_role_evidence.workflow_run_id);
     if(!embedded&&!legacy)
       throw Error("Replay player role differs from the verified catalog");
-    // Projection metadata, not a modification of the preserved native file.
+    // Source bytes are unchanged. Verified historical player-seat metadata is
+    // projected for display, but never guessed from a deck's appearance.
     if(legacy)data={...data,player_seat:entry.player_seat,
       player_deck:entry.player_deck,player_role_provenance:"verified archived workflow"};
     loadedGames.set(name,data);
+    return data;
+  }
+  async function openPublicSample(name){
+    if(!available.has(name))throw Error("Replay is not a player-seat game for this deck");
+    const ticket=++requestId;
+    rootElement.replaceChildren(node("p","small","Loading verified Gorge game…"));
+    const data=await loadVerifiedReplay(name);
     if(ticket!==requestId||!available.has(name))return;
     if(typeof window!=="undefined")window.__gorgeLoadedGames=[data];
     paintView(rootElement,data);
+    // The selected replay is the evidence drilldown, not the entire cohort.
+    // Aggregate only exact, independently verified player-seat replays, with
+    // bounded concurrent downloads so the mobile UI remains responsive.
+    const other=[...catalog].filter(row=>
+      playerEntry(row,data.player_deck)&&available.has(row.file)&&row.file!==name)
+      .sort(recentFirst);
+    if(!other.length)return;
+    const cohort=[data];
+    let cursor=0;
+    async function worker(){
+      while(cursor<other.length&&ticket===requestId){
+        const row=other[cursor++];
+        try{
+          const game=await loadVerifiedReplay(row.file);
+          if(ticket===requestId)cohort.push(game);
+        }catch(error){
+          console.warn("Source-verified Gorge game excluded from aggregation",row.seed,error);
+        }
+      }
+    }
+    await Promise.all(Array.from({length:Math.min(3,other.length)},()=>worker()));
+    if(ticket!==requestId||!available.has(name))return;
+    if(typeof window!=="undefined")window.__gorgeLoadedGames=cohort;
+    window.GorgeDashboard?.render(cohort,data.seed,data.player_deck);
+    if(cohort.length<other.length+1){
+      const status=$("game-outcome-status");
+      if(status)status.textContent+=" · "+(other.length+1-cohort.length)+
+        " replays unavailable or excluded";
+    }
   }
   function refreshForPlayer(){
     if(!catalogReady)return;
