@@ -14,7 +14,7 @@ const hashes={
   necron_dynasties:"c".repeat(64),wretched_ranks:"d".repeat(64),
   "avengers-assemble":"e".repeat(64),
 };
-test("actual public Gorge games become valid original-renderer batches",()=>{
+test("actual public or omniscient Gorge games become valid original-renderer batches",()=>{
   const batch=adapt.adapt([a,b],"mortarion_current",hashes);
   assert.equal(batch.format,"commander-gorge-outcomes-v1");
   assert.equal(batch.engine,"gorge");
@@ -30,10 +30,18 @@ test("actual public Gorge games become valid original-renderer batches",()=>{
   assert.equal(run.life_history.length,run.completed_rounds+1);
   assert.equal(run.ui_observations.length,run.completed_rounds);
   assert.equal(run.ui_observations[0].snapshot_is_turn_end,false);
-  assert.equal(run.opening_hand,null);
   assert.equal(run.opening_hand_count,7);
-  assert.equal(run.ui_observations[0].hand,null);
   assert.equal(run.ui_observations[0].hand_count,6);
+  if(a.visibility==="omniscient"){
+    assert.deepEqual(run.opening_hand,
+      a.snapshots[0].players[0].zones.hand.map(x=>x.name));
+    assert.equal(run.ui_observations[0].hand.length,6);
+    assert.equal(run.opening_hands_by_seat.length,3);
+  }else{
+    assert.equal(run.opening_hand,null);
+    assert.equal(run.ui_observations[0].hand,null);
+    assert.equal(run.opening_hands_by_seat,null);
+  }
   assert.ok(run.ui_observations[0].battlefield.includes("Swamp"));
   assert.ok(run.ui_observations[0].battlefield.includes("Sol Ring"));
   assert.ok(run.ui_observations[0].actions.some(x=>
@@ -41,8 +49,13 @@ test("actual public Gorge games become valid original-renderer batches",()=>{
   assert.ok(run.ui_observations[0].actions.some(x=>
     x.type==="reviewed_generic_spell_cast"&&x.card==="Sol Ring"&&x.seat===0));
   assert.ok(run.ui_observations[0].mana_produced_by_color.B>0);
-  assert.equal(run.ui_observations[0].actions.filter(x=>x.type==="draw").length,0,
-    "Private draws must not be inferred");
+  const sourcedDraws=run.ui_observations.flatMap(x=>x.actions)
+    .filter(x=>x.type==="draw");
+  if(a.visibility==="omniscient"){
+    assert.ok(sourcedDraws.some(x=>x.seat===0&&x.card),
+      "Omniscient synthetic draws are native and named");
+  }else assert.equal(sourcedDraws.length,0,
+    "Private draws must not be inferred from a public-only export");
   assert.equal(run.opponent_decks.length,3);
   assert.deepEqual(run.opponent_decks.map(d=>d.deck_key),[
     "magnus_premium","necron_dynasties","wretched_ranks"]);
@@ -74,12 +87,22 @@ test("winner is sourced only from an exact native game-over identifier",()=>{
   assert.equal(batch.runs[0].outcome.status,"unresolved");
   assert.equal(batch.runs[0].outcome.complete,false);
 });
-test("no hidden-content projection or altered 40-life genesis is accepted",()=>{
-  const altered=structuredClone(a);
-  altered.visibility="omniscient";
-  assert.equal(adapt.validateReplay(altered),false,
+test("unmarked hidden zones, public leaks and altered 40-life genesis are rejected",()=>{
+  const unmarked=structuredClone(a);
+  unmarked.visibility="omniscient";
+  delete unmarked.synthetic_simulation_only;
+  assert.equal(adapt.validateReplay(unmarked),false,
     "Never accept an unmarked hidden-data payload as synthetic");
-  altered.visibility="public_events_only";
+  const leaked=structuredClone(a);
+  leaked.visibility="public_events_only";
+  for(const snap of leaked.snapshots)
+    for(const p of snap.players){
+      p.zones.hand=[];
+      p.zones.library=[];
+    }
+  assert.equal(adapt.validateReplay(leaked),false,
+    "Public-only replay must not contain hidden hand or library zones");
+  const altered=structuredClone(a);
   altered.snapshots[0].players[0].life=20;
   assert.equal(adapt.validateReplay(altered),false);
 });
