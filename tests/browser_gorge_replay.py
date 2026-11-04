@@ -80,6 +80,23 @@ def check():
             assert "artifacts" in state.inner_text().lower()
             assert "graveyard" in state.inner_text().lower()
             page.screenshot(path=str(OUT/"original-insight-desktop.png"),full_page=False)
+            # Capture the OPENED insight, including old metrics and example
+            # turns, before raw-replay changes re-render the results gallery.
+            page.set_viewport_size({"width":390,"height":844})
+            tiles.first.scroll_into_view_if_needed()
+            page.screenshot(path=str(OUT/"original-insight-mobile.png"),full_page=False)
+            widths=page.evaluate("""() => ({
+              viewport: window.innerWidth,
+              document: document.documentElement.scrollWidth,
+              cards: document.querySelector('#key-insights-grid').getBoundingClientRect().width,
+              selected: document.querySelector('.insight-featured-panel[open]').getBoundingClientRect().width
+            })""")
+            print("MOBILE WIDTHS",json.dumps(widths),flush=True)
+            assert widths["document"]<=widths["viewport"]+2, \
+                "Horizontal overflow: "+str(widths)
+            assert insight.is_visible()
+            assert timeline.locator(".gorge-original-turn").first.is_visible()
+            page.set_viewport_size({"width":1440,"height":1000})
             # Original "Open full reviewer" should reveal the same source game
             # in a separate deep dive only when requested.
             tracker.locator(".insight-example-full-link").click()
@@ -123,22 +140,6 @@ def check():
                 assert turn_one.locator(".gorge-replay-event").count()==expected[seed]["turns"][1]["event_count"]
                 assert page.locator(".gorge-replay-error").count()==0
             raw.locator("summary").first.click()
-            # Mobile: capture the old card-specific metrics and narrated turns,
-            # not the very top of the page or the generic source inspector.
-            page.set_viewport_size({"width":390,"height":844})
-            tiles.first.scroll_into_view_if_needed()
-            page.screenshot(path=str(OUT/"original-insight-mobile.png"),full_page=False)
-            widths=page.evaluate("""() => ({
-              viewport: window.innerWidth,
-              document: document.documentElement.scrollWidth,
-              cards: document.querySelector('#key-insights-grid').getBoundingClientRect().width,
-              selected: document.querySelector('.insight-featured-panel[open]').getBoundingClientRect().width
-            })""")
-            print("MOBILE WIDTHS",json.dumps(widths),flush=True)
-            assert widths["document"]<=widths["viewport"]+2,\
-                "Horizontal overflow: "+str(widths)
-            assert insight.is_visible()
-            assert timeline.locator(".gorge-original-turn").first.is_visible()
             assert not errors,"Browser JavaScript errors: "+"; ".join(errors[:8])
             browser.close()
         print("PASS: original card-insight layout, inline game viewer, source state, desktop/mobile")
