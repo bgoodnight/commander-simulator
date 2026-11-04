@@ -852,8 +852,7 @@
       (activations===1?"ability":"abilities"));
     if(triggers)fragments.push(triggers+" triggered "+
       (triggers===1?"ability":"abilities"));
-    if(extras.length)fragments.push(extras.length+" other recorded "+
-      (extras.length===1?"event":"events"));
+    // Miscellaneous engine events are not meaningful summary categories.
     return fragments.length?fragments.join(" · "):null;
   }
   // Single source-grounded narration vocabulary for collapsed and expanded turns.
@@ -937,14 +936,7 @@
   function actionEvidenceDetail(action){
     if(!action||typeof action!=="object")return "";
     const facts=[];
-    if(["ability_activated","ability_triggered"].includes(action.type)){
-      // A Gorge ability slot identifies its native source ability entry,
-      // not readable Oracle text; never fabricate an effect or resolution.
-      if(Number.isInteger(action.native_ability_index))
-        facts.push("Gorge ability slot "+(action.native_ability_index+1));
-      if(Number.isInteger(action.source_seq))
-        facts.push("native event #"+action.source_seq);
-    }
+    // Engine-native ability IDs remain in the data, not in the replay UI.
     if(Number.isFinite(action.life_lost)&&action.life_lost>0)
       facts.push(action.life_lost+" life lost"+
         (Number.isInteger(action.target_seat)?" by seat "+(action.target_seat+1):""));
@@ -1113,7 +1105,7 @@
       panel.appendChild(create("p","micro","Card types unavailable for recorded battlefield"));
     for(const [label,cards] of zones){
       if(!Array.isArray(cards))continue;
-      const group=create("details","insight-end-zone");
+      const group=create("details","insight-end-zone insight-board-"+label.toLowerCase().replace(/[^a-z]+/g,"-"));
       const icon=({Hand:"▤",Creatures:"♟",Lands:"◇",
         Artifacts:"⚙",Enchantments:"✦","Other permanents":"◈",
         Graveyard:"◆",Exile:"⊘"})[label]||"◈";
@@ -1144,18 +1136,7 @@
       }
       all.appendChild(group);panel.appendChild(all);
     }
-    if(!options.openingDraw){
-      const mana=recordedManaOutput(observation);
-      const line=create("div","insight-end-mana");
-      line.appendChild(create("strong",null,"Mana generated"));
-      // Historical exports can omit these counts, so do not imply a
-      // measured zero there. Gorge's explicit turn display uses None.
-      if(mana===null&&options.isGorge)
-        line.appendChild(create("span","micro","None"));
-      else
-        manaPips(line,mana,options);
-      panel.appendChild(line);
-    }
+    // Mana totals are rendered in their own section before enemy turns.
     return panel;
   }
   function compactInsightTimeline(root,run,options={}){
@@ -1192,11 +1173,19 @@
         index?"Turn "+index:"Draw"));
       const pilot=(observation?.actions||[]).filter(a=>
         a.seat===undefined||Number(a.seat)===0);
+      const abilities=pilot.filter(a=>
+        ["ability_activated","ability_triggered"].includes(a.type));
       const synopsis=turnNarration(run.batch?.engine==="gorge"?
         pilot.filter(a=>!["ability_activated","ability_triggered"].includes(a.type)):
         pilot);
+      const grouped=[["ability_activated","activated"],["ability_triggered","triggered"]]
+        .map(([kind,label])=>{
+          const count=abilities.filter(a=>a.type===kind).length;
+          return count?count+"× "+label+" "+(count===1?"ability":"abilities"):null;
+        }).filter(Boolean);
       summary.appendChild(create("span","insight-turn-activity",
-        index?synopsis||"No named plays recorded":openingHandDescription(run)));
+        index?[synopsis,...grouped].filter(Boolean).join(" · ")||
+          "No named plays recorded":openingHandDescription(run)));
       const badges=create("span","insight-turn-metrics");
       const now=lifeAt(current,0),was=before?lifeAt(before,0):now;
       const delta=now-was;
@@ -1285,12 +1274,44 @@
           section.appendChild(items);container.appendChild(section);
         }
         actionSection("Your turn",own,"is-player",false);
+        // Native mana events provide exact color totals, but do not
+        // reliably identify individual producing permanents.
+        const mana=recordedManaOutput(observation);
+        const manaBlock=create("details","insight-mana-detail");
+        const manaHeading=create("summary","insight-mana-summary");
+        manaHeading.appendChild(create("strong",null,"Mana generated"));
+        const manaTotals=create("span","insight-mana-total");
+        if(mana===null&&run.batch?.engine==="gorge")
+          manaTotals.appendChild(create("span",null,"None"));
+        else manaPips(manaTotals,mana,options);
+        manaHeading.appendChild(manaTotals);
+        manaBlock.appendChild(manaHeading);
+        manaBlock.appendChild(create("p","micro",mana?.length?
+          "Recorded mana by color. This Gorge export does not identify which cards generated each amount.":
+          "No mana production was recorded for this turn."));
+        body.appendChild(manaBlock);
         // Keep the rest of the round to a single small evidence block.
         // Opponent cards are counted only from explicit cast/land events.
         const rest=create("section","insight-rest-of-turn");
-        rest.appendChild(create("h4","insight-rest-title","Rest of turn"));
+        rest.appendChild(create("h4","insight-rest-title","Enemy turns"));
         const enemyText=enemyActivitySummary(enemy);
         if(enemyText)rest.appendChild(create("p","insight-rest-event",enemyText));
+        const enemyGroups=[
+          ["Lands",enemy.filter(a=>a.type==="land_play")],
+          ["Creatures",enemy.filter(a=>["creature_cast","reviewed_graveyard_creature_cast"].includes(a.type))],
+          ["Artifacts",enemy.filter(a=>a.type==="artifact_cast")],
+          ["Enchantments",enemy.filter(a=>a.type==="enchantment_cast")],
+          ["Other spells",enemy.filter(a=>a.type?.endsWith("_cast")&&
+            !["creature_cast","reviewed_graveyard_creature_cast","artifact_cast","enchantment_cast"].includes(a.type))]
+        ];
+        for(const [label,entries] of enemyGroups){
+          if(!entries.length)continue;
+          const disclosure=create("details","insight-end-zone insight-enemy-group");
+          disclosure.appendChild(create("summary","insight-end-zone-label",
+            entries.length+" "+label.toLowerCase()));
+          actionSection(label,entries,"is-opponent",true,disclosure);
+          rest.appendChild(disclosure);
+        }
         // Preserve the original compact rest-of-turn layout while letting
         // viewers inspect EACH opposing ability with its actual controller,
         // source card and native event number on demand.
@@ -1304,7 +1325,7 @@
           disclosure.appendChild(create("summary","insight-end-zone-label",
             "Opponent abilities · "+activationCount+" activated · "+
             triggerCount+" triggered"));
-          actionSection("Recorded opposing abilities",enemyAbilities,
+          actionSection("Abilities",enemyAbilities,
             "is-opponent is-ability",true,disclosure);
           rest.appendChild(disclosure);
         }
@@ -1320,21 +1341,24 @@
           }
           rest.appendChild(combat);
         }
-        body.appendChild(endStatePanel(observation,{...options,
+        const board=create("section","insight-board-panel");
+        board.appendChild(create("h4","insight-board-title","Board state"));
+        board.appendChild(endStatePanel(observation,{...options,
           isGorge:run.batch?.engine==="gorge"}));
         const moves=observedZoneChanges(previous,observation);
         for(const move of moves){
           const line=create("p","insight-rest-event");
-          line.appendChild(create("span",null,move.verb+" "));
           line.appendChild(insightActionCard(move.card,options,{textOnly:true}));
+          line.appendChild(create("span",null," · "+move.verb));
           rest.appendChild(line);
         }
-        rest.appendChild(seatChangeSummary(current,before));
         body.appendChild(rest);
+        board.appendChild(seatChangeSummary(current,before));
+        body.appendChild(board);
       }
       if(!observation){
         const rest=create("section","insight-rest-of-turn");
-        rest.appendChild(create("h4","insight-rest-title","Rest of turn"));
+        rest.appendChild(create("h4","insight-rest-title","Enemy turns"));
         rest.appendChild(seatChangeSummary(current,before));
         body.appendChild(rest);
       }
