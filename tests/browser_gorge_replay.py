@@ -12,7 +12,7 @@ import os
 
 from playwright.sync_api import sync_playwright
 
-ROOT=Path(__file__).resolve().parents[1]/"docs"/"deck-lab"
+ROOT=Path(os.environ["BROWSER_SITE_DIR"]) if "BROWSER_SITE_DIR" in os.environ else Path(__file__).resolve().parents[1]/"docs"/"deck-lab"
 OUT=Path(os.getenv("BROWSER_ARTIFACT_DIR","/tmp/gorge-browser-evidence"))
 OUT.mkdir(parents=True,exist_ok=True)
 
