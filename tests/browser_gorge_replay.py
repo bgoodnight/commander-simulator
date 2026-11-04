@@ -59,8 +59,11 @@ def check():
             trigger_panel=page.locator(
                 "#game-outcome-results .insight-featured-panel"
             ).filter(has_text="Most triggered ability").first
-            assert ability_panel.is_visible()
-            assert trigger_panel.is_visible()
+            print("ABILITY INSIGHTS",page.locator(
+                "#game-outcome-results .insight-featured-panel > summary"
+            ).all_inner_texts(),flush=True)
+            ability_panel.wait_for(state="visible",timeout=15000)
+            trigger_panel.wait_for(state="visible",timeout=15000)
             ability_panel.locator(".game-outcome-summary").click()
             assert "Recorded activations" in ability_panel.inner_text()
             assert "Pestilence Demon" in ability_panel.inner_text()
