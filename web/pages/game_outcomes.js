@@ -615,7 +615,8 @@
             record("tutorFound",action.target_name,run,row.turn,1,provenance);
             record("tutorUsed",action.card,run,row.turn,1,provenance);
           }
-          if(action.type==="draw"&&action.card&&!basic(action.card)){
+          if(action.type==="draw"&&action.card&&!basic(action.card)&&
+             (action.seat===undefined||Number(action.seat)===0)){
             seen.add(action.card);
             record("seen",action.card,run,row.turn,0,{eventIndex});
           }
