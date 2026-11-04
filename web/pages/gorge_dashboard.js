@@ -89,7 +89,7 @@ function displayDeckName(name){
     "deadly-disguise":"Deadly Disguise",
     "science-pip":"Science!"
   };
-  return labels[name]||String(name||"").replaceAll(/[_-]/g," ").replace(/\\b\\w/g,c=>c.toUpperCase());
+  return labels[name]||String(name||"").replaceAll(/[_-]/g," ").replace(/\b\w/g,c=>c.toUpperCase());
 }
 function cardArt(name){
   if(!name||typeof name!=="string")return null;
