@@ -51,6 +51,21 @@ class PublicGorgeStateTest(unittest.TestCase):
             for snap in output["snapshots"] for player in snap["players"]
             for cards in player["zones"].values() for card in cards))
 
+    def test_explicit_omniscient_snapshot_has_named_hands_for_all_four_bots(self):
+        raw=fixture()
+        projected=project(raw,include_hidden=True)
+        self.assertEqual(projected[0]["players"][0]["zones"]["hand"][0]["name"],"Card 2")
+        self.assertEqual(projected[0]["players"][1]["zones"]["hand"][0]["name"],"Card 102")
+        self.assertEqual([c["name"] for c in projected[0]["players"][0]["zones"]["library"]],
+                         ["Card 4","Card 5"])
+        view=convert(raw,include_hidden=True)
+        self.assertEqual(view["visibility"],"omniscient")
+        self.assertEqual(view["state"]["hands"],"named_turn_entry_snapshots")
+        self.assertEqual(view["snapshots"][0]["players"][3]["zones"]["hand"][1]["name"],"Card 303")
+        self.assertNotIn("objects",view)
+        self.assertNotIn("log",view)
+        self.assertNotIn("intents",view)
+
     def test_20_life_game_is_not_valid_commander_benchmark(self):
         data=fixture()
         for player in data["snapshots"][0]["players"]:

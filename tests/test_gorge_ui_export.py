@@ -43,6 +43,18 @@ class GorgeUIExportTests(unittest.TestCase):
         self.assertEqual(doc["visibility"],"omniscient")
         self.assertEqual(doc["source"]["omitted_hidden_events"],0)
 
+    def test_explicit_hidden_draw_can_be_identified_without_inferring_a_card(self):
+        raw=sample()
+        raw["objects"]=[{"object_id":3,"card_name":"Swamp","effective_name":"Swamp"}]
+        doc=convert(raw,include_hidden=True)
+        draws=[e for t in doc["turns"] for e in t["events"] if e["kind"]=="draw"]
+        self.assertEqual(len(draws),1)
+        self.assertEqual(draws[0]["card_name"],"Swamp")
+        self.assertEqual(doc["object_identity"]["3"],"Swamp")
+        self.assertTrue(doc["synthetic_simulation_only"])
+        self.assertNotIn("objects",doc)
+        self.assertNotIn("log",doc)
+
     def test_invalid_events_fail_closed(self):
         raw=sample()
         raw["log"]["events"][3]["seq"]=2

@@ -21,7 +21,12 @@ def check():
     assert (ROOT/"results.html").is_file()
     assert (ROOT/"gorge_legacy_adapter.js").is_file()
     manifest=json.loads((ROOT/"gorge-data"/"manifest.json").read_text())
-    assert manifest["schema"]=="gorge-public-replay-manifest-v1"
+    assert manifest["schema"] in {"gorge-public-replay-manifest-v1",
+                                   "gorge-omniscient-replay-manifest-v1"}
+    omniscient=manifest["schema"]=="gorge-omniscient-replay-manifest-v1"
+    if omniscient:
+        assert manifest["visibility"]=="omniscient"
+        assert manifest["synthetic_simulation_only"] is True
     assert {g["seed"] for g in manifest["games"]}=={300,301}
     errors=[]
     server=ThreadingHTTPServer(("127.0.0.1",0),Handler)
@@ -80,7 +85,15 @@ def check():
             assert timeline.locator(".insight-turn-row").count()>=9
             opening=timeline.locator(".insight-turn-row").first
             assert "Opening hand" in opening.inner_text()
-            assert "identities private" in opening.inner_text()
+            if omniscient:
+                assert "identities private" not in opening.inner_text()
+                assert "Opening hand" in opening.inner_text()
+                opening.locator(".insight-turn-row-summary").click()
+                assert opening.locator(".insight-end-state .insight-end-zone").count()>0
+                assert "Opponents' hands" in opening.inner_text()
+                opening.locator(".insight-turn-row-summary").click()
+            else:
+                assert "identities private" in opening.inner_text()
             first=timeline.locator(".insight-turn-row").nth(1)
             assert "Played Swamp" in first.locator(".insight-turn-row-summary").inner_text()
             assert "Sol Ring" in first.locator(".insight-turn-row-summary").inner_text()
@@ -89,7 +102,12 @@ def check():
             first.locator(".insight-turn-row-summary").click()
             assert first.evaluate("(e)=>e.open")
             assert "Recorded turn-entry state" in first.locator(".insight-end-state").inner_text()
-            assert "Individual identities are private" in first.locator(".insight-end-state").inner_text()
+            if omniscient:
+                assert "Individual identities are private" not in first.locator(".insight-end-state").inner_text()
+                assert "Opponents' hands" in first.locator(".insight-end-state").inner_text()
+                assert "Hand ·" in first.locator(".insight-end-state").inner_text()
+            else:
+                assert "Individual identities are private" in first.locator(".insight-end-state").inner_text()
             assert "Lands" in first.locator(".insight-end-state").inner_text()
             page.screenshot(path=str(OUT/"original-renderer-desktop.png"),full_page=False)
             first.locator(".insight-turn-row-summary").click()
@@ -134,6 +152,59 @@ def check():
             hero=page.locator("#game-outcome-results .game-outcome-hero")
             assert "Losses" in hero.inner_text()
             assert "2/2" in hero.inner_text()
+            # Independently exercise the NEW omniscient UI path even when
+            # the committed public fixture is still in privacy-safe mode.
+            # The names in this synthetic browser-only fixture are test data;
+            # no game outcome or drawn card is inferred from them.
+            omnigame=json.loads((ROOT/"gorge-data"/"gorge-seed-300.ui.json").read_text())
+            omnigame["visibility"]="omniscient"
+            omnigame["synthetic_simulation_only"]=True
+            for snap in omnigame["snapshots"]:
+                for player in snap["players"]:
+                    seat=player["seat"]
+                    player["zones"]["hand"]=[
+                        {"object_id":100000+seat*1000+i,
+                         "name":f"Test hand seat {seat} card {i}","token":False}
+                        for i in range(player["hand_count"])]
+                    player["zones"]["library"]=[
+                        {"object_id":200000+seat*1000+i,
+                         "name":f"Test library seat {seat} card {i}","token":False}
+                        for i in range(player["library_count"])]
+            omnifest={
+                "schema":"gorge-omniscient-replay-manifest-v1",
+                "visibility":"omniscient",
+                "synthetic_simulation_only":True,
+                "games":[{"seed":300,"file":"gorge-seed-300.ui.json",
+                          "decks":omnigame["decks"],"chain":omnigame["chain"]}],
+            }
+            omni_page=browser.new_page(viewport={"width":390,"height":844})
+            omni_page.on("pageerror",lambda e:errors.append(str(e)))
+            omni_page.route("**/gorge-data/manifest.json",
+                lambda route:route.fulfill(status=200,content_type="application/json",
+                                          body=json.dumps(omnifest)))
+            omni_page.route("**/gorge-data/gorge-seed-300.ui.json",
+                lambda route:route.fulfill(status=200,content_type="application/json",
+                                          body=json.dumps(omnigame)))
+            omni_page.goto(site+"?deck=mortarion_current",
+                           wait_until="domcontentloaded",timeout=60000)
+            omni_card=omni_page.locator("#game-outcome-results .insight-featured-panel").first
+            omni_card.wait_for(state="visible",timeout=40000)
+            assert "omniscient" in omni_page.locator(".game-outcome-hero-meta").inner_text().lower()
+            omni_card.locator(".game-outcome-summary").click()
+            omni_tracker=omni_card.locator(".insight-inline-tracker")
+            omni_tracker.locator("summary").first.click()
+            omni_opening=omni_tracker.locator(".insight-turn-row").first
+            assert "Test hand seat 0 card 0" in omni_opening.inner_text()
+            omni_opening.locator(".insight-turn-row-summary").click()
+            assert "Opponents' hands" in omni_opening.inner_text()
+            omni_opening.locator(".insight-omniscient-opponents > summary").click()
+            omni_opening.locator(".insight-omniscient-opponent-list > details").first.locator("summary").click()
+            assert "Test hand seat 1 card 0" in omni_opening.inner_text()
+            assert "The public replay does not include" not in omni_opening.inner_text()
+            assert omni_page.evaluate("document.documentElement.scrollWidth<=window.innerWidth+2")
+            omni_page.screenshot(path=str(OUT/"original-renderer-omniscient-mobile.png"),
+                                 full_page=False)
+            omni_page.close()
             assert not errors,"Browser page errors: "+"; ".join(errors[:9])
             browser.close()
         print("PASS: actual original renderer, real Gorge outcomes, evidence, mobile and source isolation")

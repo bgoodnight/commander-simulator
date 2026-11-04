@@ -284,9 +284,10 @@ def build(output, *, catalog_path=SHARED_CATALOG, name_catalog_path=DEFAULT_NAME
         shutil.copy2(replay_source, dest)
         replay_assets.append("replay-data/" + replay_file)
 
-    # Only allowlisted, public-visibility gorge replays can ship to Pages.
-    # The original event/intent logs, object crosswalk and hidden-zone
-    # snapshots stay in restricted GitHub Actions artifacts.
+    # Only allowlisted Gorge UI projections can ship to Pages.
+    # For synthetic AI-vs-AI games the user explicitly enables omniscient
+    # hand/library identities. NEVER publish native logs, intents, raw object
+    # arrays or non-synthetic hidden-zone data. Public remains the default.
     public_gorge = static / "data" / "gorge"
     if public_gorge.is_dir():
         manifest_file = public_gorge / "manifest.json"
@@ -294,9 +295,16 @@ def build(output, *, catalog_path=SHARED_CATALOG, name_catalog_path=DEFAULT_NAME
             raise ValueError("Gorge replay samples require a manifest")
         manifest = json.loads(manifest_file.read_text(encoding="utf-8"))
         games = manifest.get("games", [])
-        if (manifest.get("schema") != "gorge-public-replay-manifest-v1"
+        mode = manifest.get("schema")
+        omniscient = mode == "gorge-omniscient-replay-manifest-v1"
+        public = mode == "gorge-public-replay-manifest-v1"
+        if (not (public or omniscient)
                 or not isinstance(games, list) or not 1 <= len(games) <= 4):
             raise ValueError("Invalid gorge replay sample manifest")
+        if omniscient and (manifest.get("visibility") != "omniscient"
+                           or manifest.get("synthetic_simulation_only") is not True):
+            raise ValueError("Omniscient publication must explicitly identify synthetic AI games")
+        visibility = "omniscient" if omniscient else "public_events_only"
         validated = []
         for row in games:
             filename = row.get("file", "")
@@ -307,12 +315,13 @@ def build(output, *, catalog_path=SHARED_CATALOG, name_catalog_path=DEFAULT_NAME
                 raise ValueError("Missing gorge public replay file")
             game = json.loads(source_file.read_text(encoding="utf-8"))
             if (game.get("schema") != "gorge-ui-replay-v1"
-                    or game.get("visibility") != "public_events_only"
+                    or game.get("visibility") != visibility
+                    or (omniscient and game.get("synthetic_simulation_only") is not True)
                     or game.get("seed") != row.get("seed")
                     or not isinstance(game.get("snapshots"), list)
                     or not game["snapshots"]
                     or "objects" in game or "log" in game or "intents" in game):
-                raise ValueError("Gorge replay could disclose private game data")
+                raise ValueError("Invalid Gorge projection or native internals in UI export")
             for snap in game["snapshots"]:
                 if snap.get("boundary") != "first_pending_decision_of_turn":
                     raise ValueError("Gorge snapshot boundary is not documented")
@@ -321,9 +330,15 @@ def build(output, *, catalog_path=SHARED_CATALOG, name_catalog_path=DEFAULT_NAME
                     raise ValueError("Gorge public replay is missing seats")
                 for player in players:
                     zones = player.get("zones", {})
-                    if set(zones) != {"battlefield", "graveyard", "exile", "command"}:
-                        raise ValueError("Private zone leaked in gorge public replay")
-            if any(event.get("secret") for turn in game.get("turns", [])
+                    expected = ({"hand", "library", "battlefield", "graveyard", "exile", "command"}
+                                if omniscient else
+                                {"battlefield", "graveyard", "exile", "command"})
+                    if set(zones) != expected:
+                        raise ValueError("Unexpected Gorge zone projection for visibility mode")
+                    if omniscient and (len(zones["hand"]) != player.get("hand_count")
+                                      or len(zones["library"]) != player.get("library_count")):
+                        raise ValueError("Omniscient zone identities do not match native counts")
+            if not omniscient and any(event.get("secret") for turn in game.get("turns", [])
                    for event in turn.get("events", [])):
                 raise ValueError("Secret gorge event leaked to public sample")
             validated.append((source_file, filename))

@@ -301,7 +301,7 @@ function paint(rootElement,data,options={}){
  * Full game-state panels remain explicitly unavailable until gorge exports
  * authoritative snapshots. No reconstructed life totals or card identity.
  */
-function paintPublicSnapshot(section,snapshot,decks){
+function paintPublicSnapshot(section,snapshot,decks,omniscient=false){
   if(!snapshot||snapshot.boundary!=="first_pending_decision_of_turn")return;
   const details=node("details","gorge-replay-state");
   details.append(node("summary",null,"Verified turn-entry state · "+snapshot.step+
@@ -315,7 +315,10 @@ function paintPublicSnapshot(section,snapshot,decks){
         " · Library "+player.library_count+(player.lost?" · Eliminated":"")));
     const mana=(player.mana_pool||[]).map((n,i)=>n>0?manaSymbols[i]+" ×"+n:null).filter(Boolean);
     card.append(node("small",null,"Unspent mana: "+(mana.join("  ")||"none")));
-    for(const zoneName of ["battlefield","graveyard","exile","command"]){
+    const shown=omniscient?
+      ["hand","library","battlefield","graveyard","exile","command"]:
+      ["battlefield","graveyard","exile","command"];
+    for(const zoneName of shown){
       const cards=player.zones&&player.zones[zoneName]||[];
       const zone=node("details","gorge-replay-zone");
       zone.append(node("summary",null,zoneName+" · "+cards.length));
@@ -336,8 +339,10 @@ function paintPublicSnapshot(section,snapshot,decks){
 function paintView(rootElement,data){
   if(!data||data.schema!=="gorge-ui-replay-v1"||data.engine!=="gorge"||
      !Array.isArray(data.turns)||!Array.isArray(data.decks)||
-     data.decks.length!==4||data.visibility!=="public_events_only")
-    throw Error("Expected a public gorge-ui-replay-v1 export");
+     data.decks.length!==4||
+     !["public_events_only","omniscient"].includes(data.visibility)||
+     (data.visibility==="omniscient"&&data.synthetic_simulation_only!==true))
+    throw Error("Expected an explicitly validated synthetic or public gorge-ui-replay-v1 export");
   rootElement.replaceChildren();
   if(typeof window!=="undefined"&&window.GorgeDashboard){
     window.__gorgeActiveGame=data;
@@ -349,11 +354,14 @@ function paintView(rootElement,data){
   header.append(node("p","small",data.decks.join(" · ")));
   header.append(node("p","small",data.source.total_native_events+
     " source events · "+data.source.total_native_decisions+
-    " decisions · "+data.source.exported_events+" public display events"));
+    " decisions · "+data.source.exported_events+
+    (data.visibility==="omniscient"?" omniscient display events":" public display events")));
   rootElement.append(header);
   rootElement.append(node("p","gorge-replay-caution",
     data.snapshots?.length?
-    "Authoritative state recorded at the FIRST pending decision of each turn, not turn end. Opponent hand and library identities remain private.":
+    data.visibility==="omniscient"?
+      "Synthetic omniscient AI game: all four players' opening hands, draws and libraries are visible. Snapshots are at the FIRST pending decision of each turn, NOT turn end.":
+      "Authoritative state recorded at the FIRST pending decision of each turn, not turn end. Opponent hand and library identities remain private.":
     "Event-only recording: no authoritative physical state available."));
   const roster=node("div","gorge-replay-roster");
   data.decks.forEach((name,i)=>{
@@ -376,7 +384,8 @@ function paintView(rootElement,data){
     section.append(summary);
     if(Array.isArray(data.snapshots)){
       const snap=data.snapshots.find(x=>x.turn===turn.turn);
-      if(snap)paintPublicSnapshot(section,snap,data.decks);
+      if(snap)paintPublicSnapshot(section,snap,data.decks,
+        data.visibility==="omniscient");
     }
     const highlight=turn.highlights.map(e=>
       e.kind.replace(/_/g," ")+(e.card_name?" · "+e.card_name:
@@ -418,6 +427,7 @@ function init(){
   const loadButton=$("gorge-replay-load");
   const available=new Set();
   const loadedGames=new Map();
+  let manifestVisibility=null;
   async function openPublicSample(name){
     if(!available.has(name))throw Error("Replay not in public manifest");
     rootElement.replaceChildren(node("p","small","Loading verified gorge game…"));
@@ -425,9 +435,10 @@ function init(){
     if(!response.ok)throw Error("Public gorge replay unavailable");
     const data=await response.json();
     if(data.schema!=="gorge-ui-replay-v1"||
-       data.visibility!=="public_events_only"||
+       data.visibility!==manifestVisibility||
+       (manifestVisibility==="omniscient"&&data.synthetic_simulation_only!==true)||
        !Array.isArray(data.snapshots)||!data.snapshots.length)
-      throw Error("Unverified public gorge replay");
+      throw Error("Unverified Gorge replay visibility or source");
     loadedGames.set(data.seed,data);
     if(typeof window!=="undefined")window.__gorgeLoadedGames=[...loadedGames.values()];
     paintView(rootElement,data);
@@ -442,8 +453,12 @@ function init(){
       if(!response.ok)throw Error("No published gorge sample yet");
       return response.json();
     }).then(manifest=>{
-      if(manifest.schema!=="gorge-public-replay-manifest-v1"||
-         !Array.isArray(manifest.games))throw Error("Unsupported sample manifest");
+      const omniscient=manifest.schema==="gorge-omniscient-replay-manifest-v1"&&
+        manifest.visibility==="omniscient"&&manifest.synthetic_simulation_only===true;
+      if(!omniscient&&manifest.schema!=="gorge-public-replay-manifest-v1")
+        throw Error("Unsupported sample manifest");
+      if(!Array.isArray(manifest.games))throw Error("Unsupported manifest games");
+      manifestVisibility=omniscient?"omniscient":"public_events_only";
       for(const game of manifest.games){
         if(!/^gorge-seed-[0-9]+\.ui\.json$/.test(game.file))continue;
         available.add(game.file);
@@ -461,7 +476,8 @@ function init(){
           if(!r.ok)throw Error("Missing public gorge sample");
           return r.json();
         }).then(g=>{
-          if(g.schema==="gorge-ui-replay-v1"&&g.visibility==="public_events_only")
+          if(g.schema==="gorge-ui-replay-v1"&&g.visibility===manifestVisibility&&
+             (manifestVisibility!=="omniscient"||g.synthetic_simulation_only===true))
             loadedGames.set(g.seed,g);
         })
       )).then(()=>{

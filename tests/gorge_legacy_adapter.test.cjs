@@ -77,11 +77,56 @@ test("winner is sourced only from an exact native game-over identifier",()=>{
 test("no hidden-content projection or altered 40-life genesis is accepted",()=>{
   const altered=structuredClone(a);
   altered.visibility="omniscient";
-  assert.equal(adapt.validateReplay(altered),false);
+  assert.equal(adapt.validateReplay(altered),false,
+    "Never accept an unmarked hidden-data payload as synthetic");
   altered.visibility="public_events_only";
   altered.snapshots[0].players[0].life=20;
   assert.equal(adapt.validateReplay(altered),false);
 });
+test("explicit synthetic omniscience restores named hands, opponent hands and sourced draws",()=>{
+  const g=structuredClone(a);
+  g.visibility="omniscient";
+  g.synthetic_simulation_only=true;
+  for(const snap of g.snapshots){
+    for(const p of snap.players){
+      p.zones.hand=Array.from({length:p.hand_count},(_,i)=>({
+        object_id:100000+p.seat*1000+i,
+        name:p.seat===0?(i===0?"Swamp":"Simulated Card "+i):
+          "Opponent "+p.seat+" Card "+i,token:false
+      }));
+      p.zones.library=Array.from({length:p.library_count},(_,i)=>({
+        object_id:200000+p.seat*1000+i,name:"Library Card "+i,token:false
+      }));
+    }
+  }
+  const row=g.turns.find(t=>t.turn===5);
+  row.events.push({seq:999999,kind:"draw",obj:4321,player:0,
+    card_name:"Dark Ritual"});
+  row.events.push({seq:999998,kind:"draw",obj:4322,player:1,
+    card_name:"Opponent Secret"});
+  row.events.sort((a,b)=>a.seq-b.seq);
+  g.object_identity["4321"]="Dark Ritual";
+  assert.equal(adapt.validateReplay(g),true);
+  const batch=adapt.adapt([g],"mortarion_current",hashes);
+  assert.equal(old.validate(batch),true);
+  const run=batch.runs[0];
+  assert.equal(run.opening_hand.length,7);
+  assert.equal(run.opening_hand[0],"Swamp");
+  assert.equal(run.opening_hands_by_seat.length,3);
+  assert.equal(run.opening_hands_by_seat[0].hand[0],"Opponent 1 Card 0");
+  assert.equal(run.ui_observations[0].hand.length,
+    run.ui_observations[0].hand_count);
+  assert.equal(run.ui_observations[0].opponent_hands.length,3);
+  assert.ok(run.ui_observations.some(t=>t.actions.some(e=>
+    e.type==="draw"&&e.card==="Dark Ritual"&&e.seat===0)));
+  const stats=old.observationCardStats([run],()=>null,"Mortarion, Daemon Primarch");
+  assert.ok(stats.seen&&stats.ranked.seen.some(x=>x.name==="Dark Ritual"));
+  assert.ok(!stats.ranked.seen.some(x=>x.name==="Opponent Secret"),
+    "Enemy draws cannot contaminate hero's seen/unplayed insights");
+  assert.ok(stats.ranked.longest.some(x=>x.name==="Simulated Card 1"));
+  assert.equal(run.gorge_source.visibility,"omniscient");
+});
+
 test("genuine cast records populate the ORIGINAL source statistics",()=>{
   const batch=adapt.adapt([a],"mortarion_current",hashes);
   const names={ 
