@@ -311,7 +311,7 @@ function paint(){
   }
   const stats=analyze(state.games,deck);
   const lookup=catalog(state.catalog?.cards||{});
-  const sample=$("simulation-snapshot"),metrics=$("simulation-snapshot-metrics");
+  const metrics=$("simulation-snapshot-metrics");
   if(sample&&metrics){
     sample.hidden=false;
     const scope=$("simulation-snapshot-scope");
