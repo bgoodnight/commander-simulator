@@ -48,6 +48,12 @@ assert.match(html,/id="gorge-replay-file"/);
 assert.match(html,/gorge_replay\.js/);
 const build=fs.readFileSync(path.join(__dirname,"../tools/build_pages_deck_lab.py"),"utf8");
 assert.match(build,/gorge_replay\.js/);
+const replayLoader=fs.readFileSync(path.join(__dirname,"../web/pages/gorge_replay.js"),"utf8");
+// A growing Gorge manifest must not fetch every megabyte-scale replay merely
+// to open the first game. Each selected seed is fetched on demand.
+assert.match(replayLoader,/return openPublicSample\(select\.value\);/);
+assert.doesNotMatch(replayLoader,/Promise\.allSettled\(\[\.\.\.available\]/);
+
 console.log("Gorge native replay viewer: schema, actual-format events, privacy filtering, turn grouping and static route wiring PASS");
 
 
