@@ -2040,3 +2040,38 @@ body:has(#pane-records:not([hidden])) .compact-selection{margin-bottom:3px}
 .gorge-replay-zone-cards{display:flex;flex-wrap:wrap;gap:.35rem;padding:.5rem}
 .gorge-replay-zone-cards a{font-size:.77rem;border:1px solid rgba(143,171,186,.25);border-radius:.4rem;padding:.35rem .5rem;color:var(--mint,#7be0cb);text-decoration:none}
 .gorge-replay-zone-cards a:hover{text-decoration:underline}
+
+/* A gorge game is a full-width Results panel independent of the old deck
+   selection grid. Small screens must not inherit the desktop grid's implicit
+   min-content width from event data or 4-seat snapshots. */
+.gorge-replay-panel,.gorge-replay-inner,.gorge-replay-root,.gorge-replay-turns{
+  min-width:0;
+  max-width:100%;
+  box-sizing:border-box;
+}
+.gorge-replay-header,.gorge-replay-header p,.gorge-replay-highlights{
+  min-width:0;
+  overflow-wrap:anywhere;
+}
+#gorge-replay-file{box-sizing:border-box;max-width:100%}
+.gorge-replay-state-player,.gorge-replay-player,.gorge-replay-zone-cards{
+  min-width:0;
+  overflow-wrap:anywhere;
+}
+@media(max-width:650px){
+  .gorge-replay-panel{width:100%;overflow-x:clip}
+  .gorge-replay-inner{display:grid;grid-template-columns:minmax(0,1fr);padding:.75rem}
+  .gorge-replay-root,.gorge-replay-turns{display:grid;grid-template-columns:minmax(0,1fr)}
+  .gorge-replay-roster,.gorge-replay-state-grid{
+    display:grid;
+    grid-template-columns:minmax(0,1fr);
+    max-width:100%;
+    min-width:0;
+    padding-left:0;
+    padding-right:0;
+  }
+  .gorge-replay-controls{min-width:0}
+  .gorge-replay-turn{max-width:100%;min-width:0}
+  .gorge-replay-event-list{min-width:0;max-width:100%;overflow-x:hidden}
+  .gorge-replay-samples{min-width:0}
+}
