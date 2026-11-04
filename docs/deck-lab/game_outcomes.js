@@ -43,7 +43,7 @@
        typeof batch.scenario!=="string"||
        batch.outcomes_are_competitive_win_rates!==false||
        !Number.isInteger(batch.requested_rounds)||batch.requested_rounds<1||
-       batch.requested_rounds>30||!Array.isArray(batch.runs)||
+       batch.requested_rounds>60||!Array.isArray(batch.runs)||
        !batch.runs.length||batch.runs.length>200)return false;
     const seeds=new Set();
     for(const run of batch.runs){

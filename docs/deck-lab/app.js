@@ -224,7 +224,37 @@ function deckVersionsForCommander(commanderId){
   return localVersions.filter(v=>keys.has(v.baseKey))
     .sort((a,b)=>String(b.updated||b.created||"").localeCompare(String(a.updated||a.created||"")));
 }
+// Only authoritative player-seat entries count as simulations of a deck.
+let activeGorgeCatalog=[];
+function verifiedPlayerGame(row,key){
+  return row&&Number.isInteger(row.player_seat)&&row.player_seat>=0&&
+    row.player_seat<4&&Array.isArray(row.decks)&&
+    row.decks[row.player_seat]===key&&row.player_deck===key;
+}
+function latestSimulatedDeckForCommander(commanderId){
+  const candidates=sameCommanderDecks(commanderId);
+  const ranked=candidates.map(deck=>{
+    const matches=activeGorgeCatalog.filter(row=>verifiedPlayerGame(row,deck.key));
+    const latest=matches.sort((a,b)=>
+      String(b.simulated_at||"").localeCompare(String(a.simulated_at||""))||
+      b.seed-a.seed)[0];
+    return {deck,latest};
+  }).filter(row=>row.latest);
+  ranked.sort((a,b)=>
+    String(b.latest.simulated_at||"").localeCompare(String(a.latest.simulated_at||""))||
+    b.latest.seed-a.latest.seed);
+  return ranked[0]?.deck?.key||null;
+}
+window.GorgeDeckLabSetCatalog=games=>{
+  activeGorgeCatalog=Array.isArray(games)?games.filter(row=>
+    row&&Number.isInteger(row.player_seat)&&typeof row.player_deck==="string"):[];
+};
 function latestSelectionForCommander(commanderId){
+  if(pageName==="results"){
+    const recent=latestSimulatedDeckForCommander(commanderId);
+    if(recent)return {key:recent,version:null};
+    return {key:sameCommanderDecks(commanderId)[0]?.key,version:null};
+  }
   const preferred=preferredByCommander[commanderId];
   if(preferred?.key&&sameCommanderDecks(commanderId).some(d=>d.key===preferred.key)){
     const version=localVersions.some(v=>v.id===preferred.version&&v.baseKey===preferred.key)?
@@ -418,8 +448,10 @@ function summon(key,{versionId=null,remember=true}={}){
   }
   renderGlobalDeckSelector();
   showPage();syncPageNavigation();
-  if(pageName==="results"&&window.GorgeDashboard)
+  if(pageName==="results"&&window.GorgeDashboard){
     window.GorgeDashboard.render(window.__gorgeLoadedGames||[],window.__gorgeActiveGame?.seed,key);
+    window.GorgeDeckLabRefreshSamples?.();
+  }
 }
 function physicalArchive(){
   if(selected!=="mortarion_physical_final"||isUnsimulatedVersion())return null;
@@ -2304,7 +2336,18 @@ async function boot(){
       throw Error("Unexpected static dataset format.");
     allNames.sort((a,b)=>a.localeCompare(b));
     for(const card of Object.values(data.cards))addAliases(card);
-    loadLocal();buildDeckRail();
+    loadLocal();
+    if(pageName==="results"){
+      try{
+        const response=await fetch("./gorge-data/manifest.json",{cache:"no-store"});
+        if(response.ok){
+          const manifest=await response.json();
+          if(Array.isArray(manifest.games))
+            window.GorgeDeckLabSetCatalog(manifest.games);
+        }
+      }catch(error){console.warn("Gorge results catalog unavailable",error)}
+    }
+    buildDeckRail();
     const params=new URLSearchParams(location.search);
     const key=params.get("deck"),requestedVersion=params.get("version");
     let choice;
@@ -2315,8 +2358,25 @@ async function boot(){
     }else{
       // Only an explicit, valid deep link overrides latest-modified default.
       // A previously viewed deck is not necessarily the newest revision.
-      const latest=latestDeckChoice();
-      choice={key:latest.key,version:latest.version};
+      const latest=pageName==="results"?
+        [...data.decks].map(deck=>({
+          deck,rows:activeGorgeCatalog.filter(row=>verifiedPlayerGame(row,deck.key))
+        })).filter(item=>item.rows.length).sort((a,b)=>{
+          const x=a.rows.sort((u,v)=>
+            String(v.simulated_at||"").localeCompare(String(u.simulated_at||""))||
+            v.seed-u.seed)[0];
+          const y=b.rows.sort((u,v)=>
+            String(v.simulated_at||"").localeCompare(String(u.simulated_at||""))||
+            v.seed-u.seed)[0];
+          return String(y.simulated_at||"").localeCompare(String(x.simulated_at||""))||
+            y.seed-x.seed;
+        })[0]:null;
+      if(latest)choice={key:latest.deck.key,version:null};
+      else{
+        const choiceFallback=pageName==="results"?
+          {key:data.decks[0].key,version:null}:latestDeckChoice();
+        choice={key:choiceFallback.key,version:choiceFallback.version};
+      }
     }
     summon(choice.key,{versionId:choice.version});
      }catch(err){

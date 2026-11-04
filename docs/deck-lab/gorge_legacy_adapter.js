@@ -205,7 +205,7 @@
     if(!validateReplay(g)||!Number.isInteger(hero)||hero<0||hero>3)
       throw Error("Invalid source Gorge game or selected seat");
     const own=g.turns.filter(t=>Number.isInteger(t.turn)&&t.turn>0&&t.seat===hero);
-    if(!own.length||own.length>30)throw Error("Unsupported Gorge round count");
+    if(!own.length||own.length>60)throw Error("Unsupported Gorge round count");
     const snapshots=new Map(g.snapshots.map(s=>[s.turn,s]));
     const names=visibleNames(g),baseline=g.snapshots[0];
     const omniscient=g.visibility==="omniscient";
@@ -294,14 +294,15 @@
     };
   }
   function adapt(games,key,deckHashes={}){
-    const actual=(games||[]).filter(g=>validateReplay(g)&&g.decks.includes(key));
+    const actual=(games||[]).filter(g=>validateReplay(g)&&Number.isInteger(g.player_seat)&&g.player_seat>=0&&
+      g.player_seat<4&&g.decks[g.player_seat]===key&&g.player_deck===key);
     if(!actual.length)return null;
     const selected=deckHashes[key];
     if(!selected)return null;
     const rounds=Math.max(...actual.map(g=>g.turns.filter(t=>t.turn>0&&
-      t.seat===g.decks.indexOf(key)).length));
-    if(rounds>30)return null; // Original renderer hard cap: do not silently truncate.
-    const runs=actual.map(g=>projectRun(g,g.decks.indexOf(key),rounds,deckHashes));
+      t.seat===g.player_seat).length));
+    if(rounds>60)return null; // Never silently truncate a native simulation.
+    const runs=actual.map(g=>projectRun(g,g.player_seat,rounds,deckHashes));
     const batch={
       format:FORMAT,schema_version:1,engine:"gorge",
       deck_key:key,deck_sha256:selected,scenario:"four_real_commander_decks",
@@ -344,7 +345,7 @@
     }
     if(!batch){
       outcomes.replaceChildren(document.createTextNode(records.length?
-        "No recorded Gorge game includes this exact deck.":
+        "No simulations have been run with this deck in the player seat.":
         "Loading source-verified Gorge simulations…"));
       // Offer a real matching Gorge run for the other Mortarion revision
       // without falsely presenting it as the selected Physical Final deck.
@@ -363,7 +364,7 @@
         link.style.marginTop="12px";
         outcomes.append(note,link);
       }
-      if(status)status.textContent=records.length?"No Gorge games for this exact deck":"Loading Gorge games…";
+      if(status)status.textContent=records.length?"No player-seat Gorge simulations":"Loading Gorge games…";
       if(reviewer)reviewer.replaceChildren();return;
     }
     if(!window.DeckGameOutcomes?.validate(batch)){

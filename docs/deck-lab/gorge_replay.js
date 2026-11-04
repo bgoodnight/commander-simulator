@@ -427,76 +427,90 @@ function init(){
   const loadButton=$("gorge-replay-load");
   const available=new Set();
   const loadedGames=new Map();
-  let manifestVisibility=null;
+  let manifestVisibility=null,catalogReady=false,requestId=0;
+  const catalog=[];
+  function playerEntry(row,key){
+    return row&&Number.isInteger(row.player_seat)&&row.player_seat>=0&&
+      row.player_seat<4&&Array.isArray(row.decks)&&
+      row.player_deck===key&&row.decks[row.player_seat]===key&&
+      /^gorge-seed-[0-9]+\\.ui\\.json$/.test(row.file);
+  }
   async function openPublicSample(name){
-    if(!available.has(name))throw Error("Replay not in public manifest");
-    rootElement.replaceChildren(node("p","small","Loading verified gorge game…"));
-    const response=await fetch("./gorge-data/"+encodeURIComponent(name),{cache:"no-store"});
-    if(!response.ok)throw Error("Public gorge replay unavailable");
-    const data=await response.json();
+    if(!available.has(name))throw Error("Replay is not a player-seat game for this deck");
+    const ticket=++requestId;
+    rootElement.replaceChildren(node("p","small","Loading verified Gorge game…"));
+    let data=loadedGames.get(name);
+    if(!data){
+      const response=await fetch("./gorge-data/"+encodeURIComponent(name),
+        {cache:"no-store"});
+      if(!response.ok)throw Error("Public Gorge replay unavailable");
+      data=await response.json();
+    }
+    const entry=catalog.find(row=>row.file===name);
     if(data.schema!=="gorge-ui-replay-v1"||
        data.visibility!==manifestVisibility||
        (manifestVisibility==="omniscient"&&data.synthetic_simulation_only!==true)||
-       !Array.isArray(data.snapshots)||!data.snapshots.length)
-      throw Error("Unverified Gorge replay visibility or source");
-    loadedGames.set(data.seed,data);
-    if(typeof window!=="undefined")window.__gorgeLoadedGames=[...loadedGames.values()];
+       !Array.isArray(data.snapshots)||!data.snapshots.length||
+       !entry||data.player_seat!==entry.player_seat||
+       data.player_deck!==entry.player_deck||
+       data.decks?.[data.player_seat]!==data.player_deck)
+      throw Error("Unverified player-seat Gorge replay or visibility");
+    loadedGames.set(name,data);
+    if(ticket!==requestId||!available.has(name))return;
+    if(typeof window!=="undefined")window.__gorgeLoadedGames=[data];
     paintView(rootElement,data);
   }
+  function refreshForPlayer(){
+    if(!catalogReady)return;
+    ++requestId;
+    const key=window.__deckLabActiveKey;
+    const previous=select.value;
+    available.clear();
+    select.replaceChildren();
+    for(const game of catalog){
+      if(!playerEntry(game,key))continue;
+      available.add(game.file);
+      const option=node("option",null,"Seed "+game.seed+" · "+
+        game.decks.filter((_,i)=>i!==game.player_seat).join(" / "));
+      option.value=game.file;select.append(option);
+    }
+    samples.hidden=!available.size;
+    if(typeof window!=="undefined")window.__gorgeLoadedGames=[];
+    if(!available.size){
+      rootElement.replaceChildren(node("p","small",
+        "No simulations have been run with this selected deck in the player seat."));
+      window.GorgeDashboard?.render([],null,key);
+      return;
+    }
+    select.value=available.has(previous)?previous:select.options[select.options.length-1].value;
+    openPublicSample(select.value).catch(err=>
+      rootElement.replaceChildren(node("p","gorge-replay-error",
+        "Unable to display Gorge replay: "+String(err.message||err))));
+  }
+  if(typeof window!=="undefined")
+    window.GorgeDeckLabRefreshSamples=refreshForPlayer;
   if(samples&&select&&loadButton){
     loadButton.addEventListener("click",()=>{
       openPublicSample(select.value).catch(err=>
         rootElement.replaceChildren(node("p","gorge-replay-error",
-          "Unable to display gorge replay: "+String(err.message||err))));
+          "Unable to display Gorge replay: "+String(err.message||err))));
     });
     fetch("./gorge-data/manifest.json",{cache:"no-store"}).then(response=>{
-      if(!response.ok)throw Error("No published gorge sample yet");
+      if(!response.ok)throw Error("No published Gorge catalog");
       return response.json();
     }).then(manifest=>{
       const omniscient=manifest.schema==="gorge-omniscient-replay-manifest-v1"&&
         manifest.visibility==="omniscient"&&manifest.synthetic_simulation_only===true;
       if(!omniscient&&manifest.schema!=="gorge-public-replay-manifest-v1")
-        throw Error("Unsupported sample manifest");
+        throw Error("Unsupported Gorge catalog");
       if(!Array.isArray(manifest.games))throw Error("Unsupported manifest games");
       manifestVisibility=omniscient?"omniscient":"public_events_only";
-      for(const game of manifest.games){
-        if(!/^gorge-seed-[0-9]+\.ui\.json$/.test(game.file))continue;
-        available.add(game.file);
-        const option=node("option",null,"Seed "+game.seed+" · "+
-          game.decks.join(" / "));
-        option.value=game.file;
-        select.append(option);
-      }
-      if(!available.size)return;
-      samples.hidden=false;
-      // Preload each verified game for cross-deck summaries. The selected
-      // game stays authoritative for the turn viewer and can be switched.
-      // One unavailable or stale sample must not hide the other valid games.
-      // GitHub Pages may briefly serve mixed revisions during publication.
-      return Promise.allSettled([...available].map(async name=>{
-        const response=await fetch("./gorge-data/"+encodeURIComponent(name),
-          {cache:"no-store"});
-        if(!response.ok)throw Error(name+": HTTP "+response.status);
-        const g=await response.json();
-        if(g.schema!=="gorge-ui-replay-v1"||g.visibility!==manifestVisibility||
-           (manifestVisibility==="omniscient"&&g.synthetic_simulation_only!==true))
-          throw Error(name+": inconsistent replay");
-        loadedGames.set(g.seed,g);
-        return name;
-      })).then(results=>{
-        const valid=results.filter(result=>result.status==="fulfilled")
-          .map(result=>result.value);
-        const failed=results.filter(result=>result.status==="rejected");
-        if(!valid.length)throw Error("No verified public replays could be loaded: "+
-          failed.map(result=>String(result.reason?.message||result.reason)).join("; "));
-        if(typeof window!=="undefined")window.__gorgeLoadedGames=[...loadedGames.values()];
-        // Choose a known-good game if the first manifest entry failed.
-        select.value=valid.includes(select.value)?select.value:valid[0];
-        return openPublicSample(select.value);
-      });
+      catalog.push(...manifest.games);
+      catalogReady=true;
+      refreshForPlayer();
     }).catch(error=>{
       rootElement.replaceChildren(node("p","gorge-replay-error",
-        "Published Gorge examples could not load: "+String(error.message||error)));
+        "Gorge results catalog unavailable: "+String(error.message||error)));
     });
   }
   input.addEventListener("change",async()=>{
