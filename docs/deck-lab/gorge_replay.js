@@ -429,6 +429,54 @@ function init(){
   const loadedGames=new Map();
   let manifestVisibility=null,catalogReady=false,requestId=0;
   const catalog=[];
+  // Full-cohort outcomes can be much larger than retained detailed replays.
+  // Never represent a sample-only card/turn panel as a 500-game measurement.
+  const analyticsPromise=fetch("./gorge-data/analytics.json",{cache:"no-store"})
+    .then(response=>{
+      if(!response.ok)throw Error("Verified outcome catalog unavailable");
+      return response.json();
+    }).then(value=>{
+      if(value.schema!=="gorge-batch-analytics-v1"||
+         !Array.isArray(value.games))
+        throw Error("Invalid Gorge outcome catalog");
+      return value.games;
+    }).catch(error=>{
+      console.warn("Gorge full-cohort outcomes unavailable",error);
+      return null;
+    });
+  async function presentOutcomeSummary(key,sampledCount,ticket){
+    const rows=await analyticsPromise;
+    if(ticket!==requestId||!available.size)return;
+    const outcomes=$("game-outcome-results");
+    if(!outcomes)return;
+    const prior=outcomes.querySelector(".gorge-full-cohort-summary");
+    if(prior)prior.remove();
+    const status=$("game-outcome-status");
+    if(!rows){
+      if(status)status.textContent=sampledCount+
+        " sampled Gorge replays · full-cohort analytics unavailable";
+      return;
+    }
+    const valid=rows.filter(r=>
+      r&&r.finished===true&&r.replay_verified===true&&
+      Number.isInteger(r.player_seat)&&r.player_seat>=0&&r.player_seat<4&&
+      Array.isArray(r.decks)&&r.decks[r.player_seat]===key&&
+      (r.player_deck===undefined||r.player_deck===key)&&
+      (r.draw===true||Number.isInteger(r.winner_seat)));
+    if(!valid.length)return;
+    const wins=valid.filter(r=>!r.draw&&r.winner_seat===r.player_seat).length;
+    const draws=valid.filter(r=>r.draw).length;
+    const losses=valid.length-wins-draws;
+    const pct=(100*wins/valid.length).toFixed(1);
+    const summary=node("p","gorge-full-cohort-summary",
+      "Full verified cohort: "+valid.length+" games · "+wins+" wins ("+pct+
+      "%) · "+losses+" losses · "+draws+" draws. Detailed turn and card insights "+
+      "below use "+sampledCount+" retained source-backed replay"+
+      (sampledCount===1?"":"s")+", not the entire cohort.");
+    outcomes.prepend(summary);
+    if(status)status.textContent=valid.length+" verified Gorge games · "+
+      sampledCount+" detailed sampled replays · source-attributed player seats";
+  }
   // The catalog records the designated player seat. A small number of
   // verified Gorge recordings predate embedding that attribution in replay
   // JSON; their original source bytes remain unchanged and are matched by
@@ -489,7 +537,10 @@ function init(){
     const other=[...catalog].filter(row=>
       playerEntry(row,data.player_deck)&&available.has(row.file)&&row.file!==name)
       .sort(recentFirst);
-    if(!other.length)return;
+    if(!other.length){
+      await presentOutcomeSummary(data.player_deck,1,ticket);
+      return;
+    }
     const cohort=[data];
     let cursor=0;
     async function worker(){
@@ -507,6 +558,7 @@ function init(){
     if(ticket!==requestId||!available.has(name))return;
     if(typeof window!=="undefined")window.__gorgeLoadedGames=cohort;
     window.GorgeDashboard?.render(cohort,data.seed,data.player_deck);
+    await presentOutcomeSummary(data.player_deck,cohort.length,ticket);
     if(cohort.length<other.length+1){
       const status=$("game-outcome-status");
       if(status)status.textContent+=" · "+(other.length+1-cohort.length)+
