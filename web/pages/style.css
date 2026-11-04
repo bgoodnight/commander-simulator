@@ -1171,7 +1171,7 @@ body:has(#pane-records:not([hidden])) .page-introduction a{font-size:.72rem}
 
 /* Latest-only Results: one card feed, then a recorded-game reviewer. */
 #pane-records{display:grid;gap:18px}
-/* Gorge-only results restore the original metric, insight and development panels. */
+#pane-records > :not(#long-game-panel):not(#turn-reviewer-panel):not(#gorge-replay-panel){display:none!important}
 #pane-records > #long-game-panel{background:transparent;border:0;border-radius:0;
   padding:0;margin:0;box-shadow:none;overflow:visible}
 #pane-records > #turn-reviewer-panel{display:block}
@@ -2155,215 +2155,37 @@ body:has(#pane-records:not([hidden])) .compact-selection{margin-bottom:3px}
 }
 
 
-/* 2026-11-04: Bring the actual pre-Gorge card-insight presentation back,
-   not generic result tiles. The original selectors above remain authoritative. */
-#pane-records > #simulation-snapshot[hidden],
+
+
+/* Gorge is a data source beneath the original Nov 3 renderer, not a
+   competing dashboard. The source inspector stays collapsed at the end. */
 #pane-records > #turn-reviewer-panel[hidden]{display:none!important}
-#pane-records #key-insights-grid.latest-insight-grid{margin-top:11px}
-#pane-records .insight-featured-panel:not([open]) .game-outcome-summary{
-  min-height:100px}
-#pane-records .insight-featured-panel[open]{grid-column:1/-1}
-#pane-records .insight-featured-panel .game-outcome-number{
-  color:#f3d9a6;font-variant-numeric:tabular-nums}
-#pane-records .insight-featured-selected .insight-featured-card-name{
-  font-size:.88rem}
-#pane-records .gorge-insight-game-control{display:flex;align-items:center;gap:9px;min-width:0}
-#pane-records .gorge-insight-example-select{
-  width:100%;min-width:0;max-width:100%;padding:10px 12px;
-  border-radius:9px;background:#203735;border:1px solid #a99776;
-  color:#f2e4c8;font-size:.85rem;text-overflow:ellipsis}
-#pane-records .gorge-insight-example-select:focus-visible{outline:2px solid #ebd0a0}
-#pane-records .insight-inline-tracker-compact{padding:6px 0;min-width:0}
-#pane-records .insight-inline-tracker-review{min-width:0}
-#pane-records .insight-example-game-label{font-size:.88rem;margin:12px 0 9px}
-#pane-records .insight-featured-metrics{grid-template-columns:repeat(2,minmax(0,1fr))}
-#pane-records .insight-featured-metric-link{
-  padding:13px 14px;min-width:0;min-height:72px;display:grid;gap:5px}
-#pane-records .insight-featured-metric-link span{font-size:.89rem;color:#c6d1c9}
-#pane-records .insight-featured-metric-link strong{font-size:1.42rem;color:#f0d5a4}
-#pane-records .gorge-example-timeline{gap:9px;margin:14px 0 7px}
-#pane-records .gorge-original-turn{border-radius:10px;background:#17272b}
-#pane-records .gorge-original-turn .insight-turn-row-summary{
-  position:relative;display:grid;
-  grid-template-columns:77px minmax(0,1fr) auto;
-  grid-template-areas:"turn narrative expand" ". metrics metrics";
-  min-height:91px;height:auto;
-  gap:8px 11px;align-items:start;padding:13px 12px;
-  background:#15282f;isolation:isolate;overflow:hidden}
-#pane-records .gorge-original-turn .insight-turn-row-summary::before{
-  background:linear-gradient(90deg,#0c2028f7 0%,#12292bdc 33%,#132a2aa4 60%,#17272735 100%)}
-#pane-records .gorge-original-turn .insight-turn-cover{
-  inset:0 0 0 auto;width:83%;height:100%;max-height:none;
-  object-fit:cover;object-position:center 34%;opacity:.99;filter:saturate(1.06);
-  mask-image:none}
-#pane-records .gorge-original-turn .insight-turn-label{
-  font-size:1.03rem;color:#f3dca9;white-space:nowrap;line-height:1.3;
-  min-width:0;grid-area:turn}
-#pane-records .gorge-original-turn .insight-turn-activity{
-  grid-area:narrative;font-size:.91rem;line-height:1.42;
-  min-width:0;overflow:visible;display:block;white-space:normal;
-  text-overflow:clip;-webkit-line-clamp:unset}
-#pane-records .gorge-original-turn .insight-turn-expand{
-  grid-area:expand;font-size:.77rem;color:#ebd3a1;
-  white-space:nowrap;justify-self:end;padding-top:2px}
-#pane-records .gorge-original-turn .insight-turn-metrics{
-  grid-area:metrics;display:flex;justify-content:flex-end;
-  flex-wrap:wrap;gap:5px;width:100%;max-width:none;min-width:0;overflow:visible}
-#pane-records .gorge-original-turn .insight-turn-metric{
-  display:inline-flex;align-items:center;gap:3px;
-  font-size:.79rem;padding:5px 7px;min-height:27px;line-height:1.2;
-  border:1px solid #58756c;background:#183137;color:#ebeee6;
-  border-radius:6px;white-space:nowrap;font-variant-numeric:tabular-nums}
-#pane-records .gorge-original-turn .insight-turn-metric.is-gain{
-  border-color:#79c8a2;background:#173f33;color:#cbefdb}
-#pane-records .gorge-original-turn .insight-turn-metric.is-loss{
-  border-color:#db8a81;background:#4d2c30;color:#ffe0d6}
-#pane-records .gorge-metric-delta{font-size:.73rem}
-#pane-records .gorge-original-turn .insight-turn-mana{gap:6px}
-#pane-records .gorge-mana-pip .mana-symbol{width:18px;height:18px;min-width:18px}
-#pane-records .gorge-mana-label{font-size:.73rem;color:#d7e0d8}
-#pane-records .gorge-original-turn .insight-turn-row-body{
-  padding:14px;gap:13px;background:rgba(14,32,33,.68)}
-#pane-records .gorge-original-turn .insight-action-phase{
-  padding:11px 13px}
-#pane-records .gorge-original-turn .insight-action-description{
-  font-size:.86rem;line-height:1.5}
-#pane-records .gorge-boundary-state{min-width:0}
-#pane-records .gorge-opponent-snapshots{
-  border-top:1px solid #52665d;padding-top:9px;margin-top:5px}
-#pane-records .gorge-opponent-snapshots>summary{
-  cursor:pointer;color:#e9d0a3;font-size:.83rem}
-#pane-records .gorge-table-state-grid{
-  display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px;margin-top:9px}
-#pane-records .gorge-table-state-seat{
-  min-width:0;display:grid;gap:6px;padding:10px;
-  border:1px solid #526a60;border-radius:8px;background:#17292b}
-#pane-records .gorge-table-state-seat strong,
-#pane-records .gorge-table-state-seat span{font-size:.81rem}
-#pane-records .gorge-game-library{
-  border-top:1px solid #596d61;padding:9px 0;margin:3px 0}
-#pane-records .gorge-game-library>summary{
-  cursor:pointer;font-size:.84rem;font-weight:650;color:#edd4a3}
-#pane-records .gorge-game-library-body{
-  display:grid;gap:8px;padding:11px 0}
-#pane-records .gorge-game-library .game-outcome-seed{
-  width:100%;font-size:.8rem;padding:10px;line-height:1.45}
-#pane-records .gorge-full-review-head{
-  display:flex;gap:10px;justify-content:space-between;
-  align-items:center;flex-wrap:wrap;margin-bottom:12px}
-#pane-records .gorge-insight-unavailable{min-height:92px;padding:13px}
-#pane-records .gorge-insight-unavailable p{margin:8px 0 0}
-@media(max-width:720px){
-  #pane-records .insight-featured-panel[open]{grid-column:1}
-  #pane-records .gorge-original-turn .insight-turn-row-summary{
-    grid-template-columns:69px minmax(0,1fr) auto;
-    min-height:94px;padding:12px 10px;gap:6px 8px}
-  #pane-records .gorge-original-turn .insight-turn-cover{
-    width:100%;object-position:center 28%}
-  #pane-records .gorge-original-turn .insight-turn-label{font-size:.91rem}
-  #pane-records .gorge-original-turn .insight-turn-activity{
-    font-size:.86rem;line-height:1.42}
-  #pane-records .gorge-original-turn .insight-turn-metrics{gap:5px}
-  #pane-records .gorge-original-turn .insight-turn-metric{
-    font-size:.75rem;padding:5px 6px}
-  #pane-records .gorge-original-turn .insight-turn-expand{font-size:.68rem}
-  #pane-records .gorge-table-state-grid{grid-template-columns:minmax(0,1fr)}
-  #pane-records .insight-featured-metric-link{padding:10px 11px}
-}
-@media(max-width:420px){
-  #pane-records .gorge-original-turn .insight-turn-row-summary{
-    grid-template-columns:61px minmax(0,1fr) auto;gap:5px 6px}
-  #pane-records .gorge-original-turn .insight-turn-label{font-size:.84rem}
-  #pane-records .gorge-original-turn .insight-turn-activity{font-size:.82rem}
-  #pane-records .gorge-original-turn .insight-turn-metric{font-size:.72rem}
-}
+#pane-records > #gorge-replay-panel{display:block!important;grid-column:1/-1}
+#pane-records > #gorge-replay-panel[hidden]{display:none!important}
+#pane-records #game-outcome-results .insight-turn-row .insight-end-state-title{
+  color:#efd5a6}
 
-
-/* Screenshot fidelity pass: pre-Gorge Nov 3 example-game proportions.
-   Avoid an extra card-within-card: classic stats -> inline picker -> game
-   heading -> tightly spaced, artwork-backed turn rows on mobile too. */
-#pane-records .insight-featured-metric-link{
-  min-height:48px;gap:2px;padding:7px 9px;border-radius:8px}
-#pane-records .insight-featured-metric-link span{
-  font-size:.76rem;line-height:1.15}
-#pane-records .insight-featured-metric-link strong{
-  font-size:1.08rem;line-height:1.12}
-#pane-records .insight-featured-evidence{gap:4px;padding-top:8px}
-#pane-records .insight-inline-tracker-compact{margin:0;padding:7px 1px 0}
-#pane-records .insight-inline-tracker-compact>summary{
-  font-size:.82rem;color:#f0d7a5;max-width:none}
-#pane-records .gorge-insight-game-control{
-  display:grid;grid-template-columns:minmax(0,1fr) max-content;
-  align-items:stretch;gap:8px;margin:13px 0 7px;min-width:0}
-#pane-records .gorge-insight-example-select{
-  width:100%;min-width:0;min-height:34px;padding:6px 9px;
-  font-size:.81rem;background:#2b403b;border:1px solid #8a9b8e;border-radius:7px}
-#pane-records .insight-inline-tracker-compact>.gorge-insight-game-control>.insight-example-full-link{
-  display:inline-flex!important;position:static!important;align-items:center;
-  justify-content:center;padding:6px 10px;margin:0;
-  max-width:none;width:auto;min-height:34px;
-  font-size:.76rem;font-weight:600;line-height:1.25;
-  border:1px solid #a28a68;border-radius:7px;
-  background:#3b5049;color:#f0dbb2;text-decoration:none;white-space:nowrap}
-#pane-records .insight-inline-tracker-compact>.gorge-insight-game-control>.insight-example-full-link:hover,
-#pane-records .insight-inline-tracker-compact>.gorge-insight-game-control>.insight-example-full-link:focus-visible{
-  background:#51675d;border-color:#e0bf88;color:#ffe9c2}
-#pane-records .insight-inline-tracker-review{margin:0}
-#pane-records .insight-inline-tracker-review>.game-outcome-evidence-head{
-  display:flex;justify-content:space-between;align-items:baseline;
-  flex-wrap:wrap;gap:4px 10px;
-  padding:0;margin:5px 0 7px;border:0}
-#pane-records .insight-inline-tracker-review>.game-outcome-evidence-head>strong{
-  font-size:.97rem;line-height:1.3;color:#ecd4a6}
-#pane-records .insight-inline-tracker-review>.game-outcome-evidence-head>.micro{
-  font-size:.67rem;color:#999e96}
-#pane-records .gorge-example-timeline{gap:4px;margin:0}
-#pane-records .gorge-original-turn{
-  border-radius:6px;border-color:#55685e;overflow:hidden;
-  background:#142b30}
-#pane-records .gorge-original-turn .insight-turn-row-summary{
-  position:relative;min-height:53px;height:auto;padding:7px 8px;
-  grid-template-columns:51px minmax(0,1fr) auto;
-  grid-template-areas:"turn narrative expand" ". metrics metrics";
-  column-gap:7px;row-gap:3px;align-items:start;background:#122930}
-#pane-records .gorge-original-turn .insight-turn-cover{
-  inset:0 0 0 auto;width:100%;height:100%;max-height:none;
-  opacity:.7;object-fit:cover;object-position:center 34%;filter:saturate(.95)}
-#pane-records .gorge-original-turn .insight-turn-row-summary::before{
-  background:linear-gradient(90deg,#10272ff0 0%,#10282ddb 28%,#122b30a8 62%,#13293141 100%)}
-#pane-records .gorge-original-turn .insight-turn-label{
-  grid-area:turn;min-width:0;font-size:.83rem;font-variant:small-caps;
-  line-height:1.28;padding-top:1px;color:#f3d6a3;white-space:nowrap}
-#pane-records .gorge-original-turn .insight-turn-activity{
-  grid-area:narrative;min-width:0;font-size:.79rem;line-height:1.31;
-  white-space:normal;display:block;overflow:visible;text-overflow:clip}
-#pane-records .gorge-original-turn .insight-turn-expand{
-  grid-area:expand;font-size:.65rem;font-weight:400;white-space:nowrap;
-  padding-top:3px;color:#e4c08f}
-#pane-records .gorge-original-turn .insight-turn-metrics{
-  grid-area:metrics;display:flex;min-width:0;width:100%;max-width:none;
-  justify-content:flex-end;align-items:center;gap:3px;flex-wrap:wrap;overflow:visible}
-#pane-records .gorge-original-turn .insight-turn-metric{
-  min-height:0;padding:2px 4px;gap:2px;
-  font-size:.67rem;line-height:1.2;border-radius:5px;
-  color:#e6eeea;background:#19363a}
-#pane-records .gorge-original-turn .insight-turn-mana{gap:2px}
-#pane-records .gorge-original-turn .gorge-mana-label{font-size:.63rem}
-#pane-records .gorge-original-turn .gorge-mana-pips{gap:3px}
-#pane-records .gorge-original-turn .gorge-mana-pip .mana-symbol{
-  width:14px;height:14px;min-width:14px}
-#pane-records .gorge-original-turn .gorge-metric-delta{font-size:.65rem}
-#pane-records .gorge-original-turn .insight-turn-row-body{padding:9px 8px}
-@media(max-width:650px){
-  #pane-records .gorge-original-turn .insight-turn-row-summary{
-    min-height:53px;grid-template-columns:51px minmax(0,1fr) auto;
-    gap:3px 6px;padding:7px 8px}
-  #pane-records .gorge-original-turn .insight-turn-label{font-size:.82rem}
-  #pane-records .gorge-original-turn .insight-turn-activity{font-size:.78rem}
-  #pane-records .gorge-original-turn .insight-turn-expand{font-size:.63rem}
-  #pane-records .gorge-original-turn .insight-turn-metric{font-size:.65rem;padding:2px 4px}
-  #pane-records .insight-featured-metric-link{padding:7px 9px;min-height:45px}
-  #pane-records .gorge-insight-example-select{font-size:.76rem}
-  #pane-records .insight-inline-tracker-compact>.gorge-insight-game-control>.insight-example-full-link{
-    font-size:.72rem;padding:6px 8px;min-height:34px}
+/* Original November 3 inline seed picker; Gorge supplies the source records. */
+.gorge-legacy-example-controls{
+  display:grid;grid-template-columns:minmax(0,1fr) max-content;gap:9px;
+  align-items:stretch;margin:10px 0 9px}
+.gorge-legacy-example-select{
+  min-width:0;width:100%;height:42px;padding:8px 12px;
+  color:#f1e3c9;background:#2b423c;border:1px solid #899e90;
+  border-radius:9px;font-size:.83rem;text-overflow:ellipsis}
+.gorge-legacy-example-controls .insight-example-full-link{
+  display:inline-flex;align-items:center;justify-content:center;
+  position:static;width:auto;max-width:none;margin:0;white-space:nowrap;
+  min-height:42px;padding:8px 12px;border:1px solid #b39b70;
+  border-radius:9px;color:#f2dbae;background:#3c524b;
+  box-shadow:none;font-size:.8rem;font-weight:600;line-height:1.25;
+  text-decoration:none}
+.gorge-legacy-example-controls .insight-example-full-link:hover,
+.gorge-legacy-example-controls .insight-example-full-link:focus-visible{
+  color:#fff0ce;background:#4c6358;border-color:#e5c28e}
+@media(max-width:450px){
+  .gorge-legacy-example-controls{gap:6px}
+  .gorge-legacy-example-select{font-size:.72rem;padding:7px 9px;height:38px}
+  .gorge-legacy-example-controls .insight-example-full-link{
+    font-size:.68rem;padding:7px 8px;min-height:38px}
 }
