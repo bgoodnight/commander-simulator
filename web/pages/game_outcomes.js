@@ -1101,7 +1101,7 @@
       ["Graveyard",observation.graveyard],
       ["Exile",observation.exile]
     ];
-    const typed=zones.slice(1,5).reduce((n,z)=>n+z[1].length,0);
+    const typed=zones.slice(2,6).reduce((n,z)=>n+z[1].length,0);
     if((observation.battlefield||[]).length&&!typed)
       panel.appendChild(create("p","micro","Card types unavailable for recorded battlefield"));
     for(const [label,cards] of zones){
