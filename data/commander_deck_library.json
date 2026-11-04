@@ -1,7 +1,7 @@
 {
   "schema": "commander-deck-library-v1",
-  "metadata_version": 1,
-  "description": "Source-classified Commander deck pool. Player-owned custom lists never enter random opponent sampling.",
+  "metadata_version": 2,
+  "description": "Role-gated Commander deck pool: custom decks are player-only, stock precons can be opponents, and explicitly dual-role Necron Dynasties/Wretched Ranks can be player decks as well.",
   "annotation_policy": "Archetype labels are descriptive hypotheses (not measured coverage or power). Color identities come from commander card identity; source/version must be checked at execution.",
   "allowed_archetypes": [
     "aristocrats",
@@ -157,7 +157,7 @@
       "color_identity": [
         "B"
       ],
-      "role": "opponent",
+      "role": "both",
       "provenance": "stock_precon",
       "primary_archetype": "artifact_recursion",
       "secondary_archetypes": [
@@ -175,7 +175,7 @@
       "color_identity": [
         "B"
       ],
-      "role": "opponent",
+      "role": "both",
       "provenance": "stock_precon",
       "primary_archetype": "tokens",
       "secondary_archetypes": [
