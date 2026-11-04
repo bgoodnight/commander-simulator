@@ -188,9 +188,7 @@ function lifeRows(game){
     life:s.players.map(p=>p.life),lost:s.players.map(p=>p.lost),
     hands:s.players.map(p=>p.hand_count),
     library:s.players.map(p=>p.library_count),
-    battlefield:s.players.map(p=>p.zones.battlefield.length),
-    lands:s.players.map(p=>p.zones.battlefield.filter(c=>
-      BASIC.has(c.name.toLowerCase())||/land$/i.test(c.name)).length)
+    battlefield:s.players.map(p=>p.zones.battlefield.length)
   }));
 }
 function lifeChart(game,lookup){
@@ -268,7 +266,7 @@ function unavailable(title,message){
   body.append(el("p","small",message));panel.append(body);
   return panel;
 }
-let state={games:[],catalog:null,deck:null,selectedSeed:null,loading:null};
+let state={games:[],catalog:null,deck:null,requestedDeck:null,selectedSeed:null,loading:null};
 function currentDeck(games){
   if(state.deck&&games.some(g=>g.decks.includes(state.deck)))return state.deck;
   const key=typeof window!=="undefined"&&typeof window.GORGE_SELECTED_DECK==="string"?
@@ -281,6 +279,36 @@ function paint(){
   const deck=currentDeck(state.games);
   if(!deck)return;
   state.deck=deck;
+  const sample=$("simulation-snapshot");
+  const heading=sample?.querySelector(".simulation-snapshot-heading");
+  if(heading){
+    let wrapper=$("gorge-recorded-deck-picker");
+    if(!wrapper){
+      wrapper=el("label","gorge-recorded-deck-picker");
+      wrapper.id="gorge-recorded-deck-picker";
+      wrapper.append(el("span","micro","Recorded deck"));
+      const picker=el("select","gorge-recorded-deck-select");
+      picker.id="gorge-recorded-deck-select";
+      picker.setAttribute("aria-label","Choose a deck from verified gorge games");
+      wrapper.append(picker);
+      heading.append(wrapper);
+    }
+    const picker=$("gorge-recorded-deck-select");
+    const decks=[...new Set(state.games.flatMap(game=>game.decks))];
+    if(picker.options.length!==decks.length||
+       decks.some((id,i)=>picker.options[i]?.value!==id)){
+      picker.replaceChildren();
+      for(const id of decks){
+        const game=state.games.find(g=>g.decks.includes(id));
+        const seat=game.decks.indexOf(id);
+        const name=game.snapshots[0].players[seat].zones.command[0]?.name||id;
+        const option=el("option",null,name+" · "+id.replaceAll("_"," "));
+        option.value=id;picker.append(option);
+      }
+      picker.onchange=()=>{state.deck=picker.value;paint()};
+    }
+    picker.value=deck;
+  }
   const stats=analyze(state.games,deck);
   const lookup=catalog(state.catalog?.cards||{});
   const sample=$("simulation-snapshot"),metrics=$("simulation-snapshot-metrics");
@@ -288,7 +316,9 @@ function paint(){
     sample.hidden=false;
     const scope=$("simulation-snapshot-scope");
     if(scope)scope.textContent=stats.n+" real four-player game"+(stats.n===1?"":"s")+
-      " · gorge · 40 life";
+      " · gorge · 40 life"+(state.requestedDeck&&
+      state.requestedDeck!==deck&&!seenGames(state.games,state.requestedDeck).length?
+      " · "+state.requestedDeck+" has no gorge samples yet":"");
     metrics.replaceChildren();
     for(const [glyph,value,label] of [
       ["◆",stats.n,"Gorge games · current sample"],
@@ -588,7 +618,8 @@ async function load(refresh=false){
 }
 function setDeck(name){
   if(typeof name!=="string"||!name)return;
-  state.deck=name;
+  state.requestedDeck=name;
+  if(!state.games.length||seenGames(state.games,name).length)state.deck=name;
   if(state.games.length)paint();
 }
 if(typeof document!=="undefined"){
