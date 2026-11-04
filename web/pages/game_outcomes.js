@@ -701,8 +701,14 @@
       return [...maps[kind].values()].map(item=>{
         const counts=[...item.counts.values()];
         const seen=item.seen.size;
+        const gorgeAbility=["activated","triggered"].includes(kind)&&
+          complete.some(run=>run.batch?.engine==="gorge");
         const score=kind==="longest"?mean(item.durations):
           kind==="seen"||kind==="seenCreature"||kind==="unplayed"?seen:
+          // Ability cards rank by real frequency per game, including zero
+          // activations/triggers in other games. Historical modeled card
+          // tiles retain their former per-game presence ordering.
+          gorgeAbility?mean(complete.map(run=>item.counts.get(run)||0)):
           ["removal","creatureKills","damage","tutorFound","tutorUsed"].includes(kind)?
             counts.reduce((t,x)=>t+x,0):
             counts.filter(x=>x>0).length;
