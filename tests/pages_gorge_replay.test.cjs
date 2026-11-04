@@ -58,6 +58,20 @@ assert.match(replayLoader,/data\.chain!==entry\.chain/);
 assert.match(replayLoader,/select\.options\[0\]\.value/);
 assert.doesNotMatch(replayLoader,/Promise\.allSettled\(\[\.\.\.available\]/);
 
+// The full-cohort dashboard must not flash a replay-sample hero and replace
+// it on the next browser frame. Paint the hero only after cohort data loads.
+const paintSource=replayLoader.slice(replayLoader.indexOf("function paintView("),
+  replayLoader.indexOf("  const header=node(",replayLoader.indexOf("function paintView(")));
+assert.doesNotMatch(paintSource,/GorgeDashboard\.render/);
+assert.match(replayLoader,/const fullReport=await cohortPromise/);
+assert.match(replayLoader,/window\.GorgeDashboard\?\.render\(cohort,data\.seed,data\.player_deck\)/);
+assert.match(replayLoader,/presentOutcomeSummary\(fullReport,data\.player_deck/);
+assert.match(replayLoader,/game-outcome-hero-frame/);
+assert.match(replayLoader,/board-report game-outcome-card gorge-full-cohort-groups/);
+const appSource=fs.readFileSync(path.join(__dirname,"../web/pages/app.js"),"utf8");
+assert.doesNotMatch(appSource,/GorgeDashboard\.render\(window\.__gorgeLoadedGames\|\|\[\]/);
+
+
 console.log("Gorge native replay viewer: schema, actual-format events, privacy filtering, turn grouping and static route wiring PASS");
 
 
