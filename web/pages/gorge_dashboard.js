@@ -33,19 +33,23 @@ function analyze(g){
     seatData.turns++;
     const actions=[];
     for(const event of turn.events||[]){
+      // Casts may occur on another player's turn. Native player is the
+      // authoritative actor when present (gorge omits seat 0's zero value).
+      const actor=Number.isInteger(event.player)?event.player:seat;
+      const actorData=bySeat[actor]||seatData;
       if(event.kind==="cast"){
-        seatData.casts++;
+        actorData.casts++;
         if(event.card_name){
-          const key=seat+"|"+event.card_name;
-          const card=casts.get(key)||{name:event.card_name,seat,played:0,turns:[]};
+          const key=actor+"|"+event.card_name;
+          const card=casts.get(key)||{name:event.card_name,seat:actor,played:0,turns:[]};
           card.played++;card.turns.push(turn.turn);casts.set(key,card);
           actions.push("Cast "+event.card_name);
         }else actions.push("Cast spell (unidentified)");
       }else if(event.kind==="land_played"){
-        seatData.lands++;actions.push("Played land");
+        actorData.lands++;actions.push("Played land");
       }else if(event.kind==="token_created"){
-        seatData.tokens++;actions.push("Created token");
-      }else if(event.kind==="damage")seatData.damageEvents++;
+        actorData.tokens++;actions.push("Created token");
+      }else if(event.kind==="damage")actorData.damageEvents++;
     }
     timeline.push({turn:turn.turn,seat,actions,
       state:g.snapshots.find(s=>s.turn===turn.turn)||null});
