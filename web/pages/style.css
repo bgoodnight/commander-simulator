@@ -2276,3 +2276,8 @@ body:has(#pane-records:not([hidden])) .compact-selection{margin-bottom:3px}
   .insight-turn-row-summary .insight-turn-metric,
   .insight-turn-row-summary button.insight-turn-metric{padding:3px 4px}
 }
+
+/* Single game chooser: one continuous control instead of scenario + seed. */
+.game-outcome-review-controls:has(select:only-child){display:block}
+.game-outcome-review-controls>select:only-child{display:block;width:100%;max-width:100%;min-width:0;box-sizing:border-box}
+.game-outcome-review-evidence .game-outcome-evidence-head strong{overflow-wrap:anywhere}
