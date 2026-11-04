@@ -210,6 +210,20 @@
       hand:namedZone(frame.players[seat],"hand"),
       hand_count:frame.players[seat].hand_count
     })).sort((a,b)=>a.seat-b.seat);
+    // All four seat snapshots come from Gorge's actual omniscient state.
+    // Never reconstruct an opponent's hand/battlefield from observed actions.
+    const boardStates=frame=>[0,1,2,3].map(real=>{
+      const p=frame.players[real];
+      return {
+        seat:mapSeat(real,hero),deck_key:g.decks[real],
+        hand:omniscient?namedZone(p,"hand"):null,
+        hand_count:p.hand_count,
+        battlefield:namedZone(p,"battlefield"),
+        graveyard:namedZone(p,"graveyard"),exile:namedZone(p,"exile"),
+        command:namedZone(p,"command"),
+        snapshot_is_turn_end:false
+      };
+    }).sort((a,b)=>a.seat-b.seat);
     const life_history=[observedLife(baseline,hero,0,null)];
     const ui_observations=[];
     for(let i=0;i<own.length;i++){
@@ -223,7 +237,7 @@
       const p=frame.players[hero];
       const turn=i+1;
       const obs={
-        turn,actions,
+        turn,actions,board_states:boardStates(frame),
         hand:omniscient?namedZone(p,"hand"):null,
         hand_count:p.hand_count,
         opponent_hands:omniscient?otherHands(frame):null,
@@ -256,6 +270,7 @@
     })).sort((a,b)=>a.seat-b.seat);
     return {
       seed:g.seed,completed_rounds:own.length,
+      opening_board_states:boardStates(baseline),
       opening_hand:omniscient?namedZone(baseline.players[hero],"hand"):null,
       opening_hands_by_seat:omniscient?otherHands(baseline):null,
       opening_hand_count:baseline.players[hero].hand_count,
