@@ -64,6 +64,7 @@ class DeckRoleTests(unittest.TestCase):
             self.assertEqual(set(hashes),set(keys))
             file=root/"cavalry-charge.json"
             d=json.loads(file.read_text());d["commander"]="Wrong Commander"
+            d["cards"][0]["name"]="Wrong Commander"
             file.write_text(json.dumps(d))
             with self.assertRaisesRegex(ValueError,"commander name"):
                 validate_deck_files(self.library,keys[0],keys[1:],root)
