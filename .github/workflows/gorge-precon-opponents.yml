@@ -57,6 +57,8 @@ jobs:
           go build -o "$RUNNER_TEMP/gorge-probe" ./commander_probe.go
       - name: Run both player decks against rotating stock precons
         working-directory: ${{ runner.temp }}/gorge
+        env:
+          PYTHONPATH: ${{ github.workspace }}
         shell: bash
         run: |
           set -o pipefail
