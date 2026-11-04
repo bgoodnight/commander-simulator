@@ -404,13 +404,17 @@ function paintView(rootElement,data){
 function init(){
   const input=$("gorge-replay-file"),rootElement=$("gorge-replay-root");
   if(!input||!rootElement)return;
-  // Gorge replay is the active Results page, not a deck-scoped legacy
-  // simulation. Show it even if the old Python-driven deck loader has not
-  // selected a deck (or its archived dataset fails to initialize).
+  // A new gorge game does not depend on the retired Python deck selector.
+  // Move the gorge panel outside the deck-scoped #app-content entirely,
+  // because legacy app initialization may hide that ancestor asynchronously.
+  // It stays an ordinary, keyboard-accessible Results panel in the same UI.
   if(typeof location!=="undefined"&&location.pathname.endsWith("/results.html")){
-    const content=$("app-content"),records=$("pane-records");
-    if(content)content.hidden=false;
-    if(records)records.hidden=false;
+    const content=$("app-content"),panel=$("gorge-replay-panel");
+    if(content&&panel&&content.contains(panel)){
+      content.before(panel);
+      panel.hidden=false;
+      panel.open=true;
+    }
   }
   // Only load versions explicitly named by the validated public manifest.
   // No hidden gorge native log is fetched or published by this control.
