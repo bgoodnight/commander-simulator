@@ -6,12 +6,12 @@
   <meta name="theme-color" content="#182428">
   <meta name="description" content="Commander Deck Lab: explore cached Commander decklists, card art and precomputed early-turn observations.">
   <title>Commander Deck Lab — The Arcane Table</title>
-  <link rel="stylesheet" href="./style.css?v=076fccff4a93">
+  <link rel="stylesheet" href="./style.css?v=924c32564103">
   <script src="https://cdn.jsdelivr.net/npm/d3@7/dist/d3.min.js" defer></script>
   <script src="./results_insights.js?v=b91291243abb" defer></script>
   <script src="./brackets.js?v=f6d0983728d2" defer></script>
   <script src="./replay.js?v=e4de062be4c2" defer></script>
-  <script src="./gorge_replay.js?v=3c59a35778a9" defer></script>
+  <script src="./gorge_replay.js?v=fe99d47d0aa0" defer></script>
   <script src="./insight_catalog.js?v=1fedb0a60e31" defer></script>
   <script src="./insight_explorer.js?v=04df44573fda" defer></script>
   <script src="./game_outcomes.js?v=c4cccfbb6d4d" defer></script>
@@ -124,10 +124,16 @@
             The file stays in this browser. Unlike the earlier abstract-opponent replay,
             this view reads recorded native Commander actions. Hidden card information
             is masked by default unless you explicitly enable omniscient inspection.</p>
+          <div class="gorge-replay-samples" id="gorge-replay-samples" hidden>
+            <label for="gorge-replay-sample-select">Verified gorge game</label>
+            <select id="gorge-replay-sample-select" aria-label="Select verified gorge game"></select>
+            <button id="gorge-replay-load" type="button">View game</button>
+            <span class="small">Source: 40-life Commander · gorge engine</span>
+          </div>
           <label class="gorge-replay-upload-label" for="gorge-replay-file">Open native gorge replay JSON</label>
           <input id="gorge-replay-file" type="file" accept=".json,application/json">
           <div class="gorge-replay-root" id="gorge-replay-root" aria-live="polite">
-            <p class="small">No gorge replay loaded. This does not affect existing Python simulation results.</p>
+            <p class="small">No gorge game loaded yet. Select a verified source game or open a gorge replay file.</p>
           </div>
         </div>
       </details>
