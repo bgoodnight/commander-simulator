@@ -34,6 +34,8 @@
          ["battlefield","graveyard","exile","command",
           ...(g.visibility==="omniscient"?["hand","library"]:[])].every(k=>
            Array.isArray(p.zones[k]))&&
+         (g.visibility!=="public_events_only"||
+           (!("hand" in p.zones)&&!("library" in p.zones)))&&
          (g.visibility!=="omniscient"||
            (p.zones.hand.length===p.hand_count&&
             p.zones.library.length===p.library_count)))))return false;
