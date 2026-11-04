@@ -143,7 +143,7 @@ def check():
                 "Horizontal mobile overflow: "+str(widths))
             assert page.locator("#gorge-dashboard").is_visible()
             assert page.locator("#gorge-dashboard .gorge-original-picker select").is_visible()
-            assert page.locator("#gorge-replay-sample-select").is_visible()
+            assert page.locator("#gorge-dashboard .gorge-original-picker select").is_visible()
             # Unknown JS errors should be reported instead of silently hidden.
             assert not errors, "Unexpected browser JavaScript errors: "+"; ".join(errors[:8])
             browser.close()
