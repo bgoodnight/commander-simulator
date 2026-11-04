@@ -106,10 +106,26 @@ class StaticPagesTests(unittest.TestCase):
             self.assertTrue(list(analytics_dir.glob("*.json")))
             self.assertTrue(all(p.is_file() and p.suffix==".json"
                                 for p in analytics_dir.iterdir()))
+        gorge_dir=self.destination/"gorge-data"
+        if gorge_dir.is_dir():
+            permitted.add("gorge-data")
+            manifest=json.loads((gorge_dir/"manifest.json").read_text())
+            self.assertEqual(manifest["schema"],"gorge-public-replay-manifest-v1")
+            self.assertEqual({p.name for p in gorge_dir.iterdir()},
+                             {"manifest.json"}|{g["file"] for g in manifest["games"]})
+            for game in manifest["games"]:
+                replay=json.loads((gorge_dir/game["file"]).read_text())
+                self.assertEqual(replay["visibility"],"public_events_only")
+                self.assertTrue(replay["snapshots"])
+                self.assertEqual([p["life"] for p in replay["snapshots"][0]["players"]],
+                                 [40]*4)
+                self.assertFalse(any(
+                    "hand" in p["zones"] or "library" in p["zones"]
+                    for snap in replay["snapshots"] for p in snap["players"]))
         self.assertEqual({p.name for p in self.destination.iterdir()},permitted)
         self.assertNotIn("shared_scryfall_catalog.json",permitted)
         self.assertFalse(any(p.is_dir() and p.name not in
-                             ("simulation-data","replay-data","game-outcomes","analytics")
+                             ("simulation-data","replay-data","game-outcomes","analytics","gorge-data")
                              for p in self.destination.iterdir()))
         page=(self.destination/"index.html").read_text()
         script=(self.destination/"app.js").read_text()
