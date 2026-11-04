@@ -79,6 +79,19 @@ jobs:
               f.write(f"# Gorge replay export\n\n{len(m['games'])} discoverable replays and {len(a['games'])} analytics rows.\n\n")
               f.write("Native log, intents and object catalog were not published.\n")
           PY
+      - name: Verify complete static website build with expanded Gorge catalog
+        run: |
+          python - <<'PY'
+          from pathlib import Path
+          import shutil,os
+          src=Path(os.environ["RUNNER_TEMP"])/"public_ui"
+          dest=Path("web/pages/data/gorge")
+          for path in src.iterdir():
+              if path.is_file():
+                  shutil.copy2(path,dest/path.name)
+          PY
+          python -m tools.build_pages_deck_lab --output "$RUNNER_TEMP/gorge-pages-verify" > /dev/null
+          test -f "$RUNNER_TEMP/gorge-pages-verify/gorge-data/analytics.json"
       - name: Stage verified public files as a reusable artifact
         uses: actions/upload-artifact@v4
         with:
