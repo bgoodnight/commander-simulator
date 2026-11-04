@@ -326,7 +326,24 @@
       outcomes.replaceChildren(document.createTextNode(records.length?
         "No recorded Gorge game includes this exact deck.":
         "Loading source-verified Gorge simulations…"));
-      if(status)status.textContent=records.length?"No Gorge games for this deck":"Loading Gorge games…";
+      // Offer a real matching Gorge run for the other Mortarion revision
+      // without falsely presenting it as the selected Physical Final deck.
+      if(records.length&&key==="mortarion_physical_final"&&
+         records.some(game=>game.decks.includes("mortarion_current"))){
+        const note=document.createElement("p");
+        note.textContent="The available Mortarion simulation uses a different 100-card "+
+          "revision (Current), not Physical Final. Three cards differ.";
+        const link=document.createElement("a");
+        const url=new URL(window.location.href);
+        url.searchParams.set("deck","mortarion_current");
+        url.searchParams.delete("version");
+        link.href=url.toString();
+        link.textContent="View Mortarion Current Gorge results";
+        link.style.display="inline-block";
+        link.style.marginTop="12px";
+        outcomes.append(note,link);
+      }
+      if(status)status.textContent=records.length?"No Gorge games for this exact deck":"Loading Gorge games…";
       if(reviewer)reviewer.replaceChildren();return;
     }
     if(!window.DeckGameOutcomes?.validate(batch)){
