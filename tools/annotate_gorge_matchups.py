@@ -26,7 +26,7 @@ def annotate_result(row, library, hero, opponents, hashes):
         "player_deck":hero,
         "seat_metadata":[{
             **annotation,"seat":i,"deck_sha256":hashes[keys[i]]
-        } for i,annotation in enumerate(matchup_annotations(library,keys))],
+        } for i,annotation in enumerate(matchup_annotations(library,keys,hero=hero))],
         "metadata_version":library["metadata_version"],
         "outcome":{
             "finished":row.get("finished"),
