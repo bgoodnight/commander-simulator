@@ -1,6 +1,7 @@
 /* Commander Deck Lab — standalone static frontend, no framework.
  * Original audio cues generated with Web Audio; no borrowed game sound files.
- * No simulation logic is executed: all observation traces come from Python.
+ * The Results page uses real gorge Commander game data; historical Python
+ * observation code remains available solely for archived reference.
  */
 "use strict";
 const $ = id => document.getElementById(id);
@@ -427,7 +428,11 @@ function showPage(){
   renderPageIntro();
   document.title=PAGE_INFO[pageName]+" | Commander Deck Lab";
   if(pageName==="results"){
-    refreshPublishedLongGame();
+    // Deck Lab layout and selection remain the same, but every active game
+    // metric now comes from gorge's verified 40-life records. Never request
+    // or render the retired Python abstract-opponent outcomes.
+    window.GORGE_SELECTED_DECK=selected;
+    window.GorgeDashboard?.setDeck(selected);
   }
 }
 
