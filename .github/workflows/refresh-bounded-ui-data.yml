@@ -1,20 +1,8 @@
-name: Refresh six-deck UI simulation datasets
+name: ARCHIVED Python · Refresh six-deck UI simulation datasets
 
+# ARCHIVED PYTHON SIMULATION: disabled automatic triggers after gorge cutover.
+# Reproduce old results from archive/python-rules-pilots-simulations-20261103.
 on:
-  push:
-    branches: [main]
-    paths:
-      - "commander_sim/**"
-      - "simulator/card_data/**"
-      - "decklists/**"
-      - "tools/build_bounded_batches.py"
-      - ".github/workflows/refresh-bounded-ui-data.yml"
-  pull_request:
-    paths:
-      - "tools/build_bounded_batches.py"
-      - "tests/test_bounded_ui_data.py"
-      - "tests/test_pages_export.py"
-      - ".github/workflows/refresh-bounded-ui-data.yml"
   workflow_dispatch:
 
 permissions:

@@ -60,3 +60,44 @@ decision payloads. Do not publish the native log or the opt-in
 
 The v1 export is the **first populated UI fixture**, not a claim that
 the full gorge-only migration is finished.
+
+## 2026-11-03 cutover: active gorge-only path
+
+The read-only predecessor snapshot is preserved at
+`archive/python-rules-pilots-simulations-20261103`. Python game simulations,
+legacy pilots/rules and pre-gorge analytics remain accessible there. The
+automated legacy archive/refresh/audit workflows have been disabled from
+ordinary pushes/PRs on main and are manual-only.
+
+**Correction to prior benchmarks:** gorge's engine defaults to **20 starting
+life**, even with `FormatCommander`. Earlier reported games and win rates
+therefore cannot be treated as ordinary 40-life Commander results. The
+active driver explicitly sets `StartingLife:40` and `Mulligans:7`. The
+public-state exporter and source validator fail closed if a captured game
+begins at another life total.
+
+The corrected `gorge-native-smoke.yml` exercises eight real Commander deck
+lists with gorge's built-in pilot and retains two complete source logs
+(privately in Actions artifacts). It exports two `gorge-ui-replay-v1` files
+with actual event highlights and **source-derived turn-entry snapshots**.
+The snapshot boundary is `first_pending_decision_of_turn`; it is not an
+end-of-turn frame.
+
+Safe published fields: seat, turn, life, elimination, unspent mana,
+hand/library **counts**, plus named battlefield, graveyard, exile and
+command-zone objects. Hidden hand and library IDs, ordering and source
+decision logs are NOT placed in static page assets. The complete source
+game record is retained only in the Actions artifact, enabling further
+replay verification.
+
+When a successful main-branch smoke build publishes
+`web/pages/data/gorge/manifest.json` and its allowlisted replay samples,
+the existing Deck Lab native gorge panel loads the first one automatically;
+the file chooser remains available for local full event logs.
+
+**Remaining limitations:** state snapshots are at turn entry rather than
+turn end; tapped status, historic +1/+1 counters, continuous effects and
+full private hand identities are not yet present in this public projection.
+The historical Python analysis panels remain collapsed as an archive;
+they are not current gorge evaluations. Do not use old Python win rates for
+comparison against corrected gorge runs.

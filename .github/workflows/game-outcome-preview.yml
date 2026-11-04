@@ -1,12 +1,8 @@
-name: Preview 20-round life and outcome records
+name: ARCHIVED Python · Preview 20-round life and outcome records
 
+# ARCHIVED PYTHON SIMULATION: disabled automatic triggers after gorge cutover.
+# Reproduce old results from archive/python-rules-pilots-simulations-20261103.
 on:
-  pull_request:
-    paths:
-      - .github/workflows/game-outcome-preview.yml
-      - commander_sim/**
-      - tools/build_game_outcomes.py
-      - tests/test_game_outcome_reporting.py
   workflow_dispatch:
 
 permissions:

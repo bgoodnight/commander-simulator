@@ -1,12 +1,8 @@
-name: Eight-deck source-reviewed effect gap audit
+name: ARCHIVED Python · Eight-deck source-reviewed effect gap audit
 
+# ARCHIVED PYTHON SIMULATION: disabled automatic triggers after gorge cutover.
+# Reproduce old results from archive/python-rules-pilots-simulations-20261103.
 on:
-  pull_request:
-    paths:
-      - commander_sim/**
-      - tools/audit_effect_gaps.py
-      - tests/test_effect_gap_audit.py
-      - .github/workflows/effect-gap-audit.yml
   workflow_dispatch:
 
 permissions:

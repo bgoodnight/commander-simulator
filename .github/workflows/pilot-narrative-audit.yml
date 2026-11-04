@@ -1,12 +1,8 @@
-name: Pilot narrative and deck coverage audit
+name: ARCHIVED Python · Pilot narrative and deck coverage audit
 
+# ARCHIVED PYTHON SIMULATION: disabled automatic triggers after gorge cutover.
+# Reproduce old results from archive/python-rules-pilots-simulations-20261103.
 on:
-  pull_request:
-    paths:
-      - .github/workflows/pilot-narrative-audit.yml
-      - commander_sim/**
-      - tools/audit_pilot_narratives.py
-      - tests/test_pilot_policy.py
   workflow_dispatch:
 
 permissions:

@@ -1,19 +1,9 @@
-name: Gorge Commander backend evaluation (experimental)
+name: ARCHIVED Python · Gorge Commander backend evaluation (experimental)
 
+# ARCHIVED PYTHON SIMULATION: disabled automatic triggers after gorge cutover.
+# Reproduce old results from archive/python-rules-pilots-simulations-20261103.
 on:
   workflow_dispatch:
-  pull_request:
-    paths:
-      - "tools/export_gorge_decks.py"
-      - "tools/gorge_commander_probe.go"
-      - "tools/gorge_benchmark.py"
-      - "tools/fetch_gorge_precons.py"
-      - "tools/gorge_native_replay.py"
-      - "commander_sim/gorge_backend.py"
-      - "tests/test_gorge_backend.py"
-      - "tests/test_gorge_precons_and_replay.py"
-      - "tests/test_gorge_benchmark.py"
-      - ".github/workflows/gorge-commander-evaluation.yml"
 
 permissions:
   contents: read

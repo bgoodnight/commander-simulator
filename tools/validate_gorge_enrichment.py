@@ -67,6 +67,8 @@ def validate_trace(record):
                     if oid in seen:
                         raise ValueError("Object appears in two physical zones")
                     seen.add(oid)
+    if any(p["life"]!=40 for p in snaps[0]["players"]):
+        raise ValueError("Commander game did not start at 40 life")
     return {
         "schema":"gorge-enrichment-validation-v1",
         "seed":record.get("seed"),

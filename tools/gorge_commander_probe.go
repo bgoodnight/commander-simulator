@@ -142,8 +142,9 @@ func main() {
         Seed:gs^uint64(i+1),AutoPayMana:true,Deps:bots.Deps{Cards:reg}})
       if err!=nil {panic(err)}
     }
+    // Gorge defaults to 20 life. Commander requires an explicit 40-life genesis.
     cfg:=rules.Config{Seed:gs,Names:ids,Decks:ds,Commanders:cs,
-      Format:rules.FormatCommander,Tokens:reg.Tokens,NameUniverse:reg.Universe()}
+      Format:rules.FormatCommander,StartingLife:40,Mulligans:7,Tokens:reg.Tokens,NameUniverse:reg.Universe()}
     start:=time.Now()
     capture:=*nativeDir!=""&&g<*nativeLimit
     observations:=[]any{}
@@ -151,7 +152,7 @@ func main() {
     hooks:=bench.Hooks{EnvSeats:true,HonestRoot:true}
     if capture {
       hooks.Guard=func(engine *rules.Engine)(string,string) {
-        if engine.G.Turn!=lastTurn {
+        if engine.G.Turn>0&&engine.G.Turn!=lastTurn {
           lastTurn=engine.G.Turn
           observations=append(observations,snapshot(engine))
         }

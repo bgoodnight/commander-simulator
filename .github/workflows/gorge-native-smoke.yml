@@ -1,0 +1,154 @@
+name: Gorge-only Commander smoke and public replay snapshots
+
+on:
+  pull_request:
+    paths:
+      - "tools/gorge_commander_probe.go"
+      - "tools/gorge_public_state.py"
+      - "tools/gorge_ui_export.py"
+      - "tools/validate_gorge_enrichment.py"
+      - "tests/test_gorge_public_state.py"
+      - "web/pages/gorge_replay.js"
+      - ".github/workflows/gorge-native-smoke.yml"
+  push:
+    branches: [main]
+    paths:
+      - "tools/gorge_commander_probe.go"
+      - "tools/gorge_public_state.py"
+      - "tools/gorge_ui_export.py"
+      - "tools/validate_gorge_enrichment.py"
+      - ".github/workflows/gorge-native-smoke.yml"
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+concurrency:
+  group: gorge-native-smoke-${{ github.ref }}
+  cancel-in-progress: false
+
+jobs:
+  smoke:
+    runs-on: ubuntu-latest
+    timeout-minutes: 40
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Check safe public replay projection and legacy converter
+        run: |
+          python -m unittest tests.test_gorge_public_state tests.test_gorge_ui_export -v
+          node --test tests/pages_gorge_replay.test.cjs
+      - name: Export local Commander deck fixtures and stock precon pool
+        run: |
+          mkdir -p "$RUNNER_TEMP/decks" "$RUNNER_TEMP/results"
+          python -m tools.export_gorge_decks --out "$RUNNER_TEMP/decks" \
+            --decks mortarion_current magnus_premium necron_dynasties wretched_ranks
+          python -m tools.fetch_gorge_precons --out "$RUNNER_TEMP/decks"
+      - name: Fetch pinned gorge implementation
+        env:
+          GORGE_COMMIT: b78e4c8b16078f6decbc48875bba953ce5535b85
+        run: |
+          git clone --filter=blob:none https://github.com/adams-shaun/gorge.git "$RUNNER_TEMP/gorge"
+          git -C "$RUNNER_TEMP/gorge" checkout --detach "$GORGE_COMMIT"
+      - uses: actions/setup-go@v5
+        with:
+          go-version-file: ${{ runner.temp }}/gorge/go.mod
+          cache: false
+      - name: Build independent card corpus and gorge driver
+        working-directory: ${{ runner.temp }}/gorge
+        run: |
+          make fetch-cards compile-cards
+          cp "$GITHUB_WORKSPACE/tools/gorge_commander_probe.go" ./commander_probe.go
+          go build -o "$RUNNER_TEMP/gorge-probe" ./commander_probe.go
+      - name: Run eight genuine Commander games with 40-life rules and London mulligans
+        working-directory: ${{ runner.temp }}/gorge
+        run: |
+          mkdir -p "$RUNNER_TEMP/results/native"
+          PYTHONPATH="$GITHUB_WORKSPACE" python -m commander_sim.gorge_backend \
+            --binary "$RUNNER_TEMP/gorge-probe" \
+            --corpus "$RUNNER_TEMP/gorge/.cards" --deck-dir "$RUNNER_TEMP/decks" \
+            --decks "mortarion_current,magnus_premium,necron_dynasties,wretched_ranks,avengers-assemble,cavalry-charge,deadly-disguise,science-pip" \
+            --pilot bot --games 8 --seed 300 --max-turns 60 \
+            --native-dir "$RUNNER_TEMP/results/native" --native-limit 2 --jsonl \
+            > "$RUNNER_TEMP/results/gorge_runs.jsonl"
+      - name: Verify source and publishable projection for 2 enriched samples
+        run: |
+          python -m tools.validate_gorge_enrichment \
+            --native-dir "$RUNNER_TEMP/results/native" \
+            --output "$RUNNER_TEMP/results/enrichment_validation.json"
+          python -m tools.gorge_ui_export \
+            "$RUNNER_TEMP/results/native/gorge-seed-300.json" \
+            "$RUNNER_TEMP/results/native/gorge-seed-301.json" \
+            --out "$RUNNER_TEMP/results/public_ui"
+          python - <<'PY'
+          import json,os
+          from pathlib import Path
+          root=Path(os.environ["RUNNER_TEMP"])/"results"/"public_ui"
+          for p in sorted(root.glob("*.json")):
+              d=json.loads(p.read_text())
+              assert d["visibility"]=="public_events_only"
+              assert d["schema"]=="gorge-ui-replay-v1"
+              assert d["snapshots"]
+              assert all(v["life"]==40 for v in d["snapshots"][0]["players"])
+              assert all(set(v["zones"])=={"battlefield","graveyard","exile","command"}
+                         for s in d["snapshots"] for v in s["players"])
+              assert "objects" not in d and "log" not in d and "intents" not in d
+              assert not any(e.get("secret") for t in d["turns"] for e in t["events"])
+              print("Safe public sample",p.name,len(d["snapshots"]),"state observations")
+          PY
+      - name: Record sample manifest with provenance
+        run: |
+          python - <<'PY'
+          import json,os
+          from pathlib import Path
+          root=Path(os.environ["RUNNER_TEMP"])/"results"/"public_ui"
+          games=[]
+          for p in sorted(root.glob("*.ui.json")):
+              d=json.loads(p.read_text())
+              games.append({"file":p.name,"seed":d["seed"],"decks":d["decks"],
+                            "chain":d["chain"],"turns":len(d["snapshots"]),
+                            "source":"gorge-40-life"})
+          (root/"manifest.json").write_text(json.dumps({
+              "schema":"gorge-public-replay-manifest-v1",
+              "source_commit":os.environ["GITHUB_SHA"],
+              "games":games},indent=2)+"\n")
+          with open(os.environ["GITHUB_STEP_SUMMARY"],"a") as f:
+              f.write("# Corrected gorge-only smoke run\n\n")
+              f.write("8 complete 40-life Commander games, 2 safe enriched UI replays.\n")
+              f.write("Earlier 20-life games are NOT Commander power benchmarks.\n")
+          PY
+      - name: Keep raw traces in an artifact, never in the public site
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: gorge-native-corrected-small-batch
+          path: ${{ runner.temp }}/results/
+          if-no-files-found: warn
+          retention-days: 14
+      - name: Commit only validated public replay examples for the Deck Lab
+        if: github.event_name != 'pull_request'
+        run: |
+          git fetch origin main
+          # A Pages publisher may have committed only generated docs while
+          # gorge was compiling. Accept that harmless change, but never
+          # publish stale samples if source engine/export code has changed.
+          if ! git diff --quiet HEAD origin/main -- \
+            tools/gorge_commander_probe.go tools/gorge_ui_export.py \
+            tools/gorge_public_state.py .github/workflows/gorge-native-smoke.yml; then
+            echo "Gorge source advanced; skipped stale replay samples." >> "$GITHUB_STEP_SUMMARY"
+            exit 0
+          fi
+          git checkout -B gorge-public-publish origin/main
+          mkdir -p web/pages/data/gorge
+          rsync -ac --delete "$RUNNER_TEMP/results/public_ui/" web/pages/data/gorge/
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add -A web/pages/data/gorge/
+          if ! git diff --cached --quiet; then
+            git commit -m "Publish verified 40-life gorge public UI samples"
+            git push origin HEAD:main
+          fi
