@@ -110,18 +110,34 @@ class StaticPagesTests(unittest.TestCase):
         if gorge_dir.is_dir():
             permitted.add("gorge-data")
             manifest=json.loads((gorge_dir/"manifest.json").read_text())
-            self.assertEqual(manifest["schema"],"gorge-public-replay-manifest-v1")
+            self.assertIn(manifest["schema"],{"gorge-public-replay-manifest-v1",
+                                                    "gorge-omniscient-replay-manifest-v1"})
+            omniscient=manifest["schema"]=="gorge-omniscient-replay-manifest-v1"
+            if omniscient:
+                self.assertEqual(manifest["visibility"],"omniscient")
+                self.assertIs(manifest["synthetic_simulation_only"],True)
             self.assertEqual({p.name for p in gorge_dir.iterdir()},
                              {"manifest.json"}|{g["file"] for g in manifest["games"]})
             for game in manifest["games"]:
                 replay=json.loads((gorge_dir/game["file"]).read_text())
-                self.assertEqual(replay["visibility"],"public_events_only")
+                self.assertEqual(replay["visibility"],
+                                 "omniscient" if omniscient else "public_events_only")
                 self.assertTrue(replay["snapshots"])
                 self.assertEqual([p["life"] for p in replay["snapshots"][0]["players"]],
                                  [40]*4)
-                self.assertFalse(any(
-                    "hand" in p["zones"] or "library" in p["zones"]
-                    for snap in replay["snapshots"] for p in snap["players"]))
+                if omniscient:
+                    self.assertIs(replay["synthetic_simulation_only"],True)
+                    self.assertTrue(all(
+                        len(p["zones"]["hand"])==p["hand_count"]
+                        for snap in replay["snapshots"] for p in snap["players"]))
+                    self.assertTrue(all(
+                        len(p["zones"]["library"])==p["library_count"]
+                        for snap in replay["snapshots"] for p in snap["players"]))
+                else:
+                    self.assertFalse(any(
+                        "hand" in p["zones"] or "library" in p["zones"]
+                        for snap in replay["snapshots"] for p in snap["players"]))
+                self.assertFalse(any(k in replay for k in ("log","objects","intents")))
         self.assertEqual({p.name for p in self.destination.iterdir()},permitted)
         self.assertNotIn("shared_scryfall_catalog.json",permitted)
         self.assertFalse(any(p.is_dir() and p.name not in
