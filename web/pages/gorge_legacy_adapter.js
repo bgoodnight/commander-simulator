@@ -2,7 +2,9 @@
  * This is a DATA adapter: the 2026-11-03 renderer owns every visible
  * insight, outcome card, chart and inline game timeline.
  * Source: pinned, sanitized gorge-ui-replay-v1. Never manufacture
- * draws, hidden hands, winners or end-of-turn snapshots.
+ * draws, winners or end-of-turn snapshots. Explicit synthetic omniscient
+ * exports CAN reveal native private hand/library identities, but only with
+ * the source's synthetic-only provenance flag.
  */
 (function(root,factory){
   const api=factory();
@@ -18,7 +20,9 @@
   const nfmt=n=>Number.isFinite(n)?String(n):"—";
   function validateReplay(g){
     if(!g||g.schema!=="gorge-ui-replay-v1"||g.engine!=="gorge"||
-       g.visibility!=="public_events_only"||!Number.isInteger(g.seed)||
+       !["public_events_only","omniscient"].includes(g.visibility)||
+       (g.visibility==="omniscient"&&g.synthetic_simulation_only!==true)||
+       !Number.isInteger(g.seed)||
        !Array.isArray(g.decks)||g.decks.length!==4||
        !Array.isArray(g.turns)||!g.turns.length||
        !Array.isArray(g.snapshots)||!g.snapshots.length||
@@ -27,8 +31,12 @@
        Number.isInteger(s.turn)&&Array.isArray(s.players)&&s.players.length===4&&
        s.players.every((p,i)=>p.seat===i&&Number.isFinite(p.life)&&
          Number.isInteger(p.hand_count)&&p.zones&&
-         ["battlefield","graveyard","exile","command"].every(k=>
-           Array.isArray(p.zones[k])))))return false;
+         ["battlefield","graveyard","exile","command",
+          ...(g.visibility==="omniscient"?["hand","library"]:[])].every(k=>
+           Array.isArray(p.zones[k]))&&
+         (g.visibility!=="omniscient"||
+           (p.zones.hand.length===p.hand_count&&
+            p.zones.library.length===p.library_count)))))return false;
     return g.snapshots[0].players.every(p=>p.life===40);
   }
   function realWinner(g){
@@ -118,6 +126,11 @@
           const name=e.card_name||names.get(e.obj)||null;
           actions.push({type:castType(name),card:name,seat,
             native_turn:t.turn,source_seq:e.seq,source_kind:e.kind});
+        }else if(e.kind==="draw"){
+          const name=e.card_name||names.get(e.obj)||null;
+          if(name)actions.push({type:"draw",card:name,seat,
+            native_turn:t.turn,source_seq:e.seq,source_kind:e.kind,
+            omniscient:g.visibility==="omniscient"});
         }else if(e.kind==="land_played"){
           const name=landAt(t,i,names);
           actions.push({type:"land_play",card:name,seat,
@@ -151,6 +164,13 @@
     if(!own.length||own.length>30)throw Error("Unsupported Gorge round count");
     const snapshots=new Map(g.snapshots.map(s=>[s.turn,s]));
     const names=visibleNames(g),baseline=g.snapshots[0];
+    const omniscient=g.visibility==="omniscient";
+    const otherHands=frame=>[0,1,2,3].filter(seat=>seat!==hero).map(seat=>({
+      seat:mapSeat(seat,hero),
+      deck_key:g.decks[seat],
+      hand:namedZone(frame.players[seat],"hand"),
+      hand_count:frame.players[seat].hand_count
+    })).sort((a,b)=>a.seat-b.seat);
     const life_history=[observedLife(baseline,hero,0,null)];
     const ui_observations=[];
     for(let i=0;i<own.length;i++){
@@ -165,7 +185,9 @@
       const turn=i+1;
       const obs={
         turn,actions,
-        hand:null,hand_count:p.hand_count,
+        hand:omniscient?namedZone(p,"hand"):null,
+        hand_count:p.hand_count,
+        opponent_hands:omniscient?otherHands(frame):null,
         battlefield:namedZone(p,"battlefield"),
         graveyard:namedZone(p,"graveyard"),
         exile:namedZone(p,"exile"),
@@ -194,13 +216,16 @@
       deck_sha256:deckHashes?.[g.decks[i]]||"",
     })).sort((a,b)=>a.seat-b.seat);
     return {
-      seed:g.seed,completed_rounds:own.length,opening_hand:null,
+      seed:g.seed,completed_rounds:own.length,
+      opening_hand:omniscient?namedZone(baseline.players[hero],"hand"):null,
+      opening_hands_by_seat:omniscient?otherHands(baseline):null,
       opening_hand_count:baseline.players[hero].hand_count,
       mulligan:null,ui_observations,life_history,opponent_decks,
       gorge_source:{chain:g.chain,original_seat:hero,visibility:g.visibility,
         source_event_count:g.source?.total_native_events,
         public_event_count:g.source?.exported_events,
         snapshot_boundary:"first_pending_decision_of_turn",
+        synthetic_simulation_only:omniscient,
         outcome_provenance:finished?"native_game_over_event":"not_exported"},
       outcome:{status,complete:finished,reason:finished?
         "Verified Gorge game-over event":"Winner not recorded in public events",
@@ -225,7 +250,7 @@
       opponent_fidelity:"gorge_native_full_100_card_decks",
       outcomes_are_competitive_win_rates:false,
       requested_rounds:rounds,runs,
-      source_note:"Native Gorge event projection; two publicly archived replay games",
+      source_note:"Source-native Gorge synthetic games; omniscient hidden zones only when explicitly exported",
       example_replays:[],
     };
     return batch;
@@ -271,7 +296,8 @@
     }
     if(status)status.textContent=batch.runs.length+" real Gorge game"+
       (batch.runs.length===1?"":"s")+" · "+batch.runs[0].ui_observations.length+
-      " recorded turns · source: public replay";
+      " recorded turns · "+(batch.runs[0].gorge_source.visibility==="omniscient"?
+        "omniscient simulated hands and draws":"public-only replay");
     window.DeckGameOutcomes.render(outcomes,[batch],{
       deckKey:key,deckHash:deckHashes[key],
       commanderName:selected.commander,commanderArt:selected.art,
