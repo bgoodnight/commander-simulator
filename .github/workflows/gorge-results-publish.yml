@@ -16,7 +16,7 @@ on:
 
 permissions:
   contents: write
-  actions: read
+  actions: write
 
 concurrency:
   group: gorge-results-publish
@@ -60,4 +60,7 @@ jobs:
           fi
           git commit -m "Publish validated Gorge replay catalog and analytics"
           git push origin HEAD:main
-          echo "Public Gorge catalog committed; Pages deployment proceeds independently." >> "$GITHUB_STEP_SUMMARY"
+          # GITHUB_TOKEN-originated pushes do not trigger another push workflow.
+          # Explicit dispatch keeps Pages publication independent of simulation.
+          GH_TOKEN="${{ github.token }}" gh workflow run deck-lab-pages.yml --ref main
+          echo "Validated catalog committed and Pages export explicitly dispatched." >> "$GITHUB_STEP_SUMMARY"
