@@ -1094,7 +1094,7 @@
     const head=create("div","game-outcome-evidence-head");
     head.append(create("strong",null,"Seed "+run.seed+" · "+stateLabel(run.outcome.status)),
       create("span","micro",roundLabel(run)));
-    if(!options.hideEvidenceHead)root.appendChild(head);
+    if(!options.hideEvidenceHead||run.batch?.engine==="gorge")root.appendChild(head);
     const timeline=create("div","insight-turn-timeline");
     root.appendChild(timeline);
     const life=run.life_history||[];
@@ -1528,7 +1528,7 @@
             if(!entry)return;
             runDetails(detailsRoot,entry.run,{
               focusTurn:entry.turn,
-              hideEvidenceHead:!options.isGorge,
+              hideEvidenceHead:true,
               lookupRecordedCard:options.lookupRecordedCard,
               renderMana:options.renderMana,
               onOpenRecordedCard:options.onOpenRecordedCard,
