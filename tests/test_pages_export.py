@@ -120,6 +120,19 @@ class StaticPagesTests(unittest.TestCase):
             if manifest.get("analytics_file"):
                 self.assertEqual(manifest["analytics_file"],"analytics.json")
                 allowed.add("analytics.json")
+                allowed.add("cohort.json")
+                cohort=json.loads((gorge_dir/"cohort.json").read_text())
+                analytics=json.loads((gorge_dir/"analytics.json").read_text())
+                self.assertEqual(cohort["schema"],"gorge-cohort-report-v1")
+                self.assertEqual(cohort["total_verified_games"],len(analytics["games"]))
+                self.assertEqual(sum(x["n"] for x in cohort["decks"].values()),
+                                 len(analytics["games"]))
+                for row in cohort["decks"].values():
+                    self.assertEqual(row["n"],row["wins"]+row["losses"]+row["draws"])
+                    self.assertLessEqual(row["detailed_replay_count"],row["n"])
+                    for model in row["regressions"].values():
+                        self.assertEqual(model["data_scope"],
+                                         "all verified cohort outcomes")
             self.assertEqual({p.name for p in gorge_dir.iterdir()},allowed)
             for game in manifest["games"]:
                 replay=json.loads((gorge_dir/game["file"]).read_text())
