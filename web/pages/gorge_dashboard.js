@@ -458,9 +458,13 @@ function feature(parent,title,candidates){
     featured.replaceChildren();metrics.replaceChildren();evidence.replaceChildren();
     const btn=cardButton(item.name,"insight-featured-card-art");
     btn.replaceChildren();
-    const picture=artImage(item.name);
-    if(picture){picture.alt=item.name+" card";btn.append(picture);}
-    else btn.append(el("span","insight-featured-card-name",item.name));
+    const fullArt=info(item.name)?.image||art(item.name);
+    if(fullArt){
+      const picture=el("img");
+      picture.src=fullArt;picture.alt=item.name+" printed card";
+      picture.loading="lazy";picture.referrerPolicy="no-referrer";
+      btn.append(picture);
+    }else btn.append(el("span","insight-featured-card-name",item.name));
     featured.append(btn,el("strong","insight-featured-card-name",item.name));
     const examples=examplesFor(item);
     let selectedExample=0,tracker=null,detail=null,select=null;
