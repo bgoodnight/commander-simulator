@@ -1,0 +1,42 @@
+name: Browser-verify gorge Commander replay UI
+
+on:
+  pull_request:
+    paths:
+      - "tests/browser_gorge_replay.py"
+      - ".github/workflows/gorge-ui-browser-check.yml"
+      - "docs/deck-lab/gorge-data/**"
+      - "web/pages/gorge_replay.js"
+      - "web/pages/index.html"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  browser:
+    name: Test real replay files in Chromium
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Install headless browser
+        run: |
+          python -m pip install "playwright==1.56.0"
+          python -m playwright install --with-deps chromium
+      - name: Validate real static Deck Lab replay UI
+        env:
+          BROWSER_ARTIFACT_DIR: ${{ runner.temp }}/gorge-browser-evidence
+        run: |
+          python tests/browser_gorge_replay.py
+      - name: Upload browser screenshots and evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: gorge-ui-browser-evidence
+          path: ${{ runner.temp }}/gorge-browser-evidence/
+          if-no-files-found: warn
+          retention-days: 7
