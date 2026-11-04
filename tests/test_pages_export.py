@@ -116,8 +116,11 @@ class StaticPagesTests(unittest.TestCase):
             if omniscient:
                 self.assertEqual(manifest["visibility"],"omniscient")
                 self.assertIs(manifest["synthetic_simulation_only"],True)
-            self.assertEqual({p.name for p in gorge_dir.iterdir()},
-                             {"manifest.json"}|{g["file"] for g in manifest["games"]})
+            allowed={"manifest.json"}|{g["file"] for g in manifest["games"]}
+            if manifest.get("analytics_file"):
+                self.assertEqual(manifest["analytics_file"],"analytics.json")
+                allowed.add("analytics.json")
+            self.assertEqual({p.name for p in gorge_dir.iterdir()},allowed)
             for game in manifest["games"]:
                 replay=json.loads((gorge_dir/game["file"]).read_text())
                 self.assertEqual(replay["visibility"],
