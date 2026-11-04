@@ -478,5 +478,5 @@ if(typeof document!=="undefined"){
   if(document.readyState==="loading")document.addEventListener("DOMContentLoaded",init);
   else init();
 }
-return {SCHEMA,KINDS,validate,turns,accessibleEvents,eventLine,stats,paint,objectName,stateForSeat};
+return {SCHEMA,KINDS,validate,turns,accessibleEvents,eventLine,stats,paint,paintView,objectName,stateForSeat};
 });
