@@ -8,6 +8,12 @@ on:
       - "docs/deck-lab/gorge-data/**"
       - "web/pages/gorge_replay.js"
       - "web/pages/index.html"
+      - "web/pages/gorge_legacy_adapter.js"
+      - "web/pages/game_outcomes.js"
+      - "web/pages/style.css"
+      - "web/pages/app.js"
+      - "tools/build_pages_deck_lab.py"
+      - "tests/gorge_legacy_adapter.test.cjs"
   workflow_dispatch:
 
 permissions:
@@ -23,6 +29,11 @@ jobs:
       - uses: actions/setup-python@v5
         with:
           python-version: "3.12"
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+      - name: Check native Gorge translation against old schema
+        run: node --test tests/gorge_legacy_adapter.test.cjs
       - name: Install headless browser
         run: |
           python -m pip install "playwright==1.56.0"
