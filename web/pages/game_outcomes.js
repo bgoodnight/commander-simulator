@@ -317,7 +317,8 @@
         create("p",null,isOmniscient?
           "Synthetic omniscient mode provides named hands and draws for all four simulated players. Snapshots are at the first decision of each turn, NOT at turn end or necessarily after game over.":
           "Public replay omits private hand/draw identities. Visible board and life snapshots are at the first decision of each turn, NOT at turn end or necessarily after game over."),
-        create("p",null,"Only verified casts, plays and public-zone identities contribute to the card rankings. Hand-held, unplayed and private-draw metrics require a controlled richer export."));
+        create("p",null,"Abilities are counted separately: explicit native activation pushes and pushed triggers. Ordinary mana taps are not all activation events, and the native log does not yet link every resolution and effect back to its originating ability."),
+        create("p",null,"Card rankings use source-verified casts, plays, native abilities and published snapshots. They are descriptive samples, not gameplay correctness or calibrated win-rate proof."));
     }else content.append(
       create("strong",null,"Early model · interpret with care"),
       create("p",null,"Small samples, unfinished games, incomplete rules and automated pilot choices can change these results."),
