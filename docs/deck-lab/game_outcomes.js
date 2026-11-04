@@ -2368,7 +2368,9 @@
     }
     // The regression story belongs after every game/card panel, immediately
     // above the independent turn reviewer.
-    cards.appendChild(elasticNetPanel(options.discoveryReport,options));
+    // Gorge cohort regression comes exclusively from all verified outcomes
+    // in the precomputed report; never show a replay-sample regression here.
+    if(!isGorge)cards.appendChild(elasticNetPanel(options.discoveryReport,options));
     if(options.reviewerRoot){
       jumpToReview=turnReviewer(options.reviewerRoot,groups,options);
     }
