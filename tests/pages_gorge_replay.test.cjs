@@ -53,7 +53,9 @@ const replayLoader=fs.readFileSync(path.join(__dirname,"../web/pages/gorge_repla
 // to open the first game. Each selected seed is fetched on demand.
 assert.match(replayLoader,/openPublicSample\(select\.value\)/);
 assert.match(replayLoader,/playerEntry\(game,key\)/);
-assert.match(replayLoader,/data\.player_seat!==entry\.player_seat/);
+assert.match(replayLoader,/entry\.source_player_role_evidence/);
+assert.match(replayLoader,/data\.chain!==entry\.chain/);
+assert.match(replayLoader,/select\.options\[0\]\.value/);
 assert.doesNotMatch(replayLoader,/Promise\.allSettled\(\[\.\.\.available\]/);
 
 console.log("Gorge native replay viewer: schema, actual-format events, privacy filtering, turn grouping and static route wiring PASS");
