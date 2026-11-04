@@ -88,8 +88,16 @@ def check():
             page.screenshot(path=str(OUT/"original-insight-desktop.png"),full_page=False)
             # Capture the OPENED insight, including old metrics and example
             # turns, before raw-replay changes re-render the results gallery.
+            # Frame the original reference region (stats, selector, continuous
+            # collapsed turns), not the expanded diagnostics or card preview.
+            turn.locator(".insight-turn-row-summary").click()
+            assert not turn.evaluate("(e)=>e.open")
             page.set_viewport_size({"width":390,"height":844})
-            tiles.first.scroll_into_view_if_needed()
+            tiles.first.evaluate("""(e)=>{
+              const bar=document.querySelector('.topbar');
+              const offset=bar?bar.getBoundingClientRect().height+12:72;
+              window.scrollTo(0,e.getBoundingClientRect().top+window.scrollY-offset);
+            }""")
             picker=tracker.locator(".gorge-insight-example-select").bounding_box()
             reviewer_button=tracker.locator(".insight-example-full-link").bounding_box()
             assert picker and reviewer_button
