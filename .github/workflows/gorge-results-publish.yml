@@ -4,7 +4,7 @@ name: Publish verified Gorge UI artifact to Pages data
 # retry never reruns a game; only independently verified converted data ships.
 on:
   workflow_run:
-    workflows: ["Convert verified Gorge recordings to public replay artifact", "Gorge · player decks versus rotating precon opponents"]
+    workflows: ["Convert verified Gorge recordings to public replay artifact", "Gorge · player decks versus rotating precon opponents", "Gorge · four-deck 500-game benchmark"]
     branches: [main]
     types: [completed]
   workflow_dispatch:
