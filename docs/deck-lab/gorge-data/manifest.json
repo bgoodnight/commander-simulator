@@ -2,7 +2,7 @@
   "schema": "gorge-omniscient-replay-manifest-v1",
   "visibility": "omniscient",
   "synthetic_simulation_only": true,
-  "source_commit": "8dee9b1ba431a09c3213525b87518fd7e0de1b2e",
+  "source_commit": "ef3ef103c58f605fe57150d4a390b41c3a801054",
   "games": [
     {
       "file": "gorge-seed-300.ui.json",
@@ -31,5 +31,9 @@
       "source": "gorge-40-life"
     }
   ],
-  "privacy_notice": "Omniscient card identities are published for synthetic AI-only Commander simulations. Native event logs, bot intents, and raw engine object data are not published."
+  "replay_features": [
+    "source_native_activated_abilities",
+    "source_native_triggered_abilities",
+    "all_player_omniscient_hands"
+  ]
 }
