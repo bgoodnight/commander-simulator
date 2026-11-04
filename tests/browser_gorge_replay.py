@@ -65,29 +65,33 @@ def check():
             print("VISIBILITY",json.dumps(ancestors),flush=True)
             print("BROWSER ERRORS",errors,flush=True)
             page.screenshot(path=str(OUT/"before-fix-diagnostic.png"),full_page=False)
-            page.locator("#gorge-replay-root h3").filter(
-                has_text="Gorge Commander · Game 300").wait_for(timeout=15000)
+            page.locator("#gorge-dashboard .board-report").first.wait_for(timeout=15000)
             dashboard=page.locator("#gorge-dashboard")
             dashboard.locator("h2").filter(has_text="Key insights").wait_for(timeout=20000)
             assert dashboard.is_visible()
             assert dashboard.locator("h2").filter(has_text="Latest simulated results").count()==1
             assert dashboard.locator("h2").filter(has_text="Turn reviewer").count()==1
-            assert dashboard.locator(".gorge-deck-result").count()>=4
-            assert "verified gorge games" in dashboard.inner_text().lower()
-            assert "win rates are withheld" in dashboard.inner_text().lower()
-            assert page.locator("#gorge-replay-samples").is_visible()
+            assert dashboard.locator(".board-report").count()==3
+            assert dashboard.locator(".game-outcome-turn-tile").count()==38
+            assert dashboard.locator(".gorge-original-deck-copy").count()==4
+            assert dashboard.locator(".gorge-original-picker").is_visible()
+            assert "turn segments" not in dashboard.inner_text().lower()
+            assert "state snapshots" not in dashboard.inner_text().lower()
+            assert "native events" not in dashboard.inner_text().lower()
             assert page.locator("#gorge-replay-panel").is_visible()
+            assert not page.locator("#gorge-replay-panel").evaluate("(el)=>el.open")
+            page.locator("#gorge-replay-panel > summary").click()
+            assert page.locator("#gorge-replay-samples").is_visible()
             assert not page.locator("#legacy-simulation-archive").evaluate(
                 "(el)=>el.open"), "Legacy Python archive should be collapsed"
             assert page.locator(".gorge-replay-player").count()==4
             for seed in (300,301):
                 expected=game_by_seed[seed]
                 if seed!=300:
-                    page.locator("#gorge-replay-sample-select").select_option(
-                        f"gorge-seed-{seed}.ui.json")
-                    page.locator("#gorge-replay-load").click()
+                    page.locator("#gorge-dashboard .gorge-original-picker select").select_option(
+                        str(seed))
                     page.locator("#gorge-replay-root h3").filter(
-                        has_text=f"Gorge Commander · Game {seed}").wait_for(timeout=20000)
+                        has_text=f"Gorge Commander · Game {seed}").wait_for(state="attached",timeout=20000)
                 assert page.locator(".gorge-replay-turn").count()==len(expected["turns"])
                 assert page.locator(".gorge-replay-player").count()==4
                 assert "first pending decision" in page.locator(
@@ -121,6 +125,10 @@ def check():
                 print(f"PASS seed {seed}: {len(expected['turns'])} turns, "
                       f"{len(expected['snapshots'])} authoritative snapshots, 4 player states, "
                       f"command-zone card {expected_name}")
+            # Main experience must be the original gallery/turn tiles, while
+            # the engine event trace stays collapsed unless requested.
+            page.locator("#gorge-replay-panel > summary").click()
+            assert not page.locator("#gorge-replay-panel").evaluate("(el)=>el.open")
             # Mobile sizing and control accessibility.
             page.set_viewport_size({"width":390,"height":844})
             page.screenshot(path=str(OUT/"gorge-seed-301-mobile.png"),full_page=False)
@@ -134,8 +142,8 @@ def check():
             assert widths["page"]<=widths["viewport"]+2, (
                 "Horizontal mobile overflow: "+str(widths))
             assert page.locator("#gorge-dashboard").is_visible()
-            assert page.locator("#gorge-replay-load").is_visible()
-            assert page.locator("#gorge-replay-sample-select").is_visible()
+            assert page.locator("#gorge-dashboard .gorge-original-picker select").is_visible()
+            assert page.locator("#gorge-dashboard .gorge-original-picker select").is_visible()
             # Unknown JS errors should be reported instead of silently hidden.
             assert not errors, "Unexpected browser JavaScript errors: "+"; ".join(errors[:8])
             browser.close()

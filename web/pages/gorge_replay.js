@@ -420,7 +420,7 @@ function init(){
       content.before(panel);
       if(dashboard)panel.before(dashboard);
       panel.hidden=false;
-      panel.open=true;
+      panel.open=false;
     }
   }
   // Only load versions explicitly named by the validated public manifest.
