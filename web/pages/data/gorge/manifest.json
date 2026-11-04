@@ -2,7 +2,7 @@
   "schema": "gorge-omniscient-replay-manifest-v1",
   "visibility": "omniscient",
   "synthetic_simulation_only": true,
-  "source_commit": "ef3ef103c58f605fe57150d4a390b41c3a801054",
+  "source_commit": "91f7781f3c23a1bf54ffd3b71c74252351814d38",
   "games": [
     {
       "file": "gorge-seed-300.ui.json",
@@ -30,10 +30,5 @@
       "turns": 38,
       "source": "gorge-40-life"
     }
-  ],
-  "replay_features": [
-    "source_native_activated_abilities",
-    "source_native_triggered_abilities",
-    "all_player_omniscient_hands"
   ]
 }
