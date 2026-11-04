@@ -1085,11 +1085,10 @@
   }
   function endStatePanel(observation,options){
     const panel=create("section","insight-end-state");
-    panel.appendChild(create("strong","insight-end-state-title",
-      observation.snapshot_is_turn_end===false?"Recorded turn-entry state":"End-of-turn state"));
-    if(observation.snapshot_is_turn_end===false)
-      panel.appendChild(create("p","micro",observation.snapshot_note||
-        "Gorge turn-entry snapshot; this is not an end-of-turn board."));
+    // The recorded snapshot boundary stays in the data; the replay view
+    // starts directly with the inspectable zones rather than engine notes.
+    if(observation.snapshot_is_turn_end!==false)
+      panel.appendChild(create("strong","insight-end-state-title","End-of-turn state"));
     if(Number.isInteger(observation.hand_count)&&!Array.isArray(observation.hand))
       panel.appendChild(create("p","micro","Hand · "+observation.hand_count+
         " cards. Individual identities are private in the public export."));
@@ -1130,7 +1129,7 @@
     if(Array.isArray(observation.opponent_hands)){
       const all=create("details","insight-end-zone insight-omniscient-opponents");
       all.appendChild(create("summary","insight-end-zone-label",
-        "Opponents' hands · omniscient simulation"));
+        "Opponents' hands"));
       const group=create("div","insight-omniscient-opponent-list");
       for(const player of observation.opponent_hands){
         const item=create("details","insight-end-zone");
@@ -1145,13 +1144,18 @@
       }
       all.appendChild(group);panel.appendChild(all);
     }
-    const mana=recordedManaOutput(observation);
-    const line=create("div","insight-end-mana");
-    line.appendChild(create("strong",null,"Mana generated"));
-    manaPips(line,mana,options);
-    if(mana===null)
-      line.appendChild(create("span","micro","Not recorded for this game"));
-    panel.appendChild(line);
+    if(!options.openingDraw){
+      const mana=recordedManaOutput(observation);
+      const line=create("div","insight-end-mana");
+      line.appendChild(create("strong",null,"Mana generated"));
+      // Historical exports can omit these counts, so do not imply a
+      // measured zero there. Gorge's explicit turn display uses None.
+      if(mana===null&&options.isGorge)
+        line.appendChild(create("span","micro","None"));
+      else
+        manaPips(line,mana,options);
+      panel.appendChild(line);
+    }
     return panel;
   }
   function compactInsightTimeline(root,run,options={}){
@@ -1188,21 +1192,21 @@
         index?"Turn "+index:"Draw"));
       const pilot=(observation?.actions||[]).filter(a=>
         a.seat===undefined||Number(a.seat)===0);
-      const synopsis=turnNarration(pilot);
+      const synopsis=turnNarration(run.batch?.engine==="gorge"?
+        pilot.filter(a=>!["ability_activated","ability_triggered"].includes(a.type)):
+        pilot);
       summary.appendChild(create("span","insight-turn-activity",
         index?synopsis||"No named plays recorded":openingHandDescription(run)));
       const badges=create("span","insight-turn-metrics");
       const now=lifeAt(current,0),was=before?lifeAt(before,0):now;
       const delta=now-was;
-      const hp=create("span","insight-turn-metric"+(before&&delta?
-        delta>0?" is-gain":" is-loss":""),"♥ "+nfmt(now)+
-        (before&&delta?" ("+(delta>0?"+":"")+nfmt(delta)+")":""));
+      const hp=create("span","insight-turn-metric","♥ "+nfmt(now));
       badges.appendChild(hp);
       const hand=index===0?run.opening_hand:observation?.hand;
       const handCount=Array.isArray(hand)?hand.length:
         index===0?run.opening_hand_count:observation?.hand_count;
       if(Number.isInteger(handCount)){
-        const handBadge=textButton("▤ Hand "+handCount,
+        const handBadge=textButton("▤ "+handCount,
           "insight-turn-metric insight-hand-shortcut",event=>{
             // Prevent the parent <summary> from toggling itself after we open it.
             event?.preventDefault?.();
@@ -1216,12 +1220,16 @@
           "Hand contains "+handCount+" cards; identities not published");
         badges.appendChild(handBadge);
       }
-      const mana=recordedManaOutput(observation);
-      const display=create("span","insight-turn-metric insight-turn-mana");
-      display.setAttribute("aria-label","Mana generated"+(mana===null?": not recorded":""));
-      display.appendChild(create("span",null,"Mana "));
-      manaPips(display,mana,options);
-      badges.appendChild(display);
+      if(index>0){
+        const mana=recordedManaOutput(observation);
+        const display=create("span","insight-turn-metric insight-turn-mana");
+        display.setAttribute("aria-label","Mana generated"+(mana===null?": not recorded":""));
+        if(mana===null&&run.batch?.engine==="gorge")
+          display.appendChild(create("span",null,"None"));
+        else
+          manaPips(display,mana,options);
+        badges.appendChild(display);
+      }
       summary.appendChild(badges);
       const arrow=create("span","insight-turn-expand","Explore ▾");
       summary.appendChild(arrow);
@@ -1238,7 +1246,7 @@
           battlefield:[],graveyard:[],exile:[],
           snapshot_is_turn_end:run.batch?.engine==="gorge"?false:undefined,
           snapshot_note:"Starting hand at the first pending decision of the game; mulligan history was not captured."
-        },options));
+        },{...options,openingDraw:true,isGorge:run.batch?.engine==="gorge"}));
       }else if(!observation){
         body.appendChild(create("p","micro",
           "Action and zone details were not exported for this round."));
@@ -1312,7 +1320,8 @@
           }
           rest.appendChild(combat);
         }
-        body.appendChild(endStatePanel(observation,options));
+        body.appendChild(endStatePanel(observation,{...options,
+          isGorge:run.batch?.engine==="gorge"}));
         const moves=observedZoneChanges(previous,observation);
         for(const move of moves){
           const line=create("p","insight-rest-event");
