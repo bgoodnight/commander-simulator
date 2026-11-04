@@ -252,14 +252,15 @@ function eventDescription(e){
   if(e.kind==="token_created")return "Created a token";
   if(e.kind==="damage")return "Damage event"+(Number.isFinite(e.amount)?" · "+e.amount:"");
   if(e.kind==="life")return "Life changed"+(Number.isFinite(e.amount)?" · "+e.amount:"");
-  if(e.kind==="mana")return "Produced "+(e.counter||"unspecified")+" mana"+
-    (Number.isFinite(e.amount)?" ×"+e.amount:"");
+  if(e.kind==="mana")return (Number(e.amount)<0?"Mana used: ":"Mana produced: ")+
+    (e.counter||"unspecified")+(Number.isFinite(e.amount)?" ×"+Math.abs(e.amount):"");
   return e.kind.replace(/_/g," ");
 }
 function turnSummary(t){
   const notable=t.actions.filter(x=>["cast","land_played","token_created"].includes(x.event.kind));
   if(!notable.length)return "No named plays in the public event log";
-  const text=notable.map(x=>eventDescription(x.event)).join(", ");
+  const text=notable.map(x=>x.event.kind==="cast"&&x.event.card_name?
+    "Played "+x.event.card_name:eventDescription(x.event)).join(", ");
   return text.length>300?text.slice(0,297)+"…":text;
 }
 function manaGenerated(t){
