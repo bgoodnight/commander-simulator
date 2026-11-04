@@ -299,7 +299,7 @@ def build(output, *, catalog_path=SHARED_CATALOG, name_catalog_path=DEFAULT_NAME
         omniscient = mode == "gorge-omniscient-replay-manifest-v1"
         public = mode == "gorge-public-replay-manifest-v1"
         if (not (public or omniscient)
-                or not isinstance(games, list) or not 1 <= len(games) <= 4):
+                or not isinstance(games, list) or not 1 <= len(games) <= 500):
             raise ValueError("Invalid gorge replay sample manifest")
         if omniscient and (manifest.get("visibility") != "omniscient"
                            or manifest.get("synthetic_simulation_only") is not True):
@@ -347,6 +347,24 @@ def build(output, *, catalog_path=SHARED_CATALOG, name_catalog_path=DEFAULT_NAME
         shutil.copy2(manifest_file, target / "manifest.json")
         for source_file, filename in validated:
             shutil.copy2(source_file, target / filename)
+        # Summary analytics are small and must never contain native logs,
+        # intents, object catalogs or hidden cards. Preserve them separately
+        # from the detailed public replay files.
+        if "analytics_file" in manifest:
+            if manifest["analytics_file"] != "analytics.json":
+                raise ValueError("Unexpected Gorge analytics filename")
+            analytics_path = public_gorge / "analytics.json"
+            if not analytics_path.is_file():
+                raise ValueError("Missing Gorge batch analytics")
+            analytics = json.loads(analytics_path.read_text(encoding="utf-8"))
+            if (analytics.get("schema") != "gorge-batch-analytics-v1"
+                    or not isinstance(analytics.get("games"), list)
+                    or any(not isinstance(x.get("decks"), list) or
+                           not isinstance(x.get("seed"), int) or
+                           "log" in x or "intents" in x or "objects" in x
+                           for x in analytics["games"])):
+                raise ValueError("Unsafe Gorge analytics payload")
+            shutil.copy2(analytics_path, target / "analytics.json")
 
     # Optional long-game exports are copied only if explicitly pinned to
     # an exact built-in deck revision. The site builder NEVER runs simulation
