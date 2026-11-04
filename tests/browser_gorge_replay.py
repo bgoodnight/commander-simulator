@@ -50,6 +50,10 @@ def check():
             assert insight.evaluate("(e)=>e.open")
             assert insight.locator(".insight-featured-compare").is_visible()
             assert insight.locator(".insight-featured-card-art").is_visible()
+            preview=insight.locator(".insight-featured-card-art img").first
+            assert preview.is_visible()
+            assert "/normal/" in preview.get_attribute("src"), \
+                "Featured card must show complete printed artwork, not a crop"
             assert insight.locator(".insight-featured-bars .insight-featured-bar").count()>=2
             tiles=insight.locator(".insight-featured-metrics .insight-featured-metric-link")
             assert tiles.count()==2
