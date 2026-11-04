@@ -1567,17 +1567,31 @@
                 onReviewRun(entry.group.id,entry.run.seed,entry.turn);
               });
             tracker.appendChild(full);
-            const exampleLabel=create("div","insight-example-game-label");
+            // Preserve the original UI's compact example-game picker.
+            // Different items select SOURCE game/turn pairs, not invented runs.
+            const controls=create("div",
+              "insight-inline-tracker-controls gorge-legacy-example-controls");
+            const choice=create("select","gorge-legacy-example-select");
+            choice.setAttribute("aria-label","Choose a recorded source game and turn");
+            examples.forEach((entry,i)=>{
+              const option=create("option",null,
+                (options.isGorge?"Real decks":entry.group.scenario)+
+                " · Seed "+entry.run.seed+" · Turn "+entry.turn+
+                " · "+stateLabel(entry.run.outcome.status));
+              option.value=String(i);choice.appendChild(option);
+            });
+            choice.addEventListener("change",()=>{
+              exampleIndex=Number(choice.value);
+              draw();
+            });
+            controls.append(choice,full);
             detailsRoot=create("div","insight-inline-tracker-review");
-            tracker.append(exampleLabel,detailsRoot);
-            const setLabel=()=>{
-              const entry=examples[Math.max(0,exampleIndex)]||examples[0];
-              exampleLabel.textContent=
-                "Scenario "+entry.group.scenario+" · Seed "+entry.run.seed+
-                " · "+stateLabel(entry.run.outcome.status);
-            };
+            tracker.append(controls,detailsRoot);
             const previousDraw=draw;
-            draw=()=>{setLabel();previousDraw()};
+            draw=()=>{
+              choice.value=String(Math.max(0,exampleIndex));
+              previousDraw();
+            };
             tracker.addEventListener("toggle",()=>{
               trigger.textContent=tracker.open?"Close example games":"View example games";
               if(tracker.open)draw();
