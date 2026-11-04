@@ -1174,19 +1174,43 @@
         index?"Turn "+index:"Draw"));
       const pilot=(observation?.actions||[]).filter(a=>
         a.seat===undefined||Number(a.seat)===0);
-      const abilities=pilot.filter(a=>
-        ["ability_activated","ability_triggered"].includes(a.type));
-      const synopsis=turnNarration(run.batch?.engine==="gorge"?
-        pilot.filter(a=>!["ability_activated","ability_triggered"].includes(a.type)):
-        pilot);
-      const grouped=[["ability_activated","activated"],["ability_triggered","triggered"]]
-        .map(([kind,label])=>{
-          const count=abilities.filter(a=>a.type===kind).length;
-          return count?count+"× "+label+" "+(count===1?"ability":"abilities"):null;
-        }).filter(Boolean);
+      // Compact Gorge synopsis: show every card played individually and
+      // group only repeated abilities from the SAME source card. The detailed
+      // replay below preserves all events in their exact recorded order.
+      const gorgeSummary=()=>{
+        const ordinary=pilot.filter(a=>
+          !["ability_activated","ability_triggered"].includes(a.type));
+        const plays=ordinary.filter(a=>narratedAction(a)).map(a=>{
+          const said=narratedAction(a);
+          const type=String(a.type||"");
+          const kind=type==="creature_cast"||type==="reviewed_graveyard_creature_cast"?
+            "creature ":type==="artifact_cast"?"artifact ":
+            type==="enchantment_cast"?"enchantment ":
+            type==="land_play"?"land ":"";
+          return said.verb==="Played"?
+            "Played "+kind+(said.card||"card"):
+            narratedText(said);
+        });
+        const counts=new Map();
+        for(const action of pilot){
+          if(!["ability_activated","ability_triggered"].includes(action.type))continue;
+          const card=action.card||action.source||"unknown source";
+          const key=action.type+"|"+card;
+          if(!counts.has(key))counts.set(key,{type:action.type,card,count:0});
+          counts.get(key).count++;
+        }
+        const abilities=[...counts.values()].map(({type,card,count})=>
+          (count>1?count+"× ":"")+
+          (type==="ability_activated"?"Activated":"Triggered")+
+          " ability of "+card);
+        return [plays.join(", "),abilities.length?
+          (plays.length?"and then ":"")+abilities.join(", "):""]
+          .filter(Boolean).join(plays.length&&abilities.length?" ":"");
+      };
+      const synopsis=run.batch?.engine==="gorge"?
+        gorgeSummary():turnNarration(pilot);
       summary.appendChild(create("span","insight-turn-activity",
-        index?[synopsis,...grouped].filter(Boolean).join(" · ")||
-          "No named plays recorded":openingHandDescription(run)));
+        index?synopsis||"No named plays recorded":openingHandDescription(run)));
       const badges=create("span","insight-turn-metrics");
       const now=lifeAt(current,0),was=before?lifeAt(before,0):now;
       const delta=now-was;
