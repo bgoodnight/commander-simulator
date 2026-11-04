@@ -1086,6 +1086,7 @@
         " cards. Individual identities are private in the public export."));
     const zones=[
       ["Hand",observation.hand],
+      ["Command zone",observation.command],
       ["Creatures",(observation.battlefield||[]).filter(n=>
         /\bcreature\b/.test(recordedCardTypes(n,options.lookupRecordedCard)))],
       ["Lands",(observation.battlefield||[]).filter(n=>
@@ -1106,7 +1107,7 @@
     for(const [label,cards] of zones){
       if(!Array.isArray(cards))continue;
       const group=create("details","insight-end-zone insight-board-"+label.toLowerCase().replace(/[^a-z]+/g,"-"));
-      const icon=({Hand:"▤",Creatures:"♟",Lands:"◇",
+      const icon=({Hand:"▤","Command zone":"♛",Creatures:"♟",Lands:"◇",
         Artifacts:"⚙",Enchantments:"✦","Other permanents":"◈",
         Graveyard:"◆",Exile:"⊘"})[label]||"◈";
       const trigger=create("summary","insight-end-zone-label");
