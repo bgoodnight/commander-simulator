@@ -45,7 +45,7 @@ jobs:
           python-version: "3.12"
       - name: Verify conversion and public data tests
         run: |
-          python -m unittest tests.test_gorge_ui_export tests.test_gorge_public_state tests.test_gorge_results_pipeline -v
+          python -m unittest tests.test_gorge_ui_export tests.test_gorge_public_state tests.test_gorge_results_pipeline tests.test_gorge_catalog_merge -v
       - name: Download existing native simulation results
         env:
           GH_TOKEN: ${{ github.token }}
