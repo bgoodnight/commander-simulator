@@ -1,8 +1,10 @@
-"""Safe, evidence-only projection of gorge's authoritative turn-entry states.
+"""Validated, evidence-only projection of gorge's authoritative turn-entry states.
 
-NEVER copy hidden hand/library object IDs or their order to the public UI.
+Default: omit all hidden hand/library identities and ordered cards.
+Explicit omniscient mode: expose all six zones for synthetic AI-vs-AI games.
+No native log or bot intents are copied into the display projection.
 """
-def project(source):
+def project(source, *, include_hidden=False):
     if source.get("enrichment_schema")!="gorge-physical-state-v1":
         return []
     objects=source.get("objects")
@@ -46,7 +48,9 @@ def project(source):
                 if not isinstance(zones.get(key),list):
                     raise ValueError("Missing zone "+key)
             public_zones={}
-            for key in ("battlefield","graveyard","exile","command"):
+            visible=("hand","library","battlefield","graveyard","exile","command") if include_hidden else (
+                "battlefield","graveyard","exile","command")
+            for key in visible:
                 entries=[]
                 for oid in zones[key]:
                     if type(oid) is not int or oid not in by_id or oid in seen:
