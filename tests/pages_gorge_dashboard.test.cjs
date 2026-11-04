@@ -14,7 +14,7 @@ for(const game of games){
     const a=dashboard.analyze(game,seat);
     assert.equal(a.seat,seat);
     assert.equal(a.key,game.decks[seat]);
-    assert(a.timeline.length>=8);
+    assert(a.timeline.length>=5, "Eliminated seats may have fewer personal turns");
     assert(a.timeline.every((t,i)=>t.number===i+1));
     assert(a.timeline.every(t=>t.atStart?.boundary==="first_pending_decision_of_turn"));
     assert(a.timeline[0].atStart.players.every(p=>p.life===40));
