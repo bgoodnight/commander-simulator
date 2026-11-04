@@ -1085,7 +1085,7 @@
       panel.appendChild(create("p","micro","Hand · "+observation.hand_count+
         " cards. Individual identities are private in the public export."));
     const zones=[
-      ["Hand",observation.hand],
+      ["Exile",observation.exile],
       ["Command zone",observation.command],
       ["Creatures",(observation.battlefield||[]).filter(n=>
         /\bcreature\b/.test(recordedCardTypes(n,options.lookupRecordedCard)))],
@@ -1099,7 +1099,7 @@
         !/\b(creature|land|artifact|enchantment)\b/.test(
           recordedCardTypes(n,options.lookupRecordedCard)))],
       ["Graveyard",observation.graveyard],
-      ["Exile",observation.exile]
+      ["Hand",observation.hand]
     ];
     const typed=zones.slice(2,6).reduce((n,z)=>n+z[1].length,0);
     if((observation.battlefield||[]).length&&!typed)
@@ -1107,6 +1107,7 @@
     for(const [label,cards] of zones){
       if(!Array.isArray(cards))continue;
       const group=create("details","insight-end-zone insight-board-"+label.toLowerCase().replace(/[^a-z]+/g,"-"));
+      group.open=true;
       const icon=({Hand:"▤","Command zone":"♛",Creatures:"♟",Lands:"◇",
         Artifacts:"⚙",Enchantments:"✦","Other permanents":"◈",
         Graveyard:"◆",Exile:"⊘"})[label]||"◈";
@@ -1119,7 +1120,7 @@
       if(!cards.length)list.appendChild(create("span","micro","None"));
       group.appendChild(list);panel.appendChild(group);
     }
-    if(Array.isArray(observation.opponent_hands)){
+    if(Array.isArray(observation.opponent_hands)&&!options.hideOpponentHands){
       const all=create("details","insight-end-zone insight-omniscient-opponents");
       all.appendChild(create("summary","insight-end-zone-label",
         "Opponents' hands"));
@@ -1369,8 +1370,47 @@
         }
         const board=create("section","insight-board-panel");
         board.appendChild(create("h4","insight-board-title","Board state"));
-        board.appendChild(endStatePanel(observation,{...options,
-          isGorge:run.batch?.engine==="gorge"}));
+        const boardContent=create("div","insight-board-content");
+        board.appendChild(boardContent);
+        const states=Array.isArray(observation.board_states)?observation.board_states:null;
+        const roster=new Map((run.opponent_decks||[]).map(p=>
+          [Number(p.seat),p.commander_name||p.deck_key]));
+        const ownCommander=run.opening_board_states?.find(p=>p.seat===0)?.command?.[0]||
+          states?.find(p=>p.seat===0)?.command?.[0]||
+          run.batch?.commander_name||"Your commander";
+        roster.set(0,ownCommander);
+        let chosenSeat=0;
+        const seatTiles=create("div","insight-seat-life-strip insight-board-seats");
+        const paintBoard=()=>{
+          const selected=states?.find(p=>p.seat===chosenSeat);
+          const state=selected|| (chosenSeat===0?observation:null);
+          boardContent.replaceChildren();
+          if(state){
+            boardContent.appendChild(endStatePanel(state,{...options,
+              isGorge:run.batch?.engine==="gorge",hideOpponentHands:true}));
+          }else{
+            boardContent.appendChild(create("p","micro",
+              "No verified board state recorded for this player."));
+          }
+          for(const button of seatTiles.children){
+            button.setAttribute("aria-pressed",
+              String(Number(button.dataset.seat)===chosenSeat));
+          }
+        };
+        for(const seat of SEATS){
+          const name=roster.get(seat)||"Seat "+(seat+1);
+          const tile=textButton("","insight-seat-life insight-board-seat",()=>{
+            chosenSeat=seat;paintBoard();
+          });
+          tile.dataset.seat=String(seat);
+          tile.appendChild(create("span","insight-seat-life-name",
+            name+(seat===0?" (You)":"")));
+          tile.appendChild(create("strong","insight-seat-life-value",
+            "♥ "+nfmt(lifeAt(current,seat))));
+          seatTiles.appendChild(tile);
+        }
+        board.appendChild(seatTiles);
+        paintBoard();
         const moves=observedZoneChanges(previous,observation);
         for(const move of moves){
           const line=create("p","insight-rest-event");
@@ -1379,7 +1419,6 @@
           rest.appendChild(line);
         }
         body.appendChild(rest);
-        board.appendChild(seatChangeSummary(current,before));
         body.appendChild(board);
       }
       if(!observation){
