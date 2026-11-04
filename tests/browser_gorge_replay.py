@@ -102,6 +102,8 @@ def check():
             # Full reviewer comes from the original module as well.
             page.set_viewport_size({"width":1440,"height":1000})
             tracker=insight.locator(".insight-inline-tracker")
+            if not tracker.evaluate("(e)=>e.open"):
+                tracker.locator("summary").first.click()
             tracker.locator(".insight-example-full-link").click()
             reviewer=page.locator("#turn-reviewer-results")
             assert reviewer.locator(".insight-turn-row").count()>=9
