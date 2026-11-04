@@ -4,12 +4,17 @@ const fs=require("node:fs");
 const path=require("node:path");
 const adapter=require("../web/pages/gorge_legacy_adapter.js");
 const renderer=require("../web/pages/game_outcomes.js");
-const dir=path.join(__dirname,"../docs/deck-lab/gorge-data");
-const manifest=JSON.parse(fs.readFileSync(path.join(dir,"manifest.json"),"utf8"));
-const games=manifest.games.map(g=>JSON.parse(fs.readFileSync(path.join(dir,g.file),"utf8")));
+// Stable test fixtures are distinct from the mutable published results
+// catalog, which can legitimately be empty after archiving.
+const dir=path.join(__dirname,"fixtures/gorge");
+const games=[300,301].map(seed=>{
+  const g=JSON.parse(fs.readFileSync(path.join(dir,
+    "gorge-seed-"+seed+".ui.json"),"utf8"));
+  g.player_seat=0;
+  g.player_deck=g.decks[0];
+  return g;
+});
 assert.equal(games.length,2);
-assert(["gorge-omniscient-replay-manifest-v1",
-        "gorge-public-replay-manifest-v1"].includes(manifest.schema));
 const hashes=Object.fromEntries([...new Set(games.flatMap(g=>g.decks))]
   .map((key,i)=>[key,String(i).padStart(64,"0")]));
 for(const game of games){
