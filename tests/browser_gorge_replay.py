@@ -197,6 +197,8 @@ def check():
             assert "Test hand seat 0 card 0" in omni_opening.inner_text()
             omni_opening.locator(".insight-turn-row-summary").click()
             assert "Opponents' hands" in omni_opening.inner_text()
+            omni_opening.locator(".insight-omniscient-opponents > summary").click()
+            omni_opening.locator(".insight-omniscient-opponent-list > details").first.locator("summary").click()
             assert "Test hand seat 1 card 0" in omni_opening.inner_text()
             assert "The public replay does not include" not in omni_opening.inner_text()
             assert omni_page.evaluate("document.documentElement.scrollWidth<=window.innerWidth+2")
