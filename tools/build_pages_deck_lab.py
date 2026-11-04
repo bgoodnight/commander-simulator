@@ -299,7 +299,7 @@ def build(output, *, catalog_path=SHARED_CATALOG, name_catalog_path=DEFAULT_NAME
         omniscient = mode == "gorge-omniscient-replay-manifest-v1"
         public = mode == "gorge-public-replay-manifest-v1"
         if (not (public or omniscient)
-                or not isinstance(games, list) or not 1 <= len(games) <= 500):
+                or not isinstance(games, list) or not 0 <= len(games) <= 500):
             raise ValueError("Invalid gorge replay sample manifest")
         if omniscient and (manifest.get("visibility") != "omniscient"
                            or manifest.get("synthetic_simulation_only") is not True):
