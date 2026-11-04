@@ -67,6 +67,14 @@ def check():
             page.screenshot(path=str(OUT/"before-fix-diagnostic.png"),full_page=False)
             page.locator("#gorge-replay-root h3").filter(
                 has_text="Gorge Commander · Game 300").wait_for(timeout=15000)
+            dashboard=page.locator("#gorge-dashboard")
+            dashboard.locator("h2").filter(has_text="Key insights").wait_for(timeout=20000)
+            assert dashboard.is_visible()
+            assert dashboard.locator("h2").filter(has_text="Latest simulated results").count()==1
+            assert dashboard.locator("h2").filter(has_text="Turn reviewer").count()==1
+            assert dashboard.locator(".gorge-deck-result").count()>=4
+            assert "verified gorge games" in dashboard.inner_text().lower()
+            assert "win rates are withheld" in dashboard.inner_text().lower()
             assert page.locator("#gorge-replay-samples").is_visible()
             assert page.locator("#gorge-replay-panel").is_visible()
             assert not page.locator("#legacy-simulation-archive").evaluate(
@@ -125,6 +133,7 @@ def check():
             print("MOBILE WIDTHS",json.dumps(widths),flush=True)
             assert widths["page"]<=widths["viewport"]+2, (
                 "Horizontal mobile overflow: "+str(widths))
+            assert page.locator("#gorge-dashboard").is_visible()
             assert page.locator("#gorge-replay-load").is_visible()
             assert page.locator("#gorge-replay-sample-select").is_visible()
             # Unknown JS errors should be reported instead of silently hidden.
