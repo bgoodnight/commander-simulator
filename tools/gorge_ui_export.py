@@ -1,7 +1,8 @@
 """Evidence-based gorge UI replay export. No fabricated game-state snapshots.
 
-The original gorge log remains the authoritative record. This exports only
-public events by default, omitting hidden-zone events and private decisions.
+The original gorge log remains authoritative. Public mode omits hidden zones
+and private events by default. --include-hidden enables existing omniscient
+recording for synthetic four-bot games; it never exports native bot intents.
 """
 from __future__ import annotations
 import argparse
@@ -49,6 +50,19 @@ def convert(source, *, include_hidden=False):
             identity[obj]=name
     for obj in conflicts:
         identity.pop(obj,None)
+    if include_hidden:
+        # A native one-game crosswalk is necessary to name hidden draws,
+        # opening hands and library identities. It is NOT emitted separately
+        # as a native object catalog or reusable cross-game identity.
+        for obj in source.get("objects",[]):
+            if type(obj.get("object_id")) is not int:
+                raise ValueError("Malformed omniscient object crosswalk")
+            name=obj.get("card_name") or obj.get("effective_name")
+            if not isinstance(name,str) or not name.strip():
+                continue
+            oid=str(obj["object_id"])
+            if oid not in identity:
+                identity[oid]=name
     turns=[]
     current=None
     hidden=0
@@ -87,7 +101,7 @@ def convert(source, *, include_hidden=False):
             for row in turn["events"]
             if row["kind"] in ("draw","cast","land_played","token_created","damage","game_over")
         ][:12]
-    safe_snapshots=project(source) if not include_hidden else []
+    safe_snapshots=project(source,include_hidden=include_hidden)
     return {
         "snapshots":safe_snapshots,
         "snapshot_definition":"first_pending_decision_of_turn" if safe_snapshots else None,
@@ -101,14 +115,23 @@ def convert(source, *, include_hidden=False):
                   "exported_events":emitted,
                   "omitted_hidden_events":hidden,
                   "event_seq_preserved":True},
-        "state":{"life":"turn_entry_snapshots" if safe_snapshots else None,"hands":None,"battlefields":"public_snapshots" if safe_snapshots else None,
-                 "graveyards":None,"mana_pools":None,"counters":None,
-                 "reason":"Turn-entry snapshots from gorge; no end-turn or private hand identity." if safe_snapshots else "Complete authoritative snapshots require a gorge engine export."},
+        "state":{"life":"turn_entry_snapshots" if safe_snapshots else None,
+                 "hands":"named_turn_entry_snapshots" if safe_snapshots and include_hidden else None,
+                 "libraries":"named_turn_entry_snapshots" if safe_snapshots and include_hidden else None,
+                 "battlefields":"all_players_turn_entry_snapshots" if safe_snapshots else None,
+                 "graveyards":"all_players_turn_entry_snapshots" if safe_snapshots else None,
+                 "mana_pools":"turn_entry_snapshots" if safe_snapshots else None,
+                 "counters":None,
+                 "reason":("Synthetic omniscient replay: hidden names for all four players, from exact native card-object snapshots. Boundaries are turn entry, NOT turn end." if include_hidden and safe_snapshots else
+                           "Turn-entry public state; private hand identities omitted." if safe_snapshots else
+                           "Native snapshots were not captured.")},
         "visibility":"omniscient" if include_hidden else "public_events_only",
+        "synthetic_simulation_only":bool(include_hidden),
         "limitations":[
             "Card names require explicit native card identity evidence.",
             "Highlights are actual events, not inferred actions.",
-            "Full zone and life state requires new engine snapshots.",
+            "Snapshots are taken at the first decision of each turn, NOT at turn end.",
+            "Opening hands and draws are sourced; mulligan count is not established by a single opening snapshot.",
             "Native gorge replay remains authoritative.",
         ],
     }
