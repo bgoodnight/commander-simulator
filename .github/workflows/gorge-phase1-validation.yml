@@ -1,0 +1,136 @@
+name: Gorge phase 1 · 20-game four-deck validation
+
+# Independent of GitHub Pages. Native traces are retained as Actions
+# artifacts only and never committed to the public website.
+on:
+  push:
+    branches: [main]
+    paths:
+      - ".github/workflows/gorge-phase1-validation.yml"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: gorge-phase1-validation
+  cancel-in-progress: false
+
+jobs:
+  validate:
+    runs-on: ubuntu-latest
+    timeout-minutes: 70
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Verify Gorge export and replay contracts
+        run: |
+          python -m unittest tests.test_gorge_backend tests.test_gorge_public_state tests.test_gorge_ui_export -v
+      - name: Export four pinned Commander decks
+        run: |
+          mkdir -p "$RUNNER_TEMP/gorge-decks" "$RUNNER_TEMP/results/native"
+          python -m tools.export_gorge_decks --out "$RUNNER_TEMP/gorge-decks" --decks mortarion_current magnus_premium necron_dynasties wretched_ranks
+      - name: Fetch pinned Gorge source
+        env:
+          GORGE_COMMIT: b78e4c8b16078f6decbc48875bba953ce5535b85
+        run: |
+          git clone --filter=blob:none https://github.com/adams-shaun/gorge.git "$RUNNER_TEMP/gorge"
+          git -C "$RUNNER_TEMP/gorge" checkout --detach "$GORGE_COMMIT"
+          test "$(git -C "$RUNNER_TEMP/gorge" rev-parse HEAD)" = "$GORGE_COMMIT"
+      - uses: actions/setup-go@v5
+        with:
+          go-version-file: ${{ runner.temp }}/gorge/go.mod
+          cache: false
+      - name: Fetch Forge card corpus and compile Gorge driver
+        working-directory: ${{ runner.temp }}/gorge
+        run: |
+          make fetch-cards compile-cards
+          cp "$GITHUB_WORKSPACE/tools/gorge_commander_probe.go" commander_probe.go
+          go build -o "$RUNNER_TEMP/gorge-probe" ./commander_probe.go
+      - name: Run 20 genuine 40-life Commander games (seeds 400–419)
+        working-directory: ${{ runner.temp }}/gorge
+        shell: bash
+        run: |
+          set -o pipefail
+          PYTHONPATH="$GITHUB_WORKSPACE" "$RUNNER_TEMP/gorge-probe" \
+            -corpus "$RUNNER_TEMP/gorge/.cards" \
+            -deck-dir "$RUNNER_TEMP/gorge-decks" \
+            -decks "mortarion_current,magnus_premium,necron_dynasties,wretched_ranks" \
+            -games 20 -seed 400 -max-turns 60 -verify=true \
+            -pilot bot -native-dir "$RUNNER_TEMP/results/native" \
+            -native-limit 20 \
+            | tee "$RUNNER_TEMP/results/gorge_runs.jsonl"
+      - name: Validate all 20 native recordings
+        run: |
+          PYTHONPATH="$GITHUB_WORKSPACE" python -m tools.validate_gorge_enrichment \
+            --native-dir "$RUNNER_TEMP/results/native" \
+            --output "$RUNNER_TEMP/results/enrichment_validation.json"
+      - name: Audit completion, seating, and event coverage
+        env:
+          RESULTS: ${{ runner.temp }}/results
+        run: |
+          python - <<'PY'
+          import json, os
+          from collections import Counter
+          from pathlib import Path
+          root=Path(os.environ["RESULTS"])
+          rows=[json.loads(x) for x in (root/"gorge_runs.jsonl").read_text().splitlines() if x.strip()]
+          traces=sorted((root/"native").glob("gorge-seed-*.json"))
+          expected={"mortarion_current","magnus_premium","necron_dynasties","wretched_ranks"}
+          completed=[r for r in rows if r.get("finished") and r.get("replay_verified") and not r.get("error")]
+          seating=Counter()
+          events=Counter()
+          turns=[]
+          issues=[]
+          for p in traces:
+              r=json.loads(p.read_text())
+              if set(r.get("decks",[]))!=expected:
+                  issues.append(f"{p.name}: wrong deck roster")
+              for seat,deck in enumerate(r.get("decks",[])):
+                  seating[f"{deck}:seat{seat+1}"]+=1
+              for e in r.get("log",{}).get("events",[]):
+                  events[str(e.get("kind"))]+=1
+              turns.append(len(r.get("snapshots",[])))
+          seeds=[r.get("seed") for r in rows]
+          if len(rows)!=20 or len(set(seeds))!=20 or set(seeds)!=set(range(400,420)):
+              issues.append("Missing or duplicate game seeds")
+          if len(completed)!=20:
+              issues.append(f"Only {len(completed)}/20 games completed and replay-verified")
+          if len(traces)!=20:
+              issues.append(f"Only {len(traces)}/20 full native recordings")
+          report={
+              "schema":"gorge-phase1-validation-v1",
+              "requested":20,"completed_and_replay_verified":len(completed),
+              "native_trace_count":len(traces),
+              "seed_range":[400,419],
+              "deck_pool":sorted(expected),"seating":dict(sorted(seating.items())),
+              "native_event_kinds":dict(sorted(events.items())),
+              "snapshot_turns":{"min":min(turns) if turns else None,
+                                "max":max(turns) if turns else None},
+              "issues":issues,
+              "limitations":["Completion and structural checks are not proof of all Oracle abilities or optimal AI decisions.",
+                             "Event source attribution and semantic rules review require narrative inspection.",
+                             "All raw traces contain hidden game state and are restricted to the Actions artifact."]
+          }
+          (root/"phase1_audit.json").write_text(json.dumps(report,indent=2)+"\n")
+          with open(os.environ["GITHUB_STEP_SUMMARY"],"a") as f:
+              f.write("# Gorge phase 1 validation\n\n")
+              f.write(f"**{len(completed)}/20** complete and replay-verified; **{len(traces)}/20** native recordings.\n\n")
+              f.write("Decks: Mortarion Current, Magnus Premium, Necron Dynasties, Wretched Ranks.\n\n")
+              f.write("Seeds: 400–419; pilot: Gorge bot; 40 life; max 60 turns.\n\n")
+              f.write("See phase1_audit.json and enrichment_validation.json in the artifact.\n\n")
+              if issues:
+                  f.write("**Issues:** "+ "; ".join(issues)+"\n")
+          if issues:
+              raise SystemExit("; ".join(issues))
+          PY
+      - name: Retain complete evidence as private-in-workflow artifact, not Pages content
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: gorge-phase1-20-game-validation
+          path: ${{ runner.temp }}/results/
+          retention-days: 14
+          if-no-files-found: warn
