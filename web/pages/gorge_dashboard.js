@@ -287,6 +287,17 @@ function paint(){
   const deck=currentDeck(state.games);
   if(!deck)return;
   state.deck=deck;
+  const warning=$("results-current-warning");
+  if(warning){
+    const missing=state.requestedDeck&&state.requestedDeck!==deck&&
+      !seenGames(state.games,state.requestedDeck).length;
+    warning.hidden=!missing;
+    if(missing)warning.textContent="No verified gorge games exist yet for the "+
+      "selected "+state.requestedDeck.replaceAll("_"," ")+" deck revision. "+
+      "The dashboard below displays the recorded "+deck.replaceAll("_"," ")+
+      " sample instead. Choose a different deck under ‘Recorded deck’ "+
+      "to view its real results; these samples are not interchangeable.";
+  }
   const sample=$("simulation-snapshot");
   const heading=sample?.querySelector(".simulation-snapshot-heading");
   if(heading){
@@ -488,6 +499,8 @@ function paint(){
     for(const model of models){
       const panel=window.DeckInsightExplorer?.render(model,{
         onOpenCard:id=>{
+          // Keep the same Deck Lab card modal and interactions as before.
+          if(typeof window.showCard==="function"){window.showCard(id);return;}
           const c=Object.values(state.catalog?.cards||{}).find(c=>c.oracle_id===id);
           if(c?.scryfall)window.open(c.scryfall,"_blank","noopener,noreferrer");
         },
@@ -496,11 +509,20 @@ function paint(){
           const turn=game?.turns.find(t=>t.turn===example.turn);
           if(!turn){container.textContent="Source turn unavailable";return;}
           const focus=turn.events.find(e=>e.seq===example.eventIndex);
-          container.append(el("strong",null,"Gorge seed "+example.seed+" · turn "+
-            example.turn+" · event #"+example.eventIndex),
-            el("p","small","Source card: "+(focus?.card_name||"unknown")+
-              " · "+(focus?.kind||"unknown event")));
-          const button=el("button","gold-button","Open complete turn reviewer");
+          if(window.GorgeReplay?.paintView){
+            // Render only the evidenced turn inline using the SAME full
+            // gorge renderer as the Turn Reviewer. No synthetic hand cards.
+            const snap=game.snapshots.filter(x=>x.turn===turn.turn);
+            window.GorgeReplay.paintView(container,{
+              ...game,turns:[turn],snapshots:snap
+            });
+          }else{
+            container.append(el("strong",null,"Gorge seed "+example.seed+" · turn "+
+              example.turn+" · event #"+example.eventIndex),
+              el("p","small","Source card: "+(focus?.card_name||"unknown")+
+                " · "+(focus?.kind||"unknown event")));
+          }
+          const button=el("button","gold-button","Open complete game in Turn Reviewer");
           button.type="button";button.onclick=()=>selectGame(example.seed,true);
           container.append(button);
         }
