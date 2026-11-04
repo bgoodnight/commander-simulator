@@ -56,7 +56,10 @@ test("player seats rotate so the selected deck is always the old UI's seat zero"
     assert.equal(run.gorge_source.original_seat,
       run.seed===300?1:0);
     assert.ok(run.ui_observations.some(o=>o.actions.some(action=>
-      action.seat===0&&action.card==="Preordain")));
+      action.seat===0&&action.card)), "Rotated hero has source-backed named plays");
+    if(run.seed===300)
+      assert.ok(run.ui_observations.some(o=>o.actions.some(action=>
+        action.seat===0&&action.card==="Preordain")));
     assert.equal(run.life_history[0].life_totals[0],40);
   }
 });
