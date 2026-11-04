@@ -14,6 +14,13 @@
   "use strict";
   const FORMAT="commander-gorge-outcomes-v1";
   const COLORS=["W","U","B","R","G","C"];
+  // Pinned Gorge native event.go ordinals, not action-name guesses.
+  // AbilityPush=34; TriggerPush=27.  Additional push kinds preserve
+  // explicit source attribution.  Ordinary mana ability uses are not all
+  // recorded as ManaActivate (55): that kind covers special limited/gained
+  // mana abilities, not every tapped land or rock.
+  const ACTIVATION_IDS=new Set([34,55,67,79,88]);
+  const TRIGGER_IDS=new Set([27,38,46,54,72,80]);
   const $=id=>typeof document!=="undefined"?document.getElementById(id):null;
   const cardInfo=name=>typeof window!=="undefined"?
     window.GorgeDeckLabCardInfo?.(name)||null:null;
@@ -95,6 +102,34 @@
   }
   function mapSeat(real,hero){return (real-hero+4)%4;}
   function actor(e,turn){return Number.isInteger(e.player)?e.player:turn.seat;}
+  function nativeAbilityActor(e){
+    // Gorge omits player:0 on JSON encoding, including when the ability
+    // fires during another seat's turn.  Use the exact native zero value,
+    // NEVER the currently active turn seat.
+    return Number.isInteger(e.player)?e.player:0;
+  }
+  function abilityAction(e,hero,names){
+    const activated=ACTIVATION_IDS.has(e.kind_id);
+    const triggered=TRIGGER_IDS.has(e.kind_id);
+    if(!activated&&!triggered)return null;
+    const card=e.card_name||names.get(e.obj)||null;
+    const real=nativeAbilityActor(e);
+    if(real<0||real>3)return null;
+    return {
+      type:activated?"ability_activated":"ability_triggered",
+      card,source:card,seat:mapSeat(real,hero),
+      source_object_id:Number.isInteger(e.obj)?e.obj:null,
+      native_kind_id:e.kind_id,
+      // Index is the exact printed ability/trigger index only for
+      // standard AbilityPush/TriggerPush. Other events overload Amount.
+      native_ability_index:[27,34].includes(e.kind_id)?
+        (Number.isInteger(e.amount)?e.amount:0):null,
+      native_ability_family:e.kind_id===55?"special_mana":
+        e.kind_id===34?"activated":e.kind_id===27?"triggered":
+        "specialized",
+      source_seq:e.seq,source_kind:e.kind
+    };
+  }
   function observedLife(s,hero,round,previous){
     const life_totals={},alive_seats=[],life_changes=[],new_eliminations=[];
     for(let real=0;real<4;real++){
@@ -124,7 +159,11 @@
          t.turn>=turnEnd)continue;
       for(let i=0;i<(t.events||[]).length;i++){
         const e=t.events[i],real=actor(e,t),seat=mapSeat(real,hero);
-        if(e.kind==="cast"){
+        const ability=abilityAction(e,hero,names);
+        if(ability){
+          ability.native_turn=t.turn;
+          actions.push(ability);
+        }else if(e.kind==="cast"){
           const name=e.card_name||names.get(e.obj)||null;
           actions.push({type:castType(name),card:name,seat,
             native_turn:t.turn,source_seq:e.seq,source_kind:e.kind});
@@ -145,12 +184,10 @@
         }else if(e.kind==="token_created"&&seat===0){
           actions.push({type:"token_created",card:names.get(e.obj)||null,seat,
             native_turn:t.turn,source_seq:e.seq,source_kind:e.kind});
-        }else if(e.kind==="trigger"&&seat===0&&names.get(e.obj)){
-          actions.push({type:"trigger",source:names.get(e.obj),seat,
-            native_turn:t.turn,source_seq:e.seq,source_kind:e.kind});
         }
-        // A public damage or life-change event can be displayed in raw
-        // source evidence. Do not invent a card source or target from it.
+        // Native Resolve events name a minted stack object, not the
+        // originating permanent. Do not attach later damage, tokens or
+        // resolutions to this activation without an explicit source link.
       }
     }
     return {actions,mana};
@@ -310,5 +347,6 @@
       onOpenRecordedCard:name=>window.GorgeDeckLabOpenCard?.(name),
     });
   }
-  return {FORMAT,validateReplay,visibleNames,realWinner,projectRun,adapt,render};
+  return {FORMAT,validateReplay,visibleNames,realWinner,projectRun,
+    abilityAction,adapt,render};
 });
