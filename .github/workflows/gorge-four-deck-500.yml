@@ -1,0 +1,182 @@
+name: Gorge · four-deck 500-game benchmark
+
+# Exactly 500 games for each selected player deck, with genuine stock-precon
+# opponents. Native logs are retained for 10 source-backed replays per player;
+# all 2,000 verified game outcomes go into separate lightweight analytics.
+on:
+  push:
+    branches: [main]
+    paths:
+      - ".github/workflows/gorge-four-deck-500.yml"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: gorge-four-deck-500
+  cancel-in-progress: false
+
+jobs:
+  prepare:
+    name: Build pinned Gorge probe and four validated player decks
+    runs-on: ubuntu-latest
+    timeout-minutes: 60
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Validate player/precon roles and conversion contracts
+        run: |
+          python -m unittest tests.test_commander_deck_library tests.test_gorge_precons_and_replay tests.test_gorge_results_pipeline -v
+      - name: Export four fixed player decks and authenticated stock precons
+        run: |
+          mkdir -p "$RUNNER_TEMP/bundle/decks" "$RUNNER_TEMP/bundle/pods"
+          python -m tools.export_gorge_decks --out "$RUNNER_TEMP/bundle/decks" \
+            --decks mortarion_current magnus_budget necron_dynasties wretched_ranks
+          python -m tools.fetch_gorge_precons --out "$RUNNER_TEMP/bundle/decks"
+          for hero in mortarion_current magnus_budget necron_dynasties wretched_ranks; do
+            opponents=""
+            for deck in necron_dynasties wretched_ranks cavalry-charge science-pip deadly-disguise avengers-assemble; do
+              if [ "$deck" != "$hero" ]; then
+                if [ -n "$opponents" ]; then opponents="$opponents,$deck"; else opponents="$deck"; fi
+              fi
+            done
+            python -m tools.commander_deck_library \
+              --hero "$hero" --opponents "$opponents" \
+              --deck-dir "$RUNNER_TEMP/bundle/decks" \
+              --output "$RUNNER_TEMP/bundle/pods/$hero-pod.json"
+          done
+      - name: Clone exact pinned Gorge rules implementation
+        env:
+          GORGE_COMMIT: b78e4c8b16078f6decbc48875bba953ce5535b85
+        run: |
+          git clone --filter=blob:none https://github.com/adams-shaun/gorge.git "$RUNNER_TEMP/gorge"
+          git -C "$RUNNER_TEMP/gorge" checkout --detach "$GORGE_COMMIT"
+          test "$(git -C "$RUNNER_TEMP/gorge" rev-parse HEAD)" = "$GORGE_COMMIT"
+      - uses: actions/setup-go@v5
+        with:
+          go-version-file: ${{ runner.temp }}/gorge/go.mod
+          cache: false
+      - name: Compile Gorge once for all twenty shards
+        working-directory: ${{ runner.temp }}/gorge
+        run: |
+          make fetch-cards compile-cards
+          cp "$GITHUB_WORKSPACE/tools/gorge_commander_probe.go" commander_probe.go
+          go build -o "$RUNNER_TEMP/bundle/gorge-probe" ./commander_probe.go
+          cp -a "$RUNNER_TEMP/gorge/.cards" "$RUNNER_TEMP/bundle/.cards"
+      - uses: actions/upload-artifact@v4
+        with:
+          name: gorge-500-pinned-bundle
+          path: ${{ runner.temp }}/bundle/
+          include-hidden-files: true
+          if-no-files-found: error
+          retention-days: 7
+
+  simulate:
+    name: ${{ matrix.deck }} / games ${{ matrix.shard }} of 5
+    needs: prepare
+    runs-on: ubuntu-latest
+    timeout-minutes: 120
+    strategy:
+      fail-fast: false
+      max-parallel: 5
+      matrix:
+        deck: [mortarion_current, magnus_budget, necron_dynasties, wretched_ranks]
+        shard: [0, 1, 2, 3, 4]
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/download-artifact@v4
+        with:
+          name: gorge-500-pinned-bundle
+          path: ${{ runner.temp }}/bundle
+      - name: Run 100 source-verified real Commander games
+        shell: bash
+        env:
+          DECK: ${{ matrix.deck }}
+          SHARD: ${{ matrix.shard }}
+        run: |
+          set -euo pipefail
+          case "$DECK" in
+            mortarion_current) index=0 ;;
+            magnus_budget) index=1 ;;
+            necron_dynasties) index=2 ;;
+            wretched_ranks) index=3 ;;
+            *) exit 1 ;;
+          esac
+          seed=$((10000 + index*500 + SHARD*100))
+          mkdir -p "data/$DECK/$SHARD/native"
+          cp "$RUNNER_TEMP/bundle/pods/$DECK-pod.json" "data/$DECK/$SHARD/pod.json"
+          opponents="$(python -c 'import json,sys;print(",".join(json.load(open(sys.argv[1]))["opponent_pool"]))' "data/$DECK/$SHARD/pod.json")"
+          chmod +x "$RUNNER_TEMP/bundle/gorge-probe"
+          "$RUNNER_TEMP/bundle/gorge-probe" \
+            -corpus "$RUNNER_TEMP/bundle/.cards" \
+            -deck-dir "$RUNNER_TEMP/bundle/decks" \
+            -hero-deck "$DECK" \
+            -opponents "$opponents" \
+            -games 100 -seed "$seed" -max-turns 60 \
+            -pilot bot -verify=true \
+            -native-dir "data/$DECK/$SHARD/native" -native-limit 2 \
+            > "data/$DECK/$SHARD/runs.jsonl"
+          python - "$DECK" "$SHARD" "$seed" <<'PY'
+          import json,sys
+          from pathlib import Path
+          deck,shard,start=sys.argv[1],sys.argv[2],int(sys.argv[3])
+          root=Path("data")/deck/shard
+          rows=[json.loads(line) for line in (root/"runs.jsonl").read_text().splitlines()]
+          assert len(rows)==100
+          assert {x["seed"] for x in rows}==set(range(start,start+100))
+          assert all(x["finished"] and x["replay_verified"] and not x.get("error") for x in rows)
+          assert all(x["decks"][x["hero_seat"]]==deck for x in rows)
+          assert len(list((root/"native").glob("gorge-seed-*.json")))==2
+          PY
+      - name: Retain source recordings and verified game summaries
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: gorge-large-shard-${{ matrix.deck }}-${{ matrix.shard }}
+          path: data/
+          if-no-files-found: warn
+          retention-days: 14
+
+  aggregate:
+    name: Publish 2,000 verified outcomes and 40 sampled replays
+    needs: simulate
+    runs-on: ubuntu-latest
+    timeout-minutes: 90
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - uses: actions/download-artifact@v4
+        with:
+          pattern: gorge-large-shard-*
+          path: ${{ runner.temp }}/shards
+          merge-multiple: true
+      - name: Verify every shard, join complete cohort and convert 40 authoritative replays
+        run: |
+          python -m tools.gorge_large_batch_analytics \
+            --shards "$RUNNER_TEMP/shards" \
+            --out "$RUNNER_TEMP/public_ui"
+          python - <<'PY'
+          import json,os
+          from pathlib import Path
+          base=Path(os.environ["RUNNER_TEMP"])/"public_ui"
+          manifest=json.loads((base/"manifest.json").read_text())
+          analytics=json.loads((base/"analytics.json").read_text())
+          assert manifest["total_verified_games"]==2000
+          assert len(manifest["games"])==40 and len(analytics["games"])==2000
+          assert {g["player_deck"] for g in analytics["games"]} == {
+            "mortarion_current","magnus_budget","necron_dynasties","wretched_ranks"}
+          with open(os.environ["GITHUB_STEP_SUMMARY"],"a") as f:
+            f.write("# Gorge: four player decks × 500 games\n\n")
+            f.write("2,000 verified outcomes; 40 sampled, source-backed detailed replays.\n")
+          PY
+      - uses: actions/upload-artifact@v4
+        with:
+          name: gorge-ui-publication
+          path: ${{ runner.temp }}/public_ui/
+          if-no-files-found: error
+          retention-days: 14
