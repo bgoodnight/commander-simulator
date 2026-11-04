@@ -209,7 +209,7 @@ test('modeled panels expose distinct outcome, life and matchup disclosures with 
     assert.ok(walk(reviewer).some(n=>n.className==='insight-turn-row'));
     const reviewNodes=walk(reviewer);
     assert.ok(reviewNodes.some(n=>n.tag==='select'));
-    assert.ok(reviewNodes.some(n=>n.textContent==='Seed 0 · Win · Round 2'));
+    assert.ok(reviewNodes.some(n=>n.textContent==='Game 1/2 · Win'));
 
     // Scenario comparison must not silently cross pilot personalities.
     Outcomes.render(root,[
