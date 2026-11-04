@@ -51,6 +51,36 @@ def check():
             assert "Wins" in page.locator(".game-outcome-hero-stats").inner_text()
             assert "1/1" in page.locator(".game-outcome-hero-stats").inner_text(), \
                 "Mortarion native game-over marker identifies the winner"
+            # Native activation and trigger categories use the ORIGINAL cards,
+            # not a new Gorge-only dashboard.  Actual seed 300 has both.
+            ability_panel=page.locator(
+                "#game-outcome-results .insight-featured-panel"
+            ).filter(has_text="Most activated ability").first
+            trigger_panel=page.locator(
+                "#game-outcome-results .insight-featured-panel"
+            ).filter(has_text="Most triggered ability").first
+            assert ability_panel.is_visible()
+            assert trigger_panel.is_visible()
+            ability_panel.locator(".game-outcome-summary").click()
+            assert "Recorded activations" in ability_panel.inner_text()
+            assert "Pestilence Demon" in ability_panel.inner_text()
+            ability_tracker=ability_panel.locator(".insight-inline-tracker")
+            ability_tracker.locator("summary").first.click()
+            assert "Activated ability of" in ability_tracker.locator(
+                ".insight-turn-timeline").inner_text()
+            assert ability_tracker.locator(
+                ".insight-turn-row .insight-action-entry").count()>0
+            assert ability_tracker.locator(
+                ".insight-opponent-abilities").count()>0
+            ability_panel.locator(".game-outcome-summary").click()
+            trigger_panel.locator(".game-outcome-summary").click()
+            assert "Recorded triggers" in trigger_panel.inner_text()
+            assert "Yahenni, Undying Partisan" in trigger_panel.inner_text()
+            trigger_tracker=trigger_panel.locator(".insight-inline-tracker")
+            trigger_tracker.locator("summary").first.click()
+            assert "Triggered ability of" in trigger_tracker.locator(
+                ".insight-turn-timeline").inner_text()
+            trigger_panel.locator(".game-outcome-summary").click()
             limits=page.locator("#game-outcome-results .game-outcome-limits")
             limits.locator("summary").click()
             assert "genuine 100-card decks" in limits.inner_text().lower()
