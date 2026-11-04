@@ -92,6 +92,16 @@ function cardInfo(name){
 // Read-only public identity/art bridge for the original Gorge-powered result panels.
 window.GorgeDeckLabCardInfo=cardInfo;
 window.GorgeDeckLabOpenCard=name=>{const card=cardInfo(name);if(card?.oracle_id)showCard(card.oracle_id)};
+window.GorgeDeckLabMana=value=>manaSymbols(value);
+window.GorgeDeckLabDeckHashes=()=>Object.fromEntries((data?.decks||[])
+  .map(deck=>[deck.key,deck.deck_sha256]));
+window.GorgeDeckLabSelectedDeck=key=>{
+  if(!data||selected!==key||!selectedDeck()||isUnsimulatedVersion())
+    return {eligible:false};
+  const deck=selectedDeck();
+  return {eligible:true,key,sha:deck.deck_sha256,commander:deck.commander,
+    art:commanderCard(deck)?.art||null};
+};
 function cardForId(id){return extraCards[id]||data.cards[id]||null;}
 function addAliases(item){
   if(!item||!item.oracle_id)return;

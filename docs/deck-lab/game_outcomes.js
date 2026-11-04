@@ -9,6 +9,7 @@
 })(typeof window!=="undefined"?window:globalThis,function(){
   "use strict";
   const FORMAT="commander-modeled-outcomes-v1";
+  const GORGE_FORMAT="commander-gorge-outcomes-v1";
   const STATES=["win","loss","draw","unresolved","not_evaluated"];
   const SEATS=[0,1,2,3];
   const SEAT_COLORS=["#dfc18b","#81bbb2","#b8a3d3","#d69f99"];
@@ -33,10 +34,13 @@
     return batch.deck_key===key&&batch.deck_sha256===sha;
   }
   function validate(batch){
-    if(!batch||batch.format!==FORMAT||batch.schema_version!==1||
+    const gorge=batch?.format===GORGE_FORMAT&&batch.engine==="gorge"&&
+      batch.opponent_fidelity==="gorge_native_full_100_card_decks";
+    const legacy=batch?.format===FORMAT&&
+      batch.opponent_fidelity==="abstract_opponent_pressure_not_card_exact";
+    if(!batch||(!gorge&&!legacy)||batch.schema_version!==1||
        typeof batch.deck_key!=="string"||typeof batch.deck_sha256!=="string"||
        typeof batch.scenario!=="string"||
-       batch.opponent_fidelity!=="abstract_opponent_pressure_not_card_exact"||
        batch.outcomes_are_competitive_win_rates!==false||
        !Number.isInteger(batch.requested_rounds)||batch.requested_rounds<1||
        batch.requested_rounds>30||!Array.isArray(batch.runs)||
@@ -300,13 +304,19 @@
     panel.appendChild(body);
     return panel;
   }
-  function limitationsDisclosure(){
+  function limitationsDisclosure(isGorge=false){
     const details=create("details","game-outcome-limits");
     const trigger=create("summary",null,"ⓘ");
     trigger.setAttribute("aria-label","Model limitations and what improves accuracy");
-    trigger.title="Early modeled results · limitations";
+    trigger.title=isGorge?"Gorge replay provenance and limitations":"Early modeled results · limitations";
     const content=create("div","game-outcome-limits-content");
-    content.append(
+    if(isGorge){
+      content.append(
+        create("strong",null,"Gorge native four-player games · limited public sample"),
+        create("p",null,"All opposing seats are genuine 100-card decks with Gorge AI pilots. Results are recorded native game-over events, not calibrated win-rate estimates."),
+        create("p",null,"Public replay omits private hand/draw identities. Visible board and life snapshots are at the first decision of each turn, NOT at turn end or necessarily after game over."),
+        create("p",null,"Only verified casts, plays and public-zone identities contribute to the card rankings. Hand-held, unplayed and private-draw metrics require a controlled richer export."));
+    }else content.append(
       create("strong",null,"Early model · interpret with care"),
       create("p",null,"Small samples, unfinished games, incomplete rules and automated pilot choices can change these results."),
       create("p",null,"The current opposing seats are abstract policies, not complete Commander decks. Archetype portraits are illustrative unless a real opposing commander was recorded."),
@@ -379,7 +389,7 @@
     childBuilder(body);
     panel.appendChild(body);
     // The icon is a sibling so it remains operable while the game card is closed.
-    wrapper.append(panel,limitationsDisclosure());
+    wrapper.append(panel,limitationsDisclosure(options.isGorge));
     return wrapper;
   }
   function metricTile(label,value,detail){
@@ -511,6 +521,8 @@
       not_evaluated:"Not evaluated"})[status]||status;
   }
   function roundLabel(run){
+    if(run.batch?.engine==="gorge")return "observed "+run.completed_rounds+
+      " turns · native game result";
     return run.outcome.complete?"finished in round "+run.completed_rounds:
       "through round "+run.completed_rounds;
   }
@@ -611,7 +623,11 @@
               String(action.type||"").endsWith("_cast"))&&
              (action.seat===undefined||Number(action.seat)===0))
             playCounts.set(name,(playCounts.get(name)||0)+1);
-          if(CAST_TYPES.has(action.type)&&name&&!basic(name)){
+          if(CAST_TYPES.has(action.type)&&name&&!basic(name)&&
+             // Gorge's source observations also include three real opponents.
+             // Only the chosen deck's actions belong in its card performance.
+             (run.batch?.engine!=="gorge"||
+               action.seat===undefined||Number(action.seat)===0)){
             casts.add(name);seen.add(name);
             const card=lookupCard(name);
             const types=String(card?.type_line||card?.category||"").split("—")[0];
@@ -979,6 +995,9 @@
     return (observation.actions||[]).map(a=>a?.card||a?.source).find(hasArt)||null;
   }
   function openingHandDescription(run){
+    if(run.batch?.engine==="gorge")
+      return "Opening hand · "+(Number.isInteger(run.opening_hand_count)?
+        run.opening_hand_count:"unknown")+" cards (identities private)";
     const hand=Array.isArray(run.opening_hand)?run.opening_hand:[];
     const mulligan=run.mulligan;
     const count=Number.isInteger(mulligan?.count)&&mulligan.count>=0?
@@ -1019,7 +1038,14 @@
   }
   function endStatePanel(observation,options){
     const panel=create("section","insight-end-state");
-    panel.appendChild(create("strong","insight-end-state-title","End-of-turn state"));
+    panel.appendChild(create("strong","insight-end-state-title",
+      observation.snapshot_is_turn_end===false?"Recorded turn-entry state":"End-of-turn state"));
+    if(observation.snapshot_is_turn_end===false)
+      panel.appendChild(create("p","micro",observation.snapshot_note||
+        "Gorge turn-entry snapshot; this is not an end-of-turn board."));
+    if(Number.isInteger(observation.hand_count)&&!Array.isArray(observation.hand))
+      panel.appendChild(create("p","micro","Hand · "+observation.hand_count+
+        " cards. Individual identities are private in the public export."));
     const zones=[
       ["Hand",observation.hand],
       ["Creatures",(observation.battlefield||[]).filter(n=>
@@ -1068,7 +1094,7 @@
     const head=create("div","game-outcome-evidence-head");
     head.append(create("strong",null,"Seed "+run.seed+" · "+stateLabel(run.outcome.status)),
       create("span","micro",roundLabel(run)));
-    if(!options.hideEvidenceHead)root.appendChild(head);
+    if(!options.hideEvidenceHead||run.batch?.engine==="gorge")root.appendChild(head);
     const timeline=create("div","insight-turn-timeline");
     root.appendChild(timeline);
     const life=run.life_history||[];
@@ -1108,8 +1134,10 @@
         (before&&delta?" ("+(delta>0?"+":"")+nfmt(delta)+")":""));
       badges.appendChild(hp);
       const hand=index===0?run.opening_hand:observation?.hand;
-      if(Array.isArray(hand)){
-        const handBadge=textButton("▤ Hand "+hand.length,
+      const handCount=Array.isArray(hand)?hand.length:
+        index===0?run.opening_hand_count:observation?.hand_count;
+      if(Number.isInteger(handCount)){
+        const handBadge=textButton("▤ Hand "+handCount,
           "insight-turn-metric insight-hand-shortcut",event=>{
             // Prevent the parent <summary> from toggling itself after we open it.
             event?.preventDefault?.();
@@ -1118,7 +1146,9 @@
             const section=body.querySelector?.(".insight-end-zone");
             if(section)section.open=true;
           });
-        handBadge.setAttribute("aria-label","Show "+hand.length+" cards in hand");
+        handBadge.setAttribute("aria-label",Array.isArray(hand)?
+          "Show "+handCount+" named cards in hand":
+          "Hand contains "+handCount+" cards; identities not published");
         badges.appendChild(handBadge);
       }
       const mana=recordedManaOutput(observation);
@@ -1133,7 +1163,11 @@
       row.appendChild(summary);
       const body=create("div","insight-turn-row-body");
       if(index===0){
-        body.appendChild(endStatePanel({hand:run.opening_hand||[],
+        if(run.batch?.engine==="gorge")
+          body.appendChild(create("p","micro",
+            "Gorge recorded "+nfmt(run.opening_hand_count)+
+            " cards in the opening hand. The public replay does not include card identities or mulligan decisions."));
+        else body.appendChild(endStatePanel({hand:run.opening_hand||[],
           battlefield:[],graveyard:[],exile:[]},options));
       }else if(!observation){
         body.appendChild(create("p","micro",
@@ -1532,18 +1566,45 @@
                 const entry=examples[Math.max(0,exampleIndex)]||examples[0];
                 onReviewRun(entry.group.id,entry.run.seed,entry.turn);
               });
-            tracker.appendChild(full);
-            const exampleLabel=create("div","insight-example-game-label");
-            detailsRoot=create("div","insight-inline-tracker-review");
-            tracker.append(exampleLabel,detailsRoot);
-            const setLabel=()=>{
-              const entry=examples[Math.max(0,exampleIndex)]||examples[0];
-              exampleLabel.textContent=
-                "Scenario "+entry.group.scenario+" · Seed "+entry.run.seed+
-                " · "+stateLabel(entry.run.outcome.status);
-            };
-            const previousDraw=draw;
-            draw=()=>{setLabel();previousDraw()};
+            // The archived Python experiments retain their exact original
+            // inline evidence presentation. Gorge uses a real-seed picker.
+            if(options.isGorge){
+              const controls=create("div",
+                "insight-inline-tracker-controls gorge-legacy-example-controls");
+              const choice=create("select","gorge-legacy-example-select");
+              choice.setAttribute("aria-label","Choose a recorded source game and turn");
+              examples.forEach((entry,i)=>{
+                const option=create("option",null,
+                  "Real decks · Seed "+entry.run.seed+" · Turn "+entry.turn+
+                  " · "+stateLabel(entry.run.outcome.status));
+                option.value=String(i);choice.appendChild(option);
+              });
+              choice.addEventListener("change",()=>{
+                exampleIndex=Number(choice.value);
+                draw();
+              });
+              controls.append(choice,full);
+              detailsRoot=create("div","insight-inline-tracker-review");
+              tracker.append(controls,detailsRoot);
+              const previousDraw=draw;
+              draw=()=>{
+                choice.value=String(Math.max(0,exampleIndex));
+                previousDraw();
+              };
+            }else{
+              tracker.appendChild(full);
+              const exampleLabel=create("div","insight-example-game-label");
+              detailsRoot=create("div","insight-inline-tracker-review");
+              tracker.append(exampleLabel,detailsRoot);
+              const setLabel=()=>{
+                const entry=examples[Math.max(0,exampleIndex)]||examples[0];
+                exampleLabel.textContent=
+                  "Scenario "+entry.group.scenario+" · Seed "+entry.run.seed+
+                  " · "+stateLabel(entry.run.outcome.status);
+              };
+              const previousDraw=draw;
+              draw=()=>{setLabel();previousDraw()};
+            }
             tracker.addEventListener("toggle",()=>{
               trigger.textContent=tracker.open?"Close example games":"View example games";
               if(tracker.open)draw();
@@ -1723,6 +1784,7 @@
     const groups=cohort.groups;
     const all=groups.flatMap(group=>group.runs.map(run=>({run,group})));
     const runs=all.map(x=>x.run);
+    const isGorge=runs[0]?.batch?.engine==="gorge";
     const total=runs.length;
     const counts=Object.fromEntries(STATES.map(state=>
       [state,runs.filter(run=>run.outcome.status===state).length]));
@@ -1809,7 +1871,7 @@
     cards.appendChild(outcomeCard({
       counts,total,terminal:finished.length,
       terminalRounds:finished.map(run=>run.completed_rounds)
-    },{...options,heroHighlights,outcomeMeta,onHighlightClick:openDetail},body=>{
+    },{...options,isGorge,heroHighlights,outcomeMeta,onHighlightClick:openDetail},body=>{
       const buckets=create("div","game-outcome-buckets");
       for(const state of STATES){
         if(!counts[state])continue;
@@ -1922,10 +1984,14 @@
     const signals=observationCardStats(runs,options.lookupRecordedCard,
       options.commanderName);
     if(signals.coverage){
-      for(const kind of ["played","creature","artifact","enchantment",
-        "instant","spell","land","seen","seenCreature","unplayed","longest",
-        "activated","removal","creatureKills","damage","finisher",
-        ...(signals.confirmedTutors?["tutorFound","tutorUsed"]:[])]){
+      const kinds=isGorge?
+        ["played","creature","artifact","enchantment","instant","spell","land",
+          "activated"]:
+        ["played","creature","artifact","enchantment",
+          "instant","spell","land","seen","seenCreature","unplayed","longest",
+          "activated","removal","creatureKills","damage","finisher",
+          ...(signals.confirmedTutors?["tutorFound","tutorUsed"]:[])];
+      for(const kind of kinds){
         const panel=cardPerformancePanel(kind,signals.ranked[kind],
           signals.coverage,groups,
           {...options,tutorSearchCount:signals.confirmedTutors},onReviewRun);
