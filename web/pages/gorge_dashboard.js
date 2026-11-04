@@ -287,7 +287,7 @@ function paint(){
       wrapper=el("label","gorge-recorded-deck-picker");
       wrapper.id="gorge-recorded-deck-picker";
       wrapper.append(el("span","micro","Recorded deck"));
-      const picker=el("select","gorge-recorded-deck-select");
+      const picker=el("select","game-outcome-scenario-select gorge-recorded-deck-select");
       picker.id="gorge-recorded-deck-select";
       picker.setAttribute("aria-label","Choose a deck from verified gorge games");
       wrapper.append(picker);
