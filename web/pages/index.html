@@ -11,7 +11,8 @@
   <script src="./results_insights.js?v=20261101h1" defer></script>
   <script src="./brackets.js?v=20261101bracket" defer></script>
   <script src="./replay.js?v=bounded-evidence-pilot-20261102" defer></script>
-  <script src="./gorge_replay.js?v=native-gorge-local-20261103" defer></script>
+  <script src="./gorge_dashboard.js?v=gorge-dashboard-20261103" defer></script>
+  <script src="./gorge_replay.js?v=gorge-dashboard-20261103" defer></script>
   <script src="./insight_catalog.js?v=held-median-20261102" defer></script>
   <script src="./insight_explorer.js?v=held-median-20261102" defer></script>
   <script src="./game_outcomes.js?v=results-cards-restore-20261102" defer></script>
@@ -111,7 +112,8 @@
       </section>
     </div>
     <div class="tab-pane" id="pane-records" hidden>
-      <section class="gorge-canonical-intro"><strong>Gorge is now our simulation engine.</strong><p>Open a verified four-player replay for authoritative gameplay. Historical Python simulations are archived below.</p></section>
+      <section class="gorge-canonical-intro"><strong>Gorge is now our simulation engine.</strong><p>Results, insights and turn review below use verified gorge games. The original styling and historical Python results remain available in the archive.</p></section>
+      <div id="gorge-dashboard" class="gorge-dashboard" aria-live="polite"></div>
       <details class="panel replay-panel result-takeaway gorge-replay-panel" id="gorge-replay-panel" open>
         <summary class="result-takeaway-summary">
           <span class="eyebrow">Full Commander · Gorge engine</span>
