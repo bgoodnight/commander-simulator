@@ -63,8 +63,17 @@ def check():
             tracker=insight.locator(".insight-inline-tracker")
             tracker.locator("summary").first.click()
             assert tracker.evaluate("(e)=>e.open")
-            assert "Seed 300" in tracker.locator(".insight-example-game-label").inner_text()
-            assert "Win" in tracker.locator(".insight-example-game-label").inner_text()
+            picker=tracker.locator(".gorge-legacy-example-select")
+            assert picker.is_visible()
+            assert "Seed 300" in picker.locator("option").first.inner_text()
+            assert "Win" in picker.locator("option").first.inner_text()
+            reviewer_link=tracker.locator(".insight-example-full-link")
+            assert reviewer_link.is_visible()
+            select_box=picker.bounding_box()
+            button_box=reviewer_link.bounding_box()
+            assert select_box and button_box
+            assert abs(select_box["y"]-button_box["y"])<5, \
+                "Original seed picker and full-reviewer action should share a row"
             timeline=tracker.locator(".insight-turn-timeline")
             assert timeline.locator(".insight-turn-row").count()>=9
             opening=timeline.locator(".insight-turn-row").first
