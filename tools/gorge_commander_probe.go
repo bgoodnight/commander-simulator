@@ -99,7 +99,11 @@ func main() {
   firstSeatPolicy:=flag.String("hero-pilot","","optional policy for seat zero")
   nativeDir:=flag.String("native-dir","","directory for gorge-native raw event/intent logs")
   nativeLimit:=flag.Int("native-limit",2,"how many initial game traces to store")
+  retryUnverified:=flag.Bool("retry-unverified",false,"retry failed or unverified games with fresh seeds until the requested count succeeds")
+  maxAttempts:=flag.Int("max-attempts",0,"maximum attempts including rejected games (default: games)")
   flag.Parse()
+  if *maxAttempts==0 {*maxAttempts=*games}
+  if *maxAttempts<*games||*maxAttempts>5000 {panic("invalid attempt limit")}
   if *directory==""||*games<=0||*games>1000||*maxTurns<=0 { panic("invalid probe arguments") }
   names:=strings.Split(*deckPool,",")
   for i:=range names {names[i]=strings.TrimSpace(names[i])}
@@ -139,7 +143,9 @@ func main() {
     if len(cs)!=100||len(commanders[i])!=1 {panic(fmt.Sprintf("%s is not a single-commander 100-card deck",name))}
   }
   failed:=false
-  for g:=0;g<*games;g++ {
+  succeeded:=0
+  skipped:=0
+  for g:=0;g<*maxAttempts&&succeeded<*games;g++ {
     gs:=*seed+uint64(g)
     // Deterministically rotate decks, so seat and turn-order bias can be
     // separated from deck advantage when more seeds are collected.
@@ -171,7 +177,8 @@ func main() {
     cfg:=rules.Config{Seed:gs,Names:ids,Decks:ds,Commanders:cs,
       Format:rules.FormatCommander,StartingLife:40,Mulligans:7,Tokens:reg.Tokens,NameUniverse:reg.Universe()}
     start:=time.Now()
-    capture:=*nativeDir!=""&&g<*nativeLimit
+    capture:=*nativeDir!=""&&
+      ((!*retryUnverified&&g<*nativeLimit)||(*retryUnverified&&succeeded<*nativeLimit))
     observations:=[]any{}
     lastTurn:=int32(-1)
     hooks:=bench.Hooks{EnvSeats:true,HonestRoot:true}
@@ -203,7 +210,8 @@ func main() {
         if rerr!=nil {rec.Error="replay: "+rerr.Error()} else {rec.Error="replay hash mismatch"}
       }
     }
-    if e!=nil&&*nativeDir!=""&&g<*nativeLimit {
+    verified:=rec.Error==""&&rec.Finished&&(!*verify||rec.ReplayVerified)
+    if e!=nil&&capture&&(!*retryUnverified||verified) {
       filename:=fmt.Sprintf("gorge-seed-%d.json",gs)
       target:=filepath.Join(*nativeDir,filename)
       payload:=map[string]any{
@@ -225,8 +233,21 @@ func main() {
         rec.Error="native write: "+writeErr.Error()
       }else{rec.NativeTrace=filename}
     }
+    verified=rec.Error==""&&rec.Finished&&(!*verify||rec.ReplayVerified)
+    if !verified {
+      failed=true
+      if *retryUnverified {
+        skipped++
+        fmt.Fprintf(os.Stderr,"Skipped unverified seed %d: finished=%t verified=%t stall=%s error=%s\\n",
+          gs,rec.Finished,rec.ReplayVerified,rec.StallReason,rec.Error)
+        continue
+      }
+    }
     out,_:=json.Marshal(rec);fmt.Println(string(out))
-    if rec.Error!=""||!rec.Finished||(*verify&&!rec.ReplayVerified){failed=true}
+    if verified {succeeded++}
   }
-  if failed {os.Exit(2)}
+  if *retryUnverified {
+    fmt.Fprintf(os.Stderr,"Gorge benchmark: %d verified games, %d excluded attempts\\n",succeeded,skipped)
+  }
+  if succeeded!=*games||(failed&&!*retryUnverified) {os.Exit(2)}
 }
