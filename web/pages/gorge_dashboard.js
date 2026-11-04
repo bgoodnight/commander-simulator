@@ -78,6 +78,19 @@ function summary(games){
 /* Keep the original Deck Lab's parchment/teal/gold card vocabulary.
    Only gorge data changes; the presentation uses the long-standing CSS
    classes board-report, board-summary, game-outcome-turn-strip, etc. */
+function displayDeckName(name){
+  const labels={
+    mortarion_current:"Mortarion · Current",
+    magnus_premium:"Magnus · Premium",
+    necron_dynasties:"Necron Dynasties",
+    wretched_ranks:"Wretched Ranks",
+    "avengers-assemble":"Avengers Assemble",
+    "cavalry-charge":"Cavalry Charge",
+    "deadly-disguise":"Deadly Disguise",
+    "science-pip":"Science!"
+  };
+  return labels[name]||String(name||"").replaceAll(/[_-]/g," ").replace(/\\b\\w/g,c=>c.toUpperCase());
+}
 function cardArt(name){
   if(!name||typeof name!=="string")return null;
   return "https://api.scryfall.com/cards/named?exact="+encodeURIComponent(name)+"&format=image&version=art_crop";
@@ -167,7 +180,7 @@ function render(games,activeSeed){
     picker.append(el("span","micro","View recorded game"));
     const select=el("select",null);
     for(const recorded of verified){
-      const option=el("option",null,"Game "+recorded.seed+" · "+recorded.decks[0]);
+      const option=el("option",null,"Game "+recorded.seed+" · "+displayDeckName(recorded.decks[0]));
       option.value=String(recorded.seed);
       select.append(option);
     }
@@ -189,7 +202,6 @@ function render(games,activeSeed){
   const grid=el("div","board-grid");
   const counts=[...model.casts].sort((a,b)=>b.played-a.played);
   const top=counts[0];
-  const allCasts=counts.reduce((n,c)=>n+c.played,0);
   const first=model.timeline.flatMap(t=>game.turns.find(x=>x.turn===t.turn)?.events||[])
     .find(e=>e.kind==="cast"&&e.card_name);
   const leadSeat=model.bySeat.map((d,seat)=>({seat,casts:d.casts}))
@@ -205,15 +217,11 @@ function render(games,activeSeed){
       title:"How the game developed",art:first?.card_name,
       evidence:"The first public spell-cast event in source order. Opening hands are intentionally not inferred.",
       list:counts.slice(0,10).map(c=>({name:c.name,count:c.played+" casts"}))},
-    {kicker:"Most active caster",value:game.decks[leadSeat.seat],
+    {kicker:"Most active caster",value:displayDeckName(game.decks[leadSeat.seat]),
       description:leadSeat.casts+" spells cast in this game",
       title:"Casting activity by deck",
       art:(game.snapshots[0]?.players[leadSeat.seat]?.zones?.command||[])[0]?.name,
-      evidence:game.decks.map((name,seat)=>name+" — "+model.bySeat[seat].casts+" public spell casts").join(" · ")},
-    {kicker:"Recorded spells",value:String(allCasts),
-      description:"Cast events across all four players",
-      title:"Card-play evidence",art:top?.name,
-      evidence:"Counts include only verified public casting events. Card draws, cards held and unsupported outcome statistics are not guessed."}
+      evidence:game.decks.map((name,seat)=>displayDeckName(name)+" — "+model.bySeat[seat].casts+" public spell casts").join(" · ")}
   ];
   for(const item of data)grid.append(artBoard(item));
   insights.append(grid);root.append(insights);
@@ -233,7 +241,7 @@ function render(games,activeSeed){
     if(image)block.append(image);
     const copy=el("div","gorge-original-deck-copy");
     copy.append(el("span","micro","Seat "+(seat+1)),
-      el("strong",null,name),
+      el("strong",null,displayDeckName(name)),
       el("small",null,model.bySeat[seat].casts+" observed casts"));
     block.append(copy);entries.append(block);
   });
@@ -256,7 +264,7 @@ function render(games,activeSeed){
       button.setAttribute("aria-pressed",String(button.dataset.turn===String(activeTurn)));
     detail.replaceChildren();
     const head=el("div","game-outcome-evidence-head");
-    head.append(el("strong",null,"Turn "+t.turn+" · "+game.decks[t.seat]));
+    head.append(el("strong",null,"Turn "+t.turn+" · "+displayDeckName(game.decks[t.seat])));
     detail.append(head);
     const events=game.turns.find(x=>x.turn===t.turn)?.events||[];
     const important=events.filter(e=>["cast","land_played","token_created","damage","player_lost"].includes(e.kind));
@@ -272,7 +280,7 @@ function render(games,activeSeed){
       const states=el("div","game-outcome-life-stats");
       for(const p of t.state.players){
         const state=el("div","game-outcome-life-stat");
-        state.append(el("span",null,game.decks[p.seat]),
+        state.append(el("span",null,displayDeckName(game.decks[p.seat])),
           el("strong",null,String(p.life)),
           el("small",null,p.hand_count+" in hand · "+p.library_count+" in library"));
         states.append(state);
@@ -322,7 +330,7 @@ function render(games,activeSeed){
   const comparison=el("div","board-card-list");
   for(const d of all.decks){
     comparison.append(el("div","board-card-row",
-      d.name+" · "+d.games+" games · "+d.casts+" casts · "+d.lands+" land plays"));
+      displayDeckName(d.name)+" · "+d.games+" games · "+d.casts+" casts · "+d.lands+" land plays"));
   }
   body.append(comparison,el("p","micro",
     "Turn-end state, draw identities, win rates, and cards held cannot yet be calculated reliably from public snapshots."));
