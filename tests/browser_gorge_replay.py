@@ -68,7 +68,7 @@ def check():
             turn=timeline.locator(".gorge-original-turn").nth(1)
             assert turn.locator(".insight-turn-cover").count()==1
             assert turn.locator(".insight-turn-metrics").count()==1
-            assert turn.locator(".gorge-mana-pips").count()==1
+            assert turn.locator(".insight-turn-row-summary .gorge-mana-pips").count()==1
             turn.locator(".insight-turn-row-summary").click()
             assert turn.evaluate("(e)=>e.open")
             state=turn.locator(".gorge-boundary-state")
@@ -126,7 +126,6 @@ def check():
             # Mobile: capture the old card-specific metrics and narrated turns,
             # not the very top of the page or the generic source inspector.
             page.set_viewport_size({"width":390,"height":844})
-            tracker.locator(".insight-featured-metrics").count() if False else None
             tiles.first.scroll_into_view_if_needed()
             page.screenshot(path=str(OUT/"original-insight-mobile.png"),full_page=False)
             widths=page.evaluate("""() => ({
