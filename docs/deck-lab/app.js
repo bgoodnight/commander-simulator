@@ -448,8 +448,14 @@ function summon(key,{versionId=null,remember=true}={}){
   }
   renderGlobalDeckSelector();
   showPage();syncPageNavigation();
-  if(pageName==="results"&&window.GorgeDashboard){
-    window.GorgeDashboard.render(window.__gorgeLoadedGames||[],window.__gorgeActiveGame?.seed,key);
+  if(pageName==="results"){
+    // Do not paint empty or sampled outcomes during deck selection.
+    // The Gorge loader publishes the verified complete-cohort view once.
+    const outcomes=$("game-outcome-results");
+    if(outcomes)outcomes.replaceChildren(el("p",
+      "Loading source-verified cohort statistics…","game-outcome-empty"));
+    const status=$("game-outcome-status");
+    if(status)status.textContent="Loading complete Gorge cohort…";
     window.GorgeDeckLabRefreshSamples?.();
   }
 }

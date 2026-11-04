@@ -344,11 +344,9 @@ function paintView(rootElement,data){
      (data.visibility==="omniscient"&&data.synthetic_simulation_only!==true))
     throw Error("Expected an explicitly validated synthetic or public gorge-ui-replay-v1 export");
   rootElement.replaceChildren();
-  if(typeof window!=="undefined"&&window.GorgeDashboard){
-    window.__gorgeActiveGame=data;
-    const loaded=window.__gorgeLoadedGames||[data];
-    window.GorgeDashboard.render(loaded,data.seed);
-  }
+  if(typeof window!=="undefined")window.__gorgeActiveGame=data;
+  // The independent replay viewer must never replace the statistics panel.
+  // Results are painted once, using all verified cohort outcomes.
   const header=node("div","gorge-replay-header");
   header.append(node("h3",null,"Gorge Commander · Game "+data.seed));
   header.append(node("p","small",data.decks.join(" · ")));
@@ -447,41 +445,94 @@ function init(){
   function cohortPercent(x){
     return Number.isFinite(x)?(x*100).toFixed(1)+"%":"—";
   }
-  function cohortStatsPanel(stats){
-    const root=node("section","gorge-full-cohort-dashboard");
-    const head=node("div","gorge-full-cohort-title");
-    head.append(node("h3",null,"Game Outcomes · Complete Gorge Cohort"),
-      node("p","small",stats.n+" verified games · "+
-        stats.detailed_replay_count+" detailed replays retained"));
-    root.append(head);
-    const metrics=node("div","gorge-full-cohort-metrics");
-    for(const [label,value,detail] of [
-      ["Wins",cohortPercent(stats.win_rate),stats.wins+" / "+stats.n+" games"],
-      ["Losses",cohortPercent(stats.losses/stats.n),stats.losses+" / "+stats.n+" games"],
-      ["Draws",cohortPercent(stats.draws/stats.n),stats.draws+" / "+stats.n+" games"],
-      ["Game length",stats.median_game_turns===null?"—":
-        String(stats.median_game_turns), "Median recorded game turns · "+
-          stats.game_turns_coverage+" games"],
-    ]){
-      const metric=node("div","gorge-full-cohort-metric");
-      metric.append(node("span","small",label),node("strong",null,value),
-        node("span","micro",detail));
-      metrics.append(metric);
+  function cohortStatsPanel(stats,previousHero){
+    // Use the original illustrated Results hero, not a temporary replacement
+    // design. All numbers here are from the complete verified cohort.
+    const frame=node("div","game-outcome-hero-frame");
+    const panel=node("details","board-report game-outcome-card game-outcome-hero");
+    const summary=node("summary","game-outcome-summary game-outcome-hero-summary");
+    const art=previousHero?.querySelector(".game-outcome-hero-art");
+    if(art)summary.append(art.cloneNode(true));
+    const copy=node("div","game-outcome-hero-copy");
+    copy.append(node("strong","game-outcome-title","Game Outcomes"));
+    const numbers=node("div","game-outcome-hero-stats");
+    for(const [state,label,count] of [
+      ["win","Wins",stats.wins],["loss","Losses",stats.losses],
+      ["unresolved","Draws",stats.draws]]){
+      const cell=node("div","game-outcome-hero-stat is-"+state);
+      cell.append(node("strong",null,cohortPercent(count/stats.n)),
+        node("span",null,label+" · "+count+"/"+stats.n));
+      numbers.append(cell);
     }
-    root.append(metrics);
-    if(Array.isArray(stats.wilson_95)){
-      root.append(node("p","micro",
-        "Win-rate Wilson interval (descriptive, assuming independent games): "+
+    copy.append(numbers);
+    const bar=node("div","game-outcome-stacked-bar");
+    bar.setAttribute("role","img");
+    bar.setAttribute("aria-label",stats.wins+" wins, "+
+      stats.losses+" losses, "+stats.draws+" draws in "+
+      stats.n+" verified games");
+    for(const [state,count] of [
+      ["win",stats.wins],["loss",stats.losses],["unresolved",stats.draws]]){
+      if(!count)continue;
+      const segment=node("span","is-"+state);
+      segment.style.width=cohortPercent(count/stats.n);
+      bar.append(segment);
+    }
+    copy.append(bar);
+    const highlights=node("div","game-outcome-hero-highlights");
+    const ranked=(stats.groups?.opponents||[])
+      .filter(group=>group.n>=10)
+      .sort((a,b)=>b.win_rate-a.win_rate||b.n-a.n);
+    for(const [label,value,detail] of [
+      ["Best matchup",ranked.length?cohortPercent(ranked[0].win_rate):"—",
+        ranked.length?ranked[0].name+" · "+ranked[0].n+" games":"No supported opponent group"],
+      ["Game length",stats.median_game_turns===null?"—":
+        String(stats.median_game_turns),"Median recorded game turns"],
+      ["Verified games",String(stats.n),"Complete simulation cohort"],
+      ["Replay coverage",String(stats.detailed_replay_count),
+        "Detailed source-backed replays"]]){
+      const tile=node("div","game-outcome-hero-highlight");
+      tile.append(node("span",null,label),node("strong",null,value),
+        node("small",null,detail));
+      highlights.append(tile);
+    }
+    copy.append(highlights);
+    copy.append(node("span","game-outcome-hero-meta",
+      stats.n+" source-verified Gorge games · "+
+      stats.detailed_replay_count+" detailed replay samples"));
+    summary.append(copy);panel.append(summary);
+    const body=node("div","game-outcome-body");
+    for(const [state,label,count] of [
+      ["win","Wins",stats.wins],["loss","Losses",stats.losses],
+      ["unresolved","Draws",stats.draws]]){
+      const line=node("div","game-outcome-bucket is-"+state);
+      line.append(node("strong",null,label),
+        node("span",null,count+" / "+stats.n));
+      const lineBar=node("span","game-outcome-bucket-bar");
+      lineBar.style.width=cohortPercent(count/stats.n);
+      line.append(lineBar);body.append(line);
+    }
+    if(Array.isArray(stats.wilson_95))
+      body.append(node("p","micro",
+        "Descriptive Wilson 95% win-rate interval: "+
         cohortPercent(stats.wilson_95[0])+"–"+
         cohortPercent(stats.wilson_95[1])+
-        ". AI pods and deterministic seed rotations may violate independence."));
-    }
-    return root;
+        ". Games may be dependent because pods and seeds are systematically rotated."));
+    panel.append(body);frame.append(panel);
+    return frame;
   }
   function cohortGroupPanel(stats){
-    const details=node("details","gorge-full-cohort-groups");
-    details.append(node("summary",null,"Matchups and archetypes · all "+
-      stats.n+" verified games"));
+    const details=node("details",
+      "board-report game-outcome-card gorge-full-cohort-groups");
+    const title=node("summary","game-outcome-summary");
+    const copy=node("div","game-outcome-summary-copy");
+    copy.append(node("span","board-kicker","Full verified cohort"),
+      node("strong","game-outcome-title","Opponent Matchups"),
+      node("span","game-outcome-number",String(stats.n)),
+      node("span","game-outcome-caption",
+        "Precons, archetypes and colors · all verified games"),
+      node("span","board-open","Explore ▾"));
+    title.append(copy);details.append(title);
+    const bodyPanel=node("div","game-outcome-body");
     const chooser=node("select","gorge-full-cohort-select");
     chooser.setAttribute("aria-label","Compare full-cohort performance by");
     for(const [name,label] of [
@@ -518,17 +569,27 @@ function init(){
       dataRoot.append(table);
     };
     chooser.addEventListener("change",paint);
-    details.append(node("p","micro","A precon, archetype or color is counted once "+
+    bodyPanel.append(node("p","micro","A precon, archetype or color is counted once "+
       "when present among the three opponents. Win rates describe the whole "+
       "four-player game, not isolated head-to-head effects."),
       chooser,dataRoot);
+    details.append(bodyPanel);
     paint();
     return details;
   }
   function cohortRegressionPanel(stats){
-    const details=node("details","gorge-full-cohort-regressions");
-    details.append(node("summary",null,
-      "Exploratory elastic-net regressions · full verified cohort"));
+    const details=node("details",
+      "board-report game-outcome-card gorge-full-cohort-regressions");
+    const title=node("summary","game-outcome-summary");
+    const copy=node("div","game-outcome-summary-copy");
+    copy.append(node("span","board-kicker","Full verified cohort"),
+      node("strong","game-outcome-title","Performance Patterns"),
+      node("span","game-outcome-number","Elastic net"),
+      node("span","game-outcome-caption",
+        "Opponent deck, archetype and color models · "+stats.n+" games"),
+      node("span","board-open","Explore ▾"));
+    title.append(copy);details.append(title);
+    const bodyPanel=node("div","game-outcome-body");
     const chooser=node("select","gorge-full-cohort-select");
     chooser.setAttribute("aria-label","Regression predictor family");
     for(const [value,label] of [
@@ -574,50 +635,47 @@ function init(){
         "Exploratory penalized coefficients, not causal effects."));
     };
     chooser.addEventListener("change",paint);
-    details.append(chooser,display);
+    bodyPanel.append(chooser,display);
+    details.append(bodyPanel);
     paint();
     return details;
   }
-  async function presentOutcomeSummary(key,sampledCount,ticket){
-    const report=await cohortPromise;
+  function presentOutcomeSummary(report,key,sampledCount,ticket){
     if(ticket!==requestId||!available.size)return;
     const outcomes=$("game-outcome-results");
     if(!outcomes)return;
-    for(const x of outcomes.querySelectorAll(
-      ".gorge-full-cohort-dashboard,.gorge-full-cohort-groups,"+
-      ".gorge-full-cohort-regressions,.gorge-sampled-insights-label")){
-      x.remove();
-    }
     const status=$("game-outcome-status");
     const full=report?.decks?.[key];
+    const grid=outcomes.querySelector(".game-outcome-grid");
     if(!full){
-      // Never present 10 sampled replay outcomes as 500-game statistics.
-      const hero=outcomes.querySelector(".game-outcome-hero");
-      if(hero)hero.remove();
-      const message=node("p","gorge-full-cohort-dashboard",
+      // Never display the 10-replay outcome proportions as the headline.
+      const oldFrame=outcomes.querySelector(".game-outcome-hero-frame");
+      if(oldFrame)oldFrame.remove();
+      const message=node("p","game-outcome-empty",
         "Full-cohort results unavailable for this deck. "+
-        "Replay-derived card insights below use "+sampledCount+
-        " retained recordings only.");
-      outcomes.prepend(message);
-      if(status)status.textContent="Full-cohort statistics unavailable · "+
-        sampledCount+" sampled replays";
+        "The card and turn panels below describe "+sampledCount+
+        " retained detailed replays only.");
+      if(grid)grid.prepend(message);else outcomes.prepend(message);
+      if(status)status.textContent="Full-cohort statistics unavailable";
       return;
     }
-    const hero=outcomes.querySelector(".game-outcome-hero");
-    if(hero)hero.remove();
-    const outdated=outcomes.querySelector(".elastic-net-panel");
-    if(outdated)outdated.remove();
+    const oldFrame=outcomes.querySelector(".game-outcome-hero-frame");
+    const hero=cohortStatsPanel(full,oldFrame);
+    if(oldFrame)oldFrame.replaceWith(hero);
+    else if(grid)grid.prepend(hero);
+    else outcomes.prepend(hero);
     const sampleTitle=node("p","gorge-sampled-insights-label",
-      "Card and turn insights below: "+sampledCount+
-      " retained detailed replays (not all "+full.n+" games). "+
-      "Only the panels above use the full verified cohort.");
-    const grid=outcomes.querySelector(".game-outcome-grid");
-    if(grid)grid.prepend(sampleTitle);
-    const panels=[cohortStatsPanel(full),cohortGroupPanel(full),
-      cohortRegressionPanel(full)];
-    outcomes.prepend(...panels);
-    if(status)status.textContent=full.n+" verified Gorge outcomes · "+
-      sampledCount+" detailed sample replays · complete-cohort statistics";
+      "Card and turn insights · "+sampledCount+
+      " retained detailed replays, not all "+full.n+" games");
+    const groups=cohortGroupPanel(full);
+    const regressions=cohortRegressionPanel(full);
+    if(grid){
+      hero.after(groups,regressions,sampleTitle);
+    }else{
+      outcomes.append(groups,regressions,sampleTitle);
+    }
+    if(status)status.textContent=full.n+" verified Gorge games · "+
+      sampledCount+" detailed replay samples · full-cohort statistics";
   }
   // The catalog records the designated player seat. A small number of
   // verified Gorge recordings predate embedding that attribution in replay
@@ -679,10 +737,6 @@ function init(){
     const other=[...catalog].filter(row=>
       playerEntry(row,data.player_deck)&&available.has(row.file)&&row.file!==name)
       .sort(recentFirst);
-    if(!other.length){
-      await presentOutcomeSummary(data.player_deck,1,ticket);
-      return;
-    }
     const cohort=[data];
     let cursor=0;
     async function worker(){
@@ -699,8 +753,12 @@ function init(){
     await Promise.all(Array.from({length:Math.min(3,other.length)},()=>worker()));
     if(ticket!==requestId||!available.has(name))return;
     if(typeof window!=="undefined")window.__gorgeLoadedGames=cohort;
+    const fullReport=await cohortPromise;
+    if(ticket!==requestId||!available.has(name))return;
+    // Render the replay details and source-verified headline together, with
+    // no intermediate sample-outcome panel or flash of incorrect statistics.
     window.GorgeDashboard?.render(cohort,data.seed,data.player_deck);
-    await presentOutcomeSummary(data.player_deck,cohort.length,ticket);
+    presentOutcomeSummary(fullReport,data.player_deck,cohort.length,ticket);
     if(cohort.length<other.length+1){
       const status=$("game-outcome-status");
       if(status)status.textContent+=" · "+(other.length+1-cohort.length)+
