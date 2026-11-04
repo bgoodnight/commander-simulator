@@ -18,7 +18,14 @@ KINDS={0:"game_start",1:"shuffle",2:"zone_change",3:"draw",
 14:"mana_clear",15:"counter_change",16:"attackers",17:"blockers",
 18:"player_lost",19:"game_over",20:"decision_requested",
 21:"decision_recorded",22:"note",23:"land_played",24:"targets",
-27:"trigger",31:"token_created"}
+27:"trigger",31:"token_created",
+# These kinds were left as opaque native_NN strings by the original exporter.
+# Names/ordinals below are pinned to gorge engine/events/event.go.
+34:"ability_activated",38:"delayed_trigger",46:"keyword_trigger",
+54:"granted_trigger",55:"mana_ability_activated",
+67:"granted_ability_activated",72:"merged_trigger",
+79:"gained_ability_activated",80:"gained_trigger",
+88:"keyword_ability_activated"}
 SKIP={1,8,10,14,20,21,28}
 
 
@@ -99,7 +106,12 @@ def convert(source, *, include_hidden=False):
         turn["highlights"]=[
             {key:row[key] for key in ("seq","kind","card_name","text","amount","counter") if key in row}
             for row in turn["events"]
-            if row["kind"] in ("draw","cast","land_played","token_created","damage","game_over")
+            if row["kind"] in ("draw","cast","land_played","token_created","damage","game_over",
+                               "trigger","ability_activated","keyword_trigger",
+                               "delayed_trigger","granted_trigger","merged_trigger",
+                               "gained_trigger","mana_ability_activated",
+                               "granted_ability_activated","gained_ability_activated",
+                               "keyword_ability_activated")
         ][:12]
     safe_snapshots=project(source,include_hidden=include_hidden)
     return {

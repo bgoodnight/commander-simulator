@@ -2,36 +2,50 @@
 const assert=require("node:assert/strict");
 const fs=require("node:fs");
 const path=require("node:path");
-const dashboard=require("../web/pages/gorge_dashboard.js");
+const adapter=require("../web/pages/gorge_legacy_adapter.js");
+const renderer=require("../web/pages/game_outcomes.js");
 const dir=path.join(__dirname,"../docs/deck-lab/gorge-data");
 const manifest=JSON.parse(fs.readFileSync(path.join(dir,"manifest.json"),"utf8"));
 const games=manifest.games.map(g=>JSON.parse(fs.readFileSync(path.join(dir,g.file),"utf8")));
 assert.equal(games.length,2);
+assert(["gorge-omniscient-replay-manifest-v1",
+        "gorge-public-replay-manifest-v1"].includes(manifest.schema));
+const hashes=Object.fromEntries([...new Set(games.flatMap(g=>g.decks))]
+  .map((key,i)=>[key,String(i).padStart(64,"0")]));
 for(const game of games){
-  assert(dashboard.valid(game));
-  const totals={casts:0,lands:0,tokens:0};
-  for(let seat=0;seat<4;seat++){
-    const a=dashboard.analyze(game,seat);
-    assert.equal(a.seat,seat);
-    assert.equal(a.key,game.decks[seat]);
-    assert(a.timeline.length>=5, "Eliminated seats may have fewer personal turns");
-    assert(a.timeline.every((t,i)=>t.number===i+1));
-    assert(a.timeline.every(t=>t.atStart?.boundary==="first_pending_decision_of_turn"));
-    assert(a.timeline[0].atStart.players.every(p=>p.life===40));
-    assert(a.timeline.every(t=>!t.atNext||
-      t.atNext.boundary==="first_pending_decision_of_turn"),
-      "Never label turn-entry snapshots as turn-end state");
-    totals.casts+=a.casts;totals.lands+=a.lands;totals.tokens+=a.tokens;
+  assert(adapter.validateReplay(game),
+    "Current original Results adapter must validate the source replay");
+  assert.equal(game.snapshots[0].players.length,4);
+  assert(game.snapshots[0].players.every(p=>p.life===40));
+  assert(game.snapshots.every(s=>
+    s.boundary==="first_pending_decision_of_turn"),
+    "Never relabel a source turn-entry snapshot as an end-of-turn state");
+  const abilityIds=new Set([34,55,67,79,88]);
+  const triggerIds=new Set([27,38,46,54,72,80]);
+  const native=game.turns.flatMap(t=>t.events);
+  for(let hero=0;hero<4;hero++){
+    const projected=adapter.projectRun(game,hero,30,hashes);
+    assert.equal(projected.gorge_source.original_seat,hero);
+    assert.equal(projected.life_history.length,projected.completed_rounds+1);
+    assert(projected.ui_observations.every(o=>o.snapshot_is_turn_end===false));
+    const actions=projected.ui_observations.flatMap(o=>o.actions);
+    assert(actions.filter(x=>x.type==="ability_activated").every(x=>
+      abilityIds.has(x.native_kind_id)&&Number.isInteger(x.source_seq)));
+    assert(actions.filter(x=>x.type==="ability_triggered").every(x=>
+      triggerIds.has(x.native_kind_id)&&Number.isInteger(x.source_seq)));
+    assert(actions.every(x=>Number.isInteger(x.seat)&&x.seat>=0&&x.seat<4));
+    if(game.visibility==="omniscient"){
+      assert.equal(projected.opening_hand.length,7);
+      assert.equal(projected.opening_hands_by_seat.length,3);
+      assert(projected.opening_hands_by_seat.every(x=>x.hand?.length===x.hand_count));
+    }else assert.equal(projected.opening_hand,null);
   }
-  const ev=game.turns.flatMap(t=>t.events);
-  assert.equal(totals.casts,ev.filter(e=>e.kind==="cast").length);
-  assert.equal(totals.lands,ev.filter(e=>e.kind==="land_played").length);
-  assert.equal(totals.tokens,ev.filter(e=>e.kind==="token_created").length);
+  assert(native.some(e=>abilityIds.has(e.kind_id)));
+  assert(native.some(e=>triggerIds.has(e.kind_id)));
+  const batch=adapter.adapt(games,game.decks[0],hashes);
+  assert(renderer.validate(batch));
 }
-const all=dashboard.summary(games);
-assert(all.decks.length>=4);
-assert(all.decks.every(x=>x.games>=1));
-assert.throws(()=>dashboard.analyze({schema:"gorge-ui-replay-v1"},0));
+assert.throws(()=>adapter.projectRun({schema:"gorge-ui-replay-v1"},0,30,hashes));
 const html=fs.readFileSync(path.join(__dirname,"../web/pages/index.html"),"utf8");
 assert.match(html,/id="key-insights-grid"/);
 assert.match(html,/id="turn-reviewer-results"/);
@@ -41,4 +55,4 @@ assert.doesNotMatch(html,/id="gorge-dashboard"/);
 assert.doesNotMatch(html,/legacy-simulation-archive/);
 const app=fs.readFileSync(path.join(__dirname,"../web/pages/app.js"),"utf8");
 assert.match(app,/window\.GorgeDeckLabCardInfo=cardInfo/);
-console.log("PASS original Deck Lab Results UI reads two real Gorge samples; source counts, original DOM and privacy boundaries verified");
+console.log("PASS original Gorge-compatible Deck Lab: abilities, seats, source counts and original DOM verified");

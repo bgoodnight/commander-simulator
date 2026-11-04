@@ -55,6 +55,37 @@ class GorgeUIExportTests(unittest.TestCase):
         self.assertNotIn("objects",doc)
         self.assertNotIn("log",doc)
 
+    def test_native_ability_pushes_are_named_and_included_in_replay_highlights(self):
+        source=sample()
+        source["log"]["events"].extend([
+            {"seq":10,"kind":34,"obj":44,"player":1,"amount":2},
+            {"seq":11,"kind":27,"obj":45,"text":"triggered ability"},
+            {"seq":12,"kind":55,"obj":46,"amount":1},
+            {"seq":13,"kind":46,"obj":47,"player":3},
+        ])
+        source["objects"]=[
+            {"object_id":44,"card_name":"Riptide Laboratory"},
+            {"object_id":45,"card_name":"Yahenni, Undying Partisan"},
+            {"object_id":46,"card_name":"Test Limited Mana Rock"},
+            {"object_id":47,"card_name":"Zombie Token"},
+        ]
+        for hidden in (False,True):
+            out=convert(source,include_hidden=hidden)
+            tail=out["turns"][-1]
+            self.assertEqual([e["kind"] for e in tail["events"][-4:]],
+                             ["ability_activated","trigger",
+                              "mana_ability_activated","keyword_trigger"])
+            self.assertEqual(tail["events"][-4]["obj"],44)
+            self.assertEqual(tail["events"][-4]["amount"],2)
+            self.assertEqual(tail["events"][-4]["player"],1)
+            self.assertTrue(any(e["kind"]=="ability_activated"
+                                for e in tail["highlights"]))
+            self.assertTrue(any(e["kind"]=="trigger"
+                                for e in tail["highlights"]))
+        out=convert(source,include_hidden=True)
+        self.assertEqual(out["turns"][-1]["events"][-4]["card_name"],
+                         "Riptide Laboratory")
+
     def test_invalid_events_fail_closed(self):
         raw=sample()
         raw["log"]["events"][3]["seq"]=2
