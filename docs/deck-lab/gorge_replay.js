@@ -404,6 +404,18 @@ function paintView(rootElement,data){
 function init(){
   const input=$("gorge-replay-file"),rootElement=$("gorge-replay-root");
   if(!input||!rootElement)return;
+  // A new gorge game does not depend on the retired Python deck selector.
+  // Move the gorge panel outside the deck-scoped #app-content entirely,
+  // because legacy app initialization may hide that ancestor asynchronously.
+  // It stays an ordinary, keyboard-accessible Results panel in the same UI.
+  if(typeof location!=="undefined"&&location.pathname.endsWith("/results.html")){
+    const content=$("app-content"),panel=$("gorge-replay-panel");
+    if(content&&panel&&content.contains(panel)){
+      content.before(panel);
+      panel.hidden=false;
+      panel.open=true;
+    }
+  }
   // Only load versions explicitly named by the validated public manifest.
   // No hidden gorge native log is fetched or published by this control.
   const samples=$("gorge-replay-samples");
