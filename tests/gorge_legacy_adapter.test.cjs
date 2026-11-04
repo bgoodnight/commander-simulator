@@ -96,4 +96,8 @@ test("genuine cast records populate the ORIGINAL source statistics",()=>{
   assert.ok(stats.ranked.played.some(x=>x.name==="Sol Ring"));
   assert.ok(stats.ranked.artifact.some(x=>x.name==="Sol Ring"));
   assert.ok(stats.ranked.creature.some(x=>x.name==="Plague Drone"));
+  assert.ok(!stats.ranked.played.some(x=>x.name==="Baral, Chief of Compliance"),
+    "Opponent wizard spells must not become Mortarion card insights");
+  assert.ok(!stats.ranked.played.some(x=>x.name==="Gravecrawler"),
+    "Opponent zombie spells must not contaminate the hero ranking");
 });
