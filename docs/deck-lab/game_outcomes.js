@@ -1070,7 +1070,23 @@
       target.appendChild(pip);
     }
   }
+  // Gorge records the exact token identity, but does not yet export
+  // calculated token power/toughness (including counters and modifiers).
+  // Only provide printed/base stats for explicitly known token kinds.
+  const KNOWN_TOKENS=Object.freeze({
+    "Zombie Token":{type:"Token Creature — Zombie",power:2,toughness:2,glyph:"☠",tone:"zombie"},
+    "Spawn Token":{type:"Token Creature",glyph:"✺",tone:"spawn"},
+    "Necron Warrior Token":{type:"Token Creature",glyph:"⚙",tone:"necron"},
+    "Crab Token":{type:"Token Creature — Crab",glyph:"♋",tone:"crab"},
+    "Faerie Token":{type:"Token Creature — Faerie",glyph:"✧",tone:"faerie"},
+    "Clue Token":{type:"Token Artifact — Clue",glyph:"⌕",tone:"clue"}
+  });
+  function tokenInfo(name){
+    return typeof name==="string"?KNOWN_TOKENS[name]||null:null;
+  }
   function recordedCardTypes(name,lookup){
+    const token=tokenInfo(name);
+    if(token)return token.type.toLowerCase().split("—")[0];
     const card=lookup?.(name);
     return String(card?.type_line||card?.type||"")
       .split("—")[0].toLowerCase();
@@ -1518,20 +1534,39 @@
     }
   }
   function insightActionCard(name,options,display={}){
-    const card=options.lookupRecordedCard?.(name);
+    const token=tokenInfo(name);
+    const card=token?null:options.lookupRecordedCard?.(name);
     const button=textButton("","insight-action-card"+
       (display.artOnly?" is-art-only":"")+
-      (display.textOnly?" is-text-only":""),
-      ()=>options.onOpenRecordedCard?.(name));
-    button.setAttribute("aria-label","View "+name+" card details");
+      (display.textOnly?" is-text-only":"")+
+      (token?" is-token is-token-"+token.tone:""),
+      ()=>{if(!token)options.onOpenRecordedCard?.(name)});
+    button.setAttribute("aria-label",token?
+      name+(Number.isInteger(token.power)?" "+token.power+"/"+token.toughness:""):
+      "View "+name+" card details");
+    if(token&&!display.textOnly){
+      const tokenArt=create("span","insight-token-art",token.glyph);
+      tokenArt.setAttribute("aria-hidden","true");
+      button.appendChild(tokenArt);
+    }
     const art=card?.art||card?.image;
-    if(!display.textOnly&&typeof art==="string"&&/^https:\/\//.test(art)){
+    if(!token&&!display.textOnly&&typeof art==="string"&&/^https:\/\//.test(art)){
       const img=create("img","insight-action-art");
       img.src=art;img.alt="";img.loading="lazy";img.referrerPolicy="no-referrer";
       button.appendChild(img);
     }
-    if(!display.artOnly||!(typeof art==="string"&&/^https:\/\//.test(art)))
-      button.appendChild(create("span","insight-action-name",name));
+    if(!display.artOnly||token||!(typeof art==="string"&&/^https:\/\//.test(art))){
+      const title=create("span","insight-action-name",name);
+      button.appendChild(title);
+      if(token&&Number.isInteger(token.power)){
+        const stats=create("span","insight-token-stats",
+          token.power+"/"+token.toughness);
+        stats.title="Base token power/toughness; modifiers not exported";
+        button.appendChild(stats);
+      }
+    }
+    if(token)button.title=token.type+
+      (Number.isInteger(token.power)?" · base "+token.power+"/"+token.toughness:"");
     return button;
   }
   // Canonical turn viewer used by card insights and the full-game reviewer.
