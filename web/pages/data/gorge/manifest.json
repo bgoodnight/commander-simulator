@@ -30,5 +30,10 @@
       "turns": 38,
       "source": "gorge-40-life"
     }
+  ],
+  "replay_features": [
+    "source_native_activated_abilities",
+    "source_native_triggered_abilities",
+    "all_player_omniscient_hands"
   ]
 }
