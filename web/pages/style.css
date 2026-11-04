@@ -2164,3 +2164,28 @@ body:has(#pane-records:not([hidden])) .compact-selection{margin-bottom:3px}
 #pane-records > #gorge-replay-panel[hidden]{display:none!important}
 #pane-records #game-outcome-results .insight-turn-row .insight-end-state-title{
   color:#efd5a6}
+
+/* Original November 3 inline seed picker; Gorge supplies the source records. */
+.gorge-legacy-example-controls{
+  display:grid;grid-template-columns:minmax(0,1fr) max-content;gap:9px;
+  align-items:stretch;margin:10px 0 9px}
+.gorge-legacy-example-select{
+  min-width:0;width:100%;height:42px;padding:8px 12px;
+  color:#f1e3c9;background:#2b423c;border:1px solid #899e90;
+  border-radius:9px;font-size:.83rem;text-overflow:ellipsis}
+.gorge-legacy-example-controls .insight-example-full-link{
+  display:inline-flex;align-items:center;justify-content:center;
+  position:static;width:auto;max-width:none;margin:0;white-space:nowrap;
+  min-height:42px;padding:8px 12px;border:1px solid #b39b70;
+  border-radius:9px;color:#f2dbae;background:#3c524b;
+  box-shadow:none;font-size:.8rem;font-weight:600;line-height:1.25;
+  text-decoration:none}
+.gorge-legacy-example-controls .insight-example-full-link:hover,
+.gorge-legacy-example-controls .insight-example-full-link:focus-visible{
+  color:#fff0ce;background:#4c6358;border-color:#e5c28e}
+@media(max-width:450px){
+  .gorge-legacy-example-controls{gap:6px}
+  .gorge-legacy-example-select{font-size:.72rem;padding:7px 9px;height:38px}
+  .gorge-legacy-example-controls .insight-example-full-link{
+    font-size:.68rem;padding:7px 8px;min-height:38px}
+}
