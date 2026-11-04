@@ -4,7 +4,7 @@ name: Publish verified Gorge UI artifact to Pages data
 # retry never reruns a game; only independently verified converted data ships.
 on:
   workflow_run:
-    workflows: ["Convert verified Gorge recordings to public replay artifact"]
+    workflows: ["Convert verified Gorge recordings to public replay artifact", "Gorge · player decks versus rotating precon opponents"]
     branches: [main]
     types: [completed]
   workflow_dispatch:
@@ -43,38 +43,11 @@ jobs:
         run: |
           case "$RUN_ID" in *[!0-9]*|'') echo "Invalid conversion run ID"; exit 1;; esac
           gh run download "$RUN_ID" --name gorge-ui-publication --dir "$RUNNER_TEMP/public_ui"
-      - name: Verify public catalog and copy allowlisted data
-        env:
-          PUBLIC_SOURCE: ${{ runner.temp }}/public_ui
+      - name: Validate, merge and verify sanitized public catalog
         run: |
-          python - <<'PY'
-          import json,os,re,hashlib,shutil
-          from pathlib import Path
-          from tools.gorge_results_pipeline import public_replay_is_safe
-          source=Path(os.environ["PUBLIC_SOURCE"])
-          manifest=json.loads((source/"manifest.json").read_text())
-          analytics=json.loads((source/"analytics.json").read_text())
-          assert manifest["schema"]=="gorge-omniscient-replay-manifest-v1"
-          assert manifest["visibility"]=="omniscient"
-          assert manifest["synthetic_simulation_only"] is True
-          assert analytics["schema"]=="gorge-batch-analytics-v1"
-          assert 1<=len(manifest["games"])<=500
-          allowed={"manifest.json","analytics.json"}
-          for entry in manifest["games"]:
-              name=entry["file"]
-              assert re.fullmatch(r"gorge-seed-[0-9]+\.ui\.json",name)
-              assert name not in allowed
-              allowed.add(name)
-              raw=(source/name).read_bytes()
-              if "ui_sha256" in entry:
-                  assert hashlib.sha256(raw).hexdigest()==entry["ui_sha256"]
-              assert public_replay_is_safe(json.loads(raw),entry)
-          assert {p.name for p in source.iterdir()}==allowed
-          for target in (Path("web/pages/data/gorge"),):
-              target.mkdir(parents=True,exist_ok=True)
-              for name in allowed: shutil.copyfile(source/name,target/name)
-          print(f"Validated {len(manifest['games'])} public replays")
-          PY
+          python -m tools.merge_gorge_results_catalog \
+            --source "$RUNNER_TEMP/public_ui" \
+            --destination web/pages/data/gorge
           python -m tools.build_pages_deck_lab --output "$RUNNER_TEMP/pages-verify" > /dev/null
       - name: Commit catalog to repository, independently of Pages deployment
         run: |
