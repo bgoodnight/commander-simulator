@@ -1,0 +1,101 @@
+name: Convert verified Gorge recordings to public replay artifact
+
+# Reprocess an earlier simulation artifact with a newer converter, without
+# invoking Gorge and without publishing any files to GitHub Pages.
+on:
+  pull_request:
+    paths:
+      - "tools/gorge_results_pipeline.py"
+      - "tests/test_gorge_results_pipeline.py"
+      - ".github/workflows/gorge-results-convert.yml"
+  push:
+    branches: [main]
+    paths:
+      - "tools/gorge_results_pipeline.py"
+      - ".github/workflows/gorge-results-convert.yml"
+  workflow_dispatch:
+    inputs:
+      simulation_run_id:
+        description: "Successful Gorge validation workflow run ID"
+        required: true
+        type: string
+      artifact_name:
+        description: "Native recording artifact name"
+        required: true
+        default: gorge-phase1-20-game-validation
+        type: string
+      max_replays:
+        description: "Detailed replays retained (analytics always include every game)"
+        required: true
+        default: "20"
+        type: string
+
+permissions:
+  contents: read
+  actions: read
+
+jobs:
+  convert:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Verify conversion and public data tests
+        run: |
+          python -m unittest tests.test_gorge_ui_export tests.test_gorge_public_state tests.test_gorge_results_pipeline tests.test_gorge_catalog_merge -v
+      - name: Download existing native simulation results
+        env:
+          GH_TOKEN: ${{ github.token }}
+          GH_REPO: ${{ github.repository }}
+          RUN_ID: ${{ inputs.simulation_run_id || '41887811966' }}
+          ARTIFACT: ${{ inputs.artifact_name || 'gorge-phase1-20-game-validation' }}
+        run: |
+          case "$RUN_ID" in *[!0-9]*|'') echo "Invalid run ID"; exit 1;; esac
+          gh run download "$RUN_ID" --name "$ARTIFACT" --dir "$RUNNER_TEMP/source"
+          test -f "$RUNNER_TEMP/source/gorge_runs.jsonl"
+          test -d "$RUNNER_TEMP/source/native"
+      - name: Convert, validate and catalog verified source recordings
+        env:
+          REPLAY_LIMIT: ${{ inputs.max_replays || '20' }}
+        run: |
+          python -m tools.gorge_results_pipeline \
+            --native-dir "$RUNNER_TEMP/source/native" \
+            --runs "$RUNNER_TEMP/source/gorge_runs.jsonl" \
+            --existing-dir web/pages/data/gorge \
+            --out "$RUNNER_TEMP/public_ui" \
+            --max-replays "$REPLAY_LIMIT" --include-hidden
+          python - <<'PY'
+          from pathlib import Path
+          import json,os
+          p=Path(os.environ["RUNNER_TEMP"])/"public_ui"
+          m=json.loads((p/"manifest.json").read_text())
+          a=json.loads((p/"analytics.json").read_text())
+          assert len(m["games"])>=20 and len(a["games"])>=20
+          assert all((p/g["file"]).is_file() for g in m["games"])
+          with open(os.environ["GITHUB_STEP_SUMMARY"],"a") as f:
+              f.write(f"# Gorge replay export\n\n{len(m['games'])} discoverable replays and {len(a['games'])} analytics rows.\n\n")
+              f.write("Native log, intents and object catalog were not published.\n")
+          PY
+      - name: Verify complete static website build with expanded Gorge catalog
+        run: |
+          python - <<'PY'
+          from pathlib import Path
+          import shutil,os
+          src=Path(os.environ["RUNNER_TEMP"])/"public_ui"
+          dest=Path("web/pages/data/gorge")
+          for path in src.iterdir():
+              if path.is_file():
+                  shutil.copy2(path,dest/path.name)
+          PY
+          python -m tools.build_pages_deck_lab --output "$RUNNER_TEMP/gorge-pages-verify" > /dev/null
+          test -f "$RUNNER_TEMP/gorge-pages-verify/gorge-data/analytics.json"
+      - name: Stage verified public files as a reusable artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: gorge-ui-publication
+          path: ${{ runner.temp }}/public_ui/
+          retention-days: 14
+          if-no-files-found: error

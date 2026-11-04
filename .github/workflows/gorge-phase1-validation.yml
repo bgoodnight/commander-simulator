@@ -126,6 +126,21 @@ jobs:
           if issues:
               raise SystemExit("; ".join(issues))
           PY
+      - name: Convert validated recordings into reusable UI replay catalog and compact analytics
+        run: |
+          python -m tools.gorge_results_pipeline \
+            --native-dir "$RUNNER_TEMP/results/native" \
+            --runs "$RUNNER_TEMP/results/gorge_runs.jsonl" \
+            --existing-dir web/pages/data/gorge \
+            --out "$RUNNER_TEMP/public_ui" \
+            --max-replays 20 --include-hidden
+      - name: Save publication-ready sanitized replays separately from raw Gorge traces
+        uses: actions/upload-artifact@v4
+        with:
+          name: gorge-ui-publication
+          path: ${{ runner.temp }}/public_ui/
+          retention-days: 14
+          if-no-files-found: error
       - name: Retain complete evidence as private-in-workflow artifact, not Pages content
         if: always()
         uses: actions/upload-artifact@v4

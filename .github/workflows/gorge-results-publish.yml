@@ -1,0 +1,66 @@
+name: Publish verified Gorge UI artifact to Pages data
+
+# Deliberately separate from simulation execution and conversion. A publication
+# retry never reruns a game; only independently verified converted data ships.
+on:
+  workflow_run:
+    workflows: ["Convert verified Gorge recordings to public replay artifact", "Gorge · player decks versus rotating precon opponents"]
+    branches: [main]
+    types: [completed]
+  workflow_dispatch:
+    inputs:
+      conversion_run_id:
+        description: "Successful Gorge results conversion workflow run ID"
+        required: true
+        type: string
+
+permissions:
+  contents: write
+  actions: write
+
+concurrency:
+  group: gorge-results-publish
+  cancel-in-progress: false
+
+jobs:
+  publish:
+    if: github.event_name == 'workflow_dispatch' || github.event.workflow_run.conclusion == 'success'
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: main
+          fetch-depth: 0
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Download validated replay-only artifact
+        env:
+          GH_TOKEN: ${{ github.token }}
+          GH_REPO: ${{ github.repository }}
+          RUN_ID: ${{ inputs.conversion_run_id || github.event.workflow_run.id }}
+        run: |
+          case "$RUN_ID" in *[!0-9]*|'') echo "Invalid conversion run ID"; exit 1;; esac
+          gh run download "$RUN_ID" --name gorge-ui-publication --dir "$RUNNER_TEMP/public_ui"
+      - name: Validate, merge and verify sanitized public catalog
+        run: |
+          python -m tools.merge_gorge_results_catalog \
+            --source "$RUNNER_TEMP/public_ui" \
+            --destination web/pages/data/gorge
+          python -m tools.build_pages_deck_lab --output "$RUNNER_TEMP/pages-verify" > /dev/null
+      - name: Commit catalog to repository, independently of Pages deployment
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add -A web/pages/data/gorge/
+          if git diff --cached --quiet; then
+            echo "No changed public replays" >> "$GITHUB_STEP_SUMMARY"
+            exit 0
+          fi
+          git commit -m "Publish validated Gorge replay catalog and analytics"
+          git push origin HEAD:main
+          # GITHUB_TOKEN-originated pushes do not trigger another push workflow.
+          # Explicit dispatch keeps Pages publication independent of simulation.
+          GH_TOKEN="${{ github.token }}" gh workflow run deck-lab-pages.yml --ref main
+          echo "Validated catalog committed and Pages export explicitly dispatched." >> "$GITHUB_STEP_SUMMARY"
