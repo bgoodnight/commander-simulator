@@ -59,7 +59,17 @@ jobs:
             exit 0
           fi
           git commit -m "Publish validated Gorge replay catalog and analytics"
-          git push origin HEAD:main
+          # Concurrent authorized commits may advance main while the catalog
+          # is being built. Rebase only our validated data commit; never force.
+          for attempt in 1 2 3; do
+            git fetch origin main
+            git rebase origin/main
+            if git push origin HEAD:main; then break; fi
+            if [ "$attempt" -eq 3 ]; then
+              echo "Main advanced repeatedly; publication needs a fresh retry"
+              exit 1
+            fi
+          done
           # GITHUB_TOKEN-originated pushes do not trigger another push workflow.
           # Explicit dispatch keeps Pages publication independent of simulation.
           GH_TOKEN="${{ github.token }}" gh workflow run deck-lab-pages.yml --ref main
