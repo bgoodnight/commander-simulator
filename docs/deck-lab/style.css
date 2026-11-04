@@ -2075,3 +2075,20 @@ body:has(#pane-records:not([hidden])) .compact-selection{margin-bottom:3px}
   .gorge-replay-event-list{min-width:0;max-width:100%;overflow-x:hidden}
   .gorge-replay-samples{min-width:0}
 }
+
+/* The original Deck Lab metrics, insight, results and turn-review aesthetics
+   are reused by the gorge-native data adapter. */
+.gorge-dashboard{display:grid;gap:1rem;min-width:0;max-width:100%;margin:1rem 0}
+.gorge-dashboard .simulation-snapshot{display:block}
+.gorge-dashboard .simulation-snapshot-metrics{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(180px,100%),1fr));gap:.75rem}
+.gorge-dashboard .simulation-snapshot-metric{display:grid;gap:.25rem;min-width:0}
+.gorge-dashboard .simulation-snapshot-metric strong{font-size:1.5rem;font-variant-numeric:tabular-nums}
+.gorge-dashboard .board-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(210px,100%),1fr));gap:.75rem}
+.gorge-dashboard .insight-card{min-width:0;overflow-wrap:anywhere}
+.gorge-dashboard .insight-card h3{font-size:1.1rem;margin:.45rem 0}
+.gorge-dashboard .gorge-deck-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(220px,100%),1fr));gap:.6rem;margin:.8rem 0}
+.gorge-dashboard .gorge-deck-result{display:grid;gap:.35rem;min-width:0;overflow-wrap:anywhere;padding:.85rem}
+.gorge-dashboard .gorge-turn-select{width:100%;max-width:32rem;margin:.7rem 0}
+.gorge-dashboard .gorge-turn-detail{min-width:0}
+.gorge-dashboard .gorge-development{padding:1rem}
+@media(max-width:650px){.gorge-dashboard{grid-template-columns:minmax(0,1fr)}.gorge-dashboard .gorge-deck-grid{grid-template-columns:minmax(0,1fr)}}
