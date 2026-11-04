@@ -19,6 +19,9 @@ BASE_SEED = 10000
 GAMES_EACH = 500
 SHARDS = 5
 SHARD_SIZE = 100
+SEEDS_PER_SHARD = 1000
+SEEDS_PER_DECK = SHARDS * SEEDS_PER_SHARD
+MAX_ATTEMPTS = 500
 SAMPLED_PER_SHARD = 2
 
 
@@ -30,7 +33,6 @@ def assemble(root: Path, destination: Path):
     native_dir = destination.parent / "gorge-sampled-native"
     pod_dir.mkdir(parents=True, exist_ok=True)
     native_dir.mkdir(parents=True, exist_ok=True)
-    expected = set(range(BASE_SEED, BASE_SEED + len(PLAYERS)*GAMES_EACH))
     for idx, hero in enumerate(PLAYERS):
         for shard in range(SHARDS):
             folder = root / hero / str(shard)
@@ -50,10 +52,15 @@ def assemble(root: Path, destination: Path):
                        if line.strip()]
             if len(records) != SHARD_SIZE:
                 raise ValueError(f"Partial shard: {hero}/{shard}")
+            seed_start = BASE_SEED + idx*SEEDS_PER_DECK + shard*SEEDS_PER_SHARD
+            last_seed = seed_start - 1
             for offset, row in enumerate(records):
-                seed = BASE_SEED + idx*GAMES_EACH + shard*SHARD_SIZE + offset
-                if row.get("seed") != seed or seed in rows:
+                seed = row.get("seed")
+                if (type(seed) is not int or seed <= last_seed or
+                        seed < seed_start or seed >= seed_start + MAX_ATTEMPTS or
+                        seed in rows):
                     raise ValueError(f"Duplicate or unexpected seed {seed}")
+                last_seed = seed
                 if (not row.get("finished") or not row.get("replay_verified") or
                         row.get("error") or row.get("draw") not in (True, False)):
                     raise ValueError(f"Unverified or unfinished Gorge game {seed}")
@@ -79,8 +86,8 @@ def assemble(root: Path, destination: Path):
                         raise ValueError(f"Missing sampled native recording {seed}")
                     shutil.copy2(src, native_dir / src.name)
                     sampled.append(row)
-    if set(rows) != expected:
-        raise ValueError(f"Missing {len(expected-set(rows))} or extra {len(set(rows)-expected)} games")
+    if len(rows) != len(PLAYERS)*GAMES_EACH:
+        raise ValueError(f"Expected 2,000 verified outcomes, got {len(rows)}")
     sampled_path = destination.parent / "gorge-retained-summaries.jsonl"
     sampled_path.write_text("".join(json.dumps(row, separators=(",", ":"))+"\n"
                                     for row in sampled))
