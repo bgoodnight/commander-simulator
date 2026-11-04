@@ -429,53 +429,195 @@ function init(){
   const loadedGames=new Map();
   let manifestVisibility=null,catalogReady=false,requestId=0;
   const catalog=[];
-  // Full-cohort outcomes can be much larger than retained detailed replays.
-  // Never represent a sample-only card/turn panel as a 500-game measurement.
-  const analyticsPromise=fetch("./gorge-data/analytics.json",{cache:"no-store"})
-    .then(response=>{
-      if(!response.ok)throw Error("Verified outcome catalog unavailable");
-      return response.json();
-    }).then(value=>{
-      if(value.schema!=="gorge-batch-analytics-v1"||
-         !Array.isArray(value.games))
-        throw Error("Invalid Gorge outcome catalog");
-      return value.games;
+  // Full-cohort report is precomputed from all verified Gorge outcomes.
+  // This small summary is the sole source of headline statistics and
+  // opponent/seat/color/archetype regressions. Replays are drilldown evidence.
+  const cohortPromise=fetch("./gorge-data/cohort.json",{cache:"no-store"})
+    .then(async response=>{
+      if(!response.ok)throw Error("Full-cohort report unavailable");
+      const doc=await response.json();
+      if(doc.schema!=="gorge-cohort-report-v1"||
+         !Number.isInteger(doc.total_verified_games)||!doc.decks)
+        throw Error("Invalid Gorge full-cohort contract");
+      return doc;
     }).catch(error=>{
-      console.warn("Gorge full-cohort outcomes unavailable",error);
+      console.warn("Full-cohort report not available",error);
       return null;
     });
+  function cohortPercent(x){
+    return Number.isFinite(x)?(x*100).toFixed(1)+"%":"—";
+  }
+  function cohortStatsPanel(stats){
+    const root=node("section","gorge-full-cohort-dashboard");
+    const head=node("div","gorge-full-cohort-title");
+    head.append(node("h3",null,"Game Outcomes · Complete Gorge Cohort"),
+      node("p","small",stats.n+" verified games · "+
+        stats.detailed_replay_count+" detailed replays retained"));
+    root.append(head);
+    const metrics=node("div","gorge-full-cohort-metrics");
+    for(const [label,value,detail] of [
+      ["Wins",cohortPercent(stats.win_rate),stats.wins+" / "+stats.n+" games"],
+      ["Losses",cohortPercent(stats.losses/stats.n),stats.losses+" / "+stats.n+" games"],
+      ["Draws",cohortPercent(stats.draws/stats.n),stats.draws+" / "+stats.n+" games"],
+      ["Game length",stats.median_game_turns===null?"—":
+        String(stats.median_game_turns), "Median recorded game turns · "+
+          stats.game_turns_coverage+" games"],
+    ]){
+      const metric=node("div","gorge-full-cohort-metric");
+      metric.append(node("span","small",label),node("strong",null,value),
+        node("span","micro",detail));
+      metrics.append(metric);
+    }
+    root.append(metrics);
+    if(Array.isArray(stats.wilson_95)){
+      root.append(node("p","micro",
+        "Win-rate Wilson interval (descriptive, assuming independent games): "+
+        cohortPercent(stats.wilson_95[0])+"–"+
+        cohortPercent(stats.wilson_95[1])+
+        ". AI pods and deterministic seed rotations may violate independence."));
+    }
+    return root;
+  }
+  function cohortGroupPanel(stats){
+    const details=node("details","gorge-full-cohort-groups");
+    details.append(node("summary",null,"Matchups and archetypes · all "+
+      stats.n+" verified games"));
+    const chooser=node("select","gorge-full-cohort-select");
+    chooser.setAttribute("aria-label","Compare full-cohort performance by");
+    for(const [name,label] of [
+      ["opponents","Opponent precon present"],
+      ["pods","Whole-table matchup"],
+      ["archetypes","Opponent archetype present"],
+      ["colors","Opponent color present"],
+      ["seats","Player seat"],
+    ]){
+      const opt=node("option",null,label);
+      opt.value=name;chooser.append(opt);
+    }
+    const dataRoot=node("div","gorge-full-cohort-table-wrap");
+    const paint=()=>{
+      dataRoot.replaceChildren();
+      const table=node("table","gorge-full-cohort-table");
+      const header=node("tr");
+      for(const cell of ["Group","Games","Wins","Losses","Draws","Win rate"]){
+        header.append(node("th",null,cell));
+      }
+      const top=node("thead");
+      top.append(header);
+      table.append(top);
+      const body=node("tbody");
+      for(const group of stats.groups?.[chooser.value]||[]){
+        const row=node("tr");
+        for(const cell of [group.name,group.n,group.wins,group.losses,
+                           group.draws,cohortPercent(group.win_rate)]){
+          row.append(node("td",null,String(cell)));
+        }
+        body.append(row);
+      }
+      table.append(body);
+      dataRoot.append(table);
+    };
+    chooser.addEventListener("change",paint);
+    details.append(node("p","micro","A precon, archetype or color is counted once "+
+      "when present among the three opponents. Win rates describe the whole "+
+      "four-player game, not isolated head-to-head effects."),
+      chooser,dataRoot);
+    paint();
+    return details;
+  }
+  function cohortRegressionPanel(stats){
+    const details=node("details","gorge-full-cohort-regressions");
+    details.append(node("summary",null,
+      "Exploratory elastic-net regressions · full verified cohort"));
+    const chooser=node("select","gorge-full-cohort-select");
+    chooser.setAttribute("aria-label","Regression predictor family");
+    for(const [value,label] of [
+      ["opponents","Opponent deck presence + player seat"],
+      ["archetypes","Opponent archetypes + player seat"],
+      ["colors","Opponent colors + player seat"]]){
+      const option=node("option",null,label);
+      option.value=value;chooser.append(option);
+    }
+    const display=node("div","gorge-regression-results");
+    const paint=()=>{
+      display.replaceChildren();
+      const fit=stats.regressions?.[chooser.value];
+      if(!fit||fit.status!=="ready"){
+        display.append(node("p","small",fit?.reason||
+          "This player deck has insufficient decisive outcomes for regression."));
+        return;
+      }
+      display.append(node("p","small",
+        fit.n+" decisive games ("+fit.draws_excluded+
+        " draws excluded) · three-fold held-out log loss "+
+        fit.cv_log_loss+" vs null "+fit.null_log_loss+
+        " · elastic-net penalty "+fit.alpha));
+      const table=node("table","gorge-full-cohort-table");
+      const head=node("thead");
+      const row=node("tr");
+      for(const col of ["Predictor","Coefficient","Odds ratio","Games exposed"]){
+        row.append(node("th",null,col));
+      }
+      head.append(row);
+      table.append(head);
+      const body=node("tbody");
+      for(const p of (fit.predictors||[]).slice(0,15)){
+        const tr=node("tr");
+        for(const value of [p.feature,p.coefficient,p.odds_ratio,p.games_exposed]){
+          tr.append(node("td",null,String(value)));
+        }
+        body.append(tr);
+      }
+      table.append(body);
+      display.append(table);
+      display.append(node("p","micro",fit.limitations||
+        "Exploratory penalized coefficients, not causal effects."));
+    };
+    chooser.addEventListener("change",paint);
+    details.append(chooser,display);
+    paint();
+    return details;
+  }
   async function presentOutcomeSummary(key,sampledCount,ticket){
-    const rows=await analyticsPromise;
+    const report=await cohortPromise;
     if(ticket!==requestId||!available.size)return;
     const outcomes=$("game-outcome-results");
     if(!outcomes)return;
-    const prior=outcomes.querySelector(".gorge-full-cohort-summary");
-    if(prior)prior.remove();
+    for(const x of outcomes.querySelectorAll(
+      ".gorge-full-cohort-dashboard,.gorge-full-cohort-groups,"+
+      ".gorge-full-cohort-regressions,.gorge-sampled-insights-label")){
+      x.remove();
+    }
     const status=$("game-outcome-status");
-    if(!rows){
-      if(status)status.textContent=sampledCount+
-        " sampled Gorge replays · full-cohort analytics unavailable";
+    const full=report?.decks?.[key];
+    if(!full){
+      // Never present 10 sampled replay outcomes as 500-game statistics.
+      const hero=outcomes.querySelector(".game-outcome-hero");
+      if(hero)hero.remove();
+      const message=node("p","gorge-full-cohort-dashboard",
+        "Full-cohort results unavailable for this deck. "+
+        "Replay-derived card insights below use "+sampledCount+
+        " retained recordings only.");
+      outcomes.prepend(message);
+      if(status)status.textContent="Full-cohort statistics unavailable · "+
+        sampledCount+" sampled replays";
       return;
     }
-    const valid=rows.filter(r=>
-      r&&r.finished===true&&r.replay_verified===true&&
-      Number.isInteger(r.player_seat)&&r.player_seat>=0&&r.player_seat<4&&
-      Array.isArray(r.decks)&&r.decks[r.player_seat]===key&&
-      (r.player_deck===undefined||r.player_deck===key)&&
-      (r.draw===true||Number.isInteger(r.winner_seat)));
-    if(!valid.length)return;
-    const wins=valid.filter(r=>!r.draw&&r.winner_seat===r.player_seat).length;
-    const draws=valid.filter(r=>r.draw).length;
-    const losses=valid.length-wins-draws;
-    const pct=(100*wins/valid.length).toFixed(1);
-    const summary=node("p","gorge-full-cohort-summary",
-      "Full verified cohort: "+valid.length+" games · "+wins+" wins ("+pct+
-      "%) · "+losses+" losses · "+draws+" draws. Detailed turn and card insights "+
-      "below use "+sampledCount+" retained source-backed replay"+
-      (sampledCount===1?"":"s")+", not the entire cohort.");
-    outcomes.prepend(summary);
-    if(status)status.textContent=valid.length+" verified Gorge games · "+
-      sampledCount+" detailed sampled replays · source-attributed player seats";
+    const hero=outcomes.querySelector(".game-outcome-hero");
+    if(hero)hero.remove();
+    const outdated=outcomes.querySelector(".elastic-net-panel");
+    if(outdated)outdated.remove();
+    const sampleTitle=node("p","gorge-sampled-insights-label",
+      "Card and turn insights below: "+sampledCount+
+      " retained detailed replays (not all "+full.n+" games). "+
+      "Only the panels above use the full verified cohort.");
+    const grid=outcomes.querySelector(".game-outcome-grid");
+    if(grid)grid.prepend(sampleTitle);
+    const panels=[cohortStatsPanel(full),cohortGroupPanel(full),
+      cohortRegressionPanel(full)];
+    outcomes.prepend(...panels);
+    if(status)status.textContent=full.n+" verified Gorge outcomes · "+
+      sampledCount+" detailed sample replays · complete-cohort statistics";
   }
   // The catalog records the designated player seat. A small number of
   // verified Gorge recordings predate embedding that attribution in replay
