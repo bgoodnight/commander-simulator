@@ -68,7 +68,9 @@ def check():
             timeline=tracker.locator(".gorge-example-timeline")
             assert timeline.locator(".gorge-original-turn").count()>=9, \
                 "Draw/opening plus individual turn rows expected"
-            assert "Opening" in timeline.locator(".gorge-original-turn").first.inner_text()
+            assert "Played Swamp" in timeline.locator(".gorge-original-turn").nth(1).inner_text(), \
+                "Public-zone object identity should name the first played land"
+            assert "Draw" in timeline.locator(".gorge-original-turn").first.inner_text()
             turn=timeline.locator(".gorge-original-turn").nth(1)
             assert turn.locator(".insight-turn-cover").count()==1
             assert turn.locator(".insight-turn-metrics").count()==1
@@ -88,6 +90,16 @@ def check():
             # turns, before raw-replay changes re-render the results gallery.
             page.set_viewport_size({"width":390,"height":844})
             tiles.first.scroll_into_view_if_needed()
+            picker=tracker.locator(".gorge-insight-example-select").bounding_box()
+            reviewer_button=tracker.locator(".insight-example-full-link").bounding_box()
+            assert picker and reviewer_button
+            assert abs(picker["y"]-reviewer_button["y"])<=3, \
+                "Classic mobile layout keeps picker and full-reviewer action side by side"
+            assert picker["x"]+picker["width"]<reviewer_button["x"], \
+                "Picker precedes the right-hand reviewer button"
+            heights=[timeline.locator(".gorge-original-turn .insight-turn-row-summary").nth(i).bounding_box()["height"] for i in range(3)]
+            assert all(45<=h<=85 for h in heights), \
+                "Classic collapsed turn rows must stay compact: "+str(heights)
             page.screenshot(path=str(OUT/"original-insight-mobile.png"),full_page=False)
             widths=page.evaluate("""() => ({
               viewport: window.innerWidth,
