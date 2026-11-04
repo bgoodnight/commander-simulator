@@ -2014,6 +2014,8 @@
     if(signals.coverage){
       const kinds=isGorge?
         ["played","creature","artifact","enchantment","instant","spell","land",
+          ...(runs.some(r=>r.gorge_source?.visibility==="omniscient")?
+             ["seen","seenCreature","unplayed","longest"]:[]),
           "activated"]:
         ["played","creature","artifact","enchantment",
           "instant","spell","land","seen","seenCreature","unplayed","longest",
