@@ -1,7 +1,7 @@
-/* Gorge data projected into the ORIGINAL November 3 Deck Lab Results DOM.
- * Keep its art-backed CSS, navigation, metric tiles, insight cards and
- * expandable timeline. Never replace the user's UI with a second dashboard.
- * Source: sanitized gorge-ui-replay-v1 public games, not retired Python runs.
+/* Original Deck Lab's art-backed card insights and nested example-game turns.
+ * Data is exclusively verified, sanitized Gorge public replay events.
+ * Native turn-entry snapshots are NEVER represented as end-of-turn states.
+ * Hidden hand identities, individual draws and game winners are unavailable.
  */
 (function(root,factory){
   const api=factory();
@@ -18,411 +18,620 @@ const el=(tag,cls,text)=>{
 };
 const info=name=>typeof window!=="undefined"&&window.GorgeDeckLabCardInfo?
   window.GorgeDeckLabCardInfo(name):null;
+const openCard=name=>typeof window!=="undefined"&&window.GorgeDeckLabOpenCard?.(name);
+const fmt=n=>Number.isFinite(n)?String(n):"—";
+const colors=["W","U","B","R","G","C"];
 function valid(g){
   return !!g&&g.schema==="gorge-ui-replay-v1"&&g.engine==="gorge"&&
-    g.visibility==="public_events_only"&&g.decks?.length===4&&
-    Array.isArray(g.turns)&&Array.isArray(g.snapshots)&&
+    g.visibility==="public_events_only"&&Array.isArray(g.decks)&&g.decks.length===4&&
+    Array.isArray(g.turns)&&Array.isArray(g.snapshots)&&g.snapshots.length>0&&
     g.snapshots.every(s=>s.boundary==="first_pending_decision_of_turn"&&
       Array.isArray(s.players)&&s.players.length===4);
 }
-function actor(e){
-  // The native source omits zero-valued player IDs for seat 0.
-  return Number.isInteger(e.player)?e.player:0;
-}
-function occurrences(g,seat){
-  const events=g.turns.flatMap(t=>(t.events||[]).map(e=>({event:e,turn:t.turn})));
-  return events.filter(x=>actor(x.event)===seat);
+function actor(e){return Number.isInteger(e.player)?e.player:0;}
+function ownTurnFor(nativeTurn,starts){
+  let n=0;
+  for(const start of starts)if(start<=nativeTurn)n++;else break;
+  return Math.max(1,n);
 }
 function analyze(g,seat){
   if(!valid(g)||!Number.isInteger(seat)||seat<0||seat>3)
-    throw Error("Expected verified Gorge public game and seat");
-  const all=occurrences(g,seat),counts=new Map(),castTurns=new Map();
-  let casts=0,lands=0,tokens=0,mana=0;
-  for(const {event:e,turn} of all){
-    if(e.kind==="cast"){
-      casts++;
-      if(e.card_name){
-        counts.set(e.card_name,(counts.get(e.card_name)||0)+1);
-        const a=castTurns.get(e.card_name)||[];
-        a.push(turn);castTurns.set(e.card_name,a);
-      }
-    }else if(e.kind==="land_played")lands++;
-    else if(e.kind==="token_created")tokens++;
-    else if(e.kind==="mana"&&Number.isFinite(e.amount))mana+=Math.max(0,e.amount);
-  }
-  const ranked=[...counts].map(([name,count])=>({name,count,turns:castTurns.get(name)}))
-    .sort((a,b)=>b.count-a.count||a.name.localeCompare(b.name));
+    throw Error("Expected verified public Gorge Commander game and seat");
   const own=g.turns.filter(t=>t.turn>0&&t.seat===seat);
+  const starts=own.map(t=>t.turn);
+  const casts=new Map();
+  let castCount=0,lands=0,tokens=0,mana=0;
+  for(const t of g.turns){
+    for(const e of t.events||[]){
+      if(actor(e)!==seat)continue;
+      if(e.kind==="cast"){
+        castCount++;
+        if(e.card_name){
+          const row=casts.get(e.card_name)||{name:e.card_name,count:0,turns:[],nativeTurns:[]};
+          row.count++;row.turns.push(ownTurnFor(t.turn,starts));
+          row.nativeTurns.push(t.turn);casts.set(e.card_name,row);
+        }
+      }else if(e.kind==="land_played")lands++;
+      else if(e.kind==="token_created")tokens++;
+      else if(e.kind==="mana"&&Number(e.amount)>0)mana+=Number(e.amount);
+    }
+  }
   const timeline=own.map((t,i)=>{
-    const next=own[i+1];
+    const next=own[i+1]||null;
     const range=g.turns.filter(x=>x.turn>=t.turn&&(!next||x.turn<next.turn));
-    const actions=range.flatMap(x=>(x.events||[]).filter(e=>actor(e)===seat)
-      .map(e=>({event:e,turn:x.turn})));
-    const atStart=g.snapshots.find(s=>s.turn===t.turn)||null;
-    const atNext=next?g.snapshots.find(s=>s.turn===next.turn)||null:null;
     return {number:i+1,nativeTurn:t.turn,nextTurn:next?.turn||null,
-      actions,atStart,atNext};
+      actions:range.flatMap(x=>(x.events||[]).filter(e=>actor(e)===seat)
+        .map(event=>({event,turn:x.turn}))),
+      atStart:g.snapshots.find(s=>s.turn===t.turn)||null,
+      atNext:next?g.snapshots.find(s=>s.turn===next.turn)||null:null};
   });
-  return {seat,key:g.decks[seat],game:g,casts,lands,tokens,mana,ranked,timeline};
+  return {seat,key:g.decks[seat],game:g,casts:castCount,lands,tokens,mana,
+    ranked:[...casts.values()].sort((a,b)=>b.count-a.count||a.name.localeCompare(b.name)),
+    timeline};
 }
 function summary(games){
   const decks=new Map();
-  for(const g of games.filter(valid))
+  for(const g of games.filter(valid)){
     for(let seat=0;seat<4;seat++){
       const a=analyze(g,seat);
       const d=decks.get(a.key)||{name:a.key,games:0,casts:0,lands:0,tokens:0};
-      d.games++;d.casts+=a.casts;d.lands+=a.lands;d.tokens+=a.tokens;
-      decks.set(a.key,d);
+      d.games++;d.casts+=a.casts;d.lands+=a.lands;d.tokens+=a.tokens;decks.set(a.key,d);
     }
+  }
   return {decks:[...decks.values()]};
 }
 function art(name){
   const c=info(name);
   return c?.art||c?.image||null;
 }
-function artImage(name,css){
+function artImage(name,cls){
   const src=art(name);
   if(!src)return null;
-  const img=el("img",css);
+  const img=el("img",cls);
   img.src=src;img.alt="";img.loading="lazy";img.referrerPolicy="no-referrer";
   return img;
 }
-function cardLink(name){
-  const card=info(name);
-  const n=el(card?.oracle_id?"button":"a","insight-action-card");
-  if(card?.oracle_id){
-    n.type="button";
-    n.addEventListener("click",()=>window.GorgeDeckLabOpenCard?.(name));
+function cardButton(name,cls="insight-action-card"){
+  const known=info(name);
+  const btn=el(known?.oracle_id?"button":"a",cls);
+  if(known?.oracle_id){
+    btn.type="button";
+    btn.addEventListener("click",()=>openCard(name));
   }else{
-    n.href="https://scryfall.com/search?q="+encodeURIComponent('!"'+name+'"');
-    n.target="_blank";n.rel="noopener noreferrer";
+    btn.href="https://scryfall.com/search?q="+encodeURIComponent('!"'+name+'"');
+    btn.target="_blank";btn.rel="noopener noreferrer";
   }
-  const img=artImage(name,"insight-action-art");
-  if(img)n.append(img);
-  n.append(el("span","insight-action-name",name));
-  return n;
+  const image=artImage(name,"insight-action-art");
+  if(image)btn.append(image);
+  btn.append(el("span","insight-action-name",name));
+  return btn;
 }
-function manaPips(mana){
-  const wrap=el("span","gorge-mana-pips");
-  for(const [color,count] of Object.entries(mana)){
-    if(!/^[WUBRGC]$/.test(color)||count<=0)continue;
-    const holder=el("span","gorge-mana-pip");
-    const img=el("img","mana-symbol");
-    img.src="https://svgs.scryfall.io/card-symbols/"+color+".svg";
-    img.alt="{"+color+"}";img.title="{"+color+"}";img.loading="lazy";
-    img.onerror=()=>img.replaceWith(el("span","mana-symbol-fallback",color));
-    holder.append(img,el("span","insight-mana-count",count>1?"×"+count:""));
-    wrap.append(holder);
+function manaPips(out){
+  const holder=el("span","gorge-mana-pips");
+  for(const color of colors){
+    const count=out[color]||0;
+    if(count<=0)continue;
+    const pip=el("span","gorge-mana-pip");
+    const icon=el("img","mana-symbol");
+    icon.src="https://svgs.scryfall.io/card-symbols/"+color+".svg";
+    icon.alt="{"+color+"}";icon.title="{"+color+"}";icon.loading="lazy";
+    icon.onerror=()=>icon.replaceWith(el("span","mana-symbol-fallback",color));
+    pip.append(icon);
+    if(count>1)pip.append(el("span","insight-mana-count","×"+count));
+    holder.append(pip);
   }
-  return wrap;
+  if(!holder.children.length)holder.append(el("span","gorge-zero-mana","0"));
+  return holder;
 }
-function metric(label,value,detail){
-  const n=el("div","simulation-snapshot-metric");
-  n.append(el("span","eyebrow",label),el("strong",null,value));
-  if(detail)n.append(el("span","micro",detail));
-  return n;
+function sourceMana(t){
+  const result={};
+  for(const {event:e} of t.actions)
+    if(e.kind==="mana"&&colors.includes(e.counter)&&Number(e.amount)>0)
+      result[e.counter]=(result[e.counter]||0)+Number(e.amount);
+  return result;
 }
-function hero(parent,name,records,primary){
+function median(nums){
+  const data=nums.filter(Number.isFinite).sort((a,b)=>a-b);
+  if(!data.length)return null;
+  const i=Math.floor(data.length/2);
+  return data.length%2?data[i]:(data[i-1]+data[i])/2;
+}
+function typeOf(name){
+  return String(info(name)?.type_line||"").split("—")[0].toLowerCase();
+}
+function cardGroups(records){
+  const cast=new Map();
+  for(const a of records){
+    for(const c of a.ranked){
+      let row=cast.get(c.name);
+      if(!row){row={name:c.name,count:0,turns:[],games:new Set(),examples:[]};cast.set(c.name,row);}
+      row.count+=c.count;row.turns.push(...c.turns);row.games.add(a.game.seed);
+      for(let i=0;i<c.turns.length;i++)
+        row.examples.push({analysis:a,ownTurn:c.turns[i],nativeTurn:c.nativeTurns[i]});
+    }
+  }
+  const all=[...cast.values()].sort((a,b)=>b.count-a.count||a.name.localeCompare(b.name));
+  const matching=pattern=>all.filter(c=>pattern.test(typeOf(c.name)));
+  return [
+    ["Most played card",all],
+    ["Most played creature",matching(/\bcreature\b/)],
+    ["Most played artifact",matching(/\bartifact\b/)],
+    ["Most played instant or sorcery",matching(/\b(instant|sorcery)\b/)]
+  ];
+}
+function commanderName(a){
+  const snap=a.game.snapshots.find(s=>s.players?.[a.seat]?.zones?.command?.length);
+  return snap?.players?.[a.seat]?.zones?.command?.[0]?.name||
+    a.key.replace(/_/g," ");
+}
+function hero(parent,records,active){
+  const name=commanderName(active);
   const frame=el("div","game-outcome-hero-frame");
-  const outer=el("section","panel game-outcome-card game-outcome-hero");
-  const head=el("div","game-outcome-hero-summary");
-  const portrait=artImage(name,"game-outcome-hero-art");
-  if(portrait)head.append(portrait);
+  const card=el("section","panel game-outcome-card game-outcome-hero");
+  const summary=el("div","game-outcome-hero-summary");
+  const picture=artImage(name,"game-outcome-hero-art");
+  if(picture)summary.append(picture);
   const copy=el("div","game-outcome-hero-copy");
-  copy.append(el("span","eyebrow","Gorge · verified Commander"),
-    el("strong","game-outcome-title",name.replace(/_/g," ")));
-  const stats=el("div","game-outcome-hero-stats");
-  const totals=[
+  copy.append(el("span","eyebrow","Full Commander · Gorge engine"),
+    el("strong","game-outcome-title",name));
+  const metrics=el("div","game-outcome-hero-stats");
+  for(const [number,label] of [
     [records.length,"Recorded games"],
     [records.reduce((n,a)=>n+a.casts,0),"Cast events"],
-    [records.reduce((n,a)=>n+a.lands,0),"Land plays"]
-  ];
-  for(const [value,label] of totals){
-    const n=el("div","game-outcome-hero-stat");
-    n.append(el("strong",null,value),el("span",null,label));stats.append(n);
+    [records.reduce((n,a)=>n+a.lands,0),"Land plays"]]){
+    const stat=el("div","game-outcome-hero-stat");
+    stat.append(el("strong",null,number),el("span",null,label));
+    metrics.append(stat);
   }
-  copy.append(stats,el("p","micro","Real four-player Gorge games · 40 starting life · verified winners not exported"));
-  head.append(copy);outer.append(head);frame.append(outer);parent.append(frame);
+  copy.append(metrics,
+    el("span","game-outcome-hero-meta",
+      "Verified 40-life Commander games · wins and matchup percentages pending outcome export"));
+  summary.append(copy);card.append(summary);frame.append(card);parent.append(frame);
 }
-function feature(parent,title,name,value,caption,examples){
-  const details=el("details","panel game-outcome-card insight-featured-panel");
+function turnNarration(t){
+  const parts=[];
+  for(const x of t.actions){
+    const e=x.event;
+    if(e.kind==="land_played")parts.push("Played a land");
+    else if(e.kind==="cast"&&e.card_name)parts.push("Played "+e.card_name);
+    else if(e.kind==="cast")parts.push("Cast an unnamed spell");
+    else if(e.kind==="token_created")parts.push("Created a token");
+  }
+  if(!parts.length)return "No named plays recorded";
+  return parts.join(", ");
+}
+function pill(value,icon,delta,caption){
+  const badge=el("span","insight-turn-metric"+
+    (Number.isFinite(delta)&&delta!==0?(delta>0?" is-gain":" is-loss"):""));
+  badge.title=caption;
+  badge.append(el("span",null,icon+" "+fmt(value)));
+  if(Number.isFinite(delta)&&delta!==0)
+    badge.append(el("span","gorge-metric-delta",
+      " ("+(delta>0?"+":"")+delta+")"));
+  return badge;
+}
+function zoneSummary(parent,title,icon,cards,opts={}){
+  const node=el("details","insight-end-zone");
+  if(opts.name)node.dataset.zone=opts.name;
+  const head=el("summary","insight-end-zone-label");
+  head.append(el("span","insight-end-zone-icon",icon),
+    el("span",null,title+" · "+cards.length));
+  node.append(head);
+  const list=el("div","insight-action-cards");
+  if(opts.private){
+    list.append(el("p","micro","Only the number of cards is published. Individual hand identities require a seat-authorized trace."));
+  }else if(!cards.length){
+    list.append(el("span","micro","None"));
+  }else for(const card of cards){
+    const name=typeof card==="string"?card:card.name;
+    if(name)list.append(cardButton(name));
+  }
+  node.append(list);parent.append(node);return node;
+}
+function zoneCategories(p){
+  const all=p.zones?.battlefield||[];
+  const match=pattern=>all.filter(card=>pattern.test(typeOf(card.name)));
+  const typed=card=>/\b(creature|artifact|enchantment|land|planeswalker|battle)\b/.test(typeOf(card.name));
+  return [
+    ["Creatures","♟",match(/\bcreature\b/),"creatures"],
+    ["Lands","◇",match(/\bland\b/),"lands"],
+    ["Artifacts","⚙",match(/\bartifact\b/),"artifacts"],
+    ["Enchantments","✦",match(/\benchantment\b/),"enchantments"],
+    ["Other permanents","◈",all.filter(card=>!typed(card)),"other"],
+    ["Graveyard","◆",p.zones?.graveyard||[],"graveyard"],
+    ["Exile","⊘",p.zones?.exile||[],"exile"]
+  ];
+}
+function statePanel(t,a){
+  const snap=t.atNext||t.atStart;
+  const section=el("section","insight-end-state gorge-boundary-state");
+  const label=t.atNext?"Next observed turn entry":"Recorded turn entry";
+  section.append(el("strong","insight-end-state-title",
+    label+" · not an end-of-turn snapshot"));
+  if(!snap){
+    section.append(el("p","micro","No verified state snapshot for this turn."));
+    return section;
+  }
+  const focus=snap.players[a.seat];
+  section.append(el("p","micro",
+    "Life "+focus.life+" · Hand "+focus.hand_count+
+    " · Library "+focus.library_count+
+    " · Battlefield "+(focus.zones?.battlefield?.length||0)+
+    " · Graveyard "+(focus.zones?.graveyard?.length||0)));
+  zoneSummary(section,"Hand","▤",Array(focus.hand_count).fill(null),
+    {name:"hand",private:true});
+  for(const [name,icon,cards,key] of zoneCategories(focus))
+    zoneSummary(section,name,icon,cards,{name:key});
+  const manaLine=el("div","insight-end-mana");
+  manaLine.append(el("strong",null,"Mana produced"),manaPips(sourceMana(t)));
+  section.append(manaLine);
+  const others=el("details","gorge-opponent-snapshots");
+  others.append(el("summary",null,"Table state · all four players"));
+  const grid=el("div","gorge-table-state-grid");
+  for(const p of snap.players){
+    const col=el("div","gorge-table-state-seat");
+    col.append(el("strong",null,a.game.decks[p.seat]),
+      el("span",null,"♥ "+p.life+" · Hand "+p.hand_count+
+        " · Battlefield "+(p.zones?.battlefield?.length||0)+
+        (p.lost?" · Eliminated":"")));
+    for(const key of ["battlefield","graveyard","exile"]){
+      const cards=p.zones?.[key]||[];
+      zoneSummary(col,key.charAt(0).toUpperCase()+key.slice(1),"◈",cards);
+    }
+    grid.append(col);
+  }
+  others.append(grid);section.append(others);
+  return section;
+}
+function turnRow(parent,t,a,options={}){
+  const row=el("details","insight-turn-row gorge-original-turn");
+  if(options.open)row.open=true;
+  const head=el("summary","insight-turn-row-summary");
+  const named=t.actions.filter(x=>x.event.kind==="cast"&&x.event.card_name);
+  const spotlight=named
+    .map(x=>({name:x.event.card_name,cmc:Number(info(x.event.card_name)?.mana_value)||0}))
+    .filter(x=>art(x.name)).sort((x,y)=>y.cmc-x.cmc)[0]?.name||
+    commanderName(a);
+  const cover=artImage(spotlight,"insight-turn-cover");
+  if(cover)head.append(cover);
+  head.append(el("strong","insight-turn-label","Turn "+t.number),
+    el("span","insight-turn-activity",turnNarration(t)));
+  const badges=el("span","insight-turn-metrics");
+  const current=t.atStart?.players?.[a.seat]||null;
+  const next=(t.atNext||t.atStart)?.players?.[a.seat]||null;
+  if(next){
+    const available=!!t.atNext&&!!current;
+    badges.append(pill(next.life,"♥",available?next.life-current.life:null,
+      "Life at "+(t.atNext?"next own turn entry":"this turn entry")+", not at end of turn"));
+    const hand=el("button","insight-turn-metric insight-hand-shortcut",
+      "▤ "+next.hand_count);
+    hand.type="button";
+    hand.title="Hand count at "+(t.atNext?"next own turn entry":"this turn entry")+
+      " · click to inspect available hand information";
+    hand.addEventListener("click",event=>{
+      event.preventDefault();event.stopPropagation();row.open=true;
+      const section=row.querySelector('[data-zone="hand"]');
+      if(section)section.open=true;
+    });
+    badges.append(hand);
+  }
+  const mana=el("span","insight-turn-metric insight-turn-mana");
+  mana.title="Positive mana-production events recorded during this turn cycle; mana spent is excluded";
+  mana.append(el("span","gorge-mana-label","Mana "),manaPips(sourceMana(t)));
+  badges.append(mana);
+  head.append(badges,el("span","insight-turn-expand","Explore"));
+  row.append(head);
+  const body=el("div","insight-turn-row-body");
+  const actions=t.actions.filter(x=>
+    ["cast","land_played","token_created","damage","life","mana"].includes(x.event.kind));
+  const actionPanel=el("section","insight-action-phase is-player");
+  actionPanel.append(el("h4","insight-action-phase-heading",
+    "Recorded actions · your turn "+t.number));
+  const list=el("div","insight-action-sequence");
+  const notable=actions.filter(x=>x.event.kind!=="mana");
+  if(!notable.length)list.append(el("p","micro","No named plays recorded."));
+  for(const {event:e,turn} of notable){
+    const item=el("div","insight-action-entry");
+    const verb=e.kind==="cast"?"Cast":e.kind==="land_played"?"Played":
+      e.kind==="token_created"?"Created":"Recorded";
+    const message=e.kind==="cast"?(e.card_name||"unidentified spell"):
+      e.kind==="land_played"?"a land (individual identity unavailable)":
+      e.kind==="token_created"?"a token":
+      e.kind==="damage"?"damage event "+(e.amount??""):
+      "life adjustment "+(e.amount??"");
+    item.append(el("span","insight-action-description",
+      verb+" "+message+(turn!==t.nativeTurn?" · during native turn "+turn:"")));
+    if(e.kind==="cast"&&e.card_name)item.append(cardButton(e.card_name));
+    list.append(item);
+  }
+  actionPanel.append(list);body.append(actionPanel,statePanel(t,a));
+  body.append(el("p","micro",
+    "The public export does not contain exact private draws or hand cards. State comparisons use verified turn-entry snapshots, not invented turn-end values."));
+  row.append(body);parent.append(row);
+  return row;
+}
+function openingRow(parent,a){
+  const first=a.timeline[0];
+  const p=first?.atStart?.players?.[a.seat];
+  const row=el("details","insight-turn-row gorge-original-turn gorge-opening-turn");
+  const summary=el("summary","insight-turn-row-summary");
+  const cover=artImage(commanderName(a),"insight-turn-cover");
+  if(cover)summary.append(cover);
+  summary.append(el("strong","insight-turn-label","Opening"),
+    el("span","insight-turn-activity",
+      "Opening observation · "+(p?fmt(p.hand_count):"unknown")+" cards in hand"));
+  const badges=el("span","insight-turn-metrics");
+  if(p){
+    badges.append(pill(p.life,"♥",null,"Life at first recorded own-turn entry"));
+    const hand=el("span","insight-turn-metric","▤ "+p.hand_count);
+    hand.title="Hand count only. Private card identities not published.";
+    badges.append(hand);
+  }
+  summary.append(badges,el("span","insight-turn-expand","Explore"));
+  row.append(summary);
+  const body=el("div","insight-turn-row-body");
+  body.append(el("p","micro",
+    "Gorge recorded the opening hand size, but the public export does not disclose the seven individual cards or mulligan history."));
+  if(first)body.append(statePanel({...first,atNext:null},a));
+  row.append(body);parent.append(row);
+}
+function timeline(parent,a,focus){
+  const list=el("div","insight-turn-timeline gorge-example-timeline");
+  openingRow(list,a);
+  for(const t of a.timeline)turnRow(list,t,a,{open:focus===t.number});
+  parent.append(list);
+  return list;
+}
+function renderTurns(a,focus){
+  const panel=$("turn-reviewer-panel"),root=$("turn-reviewer-results");
+  if(!root||!panel)return;
+  root.replaceChildren();
+  panel.hidden=false;
+  const head=el("div","gorge-full-review-head");
+  head.append(el("p","small","Seed "+a.game.seed+" · "+a.key.replace(/_/g," ")+
+    " · full evidence viewer"));
+  const close=el("button","stone-button","Close reviewer");
+  close.type="button";
+  close.onclick=()=>{panel.hidden=true;};
+  head.append(close);root.append(head);
+  timeline(root,a,focus);
+  if(typeof panel.scrollIntoView==="function")panel.scrollIntoView({behavior:"smooth",block:"start"});
+}
+function examplesFor(row){
+  const seen=new Set(),out=[];
+  for(const e of row.examples.sort((a,b)=>a.ownTurn-b.ownTurn||a.analysis.game.seed-b.analysis.game.seed)){
+    const id=e.analysis.game.seed+"|"+e.ownTurn;
+    if(seen.has(id))continue;
+    seen.add(id);out.push(e);
+  }
+  return out.slice(0,12);
+}
+function feature(parent,title,candidates){
+  if(!candidates.length){
+    const empty=el("section","panel gorge-insight-unavailable");
+    empty.append(el("strong","game-outcome-title",title),
+      el("p","small","No named, metadata-classified cast events in the available Gorge sample."));
+    parent.append(empty);
+    return;
+  }
+  const panel=el("details","panel game-outcome-card insight-featured-panel insight-card-with-evidence");
   const head=el("summary","game-outcome-summary");
   const copy=el("span","game-outcome-summary-copy");
-  copy.append(el("strong","game-outcome-title",title),
-    el("span","insight-head-name",name),
-    el("strong","game-outcome-number",value),
-    el("span","board-open","Explore evidence"));
+  const titleElement=el("strong","game-outcome-title",title);
+  const subtitle=el("span","insight-head-subtitle");
+  const nameElement=el("span","insight-head-name");
+  const cost=el("span","insight-head-mana");
+  subtitle.append(nameElement,cost);
+  const number=el("span","game-outcome-number");
+  copy.append(titleElement,subtitle,number,el("span","board-open","Explore card evidence"));
   head.append(copy);
-  const img=artImage(name,"insight-featured-cover");
-  if(img)head.append(img);
-  details.append(head);
+  const cover=el("img","insight-featured-cover");
+  cover.alt="";cover.loading="lazy";cover.referrerPolicy="no-referrer";
+  head.append(cover);panel.append(head);
   const body=el("div","game-outcome-body");
-  body.append(el("p","micro",caption));
-  for(const line of examples.slice(0,8)){
-    const n=el("div","insight-action-entry");
-    n.append(el("span","insight-action-description",line));
-    body.append(n);
+  const compare=el("div","insight-featured-compare");
+  const featured=el("div","insight-featured-selected");
+  const ranking=el("div","insight-featured-ranking");
+  ranking.append(el("strong","insight-featured-chart-title","Top cards"),
+    el("p","micro","Select a card to inspect its recorded games"));
+  const bars=el("div","insight-featured-bars");
+  ranking.append(bars);compare.append(featured,ranking);body.append(compare);
+  const metrics=el("div","insight-featured-stats");
+  const evidence=el("div","insight-featured-evidence");
+  body.append(metrics,evidence);panel.append(body);parent.append(panel);
+  const maxCount=Math.max(1,...candidates.slice(0,10).map(x=>x.count));
+  const buttons=[];
+  function choose(item){
+    nameElement.textContent=item.name;
+    number.textContent=item.count+" "+(item.count===1?"cast":"casts");
+    const value=art(item.name);
+    if(value){cover.src=value;cover.hidden=false;}else{cover.hidden=true;cover.removeAttribute("src");}
+    cost.replaceChildren();
+    const printed=String(info(item.name)?.mana_cost||"");
+    for(const token of printed.matchAll(/\{([^{}]+)\}/g)){
+      const n=token[1].replace("/","");
+      const icon=el("img","mana-symbol");
+      icon.src="https://svgs.scryfall.io/card-symbols/"+n+".svg";
+      icon.alt=token[0];icon.title=token[0];cost.append(icon);
+    }
+    for(const btn of buttons)btn.setAttribute("aria-pressed",String(btn.dataset.card===item.name));
+    featured.replaceChildren();metrics.replaceChildren();evidence.replaceChildren();
+    const btn=cardButton(item.name,"insight-featured-card-art");
+    btn.replaceChildren();
+    const fullArt=info(item.name)?.image||art(item.name);
+    if(fullArt){
+      const picture=el("img");
+      picture.src=fullArt;picture.alt=item.name+" printed card";
+      picture.loading="lazy";picture.referrerPolicy="no-referrer";
+      btn.append(picture);
+    }else btn.append(el("span","insight-featured-card-name",item.name));
+    featured.append(btn,el("strong","insight-featured-card-name",item.name));
+    const examples=examplesFor(item);
+    let selectedExample=0,tracker=null,detail=null,select=null;
+    function populate(){
+      if(!detail||!examples.length)return;
+      const ex=examples[selectedExample];
+      detail.replaceChildren();
+      const heading=el("div","game-outcome-evidence-head");
+      heading.append(el("strong",null,"Seed "+ex.analysis.game.seed+" · recorded Gorge game"),
+        el("span","micro","Focus: your turn "+ex.ownTurn+" · winner not exported"));
+      detail.append(heading);
+      timeline(detail,ex.analysis,ex.ownTurn);
+      if(select)select.value=String(selectedExample);
+    }
+    function openExample(){
+      if(!examples.length)return;
+      if(!tracker.open)selectedExample=0;
+      else selectedExample=(selectedExample+1)%examples.length;
+      tracker.open=true;populate();
+    }
+    const tiles=el("div","game-outcome-insight-grid insight-featured-metrics");
+    for(const [label,value] of [
+      ["Times played",item.count],
+      ["Median event turn",median(item.turns)]
+    ]){
+      const button=el("button","game-outcome-insight-metric insight-featured-metric-link");
+      button.type="button";button.disabled=!examples.length;
+      button.append(el("span",null,label),el("strong",null,value===null?"—":value));
+      button.setAttribute("aria-label",label+" · open next verified example game");
+      button.onclick=openExample;tiles.append(button);
+    }
+    metrics.append(tiles);
+    if(!examples.length)return;
+    tracker=el("details","insight-inline-tracker insight-inline-tracker-compact");
+    const trigger=el("summary",null,"View example games");
+    tracker.append(trigger);
+    const full=el("button","game-outcome-review-link insight-example-full-link","Open full reviewer ↗");
+    full.type="button";full.onclick=()=>{
+      const ex=examples[selectedExample];
+      renderTurns(ex.analysis,ex.ownTurn);
+    };
+    tracker.append(full);
+    const label=el("div","insight-example-game-label",
+      "Choose a source game · results from the Gorge engine");
+    const control=el("div","gorge-insight-game-control");
+    select=el("select","gorge-insight-example-select");
+    select.setAttribute("aria-label","Choose a recorded Gorge game and focus turn");
+    examples.forEach((ex,i)=>{
+      const o=el("option",null,"Seed "+ex.analysis.game.seed+
+        " · Turn "+ex.ownTurn+" · "+
+        ex.analysis.game.decks.filter((_,j)=>j!==ex.analysis.seat)
+          .map(x=>x.replace(/_/g," ")).join(" / "));
+      o.value=String(i);select.append(o);
+    });
+    select.onchange=()=>{selectedExample=Number(select.value);populate();};
+    control.append(select);
+    detail=el("div","insight-inline-tracker-review");
+    tracker.append(label,control,detail);
+    tracker.addEventListener("toggle",()=>{
+      trigger.textContent=tracker.open?"Close example games":"View example games";
+      if(tracker.open)populate();
+    });
+    evidence.append(tracker);
   }
-  details.append(body);parent.append(details);
-}
-function renderMetrics(games,records){
-  const section=$("simulation-snapshot");
-  if(!section)return;
-  section.hidden=false;
-  const scope=$("simulation-snapshot-scope");
-  if(scope)scope.textContent="Gorge · public 40-life games";
-  const root=$("simulation-snapshot-metrics");
-  if(!root)return;
-  root.replaceChildren(
-    metric("Games",records.length,"Verified public exports"),
-    metric("Cast events",records.reduce((n,a)=>n+a.casts,0),"Selected deck"),
-    metric("Lands played",records.reduce((n,a)=>n+a.lands,0),"Selected deck"),
-    metric("Source games",games.length,"All loaded decks")
-  );
+  for(const candidate of candidates.slice(0,10)){
+    const button=el("button","insight-featured-bar");
+    button.type="button";button.dataset.card=candidate.name;
+    button.setAttribute("aria-label","Inspect "+candidate.name);
+    const caption=el("span","insight-featured-bar-caption");
+    caption.append(el("span",null,candidate.name),
+      el("strong",null,candidate.count+" casts"));
+    const track=el("span","insight-featured-bar-track");
+    const fill=el("span","insight-featured-bar-fill");
+    fill.style.width=Math.max(2,100*candidate.count/maxCount)+"%";
+    track.append(fill);button.append(caption,track);
+    button.onclick=()=>choose(candidate);
+    bars.append(button);buttons.push(button);
+  }
+  choose(candidates[0]);
 }
 function renderInsights(records,active){
-  const grid=$("key-insights-grid"),empty=$("key-insights-empty");
-  if(!grid)return;
-  grid.replaceChildren();grid.classList.add("latest-insight-grid");
-  if(empty)empty.hidden=true;
-  const header=$("key-insights-panel")?.querySelector(".key-insights-heading .micro");
-  if(header)header.textContent="Explore recorded cards and genuine turn evidence.";
-  const aggregate=new Map();
-  for(const a of records)for(const c of a.ranked){
-    const row=aggregate.get(c.name)||{name:c.name,count:0,examples:[]};
-    row.count+=c.count;
-    row.examples.push("Seed "+a.game.seed+" · cast at native turn(s) "+c.turns.join(", "));
-    aggregate.set(c.name,row);
-  }
-  const ranked=[...aggregate.values()].sort((a,b)=>b.count-a.count||a.name.localeCompare(b.name));
-  const lead=ranked[0];
-  const commanderName=(active.game.snapshots[0]?.players[active.seat]?.zones?.command||[])[0]?.name||
-    active.key.replace(/_/g," ");
-  hero(grid,commanderName,records,active);
-  feature(grid,"Most cast card",lead?.name||"No identified cast",
-    lead?.count??"—","Named public cast events across the selected deck's games.",
-    lead?.examples||["The public export contains no named cast."]);
-  feature(grid,"Token production","Verified token events",
-    records.reduce((n,a)=>n+a.tokens,0),
-    "Only source-recorded token-creation events are counted.",
-    records.map(a=>"Seed "+a.game.seed+" · "+a.tokens+" token events"));
-  const last=active.game.snapshots.filter(s=>s.players[active.seat])
-    .slice(-1)[0]?.players[active.seat];
-  feature(grid,"Life at turn entry","Life total",
-    last?.life??"—",
-    "Last available verified turn-entry snapshot, not a final game result.",
-    records.map(a=>"Seed "+a.game.seed+" · last published turn-entry snapshot"));
-  feature(grid,"Cards in hand","Private identities withheld",
-    last?.hand_count??"—",
-    "This is a hand COUNT at a turn-entry snapshot. Card identities and turns held are unavailable in the public export.",
-    ["For exact hand contents, use a seat-authorized Gorge replay, not the public Pages export."]);
-}
-function renderOutcomes(records,active,games,deckKey){
-  const status=$("game-outcome-status"),out=$("game-outcome-results");
-  if(!out)return;
-  if(status)status.textContent=records.length+" Gorge game(s) for "+active.key+" · verified 40-life source";
-  out.replaceChildren();
-  const tool=el("div","game-outcome-toolbar");
-  tool.append(el("span","micro","Choose a real recorded game; no modeled opponent personalities."));
-  const select=el("select","game-outcome-scenario-select");
-  select.setAttribute("aria-label","Select Gorge game");
-  for(const a of records){
-    const option=el("option",null,"Seed "+a.game.seed+" · "+a.game.decks.join(" / "));
-    option.value=String(a.game.seed);select.append(option);
-  }
-  select.value=String(active.game.seed);
-  select.addEventListener("change",()=>render(games,select.value,deckKey));
-  tool.append(select);out.append(tool);
-  const list=el("div","game-outcome-seeds");
-  for(const a of records){
-    const button=el("button","game-outcome-seed",
-      "Seed "+a.game.seed+" · "+a.game.decks.filter((_,i)=>i!==a.seat).join(" / "));
-    button.type="button";
-    if(a.game.seed===active.game.seed)button.classList.add("is-selected");
-    button.addEventListener("click",()=>render(games,a.game.seed,deckKey));
-    list.append(button);
-  }
-  out.append(list);
-  out.append(el("p","micro",
-    "Win rates and matchups are pending a verified winner/outcome export. The opponents and card events shown here are real Gorge records."));
-}
-function eventDescription(e){
-  if(e.kind==="cast")return e.card_name?"Cast "+e.card_name:"Cast an unidentified spell";
-  if(e.kind==="land_played")return "Played a land (name not exported)";
-  if(e.kind==="token_created")return "Created a token";
-  if(e.kind==="damage")return "Damage event"+(Number.isFinite(e.amount)?" · "+e.amount:"");
-  if(e.kind==="life")return "Life changed"+(Number.isFinite(e.amount)?" · "+e.amount:"");
-  if(e.kind==="mana")return (Number(e.amount)<0?"Mana used: ":"Mana produced: ")+
-    (e.counter||"unspecified")+(Number.isFinite(e.amount)?" ×"+Math.abs(e.amount):"");
-  return e.kind.replace(/_/g," ");
-}
-function turnSummary(t){
-  const notable=t.actions.filter(x=>["cast","land_played","token_created"].includes(x.event.kind));
-  if(!notable.length)return "No named plays in the public event log";
-  const text=notable.map(x=>x.event.kind==="cast"&&x.event.card_name?
-    "Played "+x.event.card_name:eventDescription(x.event)).join(", ");
-  return text.length>300?text.slice(0,297)+"…":text;
-}
-function manaGenerated(t){
-  const out={};
-  for(const {event:e} of t.actions){
-    if(e.kind!=="mana"||!/^[WUBRGC]$/.test(e.counter||""))continue;
-    out[e.counter]=(out[e.counter]||0)+Math.max(0,Number(e.amount)||0);
-  }
-  return out;
-}
-function zoneDetail(parent,title,cards,extra){
-  const block=el("details","insight-turn-zones gorge-public-zone");
-  block.append(el("summary",null,title+" · "+cards.length+(extra||"")));
-  const body=el("div","insight-action-cards");
-  if(!cards.length)body.append(el("span","micro","None recorded"));
-  for(const card of cards){
-    if(card.name)body.append(cardLink(card.name));
-    else body.append(el("span","micro","Unnamed public object"));
-  }
-  block.append(body);parent.append(block);
-}
-function stateDetails(parent,t,seat,decks){
-  const snap=t.atNext||t.atStart;
-  const note=t.atNext?
-    "First decision of your NEXT turn (not end of this turn)":
-    "First decision of THIS turn (not turn end)";
-  if(!snap){parent.append(el("p","micro","No authoritative turn-boundary state in this public replay."));return;}
-  const heading=el("div","insight-action-phase is-life");
-  heading.append(el("strong","insight-action-phase-heading","Recorded state · "+note));
-  for(const player of snap.players){
-    const block=el("details","gorge-player-state");
-    if(player.seat===seat)block.open=true;
-    block.append(el("summary",null,
-      (player.seat===seat?"Your deck · ":"Opponent · ")+decks[player.seat]+
-      " · ♥ "+player.life+" · Hand "+player.hand_count+
-      " · Library "+player.library_count+(player.lost?" · Eliminated":"")));
-    const zones=el("div","gorge-player-zones");
-    const x=player.zones||{};
-    for(const key of ["battlefield","graveyard","exile","command"]){
-      const cards=Array.isArray(x[key])?x[key]:[];
-      zoneDetail(zones,key.charAt(0).toUpperCase()+key.slice(1),cards);
-    }
-    zones.append(el("p","micro","Hand: "+player.hand_count+
-      " cards. Opponent hand identities are private; individual hand cards cannot be shown from this export."));
-    block.append(zones);heading.append(block);
-  }
-  parent.append(heading);
-}
-function renderTurnRow(parent,t,a){
-  const details=el("details","insight-turn-row gorge-original-turn");
-  const head=el("summary","insight-turn-row-summary");
-  const first=t.actions.find(x=>x.event.kind==="cast"&&x.event.card_name);
-  const cover=first?artImage(first.event.card_name,"insight-turn-cover"):null;
-  if(cover)head.append(cover);
-  head.append(el("span","insight-turn-label","Turn "+t.number),
-    el("span","insight-turn-activity",turnSummary(t)));
-  const metrics=el("span","insight-turn-metrics");
-  const seatState=(t.atNext||t.atStart)?.players?.[a.seat];
-  if(seatState){
-    const life=el("span","insight-turn-metric","♥ "+seatState.life);
-    const hand=el("span","insight-turn-metric","▤ "+seatState.hand_count);
-    life.title="Life at "+(t.atNext?"next":"current")+" turn entry";
-    hand.title="Hand COUNT at "+(t.atNext?"next":"current")+" turn entry";
-    metrics.append(life,hand);
-  }
-  const mana=manaGenerated(t);
-  if(Object.keys(mana).length){
-    const pill=el("span","insight-turn-metric gorge-turn-mana");
-    pill.title="Recorded mana produced during this turn cycle (not unspent mana)";
-    pill.append(manaPips(mana));metrics.append(pill);
-  }
-  head.append(metrics,el("span","insight-turn-expand","Explore ▾"));
-  details.append(head);
-  const body=el("div","insight-turn-row-body");
-  const phase=el("div","insight-action-phase is-player");
-  phase.append(el("strong","insight-action-phase-heading",
-    "Recorded actions · native turn "+t.nativeTurn+
-    (t.nextTurn?" through turn "+(t.nextTurn-1):" through last recorded event")));
-  const actions=el("div","insight-action-sequence");
-  const meaningful=t.actions.filter(x=>["cast","land_played","token_created","mana","damage","life"].includes(x.event.kind));
-  for(const {event:e,turn} of meaningful){
-    const line=el("div","insight-action-entry");
-    line.append(el("span","insight-action-description","T"+turn+" · "+eventDescription(e)));
-    if(e.kind==="cast"&&e.card_name)line.append(cardLink(e.card_name));
-    actions.append(line);
-  }
-  if(!meaningful.length)actions.append(el("p","small","No public actions recorded for this deck in this turn cycle."));
-  phase.append(actions);body.append(phase);
-  stateDetails(body,t,a.seat,a.game.decks);
-  body.append(el("p","micro",
-    "The public log omits hidden draws and hand identities. State snapshots are turn-entry observations, not claimed end-of-turn counts."));
-  details.append(body);parent.append(details);
-}
-function renderTurns(active){
-  const root=$("turn-reviewer-results"),panel=$("turn-reviewer-panel");
+  const root=$("key-insights-grid");
   if(!root)return;
-  if(panel)panel.hidden=false;
+  root.replaceChildren();root.classList.add("latest-insight-grid");
+  const label=$("key-insights-panel")?.querySelector(".key-insights-heading .micro");
+  if(label)label.textContent="Choose a card, compare recorded casts and open its example games.";
+  hero(root,records,active);
+  for(const [title,cards] of cardGroups(records))feature(root,title,cards);
+  const empty=$("key-insights-empty");if(empty)empty.hidden=true;
+}
+function renderOutcomes(records,active,games,key){
+  const root=$("game-outcome-results"),status=$("game-outcome-status");
+  if(!root)return;
   root.replaceChildren();
-  root.append(el("p","micro",
-    active.key+" · Seed "+active.game.seed+" · "+active.timeline.length+
-    " own turns · real card actions, four-player snapshots and colored mana events"));
-  const list=el("div","insight-turn-timeline");
-  for(const t of active.timeline)renderTurnRow(list,t,active);
-  root.append(list);
+  if(status)status.textContent=records.length+" verified Gorge game(s) for "+key;
+  const details=el("details","gorge-game-library");
+  details.append(el("summary",null,"Game library · "+records.length+
+    " verified Gorge game"+(records.length===1?"":"s")));
+  const content=el("div","gorge-game-library-body");
+  content.append(el("p","small",
+    "Real four-player games; verified winners, matchup rates and private hand identities are not yet in the public export."));
+  for(const a of records){
+    const button=el("button","game-outcome-seed","Seed "+a.game.seed+" · "+
+      a.game.decks.map(x=>x.replace(/_/g," ")).join(" / "));
+    button.type="button";
+    button.onclick=()=>{
+      const panel=$("turn-reviewer-panel");
+      if(panel)panel.hidden=true;
+      render(games,a.game.seed,key);
+      const selected=$("key-insights-panel");
+      if(selected?.scrollIntoView)selected.scrollIntoView({behavior:"smooth",block:"start"});
+    };
+    content.append(button);
+  }
+  details.append(content);root.append(details);
 }
 function renderDevelopment(records){
   const root=$("bounded-results");
   if(!root)return;
   root.replaceChildren();
   root.append(el("p","small",
-    "Verified native events across the available public Gorge samples. Larger matchup batches and verified outcomes are not published yet."));
-  for(const a of records){
-    const x=el("p","small","Seed "+a.game.seed+" · "+
-      a.casts+" casts · "+a.lands+" land plays · "+a.tokens+
-      " token events · "+a.mana+" generated mana");
-    root.append(x);
-  }
+    "Gorge source events only; the retired Python simulations do not contribute to these results."));
+  for(const a of records)
+    root.append(el("p","small","Seed "+a.game.seed+" · "+a.casts+" casts · "+
+      a.lands+" land plays · "+a.tokens+" token events"));
 }
 function render(games,activeSeed,deckKey){
   if(typeof document==="undefined")return;
   games=(games||[]).filter(valid);
-  const activeKey=deckKey||window.__deckLabActiveKey||null;
-  const grid=$("key-insights-grid");
-  if(!grid)return;
-  const snapshot=$("simulation-snapshot"),out=$("game-outcome-results");
-  if(!games.length){
-    if(snapshot)snapshot.hidden=true;
-    grid.replaceChildren(el("p","small","Loading verified Gorge games…"));
-    if(out)out.replaceChildren();
-    return;
-  }
-  let chosen=games.find(g=>String(g.seed)===String(activeSeed)&&
-    (!activeKey||g.decks.includes(activeKey)));
-  if(!chosen)chosen=games.find(g=>!activeKey||g.decks.includes(activeKey));
-  const preview=!chosen;
-  if(!chosen)chosen=games[0];
-  const seat=activeKey?chosen.decks.indexOf(activeKey):-1;
-  const focusSeat=seat>=0?seat:0;
-  const records=games.filter(g=>g.decks.includes(chosen.decks[focusSeat]))
-    .map(g=>analyze(g,g.decks.indexOf(chosen.decks[focusSeat])));
-  const active=records.find(a=>a.game===chosen)||analyze(chosen,focusSeat);
-  const title=$("key-insights-title");
-  if(title)title.textContent="Key insights";
-  renderMetrics(games,records);
-  renderInsights(records,active);
-  renderOutcomes(records,active,games,activeKey);
-  renderTurns(active);
-  renderDevelopment(records);
-  if(preview){
-    const status=$("game-outcome-status");
-    if(status)status.textContent="Preview: no verified Gorge sample for selected "+
-      activeKey+" · showing "+active.key+" instead";
-  }
-  // Retired Python diagnostics remain in the archived branch; don't show
-  // incompatible outcome rates or example runs on a Gorge-only report.
+  const key=deckKey||window.__deckLabActiveKey||null;
+  const root=$("key-insights-grid");
+  if(!root)return;
+  const snapshot=$("simulation-snapshot");
+  if(snapshot)snapshot.hidden=true;
+  const reviewer=$("turn-reviewer-panel");
+  if(reviewer)reviewer.hidden=true;
   for(const id of ["archive-observation-details","opponent-replay-panel"]){
     const n=$(id);if(n)n.hidden=true;
   }
   const quiet=$("pane-records")?.querySelector(".diagnostic-panel");
   if(quiet)quiet.hidden=true;
-  const refresh=$("game-outcome-refresh");
-  if(refresh)refresh.hidden=true;
+  const refresh=$("game-outcome-refresh");if(refresh)refresh.hidden=true;
+  if(!games.length){
+    root.replaceChildren(el("p","small","Loading verified Gorge simulation games…"));
+    return;
+  }
+  let chosen=games.find(g=>String(g.seed)===String(activeSeed)&&
+    (!key||g.decks.includes(key)));
+  if(!chosen)chosen=games.find(g=>!key||g.decks.includes(key));
+  if(!chosen){
+    root.replaceChildren(el("p","small",
+      "No verified Gorge games have been published for this deck yet. Choose another simulated deck to explore its results."));
+    const status=$("game-outcome-status");
+    if(status)status.textContent="No Gorge results for "+key;
+    const results=$("game-outcome-results");
+    if(results)results.replaceChildren();
+    return;
+  }
+  const seat=key?chosen.decks.indexOf(key):0;
+  const selectedKey=chosen.decks[Math.max(0,seat)];
+  const records=games.filter(g=>g.decks.includes(selectedKey))
+    .map(g=>analyze(g,g.decks.indexOf(selectedKey)));
+  const active=records.find(a=>a.game===chosen)||records[0];
+  const title=$("key-insights-title");if(title)title.textContent="Key insights";
+  renderInsights(records,active);
+  renderOutcomes(records,active,games,selectedKey);
+  renderDevelopment(records);
 }
-return {valid,analyze,summary,render};
+return {valid,analyze,summary,render,median};
 });
