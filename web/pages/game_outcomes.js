@@ -557,7 +557,8 @@
     "reviewed_zone_spell_resolved","land_play"]);
   function observationCardStats(runs,lookupCard=()=>null,commanderName=null){
     const kinds=["played","creature","instant","spell","artifact","enchantment",
-      "land","seen","seenCreature","unplayed","activated","removal","creatureKills","damage","longest","finisher","tutorFound","tutorUsed"];
+      "land","seen","seenCreature","unplayed","activated","triggered",
+      "removal","creatureKills","damage","longest","finisher","tutorFound","tutorUsed"];
     const maps=Object.fromEntries(kinds.map(k=>[k,new Map()]));
     const complete=runs.filter(run=>Array.isArray(run.ui_observations)&&
       run.ui_observations.length===run.completed_rounds);
@@ -577,7 +578,7 @@
     }
     function record(kind,name,run,turn,quantity=1,extra={}){
       if(typeof name!=="string"||!name.trim()||
-         (!["tutorFound","tutorUsed"].includes(kind)&&basic(name)))return;
+         (!["tutorFound","tutorUsed","activated","triggered"].includes(kind)&&basic(name)))return;
       const map=maps[kind];
       if(!map.has(name))map.set(name,{name,counts:new Map(),seen:new Set(),
         events:[],durations:[],turns:[]});
@@ -642,9 +643,24 @@
               if(pattern.test(types))
                 record(kind,name,run,row.turn,1,{eventIndex});
           }
-          if((/activated|trigger/.test(action.type||""))&&
-              (action.card||action.source))
-            record("activated",action.card||action.source,run,row.turn,1,{eventIndex});
+          if(action.card||action.source){
+            const ownAbility=action.seat===undefined||Number(action.seat)===0;
+            if(run.batch?.engine==="gorge"){
+              // Gorge ability pushes are distinct, authoritative events.
+              // Only the selected controller's abilities count toward its
+              // insight rankings; opponent pushes remain in the replay.
+              if(ownAbility&&action.type==="ability_activated")
+                record("activated",action.card||action.source,run,row.turn,1,
+                  {eventIndex,sourceSeq:action.source_seq});
+              if(ownAbility&&action.type==="ability_triggered")
+                record("triggered",action.card||action.source,run,row.turn,1,
+                  {eventIndex,sourceSeq:action.source_seq});
+            }else if(/activated|trigger/.test(action.type||"")){
+              // Historical Python records used the combined original tile.
+              record("activated",action.card||action.source,run,row.turn,1,
+                {eventIndex});
+            }
+          }
           if(Number.isFinite(action.destroyed_count)&&action.destroyed_count>0&&
               (action.card||action.source))
             record("removal",action.card||action.source,run,row.turn,
@@ -816,12 +832,19 @@
     for(const action of enemy){
       const found=kinds.find(([,test])=>test(action));
       if(found)counts.set(found[0],(counts.get(found[0])||0)+1);
-      else if(narratedAction(action))extras.push(action);
+      else if(!["ability_activated","ability_triggered"].includes(action.type)&&
+        narratedAction(action))extras.push(action);
     }
     const played=[...counts].map(([kind,count])=>
       count+" "+kind+(count===1?"":"s"));
     const fragments=[];
     if(played.length)fragments.push("Enemies played "+played.join(", "));
+    const activations=enemy.filter(a=>a.type==="ability_activated").length;
+    const triggers=enemy.filter(a=>a.type==="ability_triggered").length;
+    if(activations)fragments.push(activations+" activated "+
+      (activations===1?"ability":"abilities"));
+    if(triggers)fragments.push(triggers+" triggered "+
+      (triggers===1?"ability":"abilities"));
     if(extras.length)fragments.push(extras.length+" other recorded "+
       (extras.length===1?"event":"events"));
     return fragments.length?fragments.join(" · "):null;
@@ -847,6 +870,10 @@
       return {verb:"Modeled combo pressure",card:null};
     if(/abstract_creature/.test(type))
       return {verb:"Opponent creature development",card:null};
+    if(type==="ability_activated")
+      return {verb:"Activated ability of",card};
+    if(type==="ability_triggered")
+      return {verb:"Triggered ability of",card};
     if(type==="draw")return {verb:"Drew",card};
     if(type==="land_play")return {verb:"Played",card};
     if(type==="cleanup_discard")return {verb:"Discarded",card};
@@ -903,6 +930,14 @@
   function actionEvidenceDetail(action){
     if(!action||typeof action!=="object")return "";
     const facts=[];
+    if(["ability_activated","ability_triggered"].includes(action.type)){
+      // A Gorge ability slot identifies its native source ability entry,
+      // not readable Oracle text; never fabricate an effect or resolution.
+      if(Number.isInteger(action.native_ability_index))
+        facts.push("Gorge ability slot "+(action.native_ability_index+1));
+      if(Number.isInteger(action.source_seq))
+        facts.push("native event #"+action.source_seq);
+    }
     if(Number.isFinite(action.life_lost)&&action.life_lost>0)
       facts.push(action.life_lost+" life lost"+
         (Number.isInteger(action.target_seat)?" by seat "+(action.target_seat+1):""));
@@ -1206,7 +1241,7 @@
         // Missing seat attribution belongs to the pilot, ahead of enemy activity.
         const own=actions.filter(a=>!Number.isInteger(a.seat)||Number(a.seat)===0);
         const enemy=actions.filter(a=>Number.isInteger(a.seat)&&a.seat>0);
-        function actionSection(title,events,cssClass,showSeat){
+        function actionSection(title,events,cssClass,showSeat,container=body){
           events=events.filter(a=>narratedAction(a));
           if(!events.length)return;
           const section=create("section","insight-action-phase "+cssClass);
@@ -1232,7 +1267,7 @@
             line.appendChild(text);
             items.appendChild(line);
           }
-          section.appendChild(items);body.appendChild(section);
+          section.appendChild(items);container.appendChild(section);
         }
         actionSection("Your turn",own,"is-player",false);
         // Keep the rest of the round to a single small evidence block.
@@ -1241,6 +1276,23 @@
         rest.appendChild(create("h4","insight-rest-title","Rest of turn"));
         const enemyText=enemyActivitySummary(enemy);
         if(enemyText)rest.appendChild(create("p","insight-rest-event",enemyText));
+        // Preserve the original compact rest-of-turn layout while letting
+        // viewers inspect EACH opposing ability with its actual controller,
+        // source card and native event number on demand.
+        const enemyAbilities=enemy.filter(a=>
+          ["ability_activated","ability_triggered"].includes(a.type));
+        if(enemyAbilities.length){
+          const disclosure=create("details","insight-end-zone insight-opponent-abilities");
+          const activationCount=enemyAbilities.filter(a=>
+            a.type==="ability_activated").length;
+          const triggerCount=enemyAbilities.length-activationCount;
+          disclosure.appendChild(create("summary","insight-end-zone-label",
+            "Opponent abilities · "+activationCount+" activated · "+
+            triggerCount+" triggered"));
+          actionSection("Recorded opposing abilities",enemyAbilities,
+            "is-opponent is-ability",true,disclosure);
+          rest.appendChild(disclosure);
+        }
         const damage=actions.filter(a=>/damage|blocked_combat|combat_blocked|block_declared/
           .test(String(a?.type||""))&&narratedAction(a));
         if(damage.length){
@@ -1468,6 +1520,7 @@
       land:"Most played nonbasic land",seen:"Most frequently seen card",
       seenCreature:"Most frequently seen creature",
       unplayed:"Most often left unplayed",activated:"Most used ability",
+      triggered:"Most triggered ability",
       removal:"Most permanents destroyed",
       creatureKills:"Most creature kills",damage:"Most damage to opponents",
       longest:"Longest held in hand",finisher:"Finishing blow",
@@ -1483,6 +1536,7 @@
     // Binary access/cast metrics use distinct-game share; repeatable event
     // metrics use per-game averages (two decimals), never raw totals.
     const isTutor=kind==="tutorFound"||kind==="tutorUsed";
+    const isAbility=["activated","triggered"].includes(kind)&&options.isGorge;
     const tutorCount=options.tutorSearchCount||0;
     const valueFor=item=>isTutor?
       (100*item.eventCount/Math.max(1,tutorCount)).toFixed(1)+"%":
@@ -1492,7 +1546,8 @@
     const displayValue=item=>valueFor(item);
     const cardData=item=>options.lookupRecordedCard?.(item.name)||null;
     let initialSelect=null;
-    const panel=card(insightCategoryLabel(kind),"Card insight",
+    const panel=card(isAbility&&kind==="activated"?
+      "Most activated ability":insightCategoryLabel(kind),"Card insight",
       displayValue(winner),winner.name,body=>{
         const compare=create("div","insight-featured-compare");
         const featured=create("div","insight-featured-selected");
@@ -1571,7 +1626,10 @@
             draw();
           };
           const tileSet=create("div","game-outcome-insight-grid insight-featured-metrics");
-          for(const [label,value] of [
+          for(const [label,value] of isAbility?[
+            [kind==="activated"?"Recorded activations":"Recorded triggers",item.eventCount],
+            ["Median event turn",quantile(item.turns,.5)]
+          ]:[
             ["Times played",item.timesPlayed||0],
             ["Median event turn",quantile(item.turns,.5)]
           ]){
@@ -2019,7 +2077,7 @@
         ["played","creature","artifact","enchantment","instant","spell","land",
           ...(runs.some(r=>r.gorge_source?.visibility==="omniscient")?
              ["seen","seenCreature","unplayed","longest"]:[]),
-          "activated"]:
+          "activated","triggered"]:
         ["played","creature","artifact","enchantment",
           "instant","spell","land","seen","seenCreature","unplayed","longest",
           "activated","removal","creatureKills","damage","finisher",
