@@ -152,6 +152,57 @@ def check():
             hero=page.locator("#game-outcome-results .game-outcome-hero")
             assert "Losses" in hero.inner_text()
             assert "2/2" in hero.inner_text()
+            # Independently exercise the NEW omniscient UI path even when
+            # the committed public fixture is still in privacy-safe mode.
+            # The names in this synthetic browser-only fixture are test data;
+            # no game outcome or drawn card is inferred from them.
+            omnigame=json.loads((ROOT/"gorge-data"/"gorge-seed-300.ui.json").read_text())
+            omnigame["visibility"]="omniscient"
+            omnigame["synthetic_simulation_only"]=True
+            for snap in omnigame["snapshots"]:
+                for player in snap["players"]:
+                    seat=player["seat"]
+                    player["zones"]["hand"]=[
+                        {"object_id":100000+seat*1000+i,
+                         "name":f"Test hand seat {seat} card {i}","token":False}
+                        for i in range(player["hand_count"])]
+                    player["zones"]["library"]=[
+                        {"object_id":200000+seat*1000+i,
+                         "name":f"Test library seat {seat} card {i}","token":False}
+                        for i in range(player["library_count"])]
+            omnifest={
+                "schema":"gorge-omniscient-replay-manifest-v1",
+                "visibility":"omniscient",
+                "synthetic_simulation_only":True,
+                "games":[{"seed":300,"file":"gorge-seed-300.ui.json",
+                          "decks":omnigame["decks"],"chain":omnigame["chain"]}],
+            }
+            omni_page=browser.new_page(viewport={"width":390,"height":844})
+            omni_page.on("pageerror",lambda e:errors.append(str(e)))
+            omni_page.route("**/gorge-data/manifest.json",
+                lambda route:route.fulfill(status=200,content_type="application/json",
+                                          body=json.dumps(omnifest)))
+            omni_page.route("**/gorge-data/gorge-seed-300.ui.json",
+                lambda route:route.fulfill(status=200,content_type="application/json",
+                                          body=json.dumps(omnigame)))
+            omni_page.goto(site+"?deck=mortarion_current",
+                           wait_until="domcontentloaded",timeout=60000)
+            omni_card=omni_page.locator("#game-outcome-results .insight-featured-panel").first
+            omni_card.wait_for(state="visible",timeout=40000)
+            assert "omniscient" in omni_page.locator(".game-outcome-hero-meta").inner_text().lower()
+            omni_card.locator(".game-outcome-summary").click()
+            omni_tracker=omni_card.locator(".insight-inline-tracker")
+            omni_tracker.locator("summary").first.click()
+            omni_opening=omni_tracker.locator(".insight-turn-row").first
+            assert "Test hand seat 0 card 0" in omni_opening.inner_text()
+            omni_opening.locator(".insight-turn-row-summary").click()
+            assert "Opponents' hands" in omni_opening.inner_text()
+            assert "Test hand seat 1 card 0" in omni_opening.inner_text()
+            assert "The public replay does not include" not in omni_opening.inner_text()
+            assert omni_page.evaluate("document.documentElement.scrollWidth<=window.innerWidth+2")
+            omni_page.screenshot(path=str(OUT/"original-renderer-omniscient-mobile.png"),
+                                 full_page=False)
+            omni_page.close()
             assert not errors,"Browser page errors: "+"; ".join(errors[:9])
             browser.close()
         print("PASS: actual original renderer, real Gorge outcomes, evidence, mobile and source isolation")
