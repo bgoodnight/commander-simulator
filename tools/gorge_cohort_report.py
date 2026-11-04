@@ -121,29 +121,54 @@ def sigmoid(t):
     return q/(1+q)
 
 
-def train(xs, ys, strength, iterations=320):
-    """Deterministic proximal gradient logistic elastic net; intercept unpenalized."""
+def train(xs, ys, strength, iterations=60):
+    """Coordinate-Newton elastic-net logistic regression, pure Python.
+
+    Binary sparse predictors, unpenalized intercept, equal L1/L2 penalty.
+    Updates use the exact conditional Bernoulli gradient and curvature,
+    avoiding costly full-gradient passes on every iteration.
+    """
     n=len(ys)
     p=len(xs[0])
+    cols=[[i for i,x in enumerate(xs) if x[j]>0] for j in range(p)]
     weights=[0.0]*p
     base=min(max(sum(ys)/n,1e-5),1-1e-5)
     intercept=log(base/(1-base))
-    # Conservative global smoothness bound for binary design + intercept.
-    step=3.6/(p+1)
+    logits=[intercept]*n
+    probs=[base]*n
+    lam1=strength*.5
+    lam2=strength*.5
     for _ in range(iterations):
-        gradients=[0.0]*p
-        offset=0.0
-        for x,y in zip(xs,ys):
-            err=sigmoid(intercept+sum(w*v for w,v in zip(weights,x)))-y
-            offset+=err
-            for j,v in enumerate(x):
-                gradients[j]+=err*v
-        intercept-=step*offset/n
-        for j in range(p):
-            tentative=weights[j]-step*(gradients[j]/n+strength*.5*weights[j])
-            shrink=step*strength*.5
-            weights[j]=(max(0,tentative-shrink) if tentative>0
-                        else min(0,tentative+shrink))
+        # Intercept has no penalty.
+        grad=sum(q-y for q,y in zip(probs,ys))/n
+        hessian=max(sum(q*(1-q) for q in probs)/n,1e-8)
+        delta=max(-2.0,min(2.0,-grad/hessian))
+        intercept+=delta
+        if delta:
+            for i in range(n):
+                logits[i]+=delta
+                probs[i]=sigmoid(logits[i])
+        largest=abs(delta)
+        for j,indexes in enumerate(cols):
+            if not indexes:
+                continue
+            gradient=sum(probs[i]-ys[i] for i in indexes)/n+lam2*weights[j]
+            curvature=(sum(probs[i]*(1-probs[i]) for i in indexes)/n+lam2)
+            if curvature<=0:
+                continue
+            proposal=weights[j]-gradient/curvature
+            shrink=lam1/curvature
+            updated=max(0,proposal-shrink) if proposal>=0 else min(0,proposal+shrink)
+            change=max(-2.0,min(2.0,updated-weights[j]))
+            if not change:
+                continue
+            weights[j]+=change
+            largest=max(largest,abs(change))
+            for i in indexes:
+                logits[i]+=change
+                probs[i]=sigmoid(logits[i])
+        if largest<1e-6:
+            break
     return intercept, weights
 
 
@@ -193,13 +218,13 @@ def regression(rows, family):
             te=[i for i,v in enumerate(folds) if v==fold]
             if not tr or not te:
                 continue
-            intercept,coefs=train([xs[i] for i in tr],[ys[i] for i in tr],strength,220)
+            intercept,coefs=train([xs[i] for i in tr],[ys[i] for i in tr],strength,60)
             total+=sum(log_loss(sigmoid(intercept+sum(w*v for w,v in zip(coefs,xs[i]))),ys[i])
                        for i in te)
         scores.append(total/n)
     best=min(range(len(candidate)),key=lambda j:scores[j])
     strength=candidate[best]
-    intercept,coefs=train(xs,ys,strength,480)
+    intercept,coefs=train(xs,ys,strength,120)
     null=sum(log_loss(sum(ys)/n,y) for y in ys)/n
     result.update({
         "status":"ready","alpha":strength,"l1_ratio":.5,"folds":3,
