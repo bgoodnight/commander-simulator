@@ -39,8 +39,12 @@ function validate(g){
      g.snapshot_definition!=="first_pending_decision_of_turn")
     throw Error("Not an authoritative public gorge replay");
   const end=g.turns.at(-1)?.events?.filter(e=>e.kind==="game_over").at(-1);
-  if(!end||!Number.isInteger(end.player)||end.player<0||end.player>3||
-     end.text!==g.decks[end.player])
+  // Gorge omits the zero-value player field for seat zero. The recorded
+  // winning deck key is authoritative: require one exact roster match.
+  const named=typeof end?.text==="string"?
+    g.decks.map((x,i)=>x===end.text?i:null).filter(x=>x!==null):[];
+  if(named.length!==1||
+     (end.player!==undefined&&end.player!==named[0]))
     throw Error("Gorge replay has no unambiguous winner");
   if(g.snapshots.some(s=>s.boundary!=="first_pending_decision_of_turn"||
        !Array.isArray(s.players)||s.players.length!==4||
@@ -57,7 +61,8 @@ function validate(g){
 }
 function winner(g){
   validate(g);
-  return g.turns.at(-1).events.filter(e=>e.kind==="game_over").at(-1).player;
+  const key=g.turns.at(-1).events.filter(e=>e.kind==="game_over").at(-1).text;
+  return g.decks.indexOf(key);
 }
 function seatForObject(obj){
   return Number.isInteger(obj)&&obj>=1&&obj<=400?
