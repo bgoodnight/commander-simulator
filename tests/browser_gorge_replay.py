@@ -21,7 +21,12 @@ def check():
     assert (ROOT/"results.html").is_file()
     assert (ROOT/"gorge_legacy_adapter.js").is_file()
     manifest=json.loads((ROOT/"gorge-data"/"manifest.json").read_text())
-    assert manifest["schema"]=="gorge-public-replay-manifest-v1"
+    assert manifest["schema"] in {"gorge-public-replay-manifest-v1",
+                                   "gorge-omniscient-replay-manifest-v1"}
+    omniscient=manifest["schema"]=="gorge-omniscient-replay-manifest-v1"
+    if omniscient:
+        assert manifest["visibility"]=="omniscient"
+        assert manifest["synthetic_simulation_only"] is True
     assert {g["seed"] for g in manifest["games"]}=={300,301}
     errors=[]
     server=ThreadingHTTPServer(("127.0.0.1",0),Handler)
@@ -80,7 +85,15 @@ def check():
             assert timeline.locator(".insight-turn-row").count()>=9
             opening=timeline.locator(".insight-turn-row").first
             assert "Opening hand" in opening.inner_text()
-            assert "identities private" in opening.inner_text()
+            if omniscient:
+                assert "identities private" not in opening.inner_text()
+                assert "Opening hand" in opening.inner_text()
+                opening.locator(".insight-turn-row-summary").click()
+                assert opening.locator(".insight-end-state .insight-end-zone").count()>0
+                assert "Opponents' hands" in opening.inner_text()
+                opening.locator(".insight-turn-row-summary").click()
+            else:
+                assert "identities private" in opening.inner_text()
             first=timeline.locator(".insight-turn-row").nth(1)
             assert "Played Swamp" in first.locator(".insight-turn-row-summary").inner_text()
             assert "Sol Ring" in first.locator(".insight-turn-row-summary").inner_text()
@@ -89,7 +102,12 @@ def check():
             first.locator(".insight-turn-row-summary").click()
             assert first.evaluate("(e)=>e.open")
             assert "Recorded turn-entry state" in first.locator(".insight-end-state").inner_text()
-            assert "Individual identities are private" in first.locator(".insight-end-state").inner_text()
+            if omniscient:
+                assert "Individual identities are private" not in first.locator(".insight-end-state").inner_text()
+                assert "Opponents' hands" in first.locator(".insight-end-state").inner_text()
+                assert "Hand ·" in first.locator(".insight-end-state").inner_text()
+            else:
+                assert "Individual identities are private" in first.locator(".insight-end-state").inner_text()
             assert "Lands" in first.locator(".insight-end-state").inner_text()
             page.screenshot(path=str(OUT/"original-renderer-desktop.png"),full_page=False)
             first.locator(".insight-turn-row-summary").click()
