@@ -2219,3 +2219,60 @@ body:has(#pane-records:not([hidden])) .compact-selection{margin-bottom:3px}
  .insight-action-entry .insight-action-art{width:24px;height:32px}
  .insight-board-panel .insight-seat-life-strip{gap:3px}
 }
+
+/* Unified compact turn-stat scale: text, hearts, hand glyphs and mana pips. */
+.insight-turn-row-summary .insight-turn-metrics{
+  --turn-stat-size:15px;
+  align-items:center;
+  gap:4px;
+}
+.insight-turn-row-summary .insight-turn-metric,
+.insight-turn-row-summary button.insight-turn-metric,
+.insight-turn-row-summary .insight-hand-shortcut{
+  box-sizing:border-box;
+  display:inline-flex;
+  align-items:center;
+  justify-content:center;
+  gap:3px;
+  min-height:26px;
+  padding:3px 5px;
+  font-family:inherit;
+  font-size:var(--turn-stat-size);
+  font-weight:400;
+  line-height:18px;
+  letter-spacing:0;
+  vertical-align:middle;
+  font-variant-numeric:tabular-nums;
+}
+.insight-turn-row-summary .insight-turn-mana,
+.insight-turn-row-summary .insight-turn-mana .insight-color-mana-pip,
+.insight-turn-row-summary .insight-turn-mana .mana-symbols{
+  display:inline-flex;
+  align-items:center;
+  gap:2px;
+  line-height:18px;
+}
+.insight-turn-row-summary .insight-turn-mana img.mana-symbol,
+.insight-turn-row-summary .insight-turn-mana .insight-fallback-mana{
+  box-sizing:border-box;
+  display:block;
+  width:var(--turn-stat-size);
+  height:var(--turn-stat-size);
+  min-width:var(--turn-stat-size);
+  min-height:var(--turn-stat-size);
+  padding:0;
+  margin:0;
+  object-fit:contain;
+  vertical-align:middle;
+}
+.insight-turn-row-summary .insight-turn-mana .insight-mana-count{
+  font-family:inherit;
+  font-size:var(--turn-stat-size);
+  line-height:18px;
+  font-weight:400;
+}
+@media(max-width:650px){
+  .insight-turn-row-summary .insight-turn-metrics{--turn-stat-size:14px;gap:3px}
+  .insight-turn-row-summary .insight-turn-metric,
+  .insight-turn-row-summary button.insight-turn-metric{padding:3px 4px}
+}
