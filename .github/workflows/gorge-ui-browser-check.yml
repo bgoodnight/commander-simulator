@@ -7,6 +7,7 @@ on:
       - ".github/workflows/gorge-ui-browser-check.yml"
       - "docs/deck-lab/gorge-data/**"
       - "web/pages/gorge_replay.js"
+      - "web/pages/gorge_dashboard.js"
       - "web/pages/index.html"
   workflow_dispatch:
 
