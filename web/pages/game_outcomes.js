@@ -1895,7 +1895,9 @@
       "Seeds "+(seedList[0]===seedList.at(-1)?seedList[0]:
         seedList[0]+"–"+seedList.at(-1)):"Seeds unavailable";
     const outcomeMeta=total+" games · "+groups[0].requestedRounds+
-      " rounds · "+groups.length+" opponent groups · "+seedLabel;
+      " rounds · "+groups.length+" opponent groups · "+seedLabel+
+      (runs.some(r=>r.gorge_source?.visibility==="omniscient")?
+        " · Omniscient simulated hands":"");
     cards.appendChild(outcomeCard({
       counts,total,terminal:finished.length,
       terminalRounds:finished.map(run=>run.completed_rounds)
