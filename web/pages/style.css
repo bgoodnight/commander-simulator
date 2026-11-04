@@ -1171,7 +1171,7 @@ body:has(#pane-records:not([hidden])) .page-introduction a{font-size:.72rem}
 
 /* Latest-only Results: one card feed, then a recorded-game reviewer. */
 #pane-records{display:grid;gap:18px}
-#pane-records > :not(#long-game-panel):not(#turn-reviewer-panel){display:none!important}
+/* Gorge-only results restore the original metric, insight and development panels. */
 #pane-records > #long-game-panel{background:transparent;border:0;border-radius:0;
   padding:0;margin:0;box-shadow:none;overflow:visible}
 #pane-records > #turn-reviewer-panel{display:block}
@@ -2093,40 +2093,63 @@ body:has(#pane-records:not([hidden])) .compact-selection{margin-bottom:3px}
 .gorge-dashboard .gorge-development{padding:1rem}
 @media(max-width:650px){.gorge-dashboard{grid-template-columns:minmax(0,1fr)}.gorge-dashboard .gorge-deck-grid{grid-template-columns:minmax(0,1fr)}}
 
-/* Original Deck Lab restoration: retain the historical board-art, game
-   summary, and turn-tile CSS rather than adding a second metric dashboard. */
-.gorge-dashboard{display:grid;gap:14px;margin:12px 0 24px;min-width:0;max-width:100%}
-.gorge-original-header{display:flex;align-items:end;justify-content:space-between;gap:12px;flex-wrap:wrap;padding:7px 2px 3px}
-.gorge-original-header h1{font-family:Cinzel,Georgia,serif;color:#f0d8a9;font-size:clamp(1.5rem,2.6vw,2.25rem);margin:4px 0}
-.gorge-original-header p{margin:2px 0;color:#b4c7bb}
-.gorge-original-picker{display:grid;gap:6px;min-width:205px}
-.gorge-original-picker select{max-width:100%;font-size:.81rem}
-.gorge-dashboard .board-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:14px;margin:12px 0 3px;align-items:start}
-.gorge-dashboard .board-report{min-width:0;overflow:hidden}
-.gorge-dashboard .board-summary{min-height:177px}
-.gorge-dashboard .board-summary-copy{width:81%}
-.gorge-dashboard .board-summary-copy strong{font-size:clamp(1.18rem,2vw,1.72rem);line-height:1.16;overflow-wrap:anywhere}
-.gorge-dashboard .board-cover{opacity:.56}
-.gorge-original-decks{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:10px;margin:12px 0}
-.gorge-original-decks .game-outcome-life-stat{position:relative;min-height:148px;overflow:hidden;padding:0;isolation:isolate}
-.gorge-original-commander-art{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;opacity:.36;z-index:-1;mask-image:linear-gradient(90deg,transparent,#000 80%)}
-.gorge-original-deck-copy{display:flex;flex-direction:column;justify-content:flex-end;gap:6px;padding:13px;min-height:148px;background:linear-gradient(90deg,#1b2d2bdc,#1a2b2a77)}
-.gorge-original-deck-copy strong{font-size:clamp(.84rem,1.2vw,1.04rem);color:#f0d9ac;overflow-wrap:anywhere}
-.gorge-original-deck-copy small{font-size:.75rem;color:#d2dfd6}
-.gorge-original-turn-detail{margin-top:14px}
-.gorge-original-turn-detail .game-outcome-life-stats{margin:12px 0}
-.gorge-original-zone-list{display:grid;gap:7px;padding:9px 3px}
-.gorge-original-development{padding:16px}
-.gorge-replay-panel{margin-top:6px}
-@media(max-width:950px){
- .gorge-dashboard .board-grid{grid-template-columns:repeat(2,minmax(0,1fr))}
- .gorge-original-decks{grid-template-columns:repeat(2,minmax(0,1fr))}
-}
+
+/* Gorge migration: use the original November 3 Results containers, not
+   a replacement dashboard. All historic visual rules above remain intact. */
+#pane-records > #simulation-snapshot:not([hidden]),
+#pane-records > #key-insights-panel:not([hidden]),
+#pane-records > #development-panel:not([hidden]),
+#pane-records > #gorge-replay-panel:not([hidden]){display:block!important}
+#pane-records > .diagnostic-panel,
+#pane-records > #archive-observation-details,
+#pane-records > #opponent-replay-panel{display:none!important}
+#pane-records > #key-insights-panel{margin-bottom:0}
+#pane-records .gorge-original-turn .insight-turn-activity{-webkit-line-clamp:4}
+#pane-records .gorge-original-turn .insight-turn-cover{height:100%}
+.gorge-mana-pips,.gorge-mana-pip{display:inline-flex;align-items:center;gap:3px;vertical-align:middle}
+.gorge-mana-pips{gap:6px;flex-wrap:wrap}
+.gorge-mana-pip .mana-symbol{width:16px;height:16px}
+.gorge-player-state{border:1px solid #52695f;border-radius:8px;background:#172a2b;margin:7px 0}
+.gorge-player-state>summary{font-size:.77rem;line-height:1.4;cursor:pointer;padding:9px;color:#e8d1a5}
+.gorge-player-zones{display:grid;gap:7px;padding:6px 9px 9px}
+.gorge-public-zone{border-top:1px solid #41574f;padding:6px 0}
+.gorge-public-zone>summary{color:#e2d2b2;font-size:.76rem;cursor:pointer}
+.gorge-public-zone .insight-action-cards{margin:8px 0;gap:6px}
+.gorge-original-turn .insight-action-entry{flex-wrap:wrap}
+.gorge-original-turn .insight-action-card{max-width:100%;overflow-wrap:anywhere}
+#pane-records .gorge-replay-panel{margin-top:4px}
+#pane-records .gorge-replay-panel .result-takeaway-summary{cursor:pointer}
 @media(max-width:650px){
- .gorge-dashboard .board-grid{grid-template-columns:minmax(0,1fr)}
- .gorge-original-decks{grid-template-columns:repeat(2,minmax(0,1fr))}
- .gorge-original-deck-copy{min-height:135px}
- .gorge-original-turn-detail .game-outcome-life-stats{grid-template-columns:repeat(2,minmax(0,1fr))}
- .gorge-original-picker{width:100%}
- .gorge-dashboard .game-outcome-turn-strip{grid-template-columns:repeat(2,minmax(0,1fr))}
+  #pane-records .gorge-original-turn .insight-turn-row-summary{
+    grid-template-columns:43px minmax(0,1fr) auto;align-items:start}
+  #pane-records .gorge-original-turn .insight-turn-metrics{flex-wrap:wrap;justify-content:flex-end}
+  #pane-records .gorge-original-turn .insight-turn-activity{-webkit-line-clamp:4}
+  .gorge-mana-pips{gap:4px}
+}
+
+
+/* Keep the original gold-and-charcoal art cards inside the phone viewport.
+   Long named-opponent configurations must shrink instead of sizing the grid. */
+#pane-records{grid-template-columns:minmax(0,1fr);min-width:0}
+#pane-records > *,
+#pane-records #key-insights-grid,
+#pane-records #game-outcome-results,
+#pane-records #turn-reviewer-results,
+#pane-records .game-outcome-toolbar,
+#pane-records .game-outcome-hero-frame,
+#pane-records .game-outcome-card,
+#pane-records .game-outcome-summary-copy{min-width:0;max-width:100%}
+#pane-records .game-outcome-scenario-select{
+  min-width:0;width:min(100%,420px);flex:1 1 180px;
+  text-overflow:ellipsis}
+#pane-records .game-outcome-seed{
+  max-width:100%;white-space:normal;overflow-wrap:anywhere}
+#pane-records .game-outcome-hero-stats{
+  grid-template-columns:repeat(3,minmax(0,1fr))}
+#pane-records .game-outcome-hero-stats > div{
+  min-width:0;overflow-wrap:anywhere}
+@media(max-width:720px){
+  #pane-records #key-insights-grid{
+    display:grid;grid-template-columns:minmax(0,1fr)}
+  #pane-records .latest-insight-grid > *{min-width:0;max-width:100%}
 }

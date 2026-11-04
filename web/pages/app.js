@@ -89,6 +89,9 @@ function safeText(value){return String(value??"");}
 function cardInfo(name){
   return cachedByName.get(name.toLowerCase())||null;
 }
+// Read-only public identity/art bridge for the original Gorge-powered result panels.
+window.GorgeDeckLabCardInfo=cardInfo;
+window.GorgeDeckLabOpenCard=name=>{const card=cardInfo(name);if(card?.oracle_id)showCard(card.oracle_id)};
 function cardForId(id){return extraCards[id]||data.cards[id]||null;}
 function addAliases(item){
   if(!item||!item.oracle_id)return;
@@ -383,6 +386,7 @@ function summon(key,{versionId=null,remember=true}={}){
   const deck=data.decks.find(d=>d.key===key);
   if(!deck)return;
   selected=key;
+  window.__deckLabActiveKey=key;
   quietRuns=null; quietTurn=-1; quietExample=0;
   selectedVersionId=versionId&&localVersions.some(v=>v.id===versionId&&v.baseKey===key)?
     versionId:null;
@@ -404,6 +408,8 @@ function summon(key,{versionId=null,remember=true}={}){
   }
   renderGlobalDeckSelector();
   showPage();syncPageNavigation();
+  if(pageName==="results"&&window.GorgeDashboard)
+    window.GorgeDashboard.render(window.__gorgeLoadedGames||[],window.__gorgeActiveGame?.seed,key);
 }
 function physicalArchive(){
   if(selected!=="mortarion_physical_final"||isUnsimulatedVersion())return null;
@@ -426,7 +432,9 @@ function showPage(){
   }
   renderPageIntro();
   document.title=PAGE_INFO[pageName]+" | Commander Deck Lab";
-  if(pageName==="results"){
+  // The Results route is now fed by verified Gorge public samples.
+  // Retired Python outcome archives must never overwrite those panels.
+  if(pageName==="results"&&!window.GorgeDashboard){
     refreshPublishedLongGame();
   }
 }

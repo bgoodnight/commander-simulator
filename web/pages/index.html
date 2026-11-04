@@ -11,8 +11,8 @@
   <script src="./results_insights.js?v=20261101h1" defer></script>
   <script src="./brackets.js?v=20261101bracket" defer></script>
   <script src="./replay.js?v=bounded-evidence-pilot-20261102" defer></script>
-  <script src="./gorge_dashboard.js?v=gorge-dashboard-20261103" defer></script>
-  <script src="./gorge_replay.js?v=gorge-dashboard-20261103" defer></script>
+  <script src="./gorge_dashboard.js?v=original-results-gorge-20261103" defer></script>
+  <script src="./gorge_replay.js?v=original-results-gorge-20261103" defer></script>
   <script src="./insight_catalog.js?v=held-median-20261102" defer></script>
   <script src="./insight_explorer.js?v=held-median-20261102" defer></script>
   <script src="./game_outcomes.js?v=results-cards-restore-20261102" defer></script>
@@ -112,34 +112,6 @@
       </section>
     </div>
     <div class="tab-pane" id="pane-records" hidden>
-      <section class="gorge-canonical-intro"><strong>Gorge is now our simulation engine.</strong><p>Results, insights and turn review below use verified gorge games. The original styling and historical Python results remain available in the archive.</p></section>
-      <div id="gorge-dashboard" class="gorge-dashboard" aria-live="polite"></div>
-      <details class="panel replay-panel result-takeaway gorge-replay-panel" id="gorge-replay-panel">
-        <summary class="result-takeaway-summary">
-          <span class="eyebrow">Full Commander · Gorge engine</span>
-          <h2 class="result-takeaway-heading">Engine replay details</h2>
-          <span class="result-takeaway-description">Optional: detailed gorge events and state evidence</span>
-          <span class="result-takeaway-open">Inspect gorge replay</span>
-        </summary>
-        <div class="gorge-replay-inner">
-          <p class="small">Select a verified 40-life Commander game below to explore genuine gorge actions,
-            public-zone card identities, life totals and turn-entry snapshots. Private hands and
-            libraries are never published. You can also open a locally saved native gorge JSON
-            file for deeper inspection; local files stay in your browser.</p>
-          <div class="gorge-replay-samples" id="gorge-replay-samples" hidden>
-            <label for="gorge-replay-sample-select">Verified gorge game</label>
-            <select id="gorge-replay-sample-select" aria-label="Select verified gorge game"></select>
-            <button id="gorge-replay-load" type="button">View game</button>
-            <span class="small">Source: 40-life Commander · gorge engine</span>
-          </div>
-          <label class="gorge-replay-upload-label" for="gorge-replay-file">Open native gorge replay JSON</label>
-          <input id="gorge-replay-file" type="file" accept=".json,application/json">
-          <div class="gorge-replay-root" id="gorge-replay-root" aria-live="polite">
-            <p class="small">No gorge game loaded yet. Select a verified source game or open a gorge replay file.</p>
-          </div>
-        </div>
-      </details>
-      <details class="panel legacy-simulation-archive" id="legacy-simulation-archive"><summary>Historical archive · Python simulations, rules and pilots</summary><p class="small">Earlier outcomes use retired Python rules and abstract opponents; they are not current gorge Commander games.</p><div class="legacy-simulation-archive-inner">
       <section id="simulation-snapshot" class="simulation-snapshot" aria-label="Simulation overview" hidden>
         <div class="simulation-snapshot-heading">
           <span class="eyebrow">Simulation at a glance</span>
@@ -220,6 +192,25 @@
         </summary>
         <div class="replay-root" id="opponent-replay-root" aria-live="polite"></div>
       </details>
+      <details class="panel replay-panel result-takeaway gorge-replay-panel" id="gorge-replay-panel">
+        <summary class="result-takeaway-summary">
+          <span class="eyebrow">Source evidence · Gorge</span>
+          <h2 class="result-takeaway-heading">Inspect complete replay details</h2>
+          <span class="result-takeaway-description">Verified public events, turn-entry state and local native logs</span>
+          <span class="result-takeaway-open">Explore source</span>
+        </summary>
+        <div class="gorge-replay-inner">
+          <p class="small">Public samples show recorded events and visible zones. The snapshots are at the first decision of a turn, not turn end. Opponents' private hand identities are not published.</p>
+          <div class="gorge-replay-samples" id="gorge-replay-samples" hidden>
+            <label for="gorge-replay-sample-select">Verified Gorge game</label>
+            <select id="gorge-replay-sample-select" aria-label="Select verified Gorge game"></select>
+            <button id="gorge-replay-load" type="button">View game</button>
+          </div>
+          <label class="gorge-replay-upload-label" for="gorge-replay-file">Open a local Gorge native replay JSON</label>
+          <input id="gorge-replay-file" type="file" accept=".json,application/json">
+          <div class="gorge-replay-root" id="gorge-replay-root" aria-live="polite">
+            <p class="small">Select a verified public game, or open a locally saved full Gorge trace.</p>
+          </div>
         </div>
       </details>
     </div>
