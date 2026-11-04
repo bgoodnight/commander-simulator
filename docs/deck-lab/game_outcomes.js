@@ -304,7 +304,7 @@
     panel.appendChild(body);
     return panel;
   }
-  function limitationsDisclosure(isGorge=false){
+  function limitationsDisclosure(isGorge=false,isOmniscient=false){
     const details=create("details","game-outcome-limits");
     const trigger=create("summary",null,"ⓘ");
     trigger.setAttribute("aria-label","Model limitations and what improves accuracy");
@@ -314,7 +314,9 @@
       content.append(
         create("strong",null,"Gorge native four-player games · limited public sample"),
         create("p",null,"All opposing seats are genuine 100-card decks with Gorge AI pilots. Results are recorded native game-over events, not calibrated win-rate estimates."),
-        create("p",null,"Public replay omits private hand/draw identities. Visible board and life snapshots are at the first decision of each turn, NOT at turn end or necessarily after game over."),
+        create("p",null,isOmniscient?
+          "Synthetic omniscient mode provides named hands and draws for all four simulated players. Snapshots are at the first decision of each turn, NOT at turn end or necessarily after game over.":
+          "Public replay omits private hand/draw identities. Visible board and life snapshots are at the first decision of each turn, NOT at turn end or necessarily after game over."),
         create("p",null,"Only verified casts, plays and public-zone identities contribute to the card rankings. Hand-held, unplayed and private-draw metrics require a controlled richer export."));
     }else content.append(
       create("strong",null,"Early model · interpret with care"),
@@ -389,7 +391,7 @@
     childBuilder(body);
     panel.appendChild(body);
     // The icon is a sibling so it remains operable while the game card is closed.
-    wrapper.append(panel,limitationsDisclosure(options.isGorge));
+    wrapper.append(panel,limitationsDisclosure(options.isGorge,options.isOmniscient));
     return wrapper;
   }
   function metricTile(label,value,detail){
@@ -613,7 +615,8 @@
             record("tutorFound",action.target_name,run,row.turn,1,provenance);
             record("tutorUsed",action.card,run,row.turn,1,provenance);
           }
-          if(action.type==="draw"&&action.card&&!basic(action.card)){
+          if(action.type==="draw"&&action.card&&!basic(action.card)&&
+             (action.seat===undefined||Number(action.seat)===0)){
             seen.add(action.card);
             record("seen",action.card,run,row.turn,0,{eventIndex});
           }
@@ -995,6 +998,8 @@
     return (observation.actions||[]).map(a=>a?.card||a?.source).find(hasArt)||null;
   }
   function openingHandDescription(run){
+    if(run.batch?.engine==="gorge"&&Array.isArray(run.opening_hand))
+      return "Opening hand · "+run.opening_hand.join(", ");
     if(run.batch?.engine==="gorge")
       return "Opening hand · "+(Number.isInteger(run.opening_hand_count)?
         run.opening_hand_count:"unknown")+" cards (identities private)";
@@ -1080,6 +1085,24 @@
       if(!cards.length)list.appendChild(create("span","micro","None"));
       group.appendChild(list);panel.appendChild(group);
     }
+    if(Array.isArray(observation.opponent_hands)){
+      const all=create("details","insight-end-zone insight-omniscient-opponents");
+      all.appendChild(create("summary","insight-end-zone-label",
+        "Opponents' hands · omniscient simulation"));
+      const group=create("div","insight-omniscient-opponent-list");
+      for(const player of observation.opponent_hands){
+        const item=create("details","insight-end-zone");
+        const named=Array.isArray(player.hand)?player.hand:[];
+        item.appendChild(create("summary","insight-end-zone-label",
+          "Seat "+(player.seat+1)+" · "+player.deck_key+" · Hand "+player.hand_count));
+        const cards=create("div","insight-action-cards");
+        for(const name of named)cards.appendChild(insightActionCard(name,options));
+        if(!named.length)cards.appendChild(create("span","micro",
+          player.hand===null?"Not recorded":"Empty"));
+        item.appendChild(cards);group.appendChild(item);
+      }
+      all.appendChild(group);panel.appendChild(all);
+    }
     const mana=recordedManaOutput(observation);
     const line=create("div","insight-end-mana");
     line.appendChild(create("strong",null,"Mana generated"));
@@ -1163,12 +1186,17 @@
       row.appendChild(summary);
       const body=create("div","insight-turn-row-body");
       if(index===0){
-        if(run.batch?.engine==="gorge")
+        if(run.batch?.engine==="gorge"&&!Array.isArray(run.opening_hand))
           body.appendChild(create("p","micro",
             "Gorge recorded "+nfmt(run.opening_hand_count)+
             " cards in the opening hand. The public replay does not include card identities or mulligan decisions."));
-        else body.appendChild(endStatePanel({hand:run.opening_hand||[],
-          battlefield:[],graveyard:[],exile:[]},options));
+        else body.appendChild(endStatePanel({
+          hand:run.opening_hand||[],hand_count:run.opening_hand_count,
+          opponent_hands:run.opening_hands_by_seat||null,
+          battlefield:[],graveyard:[],exile:[],
+          snapshot_is_turn_end:run.batch?.engine==="gorge"?false:undefined,
+          snapshot_note:"Starting hand at the first pending decision of the game; mulligan history was not captured."
+        },options));
       }else if(!observation){
         body.appendChild(create("p","micro",
           "Action and zone details were not exported for this round."));
@@ -1867,11 +1895,14 @@
       "Seeds "+(seedList[0]===seedList.at(-1)?seedList[0]:
         seedList[0]+"–"+seedList.at(-1)):"Seeds unavailable";
     const outcomeMeta=total+" games · "+groups[0].requestedRounds+
-      " rounds · "+groups.length+" opponent groups · "+seedLabel;
+      " rounds · "+groups.length+" opponent groups · "+seedLabel+
+      (runs.some(r=>r.gorge_source?.visibility==="omniscient")?
+        " · Omniscient simulated hands":"");
     cards.appendChild(outcomeCard({
       counts,total,terminal:finished.length,
       terminalRounds:finished.map(run=>run.completed_rounds)
-    },{...options,isGorge,heroHighlights,outcomeMeta,onHighlightClick:openDetail},body=>{
+    },{...options,isGorge,isOmniscient:runs.some(r=>r.gorge_source?.visibility==="omniscient"),
+       heroHighlights,outcomeMeta,onHighlightClick:openDetail},body=>{
       const buckets=create("div","game-outcome-buckets");
       for(const state of STATES){
         if(!counts[state])continue;
@@ -1986,6 +2017,8 @@
     if(signals.coverage){
       const kinds=isGorge?
         ["played","creature","artifact","enchantment","instant","spell","land",
+          ...(runs.some(r=>r.gorge_source?.visibility==="omniscient")?
+             ["seen","seenCreature","unplayed","longest"]:[]),
           "activated"]:
         ["played","creature","artifact","enchantment",
           "instant","spell","land","seen","seenCreature","unplayed","longest",
