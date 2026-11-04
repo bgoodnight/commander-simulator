@@ -102,6 +102,8 @@ test("explicit synthetic omniscience restores named hands, opponent hands and so
   const row=g.turns.find(t=>t.turn===5);
   row.events.push({seq:999999,kind:"draw",obj:4321,player:0,
     card_name:"Dark Ritual"});
+  row.events.push({seq:999998,kind:"draw",obj:4322,player:1,
+    card_name:"Opponent Secret"});
   row.events.sort((a,b)=>a.seq-b.seq);
   g.object_identity["4321"]="Dark Ritual";
   assert.equal(adapt.validateReplay(g),true);
@@ -119,6 +121,8 @@ test("explicit synthetic omniscience restores named hands, opponent hands and so
     e.type==="draw"&&e.card==="Dark Ritual"&&e.seat===0)));
   const stats=old.observationCardStats([run],()=>null,"Mortarion, Daemon Primarch");
   assert.ok(stats.seen&&stats.ranked.seen.some(x=>x.name==="Dark Ritual"));
+  assert.ok(!stats.ranked.seen.some(x=>x.name==="Opponent Secret"),
+    "Enemy draws cannot contaminate hero's seen/unplayed insights");
   assert.ok(stats.ranked.longest.some(x=>x.name==="Simulated Card 1"));
   assert.equal(run.gorge_source.visibility,"omniscient");
 });
