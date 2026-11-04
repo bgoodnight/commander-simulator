@@ -2390,3 +2390,71 @@ body:has(#pane-records:not([hidden])) .compact-selection{margin-bottom:3px}
   background:#121f22;color:#f6e5bc;white-space:nowrap;
   font-variant-numeric:tabular-nums;margin-left:2px;
 }
+
+/* Commander identity-driven board tint. Life changes remain semantically
+   green/red, independent of each commander's color identity. */
+.insight-board-panel{
+  --commander-accent:#829d97;
+  --commander-wash:#213234;
+  --commander-stripe:linear-gradient(90deg,#829d97,#829d97);
+  border-color:var(--commander-accent);
+  background:linear-gradient(145deg,var(--commander-wash),#142527 75%);
+  box-shadow:inset 0 2px 0 color-mix(in srgb,var(--commander-accent) 45%,transparent);
+  transition:background .15s ease,border-color .15s ease;
+}
+.insight-board-panel .insight-board-title{
+  color:var(--commander-accent);
+}
+.insight-board-panel .insight-end-zone{
+  border-color:color-mix(in srgb,var(--commander-accent) 50%,#334848);
+  background:color-mix(in srgb,var(--commander-wash) 55%,#102124);
+}
+.insight-board-panel .insight-board-seat{
+  --commander-accent:#829d97;
+  --commander-wash:#213234;
+  position:relative;
+  overflow:hidden;
+  border-color:color-mix(in srgb,var(--commander-accent) 72%,#41565b);
+  background:linear-gradient(155deg,var(--commander-wash),#142528 85%);
+  color:#f2eee6;
+}
+.insight-board-panel .insight-board-seat::before{
+  content:"";position:absolute;left:0;right:0;top:0;height:3px;
+  background:var(--commander-stripe);
+}
+.insight-board-panel .insight-board-seat[aria-pressed="true"]{
+  border-color:var(--commander-accent);
+  background:linear-gradient(140deg,
+    color-mix(in srgb,var(--commander-wash) 85%,var(--commander-accent)),
+    #1a2b2c 85%);
+  box-shadow:inset 0 0 0 1px var(--commander-accent);
+}
+.insight-board-panel .insight-board-seat:hover{
+  border-color:var(--commander-accent);
+}
+.insight-board-panel .insight-board-seat .insight-seat-life-name{
+  color:#f1e7e0;
+}
+.insight-board-life-values{
+  display:flex;align-items:center;justify-content:center;
+  flex-wrap:wrap;gap:7px;font-variant-numeric:tabular-nums;
+}
+.insight-board-life-values .insight-seat-life-value{
+  color:#f5e8df;font-size:.89rem;line-height:1.2;
+}
+.insight-board-life-values .insight-seat-life-delta{
+  display:inline-flex;align-items:center;justify-content:center;
+  font-size:.76rem;font-weight:750;line-height:1.2;
+  min-width:30px;padding:2px 5px;border-radius:5px;
+  border:1px solid transparent;
+}
+.insight-board-life-values .insight-seat-life-delta.is-gain{
+  color:#b8f3cb;border-color:#548b68;background:#19382c;
+}
+.insight-board-life-values .insight-seat-life-delta.is-loss{
+  color:#ffb9b4;border-color:#a35a5c;background:#42252a;
+}
+@media(max-width:650px){
+  .insight-board-life-values{gap:4px}
+  .insight-board-life-values .insight-seat-life-delta{font-size:.72rem}
+}
