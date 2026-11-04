@@ -166,7 +166,7 @@ test('modeled panels expose distinct outcome, life and matchup disclosures with 
   class Node{
     constructor(tag){
       this.tag=tag;this.className='';this.textContent='';this.children=[];
-      this.attributes={};this.style={};this.events={};this.dataset={};
+      this.attributes={};this.style={setProperty(name,value){this[name]=value}};this.events={};this.dataset={};
     }
     append(...n){this.children.push(...n)}
     appendChild(n){this.children.push(n);return n}
@@ -230,7 +230,7 @@ test('modeled panels expose distinct outcome, life and matchup disclosures with 
 test('selecting an opponent scroll entry changes the one shown art card and per-opponent metrics',()=>{
   class Node{
     constructor(tag){this.tag=tag;this.className='';this.textContent='';
-      this.children=[];this.style={};this.attributes={};this.events={};}
+      this.children=[];this.style={setProperty(name,value){this[name]=value}};this.attributes={};this.events={};}
     append(...a){this.children.push(...a)}
     appendChild(a){this.children.push(a);return a}
     replaceChildren(...a){this.children=a}
@@ -439,7 +439,7 @@ test('elastic net card interpretation and sign chart sit immediately above revie
 test('featured card insight switches artwork, mana, metrics, and evidence with selected bar',()=>{
   class Node{
     constructor(tag){this.tag=tag;this.className='';this.textContent='';
-      this.children=[];this.attributes={};this.dataset={};this.style={};this.events={};this.hidden=false}
+      this.children=[];this.attributes={};this.dataset={};this.style={setProperty(name,value){this[name]=value}};this.events={};this.hidden=false}
     append(...n){this.children.push(...n)}
     appendChild(n){this.children.push(n);return n}
     replaceChildren(...n){this.children=[...n]}
@@ -568,7 +568,7 @@ test('commander and basic lands are excluded while seen-creature and use metrics
 test('hero performance metrics open original details as modal panels, not grid duplicates',()=>{
   class Node{
     constructor(tag){this.tag=tag;this.className='';this.textContent='';
-      this.children=[];this.attributes={};this.dataset={};this.style={};
+      this.children=[];this.attributes={};this.dataset={};this.style={setProperty(name,value){this[name]=value}};
       this.events={};this.open=false;this.focused=false;}
     append(...items){this.children.push(...items)}
     appendChild(item){this.children.push(item);return item}
@@ -647,7 +647,7 @@ test('turn spotlight prioritizes real own plays and never invents drawn/opposing
 test('full-game reviewer uses same compact turn rows as insight evidence',()=>{
   class Node{
     constructor(tag){this.tag=tag;this.className='';this.textContent='';
-      this.children=[];this.attributes={};this.style={};this.dataset={};this.events={};
+      this.children=[];this.attributes={};this.style={setProperty(name,value){this[name]=value}};this.dataset={};this.events={};
       this.open=false;}
     append(...items){this.children.push(...items)}
     appendChild(item){this.children.push(item);return item}
@@ -736,7 +736,7 @@ test('resolved tutor insights count found targets and tutor sources, not merely 
 test('tutor card insight panels only appear for confirmed named search resolutions',()=>{
   class Node{
     constructor(tag){this.tag=tag;this.className='';this.textContent='';
-      this.children=[];this.attributes={};this.style={};this.dataset={};this.events={};}
+      this.children=[];this.attributes={};this.style={setProperty(name,value){this[name]=value}};this.dataset={};this.events={};}
     append(...items){this.children.push(...items)}
     appendChild(item){this.children.push(item);return item}
     replaceChildren(...items){this.children=[...items]}
@@ -777,7 +777,7 @@ test('tutor card insight panels only appear for confirmed named search resolutio
 test('selected card insight embeds relevant game turns and real life/zone change glows',()=>{
   class Node{
     constructor(tag){this.tag=tag;this.className='';this.textContent='';
-      this.children=[];this.attributes={};this.style={};this.dataset={};this.events={};
+      this.children=[];this.attributes={};this.style={setProperty(name,value){this[name]=value}};this.dataset={};this.events={};
       this.open=false;}
     append(...items){this.children.push(...items)}
     appendChild(item){this.children.push(item);return item}
@@ -831,7 +831,7 @@ test('selected card insight embeds relevant game turns and real life/zone change
 test('turn background uses first named card and enemy activity has one condensed block',()=>{
   class Node{
     constructor(tag){this.tag=tag;this.className='';this.textContent='';
-      this.children=[];this.attributes={};this.style={};this.dataset={};this.events={};
+      this.children=[];this.attributes={};this.style={setProperty(name,value){this[name]=value}};this.dataset={};this.events={};
       this.open=false;}
     append(...items){this.children.push(...items)}
     appendChild(item){this.children.push(item);return item}
@@ -890,7 +890,7 @@ test('turn background uses first named card and enemy activity has one condensed
 test('narrated turn summary and expanded actions reuse factual card-linked wording',()=>{
   class Node{
     constructor(tag){this.tag=tag;this.className='';this.textContent='';
-      this.children=[];this.attributes={};this.style={};this.dataset={};this.events={};
+      this.children=[];this.attributes={};this.style={setProperty(name,value){this[name]=value}};this.dataset={};this.events={};
       this.open=false;}
     append(...items){this.children.push(...items)}
     appendChild(item){this.children.push(item);return item}
@@ -1045,7 +1045,7 @@ test('compact insight summary beats legacy 152px min-height specificity',()=>{
 test('turn header art prefers highest-value nonland play, ties first, and falls back to land',()=>{
   class Node{
     constructor(tag){this.tag=tag;this.className='';this.textContent='';
-      this.children=[];this.attributes={};this.style={};this.dataset={};this.events={};
+      this.children=[];this.attributes={};this.style={setProperty(name,value){this[name]=value}};this.dataset={};this.events={};
       this.open=false;}
     append(...items){this.children.push(...items)}
     appendChild(item){this.children.push(item);return item}
@@ -1176,7 +1176,7 @@ test('turn summary only shows supported mana colors and hand, not battlefield/gr
 test('turn summaries and end state use actual mana pips and clickable typed cards',()=>{
   class Node{
     constructor(tag){this.tag=tag;this.className='';this.textContent='';
-      this.children=[];this.attributes={};this.style={};this.dataset={};this.events={};this.open=false}
+      this.children=[];this.attributes={};this.style={setProperty(name,value){this[name]=value}};this.dataset={};this.events={};this.open=false}
     append(...items){this.children.push(...items)}
     appendChild(item){this.children.push(item);return item}
     replaceChildren(...items){this.children=[...items]}
