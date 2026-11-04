@@ -2075,3 +2075,40 @@ body:has(#pane-records:not([hidden])) .compact-selection{margin-bottom:3px}
   .gorge-replay-event-list{min-width:0;max-width:100%;overflow-x:hidden}
   .gorge-replay-samples{min-width:0}
 }
+
+/* Data migration keeps the original cards/typography; only the new recorded
+   deck selector and formerly archived panels need responsive constraints. */
+.gorge-recorded-deck-picker{
+  display:grid;gap:4px;min-width:0;max-width:100%;
+  flex:0 1 320px;
+}
+.gorge-recorded-deck-picker .micro{text-align:left}
+.gorge-recorded-deck-select{
+  min-width:0;max-width:100%;width:100%;box-sizing:border-box;
+  white-space:nowrap;text-overflow:ellipsis;overflow:hidden;
+}
+#simulation-snapshot,#key-insights-panel,#long-game-panel,
+#turn-reviewer-panel,#development-panel{
+  min-width:0;max-width:100%;box-sizing:border-box;
+}
+#game-outcome-results,#key-insights-grid,
+#game-outcome-results .game-outcome-grid{
+  min-width:0;max-width:100%;
+}
+@media(max-width:650px){
+  .simulation-snapshot-heading{
+    display:grid;grid-template-columns:minmax(0,1fr);
+    align-items:start;gap:5px;min-width:0;
+  }
+  .simulation-snapshot-heading .micro{text-align:left;overflow-wrap:anywhere}
+  .gorge-recorded-deck-picker{width:100%;max-width:100%}
+  #long-game-panel .board-grid,
+  #key-insights-grid{grid-template-columns:minmax(0,1fr)}
+  #long-game-panel .board-report,#key-insights-panel .board-report{
+    min-width:0;max-width:100%;
+  }
+  #long-game-panel .game-outcome-hero-copy{min-width:0}
+  #long-game-panel .game-outcome-hero-highlights{
+    grid-template-columns:repeat(2,minmax(0,1fr));min-width:0
+  }
+}
