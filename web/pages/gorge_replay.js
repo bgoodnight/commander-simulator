@@ -339,6 +339,11 @@ function paintView(rootElement,data){
      data.decks.length!==4||data.visibility!=="public_events_only")
     throw Error("Expected a public gorge-ui-replay-v1 export");
   rootElement.replaceChildren();
+  if(typeof window!=="undefined"&&window.GorgeDashboard){
+    window.__gorgeActiveGame=data;
+    const loaded=window.__gorgeLoadedGames||[data];
+    window.GorgeDashboard.render(loaded,data.seed);
+  }
   const header=node("div","gorge-replay-header");
   header.append(node("h3",null,"Gorge Commander · Game "+data.seed));
   header.append(node("p","small",data.decks.join(" · ")));
@@ -411,7 +416,9 @@ function init(){
   if(typeof location!=="undefined"&&location.pathname.endsWith("/results.html")){
     const content=$("app-content"),panel=$("gorge-replay-panel");
     if(content&&panel&&content.contains(panel)){
+      const dashboard=$("gorge-dashboard");
       content.before(panel);
+      if(dashboard)panel.before(dashboard);
       panel.hidden=false;
       panel.open=true;
     }
@@ -422,6 +429,7 @@ function init(){
   const select=$("gorge-replay-sample-select");
   const loadButton=$("gorge-replay-load");
   const available=new Set();
+  const loadedGames=new Map();
   async function openPublicSample(name){
     if(!available.has(name))throw Error("Replay not in public manifest");
     rootElement.replaceChildren(node("p","small","Loading verified gorge game…"));
@@ -432,6 +440,8 @@ function init(){
        data.visibility!=="public_events_only"||
        !Array.isArray(data.snapshots)||!data.snapshots.length)
       throw Error("Unverified public gorge replay");
+    loadedGames.set(data.seed,data);
+    if(typeof window!=="undefined")window.__gorgeLoadedGames=[...loadedGames.values()];
     paintView(rootElement,data);
   }
   if(samples&&select&&loadButton){
@@ -456,7 +466,20 @@ function init(){
       }
       if(!available.size)return;
       samples.hidden=false;
-      return openPublicSample(select.value);
+      // Preload each verified game for cross-deck summaries. The selected
+      // game stays authoritative for the turn viewer and can be switched.
+      return Promise.all([...available].map(name=>
+        fetch("./gorge-data/"+encodeURIComponent(name)).then(r=>{
+          if(!r.ok)throw Error("Missing public gorge sample");
+          return r.json();
+        }).then(g=>{
+          if(g.schema==="gorge-ui-replay-v1"&&g.visibility==="public_events_only")
+            loadedGames.set(g.seed,g);
+        })
+      )).then(()=>{
+        if(typeof window!=="undefined")window.__gorgeLoadedGames=[...loadedGames.values()];
+        return openPublicSample(select.value);
+      });
     }).catch(()=>{/* Keep local-file import available while examples are unpublished. */});
   }
   input.addEventListener("change",async()=>{
