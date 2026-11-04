@@ -1143,7 +1143,8 @@
   function compactInsightTimeline(root,run,options={}){
     root.replaceChildren();
     const head=create("div","game-outcome-evidence-head");
-    head.append(create("strong",null,"Seed "+run.seed+" · "+stateLabel(run.outcome.status)),
+    head.append(create("strong",null,options.displayGameLabel||
+      "Seed "+run.seed+" · "+stateLabel(run.outcome.status)),
       create("span","micro",roundLabel(run)));
     if(!options.hideEvidenceHead||run.batch?.engine==="gorge")root.appendChild(head);
     const timeline=create("div","insight-turn-timeline");
@@ -1523,55 +1524,58 @@
   function turnReviewer(root,groups,options={}){
     root.replaceChildren();
     const choices=create("div","game-outcome-review-controls");
-    const scenarioSelect=create("select","game-outcome-scenario-select");
-    scenarioSelect.setAttribute("aria-label","Choose opponent scenario");
-    const seedSelect=create("select","game-outcome-scenario-select");
-    seedSelect.setAttribute("aria-label","Choose recorded game seed");
+    const gameSelect=create("select","game-outcome-scenario-select");
+    gameSelect.setAttribute("aria-label","Choose recorded game");
     const available=groups.filter(g=>g.runs.length);
     if(!available.length){root.textContent="No recorded games.";return}
-    for(const group of available){
-      const option=create("option",null,group.scenario+" · "+
-        group.runs.length+" games");
-      option.value=group.id;
-      scenarioSelect.appendChild(option);
+    // All games share a single selection surface. Retain their source group
+    // and exact seed for drilldowns, but do not expose internal scenario IDs.
+    const games=available.flatMap(group=>group.runs.map(run=>({group,run})));
+    function gameLabel(entry,index){
+      const enemies=opponentDecks(entry.run,entry.run.batch)
+        .map(deck=>deck.name);
+      return "Game "+(index+1)+"/"+games.length+" · "+
+        stateLabel(entry.run.outcome.status)+
+        (enemies.length?" · "+enemies.join(" · "):"");
     }
-    choices.append(scenarioSelect,seedSelect);
+    games.forEach((entry,index)=>{
+      const option=create("option",null,gameLabel(entry,index));
+      option.value=String(index);
+      gameSelect.appendChild(option);
+    });
+    choices.appendChild(gameSelect);
     const evidence=create("div","game-outcome-evidence game-outcome-review-evidence");
     root.append(choices,evidence);
-    let active=available[0];
     let focusTurn=null;
-    function showSeed(){
-      const run=active.runs.find(r=>String(r.seed)===String(seedSelect.value));
-      if(!run)return;
-      runDetails(evidence,run,{example:active.exampleBySeed.get(run.seed),
+    function showGame(){
+      const index=Number(gameSelect.value);
+      const entry=games[index];
+      if(!entry)return;
+      const {group,run}=entry;
+      runDetails(evidence,run,{
+        example:group.exampleBySeed.get(run.seed),
         onShowRecordedActions:options.onShowRecordedActions,
         onOpenRecordedCard:options.onOpenRecordedCard,
         lookupRecordedCard:options.lookupRecordedCard,
         renderMana:options.renderMana,
-        focusTurn:focusTurn});
+        focusTurn:focusTurn,
+        displayGameLabel:gameLabel(entry,index)
+      });
     }
-    function showGroup(seed,turn=null){
-      focusTurn=turn;
-      active=available.find(g=>g.id===scenarioSelect.value)||available[0];
-      seedSelect.replaceChildren();
-      for(const run of active.runs){
-        const option=create("option",null,"Seed "+run.seed+" · "+
-          stateLabel(run.outcome.status)+" · Round "+run.completed_rounds);
-        option.value=String(run.seed);
-        seedSelect.appendChild(option);
-      }
-      const firstExample=active.runs.find(run=>active.exampleBySeed.has(run.seed));
-      seedSelect.value=String(seed??(firstExample||active.runs[0]).seed);
-      showSeed();
-    }
-    scenarioSelect.addEventListener("change",()=>showGroup());
-    seedSelect.addEventListener("change",showSeed);
-    showGroup();
+    gameSelect.addEventListener("change",()=>{
+      focusTurn=null;
+      showGame();
+    });
+    const firstExample=games.findIndex(({group,run})=>group.exampleBySeed.has(run.seed));
+    gameSelect.value=String(firstExample>=0?firstExample:0);
+    showGame();
     return function jump(id,seed,turn=null){
-      const group=available.find(g=>g.id===id);
-      if(!group)return;
-      scenarioSelect.value=id;
-      showGroup(seed,turn);
+      const index=games.findIndex(({group,run})=>
+        group.id===id&&String(run.seed)===String(seed));
+      if(index<0)return;
+      focusTurn=turn;
+      gameSelect.value=String(index);
+      showGame();
       if(options.reviewerPanel?.scrollIntoView)
         options.reviewerPanel.scrollIntoView({behavior:"smooth",block:"start"});
     };
