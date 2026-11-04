@@ -1,0 +1,141 @@
+name: Gorge · player decks versus rotating precon opponents
+
+# Runs 20 genuine games while enforcing player-only Mortarion/Magnus and
+# stock-precon-only enemy seats. All raw data are Actions artifacts, never
+# source-controlled or published as static website files.
+on:
+  push:
+    branches: [main]
+    paths:
+      - ".github/workflows/gorge-player-precon-validation.yml"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: gorge-player-precon-validation
+  cancel-in-progress: false
+
+jobs:
+  validate:
+    runs-on: ubuntu-latest
+    timeout-minutes: 70
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Validate deck roles and Gorge data contracts
+        run: |
+          python -m unittest tests.test_commander_deck_library tests.test_gorge_precons_and_replay tests.test_gorge_results_pipeline -v
+      - name: Prepare player decks, six authentic precons, and matchup metadata
+        run: |
+          mkdir -p "$RUNNER_TEMP/decks" "$RUNNER_TEMP/results/native"
+          python -m tools.export_gorge_decks --out "$RUNNER_TEMP/decks" \
+            --decks mortarion_current magnus_premium necron_dynasties wretched_ranks
+          python -m tools.fetch_gorge_precons --out "$RUNNER_TEMP/decks"
+          for hero in mortarion_current magnus_premium; do
+            if [ "$hero" = mortarion_current ]; then stem=mortarion; else stem=magnus; fi
+            python -m tools.commander_deck_library \
+              --hero "$hero" \
+              --opponents necron_dynasties,wretched_ranks,cavalry-charge,science-pip,deadly-disguise,avengers-assemble \
+              --deck-dir "$RUNNER_TEMP/decks" \
+              --output "$RUNNER_TEMP/results/$stem-pod.json"
+          done
+      - name: Clone pinned Gorge rules implementation
+        env:
+          GORGE_COMMIT: b78e4c8b16078f6decbc48875bba953ce5535b85
+        run: |
+          git clone --filter=blob:none https://github.com/adams-shaun/gorge.git "$RUNNER_TEMP/gorge"
+          git -C "$RUNNER_TEMP/gorge" checkout --detach "$GORGE_COMMIT"
+          test "$(git -C "$RUNNER_TEMP/gorge" rev-parse HEAD)" = "$GORGE_COMMIT"
+      - uses: actions/setup-go@v5
+        with:
+          go-version-file: ${{ runner.temp }}/gorge/go.mod
+          cache: false
+      - name: Compile original Gorge rules and Commander driver
+        working-directory: ${{ runner.temp }}/gorge
+        run: |
+          make fetch-cards compile-cards
+          cp "$GITHUB_WORKSPACE/tools/gorge_commander_probe.go" commander_probe.go
+          go build -o "$RUNNER_TEMP/gorge-probe" ./commander_probe.go
+      - name: Run 10 Mortarion and 10 Magnus games against rotating precons
+        working-directory: ${{ runner.temp }}/gorge
+        env:
+          PYTHONPATH: ${{ github.workspace }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          for hero in mortarion_current magnus_premium; do
+            if [ "$hero" = mortarion_current ]; then seed=600; stem=mortarion; else seed=610; stem=magnus; fi
+            "$RUNNER_TEMP/gorge-probe" \
+              -corpus "$RUNNER_TEMP/gorge/.cards" \
+              -deck-dir "$RUNNER_TEMP/decks" \
+              -hero-deck "$hero" \
+              -opponents necron_dynasties,wretched_ranks,cavalry-charge,science-pip,deadly-disguise,avengers-assemble \
+              -games 10 -seed "$seed" -max-turns 60 \
+              -pilot bot -verify=true \
+              -native-dir "$RUNNER_TEMP/results/native" -native-limit 10 \
+              > "$RUNNER_TEMP/results/$stem-runs.jsonl"
+            python -m tools.annotate_gorge_matchups \
+              --runs "$RUNNER_TEMP/results/$stem-runs.jsonl" \
+              --pod "$RUNNER_TEMP/results/$stem-pod.json" \
+              --out "$RUNNER_TEMP/results/$stem-annotated.jsonl"
+          done
+          cat "$RUNNER_TEMP/results/mortarion-runs.jsonl" \
+              "$RUNNER_TEMP/results/magnus-runs.jsonl" \
+              > "$RUNNER_TEMP/results/gorge_runs.jsonl"
+      - name: Audit 20 verified recordings and role assignments
+        run: |
+          python -m tools.validate_gorge_enrichment \
+            --native-dir "$RUNNER_TEMP/results/native" \
+            --output "$RUNNER_TEMP/results/enrichment_validation.json"
+          python - <<'PY'
+          import json,os
+          from pathlib import Path
+          p=Path(os.environ["RUNNER_TEMP"])/"results"
+          rows=[json.loads(x) for x in (p/"gorge_runs.jsonl").read_text().splitlines()]
+          assert len(rows)==20 and {x["seed"] for x in rows}==set(range(600,620))
+          assert len(list((p/"native").glob("gorge-seed-*.json")))==20
+          for row in rows:
+              assert row["finished"] and row["replay_verified"] and not row.get("error")
+              seat=row["hero_seat"]
+              hero="mortarion_current" if row["seed"]<610 else "magnus_premium"
+              assert row["decks"][seat]==hero
+              assert all(key not in ("mortarion_current","magnus_premium")
+                         for i,key in enumerate(row["decks"]) if i!=seat)
+          for hero in ("mortarion","magnus"):
+              annotations=[json.loads(x) for x in (p/f"{hero}-annotated.jsonl").read_text().splitlines()]
+              assert len(annotations)==10
+              assert all(sum(seat["role"]=="opponent" for seat in row["seat_metadata"])==3
+                         for row in annotations)
+          with open(os.environ["GITHUB_STEP_SUMMARY"],"a") as f:
+              f.write("# Twenty precon-only Commander games\n\n")
+              f.write("10 Mortarion + 10 Magnus, each facing three of six verified stock precons.\n")
+              f.write("Native source, distinct seats, legal decks, and replay hashes validated.\n")
+          PY
+      - name: Convert source recordings to UI replay catalog and analytics
+        run: |
+          python -m tools.gorge_results_pipeline \
+            --native-dir "$RUNNER_TEMP/results/native" \
+            --runs "$RUNNER_TEMP/results/gorge_runs.jsonl" \
+            --existing-dir web/pages/data/gorge \
+            --pod-dir "$RUNNER_TEMP/results" \
+            --out "$RUNNER_TEMP/public_ui" \
+            --max-replays 20 --include-hidden
+      - name: Retain native source evidence independently of UI publication
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: gorge-player-precon-native-20
+          path: ${{ runner.temp }}/results/
+          retention-days: 14
+          if-no-files-found: warn
+      - name: Make safe replay catalog available to separate publisher
+        uses: actions/upload-artifact@v4
+        with:
+          name: gorge-ui-publication
+          path: ${{ runner.temp }}/public_ui/
+          retention-days: 14
+          if-no-files-found: error
