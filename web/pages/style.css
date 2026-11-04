@@ -2210,12 +2210,12 @@ body:has(#pane-records:not([hidden])) .compact-selection{margin-bottom:3px}
 .insight-board-panel .insight-end-state{border-top:0;padding:0;display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:7px}
 .insight-board-panel .insight-end-zone{min-width:0;background:#112226;border:1px solid #526960;padding:6px}
 .insight-board-panel .insight-end-zone>summary{font-size:.72rem;gap:4px;overflow-wrap:anywhere}
-.insight-board-panel .insight-board-hand-,.insight-board-panel .insight-omniscient-opponents{grid-column:1/-1}
-.insight-board-panel .insight-board-creatures-,.insight-board-panel .insight-board-lands-{grid-column:span 2}
+.insight-board-panel .insight-board-hand,.insight-board-panel .insight-omniscient-opponents{grid-column:1/-1}
+.insight-board-panel .insight-board-creatures,.insight-board-panel .insight-board-lands{grid-column:span 2}
 .insight-board-panel .insight-end-zone .insight-action-cards{display:flex;flex-wrap:wrap}
 @media(max-width:650px){
  .insight-board-panel .insight-end-state{grid-template-columns:repeat(2,minmax(0,1fr))}
- .insight-board-panel .insight-board-hand-,.insight-board-panel .insight-board-creatures-,.insight-board-panel .insight-board-lands-,.insight-board-panel .insight-omniscient-opponents{grid-column:1/-1}
+ .insight-board-panel .insight-board-hand,.insight-board-panel .insight-board-creatures,.insight-board-panel .insight-board-lands,.insight-board-panel .insight-omniscient-opponents{grid-column:1/-1}
  .insight-action-entry .insight-action-art{width:24px;height:32px}
  .insight-board-panel .insight-seat-life-strip{gap:3px}
 }
