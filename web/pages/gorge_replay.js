@@ -404,6 +404,14 @@ function paintView(rootElement,data){
 function init(){
   const input=$("gorge-replay-file"),rootElement=$("gorge-replay-root");
   if(!input||!rootElement)return;
+  // Gorge replay is the active Results page, not a deck-scoped legacy
+  // simulation. Show it even if the old Python-driven deck loader has not
+  // selected a deck (or its archived dataset fails to initialize).
+  if(typeof location!=="undefined"&&location.pathname.endsWith("/results.html")){
+    const content=$("app-content"),records=$("pane-records");
+    if(content)content.hidden=false;
+    if(records)records.hidden=false;
+  }
   // Only load versions explicitly named by the validated public manifest.
   // No hidden gorge native log is fetched or published by this control.
   const samples=$("gorge-replay-samples");
