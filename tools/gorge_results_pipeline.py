@@ -98,7 +98,7 @@ def public_replay_is_safe(doc, entry):
 
 
 def project_batch(*, native_dir, summaries, out, existing_dir=None,
-                  max_replays=20, include_hidden=True):
+                  max_replays=20, include_hidden=True, pod_dir=None):
     if not include_hidden:
         raise ValueError("This manifest requires explicit synthetic omniscient projection")
     if type(max_replays) is not int or max_replays < 0 or max_replays > 500:
@@ -130,6 +130,17 @@ def project_batch(*, native_dir, summaries, out, existing_dir=None,
     # including games not selected for detailed replay storage.
     analytics = dict(old_analytics)
     retained = set(sorted(rows)[:max_replays])
+    configs = {}
+    library = None
+    if pod_dir is not None:
+        from tools.commander_deck_library import load_library
+        library = load_library()
+        for path in sorted(Path(pod_dir).glob("*-pod.json")):
+            pod = json.loads(path.read_text(encoding="utf-8"))
+            hero = pod.get("hero")
+            if not isinstance(hero, str) or hero in configs:
+                raise ValueError("Invalid or duplicate player pod metadata")
+            configs[hero] = pod
     for seed, summary in sorted(rows.items()):
         trace_path = traces[seed]
         raw = trace_path.read_bytes()
@@ -148,6 +159,31 @@ def project_batch(*, native_dir, summaries, out, existing_dir=None,
             raise ValueError(f"Invalid source winner seat for game {seed}")
         if winner is not None and summary.get("draw"):
             raise ValueError("A drawn game cannot also have a winner")
+        seat_metadata = None
+        hero_seat = summary.get("hero_seat")
+        if configs and hero_seat is not None:
+            from tools.commander_deck_library import (
+                validate_pod, matchup_annotations,
+            )
+            if (type(hero_seat) is not int or hero_seat not in range(4)
+                    or source.get("hero_seat") != hero_seat
+                    or source.get("opponent_mode") is not True):
+                raise ValueError(f"Unverified designated player seat for seed {seed}")
+            hero = summary["decks"][hero_seat]
+            pod = configs.get(hero)
+            if pod is None:
+                raise ValueError(f"No validated deck metadata for {hero}")
+            validate_pod(library, hero, pod["opponent_pool"])
+            if (any(key not in pod["opponent_pool"] for i,key
+                    in enumerate(summary["decks"]) if i!=hero_seat)
+                    or len(set(summary["decks"]))!=4):
+                raise ValueError("A custom or duplicate deck entered an opponent seat")
+            hashes = pod["deck_sha256"]
+            seat_metadata = [
+                {**annotation, "seat": i, "deck_sha256": hashes[key]}
+                for i, (key, annotation) in enumerate(zip(
+                    summary["decks"], matchup_annotations(library, summary["decks"])))
+            ]
         analytics[seed] = {
             "seed": seed, "decks": summary["decks"],
             "policies": summary["policies"],
@@ -163,6 +199,10 @@ def project_batch(*, native_dir, summaries, out, existing_dir=None,
             "snapshot_count": validation["turn_boundaries"],
             "snapshot_boundary": validation["snapshot_definition"],
             "deck_role_note": "Decks are actual recorded seats, not inferred opponent classifications",
+            **({"player_seat": hero_seat,
+                "seat_metadata": seat_metadata,
+                "metadata_version": library["metadata_version"]}
+               if seat_metadata is not None else {}),
         }
         if seed not in retained:
             continue
@@ -225,11 +265,13 @@ def main():
     p.add_argument("--existing-dir", type=Path)
     p.add_argument("--max-replays", type=int, default=20)
     p.add_argument("--include-hidden", action="store_true")
+    p.add_argument("--pod-dir", type=Path,
+                   help="Validated role and deck-hash configurations for player-only pods")
     a = p.parse_args()
     print(json.dumps(project_batch(
         native_dir=a.native_dir, summaries=a.runs, out=a.out,
         existing_dir=a.existing_dir, max_replays=a.max_replays,
-        include_hidden=a.include_hidden), sort_keys=True))
+        include_hidden=a.include_hidden, pod_dir=a.pod_dir), sort_keys=True))
 
 if __name__ == "__main__":
     main()
