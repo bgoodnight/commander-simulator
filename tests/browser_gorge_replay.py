@@ -46,7 +46,27 @@ def check():
             # Gorge has to be in the active Results pane, not hidden behind
             # the old Python simulated-results archive.
             page.locator("#gorge-replay-root h3").filter(
-                has_text="Gorge Commander · Game 300").wait_for(timeout=35000)
+                has_text="Gorge Commander · Game 300").wait_for(state="attached",timeout=20000)
+            # Diagnose visibility from REAL computed styles, including app
+            # container/accordion ancestry. Save a screenshot even on failure.
+            page.wait_for_timeout(2500)
+            ancestors=page.evaluate("""() => {
+              const el=document.querySelector('#gorge-replay-root h3');
+              let p=el, out=[];
+              while(p&&out.length<16){
+                const st=getComputedStyle(p);
+                out.push({id:p.id,tag:p.tagName,cls:p.className,
+                  hidden:p.hidden,open:p.open,display:st.display,
+                  visibility:st.visibility,rect:p.getBoundingClientRect().height});
+                p=p.parentElement;
+              }
+              return out;
+            }""")
+            print("VISIBILITY",json.dumps(ancestors),flush=True)
+            print("BROWSER ERRORS",errors,flush=True)
+            page.screenshot(path=str(OUT/"before-fix-diagnostic.png"),full_page=False)
+            page.locator("#gorge-replay-root h3").filter(
+                has_text="Gorge Commander · Game 300").wait_for(timeout=15000)
             assert page.locator("#gorge-replay-samples").is_visible()
             assert page.locator("#gorge-replay-panel").is_visible()
             assert not page.locator("#legacy-simulation-archive").evaluate(
