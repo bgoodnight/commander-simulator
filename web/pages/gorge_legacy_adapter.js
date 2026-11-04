@@ -344,9 +344,8 @@
       if(reviewer)reviewer.replaceChildren();return;
     }
     if(!batch){
-      outcomes.replaceChildren(document.createTextNode(records.length?
-        "No simulations have been run with this deck in the player seat.":
-        "Loading source-verified Gorge simulations…"));
+      outcomes.replaceChildren(document.createTextNode(
+        "No simulations have been run with this deck in the player seat."));
       // Offer a real matching Gorge run for the other Mortarion revision
       // without falsely presenting it as the selected Physical Final deck.
       if(records.length&&key==="mortarion_physical_final"&&
@@ -364,7 +363,7 @@
         link.style.marginTop="12px";
         outcomes.append(note,link);
       }
-      if(status)status.textContent=records.length?"No player-seat Gorge simulations":"Loading Gorge games…";
+      if(status)status.textContent="No player-seat Gorge simulations";
       if(reviewer)reviewer.replaceChildren();return;
     }
     if(!window.DeckGameOutcomes?.validate(batch)){
