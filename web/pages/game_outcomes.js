@@ -2086,7 +2086,7 @@
       for(const kind of kinds){
         const panel=cardPerformancePanel(kind,signals.ranked[kind],
           signals.coverage,groups,
-          {...options,tutorSearchCount:signals.confirmedTutors},onReviewRun);
+          {...options,isGorge,tutorSearchCount:signals.confirmedTutors},onReviewRun);
         if(panel)cards.appendChild(panel);
       }
     }else{
