@@ -1547,8 +1547,9 @@
     const displayValue=item=>valueFor(item);
     const cardData=item=>options.lookupRecordedCard?.(item.name)||null;
     let initialSelect=null;
-    const panel=card(isAbility&&kind==="activated"?
-      "Most activated ability":insightCategoryLabel(kind),"Card insight",
+    const panelTitle=isAbility&&kind==="activated"?
+      "Most activated ability":insightCategoryLabel(kind);
+    const panel=card(panelTitle,"Card insight",
       displayValue(winner),winner.name,body=>{
         const compare=create("div","insight-featured-compare");
         const featured=create("div","insight-featured-selected");
@@ -1723,7 +1724,7 @@
     panel.className+=" insight-card-with-evidence insight-featured-panel";
     const summary=panel.children[0];
     const copy=summary.children[0];
-    const title=create("strong","game-outcome-title",insightCategoryLabel(kind));
+    const title=create("strong","game-outcome-title",panelTitle);
     const subtitle=create("span","insight-head-subtitle");
     const featuredName=create("span","insight-head-name",winner.name);
     const costSlot=create("span","insight-head-mana");
