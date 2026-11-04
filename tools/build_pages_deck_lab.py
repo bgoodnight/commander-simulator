@@ -365,6 +365,14 @@ def build(output, *, catalog_path=SHARED_CATALOG, name_catalog_path=DEFAULT_NAME
                            for x in analytics["games"])):
                 raise ValueError("Unsafe Gorge analytics payload")
             shutil.copy2(analytics_path, target / "analytics.json")
+            # All high-level Gorge results and exploratory regressions come
+            # from every verified outcome, never the sampled detailed replays.
+            from tools.gorge_cohort_report import make_report
+            cohort = make_report(analytics["games"])
+            (target / "cohort.json").write_text(
+                json.dumps(cohort, separators=(",", ":"), sort_keys=True) + "\\n",
+                encoding="utf-8",
+            )
 
     # Optional long-game exports are copied only if explicitly pinned to
     # an exact built-in deck revision. The site builder NEVER runs simulation
