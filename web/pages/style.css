@@ -1171,7 +1171,7 @@ body:has(#pane-records:not([hidden])) .page-introduction a{font-size:.72rem}
 
 /* Latest-only Results: one card feed, then a recorded-game reviewer. */
 #pane-records{display:grid;gap:18px}
-#pane-records > :not(#long-game-panel):not(#turn-reviewer-panel){display:none!important}
+#pane-records > :not(#long-game-panel):not(#turn-reviewer-panel):not(#gorge-replay-panel){display:none!important}
 #pane-records > #long-game-panel{background:transparent;border:0;border-radius:0;
   padding:0;margin:0;box-shadow:none;overflow:visible}
 #pane-records > #turn-reviewer-panel{display:block}
