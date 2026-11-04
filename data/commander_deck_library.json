@@ -1,0 +1,271 @@
+{
+  "schema": "commander-deck-library-v1",
+  "metadata_version": 1,
+  "description": "Source-classified Commander deck pool. Player-owned custom lists never enter random opponent sampling.",
+  "annotation_policy": "Archetype labels are descriptive hypotheses (not measured coverage or power). Color identities come from commander card identity; source/version must be checked at execution.",
+  "allowed_archetypes": [
+    "aristocrats",
+    "artifact_recursion",
+    "artifact_synergy",
+    "artifacts",
+    "combat",
+    "combo",
+    "creatures",
+    "disguise",
+    "energy",
+    "equipment",
+    "equipment_combat",
+    "face_down",
+    "graveyard_recursion",
+    "knights",
+    "life_loss",
+    "spellslinger",
+    "tokens",
+    "tribal_combat",
+    "value",
+    "zombies"
+  ],
+  "pinned_gorge_commit": "b78e4c8b16078f6decbc48875bba953ce5535b85",
+  "decks": [
+    {
+      "key": "mortarion_current",
+      "commander": "Mortarion, Daemon Primarch",
+      "color_identity": [
+        "B"
+      ],
+      "role": "player",
+      "provenance": "custom",
+      "primary_archetype": "aristocrats",
+      "secondary_archetypes": [
+        "tokens",
+        "life_loss",
+        "graveyard_recursion"
+      ],
+      "source": null,
+      "archetype_annotation": "curated_v1",
+      "matchup_metadata_version": 1
+    },
+    {
+      "key": "mortarion_ideal",
+      "commander": "Mortarion, Daemon Primarch",
+      "color_identity": [
+        "B"
+      ],
+      "role": "player",
+      "provenance": "custom",
+      "primary_archetype": "aristocrats",
+      "secondary_archetypes": [
+        "tokens",
+        "graveyard_recursion"
+      ],
+      "source": null,
+      "archetype_annotation": "curated_v1",
+      "matchup_metadata_version": 1
+    },
+    {
+      "key": "mortarion_physical_final",
+      "commander": "Mortarion, Daemon Primarch",
+      "color_identity": [
+        "B"
+      ],
+      "role": "player",
+      "provenance": "custom",
+      "primary_archetype": "aristocrats",
+      "secondary_archetypes": [
+        "tokens",
+        "graveyard_recursion"
+      ],
+      "source": null,
+      "archetype_annotation": "curated_v1",
+      "matchup_metadata_version": 1
+    },
+    {
+      "key": "magnus_premium",
+      "commander": "Magnus the Red",
+      "color_identity": [
+        "U",
+        "R"
+      ],
+      "role": "player",
+      "provenance": "custom",
+      "primary_archetype": "spellslinger",
+      "secondary_archetypes": [
+        "tokens",
+        "combo"
+      ],
+      "source": null,
+      "archetype_annotation": "curated_v1",
+      "matchup_metadata_version": 1
+    },
+    {
+      "key": "magnus_budget",
+      "commander": "Magnus the Red",
+      "color_identity": [
+        "U",
+        "R"
+      ],
+      "role": "player",
+      "provenance": "custom",
+      "primary_archetype": "spellslinger",
+      "secondary_archetypes": [
+        "tokens",
+        "combo"
+      ],
+      "source": null,
+      "archetype_annotation": "curated_v1",
+      "matchup_metadata_version": 1
+    },
+    {
+      "key": "magnus_physical_trial",
+      "commander": "Magnus the Red",
+      "color_identity": [
+        "U",
+        "R"
+      ],
+      "role": "player",
+      "provenance": "custom",
+      "primary_archetype": "spellslinger",
+      "secondary_archetypes": [
+        "tokens",
+        "combo"
+      ],
+      "source": null,
+      "archetype_annotation": "curated_v1",
+      "matchup_metadata_version": 1
+    },
+    {
+      "key": "magnus_physical_owned",
+      "commander": "Magnus the Red",
+      "color_identity": [
+        "U",
+        "R"
+      ],
+      "role": "player",
+      "provenance": "custom",
+      "primary_archetype": "spellslinger",
+      "secondary_archetypes": [
+        "tokens",
+        "combo"
+      ],
+      "source": null,
+      "archetype_annotation": "curated_v1",
+      "matchup_metadata_version": 1
+    },
+    {
+      "key": "necron_dynasties",
+      "commander": "Szarekh, the Silent King",
+      "color_identity": [
+        "B"
+      ],
+      "role": "opponent",
+      "provenance": "stock_precon",
+      "primary_archetype": "artifact_recursion",
+      "secondary_archetypes": [
+        "artifact_synergy",
+        "graveyard_recursion",
+        "value"
+      ],
+      "source": "local_pinned_fixture",
+      "archetype_annotation": "curated_v1",
+      "matchup_metadata_version": 1
+    },
+    {
+      "key": "wretched_ranks",
+      "commander": "Ghoulcaller Gisa",
+      "color_identity": [
+        "B"
+      ],
+      "role": "opponent",
+      "provenance": "stock_precon",
+      "primary_archetype": "tokens",
+      "secondary_archetypes": [
+        "zombies",
+        "aristocrats",
+        "graveyard_recursion"
+      ],
+      "source": "local_pinned_fixture",
+      "archetype_annotation": "curated_v1",
+      "matchup_metadata_version": 1
+    },
+    {
+      "key": "cavalry-charge",
+      "commander": "Sidar Jabari of Zhalfir",
+      "color_identity": [
+        "W",
+        "U",
+        "B"
+      ],
+      "role": "opponent",
+      "provenance": "stock_precon",
+      "primary_archetype": "tribal_combat",
+      "secondary_archetypes": [
+        "knights",
+        "graveyard_recursion",
+        "combat"
+      ],
+      "source": "pinned_gorge_upstream",
+      "archetype_annotation": "curated_v1",
+      "matchup_metadata_version": 1
+    },
+    {
+      "key": "science-pip",
+      "commander": "Dr. Madison Li",
+      "color_identity": [
+        "W",
+        "U",
+        "R"
+      ],
+      "role": "opponent",
+      "provenance": "stock_precon",
+      "primary_archetype": "artifacts",
+      "secondary_archetypes": [
+        "energy",
+        "artifact_synergy",
+        "value"
+      ],
+      "source": "pinned_gorge_upstream",
+      "archetype_annotation": "curated_v1",
+      "matchup_metadata_version": 1
+    },
+    {
+      "key": "deadly-disguise",
+      "commander": "Kaust, Eyes of the Glade",
+      "color_identity": [
+        "W",
+        "R",
+        "G"
+      ],
+      "role": "opponent",
+      "provenance": "stock_precon",
+      "primary_archetype": "face_down",
+      "secondary_archetypes": [
+        "disguise",
+        "combat",
+        "creatures"
+      ],
+      "source": "pinned_gorge_upstream",
+      "archetype_annotation": "curated_v1",
+      "matchup_metadata_version": 1
+    },
+    {
+      "key": "avengers-assemble",
+      "commander": "Captain America, Team Leader",
+      "color_identity": [
+        "W",
+        "U",
+        "R"
+      ],
+      "role": "opponent",
+      "provenance": "stock_precon",
+      "primary_archetype": "equipment_combat",
+      "secondary_archetypes": [
+        "equipment",
+        "combat",
+        "artifacts"
+      ],
+      "source": "pinned_gorge_upstream",
+      "archetype_annotation": "curated_v1",
+      "matchup_metadata_version": 1
+    }
+  ]
+}

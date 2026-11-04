@@ -1,0 +1,116 @@
+name: Gorge · precon-only opponent pool smoke
+
+on:
+  pull_request:
+    paths:
+      - "data/commander_deck_library.json"
+      - "tools/commander_deck_library.py"
+      - "tools/annotate_gorge_matchups.py"
+      - "tools/gorge_commander_probe.go"
+      - "tools/fetch_gorge_precons.py"
+      - "tests/test_commander_deck_library.py"
+      - ".github/workflows/gorge-precon-opponents.yml"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  verify-opponent-library:
+    runs-on: ubuntu-latest
+    timeout-minutes: 60
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Validate role, metadata and source contracts
+        run: |
+          python -m unittest tests.test_commander_deck_library tests.test_gorge_precons_and_replay -v
+      - name: Prepare player decks and all six stock precons
+        run: |
+          mkdir -p "$RUNNER_TEMP/decks" "$RUNNER_TEMP/results"
+          python -m tools.export_gorge_decks --out "$RUNNER_TEMP/decks" --decks mortarion_current magnus_premium necron_dynasties wretched_ranks
+          python -m tools.fetch_gorge_precons --out "$RUNNER_TEMP/decks"
+          python -m tools.commander_deck_library --hero mortarion_current \
+            --opponents necron_dynasties,wretched_ranks,cavalry-charge,science-pip,deadly-disguise,avengers-assemble \
+            --deck-dir "$RUNNER_TEMP/decks" --output "$RUNNER_TEMP/results/mortarion-pod.json"
+          python -m tools.commander_deck_library --hero magnus_premium \
+            --opponents necron_dynasties,wretched_ranks,cavalry-charge,science-pip,deadly-disguise,avengers-assemble \
+            --deck-dir "$RUNNER_TEMP/decks" --output "$RUNNER_TEMP/results/magnus-pod.json"
+      - name: Clone pinned Gorge engine
+        env:
+          GORGE_COMMIT: b78e4c8b16078f6decbc48875bba953ce5535b85
+        run: |
+          git clone --filter=blob:none https://github.com/adams-shaun/gorge.git "$RUNNER_TEMP/gorge"
+          git -C "$RUNNER_TEMP/gorge" checkout --detach "$GORGE_COMMIT"
+          test "$(git -C "$RUNNER_TEMP/gorge" rev-parse HEAD)" = "$GORGE_COMMIT"
+      - uses: actions/setup-go@v5
+        with:
+          go-version-file: ${{ runner.temp }}/gorge/go.mod
+          cache: false
+      - name: Build Gorge with source Forge card corpus
+        working-directory: ${{ runner.temp }}/gorge
+        run: |
+          make fetch-cards compile-cards
+          cp "$GITHUB_WORKSPACE/tools/gorge_commander_probe.go" commander_probe.go
+          go build -o "$RUNNER_TEMP/gorge-probe" ./commander_probe.go
+      - name: Run both player decks against rotating stock precons
+        working-directory: ${{ runner.temp }}/gorge
+        env:
+          PYTHONPATH: ${{ github.workspace }}
+        shell: bash
+        run: |
+          set -o pipefail
+          for hero in mortarion_current magnus_premium; do
+            if [ "$hero" = mortarion_current ]; then seed=500; else seed=504; fi
+            mkdir -p "$RUNNER_TEMP/results/$hero/native"
+            "$RUNNER_TEMP/gorge-probe" \
+              -corpus "$RUNNER_TEMP/gorge/.cards" -deck-dir "$RUNNER_TEMP/decks" \
+              -hero-deck "$hero" \
+              -opponents "necron_dynasties,wretched_ranks,cavalry-charge,science-pip,deadly-disguise,avengers-assemble" \
+              -games 4 -seed "$seed" -max-turns 60 -verify=true -pilot bot \
+              -native-dir "$RUNNER_TEMP/results/$hero/native" -native-limit 4 \
+              | tee "$RUNNER_TEMP/results/$hero/runs.jsonl"
+            python -m tools.annotate_gorge_matchups \
+              --runs "$RUNNER_TEMP/results/$hero/runs.jsonl" \
+              --pod "$RUNNER_TEMP/results/${hero%%_*}-pod.json" \
+              --out "$RUNNER_TEMP/results/$hero/annotated.jsonl"
+            python -m tools.validate_gorge_enrichment \
+              --native-dir "$RUNNER_TEMP/results/$hero/native" \
+              --output "$RUNNER_TEMP/results/$hero/validated.json"
+          done
+      - name: Verify no custom player deck was placed in an opponent seat
+        env:
+          RESULTS: ${{ runner.temp }}/results
+        run: |
+          python - <<'PY'
+          import json,os
+          from pathlib import Path
+          root=Path(os.environ["RESULTS"])
+          for hero in ("mortarion_current","magnus_premium"):
+              rows=[json.loads(x) for x in (root/hero/"annotated.jsonl").read_text().splitlines()]
+              assert len(rows)==4
+              assert sorted(x["player_seat"] for x in rows)==[0,1,2,3]
+              for game in rows:
+                  assert game["outcome"]["finished"]
+                  assert game["outcome"]["replay_verified"]
+                  opponents=[x for x in game["seat_metadata"] if x["role"]=="opponent"]
+                  assert len(opponents)==3
+                  assert len({x["deck_key"] for x in opponents})==3
+                  assert all(x["deck_key"] not in ("mortarion_current","magnus_premium")
+                             for x in opponents)
+          with open(os.environ["GITHUB_STEP_SUMMARY"],"a") as f:
+              f.write("# Precon-only opponent pool smoke\n\n")
+              f.write("Validated 8 games: 4 Mortarion player, 4 Magnus player.\n")
+              f.write("All opposing decks were sourced from the six-stock-precon library.\n")
+              f.write("Each hero occupied all 4 starting seats. Full traces retained as artifacts.\n")
+          PY
+      - name: Retain recordings and metadata without publishing to Pages
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: gorge-precon-opponent-smoke
+          path: ${{ runner.temp }}/results/
+          retention-days: 14
+          if-no-files-found: warn
