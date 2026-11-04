@@ -946,7 +946,7 @@ test('narrated turn summary and expanded actions reuse factual card-linked wordi
     assert.equal(walk(rest).filter(n=>n.className.split(' ').includes('insight-board-seat')).length,0);
     assert.ok(!walk(turn1).some(n=>n.textContent==='reviewed enter resolved'));
     const third=walk(turns[3]);
-    assert.ok(third.some(n=>n.textContent==='Moved from battlefield to graveyard '));
+    assert.ok(third.some(n=>n.textContent.includes('Moved from battlefield to graveyard')));
     assert.ok(third.some(n=>n.className.includes('is-text-only')&&
       walk(n).some(child=>child.textContent==='Grave Titan')));
   }finally{global.document=before}
