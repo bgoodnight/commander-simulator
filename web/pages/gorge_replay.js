@@ -429,11 +429,20 @@ function init(){
   const loadedGames=new Map();
   let manifestVisibility=null,catalogReady=false,requestId=0;
   const catalog=[];
+  // The catalog records the designated player seat. A small number of
+  // verified Gorge recordings predate embedding that attribution in replay
+  // JSON; their original source bytes remain unchanged and are matched by
+  // seed, chain, complete deck order and archived workflow provenance.
   function playerEntry(row,key){
     return row&&Number.isInteger(row.player_seat)&&row.player_seat>=0&&
       row.player_seat<4&&Array.isArray(row.decks)&&
       row.player_deck===key&&row.decks[row.player_seat]===key&&
-      /^gorge-seed-[0-9]+\\.ui\\.json$/.test(row.file);
+      typeof row.file==="string"&&
+      /^gorge-seed-[0-9]+\.ui\.json$/.test(row.file);
+  }
+  function recentFirst(a,b){
+    return String(b.simulated_at||"").localeCompare(String(a.simulated_at||""))||
+      Number(b.seed||0)-Number(a.seed||0);
   }
   async function openPublicSample(name){
     if(!available.has(name))throw Error("Replay is not a player-seat game for this deck");
@@ -451,10 +460,21 @@ function init(){
        data.visibility!==manifestVisibility||
        (manifestVisibility==="omniscient"&&data.synthetic_simulation_only!==true)||
        !Array.isArray(data.snapshots)||!data.snapshots.length||
-       !entry||data.player_seat!==entry.player_seat||
-       data.player_deck!==entry.player_deck||
-       data.decks?.[data.player_seat]!==data.player_deck)
+       !entry||data.seed!==entry.seed||data.chain!==entry.chain||
+       !Array.isArray(data.decks)||data.decks.length!==4||
+       data.decks.some((deck,i)=>deck!==entry.decks[i])||
+       !playerEntry(entry,entry.player_deck))
       throw Error("Unverified player-seat Gorge replay or visibility");
+    const embedded=data.player_seat===entry.player_seat&&
+      data.player_deck===entry.player_deck;
+    const legacy=data.player_seat===undefined&&data.player_deck===undefined&&
+      entry.source_player_role_evidence?.kind==="verified-workflow-player-role-v1"&&
+      Number.isInteger(entry.source_player_role_evidence.workflow_run_id);
+    if(!embedded&&!legacy)
+      throw Error("Replay player role differs from the verified catalog");
+    // Projection metadata, not a modification of the preserved native file.
+    if(legacy)data={...data,player_seat:entry.player_seat,
+      player_deck:entry.player_deck,player_role_provenance:"verified archived workflow"};
     loadedGames.set(name,data);
     if(ticket!==requestId||!available.has(name))return;
     if(typeof window!=="undefined")window.__gorgeLoadedGames=[data];
@@ -467,7 +487,7 @@ function init(){
     const previous=select.value;
     available.clear();
     select.replaceChildren();
-    for(const game of catalog){
+    for(const game of [...catalog].sort(recentFirst)){
       if(!playerEntry(game,key))continue;
       available.add(game.file);
       const option=node("option",null,"Seed "+game.seed+" · "+
@@ -482,7 +502,7 @@ function init(){
       window.GorgeDashboard?.render([],null,key);
       return;
     }
-    select.value=available.has(previous)?previous:select.options[select.options.length-1].value;
+    select.value=available.has(previous)?previous:select.options[0].value;
     openPublicSample(select.value).catch(err=>
       rootElement.replaceChildren(node("p","gorge-replay-error",
         "Unable to display Gorge replay: "+String(err.message||err))));
