@@ -3,6 +3,16 @@ name: Convert verified Gorge recordings to public replay artifact
 # Reprocess an earlier simulation artifact with a newer converter, without
 # invoking Gorge and without publishing any files to GitHub Pages.
 on:
+  pull_request:
+    paths:
+      - "tools/gorge_results_pipeline.py"
+      - "tests/test_gorge_results_pipeline.py"
+      - ".github/workflows/gorge-results-convert.yml"
+  push:
+    branches: [main]
+    paths:
+      - "tools/gorge_results_pipeline.py"
+      - ".github/workflows/gorge-results-convert.yml"
   workflow_dispatch:
     inputs:
       simulation_run_id:
@@ -40,8 +50,8 @@ jobs:
         env:
           GH_TOKEN: ${{ github.token }}
           GH_REPO: ${{ github.repository }}
-          RUN_ID: ${{ inputs.simulation_run_id }}
-          ARTIFACT: ${{ inputs.artifact_name }}
+          RUN_ID: ${{ inputs.simulation_run_id || '41887811966' }}
+          ARTIFACT: ${{ inputs.artifact_name || 'gorge-phase1-20-game-validation' }}
         run: |
           case "$RUN_ID" in *[!0-9]*|'') echo "Invalid run ID"; exit 1;; esac
           gh run download "$RUN_ID" --name "$ARTIFACT" --dir "$RUNNER_TEMP/source"
@@ -49,7 +59,7 @@ jobs:
           test -d "$RUNNER_TEMP/source/native"
       - name: Convert, validate and catalog verified source recordings
         env:
-          REPLAY_LIMIT: ${{ inputs.max_replays }}
+          REPLAY_LIMIT: ${{ inputs.max_replays || '20' }}
         run: |
           python -m tools.gorge_results_pipeline \
             --native-dir "$RUNNER_TEMP/source/native" \
