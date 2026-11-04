@@ -2277,3 +2277,93 @@ body:has(#pane-records:not([hidden])) .compact-selection{margin-bottom:3px}
   #pane-records .gorge-original-turn .insight-turn-activity{font-size:.82rem}
   #pane-records .gorge-original-turn .insight-turn-metric{font-size:.72rem}
 }
+
+
+/* Screenshot fidelity pass: pre-Gorge Nov 3 example-game proportions.
+   Avoid an extra card-within-card: classic stats -> inline picker -> game
+   heading -> tightly spaced, artwork-backed turn rows on mobile too. */
+#pane-records .insight-featured-metric-link{
+  min-height:48px;gap:2px;padding:7px 9px;border-radius:8px}
+#pane-records .insight-featured-metric-link span{
+  font-size:.76rem;line-height:1.15}
+#pane-records .insight-featured-metric-link strong{
+  font-size:1.08rem;line-height:1.12}
+#pane-records .insight-featured-evidence{gap:4px;padding-top:8px}
+#pane-records .insight-inline-tracker-compact{margin:0;padding:7px 1px 0}
+#pane-records .insight-inline-tracker-compact>summary{
+  font-size:.82rem;color:#f0d7a5;max-width:none}
+#pane-records .gorge-insight-game-control{
+  display:grid;grid-template-columns:minmax(0,1fr) max-content;
+  align-items:stretch;gap:8px;margin:13px 0 7px;min-width:0}
+#pane-records .gorge-insight-example-select{
+  width:100%;min-width:0;min-height:34px;padding:6px 9px;
+  font-size:.81rem;background:#2b403b;border:1px solid #8a9b8e;border-radius:7px}
+#pane-records .insight-inline-tracker-compact>.gorge-insight-game-control>.insight-example-full-link{
+  display:inline-flex!important;position:static!important;align-items:center;
+  justify-content:center;padding:6px 10px;margin:0;
+  max-width:none;width:auto;min-height:34px;
+  font-size:.76rem;font-weight:600;line-height:1.25;
+  border:1px solid #a28a68;border-radius:7px;
+  background:#3b5049;color:#f0dbb2;text-decoration:none;white-space:nowrap}
+#pane-records .insight-inline-tracker-compact>.gorge-insight-game-control>.insight-example-full-link:hover,
+#pane-records .insight-inline-tracker-compact>.gorge-insight-game-control>.insight-example-full-link:focus-visible{
+  background:#51675d;border-color:#e0bf88;color:#ffe9c2}
+#pane-records .insight-inline-tracker-review{margin:0}
+#pane-records .insight-inline-tracker-review>.game-outcome-evidence-head{
+  display:flex;justify-content:space-between;align-items:baseline;
+  flex-wrap:wrap;gap:4px 10px;
+  padding:0;margin:5px 0 7px;border:0}
+#pane-records .insight-inline-tracker-review>.game-outcome-evidence-head>strong{
+  font-size:.97rem;line-height:1.3;color:#ecd4a6}
+#pane-records .insight-inline-tracker-review>.game-outcome-evidence-head>.micro{
+  font-size:.67rem;color:#999e96}
+#pane-records .gorge-example-timeline{gap:4px;margin:0}
+#pane-records .gorge-original-turn{
+  border-radius:6px;border-color:#55685e;overflow:hidden;
+  background:#142b30}
+#pane-records .gorge-original-turn .insight-turn-row-summary{
+  position:relative;min-height:53px;height:auto;padding:7px 8px;
+  grid-template-columns:51px minmax(0,1fr) auto;
+  grid-template-areas:"turn narrative expand" ". metrics metrics";
+  column-gap:7px;row-gap:3px;align-items:start;background:#122930}
+#pane-records .gorge-original-turn .insight-turn-cover{
+  inset:0 0 0 auto;width:100%;height:100%;max-height:none;
+  opacity:.7;object-fit:cover;object-position:center 34%;filter:saturate(.95)}
+#pane-records .gorge-original-turn .insight-turn-row-summary::before{
+  background:linear-gradient(90deg,#10272ff0 0%,#10282ddb 28%,#122b30a8 62%,#13293141 100%)}
+#pane-records .gorge-original-turn .insight-turn-label{
+  grid-area:turn;min-width:0;font-size:.83rem;font-variant:small-caps;
+  line-height:1.28;padding-top:1px;color:#f3d6a3;white-space:nowrap}
+#pane-records .gorge-original-turn .insight-turn-activity{
+  grid-area:narrative;min-width:0;font-size:.79rem;line-height:1.31;
+  white-space:normal;display:block;overflow:visible;text-overflow:clip}
+#pane-records .gorge-original-turn .insight-turn-expand{
+  grid-area:expand;font-size:.65rem;font-weight:400;white-space:nowrap;
+  padding-top:3px;color:#e4c08f}
+#pane-records .gorge-original-turn .insight-turn-metrics{
+  grid-area:metrics;display:flex;min-width:0;width:100%;max-width:none;
+  justify-content:flex-end;align-items:center;gap:3px;flex-wrap:wrap;overflow:visible}
+#pane-records .gorge-original-turn .insight-turn-metric{
+  min-height:0;padding:2px 4px;gap:2px;
+  font-size:.67rem;line-height:1.2;border-radius:5px;
+  color:#e6eeea;background:#19363a}
+#pane-records .gorge-original-turn .insight-turn-mana{gap:2px}
+#pane-records .gorge-original-turn .gorge-mana-label{font-size:.63rem}
+#pane-records .gorge-original-turn .gorge-mana-pips{gap:3px}
+#pane-records .gorge-original-turn .gorge-mana-pip .mana-symbol{
+  width:14px;height:14px;min-width:14px}
+#pane-records .gorge-original-turn .gorge-metric-delta{font-size:.65rem}
+#pane-records .gorge-original-turn .insight-turn-row-body{padding:9px 8px}
+@media(max-width:650px){
+  #pane-records .gorge-original-turn .insight-turn-row-summary{
+    min-height:53px;grid-template-columns:51px minmax(0,1fr) auto;
+    gap:3px 6px;padding:7px 8px}
+  #pane-records .gorge-original-turn .insight-turn-label{font-size:.82rem}
+  #pane-records .gorge-original-turn .insight-turn-activity{font-size:.78rem}
+  #pane-records .gorge-original-turn .insight-turn-expand{font-size:.63rem}
+  #pane-records .gorge-original-turn .insight-turn-metric{font-size:.65rem;padding:2px 4px}
+  #pane-records .insight-featured-metric-link{padding:7px 9px;min-height:45px}
+  #pane-records .gorge-insight-example-select{font-size:.76rem}
+  #pane-records .insight-inline-tracker-compact>.gorge-insight-game-control>.insight-example-full-link{
+    font-size:.72rem;padding:6px 8px;min-height:34px}
+}
