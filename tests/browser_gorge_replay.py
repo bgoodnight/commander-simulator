@@ -75,6 +75,8 @@ def check():
             assert abs(select_box["y"]-button_box["y"])<5, \
                 "Original seed picker and full-reviewer action should share a row"
             timeline=tracker.locator(".insight-turn-timeline")
+            assert "Seed 300" in tracker.locator(".game-outcome-evidence-head").inner_text()
+            assert "Win" in tracker.locator(".game-outcome-evidence-head").inner_text()
             assert timeline.locator(".insight-turn-row").count()>=9
             opening=timeline.locator(".insight-turn-row").first
             assert "Opening hand" in opening.inner_text()
