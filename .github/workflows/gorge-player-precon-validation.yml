@@ -1,6 +1,6 @@
 name: Gorge · player decks versus rotating precon opponents
 
-# Runs 20 genuine games while enforcing player-only Mortarion/Magnus and
+# Runs a small source-verified batch while enforcing player-only Mortarion/Magnus and
 # stock-precon-only enemy seats. All raw data are Actions artifacts, never
 # source-controlled or published as static website files.
 on:
@@ -9,6 +9,17 @@ on:
     paths:
       - ".github/workflows/gorge-player-precon-validation.yml"
   workflow_dispatch:
+    inputs:
+      games_per_player:
+        description: "Verified games per player deck (2-10)"
+        required: false
+        default: "2"
+        type: string
+      start_seed:
+        description: "First unused seed for this batch"
+        required: false
+        default: "620"
+        type: string
 
 permissions:
   contents: read
@@ -60,23 +71,31 @@ jobs:
           make fetch-cards compile-cards
           cp "$GITHUB_WORKSPACE/tools/gorge_commander_probe.go" commander_probe.go
           go build -o "$RUNNER_TEMP/gorge-probe" ./commander_probe.go
-      - name: Run 10 Mortarion and 10 Magnus games against rotating precons
+      - name: Run a small Mortarion and Magnus batch against rotating precons
         working-directory: ${{ runner.temp }}/gorge
         env:
           PYTHONPATH: ${{ github.workspace }}
         shell: bash
         run: |
           set -euo pipefail
+          count="${{ inputs.games_per_player || '2' }}"
+          start="${{ inputs.start_seed || '620' }}"
+          [[ "$count" =~ ^[0-9]+$ ]] && (( count >= 2 && count <= 10 )) ||
+            { echo "games_per_player must be 2..10"; exit 1; }
+          [[ "$start" =~ ^[0-9]+$ ]] && (( start >= 620 )) ||
+            { echo "Start seed must be >=620"; exit 1; }
+          echo "Gorge smoke batch: $count games per player, first seed $start"
           for hero in mortarion_current magnus_premium; do
-            if [ "$hero" = mortarion_current ]; then seed=600; stem=mortarion; else seed=610; stem=magnus; fi
+            if [ "$hero" = mortarion_current ]; then seed="$start"; stem=mortarion;
+            else seed="$((start + count))"; stem=magnus; fi
             "$RUNNER_TEMP/gorge-probe" \
               -corpus "$RUNNER_TEMP/gorge/.cards" \
               -deck-dir "$RUNNER_TEMP/decks" \
               -hero-deck "$hero" \
               -opponents necron_dynasties,wretched_ranks,cavalry-charge,science-pip,deadly-disguise,avengers-assemble \
-              -games 10 -seed "$seed" -max-turns 60 \
+              -games "$count" -seed "$seed" -max-turns 60 \
               -pilot bot -verify=true \
-              -native-dir "$RUNNER_TEMP/results/native" -native-limit 10 \
+              -native-dir "$RUNNER_TEMP/results/native" -native-limit "$count" \
               > "$RUNNER_TEMP/results/$stem-runs.jsonl"
             python -m tools.annotate_gorge_matchups \
               --runs "$RUNNER_TEMP/results/$stem-runs.jsonl" \
@@ -86,7 +105,7 @@ jobs:
           cat "$RUNNER_TEMP/results/mortarion-runs.jsonl" \
               "$RUNNER_TEMP/results/magnus-runs.jsonl" \
               > "$RUNNER_TEMP/results/gorge_runs.jsonl"
-      - name: Audit 20 verified recordings and role assignments
+      - name: Audit verified recordings and role assignments
         run: |
           python -m tools.validate_gorge_enrichment \
             --native-dir "$RUNNER_TEMP/results/native" \
@@ -95,24 +114,26 @@ jobs:
           import json,os
           from pathlib import Path
           p=Path(os.environ["RUNNER_TEMP"])/"results"
+          count=int("${{ inputs.games_per_player || '2' }}")
+          first=int("${{ inputs.start_seed || '620' }}")
           rows=[json.loads(x) for x in (p/"gorge_runs.jsonl").read_text().splitlines()]
-          assert len(rows)==20 and {x["seed"] for x in rows}==set(range(600,620))
-          assert len(list((p/"native").glob("gorge-seed-*.json")))==20
+          assert len(rows)==2*count and {x["seed"] for x in rows}==set(range(first,first+2*count))
+          assert len(list((p/"native").glob("gorge-seed-*.json")))==2*count
           for row in rows:
               assert row["finished"] and row["replay_verified"] and not row.get("error")
               seat=row["hero_seat"]
-              hero="mortarion_current" if row["seed"]<610 else "magnus_premium"
+              hero="mortarion_current" if row["seed"]<first+count else "magnus_premium"
               assert row["decks"][seat]==hero
               assert all(key not in ("mortarion_current","magnus_premium")
                          for i,key in enumerate(row["decks"]) if i!=seat)
           for hero in ("mortarion","magnus"):
               annotations=[json.loads(x) for x in (p/f"{hero}-annotated.jsonl").read_text().splitlines()]
-              assert len(annotations)==10
+              assert len(annotations)==count
               assert all(sum(seat["role"]=="opponent" for seat in row["seat_metadata"])==3
                          for row in annotations)
           with open(os.environ["GITHUB_STEP_SUMMARY"],"a") as f:
-              f.write("# Twenty precon-only Commander games\n\n")
-              f.write("10 Mortarion + 10 Magnus, each facing three of six verified stock precons.\n")
+              f.write(f"# {2*count} precon-only Commander games\n\n")
+              f.write(f"{count} Mortarion + {count} Magnus, facing verified stock precons.\n")
               f.write("Native source, distinct seats, legal decks, and replay hashes validated.\n")
           PY
       - name: Convert source recordings to UI replay catalog and analytics
@@ -128,7 +149,7 @@ jobs:
         if: always()
         uses: actions/upload-artifact@v4
         with:
-          name: gorge-player-precon-native-20
+          name: gorge-player-precon-native-smoke
           path: ${{ runner.temp }}/results/
           retention-days: 14
           if-no-files-found: warn
