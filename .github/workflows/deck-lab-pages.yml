@@ -56,6 +56,7 @@ jobs:
           python -m unittest tests.test_pages_export tests.test_gorge_ui_export tests.test_gorge_public_state -v
           node --check web/pages/app.js
           node --check web/pages/replay.js
+          node --check web/pages/gorge_dashboard.js
           node --check web/pages/gorge_replay.js
           node --check web/pages/insight_explorer.js
           node --check web/pages/insight_catalog.js
@@ -64,12 +65,14 @@ jobs:
           node --test tests/pages_insights.test.cjs
           node --test tests/pages_replay.test.cjs
           node --test tests/pages_gorge_replay.test.cjs
+          node --test tests/pages_gorge_dashboard.test.cjs
           node --test tests/pages_insight_explorer.test.cjs
           node --test tests/pages_insight_catalog.test.cjs
           node --test tests/pages_game_outcomes.test.cjs
           node --test tests/pages_deck_selection.test.cjs
           node --check dist/pages/app.js
           node --check dist/pages/replay.js
+          node --check dist/pages/gorge_dashboard.js
           node --check dist/pages/gorge_replay.js
           node --check dist/pages/insight_explorer.js
           node --check dist/pages/insight_catalog.js
