@@ -2126,3 +2126,30 @@ body:has(#pane-records:not([hidden])) .compact-selection{margin-bottom:3px}
   #pane-records .gorge-original-turn .insight-turn-activity{-webkit-line-clamp:4}
   .gorge-mana-pips{gap:4px}
 }
+
+
+/* Keep the original gold-and-charcoal art cards inside the phone viewport.
+   Long named-opponent configurations must shrink instead of sizing the grid. */
+#pane-records{grid-template-columns:minmax(0,1fr);min-width:0}
+#pane-records > *,
+#pane-records #key-insights-grid,
+#pane-records #game-outcome-results,
+#pane-records #turn-reviewer-results,
+#pane-records .game-outcome-toolbar,
+#pane-records .game-outcome-hero-frame,
+#pane-records .game-outcome-card,
+#pane-records .game-outcome-summary-copy{min-width:0;max-width:100%}
+#pane-records .game-outcome-scenario-select{
+  min-width:0;width:min(100%,420px);flex:1 1 180px;
+  text-overflow:ellipsis}
+#pane-records .game-outcome-seed{
+  max-width:100%;white-space:normal;overflow-wrap:anywhere}
+#pane-records .game-outcome-hero-stats{
+  grid-template-columns:repeat(3,minmax(0,1fr))}
+#pane-records .game-outcome-hero-stats > div{
+  min-width:0;overflow-wrap:anywhere}
+@media(max-width:720px){
+  #pane-records #key-insights-grid{
+    display:grid;grid-template-columns:minmax(0,1fr)}
+  #pane-records .latest-insight-grid > *{min-width:0;max-width:100%}
+}
