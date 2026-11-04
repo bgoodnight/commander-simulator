@@ -116,6 +116,15 @@ def check():
             # Mobile sizing and control accessibility.
             page.set_viewport_size({"width":390,"height":844})
             page.screenshot(path=str(OUT/"gorge-seed-301-mobile.png"),full_page=False)
+            widths=page.evaluate("""() => ({
+              viewport: window.innerWidth,
+              page: document.documentElement.scrollWidth,
+              panel: document.querySelector('#gorge-replay-panel').getBoundingClientRect().width,
+              panelScroll: document.querySelector('#gorge-replay-panel').scrollWidth
+            })""")
+            print("MOBILE WIDTHS",json.dumps(widths),flush=True)
+            assert widths["page"]<=widths["viewport"]+2, (
+                "Horizontal mobile overflow: "+str(widths))
             assert page.locator("#gorge-replay-load").is_visible()
             assert page.locator("#gorge-replay-sample-select").is_visible()
             # Unknown JS errors should be reported instead of silently hidden.
