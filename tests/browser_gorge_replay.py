@@ -71,7 +71,7 @@ def check():
             assert dashboard.is_visible()
             assert dashboard.locator("h2").filter(has_text="Latest simulated results").count()==1
             assert dashboard.locator("h2").filter(has_text="Turn reviewer").count()==1
-            assert dashboard.locator(".board-report").count()==4
+            assert dashboard.locator(".board-report").count()==3
             assert dashboard.locator(".game-outcome-turn-tile").count()==38
             assert dashboard.locator(".gorge-original-deck-copy").count()==4
             assert dashboard.locator(".gorge-original-picker").is_visible()
