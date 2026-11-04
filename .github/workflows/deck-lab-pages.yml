@@ -11,6 +11,7 @@ on:
       - "tests/pages_insights.test.cjs"
       - "tests/pages_replay.test.cjs"
       - "tests/pages_gorge_replay.test.cjs"
+      - "tests/pages_gorge_dashboard.test.cjs"
       - "tests/test_gorge_ui_export.py"
       - "tools/gorge_ui_export.py"
       - "tests/pages_insight_explorer.test.cjs"
@@ -57,6 +58,7 @@ jobs:
           node --check web/pages/app.js
           node --check web/pages/replay.js
           node --check web/pages/gorge_replay.js
+          node --check web/pages/gorge_dashboard.js
           node --check web/pages/insight_explorer.js
           node --check web/pages/insight_catalog.js
           node --check web/pages/game_outcomes.js
@@ -64,6 +66,7 @@ jobs:
           node --test tests/pages_insights.test.cjs
           node --test tests/pages_replay.test.cjs
           node --test tests/pages_gorge_replay.test.cjs
+          node --test tests/pages_gorge_dashboard.test.cjs
           node --test tests/pages_insight_explorer.test.cjs
           node --test tests/pages_insight_catalog.test.cjs
           node --test tests/pages_game_outcomes.test.cjs
@@ -71,6 +74,7 @@ jobs:
           node --check dist/pages/app.js
           node --check dist/pages/replay.js
           node --check dist/pages/gorge_replay.js
+          node --check dist/pages/gorge_dashboard.js
           node --check dist/pages/insight_explorer.js
           node --check dist/pages/insight_catalog.js
           node --check dist/pages/game_outcomes.js
