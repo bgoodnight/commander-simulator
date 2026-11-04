@@ -2092,3 +2092,37 @@ body:has(#pane-records:not([hidden])) .compact-selection{margin-bottom:3px}
 .gorge-dashboard .gorge-turn-detail{min-width:0}
 .gorge-dashboard .gorge-development{padding:1rem}
 @media(max-width:650px){.gorge-dashboard{grid-template-columns:minmax(0,1fr)}.gorge-dashboard .gorge-deck-grid{grid-template-columns:minmax(0,1fr)}}
+
+
+/* Gorge migration: use the original November 3 Results containers, not
+   a replacement dashboard. All historic visual rules above remain intact. */
+#pane-records > #simulation-snapshot:not([hidden]),
+#pane-records > #key-insights-panel:not([hidden]),
+#pane-records > #development-panel:not([hidden]),
+#pane-records > #gorge-replay-panel:not([hidden]){display:block!important}
+#pane-records > .diagnostic-panel,
+#pane-records > #archive-observation-details,
+#pane-records > #opponent-replay-panel{display:none!important}
+#pane-records > #key-insights-panel{margin-bottom:0}
+#pane-records .gorge-original-turn .insight-turn-activity{-webkit-line-clamp:4}
+#pane-records .gorge-original-turn .insight-turn-cover{height:100%}
+.gorge-mana-pips,.gorge-mana-pip{display:inline-flex;align-items:center;gap:3px;vertical-align:middle}
+.gorge-mana-pips{gap:6px;flex-wrap:wrap}
+.gorge-mana-pip .mana-symbol{width:16px;height:16px}
+.gorge-player-state{border:1px solid #52695f;border-radius:8px;background:#172a2b;margin:7px 0}
+.gorge-player-state>summary{font-size:.77rem;line-height:1.4;cursor:pointer;padding:9px;color:#e8d1a5}
+.gorge-player-zones{display:grid;gap:7px;padding:6px 9px 9px}
+.gorge-public-zone{border-top:1px solid #41574f;padding:6px 0}
+.gorge-public-zone>summary{color:#e2d2b2;font-size:.76rem;cursor:pointer}
+.gorge-public-zone .insight-action-cards{margin:8px 0;gap:6px}
+.gorge-original-turn .insight-action-entry{flex-wrap:wrap}
+.gorge-original-turn .insight-action-card{max-width:100%;overflow-wrap:anywhere}
+#pane-records .gorge-replay-panel{margin-top:4px}
+#pane-records .gorge-replay-panel .result-takeaway-summary{cursor:pointer}
+@media(max-width:650px){
+  #pane-records .gorge-original-turn .insight-turn-row-summary{
+    grid-template-columns:43px minmax(0,1fr) auto;align-items:start}
+  #pane-records .gorge-original-turn .insight-turn-metrics{flex-wrap:wrap;justify-content:flex-end}
+  #pane-records .gorge-original-turn .insight-turn-activity{-webkit-line-clamp:4}
+  .gorge-mana-pips{gap:4px}
+}
