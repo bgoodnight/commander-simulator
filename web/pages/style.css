@@ -2328,3 +2328,29 @@ body:has(#pane-records:not([hidden])) .compact-selection{margin-bottom:3px}
  .insight-board-seats{grid-template-columns:repeat(2,minmax(0,1fr));gap:6px}
  .insight-board-seat .insight-seat-life-name{font-size:.68rem}
 }
+
+/* Chronological commander-by-commander enemy turns. */
+.insight-rest-of-turn .insight-enemy-turn{
+  padding:0;border:1px solid #925d60;border-radius:8px;background:#2b2025;
+  overflow:hidden;min-width:0;
+}
+.insight-enemy-turn>.insight-end-zone-label{
+  display:grid;grid-template-columns:minmax(0,180px) minmax(0,1fr);
+  align-items:start;gap:8px;padding:9px 11px;line-height:1.4;
+  color:#f4d6ca;cursor:pointer;
+}
+.insight-enemy-turn>.insight-end-zone-label strong{
+  font-size:.79rem;color:#ffd4bb;overflow-wrap:anywhere;
+}
+.insight-enemy-turn-summary{font-size:.76rem;font-weight:400;color:#ecddd4;overflow-wrap:anywhere}
+.insight-enemy-turn-detail{
+  display:grid;gap:7px;padding:8px;border-top:1px solid #795157;
+}
+.insight-enemy-turn-detail .insight-action-phase{margin:0}
+.insight-enemy-turn-detail .insight-action-seat-label{display:none}
+@media(max-width:650px){
+  .insight-enemy-turn>.insight-end-zone-label{
+    display:flex;flex-direction:column;align-items:stretch;gap:3px;padding:8px;
+  }
+  .insight-enemy-turn-summary{font-size:.74rem}
+}
