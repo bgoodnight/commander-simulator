@@ -469,31 +469,11 @@ function init(){
       }
       if(!available.size)return;
       samples.hidden=false;
-      // Preload each verified game for cross-deck summaries. The selected
-      // game stays authoritative for the turn viewer and can be switched.
-      // One unavailable or stale sample must not hide the other valid games.
-      // GitHub Pages may briefly serve mixed revisions during publication.
-      return Promise.allSettled([...available].map(async name=>{
-        const response=await fetch("./gorge-data/"+encodeURIComponent(name),
-          {cache:"no-store"});
-        if(!response.ok)throw Error(name+": HTTP "+response.status);
-        const g=await response.json();
-        if(g.schema!=="gorge-ui-replay-v1"||g.visibility!==manifestVisibility||
-           (manifestVisibility==="omniscient"&&g.synthetic_simulation_only!==true))
-          throw Error(name+": inconsistent replay");
-        loadedGames.set(g.seed,g);
-        return name;
-      })).then(results=>{
-        const valid=results.filter(result=>result.status==="fulfilled")
-          .map(result=>result.value);
-        const failed=results.filter(result=>result.status==="rejected");
-        if(!valid.length)throw Error("No verified public replays could be loaded: "+
-          failed.map(result=>String(result.reason?.message||result.reason)).join("; "));
-        if(typeof window!=="undefined")window.__gorgeLoadedGames=[...loadedGames.values()];
-        // Choose a known-good game if the first manifest entry failed.
-        select.value=valid.includes(select.value)?select.value:valid[0];
-        return openPublicSample(select.value);
-      });
+      // The manifest describes the batch; it is not a request to download
+      // every full-fidelity replay. Large batches must remain interactive
+      // without parsing dozens of megabytes before the first turn appears.
+      // Fetch only the selected verified game; other games load on demand.
+      return openPublicSample(select.value);
     }).catch(error=>{
       rootElement.replaceChildren(node("p","gorge-replay-error",
         "Published Gorge examples could not load: "+String(error.message||error)));
