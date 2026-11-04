@@ -102,7 +102,7 @@ class GorgeResultsPipelineTests(unittest.TestCase):
 
     def test_native_log_cannot_be_published(self):
         row={"seed":400,"chain":"chain-400","decks":self.keys}
-        replay=self.projected({"seed":400,"chain":"chain-400","decks":self.keys},
+        replay=self.projected({"seed":400,"chain":"chain-400","decks":self.keys,"policies":["bot"]*4},
                               include_hidden=True)
         self.assertTrue(public_replay_is_safe(replay,row))
         replay["objects"]=[]
