@@ -2189,3 +2189,33 @@ body:has(#pane-records:not([hidden])) .compact-selection{margin-bottom:3px}
   .gorge-legacy-example-controls .insight-example-full-link{
     font-size:.68rem;padding:7px 8px;min-height:38px}
 }
+
+/* Playmat-inspired expanded Gorge turn layout (2026-11-04). */
+.insight-turn-row-body{display:grid;gap:10px}
+.insight-mana-detail{border:1px solid #527368;border-radius:9px;background:#192c2b;padding:9px 11px}
+.insight-mana-summary{display:flex;align-items:center;justify-content:space-between;gap:12px;cursor:pointer;color:#e9d4ab;font-size:.8rem}
+.insight-mana-total{display:inline-flex;flex-wrap:wrap;align-items:center;gap:5px}
+.insight-mana-detail>.micro{margin:8px 0 2px;color:#c5d2ca;font-size:.72rem}
+.insight-rest-of-turn{background:#312126;border:1px solid #915e61;gap:9px;padding:11px}
+.insight-rest-title{color:#ffccc0;font-size:.84rem}
+.insight-enemy-group,.insight-opponent-abilities{background:#291f24;border-color:#88575a}
+.insight-enemy-group>summary,.insight-opponent-abilities>summary{color:#f7c8b7}
+.insight-rest-of-turn .insight-action-phase.is-opponent{background:#281e25;border-left-color:#d18b78}
+.insight-action-entry{gap:6px}
+.insight-action-entry .insight-action-art{width:25px;height:34px}
+.insight-action-entry .insight-action-card.is-art-only{padding:2px}
+.insight-action-entry .insight-action-description{line-height:1.25}
+.insight-board-panel{border:1px solid #6c765c;border-radius:10px;background:#18292a;padding:11px;display:grid;gap:10px}
+.insight-board-title{margin:0;color:#efdda9;font-size:.85rem}
+.insight-board-panel .insight-end-state{border-top:0;padding:0;display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:7px}
+.insight-board-panel .insight-end-zone{min-width:0;background:#112226;border:1px solid #526960;padding:6px}
+.insight-board-panel .insight-end-zone>summary{font-size:.72rem;gap:4px;overflow-wrap:anywhere}
+.insight-board-panel .insight-board-hand-,.insight-board-panel .insight-omniscient-opponents{grid-column:1/-1}
+.insight-board-panel .insight-board-creatures-,.insight-board-panel .insight-board-lands-{grid-column:span 2}
+.insight-board-panel .insight-end-zone .insight-action-cards{display:flex;flex-wrap:wrap}
+@media(max-width:650px){
+ .insight-board-panel .insight-end-state{grid-template-columns:repeat(2,minmax(0,1fr))}
+ .insight-board-panel .insight-board-hand-,.insight-board-panel .insight-board-creatures-,.insight-board-panel .insight-board-lands-,.insight-board-panel .insight-omniscient-opponents{grid-column:1/-1}
+ .insight-action-entry .insight-action-art{width:24px;height:32px}
+ .insight-board-panel .insight-seat-life-strip{gap:3px}
+}
