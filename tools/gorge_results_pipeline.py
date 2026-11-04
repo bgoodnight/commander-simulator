@@ -182,7 +182,7 @@ def project_batch(*, native_dir, summaries, out, existing_dir=None,
             seat_metadata = [
                 {**annotation, "seat": i, "deck_sha256": hashes[key]}
                 for i, (key, annotation) in enumerate(zip(
-                    summary["decks"], matchup_annotations(library, summary["decks"])))
+                    summary["decks"], matchup_annotations(library, summary["decks"], hero=hero)))
             ]
         analytics[seed] = {
             "seed": seed, "decks": summary["decks"],
