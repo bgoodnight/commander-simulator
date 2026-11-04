@@ -623,7 +623,11 @@
               String(action.type||"").endsWith("_cast"))&&
              (action.seat===undefined||Number(action.seat)===0))
             playCounts.set(name,(playCounts.get(name)||0)+1);
-          if(CAST_TYPES.has(action.type)&&name&&!basic(name)){
+          if(CAST_TYPES.has(action.type)&&name&&!basic(name)&&
+             // Gorge's source observations also include three real opponents.
+             // Only the chosen deck's actions belong in its card performance.
+             (run.batch?.engine!=="gorge"||
+               action.seat===undefined||Number(action.seat)===0)){
             casts.add(name);seen.add(name);
             const card=lookupCard(name);
             const types=String(card?.type_line||card?.category||"").split("—")[0];
