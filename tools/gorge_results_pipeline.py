@@ -10,6 +10,7 @@ import argparse
 from collections import Counter
 import hashlib
 import json
+from datetime import datetime, timezone
 from pathlib import Path
 import re
 import shutil
@@ -214,6 +215,9 @@ def project_batch(*, native_dir, summaries, out, existing_dir=None,
                 previous.get("ui_sha256") == digest((out / filename).read_bytes())):
             continue
         view = convert(source, include_hidden=True)
+        if seat_metadata is not None:
+            view["player_seat"] = hero_seat
+            view["player_deck"] = hero
         entry = {
             "file": filename, "seed": seed, "decks": source["decks"],
             "chain": source["chain"], "turns": len(view["snapshots"]),
@@ -222,8 +226,7 @@ def project_batch(*, native_dir, summaries, out, existing_dir=None,
             "converter_version": CONVERTER_VERSION,
             **({"player_seat": hero_seat, "player_deck": hero,
                 "simulated_at": summary.get("simulated_at") or
-                    summary.get("run_at") or __import__("datetime").datetime.now(
-                        __import__("datetime").timezone.utc).isoformat()}
+                    summary.get("run_at") or datetime.now(timezone.utc).isoformat()}
                if seat_metadata is not None else {}),
         }
         if not public_replay_is_safe(view, entry):
