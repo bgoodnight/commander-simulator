@@ -1321,40 +1321,109 @@
         // Opponent cards are counted only from explicit cast/land events.
         const rest=create("section","insight-rest-of-turn");
         rest.appendChild(create("h4","insight-rest-title","Enemy turns"));
-        const enemyText=enemyActivitySummary(enemy);
-        if(enemyText)rest.appendChild(create("p","insight-rest-event",enemyText));
-        const enemyGroups=[
-          ["Lands",enemy.filter(a=>a.type==="land_play")],
-          ["Creatures",enemy.filter(a=>["creature_cast","reviewed_graveyard_creature_cast"].includes(a.type))],
-          ["Artifacts",enemy.filter(a=>a.type==="artifact_cast")],
-          ["Enchantments",enemy.filter(a=>a.type==="enchantment_cast")],
-          ["Other spells",enemy.filter(a=>a.type?.endsWith("_cast")&&
-            !["creature_cast","reviewed_graveyard_creature_cast","artifact_cast","enchantment_cast"].includes(a.type))]
-        ];
-        for(const [label,entries] of enemyGroups){
-          if(!entries.length)continue;
-          const disclosure=create("details","insight-end-zone insight-enemy-group");
-          disclosure.appendChild(create("summary","insight-end-zone-label",
-            entries.length+" "+label.toLowerCase()));
-          actionSection(label,entries,"is-opponent",true,disclosure);
-          rest.appendChild(disclosure);
+        // Reconstruct native opposing turns, not category totals. One section
+        // per actual enemy turn, in Gorge's recorded global turn order.
+        // Events by a different actor are kept in a separate response group.
+        const rosterBySeat=new Map((run.opponent_decks||[]).map(entry=>
+          [Number(entry.seat),entry.commander_name||entry.deck_key]));
+        const enemyTurns=[];
+        for(const event of actions){
+          if(!Number.isInteger(event.native_turn)||event.native_turn_seat===0)
+            continue;
+          if(!Number.isInteger(event.native_turn_seat)||
+             event.native_turn_seat<1||event.native_turn_seat>3)continue;
+          let turn=enemyTurns.find(item=>item.nativeTurn===event.native_turn&&
+            item.seat===event.native_turn_seat);
+          if(!turn){
+            turn={nativeTurn:event.native_turn,seat:event.native_turn_seat,actions:[]};
+            enemyTurns.push(turn);
+          }
+          turn.actions.push(event);
         }
-        // Preserve the original compact rest-of-turn layout while letting
-        // viewers inspect EACH opposing ability with its actual controller,
-        // source card and native event number on demand.
-        const enemyAbilities=enemy.filter(a=>
-          ["ability_activated","ability_triggered"].includes(a.type));
-        if(enemyAbilities.length){
-          const disclosure=create("details","insight-end-zone insight-opponent-abilities");
-          const activationCount=enemyAbilities.filter(a=>
-            a.type==="ability_activated").length;
-          const triggerCount=enemyAbilities.length-activationCount;
-          disclosure.appendChild(create("summary","insight-end-zone-label",
-            "Opponent abilities · "+activationCount+" activated · "+
-            triggerCount+" triggered"));
-          actionSection("Abilities",enemyAbilities,
-            "is-opponent is-ability",true,disclosure);
-          rest.appendChild(disclosure);
+        enemyTurns.sort((a,b)=>a.nativeTurn-b.nativeTurn);
+        // Group repeated activations/triggers by source, while every draw
+        // and play remains separately named in recorded order.
+        function enemyTurnNarration(events){
+          const parts=[],abilities=new Map();
+          for(const event of events){
+            const said=narratedAction(event);
+            if(!said)continue;
+            if(["ability_activated","ability_triggered"].includes(event.type)){
+              const card=said.card||"unknown source";
+              const key=event.type+"|"+card;
+              if(!abilities.has(key))abilities.set(key,{type:event.type,card,count:0});
+              abilities.get(key).count++;
+              continue;
+            }
+            if(!["draw","land_play"].includes(event.type)&&
+               !String(event.type).endsWith("_cast")&&
+               event.type!=="reviewed_instant_response")continue;
+            const kind=event.type==="creature_cast"||
+              event.type==="reviewed_graveyard_creature_cast"?"creature ":
+              event.type==="land_play"?"land ":
+              event.type==="artifact_cast"?"artifact ":
+              event.type==="enchantment_cast"?"enchantment ":"";
+            parts.push(said.verb==="Played"?
+              "played "+kind+(said.card||"card"):
+              "drew "+(said.card||"a card"));
+          }
+          for(const {type,card,count} of abilities.values()){
+            parts.push((count>1?count+"× ":"")+
+              (type==="ability_activated"?"activated":"triggered")+
+              " ability of "+card);
+          }
+          return parts.join(", ");
+        }
+        if(enemyTurns.length){
+          for(const enemyTurn of enemyTurns){
+            const commander=rosterBySeat.get(enemyTurn.seat)||
+              "Seat "+(enemyTurn.seat+1);
+            const owned=enemyTurn.actions.filter(a=>a.seat===enemyTurn.seat);
+            const responses=enemyTurn.actions.filter(a=>a.seat!==enemyTurn.seat);
+            const turnPanel=create("details","insight-end-zone insight-enemy-turn");
+            const heading=create("summary","insight-end-zone-label");
+            heading.appendChild(create("strong",null,commander));
+            heading.appendChild(create("span","insight-enemy-turn-summary",
+              enemyTurnNarration(owned)||"No named plays recorded"));
+            turnPanel.appendChild(heading);
+            // Full source chronology is preserved in expandable detail.
+            const detailed=create("div","insight-enemy-turn-detail");
+            actionSection(commander+"'s turn",owned,"is-opponent",true,detailed);
+            if(responses.length){
+              const byActor=new Map();
+              for(const action of responses){
+                if(!byActor.has(action.seat))byActor.set(action.seat,[]);
+                byActor.get(action.seat).push(action);
+              }
+              for(const [seat,events] of byActor){
+                const name=seat===0?"You":
+                  rosterBySeat.get(seat)||"Seat "+(seat+1);
+                actionSection(name+" responded",events,
+                  "is-opponent is-response",true,detailed);
+              }
+            }
+            turnPanel.appendChild(detailed);
+            rest.appendChild(turnPanel);
+          }
+        }else if(enemy.length){
+          // Older exports lack native turn ownership; report attributed
+          // player actions without inventing any ordering across turns.
+          const grouped=new Map();
+          for(const action of enemy){
+            if(!grouped.has(action.seat))grouped.set(action.seat,[]);
+            grouped.get(action.seat).push(action);
+          }
+          for(const [seat,events] of grouped){
+            const name=rosterBySeat.get(seat)||"Seat "+(seat+1);
+            const disclosure=create("details","insight-end-zone insight-enemy-turn");
+            const heading=create("summary","insight-end-zone-label");
+            heading.append(create("strong",null,name),
+              create("span","insight-enemy-turn-summary",
+                enemyTurnNarration(events)||"No named plays recorded"));
+            disclosure.appendChild(heading);
+            actionSection(name,events,"is-opponent",true,disclosure);
+            rest.appendChild(disclosure);
+          }
         }
         const damage=actions.filter(a=>/damage|blocked_combat|combat_blocked|block_declared/
           .test(String(a?.type||""))&&narratedAction(a));
