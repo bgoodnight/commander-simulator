@@ -494,8 +494,8 @@ function feature(parent,title,candidates){
       const ex=examples[selectedExample];
       detail.replaceChildren();
       const heading=el("div","game-outcome-evidence-head");
-      heading.append(el("strong",null,"Seed "+ex.analysis.game.seed+" · recorded Gorge game"),
-        el("span","micro","Focus: your turn "+ex.ownTurn+" · winner not exported"));
+      heading.append(el("strong",null,"Seed "+ex.analysis.game.seed+" · Replay"),
+        el("span","micro","observed through round "+ex.analysis.timeline.length));
       detail.append(heading);
       timeline(detail,ex.analysis,ex.ownTurn);
       if(select)select.value=String(selectedExample);
@@ -527,27 +527,19 @@ function feature(parent,title,candidates){
       const ex=examples[selectedExample];
       renderTurns(ex.analysis,ex.ownTurn);
     };
-    tracker.append(full);
-    const label=el("div","insight-example-game-label",
-      "Choose a source game · results from the Gorge engine");
     const control=el("div","gorge-insight-game-control");
     select=el("select","gorge-insight-example-select");
     select.setAttribute("aria-label","Choose a recorded Gorge game and focus turn");
     examples.forEach((ex,i)=>{
-      const o=el("option",null,"Seed "+ex.analysis.game.seed+
-        " · Turn "+ex.ownTurn+" · "+
-        ex.analysis.game.decks.filter((_,j)=>j!==ex.analysis.seat)
-          .map(x=>x.replace(/_/g," ")).join(" / "));
+      const o=el("option",null,"4-player · Seed "+ex.analysis.game.seed+
+        " · Turn "+ex.ownTurn);
       o.value=String(i);select.append(o);
     });
     select.onchange=()=>{selectedExample=Number(select.value);populate();};
-    control.append(select);
+    control.append(select,full);
     detail=el("div","insight-inline-tracker-review");
-    tracker.append(label,control,detail);
-    tracker.addEventListener("toggle",()=>{
-      trigger.textContent=tracker.open?"Close example games":"View example games";
-      if(tracker.open)populate();
-    });
+    tracker.append(control,detail);
+    tracker.addEventListener("toggle",()=>{if(tracker.open)populate();});
     evidence.append(tracker);
   }
   for(const candidate of candidates.slice(0,10)){
