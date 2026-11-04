@@ -137,26 +137,8 @@ jobs:
           path: ${{ runner.temp }}/results/
           if-no-files-found: warn
           retention-days: 14
-      - name: Publish only verified synthetic omniscient UI projections to Deck Lab
-        if: github.event_name != 'pull_request'
+      # Smoke samples remain in the short-lived workflow artifact. They must
+      # not overwrite the production player-vs-precon benchmark catalog.
+      - name: Keep synthetic smoke samples outside production results
         run: |
-          git fetch origin main
-          # A Pages publisher may have committed only generated docs while
-          # gorge was compiling. Accept that harmless change, but never
-          # publish stale samples if source engine/export code has changed.
-          if ! git diff --quiet HEAD origin/main -- \
-            tools/gorge_commander_probe.go tools/gorge_ui_export.py \
-            tools/gorge_public_state.py .github/workflows/gorge-native-smoke.yml; then
-            echo "Gorge source advanced; skipped stale replay samples." >> "$GITHUB_STEP_SUMMARY"
-            exit 0
-          fi
-          git checkout -B gorge-public-publish origin/main
-          mkdir -p web/pages/data/gorge
-          rsync -ac --delete "$RUNNER_TEMP/results/public_ui/" web/pages/data/gorge/
-          git config user.name "github-actions[bot]"
-          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git add -A web/pages/data/gorge/
-          if ! git diff --cached --quiet; then
-            git commit -m "Publish verified 40-life gorge public UI samples"
-            git push origin HEAD:main
-          fi
+          echo "Synthetic smoke replays are retained only as Actions artifacts." >> "$GITHUB_STEP_SUMMARY"
