@@ -255,7 +255,10 @@ function storyCard(title,kicker,value,caption,onOpen){
   button.type="button";
   button.append(el("span",null,title),el("strong",null,value),
     el("small",null,caption),el("span","game-outcome-hero-highlight-cue","Explore ↗"));
-  button.onclick=onOpen;
+  button.addEventListener("click",event=>{
+    event.preventDefault();event.stopPropagation();
+    onOpen?.();
+  });
   return button;
 }
 function unavailable(title,message){
@@ -458,7 +461,24 @@ function paint(){
         chooser.addEventListener("change",render);render();
         body.append(legend,graph,last);
       });
-    cards.append(opponent,gameLength,life);
+    const survival=outcomeCard("Eliminations & Survival","Real four-player pod",
+      text(100*stats.lastAlive/stats.n)+"%","Alive at the last turn-entry checkpoint",
+      body=>{
+        for(const g of stats.games){
+          const seat=g.decks.indexOf(deck);
+          const latest=g.snapshots.at(-1).players[seat];
+          const won=winner(g)===seat;
+          body.append(metric("Seed "+g.seed,
+            won?"Winner":latest.lost?"Eliminated":"Alive before game ended",
+            "Checkpoint turn "+g.snapshots.at(-1).turn+
+            " · official winning seat: "+g.decks[winner(g)]));
+        }
+      });
+    disclosures.set("matchup",opponent);
+    disclosures.set("length",gameLength);
+    disclosures.set("survival",survival);
+    disclosures.set("life",life);
+    cards.append(opponent,gameLength,survival,life);
   }
   const insights=$("key-insights-grid");
   if(insights){
