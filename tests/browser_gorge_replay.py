@@ -74,7 +74,7 @@ def check():
             assert ability_tracker.locator(
                 ".insight-turn-row .insight-action-entry").count()>0
             assert ability_tracker.locator(
-                ".insight-opponent-abilities").count()>0
+                ".insight-enemy-turn").count()>0
             ability_panel.locator(".game-outcome-summary").click()
             trigger_panel.locator(".game-outcome-summary").click()
             assert "Recorded triggers" in trigger_panel.inner_text()
