@@ -13,7 +13,7 @@ from pathlib import Path
 
 DEFAULT_LIBRARY = Path(__file__).resolve().parents[1] / "data" / "commander_deck_library.json"
 COLORS = frozenset("WUBRG")
-ROLES = frozenset({"player", "opponent"})
+ROLES = frozenset({"player", "opponent", "both"})
 
 
 def load_library(path=DEFAULT_LIBRARY):
@@ -34,7 +34,7 @@ def load_library(path=DEFAULT_LIBRARY):
         known.add(key)
         if row.get("role") not in ROLES:
             raise ValueError(f"{key}: unknown deck role")
-        if row["role"] == "opponent" and row.get("provenance") != "stock_precon":
+        if row["role"] in ("opponent", "both") and row.get("provenance") != "stock_precon":
             raise ValueError(f"{key}: only verified stock precons may be opponents")
         colors = row.get("color_identity")
         if (not isinstance(colors, list) or len(colors) != len(set(colors))
@@ -53,22 +53,22 @@ def by_key(library):
 
 
 def opponent_keys(library):
-    return [r["key"] for r in library["decks"] if r["role"] == "opponent"]
+    return [r["key"] for r in library["decks"] if r["role"] in ("opponent", "both")]
 
 
 def player_keys(library):
-    return [r["key"] for r in library["decks"] if r["role"] == "player"]
+    return [r["key"] for r in library["decks"] if r["role"] in ("player", "both")]
 
 
 def validate_pod(library, hero, opponents):
     rows = by_key(library)
-    if hero not in rows or rows[hero]["role"] != "player":
-        raise ValueError("Selected hero must be a registered player-only deck")
+    if hero not in rows or rows[hero]["role"] not in ("player", "both"):
+        raise ValueError("Selected hero must be an authorized player deck")
     if (not isinstance(opponents, (list, tuple)) or len(opponents) < 3
             or len(opponents) != len(set(opponents))):
         raise ValueError("Provide at least three distinct precon opponents")
     for key in opponents:
-        if key not in rows or rows[key]["role"] != "opponent":
+        if key == hero or key not in rows or rows[key]["role"] not in ("opponent", "both"):
             raise ValueError(f"{key}: not an authorized stock-precon opponent")
     return hero, list(opponents)
 
@@ -90,7 +90,7 @@ def validate_deck_files(library, hero, opponents, directory):
     return versions
 
 
-def matchup_annotations(library, keys):
+def matchup_annotations(library, keys, hero=None):
     """Emit immutable per-seat annotations alongside each simulation result.
 
     A color is present as a binary property, not a claim that that color
@@ -100,7 +100,7 @@ def matchup_annotations(library, keys):
     rows = by_key(library)
     return [{
         "deck_key": key,
-        "role": rows[key]["role"],
+        "role": "player" if key == hero else "opponent" if hero is not None else rows[key]["role"],
         "commander": rows[key]["commander"],
         "color_identity": rows[key]["color_identity"],
         "colors_present": {c: c in rows[key]["color_identity"] for c in "WUBRG"},
@@ -125,7 +125,7 @@ def main():
         "hero": args.hero,
         "opponent_pool": opponents,
         "deck_sha256": versions,
-        "matchup_annotations": matchup_annotations(library, [args.hero, *opponents]),
+        "matchup_annotations": matchup_annotations(library, [args.hero, *opponents], hero=args.hero),
         "metadata_version": library["metadata_version"],
     }
     payload = json.dumps(output, indent=2, sort_keys=True) + "\n"
