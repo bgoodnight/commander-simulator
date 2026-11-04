@@ -56,6 +56,12 @@ function analyze(g,seat){
       else if(e.kind==="mana"&&Number(e.amount)>0)mana+=Number(e.amount);
     }
   }
+  const publicNames=new Map();
+  for(const snap of g.snapshots)for(const p of snap.players||[])
+    for(const cards of Object.values(p.zones||{}))for(const card of cards||[])
+      if(Number.isInteger(card.object_id)&&card.name)publicNames.set(card.object_id,card.name);
+  for(const t of g.turns)for(const e of t.events||[])
+    if(Number.isInteger(e.obj)&&e.card_name)publicNames.set(e.obj,e.card_name);
   const timeline=own.map((t,i)=>{
     const next=own[i+1]||null;
     const range=g.turns.filter(x=>x.turn>=t.turn&&(!next||x.turn<next.turn));
@@ -65,7 +71,7 @@ function analyze(g,seat){
       atStart:g.snapshots.find(s=>s.turn===t.turn)||null,
       atNext:next?g.snapshots.find(s=>s.turn===next.turn)||null:null};
   });
-  return {seat,key:g.decks[seat],game:g,casts:castCount,lands,tokens,mana,
+  return {seat,key:g.decks[seat],game:g,publicNames,casts:castCount,lands,tokens,mana,
     ranked:[...casts.values()].sort((a,b)=>b.count-a.count||a.name.localeCompare(b.name)),
     timeline};
 }
@@ -188,12 +194,24 @@ function hero(parent,records,active){
       "Verified 40-life Commander games · wins and matchup percentages pending outcome export"));
   summary.append(copy);card.append(summary);frame.append(card);parent.append(frame);
 }
-function turnNarration(t){
+/* A public land-play marker follows the visible hand-to-battlefield move.
+ * Only name a land when its exact object ID is identified in a native event
+ * or visible-zone snapshot. Never infer a private draw from hand changes. */
+function landIdentity(a,e,t){
+  const candidate=(t.events||[]).find(x=>x.kind==="zone_change"&&
+    x.from===1&&x.to===2&&Number.isInteger(x.obj)&&
+    e.seq-x.seq>=0&&e.seq-x.seq<=3);
+  return candidate?a.publicNames.get(candidate.obj)||null:null;
+}
+function turnNarration(t,a){
   const parts=[];
   for(const x of t.actions){
     const e=x.event;
-    if(e.kind==="land_played")parts.push("Played a land");
-    else if(e.kind==="cast"&&e.card_name)parts.push("Played "+e.card_name);
+    if(e.kind==="land_played"){
+      const row=a.game.turns.find(t=>t.turn===x.turn);
+      const name=row?landIdentity(a,e,row):null;
+      parts.push("Played "+(name||"a land"));
+    }else if(e.kind==="cast"&&e.card_name)parts.push("Played "+e.card_name);
     else if(e.kind==="cast")parts.push("Cast an unnamed spell");
     else if(e.kind==="token_created")parts.push("Created a token");
   }
@@ -295,7 +313,7 @@ function turnRow(parent,t,a,options={}){
   const cover=artImage(spotlight,"insight-turn-cover");
   if(cover)head.append(cover);
   head.append(el("strong","insight-turn-label","Turn "+t.number),
-    el("span","insight-turn-activity",turnNarration(t)));
+    el("span","insight-turn-activity",turnNarration(t,a)));
   const badges=el("span","insight-turn-metrics");
   const current=t.atStart?.players?.[a.seat]||null;
   const next=(t.atNext||t.atStart)?.players?.[a.seat]||null;
@@ -334,14 +352,17 @@ function turnRow(parent,t,a,options={}){
     const item=el("div","insight-action-entry");
     const verb=e.kind==="cast"?"Cast":e.kind==="land_played"?"Played":
       e.kind==="token_created"?"Created":"Recorded";
+    const nativeRow=a.game.turns.find(x=>x.turn===turn);
+    const knownLand=e.kind==="land_played"&&nativeRow?landIdentity(a,e,nativeRow):null;
     const message=e.kind==="cast"?(e.card_name||"unidentified spell"):
-      e.kind==="land_played"?"a land (individual identity unavailable)":
+      e.kind==="land_played"?(knownLand||"a land (identity not exported)"):
       e.kind==="token_created"?"a token":
       e.kind==="damage"?"damage event "+(e.amount??""):
       "life adjustment "+(e.amount??"");
     item.append(el("span","insight-action-description",
       verb+" "+message+(turn!==t.nativeTurn?" · during native turn "+turn:"")));
     if(e.kind==="cast"&&e.card_name)item.append(cardButton(e.card_name));
+    if(e.kind==="land_played"&&knownLand)item.append(cardButton(knownLand));
     list.append(item);
   }
   actionPanel.append(list);body.append(actionPanel,statePanel(t,a));
@@ -357,9 +378,9 @@ function openingRow(parent,a){
   const summary=el("summary","insight-turn-row-summary");
   const cover=artImage(commanderName(a),"insight-turn-cover");
   if(cover)summary.append(cover);
-  summary.append(el("strong","insight-turn-label","Opening"),
+  summary.append(el("strong","insight-turn-label","Draw"),
     el("span","insight-turn-activity",
-      "Opening observation · "+(p?fmt(p.hand_count):"unknown")+" cards in hand"));
+      "Opening hand · "+(p?fmt(p.hand_count):"unknown")+" cards"));
   const badges=el("span","insight-turn-metrics");
   if(p){
     badges.append(pill(p.life,"♥",null,"Life at first recorded own-turn entry"));
@@ -371,7 +392,7 @@ function openingRow(parent,a){
   row.append(summary);
   const body=el("div","insight-turn-row-body");
   body.append(el("p","micro",
-    "Gorge recorded the opening hand size, but the public export does not disclose the seven individual cards or mulligan history."));
+    "Opening hand identities and mulligans are not present in the public replay. Only the observed hand count is shown."));
   if(first)body.append(statePanel({...first,atNext:null},a));
   row.append(body);parent.append(row);
 }
