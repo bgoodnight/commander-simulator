@@ -65,6 +65,7 @@ jobs:
           node --test tests/pages_insights.test.cjs
           node --test tests/pages_replay.test.cjs
           node --test tests/pages_gorge_replay.test.cjs
+          node --test tests/pages_gorge_dashboard.test.cjs
           node --test tests/pages_insight_explorer.test.cjs
           node --test tests/pages_insight_catalog.test.cjs
           node --test tests/pages_game_outcomes.test.cjs
