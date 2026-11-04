@@ -154,6 +154,16 @@ def check():
               panelScroll: document.querySelector('#gorge-replay-panel').scrollWidth
             })""")
             print("MOBILE WIDTHS",json.dumps(widths),flush=True)
+            if widths["page"]>widths["viewport"]+2:
+                offenders=page.evaluate("""() =>
+                  Array.from(document.querySelectorAll('body *'))
+                    .map(e=>({node:e.tagName.toLowerCase(),id:e.id,
+                      cls:typeof e.className==='string'?e.className.slice(0,80):'',
+                      right:Math.round(e.getBoundingClientRect().right),
+                      width:Math.round(e.getBoundingClientRect().width)}))
+                    .filter(x=>x.right>innerWidth+2)
+                    .sort((a,b)=>b.right-a.right).slice(0,18)""")
+                print("MOBILE OFFENDERS",json.dumps(offenders),flush=True)
             assert widths["page"]<=widths["viewport"]+2, (
                 "Horizontal mobile overflow: "+str(widths))
             assert page.locator("#gorge-replay-load").is_visible()
