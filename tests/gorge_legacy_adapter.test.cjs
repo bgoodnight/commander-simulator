@@ -150,6 +150,79 @@ test("explicit synthetic omniscience restores named hands, opponent hands and so
   assert.equal(run.gorge_source.visibility,"omniscient");
 });
 
+
+test("native ability pushes are translated with correct off-turn controllers",()=>{
+  const g=game(300);
+  const batch=adapt.adapt([g],"mortarion_current",hashes);
+  assert.equal(old.validate(batch),true);
+  const run=batch.runs[0];
+  const actions=run.ui_observations.flatMap(o=>o.actions);
+  const activations=actions.filter(a=>a.type==="ability_activated");
+  const triggers=actions.filter(a=>a.type==="ability_triggered");
+  const source=g.turns.flatMap(t=>t.events);
+  const activIds=new Set([34,55,67,79,88]);
+  const triggerIds=new Set([27,38,46,54,72,80]);
+  assert.equal(activations.length,
+    source.filter(e=>activIds.has(e.kind_id)).length,
+    "Capture every source-native activated ability push from all four players");
+  assert.equal(triggers.length,
+    source.filter(e=>triggerIds.has(e.kind_id)).length,
+    "Capture every supported native triggered ability push from all four players");
+  assert.ok(activations.some(a=>
+    a.card==="Myriad Landscape"&&a.seat===0&&a.native_kind_id===34));
+  assert.ok(activations.some(a=>
+    a.card==="Riptide Laboratory"&&a.seat===1&&a.native_kind_id===34));
+  assert.ok(triggers.some(a=>
+    a.card==="Yahenni, Undying Partisan"&&a.seat===0&&
+    a.source_seq===2888),
+    "Seat zero's omitted player field must not become active player seat two");
+  assert.ok(triggers.some(a=>
+    a.card==="Magnus the Red"&&a.seat===1));
+  assert.ok(activations.every(a=>Number.isInteger(a.source_seq)&&
+    Number.isInteger(a.source_object_id)));
+  assert.ok(triggers.every(a=>Number.isInteger(a.source_seq)&&
+    Number.isInteger(a.source_object_id)));
+  assert.ok(actions.every(a=>a.type!=="ability_resolved"),
+    "A naked Resolve stack-object ID cannot establish a source ability");
+});
+test("separate source ability rankings exclude opponent actions and include commander triggers",()=>{
+  const mortarion=adapt.adapt([a],"mortarion_current",hashes);
+  const run=old.model([mortarion],"mortarion_current",hashes.mortarion_current)
+    .groups.flatMap(g=>g.runs)[0];
+  const stats=old.observationCardStats([run],()=>null,"Mortarion, Daemon Primarch");
+  assert.ok(stats.activated);
+  assert.ok(stats.triggered);
+  assert.ok(stats.ranked.activated.some(x=>x.name==="Pestilence Demon"));
+  assert.ok(stats.ranked.activated.some(x=>x.name==="Myriad Landscape"));
+  assert.ok(!stats.ranked.activated.some(x=>x.name==="Riptide Laboratory"),
+    "Opposing Izzet pilot must not inflate the Mortarion activated card rankings");
+  assert.ok(stats.ranked.triggered.some(x=>x.name==="Yahenni, Undying Partisan"));
+  assert.ok(!stats.ranked.triggered.some(x=>x.name==="Magnus the Red"),
+    "Opponent commander's triggers are visible in the replay but not our rankings");
+  assert.ok(stats.ranked.triggered.every(x=>x.eventCount>=x.games));
+  const magnus=adapt.adapt([a,b],"magnus_premium",hashes);
+  const magnusRuns=old.model([magnus],"magnus_premium",hashes.magnus_premium)
+    .groups.flatMap(g=>g.runs);
+  const enemyStats=old.observationCardStats(magnusRuns,()=>null,"Magnus the Red");
+  assert.ok(enemyStats.ranked.triggered.some(x=>x.name==="Magnus the Red"),
+    "Commander triggers must not be filtered out of ability usage rankings");
+});
+test("legacy Python ability metrics stay combined when native Gorge mode is absent",()=>{
+  const run=old.model([adapt.adapt([a],"mortarion_current",hashes)],
+    "mortarion_current",hashes.mortarion_current).groups[0].runs[0];
+  const copy=structuredClone(run);
+  copy.batch={engine:"python"};
+  copy.ui_observations=[{
+    ...copy.ui_observations[0],
+    actions:[{type:"reviewed_activated_ability",card:"Phyrexian Altar",seat:0},
+             {type:"trigger",card:"Phyrexian Altar",seat:0}]
+  }];
+  copy.completed_rounds=1;
+  const signals=old.observationCardStats([copy],()=>null);
+  assert.equal(signals.activated.eventCount,2);
+  assert.equal(signals.triggered,null);
+});
+
 test("genuine cast records populate the ORIGINAL source statistics",()=>{
   const batch=adapt.adapt([a],"mortarion_current",hashes);
   const names={ 
