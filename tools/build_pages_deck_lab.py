@@ -370,7 +370,7 @@ def build(output, *, catalog_path=SHARED_CATALOG, name_catalog_path=DEFAULT_NAME
             from tools.gorge_cohort_report import make_report
             cohort = make_report(analytics["games"])
             (target / "cohort.json").write_text(
-                json.dumps(cohort, separators=(",", ":"), sort_keys=True) + "\\n",
+                json.dumps(cohort, separators=(",", ":"), sort_keys=True) + "\n",
                 encoding="utf-8",
             )
 
