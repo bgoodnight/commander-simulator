@@ -67,6 +67,37 @@ def check():
             page.screenshot(path=str(OUT/"before-fix-diagnostic.png"),full_page=False)
             page.locator("#gorge-replay-root h3").filter(
                 has_text="Gorge Commander · Game 300").wait_for(timeout=15000)
+            # The ORIGINAL Results components must be restored outside the
+            # retired Python archive, not replaced by a new visual design.
+            page.locator("#game-outcome-results .game-outcome-hero").wait_for(timeout=20000)
+            for original_id in (
+                "simulation-snapshot","key-insights-panel","long-game-panel",
+                "turn-reviewer-panel","development-panel"):
+                assert page.locator("#"+original_id).is_visible(), original_id
+                assert page.locator("#"+original_id).evaluate(
+                    "(el)=>!el.closest('#legacy-simulation-archive')"), (
+                    original_id+" is still inside the Python archive")
+            assert page.locator("#game-outcome-results .game-outcome-hero-highlight").count()==4
+            assert page.locator("#key-insights-grid .insight-report").count()>=2
+            assert page.locator("#gorge-recorded-deck-select").is_visible()
+            assert page.locator("#game-outcome-status").inner_text().lower().count("gorge")==1
+            assert page.locator("#turn-reviewer-panel #gorge-replay-panel").count()==1
+            # The exact old hero/insight/reviewer styling remains present.
+            assert page.locator(".game-outcome-grid.latest-insight-grid").count()==1
+            assert page.locator(".insight-summary").count()>=1
+            page.screenshot(path=str(OUT/"gorge-restored-original-dashboard.png"),
+                            full_page=False)
+            # Changing the original commander context changes the selected
+            # gorge cohort (not the retired Python cohort).
+            page.locator("#gorge-recorded-deck-select").select_option("magnus_premium")
+            page.locator("#game-outcome-status").filter(
+                has_text="2 gorge Commander games").wait_for(timeout=12000)
+            assert "0%" in page.locator(".game-outcome-hero-stat.is-win").first.inner_text()
+            assert page.locator("#key-insights-grid .insight-report").count()>=2
+            page.locator("#gorge-recorded-deck-select").select_option("mortarion_current")
+            page.locator("#game-outcome-status").filter(
+                has_text="1 gorge Commander game").wait_for(timeout=12000)
+            assert "100%" in page.locator(".game-outcome-hero-stat.is-win").first.inner_text()
             assert page.locator("#gorge-replay-samples").is_visible()
             assert page.locator("#gorge-replay-panel").is_visible()
             assert not page.locator("#legacy-simulation-archive").evaluate(
