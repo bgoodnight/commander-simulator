@@ -158,6 +158,7 @@
       if(!Number.isInteger(t.turn)||t.turn<turnStart||
          t.turn>=turnEnd)continue;
       for(let i=0;i<(t.events||[]).length;i++){
+        const actionStart=actions.length;
         const e=t.events[i],real=actor(e,t),seat=mapSeat(real,hero);
         const ability=abilityAction(e,hero,names);
         if(ability){
@@ -185,6 +186,10 @@
           actions.push({type:"token_created",card:names.get(e.obj)||null,seat,
             native_turn:t.turn,source_seq:e.seq,source_kind:e.kind});
         }
+        // The source turn owner is distinct from an event's actor:
+        // an opponent can respond or trigger during another player's turn.
+        for(let k=actionStart;k<actions.length;k++)
+          actions[k].native_turn_seat=mapSeat(t.seat,hero);
         // Native Resolve events name a minted stack object, not the
         // originating permanent. Do not attach later damage, tokens or
         // resolutions to this activation without an explicit source link.
