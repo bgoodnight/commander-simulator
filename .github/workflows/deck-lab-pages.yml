@@ -40,8 +40,8 @@ permissions:
   pages: write
   id-token: write
 concurrency:
-  group: deck-lab-pages
-  cancel-in-progress: false
+  group: deck-lab-pages-${{ github.ref }}
+  cancel-in-progress: true
 jobs:
   build:
     name: Export sanitized static Deck Lab
@@ -59,6 +59,20 @@ jobs:
           python-version: "3.11"
       - name: Build six-deck static snapshot and fixed-seed observations
         run: python tools/build_pages_deck_lab.py --output ./dist/pages
+      - name: Enforce a bounded static-site footprint
+        shell: bash
+        run: |
+          set -euo pipefail
+          bytes="$(du -sb ./dist/pages | cut -f1)"
+          mib="$(( (bytes + 1048575) / 1048576 ))"
+          echo "Validated Pages export: ${mib} MiB" >> "$GITHUB_STEP_SUMMARY"
+          if (( bytes > 175 * 1048576 )); then
+            echo "::warning::Static Pages build is over 175 MiB; consider moving additional historical data to R2"
+          fi
+          if (( bytes > 250 * 1048576 )); then
+            echo "::error::Static Pages build exceeds 250 MiB project budget. Audit archives before publishing."
+            exit 1
+          fi
       - name: Validate export contracts and Javascript syntax
         run: |
           python -m unittest tests.test_pages_export tests.test_gorge_ui_export tests.test_gorge_public_state tests.test_gorge_cohort_report tests.test_gorge_card_insights -v
