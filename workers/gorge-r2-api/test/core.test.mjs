@@ -1,6 +1,6 @@
 import test from "node:test";
 import assert from "node:assert/strict";
-import { aggregate, isApproved, isDecisive, sha256, stableJson, validateDeck, normalizeRow, IDENTITY_FIELDS } from "../core.mjs";
+import { aggregate, isApproved, isDecisive, sha256, stableJson, validateDeck, normalizeRow, IDENTITY_FIELDS, approvedGameIndex } from "../core.mjs";
 
 const fp = Object.fromEntries(IDENTITY_FIELDS.map(k=>[k,"pinned-"+k]));
 const approved={cohort_id:"baseline-1",status:"current",approved:true,approval_ref:"reviewed",...fp};
@@ -46,4 +46,22 @@ test("Parquet INT64 preserves exact seat and turn values safely",async()=>{
   assert.equal(typeof row.turns,"number");
   assert.equal((await isApproved(row,registry)),true);
   assert.throws(()=>normalizeRow({winner_seat:9007199254740993n}),/Unsafe/);
+});
+
+test("approved game index reveals only safe, deterministic summaries",async()=>{
+  const a=await game({game_id:"batch/a/0/2"});
+  const b=await game({game_id:"batch/a/0/1",winner_seat:1});
+  const out=approvedGameIndex([a,b],"mortarion_current",1);
+  assert.equal(out.schema,"gorge-r2-approved-game-index-v1");
+  assert.equal(out.total,2);
+  assert.equal(out.has_more,true);
+  assert.equal(out.games[0].result,"loss");
+  assert.deepEqual(out.games[0].opponent_decks,["precon1","precon2","precon3"]);
+  assert.equal("source_sha256" in out.games[0],false);
+  assert.equal("seed" in out.games[0],false);
+  assert.equal("event_json" in out.games[0],false);
+  assert.deepEqual(approvedGameIndex([],"mortarion_current").games,[]);
+  assert.throws(()=>approvedGameIndex([a,a],"mortarion_current"),/duplicate/i);
+  assert.throws(()=>approvedGameIndex([await game({draw:true,winner_seat:null})],"mortarion_current"),/unapproved/);
+  assert.throws(()=>approvedGameIndex([a],"mortarion_current",26),/limit/);
 });
