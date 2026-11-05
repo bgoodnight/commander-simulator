@@ -19,13 +19,17 @@ const reducerCostProbeSrc = "Name:Generic Spell Reducer\nManaCost:1 U\nTypes:Cre
     "S:Mode$ ReduceCost | ValidCard$ Instant,Sorcery | Type$ Spell | Activator$ You | Amount$ 1\n" +
     "Oracle:Instant and sorcery spells you cast cost {1} less.\n"
 
+const reducerCostProbeSrc2 = "Name:Second Generic Spell Reducer\\nManaCost:U R\\nTypes:Creature Wizard\\nPT:2/2\\n" +
+    "S:Mode$ ReduceCost | ValidCard$ Instant,Sorcery | Type$ Spell | Activator$ You | Amount$ 1\\n" +
+    "Oracle:Instant and sorcery spells you cast cost {1} less.\\n"
+
 const spellCostProbeSrc = "Name:Five Mana Probe\nManaCost:5 U\nTypes:Instant\nOracle:Probe.\n"
 const sorceryCostProbeSrc = "Name:Sorcery Probe\nManaCost:2 U U\nTypes:Sorcery\nOracle:Probe.\n"
 const creatureCostProbeSrc = "Name:Creature Probe\nManaCost:5 U\nTypes:Creature Wizard\nPT:1/1\nOracle:Probe.\n"
 const tokenCostProbeSrc = "Name:Probe Creature Token\nTypes:Creature Warrior\nPT:1/1\nOracle:Token.\n"
 
 func TestMagnusCreatureTokenReductionsStackAndRespectColors(t *testing.T) {
-    e, cfg, spell := newFixtureDeck(t, 82818, spellCostProbeSrc, magnusCostProbeSrc, reducerCostProbeSrc, sorceryCostProbeSrc, creatureCostProbeSrc)
+    e, cfg, spell := newFixtureDeck(t, 82818, spellCostProbeSrc, magnusCostProbeSrc, reducerCostProbeSrc, reducerCostProbeSrc2, sorceryCostProbeSrc, creatureCostProbeSrc)
     // ReduceCost composition is valid even when fixture card is in library.
     // SpellEffectiveCost intentionally returns empty for non-hand objects.
     check:=func(label string, id state.ObjID, expected int32){
@@ -44,7 +48,7 @@ func TestMagnusCreatureTokenReductionsStackAndRespectColors(t *testing.T) {
     check("Magnus three tokens",spell,3)
     putCreature(t,e,0,reducerCostProbeSrc)
     check("three tokens plus one generic reducer",spell,4)
-    putCreature(t,e,0,reducerCostProbeSrc)
+    putCreature(t,e,0,reducerCostProbeSrc2)
     check("three tokens plus two generic reducers",spell,5)
     putToken(t,e,0,tokenCostProbeSrc,state.ZBattlefield)
     check("four tokens plus two reducers",spell,6)
