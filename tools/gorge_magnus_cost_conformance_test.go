@@ -12,7 +12,7 @@ import (
 // archived Magnus card's exact Forge script has passed a corpus-level check.
 const magnusCostProbeSrc = "Name:Magnus Cost Probe\nManaCost:3 U R\nTypes:Legendary Creature Demon Primarch\nPT:4/5\n" +
     "S:Mode$ ReduceCost | ValidCard$ Instant,Sorcery | Type$ Spell | Activator$ You | Amount$ X\n" +
-    "SVar:X:Count$Valid Creature.YouCtrl+Token\n" +
+    "SVar:X:Count$Valid Creature.token+YouCtrl\n" +
     "Oracle:Instant and sorcery spells you cast cost {1} less for each creature token you control.\n"
 
 const reducerCostProbeSrc = "Name:Generic Spell Reducer\nManaCost:1 U\nTypes:Creature Human Wizard\nPT:1/3\n" +
