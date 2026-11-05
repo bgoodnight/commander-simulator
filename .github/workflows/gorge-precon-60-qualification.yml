@@ -131,6 +131,8 @@ jobs:
               for problem in status["engine_errors"]:
                   out.write(f"- BLOCKED seed {problem['seed']}: {problem['error']}; pod: {', '.join(problem['decks'])}\\n")
               out.write("Unresolved engine errors block promotion. No R2 writes, Pages publication or current-statistics eligibility.\\n")
+          if status["engine_error_count"]:
+              raise ValueError(f"Engine errors block precon qualification: {status['engine_error_count']}")
           PY
       - name: Capture failing seed 186047 with exact rotated pod and decision evidence
         if: ${{ always() && matrix.hero == 'mortarion_current' }}
@@ -163,6 +165,8 @@ jobs:
               raise ValueError("Failure reproduction did not preserve the deterministic seed")
           r=rows[0]
           print(f"Reproduced exact seed 186047: error={bool(r.get('error'))}; finished={r.get('finished')}")
+          if r.get("error") or not r.get("finished") or not r.get("replay_verified"):
+              raise ValueError("Seed 186047 ward-Blight regression is not fully verified")
           with open(os.environ["GITHUB_STEP_SUMMARY"],"a") as out:
               out.write(f"\nSeed 186047 recheck: finished={r.get('finished')}, error={bool(r.get('error'))}; see retained diagnostic artifact.\n")
           PY
