@@ -123,6 +123,40 @@ jobs:
                   out.write(f"- BLOCKED seed {problem['seed']}: {problem['error']}; pod: {', '.join(problem['decks'])}\\n")
               out.write("Unresolved engine errors block promotion. No R2 writes, Pages publication or current-statistics eligibility.\\n")
           PY
+      - name: Capture failing seed 186047 with exact rotated pod and decision evidence
+        if: always()
+        working-directory: ${{ runner.temp }}/gorge
+        shell: bash
+        run: |
+          if [[ ! -f "$RUNNER_TEMP/panel/opponents.txt" || ! -x "$RUNNER_TEMP/gorge-probe" ]]; then
+            echo "Diagnostic unavailable: card export or compiled Gorge missing."
+            exit 0
+          fi
+          set +e
+          "$RUNNER_TEMP/gorge-probe" -corpus "$RUNNER_TEMP/gorge/.cards" \
+            -deck-dir "$RUNNER_TEMP/decks" \
+            -hero-deck mortarion_current \
+            -opponents "$(cat "$RUNNER_TEMP/panel/opponents.txt")" \
+            -pilot bot -games 1 -seed 186000 -start-attempt 47 -max-turns 60 \
+            -verify=true -native-dir "$RUNNER_TEMP/results/native" -native-limit 1 \
+            -diagnose-seed 186047 \
+            > "$RUNNER_TEMP/results/seed-186047-repro.jsonl" \
+            2> "$RUNNER_TEMP/results/seed-186047-diagnostic.log"
+          rc=$?
+          set -e
+          printf '%s\n' "$rc" > "$RUNNER_TEMP/results/seed-186047-repro-exit.txt"
+          python - <<'PY'
+          import json,os
+          from pathlib import Path
+          f=Path(os.environ["RUNNER_TEMP"])/"results/seed-186047-repro.jsonl"
+          rows=[json.loads(x) for x in f.read_text().splitlines() if x.strip()]
+          if len(rows)!=1 or rows[0]["seed"]!=186047:
+              raise ValueError("Failure reproduction did not preserve the deterministic seed")
+          r=rows[0]
+          print(f"Reproduced exact seed 186047: error={bool(r.get('error'))}; finished={r.get('finished')}")
+          with open(os.environ["GITHUB_STEP_SUMMARY"],"a") as out:
+              out.write(f"\nSeed 186047 recheck: finished={r.get('finished')}, error={bool(r.get('error'))}; see retained diagnostic artifact.\n")
+          PY
       - name: Retain experimental evidence outside production analytics
         if: always()
         uses: actions/upload-artifact@v4
