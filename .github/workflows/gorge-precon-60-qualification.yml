@@ -3,6 +3,12 @@ name: Gorge 60-precon experimental gameplay qualification
 # Explicitly experimental: never writes R2, Pages, production catalog or
 # active-eligible analytics. Requires manual launch after import validation.
 on:
+  pull_request:
+    paths:
+      - ".github/workflows/gorge-precon-60-qualification.yml"
+      - "tools/gorge_commander_probe.go"
+      - "tools/check_gorge_precon_compatibility.py"
+      - "tools/stage_gorge_precon_qualification.py"
   workflow_dispatch:
     inputs:
       games:
@@ -54,7 +60,7 @@ jobs:
         shell: bash
         run: |
           set -euo pipefail
-          count="${{ inputs.games }}"
+          count="${{ inputs.games || '12' }}"
           names="$(cat "$RUNNER_TEMP/panel/opponents.txt")"
           "$RUNNER_TEMP/gorge-probe" -corpus "$RUNNER_TEMP/gorge/.cards" \
             -deck-dir "$RUNNER_TEMP/decks" \
@@ -64,7 +70,7 @@ jobs:
             > "$RUNNER_TEMP/results/runs.jsonl"
       - name: Report observed results without granting qualification
         env:
-          GAME_COUNT: ${{ inputs.games }}
+          GAME_COUNT: ${{ inputs.games || '12' }}
         run: |
           python - <<'PY'
           import json, os
