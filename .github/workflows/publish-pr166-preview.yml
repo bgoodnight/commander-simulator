@@ -1,0 +1,86 @@
+name: Publish isolated PR 166 Deck Lab preview to branch-based Pages
+
+# Temporary publish-only automation. No normal Deck Lab code is deployed.
+on:
+  push:
+    branches: [main]
+    paths:
+      - ".github/workflows/publish-pr166-preview.yml"
+
+permissions:
+  contents: write
+  actions: read
+
+jobs:
+  preview:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    env:
+      GH_TOKEN: ${{ github.token }}
+      PREVIEW_SHA: b923e4f14f42683adf87b2bdc7c42d55c84a3a6b
+      PREVIEW_RUN: "42079611076"
+      PREVIEW_PATH: docs/preview/commander-ui-pr166
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - name: Verify source run and immutable PR commit
+        shell: bash
+        run: |
+          set -euo pipefail
+          gh api "repos/$GITHUB_REPOSITORY/actions/runs/$PREVIEW_RUN" \
+            --jq '[.head_sha, .conclusion, .event] | @tsv' > "$RUNNER_TEMP/source.tsv"
+          IFS=$'\t' read -r sha status trigger < "$RUNNER_TEMP/source.tsv"
+          test "$sha" = "$PREVIEW_SHA"
+          test "$status" = "success"
+          test "$trigger" = "pull_request"
+      - name: Download only the tested sanitized static-site artifact
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p "$RUNNER_TEMP/site"
+          gh run download "$PREVIEW_RUN" --repo "$GITHUB_REPOSITORY" \
+            --name deck-lab-static-preview --dir "$RUNNER_TEMP/site"
+          test -s "$RUNNER_TEMP/site/results.html"
+          test -s "$RUNNER_TEMP/site/index.html"
+          test -s "$RUNNER_TEMP/site/decks.json"
+          test -s "$RUNNER_TEMP/site/observations.json"
+          test -s "$RUNNER_TEMP/site/gorge-data/cohort.json"
+          # The known source is explicitly approved-current-only with no
+          # production cohort. It must not leak legacy game outcomes.
+          python - <<'PY'
+          import json,os,pathlib
+          site=pathlib.Path(os.environ['RUNNER_TEMP'])/'site'
+          manifest=json.loads((site/'gorge-data/manifest.json').read_text())
+          cohort=json.loads((site/'gorge-data/cohort.json').read_text())
+          assert manifest['eligibility']=='approved_current_only'
+          assert not manifest['games']
+          assert cohort['total_verified_games']==0
+          assert not (site/'gorge-data/card-insights.json').exists()
+          for f in site.rglob('*'):
+              if f.is_symlink():raise ValueError('Symlink in preview export')
+              if f.is_file() and (f.name.startswith('.env') or f.suffix in ('.pem','.key')):
+                  raise ValueError('Unsafe preview export')
+          PY
+      - name: Publish only to the isolated preview folder
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p "$PREVIEW_PATH"
+          rsync -ac --delete "$RUNNER_TEMP/site/" "$PREVIEW_PATH/"
+          printf '%s\n' "$PREVIEW_SHA" > "$PREVIEW_PATH/.source-commit"
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add -A "$PREVIEW_PATH"
+          if git diff --cached --quiet; then
+            echo "Preview already matches verified snapshot." >> "$GITHUB_STEP_SUMMARY"
+            exit 0
+          fi
+          git commit -m "Publish isolated PR 166 static preview; leave live Deck Lab unchanged"
+          git fetch origin main
+          if test "$(git rev-parse HEAD^)" != "$(git rev-parse origin/main)"; then
+            echo "Main advanced: refuse unsafe preview push." >&2
+            exit 1
+          fi
+          git push origin HEAD:main
+          echo "Preview path: https://bgoodnight.github.io/commander-simulator/$PREVIEW_PATH/results.html" >> "$GITHUB_STEP_SUMMARY"
