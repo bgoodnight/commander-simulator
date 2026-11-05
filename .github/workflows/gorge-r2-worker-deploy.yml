@@ -123,6 +123,44 @@ jobs:
               f.write("These are raw diagnostic reads, not approved analytics.\n")
           print("Gorge R2 direct benchmark completed; see GitHub Step Summary")
           PY
+      - name: Smoke-test public read-only API and response privacy
+        working-directory: workers/gorge-r2-api
+        env:
+          WORKER_URL: ${{ steps.deploy.outputs.deployment-url }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          for deck in mortarion_current magnus_premium; do
+            curl --fail --silent --show-error --max-time 30 \
+              "$WORKER_URL/v1/summary?deck=$deck" > "$RUNNER_TEMP/summary-$deck.json"
+            curl --fail --silent --show-error --max-time 30 \
+              "$WORKER_URL/v1/games?deck=$deck&limit=5" > "$RUNNER_TEMP/games-$deck.json"
+          done
+          python - <<'PY'
+          import json,os
+          from pathlib import Path
+          home=Path(os.environ["RUNNER_TEMP"])
+          for deck in ("mortarion_current","magnus_premium"):
+              summary=json.loads((home/f"summary-{deck}.json").read_text())
+              games=json.loads((home/f"games-{deck}.json").read_text())
+              assert summary["schema"]=="gorge-r2-live-summary-v1"
+              assert games["schema"]=="gorge-r2-approved-game-index-v1"
+              assert summary["deck"]==games["deck"]==deck
+              assert summary["population"]==games["population"]=="approved_current_decisive_only"
+              assert games["total"]>=len(games["games"])
+              assert games["limit"]==5
+              assert games["status"] in ("ready","awaiting_cohort_approval","no_warehouse_shards")
+              assert summary["status"] in ("ready","awaiting_cohort_approval","no_warehouse_shards")
+              for row in games["games"]:
+                  assert set(row)=={"game_id","turns","result","opponent_decks"}
+                  assert row["result"] in ("win","loss")
+                  assert len(row["opponent_decks"])==3
+              assert "event_json" not in json.dumps(games)
+              print(f"{deck}: summary={summary['status']}, index={games['status']}, index_games={len(games['games'])}")
+          with open(os.environ["GITHUB_STEP_SUMMARY"],"a") as output:
+              output.write("\\n## Live public API smoke check\\n")
+              output.write("Both /v1/summary and /v1/games returned validated schemas for Mortarion and Magnus.\\n")
+          PY
       - uses: actions/upload-artifact@v4
         if: always()
         with:
