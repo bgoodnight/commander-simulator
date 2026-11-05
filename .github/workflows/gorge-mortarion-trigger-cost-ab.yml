@@ -1,0 +1,141 @@
+name: Gorge Mortarion trigger-cost pilot A/B test
+on:
+  push:
+    branches: [main]
+    paths:
+      - ".github/workflows/gorge-mortarion-trigger-cost-ab.yml"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  actions: read
+
+concurrency:
+  group: gorge-mortarion-trigger-cost-ab
+  cancel-in-progress: false
+
+jobs:
+  prepare:
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-go@v5
+        with:
+          go-version: '1.25.8'
+      - name: Build pinned Gorge with isolated generic trigger-cost policy
+        env:
+          GH_TOKEN: ${{ github.token }}
+          GH_REPO: ${{ github.repository }}
+        run: |
+          set -euo pipefail
+          mkdir -p "$RUNNER_TEMP/bundle"
+          gh run download 41938112091 --name gorge-500-pinned-bundle --dir "$RUNNER_TEMP/bundle"
+          git clone --filter=blob:none https://github.com/adams-shaun/gorge.git "$RUNNER_TEMP/gorge"
+          git -C "$RUNNER_TEMP/gorge" checkout --detach b78e4c8b16078f6decbc48875bba953ce5535b85
+          python tools/gorge_trigger_cost_policy_patch.py "$RUNNER_TEMP/gorge/bots/botpolicy/policy.go"
+          cp tools/gorge_trigger_cost_policy_test.go "$RUNNER_TEMP/gorge/bots/botpolicy/trigger_cost_pilot_experiment_test.go"
+          (cd "$RUNNER_TEMP/gorge" && go test ./bots/botpolicy -run '^TestTriggerCostXAndPayPilot$' -count=1 -v)
+          cp tools/gorge_commander_probe.go "$RUNNER_TEMP/gorge/commander_probe.go"
+          (cd "$RUNNER_TEMP/gorge" && go build -o "$RUNNER_TEMP/bundle/gorge-probe" ./commander_probe.go)
+      - uses: actions/upload-artifact@v4
+        with:
+          name: gorge-trigger-cost-ab-bundle
+          path: ${{ runner.temp }}/bundle/
+          include-hidden-files: true
+          retention-days: 3
+
+  compare:
+    needs: prepare
+    runs-on: ubuntu-latest
+    timeout-minutes: 120
+    strategy:
+      fail-fast: false
+      matrix:
+        policy: [bot, forge-heuristic]
+    env:
+      POLICY: ${{ matrix.policy }}
+      R2_ACCOUNT_ID: ${{ secrets.GORGE_R2_ACCOUNT_ID }}
+      R2_ACCESS_KEY_ID: ${{ secrets.GORGE_R2_ACCESS_KEY_ID }}
+      R2_SECRET_ACCESS_KEY: ${{ secrets.GORGE_R2_SECRET_ACCESS_KEY }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/download-artifact@v4
+        with:
+          name: gorge-trigger-cost-ab-bundle
+          path: ${{ runner.temp }}/bundle
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Run 100 source-verified matched-seed A/B games
+        shell: bash
+        run: |
+          set -euo pipefail
+          chmod +x "$RUNNER_TEMP/bundle/gorge-probe"
+          root="$RUNNER_TEMP/experimental"
+          mkdir -p "$root/native"
+          opponents="$(python -c 'import json,sys;print(",".join(json.load(open(sys.argv[1]))["opponent_pool"]))' "$RUNNER_TEMP/bundle/pods/mortarion_current-pod.json")"
+          "$RUNNER_TEMP/bundle/gorge-probe" \
+            -corpus "$RUNNER_TEMP/bundle/.cards" -deck-dir "$RUNNER_TEMP/bundle/decks" \
+            -hero-deck mortarion_current -opponents "$opponents" \
+            -games 100 -seed 99000 -max-turns 60 \
+            -retry-unverified=true -max-attempts 500 \
+            -pilot bot -hero-pilot "$POLICY" -verify=true \
+            -native-dir "$root/native" -native-limit 100 > "$root/runs.jsonl"
+          python -m tools.gorge_mortarion_pilot_strategy \
+            --folder "$root" --policy "$POLICY" --out "$root/strategy.json"
+      - name: Archive experiment and compare to existing R2 baseline
+        shell: bash
+        run: |
+          set -euo pipefail
+          test -n "$R2_ACCOUNT_ID" && test -n "$R2_ACCESS_KEY_ID" && test -n "$R2_SECRET_ACCESS_KEY"
+          export AWS_ACCESS_KEY_ID="$R2_ACCESS_KEY_ID" AWS_SECRET_ACCESS_KEY="$R2_SECRET_ACCESS_KEY" AWS_DEFAULT_REGION=auto
+          endpoint="https://$R2_ACCOUNT_ID.r2.cloudflarestorage.com"
+          tar -czf "$RUNNER_TEMP/patched-$POLICY.tar.gz" -C "$RUNNER_TEMP/experimental" native runs.jsonl strategy.json
+          aws --endpoint-url "$endpoint" s3 cp "$RUNNER_TEMP/patched-$POLICY.tar.gz" \
+            "s3://gorge-simulations/pilot-evaluations/v1/${GITHUB_RUN_ID}-${GITHUB_RUN_ATTEMPT}/trigger-cost-$POLICY.tar.gz" --no-progress
+          aws --endpoint-url "$endpoint" s3 cp \
+            "s3://gorge-simulations/pilot-evaluations/v1/41953361428-1/$POLICY.tar.gz" \
+            "$RUNNER_TEMP/baseline-$POLICY.tar.gz" --no-progress
+          mkdir -p "$RUNNER_TEMP/baseline"
+          tar -xzf "$RUNNER_TEMP/baseline-$POLICY.tar.gz" -C "$RUNNER_TEMP/baseline" strategy.json
+          python - <<'PY'
+          import json,os
+          from pathlib import Path
+          root=Path(os.environ["RUNNER_TEMP"])
+          old=json.loads((root/"baseline"/"strategy.json").read_text())
+          new=json.loads((root/"experimental"/"strategy.json").read_text())
+          assert old["policy"]==new["policy"]==os.environ["POLICY"]
+          o={x["seed"]:x for x in old["games_detail"]}
+          n={x["seed"]:x for x in new["games_detail"]}
+          common=sorted(set(o)&set(n))
+          assert common, "No matching verified seeds"
+          report={
+            "policy":os.environ["POLICY"],"baseline_games":old["games"],"patched_games":new["games"],
+            "baseline_wins":old["wins"],"patched_wins":new["wins"],
+            "baseline_astartes_tokens":old["astartes_token_events"],
+            "patched_astartes_tokens":new["astartes_token_events"],
+            "baseline_astartes_games":old["astartes_games"],
+            "patched_astartes_games":new["astartes_games"],
+            "matched_seeds":len(common),
+            "patched_wins_baseline_losses":sum(n[s]["won"] and not o[s]["won"] for s in common),
+            "baseline_wins_patched_losses":sum(o[s]["won"] and not n[s]["won"] for s in common),
+            "patched_pestilence_and_astartes_games":new["pestilence_and_astartes_games"],
+            "patched_mortarion_trigger_events":new["mortarion_trigger_events"],
+          }
+          (root/"experimental"/"ab-summary.json").write_text(json.dumps(report,indent=2)+"\n")
+          with open(os.environ["GITHUB_STEP_SUMMARY"],"a") as f:
+              f.write(f"# Mortarion trigger-cost A/B: {report['policy']}\n\n")
+              f.write(f"- Baseline wins: {report['baseline_wins']}/100; patched wins: {report['patched_wins']}/100\n")
+              f.write(f"- Baseline Astartes: {report['baseline_astartes_tokens']} in {report['baseline_astartes_games']} games\n")
+              f.write(f"- Patched Astartes: {report['patched_astartes_tokens']} in {report['patched_astartes_games']} games\n")
+              f.write(f"- Matched verified seeds: {report['matched_seeds']}\n")
+          print("TRIGGER_COST_AB "+json.dumps(report,sort_keys=True))
+          PY
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: gorge-trigger-cost-ab-${{ matrix.policy }}
+          path: ${{ runner.temp }}/experimental/ab-summary.json
+          retention-days: 14
+          if-no-files-found: warn
