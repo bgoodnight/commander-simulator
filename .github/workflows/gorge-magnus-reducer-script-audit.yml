@@ -4,6 +4,7 @@ on:
     branches: [main]
     paths:
       - ".github/workflows/gorge-magnus-reducer-script-audit.yml"
+      - "tools/gorge_magnus_corpus_reducer_audit.py"
   workflow_dispatch:
 permissions:
   contents: read
