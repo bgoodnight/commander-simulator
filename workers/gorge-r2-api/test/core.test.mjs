@@ -1,6 +1,6 @@
 import test from "node:test";
 import assert from "node:assert/strict";
-import { aggregate, isApproved, isDecisive, sha256, stableJson, validateDeck, IDENTITY_FIELDS } from "../core.mjs";
+import { aggregate, isApproved, isDecisive, sha256, stableJson, validateDeck, normalizeRow, IDENTITY_FIELDS } from "../core.mjs";
 
 const fp = Object.fromEntries(IDENTITY_FIELDS.map(k=>[k,"pinned-"+k]));
 const approved={cohort_id:"baseline-1",status:"current",approved:true,approval_ref:"reviewed",...fp};
@@ -37,4 +37,13 @@ test("never accept keys or usernames as R2 object paths",()=>{
   for(const bad of ["../private","", "x?token=1","A".repeat(100)])
     assert.throws(()=>validateDeck(bad));
   assert(!isDecisive({finished:false}));
+});
+
+test("Parquet INT64 preserves exact seat and turn values safely",async()=>{
+  const g=await game();
+  const row=normalizeRow({...g,hero_seat:0n,winner_seat:0n,turns:18n});
+  assert.equal(typeof row.hero_seat,"number");
+  assert.equal(typeof row.turns,"number");
+  assert.equal((await isApproved(row,registry)),true);
+  assert.throws(()=>normalizeRow({winner_seat:9007199254740993n}),/Unsafe/);
 });
