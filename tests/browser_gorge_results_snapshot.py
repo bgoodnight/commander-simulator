@@ -40,11 +40,19 @@ def check():
                 page.get_by_text('Best matchup', exact=True).wait_for(timeout=60000)
                 assert 'Verified games' not in hero.inner_text()
                 assert 'Replay coverage' not in hero.inner_text()
+                assert 'Draws' not in hero.inner_text()
+                baseline = hero.locator('.game-outcome-baseline')
+                assert baseline.count() == 1
+                assert baseline.get_attribute('aria-label') == '25 percent equal-chance four-player baseline'
+                offset = baseline.evaluate('(e) => (e.getBoundingClientRect().left + e.getBoundingClientRect().width / 2 - e.parentElement.getBoundingClientRect().left) / e.parentElement.getBoundingClientRect().width')
+                assert abs(offset - .25) < .005
                 tiles = hero.locator('.gorge-highlight-details')
                 assert tiles.count() == 4
                 tiles.nth(0).locator('summary').first.click()
                 matchup = tiles.nth(0)
                 assert matchup.locator('table tbody tr').count() > 0
+                assert 'Deadly Disguise' in matchup.inner_text()
+                assert 'deadly-disguise' not in matchup.inner_text()
                 selector = matchup.get_by_label('Compare full-cohort performance by')
                 selector.select_option('identities')
                 assert matchup.locator('table tbody tr').count() > 0
@@ -75,6 +83,11 @@ def check():
                 assert seen_selected.is_visible()
                 seen_selected.locator('summary').first.click()
                 assert page.locator('.gorge-full-cohort-regressions').count() == 1
+                model = page.locator('.gorge-full-cohort-regressions')
+                model.locator('summary').click()
+                assert 'opponent:' not in model.inner_text()
+                assert 'Opponent:' in model.inner_text()
+                model.locator('summary').click()
                 assert page.locator('#turn-reviewer-panel').is_visible()
                 page.evaluate('window.scrollTo(0,0)')
                 page.screenshot(path=str(OUT/(name+'-results.png')), full_page=True)

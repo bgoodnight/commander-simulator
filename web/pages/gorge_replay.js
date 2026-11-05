@@ -23,6 +23,14 @@ const KINDS={
 };
 const NOTELESS=new Set([8,10,14,20,21,26,28]);
 const $=(id)=>document.getElementById(id);
+const names=()=>typeof window!=="undefined"?window.DeckDisplayNames:null;
+const deckName=key=>names()?.deck(key)||String(key).replace(/[_-]+/g," ");
+const groupName=(type,key)=>names()?.group(type,key)||deckName(key);
+const featureName=key=>names()?.feature(key)||deckName(key);
+function decisiveTotals(stats){
+  const total=stats.wins+stats.losses;
+  return {total,winRate:total?stats.wins/total:null,lossRate:total?stats.losses/total:null};
+}
 const node=(tag,cls,txt)=>{
   const el=document.createElement(tag);
   if(cls)el.className=cls;
@@ -96,7 +104,7 @@ function accessibleEvents(game,seat,reveal){
 function kind(e){return KINDS[e.kind]||"Native event #"+e.kind}
 function actor(e,data){
   const seat=Number.isInteger(e.player)?e.player:0;
-  return data.decks[seat]+" (seat "+(seat+1)+")";
+  return deckName(data.decks[seat])+" (seat "+(seat+1)+")";
 }
 function objectName(data,id){
   if(!Number.isInteger(id)||id<=0)return null;
@@ -199,7 +207,7 @@ function paint(rootElement,data,options={}){
   const roster=node("div","gorge-replay-roster");
   data.decks.forEach((name,i)=>{
     const box=node("div","gorge-replay-player");
-    box.append(node("strong",null,"Seat "+(i+1)),node("span",null,name),
+    box.append(node("strong",null,"Seat "+(i+1)),node("span",null,deckName(name)),
       node("small",null,"AI: "+data.policies[i]));
     roster.append(box);
   });
@@ -212,7 +220,7 @@ function paint(rootElement,data,options={}){
       const visible=accessibleEvents(game,state.seat,state.reveal);
       const substantive=visible.filter(e=>state.all||!NOTELESS.has(e.kind));
       const heading=game.number===0?"Game setup":
-        "Turn "+game.number+" · "+(game.seat===null?"Unknown":data.decks[game.seat]);
+        "Turn "+game.number+" · "+(game.seat===null?"Unknown":deckName(data.decks[game.seat]));
       const section=node("details","gorge-replay-turn");
       if(index===0||index===state.expanded)section.open=true;
       const summaryRow=node("summary",null,heading);
@@ -233,7 +241,7 @@ function paint(rootElement,data,options={}){
           const stateBody=node("div","gorge-replay-state-grid");
           for(const p of stateView.players){
             const playerBox=node("div","gorge-replay-state-player");
-            playerBox.append(node("strong",null,data.decks[p.seat]),
+          playerBox.append(node("strong",null,deckName(data.decks[p.seat])),
               node("span",null,"Life: "+p.life+" · Hand: "+p.hand_size+
                 " · Library: "+p.library_size+(p.lost?" · Eliminated":"")));
             if(Array.isArray(p.mana_pool)){
@@ -310,7 +318,7 @@ function paintPublicSnapshot(section,snapshot,decks,omniscient=false){
   const manaSymbols=["{W}","{U}","{B}","{R}","{G}","{C}"];
   for(const player of snapshot.players||[]){
     const card=node("div","gorge-replay-state-player");
-    card.append(node("strong",null,decks[player.seat]),
+    card.append(node("strong",null,deckName(decks[player.seat])),
       node("span",null,"Life "+player.life+" · Hand "+player.hand_count+
         " · Library "+player.library_count+(player.lost?" · Eliminated":"")));
     const mana=(player.mana_pool||[]).map((n,i)=>n>0?manaSymbols[i]+" ×"+n:null).filter(Boolean);
@@ -349,7 +357,7 @@ function paintView(rootElement,data){
   // Results are painted once, using all verified cohort outcomes.
   const header=node("div","gorge-replay-header");
   header.append(node("h3",null,"Gorge Commander · Game "+data.seed));
-  header.append(node("p","small",data.decks.join(" · ")));
+  header.append(node("p","small",data.decks.map(deckName).join(" · ")));
   header.append(node("p","small",data.source.total_native_events+
     " source events · "+data.source.total_native_decisions+
     " decisions · "+data.source.exported_events+
@@ -364,7 +372,7 @@ function paintView(rootElement,data){
   const roster=node("div","gorge-replay-roster");
   data.decks.forEach((name,i)=>{
     const box=node("div","gorge-replay-player");
-    box.append(node("strong",null,"Seat "+(i+1)),node("span",null,name),
+    box.append(node("strong",null,"Seat "+(i+1)),node("span",null,deckName(name)),
       node("small",null,"AI: "+data.policies[i]));
     roster.append(box);
   });
@@ -375,7 +383,7 @@ function paintView(rootElement,data){
     const section=node("details","gorge-replay-turn");
     if(index===1)section.open=true;
     const heading=turn.turn===0?"Game setup":
-      "Turn "+turn.turn+" · "+(data.decks[turn.seat]||"Seat unknown");
+      "Turn "+turn.turn+" · "+(data.decks[turn.seat]?deckName(data.decks[turn.seat]):"Seat unknown");
     const summary=node("summary",null,heading);
     summary.append(node("span","gorge-replay-event-count",
       turn.event_count+" recorded events"));
@@ -471,45 +479,51 @@ function init(){
     const copy=node("div","game-outcome-hero-copy");
     copy.append(node("strong","game-outcome-title","Game Outcomes"));
     const numbers=node("div","game-outcome-hero-stats");
+    const decisive=decisiveTotals(stats).total;
     for(const [state,label,count] of [
-      ["win","Wins",stats.wins],["loss","Losses",stats.losses],
-      ["unresolved","Draws",stats.draws]]){
+      ["win","Wins",stats.wins],["loss","Losses",stats.losses]]){
       const cell=node("div","game-outcome-hero-stat is-"+state);
-      cell.append(node("strong",null,cohortPercent(count/stats.n)),
-        node("span",null,label+" · "+count+"/"+stats.n));
+      cell.append(node("strong",null,cohortPercent(decisive?count/decisive:null)),
+        node("span",null,label+" · "+count+"/"+decisive));
       numbers.append(cell);
     }
     copy.append(numbers);
     const bar=node("div","game-outcome-stacked-bar");
     bar.setAttribute("role","img");
     bar.setAttribute("aria-label",stats.wins+" wins, "+
-      stats.losses+" losses, "+stats.draws+" draws in "+
-      stats.n+" verified games");
+      stats.losses+" losses in "+decisive+" decisive games; reference marker at 25 percent, the equal-chance four-player baseline");
     for(const [state,count] of [
-      ["win",stats.wins],["loss",stats.losses],["unresolved",stats.draws]]){
+      ["win",stats.wins],["loss",stats.losses]]){
       if(!count)continue;
       const segment=node("span","is-"+state);
-      segment.style.width=cohortPercent(count/stats.n);
+      segment.style.width=cohortPercent(count/decisive);
       bar.append(segment);
+    }
+    if(decisive){
+      const baseline=node("span","game-outcome-baseline");
+      baseline.title="25% · four-player baseline";
+      baseline.tabIndex=0;
+      baseline.setAttribute("role","img");
+      baseline.setAttribute("aria-label","25 percent equal-chance four-player baseline");
+      bar.append(baseline);
     }
     copy.append(bar);
     const highlights=node("div","game-outcome-hero-highlights");
     const ranked=(stats.groups?.opponents||[])
-      .filter(group=>group.n>=10)
-      .sort((a,b)=>b.win_rate-a.win_rate||b.n-a.n);
+      .filter(group=>group.wins+group.losses>=10)
+      .sort((a,b)=>b.wins/(b.wins+b.losses)-a.wins/(a.wins+a.losses)||b.n-a.n);
     summary.append(copy);panel.append(summary);
     const body=node("div","game-outcome-body");
     for(const [state,label,count] of [
-      ["win","Wins",stats.wins],["loss","Losses",stats.losses],
-      ["unresolved","Draws",stats.draws]]){
+      ["win","Wins",stats.wins],["loss","Losses",stats.losses]]){
       const line=node("div","game-outcome-bucket is-"+state);
       line.append(node("strong",null,label),
-        node("span",null,count+" / "+stats.n));
+        node("span",null,count+" / "+decisive));
       const lineBar=node("span","game-outcome-bucket-bar");
-      lineBar.style.width=cohortPercent(count/stats.n);
+      lineBar.style.width=cohortPercent(decisive?count/decisive:0);
       line.append(lineBar);body.append(line);
     }
-    if(Array.isArray(stats.wilson_95))
+    if(!stats.draws&&Array.isArray(stats.wilson_95))
       body.append(node("p","micro",
         "Descriptive Wilson 95% win-rate interval: "+
         cohortPercent(stats.wilson_95[0])+"–"+
@@ -517,8 +531,8 @@ function init(){
         ". Games may be dependent because pods and seeds are systematically rotated."));
     panel.append(body);frame.append(panel);
     for(const [label,value,detail,content] of [
-      ["Best matchup",ranked.length?cohortPercent(ranked[0].win_rate):"—",
-        ranked.length?ranked[0].name+" · "+ranked[0].n+" games":"No supported opponent group",cohortGroupPanel(stats)],
+      ["Best matchup",ranked.length?cohortPercent(ranked[0].wins/(ranked[0].wins+ranked[0].losses)):"—",
+        ranked.length?deckName(ranked[0].name)+" · "+(ranked[0].wins+ranked[0].losses)+" games":"No supported opponent group",cohortGroupPanel(stats)],
       ["Game length",stats.median_game_turns==null?"—":String(stats.median_game_turns),
         "Median recorded game turns",cohortLengthPanel(stats)],
       ...sampleHighlightRows(sampleRuns)]){
@@ -633,7 +647,7 @@ function init(){
       dataRoot.replaceChildren();
       const table=node("table","gorge-full-cohort-table");
       const header=node("tr");
-      for(const cell of ["Group","Games","Wins","Losses","Draws","Win rate"]){
+      for(const cell of ["Group","Games","Wins","Losses","Win rate"]){
         header.append(node("th",null,cell));
       }
       const top=node("thead");
@@ -641,11 +655,13 @@ function init(){
       table.append(top);
       const body=node("tbody");
       const groups=[...(stats.groups?.[chooser.value]||[])].sort((a,b)=>
-        (b.win_rate??-1)-(a.win_rate??-1)||b.n-a.n||a.name.localeCompare(b.name));
+        (b.wins+b.losses?b.wins/(b.wins+b.losses):-1)-
+        (a.wins+a.losses?a.wins/(a.wins+a.losses):-1)||b.n-a.n||a.name.localeCompare(b.name));
       for(const group of groups){
         const row=node("tr");
-        for(const cell of [group.name,group.n,group.wins,group.losses,
-                           group.draws,cohortPercent(group.win_rate)]){
+        const n=group.wins+group.losses;
+        for(const cell of [groupName(chooser.value,group.name),n,group.wins,group.losses,
+                           cohortPercent(n?group.wins/n:null)]){
           row.append(node("td",null,String(cell)));
         }
         body.append(row);
@@ -709,7 +725,7 @@ function init(){
       const body=node("tbody");
       for(const p of (fit.predictors||[]).slice(0,15)){
         const tr=node("tr");
-        for(const value of [p.feature,p.coefficient,p.odds_ratio,p.games_exposed]){
+        for(const value of [featureName(p.feature),p.coefficient,p.odds_ratio,p.games_exposed]){
           tr.append(node("td",null,String(value)));
         }
         body.append(tr);
@@ -866,7 +882,7 @@ function init(){
       if(!playerEntry(game,key))continue;
       available.add(game.file);
       const option=node("option",null,"Seed "+game.seed+" · "+
-        game.decks.filter((_,i)=>i!==game.player_seat).join(" / "));
+        game.decks.filter((_,i)=>i!==game.player_seat).map(deckName).join(" / "));
       option.value=game.file;select.append(option);
     }
     samples.hidden=!available.size;
@@ -927,5 +943,5 @@ if(typeof document!=="undefined"){
   if(document.readyState==="loading")document.addEventListener("DOMContentLoaded",init);
   else init();
 }
-return {SCHEMA,KINDS,validate,turns,accessibleEvents,eventLine,stats,paint,objectName,stateForSeat};
+return {SCHEMA,KINDS,validate,turns,accessibleEvents,eventLine,stats,paint,objectName,stateForSeat,decisiveTotals};
 });

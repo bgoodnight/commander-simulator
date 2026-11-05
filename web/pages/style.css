@@ -1094,6 +1094,15 @@ body:has(#pane-records:not([hidden])) .page-introduction a{font-size:.72rem}
 .game-outcome-stacked-bar .is-draw{background:#baa26e}
 .game-outcome-stacked-bar .is-unresolved{background:#928ba8}
 .game-outcome-stacked-bar .is-not_evaluated{background:#687b80}
+.gorge-cohort-hero-frame .game-outcome-stacked-bar{position:relative;gap:0;overflow:visible}
+.gorge-cohort-hero-frame .game-outcome-stacked-bar>span:first-child{border-radius:10px 0 0 10px}
+.gorge-cohort-hero-frame .game-outcome-stacked-bar>span:nth-last-child(2){border-radius:0 10px 10px 0}
+.gorge-cohort-hero-frame .game-outcome-stacked-bar>span:first-child:nth-last-child(2){border-radius:10px}
+.gorge-cohort-hero-frame .game-outcome-baseline{position:absolute;z-index:2;left:25%;top:-4px;
+  width:2px;height:17px;background:#ead4a5;box-shadow:0 0 0 1px #152527;transform:translateX(-50%)}
+.gorge-cohort-hero-frame .game-outcome-baseline:before{content:"";position:absolute;left:-2px;top:-3px;
+  width:6px;height:6px;background:#ead4a5;transform:rotate(45deg);box-shadow:0 0 0 1px #152527}
+.gorge-cohort-hero-frame .game-outcome-baseline:focus-visible{outline:2px solid #fff0cb;outline-offset:4px}
 .game-outcome-hero .board-open{color:#e5d2a8;font-size:.72rem}
 .game-outcome-limits{position:absolute;right:10px;top:9px;z-index:5}
 .game-outcome-limits>summary{list-style:none;cursor:pointer;display:grid;place-items:center;
@@ -1437,8 +1446,7 @@ body:has(#pane-records:not([hidden])) .page-introduction a{font-size:.72rem}
   .game-outcome-hero-frame>.game-outcome-hero-highlights{grid-template-columns:repeat(2,minmax(0,1fr))}
   .gorge-highlight-details[open]{grid-column:1/-1}
   .gorge-highlight-details .gorge-full-cohort-table :is(th,td):nth-child(3),
-  .gorge-highlight-details .gorge-full-cohort-table :is(th,td):nth-child(4),
-  .gorge-highlight-details .gorge-full-cohort-table :is(th,td):nth-child(5){display:none}
+  .gorge-highlight-details .gorge-full-cohort-table :is(th,td):nth-child(4){display:none}
 }
 @media(max-width:720px){
   .latest-insight-grid .game-outcome-hero-summary{min-height:350px}

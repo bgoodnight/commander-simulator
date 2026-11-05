@@ -1,0 +1,30 @@
+{
+  "schema": "gorge-display-labels-v1",
+  "decks": {
+    "mortarion_current": "Mortarion · Current",
+    "mortarion_ideal": "Mortarion · Ideal",
+    "mortarion_physical_final": "Mortarion · Physical",
+    "magnus_premium": "Magnus · Premium",
+    "magnus_budget": "Magnus · Budget",
+    "magnus_physical_trial": "Magnus · Physical Trial",
+    "magnus_physical_owned": "Magnus · Owned",
+    "necron_dynasties": "Necron Dynasties",
+    "wretched_ranks": "Wretched Ranks",
+    "cavalry-charge": "Cavalry Charge",
+    "science-pip": "Science!",
+    "deadly-disguise": "Deadly Disguise",
+    "avengers-assemble": "Avengers Assemble"
+  },
+  "archetypes": {
+    "aristocrats": "Aristocrats", "artifact_recursion": "Artifact Recursion",
+    "artifact_synergy": "Artifact Synergy", "artifacts": "Artifacts",
+    "combat": "Combat", "combo": "Combo", "creatures": "Creatures",
+    "disguise": "Disguise", "energy": "Energy", "equipment": "Equipment",
+    "equipment_combat": "Equipment Combat", "face_down": "Face Down",
+    "graveyard_recursion": "Graveyard Recursion", "knights": "Knights",
+    "life_loss": "Life Loss", "spellslinger": "Spellslinger", "tokens": "Tokens",
+    "tribal_combat": "Tribal Combat", "value": "Value", "zombies": "Zombies"
+  },
+  "colors": {"W":"White", "U":"Blue", "B":"Black", "R":"Red", "G":"Green"},
+  "predictor_families": {"opponent":"Opponent: {value}", "archetype":"Archetype: {value}", "color":"Opponent color: {value}", "seat":"Player seat {value}"}
+}

@@ -5,6 +5,9 @@ on:
     paths:
       - "tests/browser_gorge_replay.py"
       - "tests/browser_gorge_results_snapshot.py"
+      - "web/pages/display_names.js"
+      - "data/gorge_display_labels.json"
+      - "tools/gorge_display_labels.py"
       - ".github/workflows/gorge-ui-browser-check.yml"
       - "docs/deck-lab/gorge-data/**"
       - "web/pages/gorge_replay.js"
