@@ -41,9 +41,16 @@ consistency, not correctness of the underlying engine.
   import-success result does not certify card mechanics or pilot behavior.
 - Do not reclassify older results as current just because they are verified
   or stored in R2.
-- We **have not yet migrated** the existing R2 warehouse or UI catalogs.
-  The R2/warehouse query layer and website's dropdown filters must enforce
-  these same boundaries before we claim complete end-to-end isolation.
+- We **have not migrated** existing R2 objects. New warehouse exports preserve
+  nullable per-game provenance; `tools/gorge_approved_warehouse.py` produces
+  separate approved-only Parquet games and events. The Pages builder now filters
+  manifest/replay selections, published analytics, and cohort regressions
+  through the approved registry. Historical card-insights files are not reused
+  when they refer to an excluded cohort.
+- Direct, arbitrary R2 SQL queries still bypass these approved-only projections.
+  Point production queries at the protected dataset before declaring
+  complete end-to-end isolation. Old published Pages builds are not retroactively
+  changed by this draft PR.
 
 ## Promotion procedure
 
