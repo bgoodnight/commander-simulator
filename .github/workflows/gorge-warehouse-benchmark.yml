@@ -1,0 +1,98 @@
+name: Gorge Parquet / R2 query performance test
+on:
+  push:
+    branches: [main]
+    paths:
+      - ".github/workflows/gorge-warehouse-benchmark.yml"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  benchmark:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    env:
+      R2_ACCOUNT_ID: ${{ secrets.GORGE_R2_ACCOUNT_ID }}
+      R2_ACCESS_KEY_ID: ${{ secrets.GORGE_R2_ACCESS_KEY_ID }}
+      R2_SECRET_ACCESS_KEY: ${{ secrets.GORGE_R2_SECRET_ACCESS_KEY }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Install analytical dependencies
+        run: python -m pip install 'duckdb==1.4.1' 'pyarrow==21.0.0'
+      - name: Validate warehouse source-fidelity rules
+        run: python -m unittest tests.test_gorge_warehouse_export -v
+      - name: Benchmark local Parquet writing and query latency
+        run: |
+          python -m tools.gorge_warehouse_benchmark --out "$RUNNER_TEMP/gorge-bench" --games 500 --events-per-game 400
+      - name: Time private Cloudflare R2 upload, retrieval and local query
+        shell: bash
+        run: |
+          set -euo pipefail
+          if [[ -z "$R2_ACCOUNT_ID" || -z "$R2_ACCESS_KEY_ID" || -z "$R2_SECRET_ACCESS_KEY" ]]; then
+            echo "::error::Missing R2 repository secrets"
+            exit 1
+          fi
+          export AWS_ACCESS_KEY_ID="$R2_ACCESS_KEY_ID"
+          export AWS_SECRET_ACCESS_KEY="$R2_SECRET_ACCESS_KEY"
+          export AWS_DEFAULT_REGION=auto
+          endpoint="https://$R2_ACCOUNT_ID.r2.cloudflarestorage.com"
+          key_prefix="connection-tests/warehouse-bench/${GITHUB_RUN_ID}-${GITHUB_RUN_ATTEMPT}"
+          python - "$RUNNER_TEMP/gorge-bench" "$endpoint" "$key_prefix" <<'PY'
+          import json, pathlib, statistics, subprocess, sys, time
+          root=pathlib.Path(sys.argv[1]); endpoint=sys.argv[2]; prefix=sys.argv[3]
+          result=json.loads((root/"benchmark.json").read_text())
+          transfer={}
+          try:
+              for name in ("games.parquet","events.parquet"):
+                  source=root/name
+                  target=f"s3://gorge-simulations/{prefix}/{name}"
+                  def aws(*args):
+                      subprocess.run(["aws","--endpoint-url",endpoint,"s3",*args,"--no-progress"],check=True,
+                                     stdout=subprocess.DEVNULL)
+                  started=time.perf_counter()
+                  aws("cp",str(source),target)
+                  transfer[name]={"upload_ms":round(1000*(time.perf_counter()-started),2)}
+                  received=root/("download-"+name)
+                  started=time.perf_counter()
+                  aws("cp",target,str(received))
+                  transfer[name]["download_ms"]=round(1000*(time.perf_counter()-started),2)
+                  assert source.read_bytes()==received.read_bytes(), "R2 byte mismatch"
+              import duckdb
+              conn=duckdb.connect()
+              file=str((root/"download-events.parquet").resolve()).replace("'","''")
+              started=time.perf_counter()
+              count=conn.execute(f"SELECT count(*) FROM read_parquet('{file}')").fetchone()[0]
+              transfer["r2_roundtrip_event_rows"]=count
+              transfer["query_downloaded_ms"]=round(1000*(time.perf_counter()-started),2)
+              assert count==result["events"]
+          finally:
+              subprocess.run(["aws","--endpoint-url",endpoint,"s3","rm",f"s3://gorge-simulations/{prefix}/","--recursive"],
+                             check=False,stdout=subprocess.DEVNULL)
+          result["r2_transfer"]=transfer
+          (root/"benchmark.json").write_text(json.dumps(result,indent=2))
+          with open(__import__("os").environ["GITHUB_STEP_SUMMARY"],"a") as f:
+              f.write("# Gorge warehouse microbenchmark\n\n")
+              f.write("**Synthetic fixture-shaped workload, not actual game outcomes.**\n\n")
+              f.write(f"{result['games']:,} game rows, {result['events']:,} event rows.\n\n")
+              f.write("| Measure | Result |\n|---|---:|\n")
+              f.write(f"| Parquet export | {result['parquet_write_ms']} ms |\n")
+              for name,q in result["queries"].items():
+                  f.write(f"| DuckDB {name} (median 7) | {q['median_ms']} ms |\n")
+              for name,metrics in transfer.items():
+                  if isinstance(metrics,dict):
+                      f.write(f"| R2 upload {name} | {metrics['upload_ms']} ms |\n")
+                      f.write(f"| R2 download {name} | {metrics['download_ms']} ms |\n")
+              f.write(f"| DuckDB read after R2 download | {transfer['query_downloaded_ms']} ms |\n")
+          print(json.dumps(result,indent=2))
+          PY
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: gorge-warehouse-benchmark
+          path: ${{ runner.temp }}/gorge-bench/benchmark.json
+          retention-days: 7
