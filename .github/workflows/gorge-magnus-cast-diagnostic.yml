@@ -1,0 +1,33 @@
+name: Gorge Magnus native cast event diagnostic
+on:
+  push:
+    branches: [main]
+    paths:
+      - ".github/workflows/gorge-magnus-cast-diagnostic.yml"
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  inspect:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    env:
+      R2_ACCOUNT_ID: ${{ secrets.GORGE_R2_ACCOUNT_ID }}
+      R2_ACCESS_KEY_ID: ${{ secrets.GORGE_R2_ACCESS_KEY_ID }}
+      R2_SECRET_ACCESS_KEY: ${{ secrets.GORGE_R2_SECRET_ACCESS_KEY }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with: 
+          python-version: '3.12'
+      - name: Inspect private synthetic game event shape, never publish hidden cards
+        shell: bash
+        run: |
+          set -euo pipefail
+          export AWS_ACCESS_KEY_ID="$R2_ACCESS_KEY_ID" AWS_SECRET_ACCESS_KEY="$R2_SECRET_ACCESS_KEY" AWS_DEFAULT_REGION=auto
+          aws --endpoint-url "https://$R2_ACCOUNT_ID.r2.cloudflarestorage.com" s3 cp \
+            "s3://gorge-simulations/pilot-evaluations/v2/41966873822-1/magnus_budget/bot.tar.gz" \
+            "$RUNNER_TEMP/magnus.tar.gz" --no-progress
+          mkdir -p "$RUNNER_TEMP/trace"
+          tar -xzf "$RUNNER_TEMP/magnus.tar.gz" -C "$RUNNER_TEMP/trace" native
+          python -m tools.gorge_magnus_cast_diagnostic "$RUNNER_TEMP/trace"
