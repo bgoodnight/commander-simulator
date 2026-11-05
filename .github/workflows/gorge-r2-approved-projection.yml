@@ -1,0 +1,56 @@
+name: Gorge approved R2 projection
+on:
+  workflow_dispatch:
+    inputs:
+      batch:
+        description: Exact GitHub run-attempt warehouse batch ID
+        required: true
+        type: string
+permissions:
+  contents: read
+jobs:
+  project:
+    runs-on: ubuntu-latest
+    timeout-minutes: 60
+    env:
+      BATCH: ${{ inputs.batch }}
+      ACCOUNT: ${{ secrets.GORGE_R2_ACCOUNT_ID }}
+      ACCESS: ${{ secrets.GORGE_R2_ACCESS_KEY_ID }}
+      SECRET: ${{ secrets.GORGE_R2_SECRET_ACCESS_KEY }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Refuse malformed batch or missing R2 authorization
+        run: |
+          [[ "$BATCH" =~ ^[0-9]+-[0-9]+$ ]] || exit 1
+          test -n "$ACCOUNT" && test -n "$ACCESS" && test -n "$SECRET"
+      - name: Install Parquet support
+        run: pip install 'pyarrow==21.0.0'
+      - name: Download immutable original batch
+        run: |
+          mkdir -p "$RUNNER_TEMP/raw"
+          AWS_ACCESS_KEY_ID="$ACCESS" AWS_SECRET_ACCESS_KEY="$SECRET" AWS_DEFAULT_REGION=auto \
+            aws --endpoint-url "https://$ACCOUNT.r2.cloudflarestorage.com" s3 cp \
+            "s3://gorge-simulations/warehouse/v1/$BATCH/" "$RUNNER_TEMP/raw/" --recursive --no-progress
+      - name: Require approved cohorts and verify shard digests before projection
+        run: |
+          python -m tools.gorge_r2_projection_batch --source "$RUNNER_TEMP/raw" \
+            --registry data/gorge_analytics_cohort_registry_v1.json \
+            --out "$RUNNER_TEMP/approved" --batch "$BATCH"
+      - name: Publish protected Parquet tables before their completion manifest
+        run: |
+          registry="$(sha256sum data/gorge_analytics_cohort_registry_v1.json | cut -d' ' -f1)"
+          dest="s3://gorge-simulations/warehouse/approved/v1/$registry/$BATCH"
+          AWS_ACCESS_KEY_ID="$ACCESS" AWS_SECRET_ACCESS_KEY="$SECRET" AWS_DEFAULT_REGION=auto \
+            aws --endpoint-url "https://$ACCOUNT.r2.cloudflarestorage.com" s3 cp \
+            "$RUNNER_TEMP/approved/" "$dest/" --recursive --exclude publication.json --no-progress
+          AWS_ACCESS_KEY_ID="$ACCESS" AWS_SECRET_ACCESS_KEY="$SECRET" AWS_DEFAULT_REGION=auto \
+            aws --endpoint-url "https://$ACCOUNT.r2.cloudflarestorage.com" s3 cp \
+            "$RUNNER_TEMP/approved/publication.json" "$dest/publication.json" --no-progress
+      - uses: actions/upload-artifact@v4
+        with:
+          name: gorge-approved-projection-audit
+          path: ${{ runner.temp }}/approved/publication.json
+          retention-days: 30
