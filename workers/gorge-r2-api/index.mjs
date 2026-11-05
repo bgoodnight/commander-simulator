@@ -1,7 +1,7 @@
 import { parquetReadObjects, parquetMetadataAsync, parquetSchema } from "hyparquet";
 import { compressors } from "hyparquet-compressors";
 import registry from "../../data/gorge_analytics_cohort_registry_v1.json";
-import { aggregate, isApproved, validateDeck, normalizeRow } from "./core.mjs";
+import { aggregate, isApproved, validateDeck, normalizeRow, approvedGameIndex } from "./core.mjs";
 
 // Read-only Cloudflare Worker. The R2 binding has no credentials in JS or HTML.
 // Never return native logs, intents, event_json, object catalog, or hidden zones.
@@ -113,6 +113,28 @@ async function getSummary(env,deck,metrics) {
   return {...aggregate(rows,deck),status:rows.length?"ready":"awaiting_cohort_approval",
     raw_shards_seen:matching.length};
 }
+async function getApprovedGames(env,deck,limit,metrics) {
+  const {shards,truncated}=await listShards(env.GORGE_R2);
+  const matching=shards.filter(x=>x.deck===deck);
+  metrics.shards_scanned=matching.length;
+  metrics.list_truncated=truncated;
+  if(truncated)throw Error("shard_scan_limit_reached");
+  const approved=registry.cohorts.filter(c=>c.status==="current"&&c.approved===true);
+  if(!approved.length)return {...approvedGameIndex([],deck,limit),
+    status:matching.length?"awaiting_cohort_approval":"no_warehouse_shards",
+    raw_shards_seen:matching.length};
+  const rows=[],fingerprints=new Map();
+  for(const shard of matching) {
+    const manifest=await readManifest(env.GORGE_R2,shard);
+    const games=await readGames(env.GORGE_R2,shard,manifest);
+    for(const game of games)
+      if(await isApproved(game,registry,fingerprints))rows.push(game);
+  }
+  return {...approvedGameIndex(rows,deck,limit),
+    status:rows.length?"ready":"awaiting_cohort_approval",
+    raw_shards_seen:matching.length};
+}
+
 export default {
   async fetch(request,env) {
     const started=now();
@@ -154,17 +176,29 @@ export default {
         return fail(503,"benchmark_unavailable",started);
       }
     }
-    if(url.pathname!=="/v1/summary")return fail(404,"not_found",started);
+    if(url.pathname!=="/v1/summary" && url.pathname!=="/v1/games")
+      return fail(404,"not_found",started);
     if(!env.GORGE_R2)return fail(503,"r2_binding_missing",started);
     let deck;
     try { deck=validateDeck(url.searchParams.get("deck")); }
     catch {return fail(400,"invalid_deck",started);}
+    let limit=20;
+    if(url.pathname==="/v1/games"){
+      const rawLimit=url.searchParams.get("limit");
+      if(rawLimit!==null){
+        if(!/^(?:[1-9]|1[0-9]|2[0-5])$/.test(rawLimit))
+          return fail(400,"invalid_limit",started);
+        limit=Number(rawLimit);
+      }
+    }
     const metrics={};
     try{
-      const payload=await getSummary(env,deck,metrics);
+      const payload=url.pathname==="/v1/games"?
+        await getApprovedGames(env,deck,limit,metrics):
+        await getSummary(env,deck,metrics);
       return json({...payload,query:{...metrics,server_ms:duration(started)}},200,duration(started));
     }catch(err){
-      console.error("R2 summary failed:",String(err?.message||err));
+      console.error("R2 approved query failed:",String(err?.message||err));
       return fail(503,"r2_query_unavailable",started);
     }
   }
