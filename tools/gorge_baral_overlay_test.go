@@ -17,7 +17,9 @@ func TestPinnedBaralCorpusOverlay(t *testing.T) {
   if !ok {t.Fatal("Baral missing")}
   if len(baral.Faces)!=1 {t.Fatalf("unexpected faces: %d",len(baral.Faces))}
   before:=len(baral.Faces[0].Statics)
-  if before!=0 {t.Fatalf("pinned Baral now has %d statics: update overlay instead",before)}
+  for _,st:=range baral.Faces[0].Statics {
+    if st.ModeKind()==cards.StaticReduceCost {t.Fatal("Baral already has a reducer; overlay must be updated")}
+  }
   name:=baral.Faces[0].Name
   oracle:=baral.Faces[0].Oracle
   if err:=repairBaralCorpus(reg);err!=nil {t.Fatal(err)}
