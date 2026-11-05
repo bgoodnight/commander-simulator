@@ -13,10 +13,13 @@ class DeckRoleTests(unittest.TestCase):
     def setUp(self):
         self.library = load_library()
 
-    def test_six_stock_precons_only(self):
+    def test_stock_precons_only(self):
         self.assertEqual(set(opponent_keys(self.library)), {
             "necron_dynasties", "wretched_ranks", "cavalry-charge",
-            "science-pip", "deadly-disguise", "avengers-assemble"
+            "science-pip", "deadly-disguise", "avengers-assemble",
+            "explorers-of-the-deep", "veloci-ramp-tor", "quick-draw",
+            "desert-bloom", "creative-energy", "squirreled-away",
+            "endless-punishment", "tricky-terrain"
         })
         self.assertTrue(all("mortarion" not in x and "magnus" not in x
                             for x in opponent_keys(self.library)))
