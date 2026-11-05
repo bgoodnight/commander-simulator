@@ -11,6 +11,7 @@ from pathlib import Path
 
 K_DECLARE_ATTACKERS=16
 K_DAMAGE=5
+K_TOKEN_CREATE=31
 ASTARTES_STEM="b_2_2_astartes_warrior_menace"
 
 
@@ -34,7 +35,7 @@ def audit(root:Path, pilot:str):
                 if o.get("is_token") and
                 ("astartes" in (o.get("effective_name") or "").lower()
                  or "astartes" in (o.get("card_name") or "").lower())}
-        created=sum(e.get("kind")==33 and e.get("text")==ASTARTES_STEM and e.get("player")==hero
+        created=sum(e.get("kind")==K_TOKEN_CREATE and e.get("text")==ASTARTES_STEM and e.get("player")==hero
                     for e in source["log"]["events"])
         # Every source-backed token object ID is checked against declarations,
         # which store attacker object IDs in the authoritative event.ids list.
