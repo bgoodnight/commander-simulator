@@ -40,7 +40,7 @@ class CandidateEnrichmentTests(unittest.TestCase):
             catalog.write_text(json.dumps({
                 "schema":"gorge-stock-candidate-catalog-v1",
                 "source":{"commit":"abc","file":"decks_v2.json"},
-                "decks":[deck]*0+[deck]
+                "decks":[dict(deck, key="example-"+str(i)) for i in range(100)]
             }))
             bulk=json.dumps([card("Test Commander","Legendary Creature",["G"]),
                              card("Forest","Basic Land",["G"],cmc=0)]).encode()
