@@ -129,6 +129,7 @@ func repairBaralCorpus(reg *cards.Registry) error {
 func main() {
   corpus:=flag.String("corpus",".cards","compiled Forge card corpus")
   directory:=flag.String("deck-dir","","directory of deck JSON exported from pinned lists")
+  checkDecks:=flag.Bool("check-decks",false,"read-only deck.Load and ValidateCommander test for all named decks, emitting individual JSONL results")
   games:=flag.Int("games",3,"number of four-player runs")
   seed:=flag.Uint64("seed",100,"first deterministic seed")
   maxTurns:=flag.Int("max-turns",50,"cap for complete Commander game")
@@ -145,7 +146,7 @@ func main() {
   flag.Parse()
   if *maxAttempts==0 {*maxAttempts=*games}
   if *maxAttempts<*games||*maxAttempts>5000 {panic("invalid attempt limit")}
-  if *directory==""||*games<=0||*games>1000||*maxTurns<=0 { panic("invalid probe arguments") }
+  if *directory==""||(!*checkDecks&&(*games<=0||*games>1000||*maxTurns<=0)) { panic("invalid probe arguments") }
   names:=strings.Split(*deckPool,",")
   for i:=range names {names[i]=strings.TrimSpace(names[i])}
   restricted:=*heroDeck!=""||*opponentPool!=""
@@ -158,7 +159,7 @@ func main() {
     for i:=range opponents {opponents[i]=strings.TrimSpace(opponents[i])}
     names=append([]string{strings.TrimSpace(*heroDeck)},opponents...)
   }
-  if len(names)<4 {panic("Need at least four unique deck names")}
+  if !*checkDecks&&len(names)<4 {panic("Need at least four unique deck names")}
   unique:=map[string]bool{}
   for _,name:=range names {
     if name==""||strings.Contains(name,"/")||strings.Contains(name,"..")||unique[name]{
@@ -190,6 +191,29 @@ func main() {
     reg.Tokens[astartesStem]=token
   }
 
+  if *checkDecks {
+    for _,name:=range names {
+      result:=map[string]any{"deck_key":name,"load_ok":false,"commander_valid":false,"cards_loaded":0,"commander_count":0}
+      f,cs,loadErr:=deck.Load(reg,filepath.Join(*directory,name+".json"))
+      if loadErr!=nil {
+        result["error"]=loadErr.Error()
+      }else{
+        result["load_ok"]=true
+        result["cards_loaded"]=len(cs)
+        result["commander_count"]=len(f.CommanderIndices())
+        if err:=f.ValidateCommander(reg);err!=nil {
+          result["error"]=err.Error()
+        }else if len(cs)!=100||len(f.CommanderIndices())!=1{
+          result["error"]="not a single-commander 100-card deck"
+        }else{
+          result["commander_valid"]=true
+        }
+      }
+      blob,_:=json.Marshal(result)
+      fmt.Println(string(blob))
+    }
+    return
+  }
   decks:=make([][]*cards.Card,len(names))
   commanders:=make([][]int,len(names))
   for i,name:=range names {
