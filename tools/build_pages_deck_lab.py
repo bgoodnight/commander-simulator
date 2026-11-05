@@ -318,6 +318,8 @@ def build(output, *, catalog_path=SHARED_CATALOG, name_catalog_path=DEFAULT_NAME
             raise ValueError("Unexpected source analytics schema")
         approved_rows, excluded_rows = eligible_partition(
             source_analytics.get("games", []), registry)
+        from tools.gorge_cohort_report import eligible as decisive_game
+        decisive_rows = [r for r in approved_rows if decisive_game(r)]
         approved_by_seed = {r["seed"]: r for r in approved_rows}
         if len(approved_by_seed) != len(approved_rows):
             raise ValueError("Ambiguous approved seed in public catalog")
@@ -364,7 +366,7 @@ def build(output, *, catalog_path=SHARED_CATALOG, name_catalog_path=DEFAULT_NAME
         target.mkdir(parents=True, exist_ok=True)
         safe_manifest = {**manifest, "games": games,
                          "eligibility": "approved_current_only"}
-        if len(approved_rows) != len(source_analytics.get("games", [])):
+        if len(decisive_rows) != len(source_analytics.get("games", [])):
             # The original full-cohort insights belong to the historical
             # population and cannot be transferred to a filtered cohort.
             safe_manifest.pop("card_insights_file", None)
@@ -389,8 +391,8 @@ def build(output, *, catalog_path=SHARED_CATALOG, name_catalog_path=DEFAULT_NAME
                            "log" in x or "intents" in x or "objects" in x
                            for x in analytics["games"])):
                 raise ValueError("Unsafe Gorge analytics payload")
-            safe_analytics = {**analytics, "games": approved_rows,
-                              "eligibility": "approved_current_only"}
+            safe_analytics = {**analytics, "games": decisive_rows,
+                              "eligibility": "approved_current_decisive_only"}
             (target / "analytics.json").write_text(
                 json.dumps(safe_analytics, sort_keys=True) + "\n", encoding="utf-8")
             if manifest.get("card_insights_file") is not None:
@@ -407,15 +409,16 @@ def build(output, *, catalog_path=SHARED_CATALOG, name_catalog_path=DEFAULT_NAME
                     raise ValueError("Incomplete or inconsistent source card insights")
                 # A full-cohort card-insight file cannot be subset safely
                 # without source-level feature reaggregation.
-                if len(approved_rows) == len(analytics["games"]):
+                if len(decisive_rows) == len(analytics["games"]):
                     shutil.copy2(cards_source, target / "card-insights.json")
             # All high-level Gorge results and exploratory regressions come
             # from every verified outcome, never the sampled detailed replays.
             from tools.gorge_cohort_report import make_report
-            cohort = make_report(approved_rows)
+            cohort = make_report(decisive_rows)
             cohort["eligibility"] = {
                 "selection": "approved_current_cohorts_only",
-                "eligible_count": len(approved_rows),
+                "eligible_count": len(decisive_rows),
+                "nondecisive_excluded": len(approved_rows)-len(decisive_rows),
                 "excluded_count": len(excluded_rows),
             }
             (target / "cohort.json").write_text(
