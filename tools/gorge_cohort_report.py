@@ -28,13 +28,14 @@ def eligible(row):
     if row.get("player_deck", hero) != hero:
         return False
     if row.get("draw") is True:
-        return row.get("winner_seat") is None
+        return False
+    if row.get("stall_reason"):
+        return False
     return type(row.get("winner_seat")) is int and row["winner_seat"] in range(4)
 
 
 def outcome(row):
-    return "draw" if row.get("draw") is True else (
-        "win" if row["winner_seat"] == row["player_seat"] else "loss")
+    return "win" if row["winner_seat"] == row["player_seat"] else "loss"
 
 
 def round_number(value, digits=3):
@@ -57,7 +58,7 @@ def bucket(rows):
     n = len(rows)
     wins = sum(outcome(r) == "win" for r in rows)
     losses = sum(outcome(r) == "loss" for r in rows)
-    draws = n-wins-losses
+    draws = 0
     lengths = [r["turns"] for r in rows
                if type(r.get("turns")) in (int, float) and r["turns"] >= 0]
     return {
@@ -104,6 +105,16 @@ def grouped(rows, category):
             keys = [str(row["player_seat"]+1)]
         elif category in ("archetypes", "colors"):
             keys = source_tags(row, category)
+        elif category == "identities":
+            keys = []
+            metadata = row.get("seat_metadata")
+            if isinstance(metadata, list) and len(metadata) == 4:
+                for i, meta in enumerate(metadata):
+                    if i == row["player_seat"] or not isinstance(meta, dict) or meta.get("deck_key") != row["decks"][i]:
+                        continue
+                    colors = meta.get("color_identity")
+                    if isinstance(colors, list) and all(c in "WUBRG" for c in colors):
+                        keys.append("".join(c for c in "WUBRG" if c in colors) or "Colorless")
         elif category == "pods":
             keys = [" / ".join(sorted(opponents(row)))]
         else:
@@ -178,13 +189,13 @@ def log_loss(predicted, actual):
 
 
 def regression(rows, family):
-    # Draws are excluded from the binary win/loss model and explicitly counted.
-    binary=[r for r in rows if outcome(r)!="draw"]
+    # Callers pass only fully verified, decisive wins and losses.
+    binary=rows
     wins=sum(outcome(r)=="win" for r in binary)
     n=len(binary)
     result={"method":"elastic-net logistic regression",
-            "family":family,"n":n,"draws_excluded":len(rows)-n,
-            "data_scope":"all verified cohort outcomes",
+            "family":family,"n":n,"draws_excluded":0,
+            "data_scope":"completed and replay-verified decisive wins and losses",
             "features_scope":"opponent presence and player seat only",
             "status":"insufficient_data"}
     if n<80 or min(wins,n-wins)<15:
@@ -248,6 +259,12 @@ def regression(rows, family):
 def make_report(games):
     if not isinstance(games,list):
         raise ValueError("Expected verified analytics games array")
+    # Nondecisive games are kept only in diagnostic replay catalogs, never
+    # in denominators, histogram summaries, matchup groups, or regressions.
+    nondecisive = [r for r in games if isinstance(r,dict) and
+                   (r.get("draw") is True or r.get("finished") is not True or
+                    bool(r.get("stall_reason")))]
+    games = [r for r in games if r not in nondecisive]
     seeds=set()
     for row in games:
         if not eligible(row):
@@ -257,17 +274,21 @@ def make_report(games):
         seeds.add(row["seed"])
     result={"schema":SCHEMA,"source_schema":"gorge-batch-analytics-v1",
             "total_verified_games":len(games),"decks":{},
-            "scope":"All verified game outcomes. Detailed replay-derived card, life and state metrics are separate."}
+            "outcome_population":"decisive_win_loss_only",
+            "nondecisive_excluded":len(nondecisive),
+            "scope":"Verified decisive outcomes only; unfinished games and draws remain diagnostic replay records."}
     for key in sorted({r.get("player_deck",r["decks"][r["player_seat"]]) for r in games}):
         rows=[r for r in games
               if r.get("player_deck",r["decks"][r["player_seat"]])==key]
         groups={family:sorted(grouped(rows,family),
                  key=lambda g:(-g["n"],g["name"]))
-                for family in ("opponents","pods","seats","archetypes","colors")}
+                for family in ("opponents","pods","seats","archetypes","colors","identities")}
         models={family:regression(rows,family)
                 for family in ("opponents","archetypes","colors")}
         result["decks"][key]={"player_deck":key,
              **bucket(rows),"groups":groups,"regressions":models,
+             "game_turn_histogram": [{"turns": turn, "games": sum(r.get("turns") == turn for r in rows)}
+                                     for turn in sorted({r["turns"] for r in rows if type(r.get("turns")) is int and r["turns"] >= 0})],
              "detailed_replay_count":sum(r.get("detailed_replay_retained") is True
                                           for r in rows)}
     return result

@@ -29,6 +29,7 @@ from commander_sim.observation import observe
 from commander_sim.reviewed_rocks import reviewed_rock
 from tools.publish_simulation_archive import validate_index
 from tools.publish_game_outcomes import validate_library as validate_outcome_library
+from tools.gorge_display_labels import load_labels, validate_labels, LIBRARY as DISPLAY_LIBRARY
 
 DEFAULT_SEEDS = (0, 1, 2, 3, 4, 5, 7, 11, 21, 42, 99)
 
@@ -214,11 +215,16 @@ def build(output, *, catalog_path=SHARED_CATALOG, name_catalog_path=DEFAULT_NAME
     if not static.is_dir():
         raise ValueError("Missing static Deck Lab source")
     output.mkdir(parents=True, exist_ok=True)
+    display_labels = load_labels()
+    display_library = json.loads(DISPLAY_LIBRARY.read_text(encoding="utf-8"))
+    (output / "display_names_data.js").write_text(
+        "window.DeckDisplayLabelData=" + json.dumps(display_labels, ensure_ascii=True).replace("<", "\\u003c") + ";\n",
+        encoding="utf-8")
     # Four real HTML routes: index.html and summary.html display the
     # attractive Deck Summary by default; results.html retains the
     # interpretive observation archive and editor.html the deck workshop.
     # The same source shell selects content by pathname without a server.
-    for filename in ("app.js", "results_insights.js", "brackets.js", "replay.js", "gorge_legacy_adapter.js", "gorge_replay.js", "insight_explorer.js", "insight_catalog.js", "game_outcomes.js", "style.css", "game-changers.json"):
+    for filename in ("app.js", "results_insights.js", "brackets.js", "replay.js", "display_names.js", "gorge_legacy_adapter.js", "gorge_replay.js", "insight_explorer.js", "insight_catalog.js", "game_outcomes.js", "style.css", "game-changers.json"):
         shutil.copy2(static / filename, output / filename)
     # Cache-bust every local JS/CSS asset from its actual content hash.
     # GitHub Pages and browsers may cache a script despite a fresh HTML
@@ -226,9 +232,9 @@ def build(output, *, catalog_path=SHARED_CATALOG, name_catalog_path=DEFAULT_NAME
     # Render the *same* versioned shell on all four static routes.
     shell=(static / "index.html").read_text(encoding="utf-8")
     for filename in ("app.js","results_insights.js","brackets.js","replay.js",
-                     "gorge_legacy_adapter.js","gorge_replay.js","insight_explorer.js","insight_catalog.js","game_outcomes.js",
+                     "display_names_data.js","display_names.js","gorge_legacy_adapter.js","gorge_replay.js","insight_explorer.js","insight_catalog.js","game_outcomes.js",
                      "style.css"):
-        digest=hashlib.sha256((static / filename).read_bytes()).hexdigest()[:12]
+        digest=hashlib.sha256((output / filename).read_bytes()).hexdigest()[:12]
         pattern=r'(?P<asset>\./'+re.escape(filename)+r')(?:\?v=[^"]*)?(?=")'
         shell,count=re.subn(pattern,
                            lambda match: match.group("asset")+"?v="+digest,
@@ -344,6 +350,9 @@ def build(output, *, catalog_path=SHARED_CATALOG, name_catalog_path=DEFAULT_NAME
             validated.append((source_file, filename))
         target = output / "gorge-data"
         target.mkdir(parents=True, exist_ok=True)
+        # Replays remain selectable for diagnostics. Analytics are a strict
+        # completed decisive subset and cannot borrow full-cohort card insights.
+        safe_manifest = dict(manifest)
         shutil.copy2(manifest_file, target / "manifest.json")
         for source_file, filename in validated:
             shutil.copy2(source_file, target / filename)
@@ -364,7 +373,14 @@ def build(output, *, catalog_path=SHARED_CATALOG, name_catalog_path=DEFAULT_NAME
                            "log" in x or "intents" in x or "objects" in x
                            for x in analytics["games"])):
                 raise ValueError("Unsafe Gorge analytics payload")
-            shutil.copy2(analytics_path, target / "analytics.json")
+            from tools.gorge_cohort_report import make_report, eligible
+            cohort = make_report(analytics["games"])
+            decisive = [row for row in analytics["games"] if eligible(row)]
+            safe_analytics = {**analytics, "games": decisive,
+                              "outcome_population": "decisive_win_loss_only"}
+            (target / "analytics.json").write_text(
+                json.dumps(safe_analytics, separators=(",", ":"), sort_keys=True) + "\n",
+                encoding="utf-8")
             if manifest.get("card_insights_file") is not None:
                 if manifest["card_insights_file"] != "card-insights.json":
                     raise ValueError("Unexpected Gorge insights filename")
@@ -377,11 +393,17 @@ def build(output, *, catalog_path=SHARED_CATALOG, name_catalog_path=DEFAULT_NAME
                         or sum(data.get("verified_games", 0) for data
                                in cards.get("decks", {}).values()) != len(analytics["games"])):
                     raise ValueError("Incomplete or inconsistent source card insights")
-                shutil.copy2(cards_source, target / "card-insights.json")
-            # All high-level Gorge results and exploratory regressions come
-            # from every verified outcome, never the sampled detailed replays.
-            from tools.gorge_cohort_report import make_report
-            cohort = make_report(analytics["games"])
+                # Full-population card features cannot be applied to a
+                # filtered win/loss cohort without reaggregating raw events.
+                if len(decisive) == len(analytics["games"]):
+                    shutil.copy2(cards_source, target / "card-insights.json")
+                else:
+                    safe_manifest.pop("card_insights_file", None)
+            # All headline/model outcomes use decisive verified games only.
+            (target / "manifest.json").write_text(
+                json.dumps(safe_manifest, separators=(",", ":"), sort_keys=True) + "\n",
+                encoding="utf-8")
+            validate_labels(display_labels, display_library, cohort)
             (target / "cohort.json").write_text(
                 json.dumps(cohort, separators=(",", ":"), sort_keys=True) + "\n",
                 encoding="utf-8",
@@ -448,7 +470,7 @@ def build(output, *, catalog_path=SHARED_CATALOG, name_catalog_path=DEFAULT_NAME
         "asset_sha256": {name: hashlib.sha256((output / name).read_bytes()).hexdigest()
                          for name in ("decks.json", "observations.json", "names.json", "bounded-batches.json",
                                       "index.html", "summary.html", "results.html", "editor.html",
-                                      "app.js", "results_insights.js", "brackets.js", "replay.js", "insight_explorer.js", "insight_catalog.js", "game_outcomes.js", "gorge_legacy_adapter.js", "style.css", "game-changers.json",
+                                      "app.js", "results_insights.js", "brackets.js", "replay.js", "display_names.js", "display_names_data.js", "insight_explorer.js", "insight_catalog.js", "game_outcomes.js", "gorge_legacy_adapter.js", "style.css", "game-changers.json",
                                       *(f"bounded-runs-{key}.json" for key in batches["decks"]),
                                       *(f"simulation-data/{relative}" for relative in archive_files),
                                       *replay_assets, *outcome_assets, *analytics_assets)},
