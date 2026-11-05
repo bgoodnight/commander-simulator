@@ -1,0 +1,71 @@
+name: Gorge Magnus archived win/loss investigation
+on:
+  push:
+    branches: [main]
+    paths:
+      - ".github/workflows/gorge-magnus-winloss-audit.yml"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: gorge-magnus-winloss-audit
+  cancel-in-progress: false
+
+jobs:
+  inspect:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    strategy:
+      fail-fast: false
+      matrix:
+        policy: [bot, forge-heuristic, forge-heuristic-hold, lethal-pressure]
+    env:
+      POLICY: ${{ matrix.policy }}
+      R2_ACCOUNT_ID: ${{ secrets.GORGE_R2_ACCOUNT_ID }}
+      R2_ACCESS_KEY_ID: ${{ secrets.GORGE_R2_ACCESS_KEY_ID }}
+      R2_SECRET_ACCESS_KEY: ${{ secrets.GORGE_R2_SECRET_ACCESS_KEY }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Download verified Magnus full recordings from private R2
+        shell: bash
+        run: |
+          set -euo pipefail
+          test -n "$R2_ACCOUNT_ID" && test -n "$R2_ACCESS_KEY_ID" && test -n "$R2_SECRET_ACCESS_KEY"
+          export AWS_ACCESS_KEY_ID="$R2_ACCESS_KEY_ID" AWS_SECRET_ACCESS_KEY="$R2_SECRET_ACCESS_KEY" AWS_DEFAULT_REGION=auto
+          endpoint="https://$R2_ACCOUNT_ID.r2.cloudflarestorage.com"
+          archive="$RUNNER_TEMP/magnus-$POLICY.tar.gz"
+          aws --endpoint-url "$endpoint" s3 cp \
+            "s3://gorge-simulations/pilot-evaluations/v2/41966873822-1/magnus_budget/$POLICY.tar.gz" \
+            "$archive" --no-progress
+          mkdir -p "$RUNNER_TEMP/trace"
+          tar -xzf "$archive" -C "$RUNNER_TEMP/trace" native runs.jsonl
+          python -m tools.gorge_magnus_winloss_analysis \
+            --root "$RUNNER_TEMP/trace" --policy "$POLICY" \
+            --out "$RUNNER_TEMP/magnus-analysis.json"
+          python - <<'PY'
+          import json,os
+          from pathlib import Path
+          d=json.loads((Path(os.environ["RUNNER_TEMP"])/"magnus-analysis.json").read_text())
+          with open(os.environ["GITHUB_STEP_SUMMARY"],"a") as f:
+              f.write(f"# Magnus win/loss native audit: {d['pilot']}\n\n")
+              f.write(f"{d['wins']} wins in {d['sample_size']} verified games.\n\n")
+              f.write("| Metric | Winning games (mean) | Nonwinning games (mean) |\n|---|---:|---:|\n")
+              for m,a in d["groups"]["wins"]["means"].items():
+                  b=d["groups"]["nonwins"]["means"][m]
+                  f.write(f"| {m} | {a} | {b} |\n")
+              f.write(f"| Magnus cast in game | {d['groups']['wins']['magnus_cast_games']} | {d['groups']['nonwins']['magnus_cast_games']} |\n")
+              f.write("\nTop cards by game appearances (wins/nonwins):\n\n")
+              for c in d["cards"][:12]:
+                  f.write(f"- {c['card']}: {c['wins']} wins / {c['nonwins']} nonwins\n")
+              f.write("\nThese are associations, not causality. See artifact for provenance cautions.\n")
+          PY
+      - uses: actions/upload-artifact@v4
+        with:
+          name: magnus-analysis-${{ matrix.policy }}
+          path: ${{ runner.temp }}/magnus-analysis.json
+          retention-days: 14
