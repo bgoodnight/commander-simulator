@@ -2,7 +2,29 @@
 import unittest
 from tools.stage_gorge_precon_qualification import build_queue
 from tools.gorge_trial_panel_validate import validate
-from test_stage_gorge_precon_qualification import fixtures
+def fixtures():
+    decks=[]; selected=[]
+    for i in range(60):
+        key=f"deck-{i:02d}"
+        cards=[{"name":f"Card {i}","count":100,"resolved":True,
+                "oracle_id":str(i),"mana_value":2,"types":["Creature"]}]
+        decks.append({"key":key,"name":key,"commander":f"Commander {i}",
+                      "set_code":"TEST","release_date":"2025-01-01",
+                      "color_identity":["U"],"cards":cards,"cards_resolved":100,
+                      "is_duplicate_variant":False,"active_opponent":False,
+                      "counts":{"creatures":100},"mechanic_keywords":{},
+                      "nonland_mean_mana_value":2})
+        selected.append({"key":key})
+    enrichment={"schema":"gorge-precon-card-metadata-enrichment-v1",
+                "oracle_bulk_sha256":"abc","source_catalog_commit":"commit",
+                "as_of":"2026-11-05","decks":decks}
+    panel={"schema":"gorge-opponent-selection-assessment-v1",
+           "status":"provisional_not_gorge_qualified",
+           "source_oracle_sha256":"abc","source_catalog_commit":"commit",
+           "as_of":"2026-11-05","selection_method":"fixture",
+           "shortlist":selected}
+    return enrichment,panel
+
 
 
 def setup():
