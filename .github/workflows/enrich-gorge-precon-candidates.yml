@@ -12,6 +12,8 @@ on:
       - "tools/check_gorge_precon_compatibility.py"
       - "tests/test_check_gorge_precon_compatibility.py"
       - "tools/gorge_commander_probe.go"
+      - "tools/patch_gorge_ward_blight.py"
+      - "tests/test_patch_gorge_ward_blight.py"
       - ".github/workflows/enrich-gorge-precon-candidates.yml"
   workflow_dispatch:
 
@@ -28,7 +30,7 @@ jobs:
         with:
           python-version: "3.12"
       - name: Test source and functional classification contracts offline
-        run: python -m unittest tests.test_enrich_gorge_candidate_precons tests.test_gorge_candidate_coverage tests.test_select_gorge_precon_panel tests.test_stage_gorge_precon_qualification tests.test_check_gorge_precon_compatibility -v
+        run: python -m unittest tests.test_enrich_gorge_candidate_precons tests.test_gorge_candidate_coverage tests.test_select_gorge_precon_panel tests.test_stage_gorge_precon_qualification tests.test_check_gorge_precon_compatibility tests.test_patch_gorge_ward_blight -v
       - name: Fetch bulk Oracle identities and enrich released candidates
         run: |
           mkdir -p "$RUNNER_TEMP/precon-enrichment"
