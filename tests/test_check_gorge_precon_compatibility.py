@@ -11,6 +11,11 @@ from tools.check_gorge_precon_compatibility import export, summarize
 class CompatibilityTests(unittest.TestCase):
     def test_export_and_per_deck_reports(self):
         queue = build_queue(*fixtures())
+        for d in queue["decks"]:
+            d["oracle_card_annotations"] = [
+                {"name": d["commander"], "count": 1, "resolved": True},
+                {"name": "Basic Test Land", "count": 99, "resolved": True},
+            ]
         with TemporaryDirectory() as temp:
             names = export(queue, Path(temp))
             self.assertEqual(len(names), 60)
