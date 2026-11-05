@@ -1,0 +1,379 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#182428">
+  <meta name="description" content="Commander Deck Lab: explore cached Commander decklists, card art and precomputed early-turn observations.">
+  <title>Commander Deck Lab — The Arcane Table</title>
+  <link rel="stylesheet" href="./style.css?v=70b943e31a59">
+  <script src="https://cdn.jsdelivr.net/npm/d3@7/dist/d3.min.js" defer></script>
+  <script src="./results_insights.js?v=b91291243abb" defer></script>
+  <script src="./brackets.js?v=f6d0983728d2" defer></script>
+  <script src="./replay.js?v=e4de062be4c2" defer></script>
+  <script src="./display_names_data.js?v=d2ba1d58af2a" defer></script>
+  <script src="./display_names.js?v=eddfd16b5b3d" defer></script>
+  <script src="./gorge_legacy_adapter.js?v=fcadb4f2a6c1" defer></script>
+  <script src="./gorge_replay.js?v=93b61b3f5918" defer></script>
+  <script src="./insight_catalog.js?v=1fedb0a60e31" defer></script>
+  <script src="./insight_explorer.js?v=04df44573fda" defer></script>
+  <script src="./game_outcomes.js?v=0ac54f80c095" defer></script>
+  <script src="./app.js?v=086d411b5350" defer></script>
+</head>
+<body>
+<main class="wide-wrap" id="app">
+  <header class="topbar">
+    <div class="brand">
+      <div class="brand-mark" aria-hidden="true">
+        <svg viewBox="0 0 48 48" fill="none" stroke="currentColor" stroke-width="1.4">
+          <circle cx="24" cy="24" r="17"/><path d="M24 5v38M5 24h38M11 11l26 26M37 11 11 37"/>
+          <path d="m24 14 7 10-7 10-7-10z" fill="#f0cd86" stroke="none"/>
+        </svg>
+      </div>
+      <div class="brand-copy"><div class="overline">The Arcane Table</div><strong>Commander Deck Lab</strong></div>
+    </div>
+    <div class="top-actions">
+      <button id="audio-toggle" class="icon-button" type="button" aria-pressed="true" title="Mute sound effects">♫ Sound on</button>
+      <a class="little-button" href="https://github.com/bgoodnight/commander-simulator" target="_blank" rel="noopener noreferrer">Source on GitHub</a>
+    </div>
+  </header>
+  <nav class="site-navigation" aria-label="Main pages">
+    <a class="site-link" data-page="results" href="./results.html">✧ Simulation Results</a>
+    <a class="site-link" data-page="summary" href="./summary.html">◈ Deck Summary</a>
+    <a class="site-link" data-page="editor" href="./editor.html">⚒ Card List &amp; Editor</a>
+  </nav>
+  <section class="compact-selection" aria-label="Commander and deck selection">
+    <div class="selector-anchor">
+      <button type="button" id="commander-medallion" class="commander-medallion"
+        aria-expanded="false" aria-controls="commander-picker"
+        aria-label="Choose commander">
+        <span id="medallion-portrait" class="medallion-portrait" aria-hidden="true">✧</span>
+        <span class="medallion-rune" aria-hidden="true">✦</span>
+      </button>
+      <div id="commander-picker" class="commander-picker" hidden>
+        <div class="picker-heading">Choose a commander</div>
+        <div id="commander-rail" class="commander-rail" role="group" aria-label="Available commanders"></div>
+      </div>
+    </div>
+    <div class="selection-copy">
+      <span class="eyebrow">Tap portrait to change commander</span>
+      <h2 id="active-commander">Select a commander</h2>
+      <p id="active-deck-name">Open the rune to choose a deck.</p>
+    </div>
+  </section>
+  <section class="deck-selection-row" aria-label="Load a named deck" hidden>
+    <label for="global-deck-select">Loaded deck</label>
+    <select id="global-deck-select" class="global-deck-select" aria-label="Load a named deck"></select>
+    <span id="active-deck-state" class="selection-state">Cached decks</span>
+  </section>
+  <section id="app-content" hidden aria-live="off">
+    <div id="page-introduction" class="page-introduction" aria-live="polite"></div>
+    <div id="results-current-warning" class="warning current-deck-warning" hidden role="status"></div>
+    <div class="tab-pane" id="pane-overview">
+      <div class="two-col">
+        <section class="panel">
+          <h2 id="overview-name" class="panel-title">Commander</h2>
+          <div id="overview-art"></div>
+          <div class="metrics" id="overview-metrics"></div>
+          <div id="overview-tags" class="chips"></div>
+          <div id="bracket-assessment" class="bracket-assessment" aria-live="polite"></div>
+        </section>
+        <section class="panel">
+          <h2 class="panel-title">Card Types</h2>
+          <div id="type-chart" aria-label="Card type composition chart"></div>
+          <div class="arcane-line"></div>
+          <h2 class="panel-title">Mana Curve</h2>
+          <div id="mana-chart" aria-label="Mana value distribution chart"></div>
+          <p class="micro">Printed mana values of nonlands; multi-face/variable costs are simplified for display.</p>
+        </section>
+      </div>
+      <section class="panel themes-panel" aria-labelledby="themes-heading">
+        <div class="themes-heading"><div><span class="eyebrow">Deck signals</span><h2 id="themes-heading" class="panel-title">Themes &amp; first draws</h2></div></div>
+        <p class="small">Recurring card types, creature subtypes and rules-text patterns in your deck.</p>
+        <p id="theme-status" class="micro" hidden></p>
+        <div id="deck-themes" class="theme-grid"></div>
+        <p class="micro">Draw counts show when at least one matching card appeared in the opening hand or draws. The sample is small, and patterns can overlap.</p>
+      </section>
+    </div>
+    <div class="tab-pane" id="pane-library" hidden>
+      <section class="panel">
+        <div class="library-heading"><h2 class="panel-title">Card Library <span id="library-count" class="micro"></span></h2><a class="library-jump" href="#pane-workshop">Edit deck ↓</a></div>
+        <div class="filter-bar">
+          <input id="library-search" aria-label="Search cards in this deck" placeholder="Search card name, type or rules text…">
+          <select id="library-category" aria-label="Filter card types"><option value="all">All card types</option>
+            <option>Creature</option><option>Land</option><option>Artifact</option><option>Enchantment</option>
+            <option>Instant</option><option>Sorcery</option><option>Planeswalker</option><option>Other</option>
+          </select>
+        </div>
+        <p class="small">Tap a card for its details.</p>
+        <div class="table-scroll"><table>
+          <thead><tr><th>Count</th><th>Card</th><th>Printed type</th><th>Mana</th></tr></thead>
+          <tbody id="library-rows"></tbody>
+        </table></div>
+        <div id="library-extra" class="library-extra"></div>
+      </section>
+    </div>
+    <div class="tab-pane" id="pane-records" hidden>
+      <section id="simulation-snapshot" class="simulation-snapshot" aria-label="Simulation overview" hidden>
+        <div class="simulation-snapshot-heading">
+          <span class="eyebrow">Simulation at a glance</span>
+          <span id="simulation-snapshot-scope" class="micro"></span>
+        </div>
+        <div id="simulation-snapshot-metrics" class="simulation-snapshot-metrics"></div>
+      </section>
+      <section id="key-insights-panel" class="panel key-insights-panel" aria-labelledby="key-insights-title">
+        <div class="key-insights-heading">
+          <div><span class="eyebrow">Simulation takeaways</span><h2 id="key-insights-title">Key insights</h2></div>
+          <span class="micro">Select an insight to compare cards and inspect real seed evidence.</span>
+        </div>
+        <div id="key-insights-grid" class="board-grid"></div>
+        <p id="key-insights-empty" class="small" hidden></p>
+      </section>
+      <section id="long-game-panel" class="game-outcome-panel" aria-label="Latest simulated results">
+        <div class="latest-results-topline">
+          <span id="game-outcome-status" role="status">Loading latest simulations…</span>
+          <button type="button" id="game-outcome-refresh" class="game-outcome-refresh"
+            aria-label="Refresh latest simulation results" title="Refresh results">↻</button>
+        </div>
+        <div id="game-outcome-results" aria-live="polite"></div>
+      </section>
+      <section id="turn-reviewer-panel" class="latest-turn-reviewer" aria-labelledby="turn-reviewer-heading">
+        <h2 id="turn-reviewer-heading">Turn reviewer</h2>
+        <div id="turn-reviewer-results" aria-live="polite"></div>
+      </section>
+      <details id="development-panel" class="panel result-takeaway result-takeaway-development" aria-labelledby="bounded-heading">
+        <summary class="result-takeaway-summary">
+          <span class="eyebrow">Further analysis</span>
+          <h2 id="bounded-heading" class="result-takeaway-heading">Development &amp; consistency</h2>
+          <span class="result-takeaway-description">Opening hands, mana growth, distributions and detailed records</span>
+          <span class="result-takeaway-open">Explore details</span>
+        </summary>
+        <div id="bounded-results" aria-live="polite"></div>
+      </details>
+
+      <details class="panel diagnostic-panel result-takeaway" aria-labelledby="quiet-title">
+        <summary class="result-takeaway-summary">
+          <span class="eyebrow">Development diagnostics</span>
+          <h2 id="quiet-title" class="result-takeaway-heading">When does progress slow?</h2>
+          <span class="result-takeaway-description">Compare quiet turns and inspect the cards left in hand</span>
+          <span class="result-takeaway-open">Explore diagnostics</span>
+        </summary>
+        <p class="small">Explore consecutive turns without a recorded development or setup event.</p>
+        <details class="story-drilldown"><summary>Load a different batch</summary><label class="diagnostic-import">Load individual simulation run JSON files
+          <input id="quiet-files" type="file" accept="application/json,.json" multiple>
+        </label></details>
+        <p id="quiet-status" class="micro" role="status">No action runs loaded. Select run files from the Python simulator to explore this diagnostic.</p>
+        <div id="quiet-output" aria-live="polite"></div>
+        <details class="story-drilldown"><summary>How is this measured?</summary>
+          <p class="micro">Run files stay in this browser and must match the selected built-in deck. Generate runs together using the same simulator version. The command below creates an array from a repository checkout.</p>
+          <code id="quiet-command" class="quiet-command"></code>
+          <p class="micro">A flagged turn follows two consecutive turns without a recorded land play, reviewed permanent, tutor, token spell, trigger, phase effect or sacrifice action. The first example is selected by its proximity to the group’s average lands and unsupported cards in hand.</p>
+        </details>
+      </details>
+      <details id="archive-observation-details" class="panel story-drilldown result-takeaway"><summary>Earlier opening-hand observations · 11 hands</summary>
+      <section class="results-head panel" aria-labelledby="results-overview-heading">
+        <div class="results-heading-row">
+          <div>
+            <span class="eyebrow">Early-turn findings</span>
+            <h2 id="results-overview-heading" class="results-big-heading">Opening-hand and early-turn snapshots</h2>
+            <p id="results-provenance" class="small">Calculating findings from the fixed cached runs.</p>
+          </div>
+          <span id="results-sample" class="sample-label"></span>
+        </div>
+        <div class="results-kpis" id="results-kpis"></div>
+        <div id="results-takeaway" class="results-takeaway" aria-live="polite"></div>
+      </section>
+      </details>
+      <!-- The replay engine is also rendered inline, on demand, inside a selected insight. -->
+      <details class="panel replay-panel result-takeaway" id="opponent-replay-panel" aria-labelledby="opponent-replay-heading" hidden>
+        <summary class="result-takeaway-summary">
+          <span class="eyebrow">Pressure &amp; example games</span>
+          <h2 id="opponent-replay-heading" class="result-takeaway-heading">How did a game unfold?</h2>
+          <span class="result-takeaway-description">Compare pressure, choose a game, and follow turn-by-turn highlights</span>
+          <span class="result-takeaway-open">Explore replay</span>
+        </summary>
+        <div class="replay-root" id="opponent-replay-root" aria-live="polite"></div>
+      </details>
+      <details class="panel replay-panel result-takeaway gorge-replay-panel" id="gorge-replay-panel">
+        <summary class="result-takeaway-summary">
+          <span class="eyebrow">Source evidence · Gorge</span>
+          <h2 class="result-takeaway-heading">Inspect complete replay details</h2>
+          <span class="result-takeaway-description">Verified public events, turn-entry state and local native logs</span>
+          <span class="result-takeaway-open">Explore source</span>
+        </summary>
+        <div class="gorge-replay-inner">
+          <p class="small">Public samples show recorded events and visible zones. The snapshots are at the first decision of a turn, not turn end. Opponents' private hand identities are not published.</p>
+          <div class="gorge-replay-samples" id="gorge-replay-samples" hidden>
+            <label for="gorge-replay-sample-select">Verified Gorge game</label>
+            <select id="gorge-replay-sample-select" aria-label="Select verified Gorge game"></select>
+            <button id="gorge-replay-load" type="button">View game</button>
+          </div>
+          <label class="gorge-replay-upload-label" for="gorge-replay-file">Open a local Gorge native replay JSON</label>
+          <input id="gorge-replay-file" type="file" accept=".json,application/json">
+          <div class="gorge-replay-root" id="gorge-replay-root" aria-live="polite">
+            <p class="small">Select a verified public game, or open a locally saved full Gorge trace.</p>
+          </div>
+        </div>
+      </details>
+    </div>
+    <div class="tab-pane" id="pane-insights" hidden>
+      <details class="panel story-drilldown"><summary>Explore the earlier observation archive</summary>
+      <section class="scroll-story" aria-labelledby="story-head">
+        <div class="story-heading">
+          <span class="eyebrow">Explore the details</span>
+          <h2 id="story-head">Explore the evidence</h2>
+          <p>Follow the deck's development, then select a turn to explore the details.</p>
+        </div>
+        <details class="story-step reveal story-secondary" data-chart="opening">
+          <summary>Explore opening hands</summary>
+          <div class="story-copy"><div class="story-num">I · Opening hands</div>
+            <h3 id="story-title-opening">Opening land mix</h3>
+            <p id="story-summary-opening"></p><p id="story-meaning-opening" class="finding-meaning"></p>
+            <p id="story-caveat-opening" class="micro"></p>
+          </div>
+          <div class="story-graphic panel">
+            <h3>Modeled lands among the first seven cards</h3>
+            <div id="scroll-sources"></div>
+            <div class="chart-detail" id="detail-opening" role="status">Select a bar to inspect the recorded hands.</div>
+          </div>
+        </details>
+        <article class="story-step reveal" data-chart="resources">
+          <div class="story-copy"><div class="story-num">II · Turn-three resources</div>
+            <h3 id="story-title-resources"></h3>
+            <p id="story-summary-resources"></p><p id="story-meaning-resources" class="finding-meaning"></p>
+            <p id="story-caveat-resources" class="micro"></p>
+          </div>
+          <div class="story-graphic panel">
+            <h3>Modeled mana sources by turn</h3>
+            <p class="micro">Select a point to explore the runs behind the average.</p>
+            <div id="source-curve"></div>
+            <div id="source-curve-detail" class="curve-detail" aria-live="polite"></div>
+            <details class="story-drilldown"><summary>Explore turn-three distribution</summary>
+              <div id="scroll-hand"></div>
+              <div class="chart-detail" id="detail-resources" role="status">Select a bar to inspect the source counts.</div>
+            </details>
+          </div>
+        </article>
+        <article class="story-step reveal" data-chart="themes">
+          <div class="story-copy"><div class="story-num">III · The deck takes shape</div>
+            <h3 id="story-title-themes">When do key themes appear?</h3>
+            <p id="story-summary-themes"></p>
+            <p class="micro">First appearance in the opening hand or draws. Groups may overlap.</p>
+          </div>
+          <div class="story-graphic panel">
+            <h3>Theme access over time</h3>
+            <p class="micro">Choose a theme and turn to inspect the matching cards and runs.</p>
+            <div id="theme-story-chart"></div>
+            <div id="theme-story-detail" class="curve-detail" aria-live="polite"></div>
+          </div>
+        </article>
+        <details class="story-step reveal story-secondary" data-chart="candidates">
+          <summary>Explore early card options</summary>
+          <div class="story-copy"><div class="story-num">III · Early card options</div>
+            <h3 id="story-title-candidates"></h3>
+            <p id="story-summary-candidates"></p><p id="story-meaning-candidates" class="finding-meaning"></p>
+            <p id="story-caveat-candidates" class="micro"></p>
+          </div>
+          <div class="story-graphic panel">
+            <h3>Runs with any mana-value candidate by turn</h3>
+            <div id="scroll-candidates"></div>
+            <div class="chart-detail" id="detail-candidates" role="status">Select a turn to inspect the candidates.</div>
+          </div>
+        </details>
+      </section>
+      <section class="panel archived-details" aria-labelledby="archived-details-heading">
+        <h2 id="archived-details-heading" class="panel-title">Inspect a run</h2>
+        <p class="small">Explore one observation.</p>
+        <div class="control-row">
+          <div class="control"><label for="seed-select">Seed</label><select id="seed-select"></select></div>
+          <div class="control"><label for="turn-select">Show through turn</label>
+            <select id="turn-select"><option value="3">Turn 3</option><option value="4">Turn 4</option>
+              <option value="5">Turn 5</option><option value="6" selected>Turn 6</option></select></div>
+          <button type="button" class="gold-button" id="show-record">View run</button>
+          <button type="button" class="stone-button" id="export-record">Export JSON</button>
+        </div>
+        <div id="record-info"></div>
+        <details class="run-transcript">
+          <summary>Expand turn-by-turn trace</summary>
+          <div id="turn-timeline" class="timeline"></div>
+        </details>
+      </section>
+      </details>
+    </div>
+    <div class="tab-pane" id="pane-workshop" hidden>
+      <div class="two-col">
+        <section class="panel">
+          <h2 class="panel-title">Edit Deck</h2>
+          <div class="version-selector">
+            <p class="micro" id="version-help">Choose a built-in deck or a saved browser version. Changes stay local until you save.</p>
+            <button type="button" id="new-version-button" class="stone-button">Start a new version from this deck</button>
+          </div>
+          <p class="small">Build a variation in this browser. The original deck is immutable. Edits are saved locally on this device; export to keep or share them.</p>
+          <div class="control-row">
+            <div class="control"><label for="remove-name">Remove one card</label><select id="remove-name"></select></div>
+            <div class="control"><label for="add-name">Add a card</label><input id="add-name" list="name-suggestions" autocomplete="off" placeholder="Search all Magic names…"></div>
+            <datalist id="name-suggestions"></datalist>
+          </div>
+          <div class="control-row">
+            <button type="button" class="gold-button" id="swap-button">Swap cards</button>
+            <button type="button" class="stone-button" id="remove-one-button">− Remove 1</button>
+            <button type="button" class="stone-button" id="add-one-button">+ Add 1</button>
+            <button type="button" class="stone-button" id="undo-button">Undo</button>
+            <button type="button" class="stone-button" id="reset-button">Revert</button>
+          </div>
+          <p id="workshop-message" class="small" role="status"></p>
+          <p class="micro">You can add and remove separately while drafting. Saving and exporting require exactly 100 legal Commander cards.</p>
+          <div class="arcane-line"></div>
+          <h3>Draft changes</h3>
+          <div id="workshop-diff" class="workshop-list"></div>
+          <div class="control-row">
+            <div class="control"><label for="draft-title">Version name</label><input id="draft-title" maxlength="70" placeholder="Mortarion · Plague test"></div>
+          </div>
+          <div class="control-row">
+            <button type="button" class="gold-button" id="save-local">Save as named deck</button>
+            <button type="button" class="stone-button" id="export-deck">Download decklist .txt</button>
+          </div>
+          <p class="micro">Browser versions are stored only in this browser and can be cleared by browser settings.
+            No new simulation results are produced for edited decks.</p>
+        </section>
+        <section class="panel">
+          <h2 class="panel-title">Manage Decks</h2>
+          <p class="small">All named decks, newest updated first. Choose Load to open a deck; browser-saved versions remain on this device.</p>
+          <div id="saved-versions"></div>
+          <div class="arcane-line"></div>
+          <h3>New card from Scryfall</h3>
+          <p class="small">The complete names list is cached. If a new card lacks detailed metadata, explicitly retrieve and validate it before swapping.</p>
+          <div class="control-row">
+            <div class="control"><label for="fetch-name">Exact Magic card name</label><input id="fetch-name" list="name-suggestions" autocomplete="off" placeholder="e.g. Ophiomancer"></div>
+            <button id="fetch-card" class="stone-button" type="button">Fetch card details</button>
+          </div>
+          <div id="fetch-status" class="small" role="status"></div>
+          <div class="arcane-line"></div>
+          <p class="micro">Edited decks need new results from the Python simulator.</p>
+        </section>
+      </div>
+    </div>
+  </section>
+  <div id="toast" role="status" hidden></div>
+  <div id="dialog-backdrop" class="dialog-backdrop" hidden>
+    <div class="modal" role="dialog" aria-modal="true" aria-labelledby="card-dialog-title">
+      <div id="modal-art"></div>
+      <div>
+        <h2 id="card-dialog-title"></h2>
+        <p id="modal-meta"></p>
+        <div id="modal-cost" class="modal-cost"></div>
+        <p id="modal-oracle" class="oracle-text"></p>
+        <div class="control-row">
+          <a class="stone-button" id="modal-scryfall" href="https://scryfall.com/" target="_blank" rel="noopener noreferrer">See on Scryfall</a>
+          <button type="button" id="modal-close" class="gold-button">Close</button>
+        </div>
+      </div>
+    </div>
+  </div>
+  <footer>Commander Deck Lab · An original fantasy-tabletop interface · Magic card images &amp; card information via <a href="https://scryfall.com/" target="_blank" rel="noopener noreferrer">Scryfall</a>.
+    Magic: The Gathering and related artwork belong to their respective owners. Not affiliated with Wizards of the Coast or Hearthstone.
+    <div>Card edits stored locally · <a href="https://github.com/bgoodnight/commander-simulator" target="_blank" rel="noopener noreferrer">source and full simulator</a></div>
+  </footer>
+</main>
+</body>
+</html>
