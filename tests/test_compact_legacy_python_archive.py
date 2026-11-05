@@ -4,10 +4,33 @@ from pathlib import Path
 import tempfile
 import unittest
 
-from tests.test_simulation_publishing import ENGINE, fake_run
 from tools.build_simulation_archive import write_archive
 from tools.compact_legacy_python_archive import compact, compact_index
 from tools.publish_simulation_archive import KEYS, publish_archives, validate_index
+
+
+ENGINE = "a" * 40
+
+
+def fake_run(deck, *, seed, turns):
+    events = []
+    snapshots = []
+    for turn in range(1, turns + 1):
+        events.append({
+            "turn": turn, "land_count": turn, "creature_count": 0,
+            "mana_rock_count": 0, "hand_size": 7,
+            "unsupported_cards_in_hand": [],
+            "events": [{"type": "draw", "card": "Swamp"}]})
+        snapshots.append({
+            "turn": turn, "battlefield": [], "hand": [],
+            "graveyard": [], "exile": [], "untracked_tokens": [],
+            "object_views": {"battlefield": [], "hand": [],
+                             "graveyard": [], "exile": []}})
+    return {
+        "seed": seed, "deck_key": deck, "deck_sha256": "a" * 64,
+        "mode": "bounded_authoritative_early_actions",
+        "mulligan": {"policy": "keep"},
+        "events": events, "state_snapshots": snapshots}
 
 
 class LegacyHotCatalogTests(unittest.TestCase):
