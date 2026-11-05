@@ -24,6 +24,10 @@ permissions:
 
 jobs:
   probe:
+    strategy:
+      fail-fast: false
+      matrix:
+        hero: [mortarion_current, magnus_premium]
     runs-on: ubuntu-latest
     timeout-minutes: 120
     steps:
@@ -38,7 +42,7 @@ jobs:
           python -m tools.select_gorge_precon_panel --enrichment "$RUNNER_TEMP/panel/full-enrichment.json" --out "$RUNNER_TEMP/panel/panel-60.json" --panel-size 60
           python -m tools.stage_gorge_precon_qualification --enrichment "$RUNNER_TEMP/panel/full-enrichment.json" --panel "$RUNNER_TEMP/panel/panel-60.json" --out "$RUNNER_TEMP/panel/qualification-60.json"
           python -m tools.check_gorge_precon_compatibility --queue "$RUNNER_TEMP/panel/qualification-60.json" --deck-dir "$RUNNER_TEMP/decks" --report "$RUNNER_TEMP/panel/opponents.txt"
-          python -m tools.export_gorge_decks --out "$RUNNER_TEMP/decks" --decks mortarion_current
+          python -m tools.export_gorge_decks --out "$RUNNER_TEMP/decks" --decks mortarion_current magnus_premium
       - name: Get pinned Gorge and compile original card scripts
         env:
           GORGE_COMMIT: b78e4c8b16078f6decbc48875bba953ce5535b85
@@ -58,6 +62,8 @@ jobs:
           cp "$GITHUB_WORKSPACE/tools/gorge_commander_probe.go" commander_probe.go
           go build -o "$RUNNER_TEMP/gorge-probe" ./commander_probe.go
       - name: Run 60-game, full-panel experimental four-player Gorge qualification
+        env:
+          HERO_DECK: ${{ matrix.hero }}
         working-directory: ${{ runner.temp }}/gorge
         shell: bash
         run: |
@@ -69,7 +75,7 @@ jobs:
           set +e
           "$RUNNER_TEMP/gorge-probe" -corpus "$RUNNER_TEMP/gorge/.cards" \
             -deck-dir "$RUNNER_TEMP/decks" \
-            -hero-deck mortarion_current -opponents "$names" \
+            -hero-deck "$HERO_DECK" -opponents "$names" \
             -pilot bot -games "$count" -seed 186000 -max-turns 60 \
             -verify=true -native-dir "$RUNNER_TEMP/results/native" -native-limit 12 \
             > "$RUNNER_TEMP/results/runs.jsonl" \
@@ -84,6 +90,7 @@ jobs:
       - name: Report observed results without granting qualification
         env:
           GAME_COUNT: ${{ inputs.games || '60' }}
+          HERO_DECK: ${{ matrix.hero }}
         run: |
           python - <<'PY'
           import json, os
@@ -99,7 +106,7 @@ jobs:
                   "engine_errors":[] }
           for r in lines:
               seat=r["hero_seat"]
-              assert r["decks"][seat]=="mortarion_current"
+              assert r["decks"][seat]==os.environ["HERO_DECK"]
               opp=[d for i,d in enumerate(r["decks"]) if i!=seat]
               assert len(opp)==3 and len(set(opp))==3 and set(opp)<=pool
               seen.update(opp)
@@ -117,7 +124,7 @@ jobs:
           status["turn_limit_stalls"]=status["attempted"]-status["completed"]-status["engine_error_count"]
           (root/"results/qualification-summary.json").write_text(json.dumps(status,indent=2)+"\\n")
           with open(os.environ["GITHUB_STEP_SUMMARY"],"a") as out:
-              out.write("# Experimental Gorge precon gameplay\\n\\n")
+              out.write("# Experimental Gorge precon gameplay: "+os.environ["HERO_DECK"]+"\\n\\n")
               out.write(f"Attempted: {status['attempted']}; completed: {status['completed']}; replay-verified: {status['replay_verified']}.\\n\\n")
               out.write(f"Precons observed: **{len(seen)}/60**. These are **not** certified for rules or pilot fidelity.\\n")
               out.write(f"Turn-cap stalls: **{status['turn_limit_stalls']}**; engine errors: **{status['engine_error_count']}**.\\n")
@@ -126,7 +133,7 @@ jobs:
               out.write("Unresolved engine errors block promotion. No R2 writes, Pages publication or current-statistics eligibility.\\n")
           PY
       - name: Capture failing seed 186047 with exact rotated pod and decision evidence
-        if: always()
+        if: ${{ always() && matrix.hero == 'mortarion_current' }}
         working-directory: ${{ runner.temp }}/gorge
         shell: bash
         run: |
@@ -163,7 +170,7 @@ jobs:
         if: always()
         uses: actions/upload-artifact@v4
         with:
-          name: gorge-precon-60-experimental-gameplay
+          name: gorge-precon-60-experimental-gameplay-${{ matrix.hero }}
           path: |
             ${{ runner.temp }}/panel/
             ${{ runner.temp }}/results/
