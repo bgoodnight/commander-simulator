@@ -16,6 +16,7 @@ class CandidateEnrichmentTests(unittest.TestCase):
     def test_lookup_filters_and_ambiguous(self):
         a=card("Alpha","Creature",["G"])
         b=card("Alpha","Land",[])
+        b["oracle_id"]="different-oracle-identity"
         index,ambiguous=build_index([a,b,card("Beta","Land"),{"name":"Token","layout":"token"}])
         self.assertIn("alpha",ambiguous)
         self.assertNotIn("alpha",index)
