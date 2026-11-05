@@ -13,6 +13,15 @@ from tools.gorge_cohort_eligibility import eligible_partition, validate_registry
 
 def partition_warehouse(games, events, registry):
     approved, excluded = eligible_partition(games, registry)
+    # Retain drawn games in the immutable source and replay catalog, not
+    # in the analytics Parquet projection or its event-level features.
+    decisive = [game for game in approved if game.get("draw") is False and
+                type(game.get("winner_seat")) is int and
+                game["winner_seat"] in range(4)]
+    excluded.extend({"game_id":game["game_id"], "cohort_id":game["cohort_id"],
+                     "reason":"nondecisive_outcome"}
+                    for game in approved if game not in decisive)
+    approved = decisive
     ids = {game["game_id"] for game in approved}
     selected_events = [event for event in events if event.get("game_id") in ids]
     return approved, selected_events, excluded
