@@ -1410,6 +1410,7 @@ body:has(#pane-records:not([hidden])) .page-introduction a{font-size:.72rem}
 .game-outcome-hero-frame>.game-outcome-hero-highlights{
   grid-template-columns:repeat(2,minmax(0,1fr));max-width:none;margin-top:10px
 }
+.latest-insight-grid .gorge-cohort-hero-frame .game-outcome-hero-summary{min-height:225px}
 .gorge-highlight-details{padding:0;display:block;overflow:hidden}
 .gorge-highlight-details>summary{display:flex;flex-direction:column;gap:3px;
   padding:11px 13px;cursor:pointer;list-style:none}

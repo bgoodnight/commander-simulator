@@ -463,7 +463,7 @@ function init(){
   function cohortStatsPanel(stats,previousHero){
     // Use the original illustrated Results hero, not a temporary replacement
     // design. All numbers here are from the complete verified cohort.
-    const frame=node("div","game-outcome-hero-frame");
+    const frame=node("div","game-outcome-hero-frame gorge-cohort-hero-frame");
     const panel=node("details","board-report game-outcome-card game-outcome-hero");
     const summary=node("summary","game-outcome-summary game-outcome-hero-summary");
     const art=previousHero?.querySelector(".game-outcome-hero-art");

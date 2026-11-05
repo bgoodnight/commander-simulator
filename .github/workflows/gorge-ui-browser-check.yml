@@ -4,6 +4,7 @@ on:
   pull_request:
     paths:
       - "tests/browser_gorge_replay.py"
+      - "tests/browser_gorge_results_snapshot.py"
       - ".github/workflows/gorge-ui-browser-check.yml"
       - "docs/deck-lab/gorge-data/**"
       - "web/pages/gorge_replay.js"
@@ -45,7 +46,7 @@ jobs:
           BROWSER_SITE_DIR: ${{ runner.temp }}/gorge-site
           BROWSER_ARTIFACT_DIR: ${{ runner.temp }}/gorge-browser-evidence
         run: |
-          python tests/browser_gorge_replay.py
+          python tests/browser_gorge_results_snapshot.py
       - name: Upload browser screenshots and evidence
         if: always()
         uses: actions/upload-artifact@v4
