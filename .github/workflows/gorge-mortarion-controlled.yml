@@ -4,6 +4,7 @@ on:
     branches: [main]
     paths:
       - ".github/workflows/gorge-mortarion-controlled.yml"
+      - "tools/gorge_mortarion_controlled_test.go"
   workflow_dispatch:
 permissions:
   contents: read
