@@ -119,6 +119,39 @@ export default {
     if(url.pathname==="/health")
       return json({ok:true,service:"gorge-r2-direct-api",schema:1,
         r2_binding:!!env.GORGE_R2},200,duration(started));
+    // Authenticated diagnostic only: time a REAL raw R2 ZSTD Parquet read
+    // without returning source game data or granting statistical approval.
+    if(url.pathname==="/v1/benchmark"){
+      const token=env.BENCHMARK_TOKEN;
+      if(!token || request.headers.get("Authorization")!==("Bearer "+token))
+        return fail(401,"benchmark_not_authorized",started);
+      if(!env.GORGE_R2)return fail(503,"r2_binding_missing",started);
+      let selected;
+      try { selected=validateDeck(url.searchParams.get("deck")); }
+      catch {return fail(400,"invalid_deck",started);}
+      try{
+        const tList=now();
+        const listing=await listShards(env.GORGE_R2);
+        const listing_ms=duration(tList);
+        if(listing.truncated)throw Error("too_many_shards");
+        const shard=listing.shards.find(x=>x.deck===selected);
+        if(!shard)return json({schema:"gorge-r2-benchmark-v1",deck:selected,
+          status:"no_shards",list_ms:listing_ms},200,duration(started));
+        const tManifest=now();
+        const manifest=await readManifest(env.GORGE_R2,shard);
+        const manifest_ms=duration(tManifest);
+        const tRead=now();
+        const rows=await readGames(env.GORGE_R2,shard,manifest);
+        const parquet_ms=duration(tRead);
+        return json({schema:"gorge-r2-benchmark-v1",deck:selected,
+          status:"ok",rows_read:rows.length,source_batch:shard.batch,
+          timing_ms:{listing:listing_ms,manifest:manifest_ms,
+            parquet:parquet_ms,total:duration(started)}},200,duration(started));
+      }catch(error){
+        console.error("R2 benchmark failed:",String(error?.message||error));
+        return fail(503,"benchmark_unavailable",started);
+      }
+    }
     if(url.pathname!=="/v1/summary")return fail(404,"not_found",started);
     if(!env.GORGE_R2)return fail(503,"r2_binding_missing",started);
     let deck;
