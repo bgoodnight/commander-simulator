@@ -161,6 +161,55 @@ jobs:
               output.write("\\n## Live public API smoke check\\n")
               output.write("Both /v1/summary and /v1/games returned validated schemas for Mortarion and Magnus.\\n")
           PY
+      - name: Smoke-test individual game and native event-segment routes
+        env:
+          WORKER_URL: ${{ steps.deploy.outputs.deployment-url }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          python - <<'PY'
+          import json,os,urllib.parse,urllib.request
+          base=os.environ["WORKER_URL"].rstrip("/")
+          private_keys=("event_json","object_id","object_key","seed","source_sha256","intents")
+          def read(route,deck):
+              url=base+route+("?deck="+urllib.parse.quote(deck))
+              with urllib.request.urlopen(url,timeout=30) as response:
+                  assert response.status==200, response.status
+                  return json.load(response)
+          for deck in ("mortarion_current","magnus_premium"):
+              index=read("/v1/games",deck)
+              # Ineligible/historical game identities must never be retrievable.
+              unknown="smoke_nonexistent_game_20261105"
+              path="/v1/games/"+urllib.parse.quote(unknown,safe="")
+              for suffix in ("","/timeline"):
+                  result=read(path+suffix,deck)
+                  assert result.get("game") is None, "Unknown game was disclosed"
+                  assert result.get("status") in (
+                      "game_not_found","awaiting_cohort_approval","no_warehouse_shards"
+                  ),result
+                  assert not any(k in json.dumps(result) for k in private_keys),result
+              if index["status"]!="ready" or not index["games"]:
+                  print(f"{deck}: no approved current game, negative-route checks passed")
+                  continue
+              # When certification makes a real game available, verify actual R2
+              # event projection without ever downloading native payloads.
+              game=index["games"][0]
+              path="/v1/games/"+urllib.parse.quote(game["game_id"],safe="")
+              detail=read(path,deck)
+              timeline=read(path+"/timeline",deck)
+              assert detail["status"]=="ready" and detail["game"]["game_id"]==game["game_id"]
+              assert timeline["schema"]=="gorge-r2-game-timeline-v1"
+              assert timeline["status"]=="ready"
+              record=timeline["game"]["timeline"]
+              assert record["schema"]=="gorge-r2-event-segments-v1"
+              assert record["game_id"]==game["game_id"]
+              assert record["raw_events_exposed"] is False
+              assert record["event_count"]==sum(
+                  segment["public_events"]+segment["withheld_events"]
+                  for segment in record["segments"])
+              assert not any(k in json.dumps(timeline) for k in private_keys)
+              print(f"{deck}: verified {record['event_count']} bounded native event entries")
+          PY
       - uses: actions/upload-artifact@v4
         if: always()
         with:
