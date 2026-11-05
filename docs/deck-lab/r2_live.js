@@ -63,6 +63,78 @@
     card.append(el("p","micro","Server processing: "+(result.query?.server_ms??"—")+" ms · "+(result.query?.shards_scanned??"—")+" shard(s) scanned"));
     root.append(card);
   }
+
+  async function loadApprovedGames(selected,ticket,card){
+    const section=el("details","board-report");
+    section.append(el("summary",null,"Approved games · R2 timeline preview"));
+    const body=el("div","small");
+    body.append(el("p","micro","Loading approved game index…"));
+    section.append(body);card.append(section);
+    try{
+      const u=new URL("/v1/games",api);u.searchParams.set("deck",selected);u.searchParams.set("limit","10");
+      const response=await fetch(u.toString(),{cache:"no-store"});
+      if(!response.ok)throw Error("Game index returned HTTP "+response.status);
+      const index=await response.json();
+      if(ticket!==seq)return;
+      if(index.schema!=="gorge-r2-approved-game-index-v1"||index.deck!==selected||
+          !Array.isArray(index.games))throw Error("Unrecognized game index");
+      body.replaceChildren();
+      if(index.status!=="ready"||!index.games.length){
+        body.append(el("p","micro","No approved game details are available yet."));
+        return;
+      }
+      body.append(el("p","micro","Showing "+index.games.length+" of "+index.total+
+        " approved games. Timeline data contains event-family counts only."));
+      for(const game of index.games){
+        if(typeof game.game_id!=="string"||!["win","loss"].includes(game.result))continue;
+        const item=el("div","board-report");
+        const btn=el("button","game-outcome-refresh",
+          (game.result==="win"?"Win":"Loss")+" · "+(game.turns??"—")+
+          " turns · "+game.game_id);
+        btn.type="button";
+        const detail=el("div","micro");
+        btn.addEventListener("click",async()=>{
+          detail.replaceChildren(el("p","micro","Loading bounded event timeline…"));
+          btn.disabled=true;
+          try{
+            const url=new URL("/v1/games/"+encodeURIComponent(game.game_id)+"/timeline",api);
+            url.searchParams.set("deck",selected);
+            const res=await fetch(url.toString(),{cache:"no-store"});
+            if(!res.ok)throw Error("Timeline returned HTTP "+res.status);
+            const data=await res.json();
+            if(ticket!==seq)return;
+            if(data.schema!=="gorge-r2-game-timeline-v1"||data.deck!==selected)
+              throw Error("Unexpected timeline response");
+            detail.replaceChildren();
+            if(data.status!=="ready"||!data.game?.timeline?.segments){
+              detail.append(el("p","micro","No approved timeline is available for this game."));
+              return;
+            }
+            const timeline=data.game.timeline;
+            detail.append(el("p","micro",timeline.event_count+" native events · "+
+              timeline.segments.length+" segments; private event payloads withheld."));
+            for(const part of timeline.segments.slice(0,30)){
+              const kinds=Object.entries(part.kinds||{}).map(([name,count])=>name+
+                ": "+count).join(" · ");
+              detail.append(el("p","micro","Segment "+(part.segment+1)+
+                " · "+part.public_events+" public · "+part.withheld_events+
+                " withheld · "+(kinds||"no public event families")));
+            }
+            if(timeline.segments.length>30)
+              detail.append(el("p","micro","Showing first 30 segments."));
+          }catch(err){
+            if(ticket===seq)detail.replaceChildren(el("p","micro",
+              "Timeline unavailable: "+String(err.message||err)));
+          }finally{btn.disabled=false;}
+        });
+        item.append(btn,detail);body.append(item);
+      }
+    }catch(err){
+      if(ticket===seq)body.replaceChildren(el("p","micro",
+        "Approved game index unavailable: "+String(err.message||err)));
+    }
+  }
+
   async function refresh(force=false){
     const selected=window.__deckLabActiveKey;
     if(!selected || (!force && selected===deck))return;
@@ -79,6 +151,10 @@
       if(data.deck!==selected || data.schema!=="gorge-r2-live-summary-v1")
         throw Error("Unexpected R2 response schema");
       render(data,Math.round(performance.now()-started));
+      if(data.status==="ready" && data.n>0){
+        const panel=root.querySelector(".gorge-r2-live-panel");
+        if(panel)loadApprovedGames(selected,ticket,panel);
+      }
     }catch(err){
       if(ticket!==seq)return;
       const message=el("p","micro","R2 live query unavailable; existing published UI remains available. "+String(err.message||err));
