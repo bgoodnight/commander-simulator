@@ -2044,6 +2044,9 @@
   }
   function readablePredictor(feature){
     const name=String(feature||"");
+    if(typeof window!=="undefined"&&window.DeckDisplayNames&&
+       /^(opponent|archetype|color|seat):/.test(name))
+      return window.DeckDisplayNames.feature(name);
     if(name.includes(" × ")){
       return name.split(" × ").map(readablePredictor).join(" when facing ");
     }

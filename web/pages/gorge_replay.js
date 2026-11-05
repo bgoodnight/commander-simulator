@@ -395,7 +395,7 @@ function paintView(rootElement,data){
     }
     const highlight=turn.highlights.map(e=>
       e.kind.replace(/_/g," ")+(e.card_name?" · "+e.card_name:
-      e.text?" · "+e.text:"")).slice(0,10);
+      e.text?" · "+(e.kind==="game_over"&&data.decks.includes(e.text)?deckName(e.text):e.text):"")).slice(0,10);
     if(highlight.length)section.append(node("p","gorge-replay-highlights",
       highlight.join(" · ")));
     const body=node("div","gorge-replay-event-list");
