@@ -41,7 +41,7 @@ def check():
                 assert 'Verified games' not in hero.inner_text()
                 assert 'Replay coverage' not in hero.inner_text()
                 tiles = hero.locator('.gorge-highlight-details')
-                assert tiles.count() == 2
+                assert tiles.count() == 4
                 tiles.nth(0).locator('summary').first.click()
                 matchup = tiles.nth(0)
                 assert matchup.locator('table tbody tr').count() > 0
@@ -50,6 +50,12 @@ def check():
                 assert matchup.locator('table tbody tr').count() > 0
                 tiles.nth(0).locator('summary').first.click()
                 tiles.nth(1).locator('summary').first.click()
+                tiles.nth(2).locator('summary').first.click()
+                assert tiles.nth(2).locator('.gorge-sample-chart').count() == 1
+                tiles.nth(2).locator('summary').first.click()
+                tiles.nth(3).locator('summary').first.click()
+                assert tiles.nth(3).locator('.gorge-sample-chart').count() == 1
+                tiles.nth(3).locator('summary').first.click()
                 assert tiles.nth(1).locator('.game-outcome-finish-row').count() > 0
                 tiles.nth(1).locator('summary').first.click()
                 insight = page.locator('#game-outcome-results .insight-featured-panel').first

@@ -460,7 +460,7 @@ function init(){
   function cohortPercent(x){
     return Number.isFinite(x)?(x*100).toFixed(1)+"%":"—";
   }
-  function cohortStatsPanel(stats,previousHero){
+  function cohortStatsPanel(stats,previousHero,sampleRuns){
     // Use the original illustrated Results hero, not a temporary replacement
     // design. All numbers here are from the complete verified cohort.
     const frame=node("div","game-outcome-hero-frame gorge-cohort-hero-frame");
@@ -520,7 +520,8 @@ function init(){
       ["Best matchup",ranked.length?cohortPercent(ranked[0].win_rate):"—",
         ranked.length?ranked[0].name+" · "+ranked[0].n+" games":"No supported opponent group",cohortGroupPanel(stats)],
       ["Game length",stats.median_game_turns==null?"—":String(stats.median_game_turns),
-        "Median recorded game turns",cohortLengthPanel(stats)]]){
+        "Median recorded game turns",cohortLengthPanel(stats)],
+      ...sampleHighlightRows(sampleRuns)]){
       const tile=node("details","game-outcome-hero-highlight gorge-highlight-details");
       const heading=node("summary");
       heading.append(node("span",null,label),node("strong",null,value),node("small",null,detail));
@@ -529,6 +530,61 @@ function init(){
     }
     frame.append(highlights);
     return frame;
+  }
+  function sampleHighlightRows(runs){
+    if(!runs.length)return [];
+    const result=[];
+    for(const [metric,label,unit] of [["mana","Mana produced","mana"],["life","Life","life"]]){
+      const values=runs.map(run=>sampleValue(run,metric,5)).filter(Number.isFinite).sort((a,b)=>a-b);
+      const mid=values.length?values.length%2?values[(values.length-1)/2]:
+        (values[values.length/2-1]+values[values.length/2])/2:null;
+      result.push([label,mid===null?"—":String(mid),
+        "Median at turn 5 · "+values.length+" replay examples",
+        sampleTrendPanel(runs,metric,unit)]);
+    }
+    return result;
+  }
+  function sampleValue(run,metric,turn){
+    if(metric==="life")return run.life_history?.[turn]?.life_totals?.[0]??null;
+    const observation=run.ui_observations?.[turn-1];
+    if(!observation?.mana_produced_by_color)return null;
+    return Object.values(observation.mana_produced_by_color).reduce((sum,n)=>sum+(Number.isFinite(n)?n:0),0);
+  }
+  function sampleTrendPanel(runs,metric,unit){
+    const body=node("div","game-outcome-body gorge-sample-trend");
+    body.append(node("p","micro","Replay examples only · recorded mana is produced during your turn; life is sampled at the next own-turn entry, or the last available frame. Later points include only games still observed. These patterns are descriptive."));
+    const maxTurn=Math.max(0,...runs.map(r=>r.ui_observations?.length||0));
+    const series=["win","loss"].map(status=>({status,points:Array.from({length:maxTurn},(_,i)=>{
+      const values=runs.filter(r=>r.outcome.status===status).map(r=>sampleValue(r,metric,i+1))
+        .filter(Number.isFinite).sort((a,b)=>a-b);
+      if(!values.length)return null;
+      const k=(values.length-1)/2,lo=Math.floor(k),hi=Math.ceil(k);
+      return {turn:i+1,value:(values[lo]+values[hi])/2,n:values.length};
+    }).filter(Boolean)}));
+    const points=series.flatMap(s=>s.points), svgNS="http://www.w3.org/2000/svg";
+    if(!points.length){body.append(node("p","micro","No recorded values available."));return body;}
+    const chart=document.createElementNS(svgNS,"svg");chart.setAttribute("viewBox","0 0 500 205");
+    chart.setAttribute("role","img");chart.setAttribute("aria-label","Median "+unit+" by turn in retained winning and losing replay examples");
+    chart.classList.add("gorge-sample-chart");
+    const max=Math.max(1,...points.map(p=>p.value));
+    for(const s of series){
+      const path=document.createElementNS(svgNS,"polyline");
+      path.setAttribute("points",s.points.map(p=>(40+(p.turn-1)*440/Math.max(1,maxTurn-1))+","+(175-p.value/max*150)).join(" "));
+      path.setAttribute("class","is-"+s.status);chart.append(path);
+      for(const p of s.points){
+        const dot=document.createElementNS(svgNS,"circle");dot.setAttribute("cx",String(40+(p.turn-1)*440/Math.max(1,maxTurn-1)));
+        dot.setAttribute("cy",String(175-p.value/max*150));dot.setAttribute("r","4");dot.setAttribute("class","is-"+s.status);
+        const title=document.createElementNS(svgNS,"title");title.textContent=(s.status==="win"?"Wins":"Losses")+" · turn "+p.turn+" · median "+p.value+" "+unit+" · "+p.n+" games";
+        dot.append(title);chart.append(dot);
+      }
+    }
+    const label=document.createElementNS(svgNS,"text");label.setAttribute("x","40");label.setAttribute("y","198");label.textContent="Turn 1";chart.append(label);
+    const end=document.createElementNS(svgNS,"text");end.setAttribute("x","420");end.setAttribute("y","198");end.textContent="Turn "+maxTurn;chart.append(end);
+    const high=document.createElementNS(svgNS,"text");high.setAttribute("x","2");high.setAttribute("y","28");high.textContent=String(max);chart.append(high);
+    const legend=node("p","gorge-sample-legend");
+    legend.append(node("span","is-win","● Wins"),node("span","is-loss","● Losses"),node("span",null,"Median per observed turn"));
+    body.append(chart,legend);
+    return body;
   }
   function cohortLengthPanel(stats){
     const body=node("div","game-outcome-body gorge-length-histogram");
@@ -669,7 +725,8 @@ function init(){
     paint();
     return details;
   }
-  function presentOutcomeSummary(report,key,sampledCount,ticket){
+  function presentOutcomeSummary(report,key,sampledGames,ticket){
+    const sampledCount=sampledGames.length;
     if(ticket!==requestId||!available.size)return;
     const outcomes=$("game-outcome-results");
     if(!outcomes)return;
@@ -689,7 +746,11 @@ function init(){
       return;
     }
     const oldFrame=outcomes.querySelector(".game-outcome-hero-frame");
-    const hero=cohortStatsPanel(full,oldFrame);
+    const sampleRuns=sampledGames.map(game=>{
+      try{return window.GorgeLegacyAdapter.projectRun(game,game.player_seat,60,{});}
+      catch(error){console.warn("Replay excluded from example chart",error);return null;}
+    }).filter(Boolean);
+    const hero=cohortStatsPanel(full,oldFrame,sampleRuns);
     if(oldFrame)oldFrame.replaceWith(hero);
     else if(grid)grid.prepend(hero);
     else outcomes.prepend(hero);
@@ -787,7 +848,7 @@ function init(){
     // Render the replay details and source-verified headline together, with
     // no intermediate sample-outcome panel or flash of incorrect statistics.
     window.GorgeDashboard?.render(cohort,data.seed,data.player_deck);
-    presentOutcomeSummary(fullReport,data.player_deck,cohort.length,ticket);
+    presentOutcomeSummary(fullReport,data.player_deck,cohort,ticket);
     if(cohort.length<other.length+1){
       const status=$("game-outcome-status");
       if(status)status.textContent+=" · "+(other.length+1-cohort.length)+
