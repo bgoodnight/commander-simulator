@@ -1,0 +1,69 @@
+name: Experimental Gorge hero EBM dataset and smoke fit
+on:
+  push:
+    branches: [analysis/r2-exploratory-elastic-net-20261105]
+    paths:
+      - "tools/gorge_hero_ebm_prototype.py"
+      - "tests/test_gorge_hero_ebm_prototype.py"
+      - ".github/workflows/gorge-hero-ebm-prototype.yml"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  actions: read
+
+jobs:
+  experimental-model:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    strategy:
+      fail-fast: false
+      matrix:
+        hero: [mortarion_current, magnus_premium]
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Fetch source-backed 12-game postmerge experimental artifact
+        env:
+          GH_TOKEN: ${{ github.token }}
+          GH_REPO: ${{ github.repository }}
+          HERO: ${{ matrix.hero }}
+        run: |
+          set -euo pipefail
+          mkdir -p "$RUNNER_TEMP/input"
+          gh run download 42078713545 --name "gorge-precon-postmerge-12-$HERO" --dir "$RUNNER_TEMP/input"
+          test -f "$RUNNER_TEMP/input/results/runs.jsonl"
+          test -d "$RUNNER_TEMP/input/results/native"
+      - name: Install EBM and run tests
+        run: |
+          python -m pip install --disable-pip-version-check "interpret-core>=0.6,<0.8" "numpy>=1.26,<3"
+          python -m unittest tests.test_gorge_hero_ebm_prototype -v
+      - name: Extract experimental features and optionally demo EBM
+        env:
+          HERO: ${{ matrix.hero }}
+        run: |
+          set -euo pipefail
+          python tools/gorge_hero_ebm_prototype.py \
+            --source "$RUNNER_TEMP/input/results" --hero "$HERO" \
+            --output "$RUNNER_TEMP/output" --demo-ebm
+          python - "$RUNNER_TEMP/output/feasibility.json" <<'PY'
+          import json,os,sys
+          r=json.load(open(sys.argv[1]))
+          with open(os.environ["GITHUB_STEP_SUMMARY"],"a") as f:
+              f.write("# Exploratory EBM dataset: "+r["hero"]+"\n\n")
+              f.write("**Experimental / not approved for production inference**\n\n")
+              f.write("Outcome statuses: `"+str(r["coverage"]["outcome_status_counts"])+"`\n\n")
+              f.write("Full native recordings: "+str(r["coverage"]["native_recordings"])+" / "+str(r["coverage"]["source_games"])+"\n\n")
+              f.write("Observed first-decision hands: "+str(r["coverage"]["opening_hand_observed"])+"\n\n")
+              f.write("EBM software smoke: "+r["ebm"]["status"]+"\n\n")
+              f.write("No coefficient, importance, or accuracy claims on tiny samples.\n")
+          PY
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: gorge-ebm-experimental-${{ matrix.hero }}
+          path: ${{ runner.temp }}/output/
+          if-no-files-found: warn
+          retention-days: 14
