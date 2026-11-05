@@ -58,6 +58,7 @@ jobs:
             echo "**$label**" >> "$GITHUB_STEP_SUMMARY"
             echo '```' >> "$GITHUB_STEP_SUMMARY"
             printf '%s\n' "$totals" >> "$GITHUB_STEP_SUMMARY"
+            printf 'R2 inventory %s: %s\n' "$label" "$(printf '%s' "$totals" | tr '\n' ' ')"
             echo '```' >> "$GITHUB_STEP_SUMMARY"
           done
       - name: Preserve a small inventory snapshot as short-lived artifact
