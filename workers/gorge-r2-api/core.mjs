@@ -5,6 +5,20 @@ export const IDENTITY_FIELDS = [
   "player_deck_sha256", "pilot_version", "opponent_panel_sha256",
   "oracle_bulk_sha256", "simulation_protocol_sha256"
 ];
+// PyArrow typically writes integer game fields as Parquet INT64, and
+// hyparquet correctly decodes them as BigInt. Narrow only safe counters.
+export function normalizeRow(row) {
+  const out={...row};
+  for(const key of ["hero_seat","winner_seat","turns","seed"]) {
+    if(typeof out[key]==="bigint") {
+      if(out[key]>BigInt(Number.MAX_SAFE_INTEGER) ||
+         out[key]<BigInt(Number.MIN_SAFE_INTEGER))
+        throw Error("Unsafe Parquet INT64 in "+key);
+      out[key]=Number(out[key]);
+    }
+  }
+  return out;
+}
 export const isDecisive = row => (
   row && row.finished === true && row.replay_verified === true &&
   !row.error && row.draw === false &&
