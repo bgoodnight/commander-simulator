@@ -350,6 +350,9 @@ def build(output, *, catalog_path=SHARED_CATALOG, name_catalog_path=DEFAULT_NAME
             validated.append((source_file, filename))
         target = output / "gorge-data"
         target.mkdir(parents=True, exist_ok=True)
+        # Replays remain selectable for diagnostics. Analytics are a strict
+        # completed decisive subset and cannot borrow full-cohort card insights.
+        safe_manifest = dict(manifest)
         shutil.copy2(manifest_file, target / "manifest.json")
         for source_file, filename in validated:
             shutil.copy2(source_file, target / filename)
@@ -370,7 +373,14 @@ def build(output, *, catalog_path=SHARED_CATALOG, name_catalog_path=DEFAULT_NAME
                            "log" in x or "intents" in x or "objects" in x
                            for x in analytics["games"])):
                 raise ValueError("Unsafe Gorge analytics payload")
-            shutil.copy2(analytics_path, target / "analytics.json")
+            from tools.gorge_cohort_report import make_report, eligible
+            cohort = make_report(analytics["games"])
+            decisive = [row for row in analytics["games"] if eligible(row)]
+            safe_analytics = {**analytics, "games": decisive,
+                              "outcome_population": "decisive_win_loss_only"}
+            (target / "analytics.json").write_text(
+                json.dumps(safe_analytics, separators=(",", ":"), sort_keys=True) + "\n",
+                encoding="utf-8")
             if manifest.get("card_insights_file") is not None:
                 if manifest["card_insights_file"] != "card-insights.json":
                     raise ValueError("Unexpected Gorge insights filename")
@@ -383,11 +393,16 @@ def build(output, *, catalog_path=SHARED_CATALOG, name_catalog_path=DEFAULT_NAME
                         or sum(data.get("verified_games", 0) for data
                                in cards.get("decks", {}).values()) != len(analytics["games"])):
                     raise ValueError("Incomplete or inconsistent source card insights")
-                shutil.copy2(cards_source, target / "card-insights.json")
-            # All high-level Gorge results and exploratory regressions come
-            # from every verified outcome, never the sampled detailed replays.
-            from tools.gorge_cohort_report import make_report
-            cohort = make_report(analytics["games"])
+                # Full-population card features cannot be applied to a
+                # filtered win/loss cohort without reaggregating raw events.
+                if len(decisive) == len(analytics["games"]):
+                    shutil.copy2(cards_source, target / "card-insights.json")
+                else:
+                    safe_manifest.pop("card_insights_file", None)
+            # All headline/model outcomes use decisive verified games only.
+            (target / "manifest.json").write_text(
+                json.dumps(safe_manifest, separators=(",", ":"), sort_keys=True) + "\n",
+                encoding="utf-8")
             validate_labels(display_labels, display_library, cohort)
             (target / "cohort.json").write_text(
                 json.dumps(cohort, separators=(",", ":"), sort_keys=True) + "\n",
