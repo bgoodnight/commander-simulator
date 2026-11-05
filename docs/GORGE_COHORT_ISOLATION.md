@@ -67,3 +67,39 @@ consistency, not correctness of the underlying engine.
 
 The historical data should never be physically deleted solely to implement
 this statistical gate.
+
+## R2 preparation for the next approved cohort
+
+The protected R2 writer is `.github/workflows/gorge-r2-approved-projection.yml`.
+It is **manual only** and rejects missing approval, invalid batch IDs, bad
+source shard digests, and zero approved decisive outcomes. It downloads existing
+immutable `warehouse/v1/<run-attempt>/...` shards, validates all per-shard
+manifests, writes a separate `warehouse/approved/v1/<registry SHA>/<run-attempt>/`
+projection, and uploads `publication.json` **last**. Original R2 objects
+are never overwritten or deleted.
+
+For fresh simulated games after the site/UI is ready, create a **new**
+version-pinned cohort manifest *before* running any games. Include a true
+engine commit, patched rules digest, compiled card corpus hash, hero deck hash,
+pilot version, opponent-panel hash, Oracle bulk digest and protocol digest.
+Use `tools.gorge_cohort_provenance` on fully verified native recordings to
+write `runs-stamped.jsonl` without modifying the source. The warehouse
+exporter accepts `--runs-file runs-stamped.jsonl` and independently checks
+native-recording SHA-256 when supplied.
+
+Only then, following a separate reviewed signoff, may the registry entry be
+changed to `status=current`, `approved=true` with an approval reference.
+The approved-only R2 workflow will otherwise **refuse** to publish. The
+current registry intentionally has no approved cohorts: no historical results
+have been laundered into a new baseline.
+
+The main site is not published by these scripts. Other clients that query
+legacy `warehouse/v1` directly can bypass the protection until routed to
+the `warehouse/approved/v1` prefix. The new Parquet projection is exclusively
+for binary win/loss analytics; draw and turn-cap sources remain in raw R2 or
+individual replay diagnostics.
+
+**Deferred work:** Enable new run generation, publish the first reviewed
+post-fix cohort, and migrate all production R2 query consumers only after
+the UI work is ready. No benchmark reruns or R2 source deletion are part of
+this preparation PR.
