@@ -62,12 +62,23 @@ jobs:
           set -euo pipefail
           count="${{ inputs.games || '12' }}"
           names="$(cat "$RUNNER_TEMP/panel/opponents.txt")"
+          # Gorge exits 2 when any game stalls at the bounded turn cap.
+          # Preserve such games as *incomplete*, never as wins or passes.
+          set +e
           "$RUNNER_TEMP/gorge-probe" -corpus "$RUNNER_TEMP/gorge/.cards" \
             -deck-dir "$RUNNER_TEMP/decks" \
             -hero-deck mortarion_current -opponents "$names" \
             -pilot bot -games "$count" -seed 186000 -max-turns 60 \
             -verify=true -native-dir "$RUNNER_TEMP/results/native" -native-limit 12 \
-            > "$RUNNER_TEMP/results/runs.jsonl"
+            > "$RUNNER_TEMP/results/runs.jsonl" \
+            2> "$RUNNER_TEMP/results/probe-stderr.txt"
+          status=$?
+          set -e
+          if [[ "$status" -ne 0 && "$status" -ne 2 ]]; then
+            cat "$RUNNER_TEMP/results/probe-stderr.txt" >&2
+            exit "$status"
+          fi
+          printf '%s\\n' "$status" > "$RUNNER_TEMP/results/probe-exit-code.txt"
       - name: Report observed results without granting qualification
         env:
           GAME_COUNT: ${{ inputs.games || '12' }}
@@ -89,9 +100,14 @@ jobs:
               opp=[d for i,d in enumerate(r["decks"]) if i!=seat]
               assert len(opp)==3 and len(set(opp))==3 and set(opp)<=pool
               seen.update(opp)
+              if r.get("error"):
+                  raise ValueError("Gorge probe raised an engine error: "+str(r["error"]))
+              if not r.get("finished") and r.get("stall_reason") != "turns":
+                  raise ValueError("Unexpected non-turn-limit Gorge failure")
               status["completed"]+=int(r.get("finished") is True)
               status["replay_verified"]+=int(r.get("replay_verified") is True)
           status["distinct_precons_seen"]=len(seen)
+          status["turn_limit_stalls"]=status["attempted"]-status["completed"]
           (root/"results/qualification-summary.json").write_text(json.dumps(status,indent=2)+"\\n")
           with open(os.environ["GITHUB_STEP_SUMMARY"],"a") as out:
               out.write("# Experimental Gorge precon gameplay\\n\\n")
