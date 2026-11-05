@@ -2374,9 +2374,23 @@
       if(matching){
         const examples=new Map(runs.map(run=>[run.seed,run]));
         const ranked={};
+        const ownNames=Array.isArray(options.deckCardNames)?new Set(options.deckCardNames.map(n=>n.toLowerCase())):null;
+        const typeMatches=(kind,item)=>{
+          if(ownNames&&!ownNames.has(item.name.toLowerCase()))return false;
+          const type=String(options.lookupRecordedCard?.(item.name)?.type_line||"").toLowerCase();
+          if(!ownNames)return true;
+          if(kind==="creature")return /\bcreature\b/.test(type);
+          if(kind==="artifact")return /\bartifact\b/.test(type);
+          if(kind==="enchantment")return /\benchantment\b/.test(type);
+          if(kind==="instant")return /\binstant\b/.test(type);
+          if(kind==="spell")return /\b(instant|sorcery)\b/.test(type);
+          if(kind==="land")return /\bland\b/.test(type)&&!/\bbasic\s+land\b/.test(type);
+          if(kind==="seenCreature")return /\bcreature\b/.test(type);
+          return true;
+        };
         for(const [kind,items] of Object.entries(report.categories)){
           if(!Array.isArray(items))continue;
-          ranked[kind]=items.map(item=>({
+          ranked[kind]=items.filter(item=>typeMatches(kind,item)).map(item=>({
             ...item,
             // Evidence is clickable only for a genuinely retained recording.
             events:(item.exampleEvents||[]).filter(([seed])=>examples.has(seed))
@@ -2406,25 +2420,37 @@
           ...(signals.confirmedTutors?["tutorFound","tutorUsed"]:[])];
       const playedTypes=["played","creature","artifact","enchantment","instant","spell","land"];
       const seenTypes=["seen","seenCreature"];
-      function groupedPlayedPanel(kind,types=playedTypes){
-        const panel=cardPerformancePanel(kind,signals.ranked[kind]||[],
+      function groupedPlayedPanel(kind,types=playedTypes,ascending=false){
+        const source=signals.ranked[kind]||[];
+        const sorted=types===playedTypes?source.slice().sort((a,b)=>
+          (ascending?a.games-b.games:b.games-a.games)||a.name.localeCompare(b.name)):source;
+        const panel=cardPerformancePanel(kind,sorted,
           signals.coverage,groups,{...options,isGorge,tutorSearchCount:signals.confirmedTutors},onReviewRun);
         if(!panel)return null;
         const body=panel.querySelector(".game-outcome-body");
-        const chooser=create("select","gorge-full-cohort-select");
-        chooser.setAttribute("aria-label","Choose card type");
+        const controls=create("div","gorge-card-type-controls");
+        controls.setAttribute("role","group");controls.setAttribute("aria-label","Card type and ranking");
+        const typesMeta={played:["▣","All cards"],creature:["♞","Creatures"],artifact:["⚙","Artifacts"],enchantment:["✦","Enchantments"],instant:["ϟ","Instants"],spell:["✧","Instants and sorceries"],land:["♜","Nonbasic lands"],seen:["▣","All cards"],seenCreature:["♞","Creatures"]};
+        const render=(next,order,focusLabel)=>{
+          const replacement=groupedPlayedPanel(next,types,order);
+          if(replacement){replacement.open=true;panel.replaceWith(replacement);
+            replacement.querySelector('[aria-label="'+focusLabel+'"]')?.focus();}
+        };
         for(const type of types){
           if(!signals.ranked[type]?.length)continue;
-          const option=create("option",null,insightCategoryLabel(type));
-          option.value=type;chooser.appendChild(option);
+          const [icon,label]=typesMeta[type];
+          const button=textButton(icon,"gorge-icon-button",()=>render(type,ascending,label));
+          button.title=label;button.setAttribute("aria-label",label);button.setAttribute("aria-pressed",String(type===kind));controls.appendChild(button);
         }
-        chooser.value=kind;
-        chooser.addEventListener("change",()=>{
-          const replacement=groupedPlayedPanel(chooser.value,types);
-          if(replacement){replacement.open=true;panel.replaceWith(replacement);
-            replacement.querySelector("select")?.focus();}
-        });
-        body.prepend(chooser);
+        if(types===playedTypes){
+          const label=ascending?"Show most played first":"Show least played first";
+          const order=textButton(ascending?"↑":"↓","gorge-icon-button gorge-sort-button",()=>render(kind,!ascending,ascending?"Show least played first":"Show most played first"));
+          order.title=label;order.setAttribute("aria-label",label);order.setAttribute("aria-pressed",String(ascending));controls.appendChild(order);
+          if(ascending)panel.querySelector(".game-outcome-title").textContent="Least played "+(kind==="played"?"card":typesMeta[kind][1].toLowerCase());
+          const note=create("p","micro","Least-played rankings include recorded candidates in this snapshot; cards without recorded plays may be absent.");
+          note.hidden=!ascending;body.prepend(note);
+        }
+        body.prepend(controls);
         return panel;
       }
       for(const kind of kinds){

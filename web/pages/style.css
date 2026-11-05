@@ -2562,3 +2562,21 @@ body:has(#pane-records:not([hidden])) .compact-selection{margin-bottom:3px}
 @media(max-width:720px){
   .gorge-full-cohort-table{font-size:.74rem}
 }
+
+/* Snapshot result dialogs and compact icon controls. */
+.gorge-highlight-button{font:inherit;text-align:left;color:inherit;cursor:pointer}
+.gorge-highlight-button:hover,.gorge-highlight-button:focus-visible{border-color:#dbc18d;background:#263c3b}
+.gorge-cohort-dialog{width:min(720px,calc(100vw - 24px));max-height:min(85vh,800px);overflow:auto}
+.gorge-dialog-footer{display:flex;justify-content:center;padding:12px 18px 16px;border-top:1px solid #776b4a55}
+.gorge-dialog-footer .game-outcome-detail-close{position:static}
+.gorge-cohort-dialog .gorge-full-cohort-groups>summary{display:none}
+.gorge-compare-tools,.gorge-card-type-controls{display:flex;align-items:center;gap:7px;flex-wrap:wrap;margin-bottom:12px}
+.gorge-icon-button{display:inline-grid;place-items:center;width:39px;height:39px;border:1px solid #786d52;border-radius:9px;background:#172b2e;color:#d7c49e;font-size:1.2rem;cursor:pointer}
+.gorge-icon-button[aria-pressed="true"]{background:#b39967;color:#112326;border-color:#e6d1a4}
+.gorge-icon-button:focus-visible,.gorge-compare-info>summary:focus-visible{outline:2px solid #ebd5a1;outline-offset:2px}
+.gorge-compare-info{position:relative;margin-left:auto}.gorge-compare-info>summary{cursor:pointer;list-style:none;font-size:1.1rem;color:#d5c397}
+.gorge-compare-info p{position:absolute;z-index:4;right:0;top:24px;width:min(280px,72vw);padding:12px;background:#1b3032;border:1px solid #9b8965;border-radius:9px;box-shadow:0 5px 15px #0009}
+.gorge-compare-list{display:grid;gap:12px;max-height:225px;overflow-y:auto;padding-right:6px}
+.gorge-compare-row{display:grid;gap:6px;min-height:58px}.gorge-compare-caption{display:flex;justify-content:space-between;gap:12px;font-size:.78rem}
+.gorge-compare-caption span{color:#cbd1c8;white-space:nowrap}.gorge-compare-track{display:flex;height:10px;border-radius:8px;overflow:hidden;background:#425554}
+.gorge-compare-win{background:#77ac8d}.gorge-compare-loss{background:#c07b78}

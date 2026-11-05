@@ -381,6 +381,7 @@
       isGorge:true,
       reviewerRoot:reviewer,reviewerPanel:panel,
       lookupRecordedCard:cardInfo,
+      deckCardNames:selected.cardNames,
       renderMana:value=>window.GorgeDeckLabMana?.(value),
       onOpenRecordedCard:name=>window.GorgeDeckLabOpenCard?.(name),
       fullCardInsights:window.__gorgeCardInsights?.[key]||null,

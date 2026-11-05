@@ -513,34 +513,39 @@ function init(){
       .filter(group=>group.wins+group.losses>=10)
       .sort((a,b)=>b.wins/(b.wins+b.losses)-a.wins/(a.wins+a.losses)||b.n-a.n);
     summary.append(copy);panel.append(summary);
-    const body=node("div","game-outcome-body");
-    for(const [state,label,count] of [
-      ["win","Wins",stats.wins],["loss","Losses",stats.losses]]){
-      const line=node("div","game-outcome-bucket is-"+state);
-      line.append(node("strong",null,label),
-        node("span",null,count+" / "+decisive));
-      const lineBar=node("span","game-outcome-bucket-bar");
-      lineBar.style.width=cohortPercent(decisive?count/decisive:0);
-      line.append(lineBar);body.append(line);
+    panel.append(node("div","game-outcome-body"));frame.append(panel);
+    const dialog=node("dialog","game-outcome-detail-dialog gorge-cohort-dialog");
+    dialog.setAttribute("aria-label","Game results details");
+    const surface=node("div","game-outcome-detail-surface");
+    const header=node("div","game-outcome-detail-header");
+    const heading=node("h2","game-outcome-detail-heading");
+    header.append(heading);
+    const content=node("div","game-outcome-detail-content");
+    const footer=node("div","gorge-dialog-footer");
+    const close=node("button","game-outcome-detail-close","✕");
+    close.type="button";close.setAttribute("aria-label","Close details");footer.append(close);
+    surface.append(header,content,footer);dialog.append(surface);frame.append(dialog);
+    let trigger=null;
+    const dismiss=()=>{if(dialog.open)dialog.close();else dialog.removeAttribute("open");trigger?.focus();};
+    close.addEventListener("click",dismiss);
+    dialog.addEventListener("close",()=>trigger?.focus());
+    dialog.addEventListener("click",event=>{if(event.target===dialog)dismiss();});
+    function openDetails(label,body,source){
+      trigger=source;heading.textContent=label;content.replaceChildren(body);
+      if(typeof dialog.showModal==="function")dialog.showModal();else dialog.setAttribute("open","");
+      close.focus();
     }
-    if(!stats.draws&&Array.isArray(stats.wilson_95))
-      body.append(node("p","micro",
-        "Descriptive Wilson 95% win-rate interval: "+
-        cohortPercent(stats.wilson_95[0])+"–"+
-        cohortPercent(stats.wilson_95[1])+
-        ". Games may be dependent because pods and seeds are systematically rotated."));
-    panel.append(body);frame.append(panel);
-    for(const [label,value,detail,content] of [
+    summary.addEventListener("click",event=>{event.preventDefault();openDetails("Game outcomes",cohortComparePanel(stats),summary);});
+    for(const [label,value,detail,body] of [
       ["Best matchup",ranked.length?cohortPercent(ranked[0].wins/(ranked[0].wins+ranked[0].losses)):"—",
         ranked.length?deckName(ranked[0].name)+" · "+(ranked[0].wins+ranked[0].losses)+" games":"No supported opponent group",cohortGroupPanel(stats)],
       ["Game length",stats.median_game_turns==null?"—":String(stats.median_game_turns),
         "Median recorded game turns",cohortLengthPanel(stats)],
       ...sampleHighlightRows(sampleRuns)]){
-      const tile=node("details","game-outcome-hero-highlight gorge-highlight-details");
-      const heading=node("summary");
-      heading.append(node("span",null,label),node("strong",null,value),node("small",null,detail));
-      if(content.tagName==="DETAILS")content.open=true;
-      tile.append(heading,content);highlights.append(tile);
+      const tile=node("button","game-outcome-hero-highlight gorge-highlight-button");tile.type="button";
+      tile.append(node("span",null,label),node("strong",null,value),node("small",null,detail));
+      if(body.tagName==="DETAILS")body.open=true;
+      tile.addEventListener("click",()=>openDetails(label,body,tile));highlights.append(tile);
     }
     frame.append(highlights);
     return frame;
@@ -615,6 +620,37 @@ function init(){
       track.append(fill);row.append(node("span",null,String(item.turns)),track,node("strong",null,String(item.games)));chart.append(row);
     }
     body.append(chart);return body;
+  }
+  function cohortComparePanel(stats){
+    const root=node("div","gorge-compare-panel");
+    const tools=node("div","gorge-compare-tools");
+    const make=(symbol,label)=>{const b=node("button","gorge-icon-button",symbol);b.type="button";b.setAttribute("aria-label",label);b.title=label;return b;};
+    const deck=make("▣","Compare by opponent deck"),color=make("☀","Compare by opponent color");
+    const desc=make("↓","Sort highest win rate first"),asc=make("↑","Sort lowest win rate first");
+    const info=node("details","gorge-compare-info");const infoSummary=node("summary",null,"ⓘ");infoSummary.setAttribute("aria-label","How matchup rates are calculated");info.append(infoSummary,node("p","micro","Each table is counted once for every listed deck or color present among the three opponents. A table can appear in multiple rows. Percentages are wins and losses among decisive games, not head-to-head effects."));
+    tools.append(deck,color,desc,asc,info);root.append(tools);
+    const list=node("div","gorge-compare-list");root.append(list);
+    let mode="opponents",ascending=false;
+    function paint(){
+      for(const [b,on] of [[deck,mode==="opponents"],[color,mode==="colors"],[desc,!ascending],[asc,ascending]])b.setAttribute("aria-pressed",String(on));
+      list.replaceChildren();
+      const rows=(stats.groups?.[mode]||[]).filter(x=>x.wins+x.losses>0).slice().sort((a,b)=>{
+        const av=a.wins/(a.wins+a.losses),bv=b.wins/(b.wins+b.losses);
+        return (ascending?av-bv:bv-av)||groupName(mode,a.name).localeCompare(groupName(mode,b.name));
+      });
+      if(!rows.length){list.append(node("p","micro","No matchup results available."));return;}
+      for(const item of rows){
+        const total=item.wins+item.losses,rate=item.wins/total,row=node("div","gorge-compare-row");
+        const caption=node("div","gorge-compare-caption");
+        caption.append(node("strong",null,groupName(mode,item.name)),node("span",null,cohortPercent(rate)+" · "+total+" games"));
+        const track=node("div","gorge-compare-track");track.setAttribute("role","img");track.setAttribute("aria-label",item.wins+" wins, "+item.losses+" losses");
+        const wins=node("span","gorge-compare-win"),losses=node("span","gorge-compare-loss");
+        wins.style.width=cohortPercent(rate);losses.style.width=cohortPercent(1-rate);track.append(wins,losses);
+        row.append(caption,track);list.append(row);
+      }
+    }
+    deck.onclick=()=>{mode="opponents";paint();};color.onclick=()=>{mode="colors";paint();};
+    desc.onclick=()=>{ascending=false;paint();};asc.onclick=()=>{ascending=true;paint();};paint();return root;
   }
   function cohortGroupPanel(stats){
     const details=node("details",

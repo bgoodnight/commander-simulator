@@ -46,39 +46,56 @@ def check():
                 assert baseline.get_attribute('aria-label') == '25 percent equal-chance four-player baseline'
                 offset = baseline.evaluate('(e) => (e.getBoundingClientRect().left + e.getBoundingClientRect().width / 2 - e.parentElement.getBoundingClientRect().left) / e.parentElement.getBoundingClientRect().width')
                 assert abs(offset - .25) < .005
-                tiles = hero.locator('.gorge-highlight-details')
+                dialog = hero.locator('.gorge-cohort-dialog')
+                hero.locator('.game-outcome-hero-summary').click()
+                assert dialog.is_visible()
+                assert dialog.locator('.gorge-compare-row').count() >= 3
+                assert dialog.get_by_label('Compare by opponent deck').get_attribute('aria-pressed') == 'true'
+                assert dialog.get_by_label('Sort highest win rate first').get_attribute('aria-pressed') == 'true'
+                dialog.get_by_label('Sort lowest win rate first').click()
+                assert dialog.get_by_label('Sort lowest win rate first').get_attribute('aria-pressed') == 'true'
+                dialog.get_by_label('Compare by opponent color').click()
+                assert dialog.get_by_label('Compare by opponent color').get_attribute('aria-pressed') == 'true'
+                assert dialog.get_by_label('Compare by opponent deck').get_attribute('aria-pressed') == 'false'
+                assert dialog.locator('.gorge-compare-row').count() > 0
+                dialog.get_by_label('How matchup rates are calculated').click()
+                assert 'multiple rows' in dialog.inner_text()
+                page.screenshot(path=str(OUT/(name+'-outcomes.png')))
+                dialog.get_by_label('Close details').click()
+                assert not dialog.is_visible()
+                tiles = hero.locator('.gorge-highlight-button')
                 assert tiles.count() == 4
-                tiles.nth(0).locator('summary').first.click()
-                matchup = tiles.nth(0)
-                assert matchup.locator('table tbody tr').count() > 0
-                assert 'Deadly Disguise' in matchup.inner_text()
-                assert 'deadly-disguise' not in matchup.inner_text()
-                selector = matchup.get_by_label('Compare full-cohort performance by')
+                tiles.nth(0).click()
+                assert dialog.locator('table tbody tr').count() > 0
+                assert 'Deadly Disguise' in dialog.inner_text()
+                selector = dialog.get_by_label('Compare full-cohort performance by')
                 selector.select_option('identities')
-                assert matchup.locator('table tbody tr').count() > 0
-                tiles.nth(0).locator('summary').first.click()
-                tiles.nth(1).locator('summary').first.click()
-                tiles.nth(2).locator('summary').first.click()
-                assert tiles.nth(2).locator('.gorge-sample-chart').count() == 1
-                tiles.nth(2).locator('summary').first.click()
-                tiles.nth(3).locator('summary').first.click()
-                assert tiles.nth(3).locator('.gorge-sample-chart').count() == 1
-                page.evaluate('window.scrollTo(0,0)')
-                page.screenshot(path=str(OUT/(name+'-life.png')), full_page=True)
-                tiles.nth(3).locator('summary').first.click()
-                assert tiles.nth(1).locator('.game-outcome-finish-row').count() > 0
-                tiles.nth(1).locator('summary').first.click()
+                assert dialog.locator('table tbody tr').count() > 0
+                page.keyboard.press('Escape')
+                assert not dialog.is_visible()
+                tiles.nth(1).click()
+                assert dialog.locator('.game-outcome-finish-row').count() > 0
+                dialog.get_by_label('Close details').click()
+                for index in (2,3):
+                    tiles.nth(index).click()
+                    assert dialog.locator('.gorge-sample-chart').count() == 1
+                    if index == 3:
+                        page.screenshot(path=str(OUT/(name+'-life.png')))
+                    dialog.get_by_label('Close details').click()
                 insight = page.locator('#game-outcome-results .insight-featured-panel').first
                 insight.locator('summary').first.click()
-                chooser = insight.get_by_label('Choose card type')
-                assert chooser.is_visible()
-                chooser.select_option('creature')
+                assert insight.get_by_role('button', name='All cards').get_attribute('aria-pressed') == 'true'
+                insight.get_by_role('button', name='Creatures').click()
                 replacement = page.locator('#game-outcome-results .insight-featured-panel').first
                 assert 'Most played creature' in replacement.locator('summary').first.inner_text()
+                replacement.get_by_role('button', name='Show least played first').click()
+                replacement = page.locator('#game-outcome-results .insight-featured-panel').first
+                assert 'Least played' in replacement.locator('summary').first.inner_text()
+                assert 'may be absent' in replacement.inner_text()
                 replacement.locator('summary').first.click()
                 seen = page.locator('#game-outcome-results .insight-featured-panel').filter(has_text='Most frequently seen card').first
                 seen.locator('summary').first.click()
-                seen.get_by_label('Choose card type').select_option('seenCreature')
+                seen.get_by_role('button',name='Creatures').click()
                 seen_selected = page.locator('#game-outcome-results .insight-featured-panel').filter(has_text='Most frequently seen creature').first
                 assert seen_selected.is_visible()
                 seen_selected.locator('summary').first.click()
@@ -91,8 +108,9 @@ def check():
                 assert page.locator('#turn-reviewer-panel').is_visible()
                 page.evaluate('window.scrollTo(0,0)')
                 page.screenshot(path=str(OUT/(name+'-results.png')), full_page=True)
-                tiles.nth(0).locator('summary').first.click()
-                page.screenshot(path=str(OUT/(name+'-matchups.png')), full_page=True)
+                tiles.nth(0).click()
+                page.screenshot(path=str(OUT/(name+'-matchups.png')))
+                dialog.get_by_label('Close details').click()
                 page.close()
             browser.close()
         assert not errors, errors
