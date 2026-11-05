@@ -16,11 +16,20 @@ func TestMortarionGuaranteedLifeLossAndMana(t *testing.T) {
   e := newSeats(t, 2)
   // Inject the shared corpus repair into this isolated control scenario.
   // The production probe uses the same token definition.
-  script:=[]byte("Name:Astartes Warrior Token\\nTypes:Creature Astartes Warrior\\nColors:B\\nPT:2/2\\nK:Menace\\nOracle:Token\\n")
+  script:=[]byte("Name:Astartes Warrior Token\nTypes:Creature Astartes Warrior\nColors:B\nPT:2/2\nK:Menace\nOracle:Token\n")
   token,diags:=cards.ParseBytes("b_2_2_astartes_warrior_menace",script)
   if token==nil||len(diags)>0 {t.Fatalf("Token parse: %v",diags)}
   if diags:=token.Link();len(diags)>0 {t.Fatalf("Token link: %v",diags)}
-  for _,face:=range token.Faces {face.ApplyIntrinsics()}
+  for _,face:=range token.Faces {
+    face.ApplyIntrinsics()
+    if face.Power()!=2 || face.Toughness()!=2 ||
+      !strings.Contains(strings.Join(face.Types," "),"Astartes") ||
+      !strings.Contains(strings.Join(face.Types," "),"Warrior") ||
+      !strings.Contains(strings.Join(face.Keywords," "),"Menace") {
+      t.Fatalf("Invalid Astartes characteristics: name=%q types=%v power=%d toughness=%d keywords=%v",
+        face.Name,face.Types,face.Power(),face.Toughness(),face.Keywords)
+    }
+  }
   if e.G.Tokens==nil {e.G.Tokens=make(map[string]*cards.Card)}
   e.G.Tokens["b_2_2_astartes_warrior_menace"]=token
   // Enter the first main phase before placing Mortarion, so the fixture
