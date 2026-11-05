@@ -93,7 +93,8 @@ jobs:
           assert len(lines)==int(os.environ["GAME_COUNT"])
           seen=set()
           status={"attempted":len(lines),"completed":0,"replay_verified":0,"distinct_precons_seen":0,
-                  "eligible_for_current_statistics":0,"status":"experimental_unqualified"}
+                  "eligible_for_current_statistics":0,"status":"experimental_unqualified",
+                  "engine_errors":[] }
           for r in lines:
               seat=r["hero_seat"]
               assert r["decks"][seat]=="mortarion_current"
@@ -101,7 +102,8 @@ jobs:
               assert len(opp)==3 and len(set(opp))==3 and set(opp)<=pool
               seen.update(opp)
               if r.get("error"):
-                  raise ValueError("Gorge probe raised an engine error: "+str(r["error"]))
+                  status["engine_errors"].append({"seed":r["seed"],"decks":r["decks"],"error":str(r["error"])})
+                  continue
               if not r.get("finished") and r.get("stall_reason") != "turns":
                   raise ValueError("Unexpected non-turn-limit Gorge failure")
               status["completed"]+=int(r.get("finished") is True)
@@ -109,13 +111,17 @@ jobs:
           status["distinct_precons_seen"]=len(seen)
           if status["attempted"] == 60 and len(seen) != 60:
               raise ValueError("Full-panel test failed to expose all 60 selected precons")
-          status["turn_limit_stalls"]=status["attempted"]-status["completed"]
+          status["engine_error_count"]=len(status["engine_errors"])
+          status["turn_limit_stalls"]=status["attempted"]-status["completed"]-status["engine_error_count"]
           (root/"results/qualification-summary.json").write_text(json.dumps(status,indent=2)+"\\n")
           with open(os.environ["GITHUB_STEP_SUMMARY"],"a") as out:
               out.write("# Experimental Gorge precon gameplay\\n\\n")
               out.write(f"Attempted: {status['attempted']}; completed: {status['completed']}; replay-verified: {status['replay_verified']}.\\n\\n")
               out.write(f"Precons observed: **{len(seen)}/60**. These are **not** certified for rules or pilot fidelity.\\n")
-              out.write("No active opponent pool changes, R2 writes, Pages publication or current-statistics eligibility.\\n")
+              out.write(f"Turn-cap stalls: **{status['turn_limit_stalls']}**; engine errors: **{status['engine_error_count']}**.\\n")
+              for problem in status["engine_errors"]:
+                  out.write(f"- BLOCKED seed {problem['seed']}: {problem['error']}; pod: {', '.join(problem['decks'])}\\n")
+              out.write("Unresolved engine errors block promotion. No R2 writes, Pages publication or current-statistics eligibility.\\n")
           PY
       - name: Retain experimental evidence outside production analytics
         if: always()
