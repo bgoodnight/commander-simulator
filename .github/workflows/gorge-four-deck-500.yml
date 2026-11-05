@@ -151,7 +151,12 @@ jobs:
             "$folder/pod.json" docs/deck-lab/decks.json "$folder/card-insights.json"
           # Preserve ALL authoritative Gorge recordings before the existing
           # two-per-shard replay pruning. No credentials are printed.
-          # A missing Cloudflare configuration preserves legacy behavior.
+          # Fail closed: never prune 98 of 100 native recordings unless the
+          # complete native archive and warehouse can be uploaded to R2.
+          if [[ -z "${R2_ACCOUNT_ID}" || -z "${R2_ACCESS_KEY_ID}" || -z "${R2_SECRET_ACCESS_KEY}" ]]; then
+            echo "::error::All GORGE_R2_* credentials are required before pruning native recordings"
+            exit 1
+          fi
           if [[ -n "${R2_ACCOUNT_ID}" || -n "${R2_ACCESS_KEY_ID}" || -n "${R2_SECRET_ACCESS_KEY}" ]]; then
             if [[ -z "${R2_ACCOUNT_ID}" || -z "${R2_ACCESS_KEY_ID}" || -z "${R2_SECRET_ACCESS_KEY}" ]]; then
               echo "::error::Incomplete Gorge R2 credentials"
@@ -186,8 +191,6 @@ jobs:
               "s3://gorge-simulations/warehouse/v1/${GITHUB_RUN_ID}-${GITHUB_RUN_ATTEMPT}/$DECK/$SHARD/" \
               --recursive --no-progress
             echo "Uploaded full-cohort Parquet games/events for $DECK shard $SHARD." >> "$GITHUB_STEP_SUMMARY"
-          else
-            echo "::notice::R2 not configured; only two native recordings per shard will be retained."
           fi
           python - "$folder" <<'PY'
           import json,sys
