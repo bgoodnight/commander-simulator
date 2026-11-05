@@ -36,6 +36,14 @@ Historical/unversioned data stays excluded. The registry currently has zero
 approved current cohorts, so the correct live response is
 `awaiting_cohort_approval` if source shards exist.
 
+## Draft approved game-detail and event-segment endpoints (PR #175)
+
+- `GET /v1/games/{encoded_game_id}?deck=<deck>`: a single approved-current decisive game's public-safe metadata. Encode the complete game ID as a URL path segment (including its slashes), and send the selected hero deck separately.
+- `GET /v1/games/{encoded_game_id}/timeline?deck=<deck>`: a bounded **event-family segment preview**. Segments begin at native Gorge kind 9 (`turn_change`), not necessarily the start of a complete player round. The response reports counts per kind for non-secret events, withheld-event counts, and segment sequence bounds. It does not expose individual actions, cards, object IDs, event JSON, player-private zones, or native intents.
+- Both endpoints require source-backed explicit cohort approval. An empty current registry fails closed, returning no game. They are a development preview, **not** a complete replay UI.
+- The timeline reader projects only `game_id`, `seq`, `kind_id`, and `secret` from private `events.parquet`, with a 16 MiB / 100,000-event shard guard. Larger shards require a separate indexed projection architecture; do not relax limits without benchmarking.
+- Do not claim complete native timeline coverage for a game until its R2 source and full segment count have been validated. The authoritative recording remains private and immutable.
+
 ## Deploy and benchmark
 
 1. Create an account-scoped Cloudflare API token with **Edit Cloudflare
