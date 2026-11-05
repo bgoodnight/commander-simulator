@@ -32,6 +32,7 @@ func TestMortarionGuaranteedLifeLossAndMana(t *testing.T) {
     e.LifeLostThisTurn(0),e.G.Players[0].Pool.Total())
   t.Logf("AT_ENDSTEP turn=%d phase=%v stack=%d pending=%v",e.G.Turn,
     e.G.Step,len(e.G.Stack),e.Pending())
+  sourceEventStart := len(e.L.Events)
   chosenX:=false
   paid:=false
   for i:=0;i<80;i++ {
@@ -74,6 +75,10 @@ func TestMortarionGuaranteedLifeLossAndMana(t *testing.T) {
     if o.Face()!=nil && len(o.Face().Name)>0 {
       t.Logf("TOKEN name=%q zone=%v owner=%v",o.Face().Name,o.Zone,o.Owner)
     }
+  }
+  for _,event:=range e.L.Events[sourceEventStart:] {
+    t.Logf("POST_EVENT kind=%v obj=%d player=%d amount=%d text=%q to=%v",
+      event.Kind,event.Obj,event.Player,event.Amount,event.Text,event.To)
   }
   t.Logf("RESULT token_count=%d life=%d loss=%d mana=%d",
     tokens,e.G.Players[0].Life,e.LifeLostThisTurn(0),e.G.Players[0].Pool.Total())
