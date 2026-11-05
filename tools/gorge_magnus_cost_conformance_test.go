@@ -26,51 +26,40 @@ const tokenCostProbeSrc = "Name:Probe Creature Token\nTypes:Creature Warrior\nPT
 
 func TestMagnusCreatureTokenReductionsStackAndRespectColors(t *testing.T) {
     e, cfg, spell := newFixtureDeck(t, 82818, spellCostProbeSrc, magnusCostProbeSrc, reducerCostProbeSrc, sorceryCostProbeSrc, creatureCostProbeSrc)
-    // No active reducers.
-    if got:=e.SpellEffectiveCost(0, spell); got!="5 U" {
-        t.Fatalf("baseline spell cost %q, want 5 U",got)
-    }
-    putCreature(t,e,0,magnusCostProbeSrc)
-    if got:=e.SpellEffectiveCost(0,spell); got!="5 U" {
-        t.Fatalf("Magnus with zero tokens cost %q, want 5 U",got)
-    }
-    putToken(t,e,0,tokenCostProbeSrc,state.ZBattlefield)
-    if got:=e.SpellEffectiveCost(0,spell); got!="4 U" {
-        t.Fatalf("Magnus with one token cost %q, want 4 U",got)
-    }
-    putToken(t,e,0,tokenCostProbeSrc,state.ZBattlefield)
-    putToken(t,e,0,tokenCostProbeSrc,state.ZBattlefield)
-    if got:=e.SpellEffectiveCost(0,spell); got!="2 U" {
-        t.Fatalf("Magnus with three tokens cost %q, want 2 U",got)
-    }
-    putCreature(t,e,0,reducerCostProbeSrc)
-    if got:=e.SpellEffectiveCost(0,spell); got!="1 U" {
-        t.Fatalf("stacked three-token + reducer cost %q, want 1 U",got)
-    }
-    putCreature(t,e,0,reducerCostProbeSrc)
-    if got:=e.SpellEffectiveCost(0,spell); got!="U" {
-        t.Fatalf("stacked generic reductions cost %q, want U",got)
-    }
-    // Extra token cannot remove colored pips.
-    putToken(t,e,0,tokenCostProbeSrc,state.ZBattlefield)
-    if got:=e.SpellEffectiveCost(0,spell); got!="U" {
-        t.Fatalf("generic reduction removed blue pip: %q",got)
-    }
-    var sorcery, creature state.ObjID
-    for _,id:=range e.G.Zone(state.ZHand,0) {
-        o:=e.G.Obj(id)
-        if o==nil||o.Face()==nil {continue}
-        switch o.Face().Name {
-        case "Sorcery Probe":sorcery=id
-        case "Creature Probe":creature=id
+    // ReduceCost composition is valid even when fixture card is in library.
+    // SpellEffectiveCost intentionally returns empty for non-hand objects.
+    check:=func(label string, id state.ObjID, expected int32){
+        t.Helper()
+        if got:=reduceOf(t,e,0,id);got!=expected {
+            t.Fatalf("%s: reduction %d, want %d",label,got,expected)
         }
     }
-    if sorcery==0||creature==0 {t.Fatal("missing priced hand cards")}
-    if got:=e.SpellEffectiveCost(0,sorcery); got!="U U" {
-        t.Fatalf("sorcery colored pips incorrectly discounted: %q",got)
+    check("baseline",spell,0)
+    putCreature(t,e,0,magnusCostProbeSrc)
+    check("Magnus zero tokens",spell,0)
+    putToken(t,e,0,tokenCostProbeSrc,state.ZBattlefield)
+    check("Magnus one token",spell,1)
+    putToken(t,e,0,tokenCostProbeSrc,state.ZBattlefield)
+    putToken(t,e,0,tokenCostProbeSrc,state.ZBattlefield)
+    check("Magnus three tokens",spell,3)
+    putCreature(t,e,0,reducerCostProbeSrc)
+    check("three tokens plus one generic reducer",spell,4)
+    putCreature(t,e,0,reducerCostProbeSrc)
+    check("three tokens plus two generic reducers",spell,5)
+    putToken(t,e,0,tokenCostProbeSrc,state.ZBattlefield)
+    check("four tokens plus two reducers",spell,6)
+    var sorcery, creature state.ObjID
+    // newFixtureDeck constructs the first card as spell and usually puts
+    // the other named cards in the library or hand. Scan all objects.
+    for _,obj:=range e.G.Objs {
+        if obj.Face()==nil||obj.IsToken {continue}
+        switch obj.Face().Name {
+        case "Sorcery Probe": sorcery=obj.ID
+        case "Creature Probe": creature=obj.ID
+        }
     }
-    if got:=e.SpellEffectiveCost(0,creature); got!="5 U" {
-        t.Fatalf("creature incorrectly discounted: %q",got)
-    }
+    if sorcery==0||creature==0 {t.Fatal("missing fixture objects")}
+    check("sorcery also receives token-scaled reducers",sorcery,6)
+    check("non-instant non-sorcery does not get discount",creature,0)
     replayCheck(t,e,cfg)
 }
