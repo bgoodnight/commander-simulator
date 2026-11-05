@@ -58,6 +58,23 @@ def make_report(catalog=DEFAULT, as_of="2026-11-05", shortlist=TARGET):
         (released if datetime.date.fromisoformat(d["release_date"])<=cutoff else future).append(d)
     if not released:
         raise ValueError("No released candidates on the cutoff")
+    # Product variants sometimes contain identical playable 100-card decks.
+    # Count them as one deck for diversity/benchmark sampling while retaining
+    # all source product identities and provenance.
+    signatures={}
+    duplicate_variants=[]
+    unique_released=[]
+    for d in released:
+        identity=(d["commander"],tuple(sorted((c["name"],c["count"]) for c in d["cards"])))
+        first=signatures.get(identity)
+        if first:
+            duplicate_variants.append({"retained_key":first,"duplicate_key":d["key"],
+                                       "duplicate_name":d["name"]})
+        else:
+            signatures[identity]=d["key"]
+            unique_released.append(d)
+    released_all=released
+    released=unique_released
     profiles=[profile(d) for d in released]
     profile_map={p["key"]:p for p in profiles}
     card_sets={d["key"]:{c["name"] for c in d["cards"]} for d in released}
@@ -107,7 +124,9 @@ def make_report(catalog=DEFAULT, as_of="2026-11-05", shortlist=TARGET):
         "schema":"gorge-precon-descriptive-coverage-v1",
         "as_of":as_of,"source_commit":raw["source"]["commit"],
         "source_catalog_count":len(raw["decks"]),
-        "released_count":len(released),"future_count":len(future),
+        "released_count":len(released_all),"future_count":len(future),
+        "distinct_decklists":len(released),
+        "duplicate_product_variants":duplicate_variants,
         "future_decks":[{"key":d["key"],"name":d["name"],"release_date":d["release_date"]} for d in future],
         "unique_card_names":len(card_freq),"unique_commanders":len(names),
         "duplicate_commander_names":{n:k for n,k in sorted(names.items()) if k>1},
