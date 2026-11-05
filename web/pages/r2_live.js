@@ -75,12 +75,12 @@
       const response=await fetch(endpoint.toString(),{cache:"no-store"});
       if(!response.ok)throw Error("Worker returned HTTP "+response.status);
       const data=await response.json();
-      if(ticket!==seq || data.deck!==selected || data.schema!=="gorge-r2-live-summary-v1")
-        return;
+      if(ticket!==seq)return;
+      if(data.deck!==selected || data.schema!=="gorge-r2-live-summary-v1")
+        throw Error("Unexpected R2 response schema");
       render(data,Math.round(performance.now()-started));
     }catch(err){
       if(ticket!==seq)return;
-      inFlight=false;
       const message=el("p","micro","R2 live query unavailable; existing published UI remains available. "+String(err.message||err));
       const retry=el("button","game-outcome-refresh","Try again");
       retry.type="button";retry.addEventListener("click",()=>refresh(true));
