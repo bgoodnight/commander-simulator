@@ -27,6 +27,32 @@ def check():
     if omniscient:
         assert manifest["visibility"]=="omniscient"
         assert manifest["synthetic_simulation_only"] is True
+    if manifest.get("eligibility")=="approved_current_only" and not manifest["games"]:
+        # The native fixture recordings are intentionally historical. Until
+        # a rules-versioned cohort is approved, the public selector is empty
+        # rather than silently promoting obsolete simulations.
+        cohort=json.loads((ROOT/"gorge-data"/"cohort.json").read_text())
+        assert cohort["total_verified_games"]==0
+        assert cohort["eligibility"]["eligible_count"]==0
+        assert not (ROOT/"gorge-data"/"card-insights.json").exists()
+        server=ThreadingHTTPServer(("127.0.0.1",0),Handler)
+        server.daemon_threads=True
+        Thread(target=server.serve_forever,daemon=True).start()
+        try:
+            with sync_playwright() as p:
+                browser=p.chromium.launch(headless=True)
+                page=browser.new_page(viewport={"width":1280,"height":900})
+                site=f"http://127.0.0.1:{server.server_port}/results.html"
+                page.goto(site+"?deck=mortarion_current",wait_until="domcontentloaded",timeout=60000)
+                page.wait_for_timeout(1200)
+                assert page.locator("#gorge-replay-sample-select option").count()==0
+                assert page.locator("#game-outcome-results .game-outcome-hero").count()==0
+                browser.close()
+        finally:
+            server.shutdown()
+            server.server_close()
+        print("PASS: archived Gorge results are unavailable in current browser selectors")
+        return
     assert {g["seed"] for g in manifest["games"]}=={300,301}
     errors=[]
     server=ThreadingHTTPServer(("127.0.0.1",0),Handler)
