@@ -94,7 +94,7 @@ async function readEventSegments(bucket,shard,manifest,gameId) {
   const expected=manifest.files?.["events.parquet"];
   if(!expected || !Number.isInteger(expected.rows) || expected.rows>100000)
     throw Error("event_count_limit");
-  const key=shard.manifestKey.replace(/manifest\\.json$/,"events.parquet");
+  const key=shard.manifestKey.replace(/manifest\.json$/,"events.parquet");
   const info=await bucket.head(key);
   if(!info || info.size!==expected.bytes || info.size>MAX_OBJECT_SIZE)
     throw Error("event_parquet_unavailable");
