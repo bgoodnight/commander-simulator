@@ -1,0 +1,103 @@
+name: Preserve legacy Python simulation archive in private R2
+
+# Independent historical migration: no Gorge simulation, replay publication,
+# or queries against live private warehouse/native data.
+on:
+  pull_request:
+    paths:
+      - "tools/archive_legacy_python.py"
+      - "tests/test_archive_legacy_python.py"
+      - ".github/workflows/legacy-python-r2-backup.yml"
+  push:
+    branches: [main]
+    paths:
+      - "tools/archive_legacy_python.py"
+      - ".github/workflows/legacy-python-r2-backup.yml"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: archive-legacy-python-v1
+  cancel-in-progress: false
+
+jobs:
+  archive:
+    runs-on: ubuntu-latest
+    timeout-minutes: 35
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Validate legacy publishing and archive-backup contracts
+        run: |
+          python -m unittest tests.test_archive_legacy_python tests.test_simulation_publishing -v
+      - name: Build deterministic, checksum-verified historical backup
+        if: github.event_name != 'pull_request'
+        run: |
+          set -euo pipefail
+          python -m tools.archive_legacy_python \
+            --source web/pages/data/simulation-archive \
+            --out "$RUNNER_TEMP/legacy-python"
+      - name: Upload to isolated immutable R2 legacy namespace and verify readback
+        if: github.event_name != 'pull_request'
+        shell: bash
+        env:
+          R2_ACCOUNT_ID: ${{ secrets.GORGE_R2_ACCOUNT_ID }}
+          R2_ACCESS_KEY_ID: ${{ secrets.GORGE_R2_ACCESS_KEY_ID }}
+          R2_SECRET_ACCESS_KEY: ${{ secrets.GORGE_R2_SECRET_ACCESS_KEY }}
+        run: |
+          set -euo pipefail
+          if [[ -z "$R2_ACCOUNT_ID" || -z "$R2_ACCESS_KEY_ID" || -z "$R2_SECRET_ACCESS_KEY" ]]; then
+            echo "::error::All GORGE_R2_* credentials are required for migration"
+            exit 1
+          fi
+          export AWS_ACCESS_KEY_ID="$R2_ACCESS_KEY_ID"
+          export AWS_SECRET_ACCESS_KEY="$R2_SECRET_ACCESS_KEY"
+          export AWS_DEFAULT_REGION=auto
+          endpoint="https://$R2_ACCOUNT_ID.r2.cloudflarestorage.com"
+          folder="$RUNNER_TEMP/legacy-python"
+          key="$(python -c 'import json,sys;print(json.load(open(sys.argv[1]))["r2_object_key"])' "$folder/inventory.json")"
+          sha="$(python -c 'import json,sys;print(json.load(open(sys.argv[1]))["r2_archive_sha256"])' "$folder/inventory.json")"
+          # The new namespace cannot collide with active R2 studies.
+          [[ "$key" == legacy-python/v1/*.tar.gz ]] || exit 1
+          if aws --endpoint-url "$endpoint" s3api head-object \
+              --bucket gorge-simulations --key "$key" >/dev/null 2>&1; then
+            existing_sha="$(aws --endpoint-url "$endpoint" s3api head-object \
+              --bucket gorge-simulations --key "$key" --query 'Metadata.sha256' --output text)"
+            [[ "$existing_sha" == "$sha" ]] || { echo "::error::Existing R2 object SHA metadata mismatch"; exit 1; }
+          else
+            aws --endpoint-url "$endpoint" s3 cp "$folder/legacy-python-source.tar.gz" \
+              "s3://gorge-simulations/$key" --metadata "sha256=$sha" --no-progress
+          fi
+          aws --endpoint-url "$endpoint" s3 cp "s3://gorge-simulations/$key" \
+            "$RUNNER_TEMP/legacy-python-roundtrip.tar.gz" --no-progress
+          python -m tools.archive_legacy_python \
+            --verify-download "$RUNNER_TEMP/legacy-python-roundtrip.tar.gz" \
+            --inventory "$folder/inventory.json"
+          inventory_key="${key%.tar.gz}.inventory.json"
+          aws --endpoint-url "$endpoint" s3 cp "$folder/inventory.json" \
+            "s3://gorge-simulations/$inventory_key" --no-progress
+          echo "### Independent legacy Python source archive verified" >> "$GITHUB_STEP_SUMMARY"
+          printf 'R2 object: \`%s\`\n\nSHA-256: \`%s\`\n\n' "$key" "$sha" >> "$GITHUB_STEP_SUMMARY"
+          python - "$folder/inventory.json" <<'PY'
+          import json,os,sys
+          x=json.load(open(sys.argv[1]))
+          with open(os.environ['GITHUB_STEP_SUMMARY'],'a') as s:
+              s.write(f"Verified {x['release_count']} legacy releases, {x['source_file_count']} files; ")
+              s.write(f"{x['source_total_bytes']} source bytes. Independent R2 roundtrip passed.\n")
+          print("VERIFIED_LEGACY_PYTHON_R2_CHECKPOINT",json.dumps({
+            k:x[k] for k in ("r2_object_key","r2_archive_sha256",
+              "r2_archive_bytes","source_manifest_sha256","release_count","source_file_count")
+          },sort_keys=True))
+          PY
+      - name: Retain migration evidence temporarily
+        if: github.event_name != 'pull_request'
+        uses: actions/upload-artifact@v4
+        with:
+          name: legacy-python-r2-migration-inventory
+          path: ${{ runner.temp }}/legacy-python/inventory.json
+          retention-days: 14
+          if-no-files-found: error
