@@ -133,3 +133,15 @@ export function approvedGameIndex(rows, deck, limit=20) {
     population:"approved_current_decisive_only",
     total:parsed.length,limit,has_more:parsed.length>limit,games:parsed.slice(0,limit)};
 }
+
+/** Safe detail for one already-verified, approved game; never exposes the native recording. */
+export function approvedGameDetail(rows,deck,gameId) {
+  const matches=rows.filter(row=>row.game_id===gameId);
+  if(matches.length>1)throw Error("duplicate_approved_game_id");
+  if(!matches.length)return null;
+  const item=approvedGameIndex(matches,deck,1).games[0];
+  return {schema:"gorge-r2-approved-game-detail-v1",
+    population:"approved_current_decisive_only",deck,...item,
+    replay_status:"not_available",
+    disclaimer:"Native event replay is not exposed by this endpoint."};
+}
