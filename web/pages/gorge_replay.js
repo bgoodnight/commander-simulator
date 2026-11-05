@@ -475,7 +475,7 @@ function init(){
     const panel=node("details","board-report game-outcome-card game-outcome-hero");
     const summary=node("summary","game-outcome-summary game-outcome-hero-summary");
     const art=previousHero?.querySelector(".game-outcome-hero-art");
-    if(art)summary.append(art.cloneNode(true));
+    if(art)frame.append(art.cloneNode(true));
     const copy=node("div","game-outcome-hero-copy");
     copy.append(node("strong","game-outcome-title","Game Outcomes"));
     const numbers=node("div","game-outcome-hero-stats");
@@ -611,15 +611,22 @@ function init(){
     if(!values.length){body.append(node("p","micro","Game length distribution is not available for this cohort."));return body;}
     body.append(node("p","micro","Recorded game turns · "+stats.game_turns_coverage+" games"));
     const highest=Math.max(...values.map(v=>v.games),1);
-    const chart=node("div","game-outcome-finish-bars");
-    for(const item of values){
-      const row=node("div","game-outcome-finish-row");
-      const track=node("div","game-outcome-finish-track");
-      const fill=node("span","game-outcome-finish-fill");
-      fill.style.width=(100*item.games/highest)+"%";
-      track.append(fill);row.append(node("span",null,String(item.turns)),track,node("strong",null,String(item.games)));chart.append(row);
-    }
-    body.append(chart);return body;
+    const chart=node("div","gorge-turn-chart");
+    chart.setAttribute("role","img");
+    chart.setAttribute("aria-label","Game length distribution: "+values.map(v=>v.turns+" turns, "+v.games+" games").join("; "));
+    const labelEvery=Math.max(1,Math.ceil(values.length/7));
+    values.forEach((item,index)=>{
+      const column=node("div","gorge-turn-column");
+      column.title=item.turns+" turns · "+item.games+" games";
+      const track=node("div","gorge-turn-track");
+      const fill=node("span","gorge-turn-fill");
+      fill.style.height=(100*item.games/highest)+"%";
+      track.append(fill);
+      column.append(track,node("span","gorge-turn-tick",index%labelEvery===0||index===values.length-1?String(item.turns):""));
+      chart.append(column);
+    });
+    body.append(node("div","gorge-turn-axis-label","Games"));
+    body.append(chart,node("div","gorge-turn-x-label","Turns"));return body;
   }
   function cohortComparePanel(stats){
     const root=node("div","gorge-compare-panel");

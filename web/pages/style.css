@@ -2580,3 +2580,27 @@ body:has(#pane-records:not([hidden])) .compact-selection{margin-bottom:3px}
 .gorge-compare-row{display:grid;gap:6px;min-height:58px}.gorge-compare-caption{display:flex;justify-content:space-between;gap:12px;font-size:.78rem}
 .gorge-compare-caption span{color:#cbd1c8;white-space:nowrap}.gorge-compare-track{display:flex;height:10px;border-radius:8px;overflow:hidden;background:#425554}
 .gorge-compare-win{background:#77ac8d}.gorge-compare-loss{background:#c07b78}
+
+/* One illustrated surface holds the results and their four detail cards. */
+.latest-insight-grid .gorge-cohort-hero-frame{overflow:hidden;border:1px solid #aa95715c;border-radius:14px;background:#12272b}
+.latest-insight-grid .gorge-cohort-hero-frame>.game-outcome-hero-art{width:100%;height:100%;object-position:70% 25%;filter:saturate(.97) brightness(.85);opacity:1;z-index:0}
+.gorge-cohort-hero-frame:before{content:"";position:absolute;inset:0;z-index:1;pointer-events:none;background:linear-gradient(90deg,#0d2023f7 0%,#102529e8 39%,#11252988 73%,#10202355 100%)}
+.latest-insight-grid .gorge-cohort-hero-frame>.game-outcome-hero{z-index:2;background:transparent;border:0;box-shadow:none}
+.latest-insight-grid .gorge-cohort-hero-frame .game-outcome-hero-summary{background:transparent;min-height:205px}
+.latest-insight-grid .gorge-cohort-hero-frame .game-outcome-hero-summary:before{display:none}
+.latest-insight-grid .gorge-cohort-hero-frame .game-outcome-hero-copy{width:min(62%,650px)}
+.gorge-cohort-hero-frame>.game-outcome-hero-highlights{position:relative;z-index:2;margin:0;padding:0 18px 18px;gap:10px}
+.gorge-turn-axis-label{font-size:.7rem;color:#cbd1c8;margin:8px 0 4px}
+.gorge-turn-chart{display:flex;align-items:stretch;width:100%;height:180px;gap:1px;border-bottom:1px solid #8f987f}
+.gorge-turn-column{display:flex;flex:1 1 0;min-width:0;flex-direction:column;align-items:stretch}
+.gorge-turn-track{display:flex;align-items:end;flex:1;min-height:0}
+.gorge-turn-fill{display:block;width:100%;min-height:1px;background:linear-gradient(0deg,#83b8a5,#dec39b);border-radius:2px 2px 0 0}
+.gorge-turn-tick{height:20px;font-size:.62rem;color:#cbd1c8;white-space:nowrap;text-align:center;overflow:visible}
+.gorge-turn-x-label{text-align:center;font-size:.7rem;color:#cbd1c8;margin-top:5px}
+@media(max-width:720px){
+  .latest-insight-grid .gorge-cohort-hero-frame>.game-outcome-hero-art{object-position:62% 20%;opacity:.82}
+  .gorge-cohort-hero-frame:before{background:linear-gradient(90deg,#0c1d20e8,#102428b8 65%,#0c1d2080)}
+  .latest-insight-grid .gorge-cohort-hero-frame .game-outcome-hero-summary{min-height:205px}
+  .latest-insight-grid .gorge-cohort-hero-frame .game-outcome-hero-copy{width:100%;padding:18px 16px}
+  .gorge-cohort-hero-frame>.game-outcome-hero-highlights{padding:0 12px 12px;gap:8px}
+}

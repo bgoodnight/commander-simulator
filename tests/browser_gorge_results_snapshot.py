@@ -74,7 +74,9 @@ def check():
                 page.keyboard.press('Escape')
                 assert not dialog.is_visible()
                 tiles.nth(1).click()
-                assert dialog.locator('.game-outcome-finish-row').count() > 0
+                assert dialog.locator('.gorge-turn-column').count() > 0
+                chart = dialog.locator('.gorge-turn-chart')
+                assert chart.evaluate('(e) => e.scrollWidth <= e.clientWidth')
                 dialog.get_by_label('Close details').click()
                 for index in (2,3):
                     tiles.nth(index).click()
@@ -93,12 +95,13 @@ def check():
                 assert 'Least played' in replacement.locator('summary').first.inner_text()
                 assert 'may be absent' in replacement.inner_text()
                 replacement.locator('summary').first.click()
-                seen = page.locator('#game-outcome-results .insight-featured-panel').filter(has_text='Most frequently seen card').first
-                seen.locator('summary').first.click()
-                seen.get_by_role('button',name='Creatures').click()
-                seen_selected = page.locator('#game-outcome-results .insight-featured-panel').filter(has_text='Most frequently seen creature').first
-                assert seen_selected.is_visible()
-                seen_selected.locator('summary').first.click()
+                assert page.get_by_text('Most frequently seen card', exact=False).count() == 0
+                assert page.get_by_text('Most often left unplayed', exact=False).count() == 0
+                held = page.locator('#game-outcome-results .insight-featured-panel').filter(has_text='Longest held in hand').first
+                held.locator('summary').first.click()
+                assert 'mean rounds held' in held.inner_text()
+                assert 'headline shows the median' in held.inner_text()
+                held.locator('summary').first.click()
                 assert page.locator('.gorge-full-cohort-regressions').count() == 1
                 model = page.locator('.gorge-full-cohort-regressions')
                 model.locator('summary').click()

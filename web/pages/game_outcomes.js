@@ -1985,7 +1985,8 @@
             }
           }
         }
-        ranking.appendChild(create("strong","insight-featured-chart-title","Top cards"));
+        ranking.appendChild(create("strong","insight-featured-chart-title",isHeld?"Top cards · mean rounds held":"Top cards"));
+        if(isHeld)ranking.appendChild(create("p","micro","The headline shows the median; bars show the mean of the same recorded holding times. Cards are ranked by mean."));
         const barList=create("div","insight-featured-bars");
         ranking.appendChild(barList);
         for(const item of ranked.slice(0,10)){
@@ -1996,7 +1997,7 @@
           button.setAttribute("aria-pressed","false");
           const caption=create("span","insight-featured-bar-caption");
           caption.append(create("span",null,item.name),
-            create("strong",null,valueFor(item)));
+            create("strong",null,isHeld?nfmt(item.average)+" rounds":valueFor(item)));
           const track=create("span","insight-featured-bar-track");
           const fill=create("span","insight-featured-bar-fill");
           fill.style.width=Math.max(1,100*item.score/maxScore)+"%";
@@ -2412,10 +2413,10 @@
       const kinds=isGorge?
         ["played","creature","artifact","enchantment","instant","spell","land",
           ...(runs.some(r=>r.gorge_source?.visibility==="omniscient")?
-             ["seen","seenCreature","unplayed","longest"]:[]),
+             ["longest"]:[]),
           "activated","triggered"]:
         ["played","creature","artifact","enchantment",
-          "instant","spell","land","seen","seenCreature","unplayed","longest",
+          "instant","spell","land","longest",
           "activated","removal","creatureKills","damage","finisher",
           ...(signals.confirmedTutors?["tutorFound","tutorUsed"]:[])];
       const playedTypes=["played","creature","artifact","enchantment","instant","spell","land"];
