@@ -49,6 +49,9 @@ assert.match(html,/gorge_replay\.js/);
 const build=fs.readFileSync(path.join(__dirname,"../tools/build_pages_deck_lab.py"),"utf8");
 assert.match(build,/gorge_replay\.js/);
 const replayLoader=fs.readFileSync(path.join(__dirname,"../web/pages/gorge_replay.js"),"utf8");
+assert.match(replayLoader,/manifestEligibility===\"approved_current_only\"/);
+assert.match(replayLoader,/No approved current simulations are published for this deck/);
+assert.doesNotMatch(replayLoader,/No simulations have been run with this selected deck/);
 // A growing Gorge manifest must not fetch every megabyte-scale replay merely
 // to open the first game. Each selected seed is fetched on demand.
 assert.match(replayLoader,/openPublicSample\(select\.value\)/);

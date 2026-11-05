@@ -100,7 +100,8 @@ window.GorgeDeckLabSelectedDeck=key=>{
     return {eligible:false};
   const deck=selectedDeck();
   return {eligible:true,key,sha:deck.deck_sha256,commander:deck.commander,
-    art:commanderCard(deck)?.art||null};
+    art:commanderCard(deck)?.art||null,
+    cardNames:deck.cards.map(card=>card.name)};
 };
 function cardForId(id){return extraCards[id]||data.cards[id]||null;}
 function addAliases(item){
