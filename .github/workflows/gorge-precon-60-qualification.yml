@@ -122,7 +122,7 @@ jobs:
               raise ValueError("Full-panel test failed to expose all 60 selected precons")
           status["engine_error_count"]=len(status["engine_errors"])
           status["turn_limit_stalls"]=status["attempted"]-status["completed"]-status["engine_error_count"]
-          (root/"results/qualification-summary.json").write_text(json.dumps(status,indent=2)+"\\n")
+          (root/"results/qualification-summary.json").write_text(json.dumps(status,indent=2)+"\n")
           with open(os.environ["GITHUB_STEP_SUMMARY"],"a") as out:
               out.write("# Experimental Gorge precon gameplay: "+os.environ["HERO_DECK"]+"\\n\\n")
               out.write(f"Attempted: {status['attempted']}; completed: {status['completed']}; replay-verified: {status['replay_verified']}.\\n\\n")
