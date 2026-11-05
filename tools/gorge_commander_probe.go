@@ -104,8 +104,8 @@ func repairBaralCorpus(reg *cards.Registry) error {
       return fmt.Errorf("Baral already has a cost reducer; inspect corpus before applying overlay")
     }
   }
-  overlay:= "Name:Baral, Chief of Compliance\\nTypes:Legendary Creature Human Wizard\\n" +
-    "S:Mode$ ReduceCost | ValidCard$ Instant,Sorcery | Type$ Spell | Activator$ You | Amount$ 1\\n"
+  overlay:= "Name:Baral, Chief of Compliance\nTypes:Legendary Creature Human Wizard\n" +
+    "S:Mode$ ReduceCost | ValidCard$ Instant,Sorcery | Type$ Spell | Activator$ You | Amount$ 1\n"
   parsed,diags:=cards.ParseBytes("baral-cost-reducer-overlay",[]byte(overlay))
   if parsed==nil||len(diags)>0||len(parsed.Faces)!=1||len(parsed.Faces[0].Statics)!=1 {
     return fmt.Errorf("invalid Baral cost reducer overlay: %v",diags)
