@@ -1,0 +1,59 @@
+name: Enrich official Commander precon candidates
+
+on:
+  pull_request:
+    paths:
+      - "tools/enrich_gorge_candidate_precons.py"
+      - "tests/test_enrich_gorge_candidate_precons.py"
+      - ".github/workflows/enrich-gorge-precon-candidates.yml"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  enrich:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Test source and functional classification contracts offline
+        run: python -m unittest tests.test_enrich_gorge_candidate_precons tests.test_gorge_candidate_coverage -v
+      - name: Fetch bulk Oracle identities and enrich released candidates
+        run: |
+          mkdir -p "$RUNNER_TEMP/precon-enrichment"
+          python -m tools.enrich_gorge_candidate_precons \
+            --as-of 2026-11-05 \
+            --out "$RUNNER_TEMP/precon-enrichment/full-enrichment.json"
+          python - <<'PY'
+          import json,os
+          from pathlib import Path
+          p=Path(os.environ["RUNNER_TEMP"])/"precon-enrichment"
+          a=json.loads((p/"full-enrichment.json").read_text())
+          assert a["distinct_decklists"]>=100
+          summary={k:a[k] for k in ("schema","as_of","source_catalog_commit",
+                       "oracle_bulk_sha256","oracle_bulk_metadata",
+                       "released_products","distinct_decklists",
+                       "commander_identity_resolved","complete_deck_resolution",
+                       "unresolved_card_name_count","color_identity_distribution",
+                       "mechanic_proxy_prevalence","caveats")}
+          (p/"summary.json").write_text(json.dumps(summary,indent=2,sort_keys=True)+"\n")
+          with open(os.environ["GITHUB_STEP_SUMMARY"],"a") as f:
+              f.write("# Enriched Commander candidate library\n\n")
+              f.write(f"- Distinct released decklists: **{a['distinct_decklists']}**\n")
+              f.write(f"- Commander identity resolved: **{a['commander_identity_resolved']}**\n")
+              f.write(f"- Complete 100-card Oracle resolution: **{a['complete_deck_resolution']}**\n")
+              f.write(f"- Unresolved card names: **{a['unresolved_card_name_count']}**\n")
+              f.write("- Functional counts are exploratory text proxies, not reviewed deck strategies.\n")
+              f.write("- No Gorge opponent promotion or simulation.\n")
+          PY
+      - name: Preserve compact and detailed metadata for assessment
+        uses: actions/upload-artifact@v4
+        with:
+          name: commander-precon-oracle-enrichment
+          path: ${{ runner.temp }}/precon-enrichment/
+          retention-days: 21
+          if-no-files-found: error
