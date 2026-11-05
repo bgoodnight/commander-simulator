@@ -73,6 +73,7 @@ jobs:
         run: |
           set -euo pipefail
           root="$RUNNER_TEMP/results"
+          chmod +x "$RUNNER_TEMP/bundle/gorge-probe"
           mkdir -p "$root/native"
           opponents="$(python -c 'import json,sys;print(",".join(json.load(open(sys.argv[1]))["opponent_pool"]))' "$RUNNER_TEMP/bundle/pods/mortarion_current-pod.json")"
           "$RUNNER_TEMP/bundle/gorge-probe" \
