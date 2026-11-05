@@ -104,10 +104,11 @@ async function getSummary(env,deck,metrics) {
       raw_shards_seen:matching.length};
   }
   const rows=[];
+  const fingerprintCache=new Map();
   for(const shard of matching) {
     const manifest=await readManifest(env.GORGE_R2,shard);
     const games=await readGames(env.GORGE_R2,shard,manifest);
-    for(const game of games)if(await isApproved(game,registry))rows.push(game);
+    for(const game of games)if(await isApproved(game,registry,fingerprintCache))rows.push(game);
   }
   return {...aggregate(rows,deck),status:rows.length?"ready":"awaiting_cohort_approval",
     raw_shards_seen:matching.length};
