@@ -133,6 +133,21 @@ func main() {
   if *nativeLimit<0||*nativeLimit>100{panic("Invalid trace count")}
   if *nativeDir!=""{if err:=os.MkdirAll(*nativeDir,0700);err!=nil{panic(err)}}
   reg,err:=testutil.OpenCorpusRegistry(*corpus);if err!=nil {panic(err)}
+  // A pinned Forge token corpus may omit a script referenced by a card.
+  // Mortarion's end-step ability correctly resolves its X payment but would
+  // otherwise emit "unknown token script" instead of creating permanents.
+  // Supply the missing canonical 2/2 black Astartes Warrior with menace to
+  // the shared token registry, not to Mortarion's card or the pilot.
+  const astartesStem="b_2_2_astartes_warrior_menace"
+  if _,ok:=reg.Tokens[astartesStem];!ok {
+    text:="Name:Astartes Warrior Token\nTypes:Creature Astartes Warrior\nColors:B\nPT:2/2\nK:Menace\nOracle:Token\n"
+    token,diags:=cards.ParseBytes(astartesStem,[]byte(text))
+    if token==nil||len(diags)>0 {panic(fmt.Sprintf("Astartes token parse: %v",diags))}
+    if d:=token.Link();len(d)>0 {panic(fmt.Sprintf("Astartes token link: %v",d))}
+    for _,face:=range token.Faces {face.ApplyIntrinsics()}
+    reg.Tokens[astartesStem]=token
+  }
+
   decks:=make([][]*cards.Card,len(names))
   commanders:=make([][]int,len(names))
   for i,name:=range names {
