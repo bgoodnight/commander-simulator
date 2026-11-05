@@ -23,7 +23,7 @@ jobs:
       - name: Install reproducible Worker dependencies and test
         working-directory: workers/gorge-r2-api
         run: |
-          npm ci --ignore-scripts --no-audit
+          npm install --ignore-scripts --no-audit --no-fund
           npm test
       - name: Deploy the read-only Worker; do not run simulations or publish Pages
         uses: cloudflare/wrangler-action@v3
