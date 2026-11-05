@@ -26,7 +26,7 @@ jobs:
           python-version: "3.12"
       - name: Validate player/precon roles and conversion contracts
         run: |
-          python -m unittest tests.test_commander_deck_library tests.test_gorge_precons_and_replay tests.test_gorge_results_pipeline -v
+          python -m unittest tests.test_commander_deck_library tests.test_gorge_precons_and_replay tests.test_gorge_results_pipeline tests.test_gorge_warehouse_export -v
       - name: Export four fixed player decks and authenticated stock precons
         run: |
           mkdir -p "$RUNNER_TEMP/bundle/decks" "$RUNNER_TEMP/bundle/pods"
@@ -171,6 +171,21 @@ jobs:
               s3 cp "$archive" "s3://gorge-simulations/native/v1/$DECK/$SHARD/$(basename "$archive")" \
               --no-progress
             echo "Archived full $DECK shard $SHARD to private R2 before pruning." >> "$GITHUB_STEP_SUMMARY"
+            # Publish versioned, private Parquet tables containing *every*
+            # verified game and every native event from the shard.
+            # This runs before sampled-replay pruning; nothing is published to Pages.
+            python -m pip install --disable-pip-version-check 'pyarrow==21.0.0'
+            warehouse="$RUNNER_TEMP/gorge-warehouse-$DECK-$SHARD"
+            python -m tools.gorge_warehouse_export \
+              --shard-folder "$folder" --out "$warehouse" \
+              --batch-id "${GITHUB_RUN_ID}-${GITHUB_RUN_ATTEMPT}" \
+              --deck "$DECK" --shard "$SHARD"
+            AWS_ACCESS_KEY_ID="$R2_ACCESS_KEY_ID" AWS_SECRET_ACCESS_KEY="$R2_SECRET_ACCESS_KEY" \
+              AWS_DEFAULT_REGION=auto aws --endpoint-url "https://$R2_ACCOUNT_ID.r2.cloudflarestorage.com" \
+              s3 cp "$warehouse/" \
+              "s3://gorge-simulations/warehouse/v1/${GITHUB_RUN_ID}-${GITHUB_RUN_ATTEMPT}/$DECK/$SHARD/" \
+              --recursive --no-progress
+            echo "Uploaded full-cohort Parquet games/events for $DECK shard $SHARD." >> "$GITHUB_STEP_SUMMARY"
           else
             echo "::notice::R2 not configured; only two native recordings per shard will be retained."
           fi
