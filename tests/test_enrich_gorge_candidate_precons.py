@@ -23,6 +23,14 @@ class CandidateEnrichmentTests(unittest.TestCase):
         self.assertIn("beta",index)
         self.assertNotIn("token",index)
 
+    def test_exact_name_wins_over_card_face_alias(self):
+        standalone=card("Brainstorm","Instant",["U"])
+        alternate=card("Mage // Brainstorm","Creature",["U"])
+        alternate["card_faces"]=[{"name":"Mage"},{"name":"Brainstorm"}]
+        lookup,ambiguous=build_index([alternate,standalone])
+        self.assertEqual(lookup["brainstorm"]["oracle_id"],standalone["oracle_id"])
+        self.assertNotIn("brainstorm",ambiguous)
+
     def test_conservative_mechanic_flags(self):
         m=card("One","Artifact",[], "Tap: Add {C}. Draw a card. Create a 1/1 colorless Servo artifact creature token.",1)
         flags=card_metrics(m)
