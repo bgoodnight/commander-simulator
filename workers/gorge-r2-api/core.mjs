@@ -104,3 +104,32 @@ export function validateDeck(deck) {
   if (!/^[a-z][a-z0-9_-]{1,75}$/.test(deck||"")) throw Error("Invalid deck");
   return deck;
 }
+
+/**
+ * Public-safe game index: use only after isApproved verifies the source cohort.
+ * This is deliberately NOT a native replay or an events.parquet export.
+ */
+export function approvedGameIndex(rows, deck, limit=20) {
+  if(!Number.isInteger(limit) || limit<1 || limit>25)throw Error("invalid_game_limit");
+  const ids=new Set();
+  const parsed=rows.map(row=>{
+    if(!isDecisive(row) || row.deck!==deck)throw Error("unapproved_game_index_source");
+    if(typeof row.game_id!=="string" || !row.game_id || ids.has(row.game_id))
+      throw Error("duplicate_or_invalid_game_id");
+    ids.add(row.game_id);
+    const pod=JSON.parse(row.decks_json);
+    if(!Array.isArray(pod) || pod.length!==4 || pod[row.hero_seat]!==deck ||
+      pod.some(v=>typeof v!=="string" || !/^[a-z][a-z0-9_-]{1,75}$/.test(v)) ||
+      new Set(pod).size!==4)throw Error("invalid_game_pod");
+    return {
+      game_id:row.game_id,
+      turns:Number.isInteger(row.turns)&&row.turns>=0?row.turns:null,
+      result:row.hero_seat===row.winner_seat?"win":"loss",
+      opponent_decks:pod.filter((_,seat)=>seat!==row.hero_seat),
+      // No source trace, seed, hidden hand, event payload, or object keys.
+    };
+  }).sort((a,b)=>a.game_id.localeCompare(b.game_id));
+  return {schema:"gorge-r2-approved-game-index-v1",deck,
+    population:"approved_current_decisive_only",
+    total:parsed.length,limit,has_more:parsed.length>limit,games:parsed.slice(0,limit)};
+}
