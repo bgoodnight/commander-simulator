@@ -1,0 +1,61 @@
+name: Gorge Astartes archived combat audit
+on:
+  push:
+    branches: [main]
+    paths:
+      - ".github/workflows/gorge-astartes-combat-audit.yml"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  audit:
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    strategy:
+      fail-fast: false
+      matrix:
+        policy: [bot, forge-heuristic]
+    env:
+      POLICY: ${{ matrix.policy }}
+      R2_ACCOUNT_ID: ${{ secrets.GORGE_R2_ACCOUNT_ID }}
+      R2_ACCESS_KEY_ID: ${{ secrets.GORGE_R2_ACCESS_KEY_ID }}
+      R2_SECRET_ACCESS_KEY: ${{ secrets.GORGE_R2_SECRET_ACCESS_KEY }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Read archived experimental native Gorge recordings privately
+        shell: bash
+        run: |
+          set -euo pipefail
+          test -n "$R2_ACCOUNT_ID" && test -n "$R2_ACCESS_KEY_ID" && test -n "$R2_SECRET_ACCESS_KEY"
+          export AWS_ACCESS_KEY_ID="$R2_ACCESS_KEY_ID" AWS_SECRET_ACCESS_KEY="$R2_SECRET_ACCESS_KEY" AWS_DEFAULT_REGION=auto
+          endpoint="https://$R2_ACCOUNT_ID.r2.cloudflarestorage.com"
+          archive="$RUNNER_TEMP/$POLICY.tar.gz"
+          aws --endpoint-url "$endpoint" s3 cp \
+            "s3://gorge-simulations/pilot-evaluations/v1/41954258639-1/trigger-cost-$POLICY.tar.gz" \
+            "$archive" --no-progress
+          mkdir -p "$RUNNER_TEMP/trace"
+          tar -xzf "$archive" -C "$RUNNER_TEMP/trace" native runs.jsonl
+          python -m tools.gorge_astartes_combat_audit \
+            --root "$RUNNER_TEMP/trace" --policy "$POLICY" --out "$RUNNER_TEMP/astartes-audit.json"
+          python - <<'PY'
+          import json,os
+          from pathlib import Path
+          report=json.loads((Path(os.environ["RUNNER_TEMP"])/"astartes-audit.json").read_text())
+          m=report["metrics"]
+          with open(os.environ["GITHUB_STEP_SUMMARY"],"a") as f:
+              f.write(f"# Astartes combat evidence: {report['pilot']}\n\n")
+              f.write(f"- Verified games: {report['games']}\n")
+              for k,v in m.items():f.write(f"- {k}: **{v}**\n")
+              f.write("\nAttack evidence uses DeclareAttackers IDs tied to minted token objects.\n")
+          PY
+      - uses: actions/upload-artifact@v4
+        with:
+          name: astartes-combat-audit-${{ matrix.policy }}
+          path: ${{ runner.temp }}/astartes-audit.json
+          retention-days: 14
+          if-no-files-found: warn
