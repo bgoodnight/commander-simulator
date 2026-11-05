@@ -1,0 +1,143 @@
+name: Preserve verified experimental Gorge evidence in private R2
+
+# One-time source-verified archival of run 42129260132.
+# This workflow NEVER grants cohort approval, publishes Pages, or changes the API.
+on:
+  workflow_dispatch:
+permissions:
+  contents: read
+  actions: read
+jobs:
+  stage:
+    if: github.ref == 'refs/heads/main'
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    strategy:
+      fail-fast: false
+      matrix:
+        hero: [mortarion_current, magnus_premium]
+    env:
+      HERO: ${{ matrix.hero }}
+      ACCOUNT: ${{ secrets.GORGE_R2_ACCOUNT_ID }}
+      ACCESS: ${{ secrets.GORGE_R2_ACCESS_KEY_ID }}
+      SECRET: ${{ secrets.GORGE_R2_SECRET_ACCESS_KEY }}
+      BATCH: 42129260132-1
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Verify R2 credentials are configured
+        run: |
+          test -n "$ACCOUNT" && test -n "$ACCESS" && test -n "$SECRET"
+      - name: Fetch exact original experimental recording artifact
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          mkdir -p "$RUNNER_TEMP/source"
+          gh run download 42129260132 \
+            --name "gorge-precon-60-experimental-gameplay-$HERO" \
+            --dir "$RUNNER_TEMP/source"
+      - name: Exclude unfinished games without changing source evidence
+        run: |
+          python - <<'PY'
+          import json,os
+          from pathlib import Path
+          root=Path(os.environ["RUNNER_TEMP"])
+          src=root/"source/results"
+          dest=root/"verified"
+          (dest/"native").mkdir(parents=True)
+          summary=json.loads((src/"qualification-summary.json").read_text())
+          hero=os.environ["HERO"]
+          expected=12 if hero=="mortarion_current" else 11
+          if (summary.get("status")!="experimental_unqualified"
+              or summary.get("eligible_for_current_statistics")!=0
+              or summary.get("attempted")!=12
+              or summary.get("engine_error_count")!=0
+              or summary.get("completed")!=expected
+              or summary.get("replay_verified")!=expected):
+              raise ValueError("Source is not the pinned 12-game experimental sample")
+          panel=json.loads((root/"source/panel/full-enrichment.json").read_text())
+          locked=json.loads(Path("data/gorge_initial_trial_opponents_v1.json").read_text())
+          if panel.get("oracle_bulk_sha256")!=locked.get("source_oracle_sha256"):
+              raise ValueError("Pinned Oracle source mismatch")
+          runs=[json.loads(line) for line in (src/"runs.jsonl").read_text().splitlines()
+                if line.strip()]
+          if len(runs)!=12 or len({r.get("seed") for r in runs})!=12:
+              raise ValueError("Unexpected source game count or repeated seed")
+          approved_for_archive=[]
+          for game in runs:
+              if game.get("error") or "cohort_id" in game:
+                  raise ValueError("Unapproved cohort or engine error")
+              if not game.get("finished"):
+                  if game.get("stall_reason")!="turns" or game.get("replay_verified"):
+                      raise ValueError("Unexpected unfinished game")
+                  continue
+              if game.get("replay_verified") is not True:
+                  raise ValueError("Unverified finished game")
+              source=src/"native"/f"gorge-seed-{game['seed']}.json"
+              if not source.is_file():
+                  raise ValueError("Missing authoritative source trace")
+              approved_for_archive.append(game)
+              # Native logs stay private in R2 and are never published to Pages.
+              (dest/"native"/source.name).write_bytes(source.read_bytes())
+          if len(approved_for_archive)!=expected:
+              raise ValueError("Finished source count differs from qualification")
+          (dest/"runs.jsonl").write_text("".join(
+              json.dumps(r,sort_keys=True,separators=(",",":"))+"\n"
+              for r in approved_for_archive))
+          print(f"{hero}: {expected} source-verified completed experimental records")
+          PY
+      - name: Convert into immutable private experimental warehouse shard
+        run: |
+          python -m pip install --disable-pip-version-check 'pyarrow==21.0.0'
+          python -m tools.gorge_warehouse_export \
+            --shard-folder "$RUNNER_TEMP/verified" \
+            --out "$RUNNER_TEMP/warehouse" --batch-id "$BATCH" \
+            --deck "$HERO" --shard 0
+          python - <<'PY'
+          import json,os
+          from pathlib import Path
+          import pyarrow.parquet as pq
+          f=Path(os.environ["RUNNER_TEMP"])/"warehouse"
+          manifest=json.loads((f/"manifest.json").read_text())
+          game=pq.read_table(f/"games.parquet",
+              columns=["cohort_id","event_start_row","native_event_count"])
+          if any(x is not None for x in game["cohort_id"].to_pylist()):
+              raise ValueError("Experimental games cannot receive a cohort ID")
+          offsets=game["event_start_row"].to_pylist()
+          lengths=game["native_event_count"].to_pylist()
+          if not lengths or offsets[0]!=0 or any(
+              offsets[i+1]!=offsets[i]+lengths[i] for i in range(len(lengths)-1)
+          ) or offsets[-1]+lengths[-1]!=manifest["native_events"]:
+              raise ValueError("Untrusted event offsets")
+          print("Verified private experimental event windows and no cohort approval")
+          PY
+      - name: Preserve private immutable recordings and Parquet, manifest last
+        shell: bash
+        run: |
+          set -euo pipefail
+          export AWS_ACCESS_KEY_ID="$ACCESS"
+          export AWS_SECRET_ACCESS_KEY="$SECRET"
+          export AWS_DEFAULT_REGION=auto
+          endpoint="https://$ACCOUNT.r2.cloudflarestorage.com"
+          root="warehouse/v1/$BATCH/$HERO/0"
+          native="native/experimental/v1/$BATCH/$HERO"
+          for prefix in "$root/" "$native/"; do
+            count="$(aws --endpoint-url "$endpoint" s3api list-objects-v2 \
+              --bucket gorge-simulations --prefix "$prefix" \
+              --query KeyCount --output text)"
+            [[ "$count" == "0" ]] || {
+              echo "::error::R2 prefix $prefix already exists; refuse overwrite"
+              exit 1
+            }
+          done
+          aws --endpoint-url "$endpoint" s3 cp "$RUNNER_TEMP/verified/native/" \
+            "s3://gorge-simulations/$native/" --recursive --no-progress
+          aws --endpoint-url "$endpoint" s3 cp "$RUNNER_TEMP/warehouse/" \
+            "s3://gorge-simulations/$root/" --recursive --exclude manifest.json --no-progress
+          # Manifest is the commit marker; no API approval is inferred.
+          aws --endpoint-url "$endpoint" s3 cp \
+            "$RUNNER_TEMP/warehouse/manifest.json" \
+            "s3://gorge-simulations/$root/manifest.json" --no-progress
+          echo "Archived source-verified $HERO experiment in private R2; no cohort approved." >> "$GITHUB_STEP_SUMMARY"
