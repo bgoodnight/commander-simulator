@@ -1,0 +1,59 @@
+name: Gorge Magnus early mana development audit
+on:
+  push:
+    branches: [main]
+    paths:
+      - ".github/workflows/gorge-magnus-early-mana.yml"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+jobs:
+  early-mana:
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    strategy:
+      fail-fast: false
+      matrix:
+        policy: [bot, forge-heuristic, forge-heuristic-hold, lethal-pressure]
+    env:
+      POLICY: ${{ matrix.policy }}
+      R2_ACCOUNT_ID: ${{ secrets.GORGE_R2_ACCOUNT_ID }}
+      R2_ACCESS_KEY_ID: ${{ secrets.GORGE_R2_ACCESS_KEY_ID }}
+      R2_SECRET_ACCESS_KEY: ${{ secrets.GORGE_R2_SECRET_ACCESS_KEY }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with: 
+          python-version: "3.12"
+      - name: Analyze first four personal turns in existing Magnus game recordings
+        shell: bash
+        run: |
+          set -euo pipefail
+          test -n "$R2_ACCOUNT_ID" && test -n "$R2_ACCESS_KEY_ID" && test -n "$R2_SECRET_ACCESS_KEY"
+          export AWS_ACCESS_KEY_ID="$R2_ACCESS_KEY_ID" AWS_SECRET_ACCESS_KEY="$R2_SECRET_ACCESS_KEY" AWS_DEFAULT_REGION=auto
+          aws --endpoint-url "https://$R2_ACCOUNT_ID.r2.cloudflarestorage.com" s3 cp \
+            "s3://gorge-simulations/pilot-evaluations/v2/41966873822-1/magnus_budget/$POLICY.tar.gz" \
+            "$RUNNER_TEMP/magnus-$POLICY.tar.gz" --no-progress
+          mkdir -p "$RUNNER_TEMP/trace"
+          tar -xzf "$RUNNER_TEMP/magnus-$POLICY.tar.gz" -C "$RUNNER_TEMP/trace" native runs.jsonl
+          python -m tools.gorge_magnus_early_mana --root "$RUNNER_TEMP/trace" --policy "$POLICY" \
+            --out "$RUNNER_TEMP/early-mana.json"
+          python - <<'PY'
+          import json,os
+          from pathlib import Path
+          data=json.loads((Path(os.environ["RUNNER_TEMP"])/"early-mana.json").read_text())
+          with open(os.environ["GITHUB_STEP_SUMMARY"],"a") as f:
+              f.write(f"# Magnus first-four-personal-turn development: {data['pilot']}\n\n")
+              f.write(f"{data['games_reaching_four_hero_turns']}/100 games reached four personal turns.\n\n")
+              f.write("| Land plays in first four personal turns | Games | Wins | Win rate |\n|---|---:|---:|---:|\n")
+              for band,row in data["by_early_land_plays"].items():
+                  rate=f"{row['win_rate']:.1%}" if row["win_rate"] is not None else "N/A"
+                  f.write(f"| {band} | {row['n']} | {row['wins']} | {rate} |\n")
+              f.write("\nDescriptive, not causal; ramp may put lands onto battlefield.\n")
+          PY
+      - uses: actions/upload-artifact@v4
+        with:
+          name: gorge-magnus-early-mana-${{ matrix.policy }}
+          path: ${{ runner.temp }}/early-mana.json
+          retention-days: 14
