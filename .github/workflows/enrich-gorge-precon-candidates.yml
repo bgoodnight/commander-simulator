@@ -9,6 +9,9 @@ on:
       - "tests/test_select_gorge_precon_panel.py"
       - "tools/stage_gorge_precon_qualification.py"
       - "tests/test_stage_gorge_precon_qualification.py"
+      - "tools/check_gorge_precon_compatibility.py"
+      - "tests/test_check_gorge_precon_compatibility.py"
+      - "tools/gorge_commander_probe.go"
       - ".github/workflows/enrich-gorge-precon-candidates.yml"
   workflow_dispatch:
 
@@ -25,7 +28,7 @@ jobs:
         with:
           python-version: "3.12"
       - name: Test source and functional classification contracts offline
-        run: python -m unittest tests.test_enrich_gorge_candidate_precons tests.test_gorge_candidate_coverage tests.test_select_gorge_precon_panel tests.test_stage_gorge_precon_qualification -v
+        run: python -m unittest tests.test_enrich_gorge_candidate_precons tests.test_gorge_candidate_coverage tests.test_select_gorge_precon_panel tests.test_stage_gorge_precon_qualification tests.test_check_gorge_precon_compatibility -v
       - name: Fetch bulk Oracle identities and enrich released candidates
         run: |
           mkdir -p "$RUNNER_TEMP/precon-enrichment"
@@ -78,3 +81,78 @@ jobs:
           path: ${{ runner.temp }}/precon-enrichment/
           retention-days: 21
           if-no-files-found: error
+
+  check-gorge-import:
+    needs: enrich
+    runs-on: ubuntu-latest
+    timeout-minutes: 70
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - uses: actions/download-artifact@v4
+        with:
+          name: commander-precon-oracle-enrichment
+          path: ${{ runner.temp }}/precon-enrichment
+      - name: Export 60 original stock decklists with Oracle-backed provenance
+        run: |
+          mkdir -p "$RUNNER_TEMP/compat/decks"
+          python -m tools.check_gorge_precon_compatibility \
+            --queue "$RUNNER_TEMP/precon-enrichment/qualification-queue-60.json" \
+            --deck-dir "$RUNNER_TEMP/compat/decks" \
+            --report "$RUNNER_TEMP/compat/names.txt"
+      - name: Clone pinned Gorge engine
+        env:
+          GORGE_COMMIT: b78e4c8b16078f6decbc48875bba953ce5535b85
+        run: |
+          git clone --filter=blob:none https://github.com/adams-shaun/gorge.git "$RUNNER_TEMP/gorge"
+          git -C "$RUNNER_TEMP/gorge" checkout --detach "$GORGE_COMMIT"
+          test "$(git -C "$RUNNER_TEMP/gorge" rev-parse HEAD)" = "$GORGE_COMMIT"
+      - uses: actions/setup-go@v5
+        with:
+          go-version-file: ${{ runner.temp }}/gorge/go.mod
+          cache: false
+      - name: Compile pinned Forge card corpus and Gorge deck-check driver
+        working-directory: ${{ runner.temp }}/gorge
+        run: |
+          make fetch-cards compile-cards
+          cp "$GITHUB_WORKSPACE/tools/gorge_commander_probe.go" commander_probe.go
+          go build -o "$RUNNER_TEMP/gorge-probe" ./commander_probe.go
+      - name: Test each staged deck independently for import and Commander validity
+        working-directory: ${{ runner.temp }}/gorge
+        shell: bash
+        run: |
+          set -euo pipefail
+          names="$(cat "$RUNNER_TEMP/compat/names.txt")"
+          "$RUNNER_TEMP/gorge-probe" \
+            -corpus "$RUNNER_TEMP/gorge/.cards" \
+            -deck-dir "$RUNNER_TEMP/compat/decks" \
+            -decks "$names" -check-decks \
+            > "$RUNNER_TEMP/compat/import-results.jsonl"
+          python -m tools.check_gorge_precon_compatibility \
+            --queue "$RUNNER_TEMP/precon-enrichment/qualification-queue-60.json" \
+            --results-jsonl "$RUNNER_TEMP/compat/import-results.jsonl" \
+            --report "$RUNNER_TEMP/compat/compatibility-report.json"
+          python - <<'PY'
+          import json,os
+          from pathlib import Path
+          r=json.loads((Path(os.environ["RUNNER_TEMP"])/"compat"/"compatibility-report.json").read_text())
+          with open(os.environ["GITHUB_STEP_SUMMARY"],"a") as f:
+              f.write("# Gorge precon compatibility: 60 staged decks\\n\\n")
+              f.write(f"Import + Commander validity: **{r['import_passed']} pass / {r['import_failed']} fail**\\n\\n")
+              f.write("This is import-only; rules and pilot behavior remain unverified. Zero decks promoted.\\n")
+              f.write("\\n| Deck | Result | Detail |\\n|---|---|---|\\n")
+              for d in r["decks"]:
+                  status="PASS" if d["load_ok"] and d["commander_valid"] else "FAIL"
+                  reason=(d.get("error") or "").replace("|","/").replace("\\n"," ")[:160]
+                  f.write(f"| {d['name']} | {status} | {reason} |\\n")
+          PY
+      - name: Retain compact import audit and full metadata only in private Actions artifacts
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: gorge-precon-60-import-compatibility
+          path: ${{ runner.temp }}/compat/
+          retention-days: 21
+          if-no-files-found: warn
