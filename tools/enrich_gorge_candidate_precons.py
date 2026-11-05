@@ -54,24 +54,38 @@ def strings(record):
 
 
 def build_index(cards):
-    lookup = {}
-    ambiguous = set()
+    # Exact full printed Oracle names always outrank a different card's
+    # face alias (e.g. standalone Brainstorm vs a Prepared card face).
+    exact={}
+    exact_ambiguous=set()
+    aliases={}
+    alias_ambiguous=set()
     for c in cards:
         if c.get("lang", "en") != "en" or c.get("layout") in BAD_LAYOUTS:
             continue
-        names = {c.get("name")}
-        for face in c.get("card_faces") or []:
-            names.add(face.get("name"))
-        for name in filter(None,names):
+        name=c.get("name")
+        if name:
             key=name.casefold().strip()
-            prior=lookup.get(key)
+            prior=exact.get(key)
             if prior and prior.get("oracle_id")!=c.get("oracle_id"):
-                ambiguous.add(key)
+                exact_ambiguous.add(key)
             else:
-                lookup[key]=c
-    for key in ambiguous:
-        lookup.pop(key,None)
-    return lookup,ambiguous
+                exact[key]=c
+        for face in c.get("card_faces") or []:
+            label=face.get("name")
+            if not label:continue
+            key=label.casefold().strip()
+            prior=aliases.get(key)
+            if prior and prior.get("oracle_id")!=c.get("oracle_id"):
+                alias_ambiguous.add(key)
+            else:
+                aliases[key]=c
+    for key in exact_ambiguous:
+        exact.pop(key,None)
+    for key,c in aliases.items():
+        if key not in exact and key not in alias_ambiguous and key not in exact_ambiguous:
+            exact[key]=c
+    return exact,exact_ambiguous|{k for k in alias_ambiguous if k not in exact}
 
 
 def decode_bulk(raw):
