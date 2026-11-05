@@ -15,7 +15,7 @@ from tools.commander_deck_library import load_library, matchup_annotations, vali
 from tools.gorge_results_pipeline import project_batch, canonical_bytes
 
 PLAYERS = ("mortarion_current", "magnus_budget", "necron_dynasties", "wretched_ranks")
-BASE_SEED = 10000
+BASE_SEED = 30000
 GAMES_EACH = 500
 SHARDS = 5
 SHARD_SIZE = 100
@@ -125,6 +125,12 @@ def assemble(root: Path, destination: Path):
                 "detail_unavailable_reason": "Native trace intentionally not retained; verified outcome only",
             }
         all_rows.append(enriched)
+    # Every game contributes native card actions and hands before raw logs
+    # are discarded. Partial feature coverage is a publication error.
+    from tools.gorge_card_insights import write_report
+    cards = write_report(root, all_rows, destination / "card-insights.json")
+    if cards["total_verified_games"] != len(rows):
+        raise ValueError("Incomplete card-level feature extraction")
     analytics["games"] = all_rows
     analytics["description"] = (
         "Every outcome and player seat is source-verified. Detailed turn, action, "
@@ -132,6 +138,7 @@ def assemble(root: Path, destination: Path):
     )
     (destination / "analytics.json").write_bytes(canonical_bytes(analytics))
     catalog = json.loads((destination / "manifest.json").read_text())
+    catalog["card_insights_file"] = "card-insights.json"
     catalog["catalog_version"] = 5
     catalog["cohort_description"] = "500 Gorge games per player deck, sampled replays"
     catalog["cohort_recorded_at"] = archived_at

@@ -44,9 +44,31 @@ def merge_publication(source, destination):
             raise ValueError("Invalid or misattributed public replay")
         records[filename] = entry
         files.add(filename)
+    card_file = manifest.get("card_insights_file")
+    card_insights = None
+    if card_file is not None:
+        if card_file != "card-insights.json":
+            raise ValueError("Unexpected card insights file")
+        from tools.gorge_card_insights import SCHEMA as CARD_SCHEMA
+        card_insights = json.loads((source / card_file).read_text(encoding="utf-8"))
+        if (card_insights.get("schema") != CARD_SCHEMA
+                or card_insights.get("total_verified_games") != len(analytics["games"])
+                or not isinstance(card_insights.get("decks"), dict)
+                or sum(d.get("verified_games", 0) for d in
+                       card_insights["decks"].values()) != len(analytics["games"])
+                or any(d.get("observed_games") != d.get("verified_games")
+                       for d in card_insights["decks"].values())):
+            raise ValueError("Full card-insights cohort is incomplete")
+        files.add(card_file)
     if {p.name for p in source.iterdir()} != files:
         raise ValueError("Non-allowlisted files in publication artifact")
-    old_records, old_analytics = validate_existing(destination)
+    if card_insights is not None:
+        # A complete source-backed cohort supersedes historical outcome-only
+        # results. Old snapshots live in the dedicated archive branch, not
+        # in the active statistics denominator.
+        old_records, old_analytics = {}, {}
+    else:
+        old_records, old_analytics = validate_existing(destination)
     combined = dict(old_records)
     for filename, entry in records.items():
         prior = old_records.get(filename)
@@ -71,6 +93,10 @@ def merge_publication(source, destination):
     if len(combined) > 500:
         raise ValueError("Replay catalog exceeds safe static hosting limit")
     destination.mkdir(parents=True, exist_ok=True)
+    if card_insights is not None:
+        for old in destination.glob("gorge-seed-*.ui.json"):
+            if old.name not in records:
+                old.unlink()
     for filename in records:
         shutil.copyfile(source / filename, destination / filename)
     output_manifest = {
@@ -80,6 +106,7 @@ def merge_publication(source, destination):
         "synthetic_simulation_only": True,
         "converter_version": manifest.get("converter_version"),
         "analytics_file": "analytics.json",
+        **({"card_insights_file": "card-insights.json"} if card_insights else {}),
         "games": sorted(combined.values(), key=lambda r: r["seed"]),
     }
     output_analytics = {
@@ -89,6 +116,10 @@ def merge_publication(source, destination):
     }
     (destination / "manifest.json").write_bytes(canonical_bytes(output_manifest))
     (destination / "analytics.json").write_bytes(canonical_bytes(output_analytics))
+    if card_insights is not None:
+        if len(batch) != card_insights["total_verified_games"]:
+            raise ValueError("Card features cannot be mixed with another cohort")
+        (destination / "card-insights.json").write_bytes(canonical_bytes(card_insights))
     return {"replays": len(combined), "analytics_games": len(batch),
             "new_or_updated": len(records)}
 

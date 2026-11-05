@@ -121,6 +121,16 @@ class StaticPagesTests(unittest.TestCase):
                 self.assertEqual(manifest["analytics_file"],"analytics.json")
                 allowed.add("analytics.json")
                 allowed.add("cohort.json")
+                if manifest.get("card_insights_file"):
+                    self.assertEqual(manifest["card_insights_file"],
+                                     "card-insights.json")
+                    cards=json.loads((gorge_dir/"card-insights.json").read_text())
+                    self.assertEqual(cards["schema"],"gorge-card-insights-v1")
+                    self.assertEqual(cards["total_verified_games"],
+                                     len(json.loads((gorge_dir/"analytics.json").read_text())["games"]))
+                    self.assertTrue(all(v["observed_games"]==v["verified_games"]
+                                        for v in cards["decks"].values()))
+                    allowed.add("card-insights.json")
                 cohort=json.loads((gorge_dir/"cohort.json").read_text())
                 analytics=json.loads((gorge_dir/"analytics.json").read_text())
                 self.assertEqual(cohort["schema"],"gorge-cohort-report-v1")

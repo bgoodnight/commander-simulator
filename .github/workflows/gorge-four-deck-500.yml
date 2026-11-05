@@ -107,7 +107,7 @@ jobs:
           esac
           # Each shard has 1,000 reserved seeds; retry invalid games without
           # colliding with other decks or shards.
-          seed=$((10000 + index*5000 + SHARD*1000))
+          seed=$((30000 + index*5000 + SHARD*1000))
           mkdir -p "data/$DECK/$SHARD/native"
           cp "$RUNNER_TEMP/bundle/pods/$DECK-pod.json" "data/$DECK/$SHARD/pod.json"
           opponents="$(python -c 'import json,sys;print(",".join(json.load(open(sys.argv[1]))["opponent_pool"]))' "data/$DECK/$SHARD/pod.json")"
@@ -120,7 +120,7 @@ jobs:
             -games 100 -seed "$seed" -max-turns 60 \
             -retry-unverified=true -max-attempts 500 \
             -pilot bot -verify=true \
-            -native-dir "data/$DECK/$SHARD/native" -native-limit 2 \
+            -native-dir "data/$DECK/$SHARD/native" -native-limit 100 \
             > "data/$DECK/$SHARD/runs.jsonl"
           python - "$DECK" "$SHARD" "$seed" <<'PY'
           import json,sys
@@ -134,8 +134,38 @@ jobs:
           assert all(start<=seed<start+500 for seed in seeds)
           assert all(x["finished"] and x["replay_verified"] and not x.get("error") for x in rows)
           assert all(x["decks"][x["hero_seat"]]==deck for x in rows)
-          assert len(list((root/"native").glob("gorge-seed-*.json")))==2
+          assert len(list((root/"native").glob("gorge-seed-*.json")))==100
           PY
+      - name: Extract all card measurements and retain only two replay sources
+        env:
+          DECK: ${{ matrix.deck }}
+          SHARD: ${{ matrix.shard }}
+        run: |
+          set -euo pipefail
+          folder="data/$DECK/$SHARD"
+          mkdir -p "$RUNNER_TEMP/feature-ui"
+          python -m tools.gorge_ui_export "$folder"/native/gorge-seed-*.json \
+            --include-hidden --out "$RUNNER_TEMP/feature-ui" > /dev/null
+          node --max-old-space-size=4096 tools/gorge_card_insights_extract.cjs \
+            "$RUNNER_TEMP/feature-ui" "$folder/runs.jsonl" \
+            "$folder/pod.json" docs/deck-lab/decks.json "$folder/card-insights.json"
+          python - "$folder" <<'PY'
+          import json,sys
+          from pathlib import Path
+          folder=Path(sys.argv[1])
+          rows=[json.loads(s) for s in (folder/"runs.jsonl").read_text().splitlines()]
+          keep={r["seed"] for r in rows[:2]}
+          natives=list((folder/"native").glob("gorge-seed-*.json"))
+          assert len(natives)==100
+          for p in natives:
+              if int(p.stem.removeprefix("gorge-seed-")) not in keep:
+                  p.unlink()
+          assert len(list((folder/"native").glob("gorge-seed-*.json")))==2
+          features=json.loads((folder/"card-insights.json").read_text())
+          assert features["completed_verified_games"]==100
+          assert len(features["seed_chains"])==100
+          PY
+          rm -rf "$RUNNER_TEMP/feature-ui"
       - name: Retain source recordings and verified game summaries
         if: always()
         uses: actions/upload-artifact@v4
@@ -173,6 +203,10 @@ jobs:
           analytics=json.loads((base/"analytics.json").read_text())
           assert manifest["total_verified_games"]==2000
           assert len(manifest["games"])==40 and len(analytics["games"])==2000
+          cards=json.loads((base/"card-insights.json").read_text())
+          assert cards["total_verified_games"]==2000
+          assert all(d["verified_games"]==500 and d["observed_games"]==500
+                     for d in cards["decks"].values())
           assert {g["player_deck"] for g in analytics["games"]} == {
             "mortarion_current","magnus_budget","necron_dynasties","wretched_ranks"}
           with open(os.environ["GITHUB_STEP_SUMMARY"],"a") as f:

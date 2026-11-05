@@ -382,6 +382,8 @@
       lookupRecordedCard:cardInfo,
       renderMana:value=>window.GorgeDeckLabMana?.(value),
       onOpenRecordedCard:name=>window.GorgeDeckLabOpenCard?.(name),
+      fullCardInsights:window.__gorgeCardInsights?.[key]||null,
+      fullCohortGames:window.__gorgeFullCohort?.decks?.[key]?.n||null,
     });
   }
   return {FORMAT,validateReplay,visibleNames,realWinner,projectRun,

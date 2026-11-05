@@ -430,6 +430,21 @@ function init(){
   // Full-cohort report is precomputed from all verified Gorge outcomes.
   // This small summary is the sole source of headline statistics and
   // opponent/seat/color/archetype regressions. Replays are drilldown evidence.
+  // Card rankings are independently published and must cover all games.
+  // Missing data intentionally disables the misleading replay-only rankings.
+  const insightsPromise=fetch("./gorge-data/card-insights.json",{cache:"no-store"})
+    .then(async response=>{
+      if(!response.ok)return null;
+      const doc=await response.json();
+      if(doc.schema!=="gorge-card-insights-v1"||
+         !Number.isInteger(doc.total_verified_games)||
+         !doc.decks||typeof doc.decks!=="object")
+        throw Error("Invalid Gorge card-insights contract");
+      return doc;
+    }).catch(error=>{
+      console.warn("Full-cohort card insights unavailable",error);
+      return null;
+    });
   const cohortPromise=fetch("./gorge-data/cohort.json",{cache:"no-store"})
     .then(async response=>{
       if(!response.ok)throw Error("Full-cohort report unavailable");
@@ -753,8 +768,12 @@ function init(){
     await Promise.all(Array.from({length:Math.min(3,other.length)},()=>worker()));
     if(ticket!==requestId||!available.has(name))return;
     if(typeof window!=="undefined")window.__gorgeLoadedGames=cohort;
-    const fullReport=await cohortPromise;
+    const [fullReport,cardInsights]=await Promise.all([cohortPromise,insightsPromise]);
     if(ticket!==requestId||!available.has(name))return;
+    if(typeof window!=="undefined"){
+      window.__gorgeFullCohort=fullReport;
+      window.__gorgeCardInsights=cardInsights?.decks||{};
+    }
     // Render the replay details and source-verified headline together, with
     // no intermediate sample-outcome panel or flash of incorrect statistics.
     window.GorgeDashboard?.render(cohort,data.seed,data.player_deck);

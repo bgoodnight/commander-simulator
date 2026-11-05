@@ -5,6 +5,9 @@ on:
     paths:
       - "web/pages/**"
       - "tools/build_pages_deck_lab.py"
+      - "tools/gorge_card_insights.py"
+      - "tools/gorge_card_insights_extract.cjs"
+      - "tests/test_gorge_card_insights.py"
       - "tools/gorge_cohort_report.py"
       - "tests/test_gorge_cohort_report.py"
       - "commander_sim/**"
@@ -58,13 +61,14 @@ jobs:
         run: python tools/build_pages_deck_lab.py --output ./dist/pages
       - name: Validate export contracts and Javascript syntax
         run: |
-          python -m unittest tests.test_pages_export tests.test_gorge_ui_export tests.test_gorge_public_state tests.test_gorge_cohort_report -v
+          python -m unittest tests.test_pages_export tests.test_gorge_ui_export tests.test_gorge_public_state tests.test_gorge_cohort_report tests.test_gorge_card_insights -v
           node --check web/pages/app.js
           node --check web/pages/replay.js
           node --check web/pages/gorge_dashboard.js
           node --check web/pages/gorge_legacy_adapter.js
           node --test tests/gorge_legacy_adapter.test.cjs
           node --check web/pages/gorge_replay.js
+          node --check tools/gorge_card_insights_extract.cjs
           node --check web/pages/insight_explorer.js
           node --check web/pages/insight_catalog.js
           node --check web/pages/game_outcomes.js

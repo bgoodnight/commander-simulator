@@ -365,6 +365,19 @@ def build(output, *, catalog_path=SHARED_CATALOG, name_catalog_path=DEFAULT_NAME
                            for x in analytics["games"])):
                 raise ValueError("Unsafe Gorge analytics payload")
             shutil.copy2(analytics_path, target / "analytics.json")
+            if manifest.get("card_insights_file") is not None:
+                if manifest["card_insights_file"] != "card-insights.json":
+                    raise ValueError("Unexpected Gorge insights filename")
+                cards_source = public_gorge / "card-insights.json"
+                cards = json.loads(cards_source.read_text(encoding="utf-8"))
+                if (cards.get("schema") != "gorge-card-insights-v1"
+                        or cards.get("total_verified_games") != len(analytics["games"])
+                        or any(data.get("observed_games") != data.get("verified_games")
+                               for data in cards.get("decks", {}).values())
+                        or sum(data.get("verified_games", 0) for data
+                               in cards.get("decks", {}).values()) != len(analytics["games"])):
+                    raise ValueError("Incomplete or inconsistent source card insights")
+                shutil.copy2(cards_source, target / "card-insights.json")
             # All high-level Gorge results and exploratory regressions come
             # from every verified outcome, never the sampled detailed replays.
             from tools.gorge_cohort_report import make_report
