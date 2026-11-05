@@ -1,0 +1,21 @@
+{
+  "schema": "gorge-initial-trial-opponents-v1",
+  "status": "requires_source_qualification_check",
+  "source_oracle_sha256": "bedd71445ad4010ad4f4cf23f88bf2460d1fdc7279ed962e403eef85af08e07b",
+  "evidence_action_run_id": 42053608363,
+  "scope": "experimental-only; never current statistics",
+  "opponents": [
+    "guided-by-nature--c14",
+    "peer-through-time--c14",
+    "sneak-attack--znc",
+    "party-time--clb",
+    "draconic-rage--afc",
+    "swell-the-host--c15",
+    "virtue-and-valor--woc",
+    "quick-draw--otc",
+    "arm-for-battle--cmr",
+    "world-shaper--eoc",
+    "science--pip",
+    "eldrazi-incursion--m3c"
+  ]
+}
