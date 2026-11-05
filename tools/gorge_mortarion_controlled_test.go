@@ -13,12 +13,14 @@ import (
 // Mortarion corpus card; no fabricated script or game-state projections.
 func TestMortarionGuaranteedLifeLossAndMana(t *testing.T) {
   e := newSeats(t, 2)
+  // Enter the first main phase before placing Mortarion, so the fixture
+  // cannot encounter an unrelated turn-0 optional trigger.
+  driveToStep(t,e,1,0,state.StepMain1)
   card := corpusCard(t, "Mortarion, Daemon Primarch")
   id := onBoardCard(t,e,0,card)
   if e.G.Obj(id).Zone != state.ZBattlefield {
     t.Fatal("Mortarion not present")
   }
-  driveToStep(t,e,1,0,state.StepMain1)
   e.emit(events.Event{Kind: events.Damage, Player: 0, Amount: 3})
   if loss:=e.LifeLostThisTurn(0); loss!=3 {
     t.Fatalf("life lost %d not 3",loss)
