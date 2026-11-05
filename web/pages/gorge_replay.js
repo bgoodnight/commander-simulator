@@ -607,8 +607,11 @@ function init(){
   }
   function cohortLengthPanel(stats){
     const body=node("div","game-outcome-body gorge-length-histogram");
-    const values=stats.game_turn_histogram||[];
-    if(!values.length){body.append(node("p","micro","Game length distribution is not available for this cohort."));return body;}
+    const observed=stats.game_turn_histogram||[];
+    if(!observed.length){body.append(node("p","micro","Game length distribution is not available for this cohort."));return body;}
+    const counts=new Map(observed.map(item=>[item.turns,item.games]));
+    const first=Math.min(...counts.keys()),last=Math.max(...counts.keys());
+    const values=Array.from({length:last-first+1},(_,i)=>({turns:first+i,games:counts.get(first+i)||0}));
     body.append(node("p","micro","Recorded game turns · "+stats.game_turns_coverage+" games"));
     const highest=Math.max(...values.map(v=>v.games),1);
     const chart=node("div","gorge-turn-chart");
@@ -621,6 +624,7 @@ function init(){
       const track=node("div","gorge-turn-track");
       const fill=node("span","gorge-turn-fill");
       fill.style.height=(100*item.games/highest)+"%";
+      if(!item.games)fill.style.visibility="hidden";
       track.append(fill);
       column.append(track,node("span","gorge-turn-tick",index%labelEvery===0||index===values.length-1?String(item.turns):""));
       chart.append(column);
