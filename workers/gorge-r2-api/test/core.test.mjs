@@ -62,6 +62,7 @@ test("approved game index reveals only safe, deterministic summaries",async()=>{
   assert.equal("event_json" in out.games[0],false);
   assert.deepEqual(approvedGameIndex([],"mortarion_current").games,[]);
   assert.throws(()=>approvedGameIndex([a,a],"mortarion_current"),/duplicate/i);
-  assert.throws(()=>approvedGameIndex([await game({draw:true,winner_seat:null})],"mortarion_current"),/unapproved/);
+  const drawn=await game({draw:true,winner_seat:null});
+  assert.throws(()=>approvedGameIndex([drawn],"mortarion_current"),/unapproved/);
   assert.throws(()=>approvedGameIndex([a],"mortarion_current",26),/limit/);
 });
