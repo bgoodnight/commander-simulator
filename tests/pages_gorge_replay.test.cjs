@@ -63,8 +63,8 @@ assert.doesNotMatch(replayLoader,/Promise\.allSettled\(\[\.\.\.available\]/);
 const paintSource=replayLoader.slice(replayLoader.indexOf("function paintView("),
   replayLoader.indexOf("  const header=node(",replayLoader.indexOf("function paintView(")));
 assert.doesNotMatch(paintSource,/GorgeDashboard\.render/);
-assert.match(replayLoader,/const \\[fullReport,cardInsights\\]=await Promise\\.all/);
-assert.match(replayLoader,/window\\.__gorgeCardInsights=cardInsights\\?\\.decks\\|\\|\\{\\}/);
+assert(replayLoader.includes("const [fullReport,cardInsights]=await Promise.all"));
+assert(replayLoader.includes("window.__gorgeCardInsights=cardInsights?.decks||{}"));
 assert.match(replayLoader,/window\.GorgeDashboard\?\.render\(cohort,data\.seed,data\.player_deck\)/);
 assert.match(replayLoader,/presentOutcomeSummary\(fullReport,data\.player_deck/);
 assert.match(replayLoader,/game-outcome-hero-frame/);
