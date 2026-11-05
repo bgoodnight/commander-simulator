@@ -1,7 +1,7 @@
 import { parquetReadObjects, parquetMetadataAsync, parquetSchema } from "hyparquet";
 import { compressors } from "hyparquet-compressors";
 import registry from "../../data/gorge_analytics_cohort_registry_v1.json";
-import { aggregate, isApproved, validateDeck, normalizeRow, approvedGameIndex } from "./core.mjs";
+import { aggregate, isApproved, validateDeck, normalizeRow, approvedGameIndex, approvedGameDetail, approvedEventSegments } from "./core.mjs";
 
 // Read-only Cloudflare Worker. The R2 binding has no credentials in JS or HTML.
 // Never return native logs, intents, event_json, object catalog, or hidden zones.
@@ -87,6 +87,67 @@ async function readGames(bucket,shard,manifest) {
     throw Error("parquet_row_count_mismatch");
   return rows;
 }
+
+// Events are private omniscient data. Read only a bounded set of safe columns,
+// and only after game + cohort approval. Never request event_json or object IDs.
+async function readEventSegments(bucket,shard,manifest,gameId) {
+  const expected=manifest.files?.["events.parquet"];
+  if(!expected || !Number.isInteger(expected.rows) || expected.rows>100000)
+    throw Error("event_count_limit");
+  const key=shard.manifestKey.replace(/manifest\.json$/,"events.parquet");
+  const info=await bucket.head(key);
+  if(!info || info.size!==expected.bytes || info.size>MAX_OBJECT_SIZE)
+    throw Error("event_parquet_unavailable");
+  const file={byteLength:info.size,async slice(begin,end) {
+    const from=Math.max(0,begin<0?info.size+begin:begin);
+    const to=end===undefined?info.size:Math.min(info.size,end<0?info.size+end:end);
+    if(to<from)throw Error("invalid_event_range");
+    if(to===from)return new ArrayBuffer(0);
+    const part=await bucket.get(key,{range:{offset:from,length:to-from}});
+    if(!part)throw Error("event_range_unavailable");
+    return part.arrayBuffer();
+  }};
+  const metadata=await parquetMetadataAsync(file);
+  const present=new Set(parquetSchema(metadata).children.map(c=>c.element.name));
+  const required=["game_id","seq","kind_id","secret"];
+  if(required.some(c=>!present.has(c)))throw Error("missing_event_columns");
+  const rows=(await parquetReadObjects({file,compressors,columns:required}))
+    .map(row=>({
+      game_id:row.game_id,
+      seq:typeof row.seq==="bigint"?Number(row.seq):row.seq,
+      kind_id:typeof row.kind_id==="bigint"?Number(row.kind_id):row.kind_id,
+      secret:row.secret
+    }));
+  if(rows.length!==expected.rows)throw Error("event_row_count_mismatch");
+  return approvedEventSegments(rows,gameId);
+}
+async function getApprovedTimeline(env,deck,gameId,metrics) {
+  const {shards,truncated}=await listShards(env.GORGE_R2);
+  if(truncated)throw Error("shard_scan_limit_reached");
+  const matching=shards.filter(s=>s.deck===deck);
+  metrics.shards_scanned=matching.length;
+  if(!registry.cohorts.some(c=>c.status==="current"&&c.approved===true))
+    return {schema:"gorge-r2-game-timeline-v1",deck,game:null,
+      status:matching.length?"awaiting_cohort_approval":"no_warehouse_shards"};
+  let found=null;
+  const fingerprints=new Map();
+  for(const shard of matching) {
+    const manifest=await readManifest(env.GORGE_R2,shard);
+    const games=await readGames(env.GORGE_R2,shard,manifest);
+    for(const g of games) {
+      if(g.game_id!==gameId)continue;
+      if(found)throw Error("duplicate_game_id");
+      if(!(await isApproved(g,registry,fingerprints)))
+        continue;
+      const detail=approvedGameDetail([g],deck,gameId);
+      const segments=await readEventSegments(env.GORGE_R2,shard,manifest,gameId);
+      found={...detail,timeline:segments};
+    }
+  }
+  return {schema:"gorge-r2-game-timeline-v1",deck,game:found,
+    status:found?"ready":"game_not_found"};
+}
+
 async function getSummary(env,deck,metrics) {
   const {shards,truncated}=await listShards(env.GORGE_R2);
   const matching=shards.filter(x=>x.deck===deck);
@@ -113,22 +174,32 @@ async function getSummary(env,deck,metrics) {
   return {...aggregate(rows,deck),status:rows.length?"ready":"awaiting_cohort_approval",
     raw_shards_seen:matching.length};
 }
-async function getApprovedGames(env,deck,limit,metrics) {
+async function getApprovedGames(env,deck,limit,metrics,gameId=null) {
   const {shards,truncated}=await listShards(env.GORGE_R2);
   const matching=shards.filter(x=>x.deck===deck);
   metrics.shards_scanned=matching.length;
   metrics.list_truncated=truncated;
   if(truncated)throw Error("shard_scan_limit_reached");
   const approved=registry.cohorts.filter(c=>c.status==="current"&&c.approved===true);
-  if(!approved.length)return {...approvedGameIndex([],deck,limit),
-    status:matching.length?"awaiting_cohort_approval":"no_warehouse_shards",
-    raw_shards_seen:matching.length};
+  if(!approved.length)return gameId===null?
+    {...approvedGameIndex([],deck,limit),
+      status:matching.length?"awaiting_cohort_approval":"no_warehouse_shards",
+      raw_shards_seen:matching.length}:
+    {schema:"gorge-r2-approved-game-detail-v1",deck,
+      population:"approved_current_decisive_only",game:null,
+      status:matching.length?"awaiting_cohort_approval":"no_warehouse_shards"};
   const rows=[],fingerprints=new Map();
   for(const shard of matching) {
     const manifest=await readManifest(env.GORGE_R2,shard);
     const games=await readGames(env.GORGE_R2,shard,manifest);
     for(const game of games)
       if(await isApproved(game,registry,fingerprints))rows.push(game);
+  }
+  if(gameId!==null) {
+    const game=approvedGameDetail(rows,deck,gameId);
+    return {schema:"gorge-r2-approved-game-detail-response-v1",
+      deck,population:"approved_current_decisive_only",game,
+      status:game?"ready":"game_not_found",raw_shards_seen:matching.length};
   }
   return {...approvedGameIndex(rows,deck,limit),
     status:rows.length?"ready":"awaiting_cohort_approval",
@@ -176,8 +247,16 @@ export default {
         return fail(503,"benchmark_unavailable",started);
       }
     }
-    if(url.pathname!=="/v1/summary" && url.pathname!=="/v1/games")
+    const detailMatch=url.pathname.match(/^\/v1\/games\/([^/]+?)(\/timeline)?$/);
+    if(url.pathname!=="/v1/summary" && url.pathname!=="/v1/games" && !detailMatch)
       return fail(404,"not_found",started);
+    let gameId=null;
+    if(detailMatch) {
+      try {
+        gameId=decodeURIComponent(detailMatch[1]);
+        if(!/^[a-zA-Z0-9_.:/-]{1,200}$/.test(gameId))throw Error("invalid_game_id");
+      }catch{return fail(400,"invalid_game_id",started);}
+    }
     if(!env.GORGE_R2)return fail(503,"r2_binding_missing",started);
     let deck;
     try { deck=validateDeck(url.searchParams.get("deck")); }
@@ -193,8 +272,9 @@ export default {
     }
     const metrics={};
     try{
-      const payload=url.pathname==="/v1/games"?
-        await getApprovedGames(env,deck,limit,metrics):
+      const payload=detailMatch?.[2]?await getApprovedTimeline(env,deck,gameId,metrics):
+        (url.pathname==="/v1/games" || gameId!==null)?
+        await getApprovedGames(env,deck,limit,metrics,gameId):
         await getSummary(env,deck,metrics);
       return json({...payload,query:{...metrics,server_ms:duration(started)}},200,duration(started));
     }catch(err){

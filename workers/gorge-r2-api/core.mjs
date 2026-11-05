@@ -133,3 +133,55 @@ export function approvedGameIndex(rows, deck, limit=20) {
     population:"approved_current_decisive_only",
     total:parsed.length,limit,has_more:parsed.length>limit,games:parsed.slice(0,limit)};
 }
+
+/** Safe detail for one already-verified, approved game; never exposes the native recording. */
+export function approvedGameDetail(rows,deck,gameId) {
+  const matches=rows.filter(row=>row.game_id===gameId);
+  if(matches.length>1)throw Error("duplicate_approved_game_id");
+  if(!matches.length)return null;
+  const item=approvedGameIndex(matches,deck,1).games[0];
+  return {schema:"gorge-r2-approved-game-detail-v1",
+    population:"approved_current_decisive_only",deck,...item,
+    replay_status:"not_available",
+    disclaimer:"Native event replay is not exposed by this endpoint."};
+}
+
+export const EVENT_KINDS = [
+  "game_start","shuffle","move_zone","draw","life_change","damage","tap",
+  "untap","step_change","turn_change","priority","put_on_stack","resolve",
+  "mana_add","mana_clear","counter_change","declare_attackers",
+  "declare_blockers","player_lost","game_over"
+];
+
+/** Counts only, never the private native event payload or game object identities. */
+export function approvedEventSegments(events,gameId) {
+  const selected=events.filter(e=>e.game_id===gameId).sort((a,b)=>a.seq-b.seq);
+  if(selected.length>100000)throw Error("event_count_limit");
+  const segments=[];
+  let segment=null,last=-1,total=0;
+  for(const e of selected) {
+    if(!Number.isSafeInteger(e.seq)||e.seq<=last ||
+       !Number.isSafeInteger(e.kind_id)||e.kind_id<0 ||
+       typeof e.secret!=="boolean")throw Error("invalid_event_projection");
+    last=e.seq;
+    // Secret native events are deliberately not counted by family or exposed
+    // with their per-event location; their contribution is withheld entirely.
+    if(e.kind_id===9 || segment===null) {
+      segment={segment:segments.length,start_seq:e.seq,end_seq:e.seq,
+        public_events:0,withheld_events:0,kinds:{}};
+      segments.push(segment);
+    }
+    segment.end_seq=e.seq;
+    if(e.secret)segment.withheld_events++;
+    else {
+      const family=EVENT_KINDS[e.kind_id]??"unknown";
+      segment.kinds[family]=(segment.kinds[family]??0)+1;
+      segment.public_events++;
+    }
+    total++;
+  }
+  return {schema:"gorge-r2-event-segments-v1",game_id:gameId,
+    segmentation:"native_turn_change_boundaries_not_complete_player_rounds",
+    event_count:total,segments,
+    raw_events_exposed:false};
+}

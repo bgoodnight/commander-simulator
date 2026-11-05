@@ -1,6 +1,6 @@
 import test from "node:test";
 import assert from "node:assert/strict";
-import { aggregate, isApproved, isDecisive, sha256, stableJson, validateDeck, normalizeRow, IDENTITY_FIELDS, approvedGameIndex } from "../core.mjs";
+import { aggregate, isApproved, isDecisive, sha256, stableJson, validateDeck, normalizeRow, IDENTITY_FIELDS, approvedGameIndex, approvedGameDetail, approvedEventSegments } from "../core.mjs";
 
 const fp = Object.fromEntries(IDENTITY_FIELDS.map(k=>[k,"pinned-"+k]));
 const approved={cohort_id:"baseline-1",status:"current",approved:true,approval_ref:"reviewed",...fp};
@@ -65,4 +65,37 @@ test("approved game index reveals only safe, deterministic summaries",async()=>{
   const drawn=await game({draw:true,winner_seat:null});
   assert.throws(()=>approvedGameIndex([drawn],"mortarion_current"),/unapproved/);
   assert.throws(()=>approvedGameIndex([a],"mortarion_current",26),/limit/);
+});
+
+test("individual approved game detail is limited to public-safe metadata",async()=>{
+  const g=await game({event_json:"SECRET",seed:891,object_key:"PRIVATE"});
+  const out=approvedGameDetail([g],"mortarion_current",g.game_id);
+  assert.equal(out.game_id,g.game_id);
+  assert.equal(out.result,"win");
+  assert.equal(out.replay_status,"not_available");
+  for(const field of ["event_json","seed","object_key","source_sha256","decks_json"])
+    assert.equal(field in out,false);
+  assert.equal(approvedGameDetail([g],"mortarion_current","absent"),null);
+  assert.throws(()=>approvedGameDetail([g,g],"mortarion_current",g.game_id),/duplicate/);
+});
+
+test("native event segments retain only non-secret family counts",()=>{
+  const gid="batch/mortarion_current/0/1";
+  const events=[
+    {game_id:gid,seq:1,kind_id:0,secret:false},
+    {game_id:gid,seq:2,kind_id:3,secret:true},
+    {game_id:gid,seq:3,kind_id:9,secret:false},
+    {game_id:gid,seq:4,kind_id:5,secret:false},
+    {game_id:"other",seq:5,kind_id:4,secret:false}
+  ];
+  const result=approvedEventSegments(events,gid);
+  assert.equal(result.event_count,4);
+  assert.equal(result.segments.length,2);
+  assert.equal(result.segments[0].public_events,1);
+  assert.equal(result.segments[0].withheld_events,1);
+  assert.equal(result.segments[1].kinds.damage,1);
+  assert.equal(result.raw_events_exposed,false);
+  assert(!JSON.stringify(result).includes("other"));
+  assert.throws(()=>approvedEventSegments([events[0],events[0]],gid),/invalid/);
+  assert.throws(()=>approvedEventSegments([{...events[0],secret:null}],gid),/invalid/);
 });
