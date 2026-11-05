@@ -7,6 +7,7 @@ on:
     paths:
       - ".github/workflows/gorge-precon-60-qualification.yml"
       - "tools/gorge_commander_probe.go"
+      - "tools/patch_gorge_ward_blight.py"
       - "tools/check_gorge_precon_compatibility.py"
       - "tools/stage_gorge_precon_qualification.py"
   workflow_dispatch:
@@ -45,6 +46,7 @@ jobs:
           git clone --filter=blob:none https://github.com/adams-shaun/gorge.git "$RUNNER_TEMP/gorge"
           git -C "$RUNNER_TEMP/gorge" checkout --detach "$GORGE_COMMIT"
           test "$(git -C "$RUNNER_TEMP/gorge" rev-parse HEAD)" = "$GORGE_COMMIT"
+          python -m tools.patch_gorge_ward_blight --gorge "$RUNNER_TEMP/gorge"
       - uses: actions/setup-go@v5
         with:
           go-version-file: ${{ runner.temp }}/gorge/go.mod
