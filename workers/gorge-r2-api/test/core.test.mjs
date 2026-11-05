@@ -1,6 +1,6 @@
 import test from "node:test";
 import assert from "node:assert/strict";
-import { aggregate, isApproved, isDecisive, sha256, stableJson, validateDeck, normalizeRow, IDENTITY_FIELDS, approvedGameIndex } from "../core.mjs";
+import { aggregate, isApproved, isDecisive, sha256, stableJson, validateDeck, normalizeRow, IDENTITY_FIELDS, approvedGameIndex, approvedGameDetail } from "../core.mjs";
 
 const fp = Object.fromEntries(IDENTITY_FIELDS.map(k=>[k,"pinned-"+k]));
 const approved={cohort_id:"baseline-1",status:"current",approved:true,approval_ref:"reviewed",...fp};
@@ -65,4 +65,16 @@ test("approved game index reveals only safe, deterministic summaries",async()=>{
   const drawn=await game({draw:true,winner_seat:null});
   assert.throws(()=>approvedGameIndex([drawn],"mortarion_current"),/unapproved/);
   assert.throws(()=>approvedGameIndex([a],"mortarion_current",26),/limit/);
+});
+
+test("individual approved game detail is limited to public-safe metadata",async()=>{
+  const g=await game({event_json:"SECRET",seed:891,object_key:"PRIVATE"});
+  const out=approvedGameDetail([g],"mortarion_current",g.game_id);
+  assert.equal(out.game_id,g.game_id);
+  assert.equal(out.result,"win");
+  assert.equal(out.replay_status,"not_available");
+  for(const field of ["event_json","seed","object_key","source_sha256","decks_json"])
+    assert.equal(field in out,false);
+  assert.equal(approvedGameDetail([g],"mortarion_current","absent"),null);
+  assert.throws(()=>approvedGameDetail([g,g],"mortarion_current",g.game_id),/duplicate/);
 });
