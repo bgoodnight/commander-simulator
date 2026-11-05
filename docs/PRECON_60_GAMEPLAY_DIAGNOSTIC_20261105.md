@@ -21,3 +21,36 @@ The initial workflow intentionally failed on the engine error, correctly prevent
 5. Repeat targeted tests following any Gorge rules/pilot change, then version the resulting eligibility metadata and approve cohorts deliberately.
 
 All 60 decks remain staged; none promoted to the active opponent pool.
+
+## Follow-up: source-verified ward-Blight repair and two-hero panel
+
+The failing game was pinpointed from a native decision trace: at seed
+`186047`, intent 630, Mortarion's player elected to pay Blight ward, then
+Gorge created `Choose a creature to blight` with `min=1,max=1` and **zero
+legal options**. This was an invalid rules-side decision, not a legal play
+available to the bot.
+
+`tools/patch_gorge_ward_blight.py` is a fail-closed overlay to the pinned
+`engine/rules/ward.go`: when ward Blight has zero legal creatures, the
+payment fails and the ward effect proceeds as unpaid. It makes no artificial
+selection and changes no other ward payments. The same overlay is applied to
+the 60-precon qualification workflow and the named Gorge precon/benchmark
+workflows. Any future upstream source change requires review because the
+overlay checks the exact pinned code fragment.
+
+[Patched full-panel validation run 42052716986](https://github.com/bgoodnight/commander-simulator/actions/runs/42052716986):
+**57/60 completed and replay-verified, 3 turn-limit stalls, 0 engine errors,
+60/60 opponent precons encountered**. Exact seed 186047 completed on turn 36
+with a verified replay; previous failure is resolved.
+
+[Two-hero experimental run 42053608363](https://github.com/bgoodnight/commander-simulator/actions/runs/42053608363):
+both `mortarion_current` and `magnus_premium` independently played 60
+four-player games versus the same provisional 60-precon panel. Each had
+**57 fully replay-verified completions, 3 60-turn stalls, 0 engine errors,
+and exposure to all 60 opponents**. Across both: 120 attempts, 114 verified
+completions, 6 capped games.
+
+These are **experimental qualification recordings**, not current-model
+observations. Completing 57 games does not yet certify pilot quality or
+Oracle mechanic fidelity. Do not merge with old R2 win-rate estimates or
+treat one appearance per candidate as an accurate deck power benchmark.
