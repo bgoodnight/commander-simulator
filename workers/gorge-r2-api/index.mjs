@@ -1,0 +1,136 @@
+import { parquetReadObjects } from "hyparquet";
+import { compressors } from "hyparquet-compressors";
+import registry from "../../data/gorge_analytics_cohort_registry_v1.json";
+import { aggregate, isApproved, validateDeck } from "./core.mjs";
+
+// Read-only Cloudflare Worker. The R2 binding has no credentials in JS or HTML.
+// Never return native logs, intents, event_json, object catalog, or hidden zones.
+const PREFIX="warehouse/v1/";
+const MAX_SHARDS=40;
+const MAX_OBJECT_SIZE=16*1024*1024;  // initial latency/memory guardrail
+const ORIGIN="https://bgoodnight.github.io";
+const now=()=>performance.now();
+const duration=t=>Math.round((now()-t)*10)/10;
+function json(value,status=200,ms=0) {
+  return new Response(JSON.stringify(value),{
+    status,headers:{
+      "Content-Type":"application/json; charset=utf-8",
+      "Cache-Control":"public, max-age=30, stale-while-revalidate=30",
+      "Access-Control-Allow-Origin":ORIGIN,
+      "Vary":"Origin",
+      "X-Gorge-Api-Ms":String(ms),
+      "X-Content-Type-Options":"nosniff"
+    }
+  });
+}
+function fail(status,code,t) {return json({error:code},status,duration(t));}
+async function listShards(bucket) {
+  let cursor, pages=0, truncated=false;
+  const shards=[];
+  do {
+    const listing=await bucket.list({prefix:PREFIX,limit:500,...(cursor?{cursor}:{})});
+    for (const obj of listing.objects) {
+      if (!obj.key.endsWith("/manifest.json")) continue;
+      const match=obj.key.match(/^warehouse\/v1\/([0-9]+-[0-9]+)\/([a-z0-9_-]+)\/([0-9]+)\/manifest\.json$/);
+      if (!match) continue;
+      shards.push({manifestKey:obj.key,batch:match[1],deck:match[2],shard:match[3]});
+      if (shards.length>=MAX_SHARDS) {truncated=true;break;}
+    }
+    if(truncated)break;
+    cursor=listing.truncated?listing.cursor:null;
+    pages++;
+  } while (cursor && pages<4);
+  if(cursor)truncated=true;
+  return {shards:shards.sort((a,b)=>b.batch.localeCompare(a.batch)),truncated};
+}
+async function readManifest(bucket,shard) {
+  const file=await bucket.get(shard.manifestKey);
+  if (!file) throw Error("missing_manifest");
+  const manifest=await file.json();
+  if(manifest.schema!=="gorge-warehouse-shard-v1" ||
+     manifest.batch_id!==shard.batch ||
+     manifest.player_deck!==shard.deck ||
+     String(manifest.shard)!==shard.shard ||
+     !manifest.files?.["games.parquet"]?.sha256)throw Error("invalid_manifest");
+  return manifest;
+}
+async function readGames(bucket,shard,manifest) {
+  const key=shard.manifestKey.replace(/manifest\.json$/,"games.parquet");
+  const info=await bucket.head(key);
+  if(!info || info.size!==manifest.files["games.parquet"].bytes)
+    throw Error("parquet_file_mismatch");
+  if(info.size>MAX_OBJECT_SIZE)throw Error("parquet_file_too_large");
+  // AsyncBuffer from private R2 byte ranges: no signed URLs, no full event scans.
+  const file={
+    byteLength:info.size,
+    async slice(begin,end) {
+      const from=Math.max(0,begin);
+      const to=end===undefined?info.size:Math.min(info.size,end);
+      if(to<from)throw Error("invalid_range");
+      const length=to-from;
+      if(!length)return new ArrayBuffer(0);
+      const chunk=await bucket.get(key,{range:{offset:from,length}});
+      if(!chunk)throw Error("missing_parquet_range");
+      return chunk.arrayBuffer();
+    }
+  };
+  const rows=await parquetReadObjects({
+    file,compressors,
+    columns:["game_id","deck","finished","replay_verified","error","draw",
+      "hero_seat","winner_seat","turns","decks_json","source_sha256","cohort_id",
+      "cohort_manifest_sha256","engine_commit","rules_patch_sha256",
+      "card_corpus_sha256","player_deck_sha256","pilot_version",
+      "opponent_panel_sha256","oracle_bulk_sha256","simulation_protocol_sha256"]
+  });
+  if(rows.length!==manifest.files["games.parquet"].rows)
+    throw Error("parquet_row_count_mismatch");
+  return rows;
+}
+async function getSummary(env,deck,metrics) {
+  const {shards,truncated}=await listShards(env.GORGE_R2);
+  const matching=shards.filter(x=>x.deck===deck);
+  metrics.shards_scanned=matching.length;
+  metrics.list_truncated=truncated;
+  if(truncated)throw Error("shard_scan_limit_reached");
+  // Critical optimization: no approved registry means no Parquet decompression.
+  const approved=registry.cohorts.filter(c=>c.status==="current"&&c.approved===true);
+  if(!approved.length) {
+    return {schema:"gorge-r2-live-summary-v1",source:"r2-direct-parquet",
+      population:"approved_current_decisive_only",deck,n:0,wins:0,losses:0,
+      win_rate:null,baseline:.25,groups:{opponents:[]},
+      median_game_turns:null,regressions:{status:"not_precomputed"},
+      status:matching.length?"awaiting_cohort_approval":"no_warehouse_shards",
+      raw_shards_seen:matching.length};
+  }
+  const rows=[];
+  for(const shard of matching) {
+    const manifest=await readManifest(env.GORGE_R2,shard);
+    const games=await readGames(env.GORGE_R2,shard,manifest);
+    for(const game of games)if(await isApproved(game,registry))rows.push(game);
+  }
+  return {...aggregate(rows,deck),status:rows.length?"ready":"awaiting_cohort_approval",
+    raw_shards_seen:matching.length};
+}
+export default {
+  async fetch(request,env) {
+    const started=now();
+    if(request.method!=="GET")return fail(405,"method_not_allowed",started);
+    const url=new URL(request.url);
+    if(url.pathname==="/health")
+      return json({ok:true,service:"gorge-r2-direct-api",schema:1,
+        r2_binding:!!env.GORGE_R2},200,duration(started));
+    if(url.pathname!=="/v1/summary")return fail(404,"not_found",started);
+    if(!env.GORGE_R2)return fail(503,"r2_binding_missing",started);
+    let deck;
+    try { deck=validateDeck(url.searchParams.get("deck")); }
+    catch {return fail(400,"invalid_deck",started);}
+    const metrics={};
+    try{
+      const payload=await getSummary(env,deck,metrics);
+      return json({...payload,query:{...metrics,server_ms:duration(started)}},200,duration(started));
+    }catch(err){
+      console.error("R2 summary failed:",String(err?.message||err));
+      return fail(503,"r2_query_unavailable",started);
+    }
+  }
+};
