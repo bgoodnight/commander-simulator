@@ -375,7 +375,7 @@ def build(output, *, catalog_path=SHARED_CATALOG, name_catalog_path=DEFAULT_NAME
         if len(decisive_rows)!=len(source_analytics.get("games",[])):
             safe_manifest.pop("card_insights_file",None)
         (target / "manifest.json").write_text(
-            json.dumps(safe_manifest,sort_keys=True)+"\\n",encoding="utf-8")
+            json.dumps(safe_manifest,sort_keys=True)+"\n",encoding="utf-8")
         for source_file, filename in validated:
             shutil.copy2(source_file, target / filename)
         # Summary analytics are small and must never contain native logs,
