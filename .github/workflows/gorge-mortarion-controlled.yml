@@ -1,0 +1,37 @@
+name: Gorge · Mortarion controlled Astartes rule test
+on:
+  push:
+    branches: [main]
+    paths:
+      - ".github/workflows/gorge-mortarion-controlled.yml"
+  workflow_dispatch:
+permissions:
+  contents: read
+  actions: read
+jobs:
+  controlled:
+    runs-on: ubuntu-latest
+    timeout-minutes: 35
+    steps:
+      - uses: actions/checkout@v4
+      - name: Clone pinned Gorge
+        run: |
+          git clone --filter=blob:none https://github.com/adams-shaun/gorge.git "$RUNNER_TEMP/gorge"
+          git -C "$RUNNER_TEMP/gorge" checkout --detach b78e4c8b16078f6decbc48875bba953ce5535b85
+      - uses: actions/setup-go@v5
+        with:
+          go-version-file: ${{ runner.temp }}/gorge/go.mod
+          cache: false
+      - name: Restore compiled card corpus from the verified benchmark
+        env:
+          GH_TOKEN: ${{ github.token }}
+          GH_REPO: ${{ github.repository }}
+        run: |
+          mkdir -p "$RUNNER_TEMP/bundle"
+          gh run download 41938112091 --name gorge-500-pinned-bundle --dir "$RUNNER_TEMP/bundle"
+          cp -a "$RUNNER_TEMP/bundle/.cards" "$RUNNER_TEMP/gorge/.cards"
+          cp tools/gorge_mortarion_controlled_test.go "$RUNNER_TEMP/gorge/engine/rules/mortarion_controlled_test.go"
+      - name: Test Mortarion life-loss trigger with guaranteed mana
+        working-directory: ${{ runner.temp }}/gorge
+        run: |
+          go test ./engine/rules -run '^TestMortarionGuaranteedLifeLossAndMana$' -count=1 -v
