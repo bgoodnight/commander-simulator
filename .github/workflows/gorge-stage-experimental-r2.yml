@@ -118,6 +118,48 @@ jobs:
               raise ValueError("Untrusted event offsets")
           print("Verified private experimental event windows and no cohort approval")
           PY
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Verify real ZSTD Parquet game-window reads with Worker decoder
+        working-directory: workers/gorge-r2-api
+        run: |
+          npm install --ignore-scripts --no-audit --no-fund
+          node --input-type=module <<'JS'
+          import assert from "node:assert/strict";
+          import path from "node:path";
+          import { asyncBufferFromFile, parquetReadObjects } from "hyparquet";
+          import { compressors } from "hyparquet-compressors";
+          import { approvedEventWindow, approvedEventSegments } from "./core.mjs";
+          const dir=path.join(process.env.RUNNER_TEMP,"warehouse");
+          const games=await parquetReadObjects({
+            file:await asyncBufferFromFile(path.join(dir,"games.parquet")),
+            columns:["game_id","event_start_row","native_event_count"],
+            compressors
+          });
+          assert.ok(games.length>=11);
+          const game=games.at(-1);
+          const meta=await import("node:fs/promises");
+          const manifest=JSON.parse(await meta.readFile(path.join(dir,"manifest.json"),"utf8"));
+          const window=approvedEventWindow({
+            event_start_row:Number(game.event_start_row),
+            native_event_count:Number(game.native_event_count)
+          },manifest.files["events.parquet"].rows);
+          const rows=await parquetReadObjects({
+            file:await asyncBufferFromFile(path.join(dir,"events.parquet")),
+            columns:["game_id","seq","kind_id","secret"],
+            rowStart:window.rowStart,rowEnd:window.rowEnd,compressors
+          });
+          assert.equal(rows.length,window.count);
+          assert.ok(rows.every(e=>e.game_id===game.game_id));
+          const projection=approvedEventSegments(rows.map(e=>({
+            game_id:e.game_id,seq:Number(e.seq),
+            kind_id:Number(e.kind_id),secret:e.secret
+          })),game.game_id);
+          assert.equal(projection.event_count,window.count);
+          assert.equal(projection.raw_events_exposed,false);
+          console.log("Source-backed hyparquet game-window round trip:", window.count,"events");
+          JS
       - name: Preserve private immutable recordings and Parquet, manifest last
         shell: bash
         run: |
