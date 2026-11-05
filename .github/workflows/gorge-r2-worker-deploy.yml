@@ -68,8 +68,32 @@ jobs:
           trap cleanup EXIT
           printf '%s' "$token" | npx wrangler secret put BENCHMARK_TOKEN --name gorge-r2-direct-api-preview >/dev/null
           put=1
-          sleep 3
+          # Secret updates can take time to propagate across Workers isolates.
+          # Authenticate before timing the benchmark so a transient 401 is not
+          # confused with a Parquet decoding or R2 access failure.
           curl --fail --silent --show-error --max-time 25 "$WORKER_URL/health" >/dev/null
+          ready=0
+          for attempt in {1..12}; do
+            code="$(curl --silent --show-error --max-time 30 --output "$RUNNER_TEMP/r2-benchmark-probe.json" --write-out '%{http_code}' \
+              -H "Authorization: Bearer $token" \
+              "$WORKER_URL/v1/benchmark?deck=mortarion_current")"
+            if [[ "$code" == 200 ]]; then
+              ready=1
+              break
+            fi
+            if [[ "$code" != 401 ]]; then
+              echo "::error::Benchmark probe returned HTTP $code, not a temporary authorization error"
+              cat "$RUNNER_TEMP/r2-benchmark-probe.json"
+              exit 1
+            fi
+            echo "Benchmark credential not yet active (HTTP 401, attempt $attempt/12)"
+            sleep 5
+          done
+          if [[ "$ready" -ne 1 ]]; then
+            echo "::error::Benchmark authentication did not become active after 12 attempts"
+            exit 1
+          fi
+          node -e 'const x=require(process.argv[1]);if(x.status!=="ok"){console.error("Benchmark probe status:",x.status);process.exit(1)}' "$RUNNER_TEMP/r2-benchmark-probe.json"
           : > "$RUNNER_TEMP/r2-api-benchmark.jsonl"
           for i in {1..7}; do
             curl --fail --silent --show-error --retry 2 --retry-delay 2 --max-time 30 \
