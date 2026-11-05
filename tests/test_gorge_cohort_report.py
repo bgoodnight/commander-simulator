@@ -57,6 +57,25 @@ class FullCohortTests(unittest.TestCase):
         with self.assertRaisesRegex(ValueError,"Duplicate"):
             make_report([row,row])
 
+    def test_draws_and_turn_limit_stalls_are_not_in_any_analytics(self):
+        win=game(9001,9001%4)
+        loss=game(9002,(9002%4+1)%4)
+        draw={**game(9003,None), "draw":True, "winner_seat":None}
+        capped={**game(9004,None), "finished":False, "winner_seat":None,
+                "stall_reason":"turns", "replay_verified":False}
+        report=make_report([win,loss,draw,capped])
+        stats=report["decks"]["mortarion_current"]
+        self.assertEqual(report["total_verified_games"],2)
+        self.assertEqual(report["nondecisive_excluded"],2)
+        self.assertEqual(stats["n"],2)
+        self.assertEqual(stats["wins"],1)
+        self.assertEqual(stats["losses"],1)
+        self.assertEqual(stats["win_rate"],.5)
+        self.assertEqual(stats["groups"]["opponents"][0]["n"],2)
+        self.assertEqual(stats["regressions"]["opponents"]["n"],2)
+        self.assertFalse(eligible(draw))
+        self.assertFalse(eligible(capped))
+
     def test_regression_reports_insufficient_outcome_variation(self):
         rows=[game(20000+i,i%4) for i in range(100)]
         model=regression(rows,"opponents")
