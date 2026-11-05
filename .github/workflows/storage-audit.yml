@@ -50,7 +50,10 @@ jobs:
           export AWS_DEFAULT_REGION=auto
           endpoint="https://$R2_ACCOUNT_ID.r2.cloudflarestorage.com"
           echo "### R2 private storage inventory" >> "$GITHUB_STEP_SUMMARY"
-          for prefix in "" "native/v1/" "warehouse/v1/"; do
+          # Enumerate prefix summaries rather than assuming all R2 objects use
+          # our two canonical archive namespaces. Never print object names.
+          top_prefixes="$(aws --endpoint-url "$endpoint" s3 ls s3://gorge-simulations/ | awk '$1 == "PRE" { print $2 }')"
+          for prefix in "" "native/v1/" "warehouse/v1/" $top_prefixes; do
             location="s3://gorge-simulations/$prefix"
             if [[ -z "$prefix" ]]; then label="Entire bucket"; else label="$prefix"; fi
             totals="$(aws --endpoint-url "$endpoint" s3 ls "$location" --recursive --summarize | tail -n 2)"
