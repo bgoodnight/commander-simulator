@@ -142,7 +142,7 @@ class StaticPagesTests(unittest.TestCase):
                     self.assertLessEqual(row["detailed_replay_count"],row["n"])
                     for model in row["regressions"].values():
                         self.assertEqual(model["data_scope"],
-                                         "all verified cohort outcomes")
+                                         "completed and replay-verified decisive wins and losses")
             self.assertEqual({p.name for p in gorge_dir.iterdir()},allowed)
             for game in manifest["games"]:
                 replay=json.loads((gorge_dir/game["file"]).read_text())
