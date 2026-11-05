@@ -55,12 +55,12 @@ jobs:
           make fetch-cards compile-cards
           cp "$GITHUB_WORKSPACE/tools/gorge_commander_probe.go" commander_probe.go
           go build -o "$RUNNER_TEMP/gorge-probe" ./commander_probe.go
-      - name: Run bounded four-player experimental games with real precons
+      - name: Run 60-game, full-panel experimental four-player Gorge qualification
         working-directory: ${{ runner.temp }}/gorge
         shell: bash
         run: |
           set -euo pipefail
-          count="${{ inputs.games || '12' }}"
+          count="${{ inputs.games || '60' }}"
           names="$(cat "$RUNNER_TEMP/panel/opponents.txt")"
           # Gorge exits 2 when any game stalls at the bounded turn cap.
           # Preserve such games as *incomplete*, never as wins or passes.
@@ -81,7 +81,7 @@ jobs:
           printf '%s\\n' "$status" > "$RUNNER_TEMP/results/probe-exit-code.txt"
       - name: Report observed results without granting qualification
         env:
-          GAME_COUNT: ${{ inputs.games || '12' }}
+          GAME_COUNT: ${{ inputs.games || '60' }}
         run: |
           python - <<'PY'
           import json, os
@@ -107,6 +107,8 @@ jobs:
               status["completed"]+=int(r.get("finished") is True)
               status["replay_verified"]+=int(r.get("replay_verified") is True)
           status["distinct_precons_seen"]=len(seen)
+          if status["attempted"] == 60 and len(seen) != 60:
+              raise ValueError("Full-panel test failed to expose all 60 selected precons")
           status["turn_limit_stalls"]=status["attempted"]-status["completed"]
           (root/"results/qualification-summary.json").write_text(json.dumps(status,indent=2)+"\\n")
           with open(os.environ["GITHUB_STEP_SUMMARY"],"a") as out:
