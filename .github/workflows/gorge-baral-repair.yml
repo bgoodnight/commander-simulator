@@ -6,6 +6,7 @@ on:
       - ".github/workflows/gorge-baral-repair.yml"
       - "tools/gorge_commander_probe.go"
       - "tools/gorge_baral_overlay_test.go"
+      - "tools/gorge_baral_cost_rules_test.go"
   workflow_dispatch:
 permissions:
   contents: read
@@ -34,7 +35,53 @@ jobs:
           cp tools/gorge_commander_probe.go "$RUNNER_TEMP/gorge/commander_probe.go"
           cp tools/gorge_baral_overlay_test.go "$RUNNER_TEMP/gorge/baral_overlay_test.go"
           export GORGE_TEST_CORPUS="$RUNNER_TEMP/bundle/.cards"
-          (cd "$RUNNER_TEMP/gorge" && go test commander_probe.go baral_overlay_test.go -run '^TestPinnedBaralCorpusOverlay$' -count=1 -v)
+          (cd "$RUNNER_TEMP/gorge" && go test commander_probe.go baral_overlay_test.go -run '^TestPinnedBaralCorpusOverlay
+          (cd "$RUNNER_TEMP/gorge" && go build -o "$RUNNER_TEMP/bundle/gorge-probe" ./commander_probe.go)
+      - name: Small full-engine verified Magnus game smoke
+        shell: bash
+        run: |
+          set -euo pipefail
+          chmod +x "$RUNNER_TEMP/bundle/gorge-probe"
+          opponents="$(python -c 'import json,sys;print(",".join(json.load(open(sys.argv[1]))["opponent_pool"]))' "$RUNNER_TEMP/bundle/pods/magnus_budget-pod.json")"
+          mkdir -p "$RUNNER_TEMP/smoke/native"
+          "$RUNNER_TEMP/bundle/gorge-probe" \
+            -corpus "$RUNNER_TEMP/bundle/.cards" -deck-dir "$RUNNER_TEMP/bundle/decks" \
+            -hero-deck magnus_budget -opponents "$opponents" \
+            -games 1 -seed 107001 -max-turns 60 \
+            -retry-unverified=true -max-attempts 20 \
+            -pilot bot -hero-pilot lethal-pressure -verify=true \
+            -native-dir "$RUNNER_TEMP/smoke/native" -native-limit 1 > "$RUNNER_TEMP/smoke/runs.jsonl"
+          python - "$RUNNER_TEMP/smoke/runs.jsonl" <<'PY'
+          import json,sys
+          data=[json.loads(x) for x in open(sys.argv[1]) if x.strip()]
+          assert len(data)==1 and data[0]["finished"] and data[0]["replay_verified"]
+          print("BARAL_SMOKE_VERIFIED "+json.dumps({"seed":data[0]["seed"],"finished":data[0]["finished"],"replay_verified":data[0]["replay_verified"]}))
+          PY
+ -count=1 -v)
+          cp tools/gorge_baral_cost_rules_test.go "$RUNNER_TEMP/gorge/engine/rules/baral_mana_discount_validation_test.go"
+          (cd "$RUNNER_TEMP/gorge" && go test ./engine/rules -run '^TestBaralGenericSpellDiscountInRules
+          (cd "$RUNNER_TEMP/gorge" && go build -o "$RUNNER_TEMP/bundle/gorge-probe" ./commander_probe.go)
+      - name: Small full-engine verified Magnus game smoke
+        shell: bash
+        run: |
+          set -euo pipefail
+          chmod +x "$RUNNER_TEMP/bundle/gorge-probe"
+          opponents="$(python -c 'import json,sys;print(",".join(json.load(open(sys.argv[1]))["opponent_pool"]))' "$RUNNER_TEMP/bundle/pods/magnus_budget-pod.json")"
+          mkdir -p "$RUNNER_TEMP/smoke/native"
+          "$RUNNER_TEMP/bundle/gorge-probe" \
+            -corpus "$RUNNER_TEMP/bundle/.cards" -deck-dir "$RUNNER_TEMP/bundle/decks" \
+            -hero-deck magnus_budget -opponents "$opponents" \
+            -games 1 -seed 107001 -max-turns 60 \
+            -retry-unverified=true -max-attempts 20 \
+            -pilot bot -hero-pilot lethal-pressure -verify=true \
+            -native-dir "$RUNNER_TEMP/smoke/native" -native-limit 1 > "$RUNNER_TEMP/smoke/runs.jsonl"
+          python - "$RUNNER_TEMP/smoke/runs.jsonl" <<'PY'
+          import json,sys
+          data=[json.loads(x) for x in open(sys.argv[1]) if x.strip()]
+          assert len(data)==1 and data[0]["finished"] and data[0]["replay_verified"]
+          print("BARAL_SMOKE_VERIFIED "+json.dumps({"seed":data[0]["seed"],"finished":data[0]["finished"],"replay_verified":data[0]["replay_verified"]}))
+          PY
+ -count=1 -v)
           (cd "$RUNNER_TEMP/gorge" && go build -o "$RUNNER_TEMP/bundle/gorge-probe" ./commander_probe.go)
       - name: Small full-engine verified Magnus game smoke
         shell: bash
