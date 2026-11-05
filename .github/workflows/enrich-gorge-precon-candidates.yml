@@ -42,6 +42,7 @@ jobs:
                        "mechanic_proxy_prevalence","caveats")}
           (p/"summary.json").write_text(json.dumps(summary,indent=2,sort_keys=True)+"\n")
           print("UNRESOLVED_CARDS",json.dumps(a["unresolved_card_quantities"],ensure_ascii=False))
+          print("MECHANIC_PROXY_PREVALENCE",json.dumps(a["mechanic_proxy_prevalence"],sort_keys=True))
           with open(os.environ["GITHUB_STEP_SUMMARY"],"a") as f:
               f.write("# Enriched Commander candidate library\n\n")
               f.write(f"- Distinct released decklists: **{a['distinct_decklists']}**\n")
