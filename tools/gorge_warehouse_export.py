@@ -56,6 +56,7 @@ def build_rows(folder: Path, batch_id: str, deck: str, shard: int, runs_file="ru
         if not isinstance(native_events, list) or not isinstance(log.get("intents"), list):
             raise ValueError(f"Missing authoritative Gorge events: {seed}")
         gid = f"{batch_id}/{deck}/{shard}/{seed}"
+        event_start_row = len(events)  # Immutable physical row offset into events.parquet
         previous = -1
         for event in native_events:
             seq, kind = event.get("seq"), event.get("kind")
@@ -93,6 +94,7 @@ def build_rows(folder: Path, batch_id: str, deck: str, shard: int, runs_file="ru
             "decks_json": canonical(decks).decode("utf-8"),
             "policies_json": canonical(row.get("policies")).decode("utf-8"),
             "source_sha256": raw_sha,
+            "event_start_row": event_start_row,
             "native_event_count": len(native_events),
             "native_intent_count": len(log["intents"]),
         })
