@@ -1,0 +1,49 @@
+import test from "node:test";
+import assert from "node:assert/strict";
+import { aggregate, isApproved, isDecisive, sha256, stableJson, validateDeck, normalizeRow, IDENTITY_FIELDS } from "../core.mjs";
+
+const fp = Object.fromEntries(IDENTITY_FIELDS.map(k=>[k,"pinned-"+k]));
+const approved={cohort_id:"baseline-1",status:"current",approved:true,approval_ref:"reviewed",...fp};
+const registry={schema:"gorge-analytics-cohort-registry-v1",cohorts:[approved]};
+async function game(overrides={}){
+  const fingerprint=await sha256(stableJson({cohort_id:"baseline-1",...fp}));
+  return {game_id:"batch/a/0/1",deck:"mortarion_current",finished:true,replay_verified:true,
+    error:null,draw:false,hero_seat:0,winner_seat:0,turns:18,
+    decks_json:JSON.stringify(["mortarion_current","precon1","precon2","precon3"]),
+    source_sha256:"f".repeat(64),cohort_id:"baseline-1",cohort_manifest_sha256:fingerprint,...fp,...overrides};
+}
+test("approval requires exact identity and a source-backed decisive outcome",async()=>{
+  const g=await game();
+  assert.equal(await isApproved(g,registry),true);
+  for(const delta of [{draw:true,winner_seat:null},{replay_verified:false},
+    {finished:false},{engine_commit:"older"},{cohort_id:"unknown"},
+    {source_sha256:null},{cohort_manifest_sha256:"0".repeat(64)}]){
+    assert.equal(await isApproved({...g,...delta},registry),false,JSON.stringify(delta));
+  }
+  assert.equal(await isApproved(g,{schema:registry.schema,cohorts:[]}),false);
+});
+test("groups count each game once and only decisive records",async()=>{
+  const a=await game(),b=await game({game_id:"batch/a/0/2",winner_seat:2,turns:22});
+  const draws=await game({game_id:"batch/a/0/3",draw:true,winner_seat:null});
+  const result=aggregate([a,b,draws],"mortarion_current");
+  assert.equal(result.n,2);assert.equal(result.win_rate,.5);
+  assert.equal(result.median_game_turns,20);
+  assert.equal(result.groups.opponents.length,3);
+  assert.equal(result.groups.opponents[0].n,2);
+  assert.throws(()=>aggregate([a,a],"mortarion_current"),/Duplicate/);
+});
+test("never accept keys or usernames as R2 object paths",()=>{
+  assert.equal(validateDeck("magnus_premium"),"magnus_premium");
+  for(const bad of ["../private","", "x?token=1","A".repeat(100)])
+    assert.throws(()=>validateDeck(bad));
+  assert(!isDecisive({finished:false}));
+});
+
+test("Parquet INT64 preserves exact seat and turn values safely",async()=>{
+  const g=await game();
+  const row=normalizeRow({...g,hero_seat:0n,winner_seat:0n,turns:18n});
+  assert.equal(typeof row.hero_seat,"number");
+  assert.equal(typeof row.turns,"number");
+  assert.equal((await isApproved(row,registry)),true);
+  assert.throws(()=>normalizeRow({winner_seat:9007199254740993n}),/Unsafe/);
+});

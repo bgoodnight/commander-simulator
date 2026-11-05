@@ -1,0 +1,11 @@
+name = "gorge-r2-direct-api-preview"
+main = "index.mjs"
+compatibility_date = "2026-11-05"
+workers_dev = true
+
+[[r2_buckets]]
+binding = "GORGE_R2"
+bucket_name = "gorge-simulations"
+
+# No PUT/DELETE routes; all access is through a private bucket binding.
+# Deploy only with a Cloudflare Workers edit token, never the R2 S3 key.
