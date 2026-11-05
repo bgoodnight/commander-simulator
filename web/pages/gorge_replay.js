@@ -472,8 +472,7 @@ function init(){
     copy.append(node("strong","game-outcome-title","Game Outcomes"));
     const numbers=node("div","game-outcome-hero-stats");
     for(const [state,label,count] of [
-      ["win","Wins",stats.wins],["loss","Losses",stats.losses],
-      ["unresolved","Draws",stats.draws]]){
+      ["win","Wins",stats.wins],["loss","Losses",stats.losses]]){
       const cell=node("div","game-outcome-hero-stat is-"+state);
       cell.append(node("strong",null,cohortPercent(count/stats.n)),
         node("span",null,label+" · "+count+"/"+stats.n));
@@ -482,11 +481,10 @@ function init(){
     copy.append(numbers);
     const bar=node("div","game-outcome-stacked-bar");
     bar.setAttribute("role","img");
-    bar.setAttribute("aria-label",stats.wins+" wins, "+
-      stats.losses+" losses, "+stats.draws+" draws in "+
-      stats.n+" verified games");
+    bar.setAttribute("aria-label",stats.wins+" wins and "+
+      stats.losses+" losses in "+stats.n+" completed decisive games");
     for(const [state,count] of [
-      ["win",stats.wins],["loss",stats.losses],["unresolved",stats.draws]]){
+      ["win",stats.wins],["loss",stats.losses]]){
       if(!count)continue;
       const segment=node("span","is-"+state);
       segment.style.width=cohortPercent(count/stats.n);
@@ -502,7 +500,7 @@ function init(){
         ranked.length?ranked[0].name+" · "+ranked[0].n+" games":"No supported opponent group"],
       ["Game length",stats.median_game_turns===null?"—":
         String(stats.median_game_turns),"Median recorded game turns"],
-      ["Verified games",String(stats.n),"Complete simulation cohort"],
+      ["Completed games",String(stats.n),"Win/loss outcomes only"],
       ["Replay coverage",String(stats.detailed_replay_count),
         "Detailed source-backed replays"]]){
       const tile=node("div","game-outcome-hero-highlight");
@@ -512,13 +510,12 @@ function init(){
     }
     copy.append(highlights);
     copy.append(node("span","game-outcome-hero-meta",
-      stats.n+" source-verified Gorge games · "+
+      stats.n+" completed decisive Gorge games · "
       stats.detailed_replay_count+" detailed replay samples"));
     summary.append(copy);panel.append(summary);
     const body=node("div","game-outcome-body");
     for(const [state,label,count] of [
-      ["win","Wins",stats.wins],["loss","Losses",stats.losses],
-      ["unresolved","Draws",stats.draws]]){
+      ["win","Wins",stats.wins],["loss","Losses",stats.losses]]){
       const line=node("div","game-outcome-bucket is-"+state);
       line.append(node("strong",null,label),
         node("span",null,count+" / "+stats.n));
@@ -565,7 +562,7 @@ function init(){
       dataRoot.replaceChildren();
       const table=node("table","gorge-full-cohort-table");
       const header=node("tr");
-      for(const cell of ["Group","Games","Wins","Losses","Draws","Win rate"]){
+      for(const cell of ["Group","Games","Wins","Losses","Win rate"]){
         header.append(node("th",null,cell));
       }
       const top=node("thead");
@@ -575,7 +572,7 @@ function init(){
       for(const group of stats.groups?.[chooser.value]||[]){
         const row=node("tr");
         for(const cell of [group.name,group.n,group.wins,group.losses,
-                           group.draws,cohortPercent(group.win_rate)]){
+                           cohortPercent(group.win_rate)]){
           row.append(node("td",null,String(cell)));
         }
         body.append(row);
@@ -624,8 +621,7 @@ function init(){
         return;
       }
       display.append(node("p","small",
-        fit.n+" decisive games ("+fit.draws_excluded+
-        " draws excluded) · three-fold held-out log loss "+
+        fit.n+" completed decisive games · three-fold held-out log loss "+
         fit.cv_log_loss+" vs null "+fit.null_log_loss+
         " · elastic-net penalty "+fit.alpha));
       const table=node("table","gorge-full-cohort-table");
