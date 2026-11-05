@@ -57,7 +57,7 @@ class CompatibilityTests(unittest.TestCase):
         self.assertEqual(report["decks"][1]["error"], "unknown card")
 
     def test_missing_or_duplicate_results_fail(self):
-        queue = build_queue(*fixtures())
+        queue = make_queue()
         row = {"deck_key": queue["decks"][0]["key"], "load_ok": True,
                "commander_valid": True, "cards_loaded": 100, "commander_count": 1}
         with self.assertRaisesRegex(ValueError, "Missing"):
