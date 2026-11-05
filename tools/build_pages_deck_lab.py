@@ -364,6 +364,10 @@ def build(output, *, catalog_path=SHARED_CATALOG, name_catalog_path=DEFAULT_NAME
         target.mkdir(parents=True, exist_ok=True)
         safe_manifest = {**manifest, "games": games,
                          "eligibility": "approved_current_only"}
+        if len(approved_rows) != len(source_analytics.get("games", [])):
+            # The original full-cohort insights belong to the historical
+            # population and cannot be transferred to a filtered cohort.
+            safe_manifest.pop("card_insights_file", None)
         (target / "manifest.json").write_text(
             json.dumps(safe_manifest, sort_keys=True) + "\n", encoding="utf-8")
         for source_file, filename in validated:
