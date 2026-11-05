@@ -7,6 +7,8 @@ on:
       - "tests/test_enrich_gorge_candidate_precons.py"
       - "tools/select_gorge_precon_panel.py"
       - "tests/test_select_gorge_precon_panel.py"
+      - "tools/stage_gorge_precon_qualification.py"
+      - "tests/test_stage_gorge_precon_qualification.py"
       - ".github/workflows/enrich-gorge-precon-candidates.yml"
   workflow_dispatch:
 
@@ -23,7 +25,7 @@ jobs:
         with:
           python-version: "3.12"
       - name: Test source and functional classification contracts offline
-        run: python -m unittest tests.test_enrich_gorge_candidate_precons tests.test_gorge_candidate_coverage tests.test_select_gorge_precon_panel -v
+        run: python -m unittest tests.test_enrich_gorge_candidate_precons tests.test_gorge_candidate_coverage tests.test_select_gorge_precon_panel tests.test_stage_gorge_precon_qualification -v
       - name: Fetch bulk Oracle identities and enrich released candidates
         run: |
           mkdir -p "$RUNNER_TEMP/precon-enrichment"
@@ -33,6 +35,10 @@ jobs:
           python -m tools.select_gorge_precon_panel \
             --enrichment "$RUNNER_TEMP/precon-enrichment/full-enrichment.json" \
             --out "$RUNNER_TEMP/precon-enrichment/candidate-panel-60.json" --panel-size 60
+          python -m tools.stage_gorge_precon_qualification \
+            --enrichment "$RUNNER_TEMP/precon-enrichment/full-enrichment.json" \
+            --panel "$RUNNER_TEMP/precon-enrichment/candidate-panel-60.json" \
+            --out "$RUNNER_TEMP/precon-enrichment/qualification-queue-60.json"
           python - <<'PY'
           import json,os
           from pathlib import Path
@@ -42,6 +48,10 @@ jobs:
           panel=json.loads((p/"candidate-panel-60.json").read_text())
           assert panel["candidate_count"]==a["distinct_decklists"]
           assert len(panel["shortlist"])==60
+          queue=json.loads((p/"qualification-queue-60.json").read_text())
+          assert queue["panel_size"]==60
+          assert all(not row["active_opponent"] and row["qualification"]=="queued_not_approved" for row in queue["decks"])
+          assert queue["oracle_bulk_sha256"]==a["oracle_bulk_sha256"]
           summary={k:a[k] for k in ("schema","as_of","source_catalog_commit",
                        "oracle_bulk_sha256","oracle_bulk_metadata",
                        "released_products","distinct_decklists",
