@@ -49,6 +49,20 @@ class LegacyHotCatalogTests(unittest.TestCase):
             compact_index(index, {"decks": [
                 {"key": "deck-a", "deck_sha256": "b"*64}]})
 
+    def test_checked_in_legacy_catalog_is_compact_and_mirrored(self):
+        root = Path(__file__).resolve().parents[1]
+        source = root / "web/pages/data/simulation-archive"
+        mirror = root / "docs/deck-lab/simulation-data"
+        decks = json.loads((root / "docs/deck-lab/decks.json").read_text())
+        index = validate_index(source)
+        selected, matches = compact_index(index, decks)
+        self.assertEqual(selected, index)
+        self.assertGreaterEqual(len(matches), 6)
+        self.assertEqual(index, validate_index(mirror))
+        self.assertEqual(
+            (source / "manifest.json").read_bytes(),
+            (mirror / "manifest.json").read_bytes())
+
     def test_rejects_in_place_pruning(self):
         with tempfile.TemporaryDirectory() as tmp:
             root = Path(tmp)
