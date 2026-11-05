@@ -277,12 +277,24 @@ def main():
     import argparse
     p=argparse.ArgumentParser()
     p.add_argument("--input",required=True,type=Path)
+    p.add_argument("--registry",required=True,type=Path,
+                   help="Explicit approved cohort registry; no default historical inclusion")
     p.add_argument("--out",required=True,type=Path)
     a=p.parse_args()
     source=json.loads(a.input.read_text(encoding="utf-8"))
     if source.get("schema")!="gorge-batch-analytics-v1":
         raise ValueError("Not authoritative Gorge analytics")
-    report=make_report(source["games"])
+    from tools.gorge_cohort_eligibility import eligible_partition
+    registry=json.loads(a.registry.read_text(encoding="utf-8"))
+    selected, excluded=eligible_partition(source["games"], registry)
+    report=make_report(selected)
+    report["eligibility"]={
+        "registry_schema":registry["schema"],
+        "eligible_count":len(selected),
+        "excluded_count":len(excluded),
+        "exclusion_reasons":dict(__import__("collections").Counter(x["reason"] for x in excluded)),
+        "selection":"approved_current_cohorts_only",
+    }
     a.out.parent.mkdir(parents=True,exist_ok=True)
     a.out.write_text(json.dumps(report,separators=(",",":"),sort_keys=True)+"\n",encoding="utf-8")
     print("Precomputed Gorge cohort:",report["total_verified_games"],"verified games")
