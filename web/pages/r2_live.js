@@ -49,7 +49,7 @@
       details.append(el("summary",null,"Opponent matchups"));
       const list=el("div","small");
       for(const g of (result.groups?.opponents||[]).slice(0,15))
-        list.append(el("p",null,g.name+" · "+g.wins+"/"+g.n+" wins ("+percent(g.win_rate)+")"));
+        list.append(el("p",null,(window.DeckDisplayNames?.deck(g.name)||g.name)+" · "+g.wins+"/"+g.n+" wins ("+percent(g.win_rate)+")"));
       details.append(list);card.append(details);
     }else card.append(el("p","small","No approved decisive games for this deck."));
     card.append(el("p","micro","Server processing: "+(result.query?.server_ms??"—")+" ms · "+(result.query?.shards_scanned??"—")+" shard(s) scanned"));
