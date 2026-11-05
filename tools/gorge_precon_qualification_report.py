@@ -92,11 +92,15 @@ def select_trial_pool(evidence, proposed):
         raise ValueError("Oracle panel provenance mismatch")
     rows = {r["key"]: r for r in evidence["decks"]}
     keys = proposed.get("opponents")
+    hashes = proposed.get("pinned_decklists")
+    if hashes is not None and (not isinstance(hashes,dict) or set(hashes)!=set(keys or [])):
+        raise ValueError("Missing pinned source decklist fingerprints")
     if not isinstance(keys,list) or len(keys) < 3 or len(set(keys)) != len(keys):
         raise ValueError("Trial requires distinct named precons")
     for key in keys:
         r = rows.get(key)
-        if r is None or not r["trial_opponent_eligible"] or r["production_eligible"]:
+        if (r is None or not r["trial_opponent_eligible"] or r["production_eligible"] or
+                (hashes is not None and r["decklist_sha256"] != hashes[key])):
             raise ValueError(f"{key}: not a validated bounded experimental opponent")
         if any(r.get(field)!="not_certified" for field in ("rules_fidelity","pilot_fidelity")):
             raise ValueError("Unexpected qualification declaration")
