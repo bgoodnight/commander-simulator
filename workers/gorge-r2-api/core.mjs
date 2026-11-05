@@ -36,17 +36,21 @@ export async function sha256(text) {
   const hash = await crypto.subtle.digest("SHA-256", bytes);
   return [...new Uint8Array(hash)].map(x => x.toString(16).padStart(2,"0")).join("");
 }
-export async function isApproved(row, registry) {
+export async function isApproved(row, registry, fingerprintCache=new Map()) {
   if (!isDecisive(row) || typeof row.source_sha256 !== "string" ||
       !/^[a-f0-9]{64}$/i.test(row.source_sha256)) return false;
   const cohort = registry.cohorts?.find(c => c.cohort_id === row.cohort_id);
   if (!cohort || cohort.status !== "current" || cohort.approved !== true ||
       !cohort.approval_ref) return false;
   if (IDENTITY_FIELDS.some(k => !cohort[k] || row[k] !== cohort[k])) return false;
-  const fingerprint = await sha256(stableJson({
-    cohort_id: cohort.cohort_id,
-    ...Object.fromEntries(IDENTITY_FIELDS.map(k => [k,cohort[k]]))
-  }));
+  let fingerprint = fingerprintCache.get(cohort.cohort_id);
+  if(!fingerprint) {
+    fingerprint = await sha256(stableJson({
+      cohort_id: cohort.cohort_id,
+      ...Object.fromEntries(IDENTITY_FIELDS.map(k => [k,cohort[k]]))
+    }));
+    fingerprintCache.set(cohort.cohort_id,fingerprint);
+  }
   return row.cohort_manifest_sha256 === fingerprint;
 }
 export function aggregate(rows, deck) {
