@@ -26,7 +26,7 @@ jobs:
           npm install --ignore-scripts --no-audit --no-fund
           npm test
       - name: Deploy the read-only Worker; do not run simulations or publish Pages
-        uses: cloudflare/wrangler-action@v3
+        uses: cloudflare/wrangler-action@v4
         with:
           apiToken: ${{ secrets.CLOUDFLARE_API_TOKEN }}
           accountId: ${{ secrets.GORGE_R2_ACCOUNT_ID }}
