@@ -305,6 +305,26 @@ def build(output, *, catalog_path=SHARED_CATALOG, name_catalog_path=DEFAULT_NAME
                            or manifest.get("synthetic_simulation_only") is not True):
             raise ValueError("Omniscient publication must explicitly identify synthetic AI games")
         visibility = "omniscient" if omniscient else "public_events_only"
+        # The build must not bypass the approved-cohort gate by calling
+        # make_report on all verified historical games. Legacy data stays
+        # in the source archive but is not selectable on the built site.
+        from tools.gorge_cohort_eligibility import eligible_partition
+        registry_path = Path(__file__).resolve().parent.parent / "data/gorge_analytics_cohort_registry_v1.json"
+        registry = json.loads(registry_path.read_text(encoding="utf-8"))
+        source_analytics_path = public_gorge / "analytics.json"
+        source_analytics = (json.loads(source_analytics_path.read_text(encoding="utf-8"))
+                            if source_analytics_path.is_file() else {"games": []})
+        if source_analytics.get("schema") not in (None, "gorge-batch-analytics-v1"):
+            raise ValueError("Unexpected source analytics schema")
+        approved_rows, excluded_rows = eligible_partition(
+            source_analytics.get("games", []), registry)
+        from tools.gorge_cohort_report import eligible as decisive_game
+        decisive_rows = [r for r in approved_rows if decisive_game(r)]
+        approved_by_seed = {r["seed"]: r for r in approved_rows}
+        if len(approved_by_seed) != len(approved_rows):
+            raise ValueError("Ambiguous approved seed in public catalog")
+        games = [row for row in games if row.get("seed") in approved_by_seed
+                 and row.get("chain") == approved_by_seed[row["seed"]].get("chain")]
         validated = []
         for row in games:
             filename = row.get("file", "")
@@ -344,7 +364,14 @@ def build(output, *, catalog_path=SHARED_CATALOG, name_catalog_path=DEFAULT_NAME
             validated.append((source_file, filename))
         target = output / "gorge-data"
         target.mkdir(parents=True, exist_ok=True)
-        shutil.copy2(manifest_file, target / "manifest.json")
+        safe_manifest = {**manifest, "games": games,
+                         "eligibility": "approved_current_only"}
+        if len(decisive_rows) != len(source_analytics.get("games", [])):
+            # The original full-cohort insights belong to the historical
+            # population and cannot be transferred to a filtered cohort.
+            safe_manifest.pop("card_insights_file", None)
+        (target / "manifest.json").write_text(
+            json.dumps(safe_manifest, sort_keys=True) + "\n", encoding="utf-8")
         for source_file, filename in validated:
             shutil.copy2(source_file, target / filename)
         # Summary analytics are small and must never contain native logs,
@@ -364,7 +391,10 @@ def build(output, *, catalog_path=SHARED_CATALOG, name_catalog_path=DEFAULT_NAME
                            "log" in x or "intents" in x or "objects" in x
                            for x in analytics["games"])):
                 raise ValueError("Unsafe Gorge analytics payload")
-            shutil.copy2(analytics_path, target / "analytics.json")
+            safe_analytics = {**analytics, "games": decisive_rows,
+                              "eligibility": "approved_current_decisive_only"}
+            (target / "analytics.json").write_text(
+                json.dumps(safe_analytics, sort_keys=True) + "\n", encoding="utf-8")
             if manifest.get("card_insights_file") is not None:
                 if manifest["card_insights_file"] != "card-insights.json":
                     raise ValueError("Unexpected Gorge insights filename")
@@ -377,11 +407,20 @@ def build(output, *, catalog_path=SHARED_CATALOG, name_catalog_path=DEFAULT_NAME
                         or sum(data.get("verified_games", 0) for data
                                in cards.get("decks", {}).values()) != len(analytics["games"])):
                     raise ValueError("Incomplete or inconsistent source card insights")
-                shutil.copy2(cards_source, target / "card-insights.json")
+                # A full-cohort card-insight file cannot be subset safely
+                # without source-level feature reaggregation.
+                if len(decisive_rows) == len(analytics["games"]):
+                    shutil.copy2(cards_source, target / "card-insights.json")
             # All high-level Gorge results and exploratory regressions come
             # from every verified outcome, never the sampled detailed replays.
             from tools.gorge_cohort_report import make_report
-            cohort = make_report(analytics["games"])
+            cohort = make_report(decisive_rows)
+            cohort["eligibility"] = {
+                "selection": "approved_current_cohorts_only",
+                "eligible_count": len(decisive_rows),
+                "nondecisive_excluded": len(approved_rows)-len(decisive_rows),
+                "excluded_count": len(excluded_rows),
+            }
             (target / "cohort.json").write_text(
                 json.dumps(cohort, separators=(",", ":"), sort_keys=True) + "\n",
                 encoding="utf-8",

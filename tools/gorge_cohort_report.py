@@ -28,13 +28,12 @@ def eligible(row):
     if row.get("player_deck", hero) != hero:
         return False
     if row.get("draw") is True:
-        return row.get("winner_seat") is None
+        return False
     return type(row.get("winner_seat")) is int and row["winner_seat"] in range(4)
 
 
 def outcome(row):
-    return "draw" if row.get("draw") is True else (
-        "win" if row["winner_seat"] == row["player_seat"] else "loss")
+    return "win" if row["winner_seat"] == row["player_seat"] else "loss"
 
 
 def round_number(value, digits=3):
@@ -57,7 +56,7 @@ def bucket(rows):
     n = len(rows)
     wins = sum(outcome(r) == "win" for r in rows)
     losses = sum(outcome(r) == "loss" for r in rows)
-    draws = n-wins-losses
+    draws = 0
     lengths = [r["turns"] for r in rows
                if type(r.get("turns")) in (int, float) and r["turns"] >= 0]
     return {
@@ -178,13 +177,13 @@ def log_loss(predicted, actual):
 
 
 def regression(rows, family):
-    # Draws are excluded from the binary win/loss model and explicitly counted.
-    binary=[r for r in rows if outcome(r)!="draw"]
+    # All input to current analytics is decisive; no draws/stalls are modeled.
+    binary=rows
     wins=sum(outcome(r)=="win" for r in binary)
     n=len(binary)
     result={"method":"elastic-net logistic regression",
-            "family":family,"n":n,"draws_excluded":len(rows)-n,
-            "data_scope":"all verified cohort outcomes",
+            "family":family,"n":n,"draws_excluded":0,
+            "data_scope":"verified decisive wins and losses only",
             "features_scope":"opponent presence and player seat only",
             "status":"insufficient_data"}
     if n<80 or min(wins,n-wins)<15:
@@ -248,6 +247,13 @@ def regression(rows, family):
 def make_report(games):
     if not isinstance(games,list):
         raise ValueError("Expected verified analytics games array")
+    # Nondecisive games remain in the replay/catalog layer, never in model
+    # denominators or outcome visualizations. Bad purportedly decisive rows
+    # still fail closed rather than being quietly dropped.
+    nondecisive = [r for r in games if isinstance(r,dict) and
+                   (r.get("draw") is True or r.get("finished") is not True or
+                    r.get("stall_reason"))]
+    games = [r for r in games if r not in nondecisive]
     seeds=set()
     for row in games:
         if not eligible(row):
@@ -257,7 +263,9 @@ def make_report(games):
         seeds.add(row["seed"])
     result={"schema":SCHEMA,"source_schema":"gorge-batch-analytics-v1",
             "total_verified_games":len(games),"decks":{},
-            "scope":"All verified game outcomes. Detailed replay-derived card, life and state metrics are separate."}
+            "outcome_population":"decisive_win_loss_only",
+            "nondecisive_excluded":len(nondecisive),
+            "scope":"Verified decisive wins/losses only. Draws and turn-limit stalls are replay diagnostics, not analytics."}
     for key in sorted({r.get("player_deck",r["decks"][r["player_seat"]]) for r in games}):
         rows=[r for r in games
               if r.get("player_deck",r["decks"][r["player_seat"]])==key]
@@ -277,12 +285,26 @@ def main():
     import argparse
     p=argparse.ArgumentParser()
     p.add_argument("--input",required=True,type=Path)
+    p.add_argument("--registry",required=True,type=Path,
+                   help="Explicit approved cohort registry; no default historical inclusion")
     p.add_argument("--out",required=True,type=Path)
     a=p.parse_args()
     source=json.loads(a.input.read_text(encoding="utf-8"))
     if source.get("schema")!="gorge-batch-analytics-v1":
         raise ValueError("Not authoritative Gorge analytics")
-    report=make_report(source["games"])
+    from tools.gorge_cohort_eligibility import eligible_partition
+    registry=json.loads(a.registry.read_text(encoding="utf-8"))
+    selected, excluded=eligible_partition(source["games"], registry)
+    decisive=[r for r in selected if eligible(r)]
+    report=make_report(decisive)
+    report["eligibility"]={
+        "registry_schema":registry["schema"],
+        "eligible_count":len(decisive),
+        "nondecisive_excluded":len(selected)-len(decisive),
+        "excluded_count":len(excluded),
+        "exclusion_reasons":dict(__import__("collections").Counter(x["reason"] for x in excluded)),
+        "selection":"approved_current_cohorts_only",
+    }
     a.out.parent.mkdir(parents=True,exist_ok=True)
     a.out.write_text(json.dumps(report,separators=(",",":"),sort_keys=True)+"\n",encoding="utf-8")
     print("Precomputed Gorge cohort:",report["total_verified_games"],"verified games")
