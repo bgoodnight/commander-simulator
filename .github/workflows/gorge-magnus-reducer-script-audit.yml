@@ -1,0 +1,27 @@
+name: Gorge pinned Magnus reducer script audit
+on:
+  push:
+    branches: [main]
+    paths:
+      - ".github/workflows/gorge-magnus-reducer-script-audit.yml"
+  workflow_dispatch:
+permissions:
+  contents: read
+  actions: read
+jobs:
+  scripts:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+      - name: Fetch identical pinned Gorge corpus used by simulations
+        env:
+          GH_TOKEN: ${{ github.token }}
+          GH_REPO: ${{ github.repository }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p "$RUNNER_TEMP/bundle"
+          gh run download 41938112091 --name gorge-500-pinned-bundle --dir "$RUNNER_TEMP/bundle"
+          test -d "$RUNNER_TEMP/bundle/.cards"
+          python tools/gorge_magnus_corpus_reducer_audit.py "$RUNNER_TEMP/bundle/.cards"
