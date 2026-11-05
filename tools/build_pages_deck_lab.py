@@ -309,7 +309,7 @@ def build(output, *, catalog_path=SHARED_CATALOG, name_catalog_path=DEFAULT_NAME
         # make_report on all verified historical games. Legacy data stays
         # in the source archive but is not selectable on the built site.
         from tools.gorge_cohort_eligibility import eligible_partition
-        registry_path = Path("data/gorge_analytics_cohort_registry_v1.json")
+        registry_path = Path(__file__).resolve().parent.parent / "data/gorge_analytics_cohort_registry_v1.json"
         registry = json.loads(registry_path.read_text(encoding="utf-8"))
         source_analytics_path = public_gorge / "analytics.json"
         source_analytics = (json.loads(source_analytics_path.read_text(encoding="utf-8"))
@@ -365,7 +365,7 @@ def build(output, *, catalog_path=SHARED_CATALOG, name_catalog_path=DEFAULT_NAME
         safe_manifest = {**manifest, "games": games,
                          "eligibility": "approved_current_only"}
         (target / "manifest.json").write_text(
-            json.dumps(safe_manifest, sort_keys=True) + "\\n", encoding="utf-8")
+            json.dumps(safe_manifest, sort_keys=True) + "\n", encoding="utf-8")
         for source_file, filename in validated:
             shutil.copy2(source_file, target / filename)
         # Summary analytics are small and must never contain native logs,
@@ -388,7 +388,7 @@ def build(output, *, catalog_path=SHARED_CATALOG, name_catalog_path=DEFAULT_NAME
             safe_analytics = {**analytics, "games": approved_rows,
                               "eligibility": "approved_current_only"}
             (target / "analytics.json").write_text(
-                json.dumps(safe_analytics, sort_keys=True) + "\\n", encoding="utf-8")
+                json.dumps(safe_analytics, sort_keys=True) + "\n", encoding="utf-8")
             if manifest.get("card_insights_file") is not None:
                 if manifest["card_insights_file"] != "card-insights.json":
                     raise ValueError("Unexpected Gorge insights filename")
