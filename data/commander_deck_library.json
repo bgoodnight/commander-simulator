@@ -1,7 +1,7 @@
 {
   "schema": "commander-deck-library-v1",
-  "metadata_version": 2,
-  "description": "Role-gated Commander deck pool: custom decks are player-only, stock precons can be opponents, and explicitly dual-role Necron Dynasties/Wretched Ranks can be player decks as well.",
+  "metadata_version": 3,
+  "description": "Role-gated Commander deck pool with eight new strictly validated MTGJSON official stock precon candidates. These require source and Gorge rules validation before benchmark use.",
   "annotation_policy": "Archetype labels are descriptive hypotheses (not measured coverage or power). Color identities come from commander card identity; source/version must be checked at execution.",
   "allowed_archetypes": [
     "aristocrats",
@@ -264,6 +264,157 @@
         "artifacts"
       ],
       "source": "pinned_gorge_upstream",
+      "archetype_annotation": "curated_v1",
+      "matchup_metadata_version": 1
+    },
+    {
+      "key": "explorers-of-the-deep",
+      "commander": "Hakbal of the Surging Soul",
+      "color_identity": [
+        "G",
+        "U"
+      ],
+      "role": "opponent",
+      "provenance": "stock_precon",
+      "primary_archetype": "tribal_combat",
+      "secondary_archetypes": [
+        "value"
+      ],
+      "source": "mtgjson_official_commander_deck",
+      "source_name": "Explorers of the Deep",
+      "archetype_annotation": "curated_v1",
+      "matchup_metadata_version": 1
+    },
+    {
+      "key": "veloci-ramp-tor",
+      "commander": "Pantlaza, Sun-Favored",
+      "color_identity": [
+        "R",
+        "G",
+        "W"
+      ],
+      "role": "opponent",
+      "provenance": "stock_precon",
+      "primary_archetype": "tribal_combat",
+      "secondary_archetypes": [
+        "creatures",
+        "value"
+      ],
+      "source": "mtgjson_official_commander_deck",
+      "source_name": "Veloci-ramp-tor",
+      "archetype_annotation": "curated_v1",
+      "matchup_metadata_version": 1
+    },
+    {
+      "key": "quick-draw",
+      "commander": "Stella Lee, Wild Card",
+      "color_identity": [
+        "U",
+        "R"
+      ],
+      "role": "opponent",
+      "provenance": "stock_precon",
+      "primary_archetype": "spellslinger",
+      "secondary_archetypes": [
+        "combo"
+      ],
+      "source": "mtgjson_official_commander_deck",
+      "source_name": "Quick Draw",
+      "archetype_annotation": "curated_v1",
+      "matchup_metadata_version": 1
+    },
+    {
+      "key": "desert-bloom",
+      "commander": "Yuma, Proud Protector",
+      "color_identity": [
+        "R",
+        "G",
+        "W"
+      ],
+      "role": "opponent",
+      "provenance": "stock_precon",
+      "primary_archetype": "graveyard_recursion",
+      "secondary_archetypes": [
+        "tokens",
+        "value"
+      ],
+      "source": "mtgjson_official_commander_deck",
+      "source_name": "Desert Bloom",
+      "archetype_annotation": "curated_v1",
+      "matchup_metadata_version": 1
+    },
+    {
+      "key": "creative-energy",
+      "commander": "Satya, Aetherflux Genius",
+      "color_identity": [
+        "W",
+        "U",
+        "R"
+      ],
+      "role": "opponent",
+      "provenance": "stock_precon",
+      "primary_archetype": "energy",
+      "secondary_archetypes": [
+        "artifact_synergy",
+        "value"
+      ],
+      "source": "mtgjson_official_commander_deck",
+      "source_name": "Creative Energy",
+      "archetype_annotation": "curated_v1",
+      "matchup_metadata_version": 1
+    },
+    {
+      "key": "squirreled-away",
+      "commander": "Hazel of the Rootbloom",
+      "color_identity": [
+        "B",
+        "G"
+      ],
+      "role": "opponent",
+      "provenance": "stock_precon",
+      "primary_archetype": "tokens",
+      "secondary_archetypes": [
+        "aristocrats",
+        "creatures"
+      ],
+      "source": "mtgjson_official_commander_deck",
+      "source_name": "Squirreled Away",
+      "archetype_annotation": "curated_v1",
+      "matchup_metadata_version": 1
+    },
+    {
+      "key": "endless-punishment",
+      "commander": "Valgavoth, Harrower of Souls",
+      "color_identity": [
+        "B",
+        "R"
+      ],
+      "role": "opponent",
+      "provenance": "stock_precon",
+      "primary_archetype": "life_loss",
+      "secondary_archetypes": [
+        "value"
+      ],
+      "source": "mtgjson_official_commander_deck",
+      "source_name": "Endless Punishment",
+      "archetype_annotation": "curated_v1",
+      "matchup_metadata_version": 1
+    },
+    {
+      "key": "tricky-terrain",
+      "commander": "Omo, Queen of Vesuva",
+      "color_identity": [
+        "G",
+        "U"
+      ],
+      "role": "opponent",
+      "provenance": "stock_precon",
+      "primary_archetype": "value",
+      "secondary_archetypes": [
+        "creatures"
+      ],
+      "source": "mtgjson_official_commander_deck",
+      "source_name": "Tricky Terrain",
       "archetype_annotation": "curated_v1",
       "matchup_metadata_version": 1
     }
