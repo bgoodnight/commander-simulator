@@ -61,6 +61,7 @@ jobs:
           git clone --filter=blob:none https://github.com/adams-shaun/gorge.git "$RUNNER_TEMP/gorge"
           git -C "$RUNNER_TEMP/gorge" checkout --detach "$GORGE_COMMIT"
           test "$(git -C "$RUNNER_TEMP/gorge" rev-parse HEAD)" = "$GORGE_COMMIT"
+          python -m tools.patch_gorge_ward_blight --gorge "$RUNNER_TEMP/gorge"
       - uses: actions/setup-go@v5
         with:
           go-version-file: ${{ runner.temp }}/gorge/go.mod

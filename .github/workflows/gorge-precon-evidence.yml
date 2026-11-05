@@ -1,0 +1,56 @@
+name: Gorge precon evidence and initial experimental panel
+
+# Reanalyzes existing recordings; never executes Gorge or updates production.
+on:
+  pull_request:
+    paths:
+      - tools/gorge_precon_qualification_report.py
+      - tests/test_gorge_precon_qualification_report.py
+      - tools/gorge_trial_panel_validate.py
+      - tests/test_gorge_trial_panel_validate.py
+      - data/gorge_initial_trial_opponents_v1.json
+      - .github/workflows/gorge-precon-evidence.yml
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  actions: read
+
+jobs:
+  audit:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Run offline fail-closed tests
+        run: python -m unittest tests.test_gorge_precon_qualification_report tests.test_gorge_trial_panel_validate -v
+      - name: Retrieve prior native-source-backed qualification evidence
+        uses: actions/download-artifact@v4
+        with:
+          run-id: '42053608363'
+          github-token: ${{ github.token }}
+          name: gorge-precon-60-experimental-gameplay-mortarion_current
+          path: ${{ runner.temp }}/prior/mortarion
+      - uses: actions/download-artifact@v4
+        with:
+          run-id: '42053608363'
+          github-token: ${{ github.token }}
+          name: gorge-precon-60-experimental-gameplay-magnus_premium
+          path: ${{ runner.temp }}/prior/magnus
+      - name: Reconstruct per-precon evidence; never certify mechanics
+        run: |
+          python -m tools.gorge_precon_qualification_report \
+            --queue "$RUNNER_TEMP/prior/mortarion/panel/qualification-60.json" \
+            --mortarion "$RUNNER_TEMP/prior/mortarion/results/runs.jsonl" \
+            --magnus "$RUNNER_TEMP/prior/magnus/results/runs.jsonl" \
+            --panel data/gorge_initial_trial_opponents_v1.json \
+            --out "$RUNNER_TEMP/qualification"
+      - uses: actions/upload-artifact@v4
+        with:
+          name: gorge-precon-60-qualification-and-initial-trial-panel
+          path: ${{ runner.temp }}/qualification/
+          retention-days: 30
+          if-no-files-found: error

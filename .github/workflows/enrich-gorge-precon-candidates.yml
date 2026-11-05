@@ -1,0 +1,162 @@
+name: Enrich official Commander precon candidates
+
+on:
+  pull_request:
+    paths:
+      - "tools/enrich_gorge_candidate_precons.py"
+      - "tests/test_enrich_gorge_candidate_precons.py"
+      - "tools/select_gorge_precon_panel.py"
+      - "tests/test_select_gorge_precon_panel.py"
+      - "tools/stage_gorge_precon_qualification.py"
+      - "tests/test_stage_gorge_precon_qualification.py"
+      - "tools/check_gorge_precon_compatibility.py"
+      - "tests/test_check_gorge_precon_compatibility.py"
+      - "tools/gorge_commander_probe.go"
+      - "tools/patch_gorge_ward_blight.py"
+      - "tests/test_patch_gorge_ward_blight.py"
+      - ".github/workflows/enrich-gorge-precon-candidates.yml"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  enrich:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Test source and functional classification contracts offline
+        run: python -m unittest tests.test_enrich_gorge_candidate_precons tests.test_gorge_candidate_coverage tests.test_select_gorge_precon_panel tests.test_stage_gorge_precon_qualification tests.test_check_gorge_precon_compatibility tests.test_patch_gorge_ward_blight -v
+      - name: Fetch bulk Oracle identities and enrich released candidates
+        run: |
+          mkdir -p "$RUNNER_TEMP/precon-enrichment"
+          python -m tools.enrich_gorge_candidate_precons \
+            --as-of 2026-11-05 \
+            --out "$RUNNER_TEMP/precon-enrichment/full-enrichment.json"
+          python -m tools.select_gorge_precon_panel \
+            --enrichment "$RUNNER_TEMP/precon-enrichment/full-enrichment.json" \
+            --out "$RUNNER_TEMP/precon-enrichment/candidate-panel-60.json" --panel-size 60
+          python -m tools.stage_gorge_precon_qualification \
+            --enrichment "$RUNNER_TEMP/precon-enrichment/full-enrichment.json" \
+            --panel "$RUNNER_TEMP/precon-enrichment/candidate-panel-60.json" \
+            --out "$RUNNER_TEMP/precon-enrichment/qualification-queue-60.json"
+          python - <<'PY'
+          import json,os
+          from pathlib import Path
+          p=Path(os.environ["RUNNER_TEMP"])/"precon-enrichment"
+          a=json.loads((p/"full-enrichment.json").read_text())
+          assert a["distinct_decklists"]>=100
+          panel=json.loads((p/"candidate-panel-60.json").read_text())
+          assert panel["candidate_count"]==a["distinct_decklists"]
+          assert len(panel["shortlist"])==60
+          queue=json.loads((p/"qualification-queue-60.json").read_text())
+          assert queue["panel_size"]==60
+          assert all(not row["active_opponent"] and row["qualification"]=="queued_not_approved" for row in queue["decks"])
+          assert queue["oracle_bulk_sha256"]==a["oracle_bulk_sha256"]
+          summary={k:a[k] for k in ("schema","as_of","source_catalog_commit",
+                       "oracle_bulk_sha256","oracle_bulk_metadata",
+                       "released_products","distinct_decklists",
+                       "commander_identity_resolved","complete_deck_resolution",
+                       "unresolved_card_name_count","color_identity_distribution",
+                       "mechanic_proxy_prevalence","caveats")}
+          (p/"summary.json").write_text(json.dumps(summary,indent=2,sort_keys=True)+"\n")
+          print("UNRESOLVED_CARDS",json.dumps(a["unresolved_card_quantities"],ensure_ascii=False))
+          print("MECHANIC_PROXY_PREVALENCE",json.dumps(a["mechanic_proxy_prevalence"],sort_keys=True))
+          with open(os.environ["GITHUB_STEP_SUMMARY"],"a") as f:
+              f.write("# Enriched Commander candidate library\n\n")
+              f.write(f"- Distinct released decklists: **{a['distinct_decklists']}**\n")
+              f.write(f"- Commander identity resolved: **{a['commander_identity_resolved']}**\n")
+              f.write(f"- Complete 100-card Oracle resolution: **{a['complete_deck_resolution']}**\n")
+              f.write(f"- Unresolved card names: **{a['unresolved_card_name_count']}**\n")
+              f.write("- Functional counts are exploratory text proxies, not reviewed deck strategies.\n")
+              f.write("- No Gorge opponent promotion or simulation.\n")
+              f.write(f"- Provisional diversity shortlist: **{len(panel['shortlist'])}** distinct opponents.\n")
+          PY
+      - name: Preserve compact and detailed metadata for assessment
+        uses: actions/upload-artifact@v4
+        with:
+          name: commander-precon-oracle-enrichment
+          path: ${{ runner.temp }}/precon-enrichment/
+          retention-days: 21
+          if-no-files-found: error
+
+  check-gorge-import:
+    needs: enrich
+    runs-on: ubuntu-latest
+    timeout-minutes: 70
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - uses: actions/download-artifact@v4
+        with:
+          name: commander-precon-oracle-enrichment
+          path: ${{ runner.temp }}/precon-enrichment
+      - name: Export 60 original stock decklists with Oracle-backed provenance
+        run: |
+          mkdir -p "$RUNNER_TEMP/compat/decks"
+          python -m tools.check_gorge_precon_compatibility \
+            --queue "$RUNNER_TEMP/precon-enrichment/qualification-queue-60.json" \
+            --deck-dir "$RUNNER_TEMP/compat/decks" \
+            --report "$RUNNER_TEMP/compat/names.txt"
+      - name: Clone pinned Gorge engine
+        env:
+          GORGE_COMMIT: b78e4c8b16078f6decbc48875bba953ce5535b85
+        run: |
+          git clone --filter=blob:none https://github.com/adams-shaun/gorge.git "$RUNNER_TEMP/gorge"
+          git -C "$RUNNER_TEMP/gorge" checkout --detach "$GORGE_COMMIT"
+          test "$(git -C "$RUNNER_TEMP/gorge" rev-parse HEAD)" = "$GORGE_COMMIT"
+      - uses: actions/setup-go@v5
+        with:
+          go-version-file: ${{ runner.temp }}/gorge/go.mod
+          cache: false
+      - name: Compile pinned Forge card corpus and Gorge deck-check driver
+        working-directory: ${{ runner.temp }}/gorge
+        run: |
+          make fetch-cards compile-cards
+          cp "$GITHUB_WORKSPACE/tools/gorge_commander_probe.go" commander_probe.go
+          go build -o "$RUNNER_TEMP/gorge-probe" ./commander_probe.go
+      - name: Test each staged deck independently for import and Commander validity
+        env:
+          PYTHONPATH: ${{ github.workspace }}
+        working-directory: ${{ runner.temp }}/gorge
+        shell: bash
+        run: |
+          set -euo pipefail
+          names="$(cat "$RUNNER_TEMP/compat/names.txt")"
+          "$RUNNER_TEMP/gorge-probe" \
+            -corpus "$RUNNER_TEMP/gorge/.cards" \
+            -deck-dir "$RUNNER_TEMP/compat/decks" \
+            -decks "$names" -check-decks \
+            > "$RUNNER_TEMP/compat/import-results.jsonl"
+          python -m tools.check_gorge_precon_compatibility \
+            --queue "$RUNNER_TEMP/precon-enrichment/qualification-queue-60.json" \
+            --results-jsonl "$RUNNER_TEMP/compat/import-results.jsonl" \
+            --report "$RUNNER_TEMP/compat/compatibility-report.json"
+          python - <<'PY'
+          import json,os
+          from pathlib import Path
+          r=json.loads((Path(os.environ["RUNNER_TEMP"])/"compat"/"compatibility-report.json").read_text())
+          with open(os.environ["GITHUB_STEP_SUMMARY"],"a") as f:
+              f.write("# Gorge precon compatibility: 60 staged decks\\n\\n")
+              f.write(f"Import + Commander validity: **{r['import_passed']} pass / {r['import_failed']} fail**\\n\\n")
+              f.write("This is import-only; rules and pilot behavior remain unverified. Zero decks promoted.\\n")
+              f.write("\\n| Deck | Result | Detail |\\n|---|---|---|\\n")
+              for d in r["decks"]:
+                  status="PASS" if d["load_ok"] and d["commander_valid"] else "FAIL"
+                  reason=(d.get("error") or "").replace("|","/").replace("\\n"," ")[:160]
+                  f.write(f"| {d['name']} | {status} | {reason} |\\n")
+          PY
+      - name: Retain compact import audit and full metadata only in private Actions artifacts
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: gorge-precon-60-import-compatibility
+          path: ${{ runner.temp }}/compat/
+          retention-days: 21
+          if-no-files-found: warn

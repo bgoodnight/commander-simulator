@@ -1,0 +1,188 @@
+name: Gorge 60-precon experimental gameplay qualification
+
+# Explicitly experimental: manually launched only after the UI is ready.
+# Does not write R2, Pages, production catalog or active eligible analytics.
+on:
+  workflow_dispatch:
+    inputs:
+      panel_mode:
+        description: Which stock precon panel should be used for post-UI gameplay
+        required: true
+        default: initial12
+        type: choice
+        options: [initial12, all60]
+      games:
+        description: "12 quick probes or 60 for full panel"
+        required: true
+        default: "12"
+        type: choice
+        options: ["12", "60"]
+
+permissions:
+  contents: read
+
+jobs:
+  probe:
+    strategy:
+      fail-fast: false
+      matrix:
+        hero: [mortarion_current, magnus_premium]
+    runs-on: ubuntu-latest
+    timeout-minutes: 120
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Reproduce exact candidate selection and Oracle provenance
+        run: |
+          mkdir -p "$RUNNER_TEMP/panel" "$RUNNER_TEMP/decks" "$RUNNER_TEMP/results/native"
+          python -m tools.enrich_gorge_candidate_precons --as-of 2026-11-05 --out "$RUNNER_TEMP/panel/full-enrichment.json"
+          python -m tools.select_gorge_precon_panel --enrichment "$RUNNER_TEMP/panel/full-enrichment.json" --out "$RUNNER_TEMP/panel/panel-60.json" --panel-size 60
+          python -m tools.stage_gorge_precon_qualification --enrichment "$RUNNER_TEMP/panel/full-enrichment.json" --panel "$RUNNER_TEMP/panel/panel-60.json" --out "$RUNNER_TEMP/panel/qualification-60.json"
+          python -m tools.check_gorge_precon_compatibility --queue "$RUNNER_TEMP/panel/qualification-60.json" --deck-dir "$RUNNER_TEMP/decks" --report "$RUNNER_TEMP/panel/opponents.txt"
+          if [ "${{ inputs.panel_mode || 'initial12' }}" = "initial12" ]; then
+            python -m tools.gorge_trial_panel_validate \
+              --queue "$RUNNER_TEMP/panel/qualification-60.json" \
+              --panel data/gorge_initial_trial_opponents_v1.json \
+              --out "$RUNNER_TEMP/panel/opponents.txt"
+          fi
+          python -m tools.export_gorge_decks --out "$RUNNER_TEMP/decks" --decks mortarion_current magnus_premium
+      - name: Get pinned Gorge and compile original card scripts
+        env:
+          GORGE_COMMIT: b78e4c8b16078f6decbc48875bba953ce5535b85
+        run: |
+          git clone --filter=blob:none https://github.com/adams-shaun/gorge.git "$RUNNER_TEMP/gorge"
+          git -C "$RUNNER_TEMP/gorge" checkout --detach "$GORGE_COMMIT"
+          test "$(git -C "$RUNNER_TEMP/gorge" rev-parse HEAD)" = "$GORGE_COMMIT"
+          python -m tools.patch_gorge_ward_blight --gorge "$RUNNER_TEMP/gorge"
+      - uses: actions/setup-go@v5
+        with:
+          go-version-file: ${{ runner.temp }}/gorge/go.mod
+          cache: false
+      - name: Build verified four-player Gorge probe
+        working-directory: ${{ runner.temp }}/gorge
+        run: |
+          make fetch-cards compile-cards
+          cp "$GITHUB_WORKSPACE/tools/gorge_commander_probe.go" commander_probe.go
+          go build -o "$RUNNER_TEMP/gorge-probe" ./commander_probe.go
+      - name: Run 60-game, full-panel experimental four-player Gorge qualification
+        env:
+          HERO_DECK: ${{ matrix.hero }}
+        working-directory: ${{ runner.temp }}/gorge
+        shell: bash
+        run: |
+          set -euo pipefail
+          count="${{ inputs.games || '60' }}"
+          names="$(cat "$RUNNER_TEMP/panel/opponents.txt")"
+          # Gorge exits 2 when any game stalls at the bounded turn cap.
+          # Preserve such games as *incomplete*, never as wins or passes.
+          set +e
+          "$RUNNER_TEMP/gorge-probe" -corpus "$RUNNER_TEMP/gorge/.cards" \
+            -deck-dir "$RUNNER_TEMP/decks" \
+            -hero-deck "$HERO_DECK" -opponents "$names" \
+            -pilot bot -games "$count" -seed 186000 -max-turns 60 \
+            -verify=true -native-dir "$RUNNER_TEMP/results/native" -native-limit 12 \
+            > "$RUNNER_TEMP/results/runs.jsonl" \
+            2> "$RUNNER_TEMP/results/probe-stderr.txt"
+          status=$?
+          set -e
+          if [[ "$status" -ne 0 && "$status" -ne 2 ]]; then
+            cat "$RUNNER_TEMP/results/probe-stderr.txt" >&2
+            exit "$status"
+          fi
+          printf '%s\\n' "$status" > "$RUNNER_TEMP/results/probe-exit-code.txt"
+      - name: Report observed results without granting qualification
+        env:
+          GAME_COUNT: ${{ inputs.games || '60' }}
+          HERO_DECK: ${{ matrix.hero }}
+        run: |
+          python - <<'PY'
+          import json, os
+          from pathlib import Path
+          root=Path(os.environ["RUNNER_TEMP"])
+          queue=json.loads((root/"panel/qualification-60.json").read_text())
+          pool=set((root/"panel/opponents.txt").read_text().strip().split(","))
+          assert pool<= {d["key"] for d in queue["decks"]}
+          lines=[json.loads(x) for x in (root/"results/runs.jsonl").read_text().splitlines() if x.strip()]
+          assert len(lines)==int(os.environ["GAME_COUNT"])
+          seen=set()
+          status={"attempted":len(lines),"completed":0,"replay_verified":0,"distinct_precons_seen":0,
+                  "eligible_for_current_statistics":0,"status":"experimental_unqualified",
+                  "engine_errors":[] }
+          for r in lines:
+              seat=r["hero_seat"]
+              assert r["decks"][seat]==os.environ["HERO_DECK"]
+              opp=[d for i,d in enumerate(r["decks"]) if i!=seat]
+              assert len(opp)==3 and len(set(opp))==3 and set(opp)<=pool
+              seen.update(opp)
+              if r.get("error"):
+                  status["engine_errors"].append({"seed":r["seed"],"decks":r["decks"],"error":str(r["error"])})
+                  continue
+              if not r.get("finished") and r.get("stall_reason") != "turns":
+                  raise ValueError("Unexpected non-turn-limit Gorge failure")
+              status["completed"]+=int(r.get("finished") is True)
+              status["replay_verified"]+=int(r.get("replay_verified") is True)
+          status["distinct_precons_seen"]=len(seen)
+          if status["attempted"] == 60 and len(seen) != len(pool):
+              raise ValueError("Selected precon panel not fully exposed by 60 games")
+          status["engine_error_count"]=len(status["engine_errors"])
+          status["turn_limit_stalls"]=status["attempted"]-status["completed"]-status["engine_error_count"]
+          (root/"results/qualification-summary.json").write_text(json.dumps(status,indent=2)+"\n")
+          with open(os.environ["GITHUB_STEP_SUMMARY"],"a") as out:
+              out.write("# Experimental Gorge precon gameplay: "+os.environ["HERO_DECK"]+"\\n\\n")
+              out.write(f"Attempted: {status['attempted']}; completed: {status['completed']}; replay-verified: {status['replay_verified']}.\\n\\n")
+              out.write(f"Precons observed: **{len(seen)}/{len(pool)}**. These are **not** certified for rules or pilot fidelity.\\n")
+              out.write(f"Turn-cap stalls: **{status['turn_limit_stalls']}**; engine errors: **{status['engine_error_count']}**.\\n")
+              for problem in status["engine_errors"]:
+                  out.write(f"- BLOCKED seed {problem['seed']}: {problem['error']}; pod: {', '.join(problem['decks'])}\\n")
+              out.write("Unresolved engine errors block promotion. No R2 writes, Pages publication or current-statistics eligibility.\\n")
+          if status["engine_error_count"]:
+              raise ValueError(f"Engine errors block precon qualification: {status['engine_error_count']}")
+          PY
+      - name: Capture failing seed 186047 with exact rotated pod and decision evidence
+        if: ${{ always() && matrix.hero == 'mortarion_current' }}
+        working-directory: ${{ runner.temp }}/gorge
+        shell: bash
+        run: |
+          if [[ ! -f "$RUNNER_TEMP/panel/opponents.txt" || ! -x "$RUNNER_TEMP/gorge-probe" ]]; then
+            echo "Diagnostic unavailable: card export or compiled Gorge missing."
+            exit 0
+          fi
+          set +e
+          "$RUNNER_TEMP/gorge-probe" -corpus "$RUNNER_TEMP/gorge/.cards" \
+            -deck-dir "$RUNNER_TEMP/decks" \
+            -hero-deck mortarion_current \
+            -opponents "$(cat "$RUNNER_TEMP/panel/opponents.txt")" \
+            -pilot bot -games 1 -seed 186000 -start-attempt 47 -max-turns 60 \
+            -verify=true -native-dir "$RUNNER_TEMP/results/native" -native-limit 1 \
+            -diagnose-seed 186047 \
+            > "$RUNNER_TEMP/results/seed-186047-repro.jsonl" \
+            2> "$RUNNER_TEMP/results/seed-186047-diagnostic.log"
+          rc=$?
+          set -e
+          printf '%s\n' "$rc" > "$RUNNER_TEMP/results/seed-186047-repro-exit.txt"
+          python - <<'PY'
+          import json,os
+          from pathlib import Path
+          f=Path(os.environ["RUNNER_TEMP"])/"results/seed-186047-repro.jsonl"
+          rows=[json.loads(x) for x in f.read_text().splitlines() if x.strip()]
+          if len(rows)!=1 or rows[0]["seed"]!=186047:
+              raise ValueError("Failure reproduction did not preserve the deterministic seed")
+          r=rows[0]
+          print(f"Reproduced exact seed 186047: error={bool(r.get('error'))}; finished={r.get('finished')}")
+          if r.get("error") or not r.get("finished") or not r.get("replay_verified"):
+              raise ValueError("Seed 186047 ward-Blight regression is not fully verified")
+          with open(os.environ["GITHUB_STEP_SUMMARY"],"a") as out:
+              out.write(f"\nSeed 186047 recheck: finished={r.get('finished')}, error={bool(r.get('error'))}; see retained diagnostic artifact.\n")
+          PY
+      - name: Retain experimental evidence outside production analytics
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: gorge-precon-60-experimental-gameplay-${{ matrix.hero }}
+          path: |
+            ${{ runner.temp }}/panel/
+            ${{ runner.temp }}/results/
+          retention-days: 14
+          if-no-files-found: warn

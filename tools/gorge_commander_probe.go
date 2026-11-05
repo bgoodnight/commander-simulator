@@ -6,6 +6,8 @@ package main
 
 import (
   "encoding/json"
+  "github.com/adams-shaun/gorge/engine/decision"
+  "github.com/adams-shaun/gorge/bots/botpolicy"
   "flag"
   "fmt"
   "os"
@@ -129,8 +131,11 @@ func repairBaralCorpus(reg *cards.Registry) error {
 func main() {
   corpus:=flag.String("corpus",".cards","compiled Forge card corpus")
   directory:=flag.String("deck-dir","","directory of deck JSON exported from pinned lists")
+  checkDecks:=flag.Bool("check-decks",false,"read-only deck.Load and ValidateCommander test for all named decks, emitting individual JSONL results")
   games:=flag.Int("games",3,"number of four-player runs")
   seed:=flag.Uint64("seed",100,"first deterministic seed")
+  startAttempt:=flag.Int("start-attempt",0,"deterministic rotation index offset for one-game reproductions")
+  diagnoseSeed:=flag.Uint64("diagnose-seed",0,"log decisions and intents near this failed seed to stderr; never publish to Pages")
   maxTurns:=flag.Int("max-turns",50,"cap for complete Commander game")
   verify:=flag.Bool("verify",true,"replay each completed game")
   deckPool:=flag.String("decks","mortarion_current,magnus_premium,necron_dynasties,wretched_ranks","comma-separated pool of four or more Commander deck names")
@@ -144,8 +149,8 @@ func main() {
   maxAttempts:=flag.Int("max-attempts",0,"maximum attempts including rejected games (default: games)")
   flag.Parse()
   if *maxAttempts==0 {*maxAttempts=*games}
-  if *maxAttempts<*games||*maxAttempts>5000 {panic("invalid attempt limit")}
-  if *directory==""||*games<=0||*games>1000||*maxTurns<=0 { panic("invalid probe arguments") }
+  if *maxAttempts<*games||*maxAttempts>5000||*startAttempt<0||*startAttempt>500000 {panic("invalid attempt limit")}
+  if *directory==""||(!*checkDecks&&(*games<=0||*games>1000||*maxTurns<=0)) { panic("invalid probe arguments") }
   names:=strings.Split(*deckPool,",")
   for i:=range names {names[i]=strings.TrimSpace(names[i])}
   restricted:=*heroDeck!=""||*opponentPool!=""
@@ -158,7 +163,7 @@ func main() {
     for i:=range opponents {opponents[i]=strings.TrimSpace(opponents[i])}
     names=append([]string{strings.TrimSpace(*heroDeck)},opponents...)
   }
-  if len(names)<4 {panic("Need at least four unique deck names")}
+  if !*checkDecks&&len(names)<4 {panic("Need at least four unique deck names")}
   unique:=map[string]bool{}
   for _,name:=range names {
     if name==""||strings.Contains(name,"/")||strings.Contains(name,"..")||unique[name]{
@@ -190,6 +195,29 @@ func main() {
     reg.Tokens[astartesStem]=token
   }
 
+  if *checkDecks {
+    for _,name:=range names {
+      result:=map[string]any{"deck_key":name,"load_ok":false,"commander_valid":false,"cards_loaded":0,"commander_count":0}
+      f,cs,loadErr:=deck.Load(reg,filepath.Join(*directory,name+".json"))
+      if loadErr!=nil {
+        result["error"]=loadErr.Error()
+      }else{
+        result["load_ok"]=true
+        result["cards_loaded"]=len(cs)
+        result["commander_count"]=len(f.CommanderIndices())
+        if err:=f.ValidateCommander(reg);err!=nil {
+          result["error"]=err.Error()
+        }else if len(cs)!=100||len(f.CommanderIndices())!=1{
+          result["error"]="not a single-commander 100-card deck"
+        }else{
+          result["commander_valid"]=true
+        }
+      }
+      blob,_:=json.Marshal(result)
+      fmt.Println(string(blob))
+    }
+    return
+  }
   decks:=make([][]*cards.Card,len(names))
   commanders:=make([][]int,len(names))
   for i,name:=range names {
@@ -202,7 +230,7 @@ func main() {
   failed:=false
   succeeded:=0
   skipped:=0
-  for g:=0;g<*maxAttempts&&succeeded<*games;g++ {
+  for g:=*startAttempt;g<*startAttempt+*maxAttempts&&succeeded<*games;g++ {
     gs:=*seed+uint64(g)
     // Deterministically rotate decks, so seat and turn-order bias can be
     // separated from deck advantage when more seeds are collected.
@@ -235,10 +263,22 @@ func main() {
       Format:rules.FormatCommander,StartingLife:40,Mulligans:7,Tokens:reg.Tokens,NameUniverse:reg.Universe()}
     start:=time.Now()
     capture:=*nativeDir!=""&&
-      ((!*retryUnverified&&g<*nativeLimit)||(*retryUnverified&&succeeded<*nativeLimit))
+      ((!*retryUnverified&&g-*startAttempt<*nativeLimit)||(*retryUnverified&&succeeded<*nativeLimit))
     observations:=[]any{}
     lastTurn:=int32(-1)
     hooks:=bench.Hooks{EnvSeats:true,HonestRoot:true}
+    if *diagnoseSeed!=0&&gs==*diagnoseSeed {
+      count:=0
+      hooks.Decision=func(seatIdx int, d *decision.Decision, in decision.Intent, board *botpolicy.Board) error {
+        if count>=625 {
+          dj,_:=json.Marshal(d)
+          ij,_:=json.Marshal(in)
+          fmt.Fprintf(os.Stderr,"GORGE_DIAGNOSTIC seed=%d intent=%d seat=%d decision=%s answer=%s\n",gs,count,seatIdx,dj,ij)
+        }
+        count++
+        return nil
+      }
+    }
     if capture {
       hooks.Guard=func(engine *rules.Engine)(string,string) {
         if engine.G.Turn>0&&engine.G.Turn!=lastTurn {

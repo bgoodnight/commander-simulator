@@ -1,0 +1,55 @@
+name: Audit Gorge candidate library coverage
+
+on:
+  pull_request:
+    paths:
+      - "data/gorge_stock_precon_candidates_v1.json"
+      - "tools/audit_gorge_candidate_catalog.py"
+      - "tools/gorge_candidate_coverage.py"
+      - "tests/test_gorge_candidate_coverage.py"
+      - ".github/workflows/gorge-candidate-coverage.yml"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  coverage-audit:
+    runs-on: ubuntu-latest
+    timeout-minutes: 12
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Validate coverage model against pinned catalog
+        run: python -m unittest tests.test_gorge_candidate_coverage -v
+      - name: Audit released candidates and make provisional 60-deck shortlist
+        run: |
+          python -m tools.gorge_candidate_coverage \
+            --as-of 2026-11-05 --shortlist 60 \
+            --out "$RUNNER_TEMP/precon-coverage.json"
+          python - <<'PY'
+          import json, os
+          from pathlib import Path
+          p=Path(os.environ["RUNNER_TEMP"])/"precon-coverage.json"
+          a=json.loads(p.read_text())
+          assert a["released_count"]>=100
+          assert a["future_count"]==a["source_catalog_count"]-a["released_count"]
+          assert a["feature_completeness"]["verified_color_identity"]==0
+          with open(os.environ["GITHUB_STEP_SUMMARY"],"a") as f:
+              f.write("# Gorge precon candidate coverage\n\n")
+              f.write(f"- Source: **{a['source_catalog_count']}** full candidate lists\n")
+              f.write(f"- Released as of cutoff: **{a['released_count']}**; future: **{a['future_count']}**\n")
+              f.write(f"- Unique cards: **{a['unique_card_names']}**\n")
+              f.write(f"- Provisional diversity shortlist: **{a['provisional_shortlist_count']}**\n")
+              f.write("- **No verified color, archetype, rules compatibility, or pilot metadata yet.**\n")
+              f.write("- No decks activated. No Gorge simulations executed.\n")
+          PY
+      - name: Upload complete audit and provisional shortlist
+        uses: actions/upload-artifact@v4
+        with:
+          name: gorge-precon-coverage-audit
+          path: ${{ runner.temp }}/precon-coverage.json
+          retention-days: 21
+          if-no-files-found: error
