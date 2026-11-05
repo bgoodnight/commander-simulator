@@ -49,7 +49,7 @@ assert.match(html,/gorge_replay\.js/);
 const build=fs.readFileSync(path.join(__dirname,"../tools/build_pages_deck_lab.py"),"utf8");
 assert.match(build,/gorge_replay\.js/);
 const directR2=fs.readFileSync(path.join(__dirname,"../web/pages/r2_live.js"),"utf8");
-assert.match(directR2,/gorge-r2-direct-api-preview\\.darbosama\\.workers\\.dev/,"live API should work without a query flag");
+assert.ok(directR2.includes("gorge-r2-direct-api-preview.darbosama.workers.dev"),"live API should work without a query flag");
 assert.match(directR2,/\/v1\/summary/,"query Worker summary endpoint");
 assert.match(directR2,/awaiting_cohort_approval/,"unapproved cohorts must be identified");
 assert.match(directR2,/Refresh live R2 results/,"UI must allow explicit refresh");
