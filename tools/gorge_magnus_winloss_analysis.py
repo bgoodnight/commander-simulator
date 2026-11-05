@@ -11,7 +11,7 @@ from pathlib import Path
 import statistics
 
 # Pinned Gorge append-only event IDs and zone IDs.
-MOVE, DRAW, DAMAGE, TURN, MANA, ATTACK, LAND = 2, 3, 5, 9, 13, 16, 23
+MOVE, DRAW, DAMAGE, TURN, MANA, ATTACK, LAND, CAST = 2, 3, 5, 9, 13, 16, 23, 11
 HAND, STACK, COMMAND = 1, 5, 6
 COMMANDER="Magnus the Red"
 
@@ -60,7 +60,7 @@ def analyze(root:Path, policy:str):
                 if own: counts["attacking_creature_declarations"]+=len(own)
             if k==DAMAGE and event.get("obj") in objs and objs[event["obj"]].get("owner")==hero:
                 counts["damage_events_from_owned_objects"]+=1
-            if k==MOVE and event.get("to")==STACK and event.get("from") in (HAND,COMMAND):
+            if k==CAST and event.get("to")==STACK and event.get("from") in (HAND,COMMAND):
                 obj=objs.get(event.get("obj"),{})
                 if obj.get("owner")!=hero or obj.get("is_token"):
                     continue
@@ -117,7 +117,7 @@ def summarize(policy,features):
             "opponents":{n:dict(c) for n,c in sorted(by_opponent.items())},
             "metric_limits":[
                 "LandPlayed and Draw are events, not inferred card names.",
-                "Casts from hand/command use MoveZone events to stack and source object ownership; stolen cards and special copy-casts may be missed.",
+                "Casts from hand/command use PutOnStack events (kind=11) with source zone and owner crosswalk; stolen cards and special copy-casts may be missed.",
                 "Card type is from the final object crosswalk and may not reflect temporary copy/transform status at cast time.",
                 "Winner-vs-loser means are descriptive and confounded by game duration, opponents, and survival; they are not estimates of causal effects.",
                 "No evidence of spell costs paid, Wizard triggers, damage to opponents, or mana spent without an explicit event-specific validation.",
