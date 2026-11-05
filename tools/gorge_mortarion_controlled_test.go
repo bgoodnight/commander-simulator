@@ -27,7 +27,7 @@ func TestMortarionGuaranteedLifeLossAndMana(t *testing.T) {
   }
   driveToStep(t,e,1,0,state.StepEnd)
   // Mana added at end step: pools empty on step transitions.
-  addMana(t,e,0,"CCC")
+  e.G.Players[0].Pool[state.MC] = 3
   t.Logf("PRECONDITION life=%d loss=%d mana=%d",e.G.Players[0].Life,
     e.LifeLostThisTurn(0),e.G.Players[0].Pool.Total())
   t.Logf("AT_ENDSTEP turn=%d phase=%v stack=%d pending=%v",e.G.Turn,
