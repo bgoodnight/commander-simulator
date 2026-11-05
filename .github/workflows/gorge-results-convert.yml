@@ -42,8 +42,8 @@ jobs:
         env:
           GH_TOKEN: ${{ github.token }}
           GH_REPO: ${{ github.repository }}
-          RUN_ID: ${{ inputs.simulation_run_id || '41887811966' }}
-          ARTIFACT: ${{ inputs.artifact_name || 'gorge-phase1-20-game-validation' }}
+          RUN_ID: ${{ inputs.simulation_run_id }}
+          ARTIFACT: ${{ inputs.artifact_name }}
         run: |
           case "$RUN_ID" in *[!0-9]*|'') echo "Invalid run ID"; exit 1;; esac
           gh run download "$RUN_ID" --name "$ARTIFACT" --dir "$RUNNER_TEMP/source"
@@ -51,7 +51,7 @@ jobs:
           test -d "$RUNNER_TEMP/source/native"
       - name: Convert, validate and catalog verified source recordings
         env:
-          REPLAY_LIMIT: ${{ inputs.max_replays || '20' }}
+          REPLAY_LIMIT: ${{ inputs.max_replays }}
         run: |
           python -m tools.gorge_results_pipeline \
             --native-dir "$RUNNER_TEMP/source/native" \
