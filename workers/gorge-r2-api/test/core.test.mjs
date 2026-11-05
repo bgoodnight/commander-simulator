@@ -1,6 +1,6 @@
 import test from "node:test";
 import assert from "node:assert/strict";
-import { aggregate, isApproved, isDecisive, sha256, stableJson, validateDeck, normalizeRow, IDENTITY_FIELDS, approvedGameIndex, approvedGameDetail, approvedEventSegments } from "../core.mjs";
+import { aggregate, isApproved, isDecisive, sha256, stableJson, validateDeck, normalizeRow, IDENTITY_FIELDS, approvedGameIndex, approvedGameDetail, approvedEventSegments, approvedEventWindow } from "../core.mjs";
 
 const fp = Object.fromEntries(IDENTITY_FIELDS.map(k=>[k,"pinned-"+k]));
 const approved={cohort_id:"baseline-1",status:"current",approved:true,approval_ref:"reviewed",...fp};
@@ -98,4 +98,21 @@ test("native event segments retain only non-secret family counts",()=>{
   assert(!JSON.stringify(result).includes("other"));
   assert.throws(()=>approvedEventSegments([events[0],events[0]],gid),/invalid/);
   assert.throws(()=>approvedEventSegments([{...events[0],secret:null}],gid),/invalid/);
+});
+
+test("approved event windows are bounded to one source-backed game",()=>{
+  const g={event_start_row:10000,native_event_count:15218};
+  assert.deepEqual(approvedEventWindow(g,123434),{
+    rowStart:10000,rowEnd:25218,count:15218});
+  // A shard may have >100k events; the *requested game* is bounded.
+  for(const bad of [
+    {event_start_row:-1,native_event_count:5},
+    {event_start_row:5,native_event_count:0},
+    {event_start_row:123430,native_event_count:5},
+    {event_start_row:0,native_event_count:30001},
+    {native_event_count:12},
+    {event_start_row:5}
+  ])assert.throws(()=>approvedEventWindow(bad,123434),/unindexed/);
+  assert.throws(()=>approvedEventWindow({event_start_row:1n,native_event_count:2},100),
+    /unindexed/);
 });

@@ -42,10 +42,28 @@ class WarehouseExportTests(unittest.TestCase):
         self.assertEqual(len(games), 1)
         self.assertEqual(len(events), 2)
         self.assertEqual(games[0]["native_event_count"], 2)
+        self.assertEqual(games[0]["event_start_row"], 0)
         self.assertEqual(events[1]["seq"], 3)
         self.assertTrue(events[1]["secret"])
         self.assertEqual(json.loads(events[1]["event_json"]), self.source["log"]["events"][1])
         self.assertEqual(events[0]["game_id"], games[0]["game_id"])
+
+    def test_event_offsets_are_contiguous_across_games(self):
+        other = dict(self.row, seed=1235, replay_chain="chain-1235")
+        rows = [self.row, other]
+        (self.folder / "runs.jsonl").write_text(
+            "".join(json.dumps(r) + "\n" for r in rows))
+        source2 = dict(self.source, seed=1235, chain="chain-1235")
+        (self.folder / "native" / "gorge-seed-1235.json").write_text(
+            json.dumps(source2))
+        games, events = build_rows(self.folder, "batch-7", "mortarion_current", 0)
+        self.assertEqual([g["event_start_row"] for g in games], [0, 2])
+        self.assertEqual([g["native_event_count"] for g in games], [2, 2])
+        for game in games:
+            start = game["event_start_row"]
+            end = start + game["native_event_count"]
+            self.assertEqual({e["game_id"] for e in events[start:end]},
+                             {game["game_id"]})
 
     def test_source_chain_mismatch_is_rejected(self):
         self.source["chain"] = "wrong"

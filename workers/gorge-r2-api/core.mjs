@@ -9,7 +9,7 @@ export const IDENTITY_FIELDS = [
 // hyparquet correctly decodes them as BigInt. Narrow only safe counters.
 export function normalizeRow(row) {
   const out={...row};
-  for(const key of ["hero_seat","winner_seat","turns","seed"]) {
+  for(const key of ["hero_seat","winner_seat","turns","seed","event_start_row","native_event_count"]) {
     if(typeof out[key]==="bigint") {
       if(out[key]>BigInt(Number.MAX_SAFE_INTEGER) ||
          out[key]<BigInt(Number.MIN_SAFE_INTEGER))
@@ -184,4 +184,17 @@ export function approvedEventSegments(events,gameId) {
     segmentation:"native_turn_change_boundaries_not_complete_player_rounds",
     event_count:total,segments,
     raw_events_exposed:false};
+}
+
+/** Authoritative physical Parquet row window; rejects legacy unindexed shards.
+ * Never derive offsets from client input or game_id/seed.
+ */
+export function approvedEventWindow(game, totalRows, maxGameEvents=30000) {
+  const start=game?.event_start_row,count=game?.native_event_count;
+  if(!Number.isSafeInteger(totalRows)||totalRows<0||
+     !Number.isSafeInteger(start)||start<0||
+     !Number.isSafeInteger(count)||count<1||count>maxGameEvents||
+     start>totalRows||count>totalRows-start)
+    throw Error("unindexed_or_oversized_game_events");
+  return {rowStart:start,rowEnd:start+count,count};
 }

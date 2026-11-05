@@ -44,6 +44,25 @@ approved current cohorts, so the correct live response is
 - The timeline reader projects only `game_id`, `seq`, `kind_id`, and `secret` from private `events.parquet`, with a 16 MiB / 100,000-event shard guard. Larger shards require a separate indexed projection architecture; do not relax limits without benchmarking.
 - Do not claim complete native timeline coverage for a game until its R2 source and full segment count have been validated. The authoritative recording remains private and immutable.
 
+## Game-scoped event reads (pending initial certified cohort)
+
+New source-backed warehouse exports include immutable `event_start_row` and
+`native_event_count` in each `games.parquet` row. Since the exporter appends
+complete games' events contiguously, these values index exact physical row
+windows within that shard's `events.parquet`. The public timeline API reads
+only `game_id`, `seq`, `kind_id` and `secret` from the selected window via
+hyparquet `rowStart` / `rowEnd`; it checks the returned count and each
+row's game identity before returning segment counts. No client can supply
+offsets; approval is checked before reading event rows.
+
+The window cap is **30,000 native events per game**, independent of how many
+events exist across the entire shard. The 16 MiB event-Parquet object-size
+limit and 40-manifest discovery limit still apply. Source exports predating
+the new row index fail closed with `unindexed_or_oversized_game_events` and
+must not be retroactively modified in place. New certified recordings need
+fresh immutable `warehouse/v1` keys with these columns. This is a safe
+native event-family summary, not a player-visible card-action replay.
+
 ## Deploy and benchmark
 
 1. Create an account-scoped Cloudflare API token with **Edit Cloudflare

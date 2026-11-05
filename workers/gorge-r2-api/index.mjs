@@ -1,7 +1,7 @@
 import { parquetReadObjects, parquetMetadataAsync, parquetSchema } from "hyparquet";
 import { compressors } from "hyparquet-compressors";
 import registry from "../../data/gorge_analytics_cohort_registry_v1.json";
-import { aggregate, isApproved, validateDeck, normalizeRow, approvedGameIndex, approvedGameDetail, approvedEventSegments } from "./core.mjs";
+import { aggregate, isApproved, validateDeck, normalizeRow, approvedGameIndex, approvedGameDetail, approvedEventSegments, approvedEventWindow } from "./core.mjs";
 
 // Read-only Cloudflare Worker. The R2 binding has no credentials in JS or HTML.
 // Never return native logs, intents, event_json, object catalog, or hidden zones.
@@ -80,7 +80,8 @@ async function readGames(bucket,shard,manifest) {
       "hero_seat","winner_seat","turns","decks_json","source_sha256","cohort_id",
       "cohort_manifest_sha256","engine_commit","rules_patch_sha256",
       "card_corpus_sha256","player_deck_sha256","pilot_version",
-      "opponent_panel_sha256","oracle_bulk_sha256","simulation_protocol_sha256"];
+      "opponent_panel_sha256","oracle_bulk_sha256","simulation_protocol_sha256",
+      "event_start_row","native_event_count"];
   const rows=(await parquetReadObjects({file,compressors,
     columns:requested.filter(key=>columnsAvailable.has(key))})).map(normalizeRow);
   if(rows.length!==manifest.files["games.parquet"].rows)
@@ -90,10 +91,10 @@ async function readGames(bucket,shard,manifest) {
 
 // Events are private omniscient data. Read only a bounded set of safe columns,
 // and only after game + cohort approval. Never request event_json or object IDs.
-async function readEventSegments(bucket,shard,manifest,gameId) {
+async function readEventSegments(bucket,shard,manifest,game) {
   const expected=manifest.files?.["events.parquet"];
-  if(!expected || !Number.isInteger(expected.rows) || expected.rows>100000)
-    throw Error("event_count_limit");
+  if(!expected)throw Error("missing_event_manifest");
+  const window=approvedEventWindow(game,expected.rows);
   const key=shard.manifestKey.replace(/manifest\.json$/,"events.parquet");
   const info=await bucket.head(key);
   if(!info || info.size!==expected.bytes || info.size>MAX_OBJECT_SIZE)
@@ -111,15 +112,17 @@ async function readEventSegments(bucket,shard,manifest,gameId) {
   const present=new Set(parquetSchema(metadata).children.map(c=>c.element.name));
   const required=["game_id","seq","kind_id","secret"];
   if(required.some(c=>!present.has(c)))throw Error("missing_event_columns");
-  const rows=(await parquetReadObjects({file,compressors,columns:required}))
+  const rows=(await parquetReadObjects({file,compressors,columns:required,
+    rowStart:window.rowStart,rowEnd:window.rowEnd}))
     .map(row=>({
       game_id:row.game_id,
       seq:typeof row.seq==="bigint"?Number(row.seq):row.seq,
       kind_id:typeof row.kind_id==="bigint"?Number(row.kind_id):row.kind_id,
       secret:row.secret
     }));
-  if(rows.length!==expected.rows)throw Error("event_row_count_mismatch");
-  return approvedEventSegments(rows,gameId);
+  if(rows.length!==window.count || rows.some(row=>row.game_id!==game.game_id))
+    throw Error("event_window_source_mismatch");
+  return approvedEventSegments(rows,game.game_id);
 }
 async function getApprovedTimeline(env,deck,gameId,metrics) {
   const {shards,truncated}=await listShards(env.GORGE_R2);
@@ -140,7 +143,7 @@ async function getApprovedTimeline(env,deck,gameId,metrics) {
       if(!(await isApproved(g,registry,fingerprints)))
         continue;
       const detail=approvedGameDetail([g],deck,gameId);
-      const segments=await readEventSegments(env.GORGE_R2,shard,manifest,gameId);
+      const segments=await readEventSegments(env.GORGE_R2,shard,manifest,g);
       found={...detail,timeline:segments};
     }
   }
