@@ -1,0 +1,67 @@
+name: Test direct R2 Gorge Worker
+on:
+  pull_request:
+    paths:
+      - "workers/gorge-r2-api/**"
+      - ".github/workflows/gorge-r2-worker-check.yml"
+      - ".github/workflows/gorge-r2-worker-deploy.yml"
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+      - name: Validate read-only Worker and ZSTD Parquet bundling
+        working-directory: workers/gorge-r2-api
+        run: |
+          npm install --ignore-scripts --no-audit --no-fund
+          npm test
+          npm run check
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Generate authoritative ZSTD Parquet test fixture
+        run: |
+          python -m pip install 'pyarrow==21.0.0'
+          mkdir -p "$RUNNER_TEMP/gorge-r2-fixture"
+          python - <<'PY'
+          import os
+          from pathlib import Path
+          import pyarrow as pa
+          import pyarrow.parquet as pq
+          out=Path(os.environ["RUNNER_TEMP"])/"gorge-r2-fixture/games.parquet"
+          records=[
+              {"game_id":"sample/a/0/1","hero_seat":0,"winner_seat":2,
+               "turns":18,"draw":False,"finished":True,"replay_verified":True,
+               "deck":"mortarion_current","decks_json":'["mortarion_current","a","b","c"]'},
+              {"game_id":"sample/a/0/2","hero_seat":1,"winner_seat":1,
+               "turns":20,"draw":False,"finished":True,"replay_verified":True,
+               "deck":"mortarion_current","decks_json":'["a","mortarion_current","b","c"]'}
+          ]
+          pq.write_table(pa.Table.from_pylist(records),out,compression="zstd")
+          PY
+      - name: Verify actual PyArrow INT64 and ZSTD decoding in hyparquet
+        working-directory: workers/gorge-r2-api
+        env:
+          PARQUET_PATH: ${{ runner.temp }}/gorge-r2-fixture/games.parquet
+        run: |
+          node --input-type=module <<'JS'
+          import assert from 'node:assert/strict';
+          import { asyncBufferFromFile, parquetReadObjects } from 'hyparquet';
+          import { compressors } from 'hyparquet-compressors';
+          import { normalizeRow, isDecisive } from './core.mjs';
+          const file=await asyncBufferFromFile(process.env.PARQUET_PATH);
+          const rows=(await parquetReadObjects({file,compressors})).map(normalizeRow);
+          assert.equal(rows.length,2);
+          assert.equal(rows[0].hero_seat,0);
+          assert.equal(rows[1].winner_seat,1);
+          assert.equal(rows[0].turns,18);
+          assert(rows.every(isDecisive));
+          console.log('PASS: PyArrow ZSTD Parquet -> hyparquet -> valid decisive rows');
+          JS

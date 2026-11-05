@@ -1,0 +1,16 @@
+{
+  "name": "gorge-r2-direct-api",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "test": "node --test test/*.test.mjs",
+    "check": "wrangler deploy --dry-run --outdir .wrangler-preview"
+  },
+  "dependencies": {
+    "hyparquet": "1.32.0",
+    "hyparquet-compressors": "^1.0.0"
+  },
+  "devDependencies": {
+    "wrangler": "^4.0.0"
+  }
+}
