@@ -39,7 +39,12 @@ jobs:
           cp tools/gorge_baral_cost_rules_test.go "$RUNNER_TEMP/gorge/engine/rules/baral_mana_discount_validation_test.go"
           export GORGE_TEST_CORPUS="$RUNNER_TEMP/bundle/.cards"
           (cd "$RUNNER_TEMP/gorge" && go test commander_probe.go baral_overlay_test.go -run 'TestPinnedBaralCorpusOverlay' -count=1 -v)
+          # The scratch Gorge root is itself a package imported by dirac.
+          # Keep standalone probe (package main) out of root while testing rules.
+          mv "$RUNNER_TEMP/gorge/commander_probe.go" "$RUNNER_TEMP/commander_probe.go"
+          rm "$RUNNER_TEMP/gorge/baral_overlay_test.go"
           (cd "$RUNNER_TEMP/gorge" && go test ./engine/rules -run 'TestBaralGenericSpellDiscountInRules' -count=1 -v)
+          mv "$RUNNER_TEMP/commander_probe.go" "$RUNNER_TEMP/gorge/commander_probe.go"
           (cd "$RUNNER_TEMP/gorge" && go build -o "$RUNNER_TEMP/bundle/gorge-probe" ./commander_probe.go)
 
       - name: Verify Magnus game with corrected Baral definition
