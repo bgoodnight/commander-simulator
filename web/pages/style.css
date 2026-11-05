@@ -1408,10 +1408,11 @@ body:has(#pane-records:not([hidden])) .page-introduction a{font-size:.72rem}
   overflow-wrap:anywhere
 }
 .game-outcome-hero-frame>.game-outcome-hero-highlights{
-  grid-template-columns:repeat(4,minmax(0,1fr));max-width:none;margin-top:10px
+  grid-template-columns:repeat(4,minmax(0,1fr));max-width:none;margin-top:10px;align-items:start
 }
 .latest-insight-grid .gorge-cohort-hero-frame .game-outcome-hero-summary{min-height:225px}
 .gorge-highlight-details{padding:0;display:block;overflow:hidden}
+.gorge-highlight-details[open]{grid-column:1/-1}
 .gorge-highlight-details>summary{display:flex;flex-direction:column;gap:3px;
   padding:11px 13px;cursor:pointer;list-style:none}
 .gorge-highlight-details>summary::-webkit-details-marker{display:none}
@@ -1422,6 +1423,7 @@ body:has(#pane-records:not([hidden])) .page-introduction a{font-size:.72rem}
 .gorge-highlight-details>.gorge-full-cohort-groups{border:0;background:transparent}
 .gorge-highlight-details>.gorge-full-cohort-groups>summary{display:none}
 .gorge-highlight-details .game-outcome-body{padding:12px}
+.gorge-length-histogram .game-outcome-finish-bars{max-height:260px;overflow-y:auto}
 .gorge-full-cohort-regressions{grid-column:1/-1}
 .gorge-sample-chart{display:block;width:100%;min-width:220px;height:auto}
 .gorge-sample-chart polyline{fill:none;stroke-width:3}
