@@ -1,0 +1,27 @@
+name: Gorge Magnus mana discount conformance
+on:
+  push:
+    branches: [main]
+    paths:
+      - ".github/workflows/gorge-magnus-cost-conformance.yml"
+  workflow_dispatch:
+permissions:
+  contents: read
+  actions: read
+jobs:
+  validate:
+    runs-on: ubuntu-latest
+    timeout-minutes: 35
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-go@v5
+        with:
+          go-version: '1.25.8'
+      - name: Exercise pinned Gorge token-quantity and stacked cost rules
+        shell: bash
+        run: |
+          set -euo pipefail
+          git clone --filter=blob:none https://github.com/adams-shaun/gorge.git "$RUNNER_TEMP/gorge"
+          git -C "$RUNNER_TEMP/gorge" checkout --detach b78e4c8b16078f6decbc48875bba953ce5535b85
+          cp tools/gorge_magnus_cost_conformance_test.go "$RUNNER_TEMP/gorge/engine/rules/magnus_strategy_cost_conformance_test.go"
+          (cd "$RUNNER_TEMP/gorge" && go test ./engine/rules -run '^TestMagnusCreatureTokenReductionsStackAndRespectColors$' -count=1 -v)
