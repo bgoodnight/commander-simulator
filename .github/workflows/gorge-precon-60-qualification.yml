@@ -5,6 +5,12 @@ name: Gorge 60-precon experimental gameplay qualification
 on:
   workflow_dispatch:
     inputs:
+      panel_mode:
+        description: Which stock precon panel should be used for post-UI gameplay
+        required: true
+        default: initial12
+        type: choice
+        options: [initial12, all60]
       games:
         description: "12 quick probes or 60 for full panel"
         required: true
@@ -35,6 +41,12 @@ jobs:
           python -m tools.select_gorge_precon_panel --enrichment "$RUNNER_TEMP/panel/full-enrichment.json" --out "$RUNNER_TEMP/panel/panel-60.json" --panel-size 60
           python -m tools.stage_gorge_precon_qualification --enrichment "$RUNNER_TEMP/panel/full-enrichment.json" --panel "$RUNNER_TEMP/panel/panel-60.json" --out "$RUNNER_TEMP/panel/qualification-60.json"
           python -m tools.check_gorge_precon_compatibility --queue "$RUNNER_TEMP/panel/qualification-60.json" --deck-dir "$RUNNER_TEMP/decks" --report "$RUNNER_TEMP/panel/opponents.txt"
+          if [ "${{ inputs.panel_mode || 'initial12' }}" = "initial12" ]; then
+            python -m tools.gorge_trial_panel_validate \
+              --queue "$RUNNER_TEMP/panel/qualification-60.json" \
+              --panel data/gorge_initial_trial_opponents_v1.json \
+              --out "$RUNNER_TEMP/panel/opponents.txt"
+          fi
           python -m tools.export_gorge_decks --out "$RUNNER_TEMP/decks" --decks mortarion_current magnus_premium
       - name: Get pinned Gorge and compile original card scripts
         env:
@@ -90,7 +102,8 @@ jobs:
           from pathlib import Path
           root=Path(os.environ["RUNNER_TEMP"])
           queue=json.loads((root/"panel/qualification-60.json").read_text())
-          pool={d["key"] for d in queue["decks"]}
+          pool=set((root/"panel/opponents.txt").read_text().strip().split(","))
+          assert pool<= {d["key"] for d in queue["decks"]}
           lines=[json.loads(x) for x in (root/"results/runs.jsonl").read_text().splitlines() if x.strip()]
           assert len(lines)==int(os.environ["GAME_COUNT"])
           seen=set()
@@ -111,15 +124,15 @@ jobs:
               status["completed"]+=int(r.get("finished") is True)
               status["replay_verified"]+=int(r.get("replay_verified") is True)
           status["distinct_precons_seen"]=len(seen)
-          if status["attempted"] == 60 and len(seen) != 60:
-              raise ValueError("Full-panel test failed to expose all 60 selected precons")
+          if status["attempted"] == 60 and len(seen) != len(pool):
+              raise ValueError("Selected precon panel not fully exposed by 60 games")
           status["engine_error_count"]=len(status["engine_errors"])
           status["turn_limit_stalls"]=status["attempted"]-status["completed"]-status["engine_error_count"]
           (root/"results/qualification-summary.json").write_text(json.dumps(status,indent=2)+"\n")
           with open(os.environ["GITHUB_STEP_SUMMARY"],"a") as out:
               out.write("# Experimental Gorge precon gameplay: "+os.environ["HERO_DECK"]+"\\n\\n")
               out.write(f"Attempted: {status['attempted']}; completed: {status['completed']}; replay-verified: {status['replay_verified']}.\\n\\n")
-              out.write(f"Precons observed: **{len(seen)}/60**. These are **not** certified for rules or pilot fidelity.\\n")
+              out.write(f"Precons observed: **{len(seen)}/{len(pool)}**. These are **not** certified for rules or pilot fidelity.\\n")
               out.write(f"Turn-cap stalls: **{status['turn_limit_stalls']}**; engine errors: **{status['engine_error_count']}**.\\n")
               for problem in status["engine_errors"]:
                   out.write(f"- BLOCKED seed {problem['seed']}: {problem['error']}; pod: {', '.join(problem['decks'])}\\n")
