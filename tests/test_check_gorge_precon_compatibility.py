@@ -3,14 +3,35 @@ import unittest
 from tempfile import TemporaryDirectory
 from pathlib import Path
 
-from tests.test_stage_gorge_precon_qualification import fixtures
-from tools.stage_gorge_precon_qualification import build_queue
 from tools.check_gorge_precon_compatibility import export, summarize
 
 
+
+def make_queue():
+    rows = []
+    for i in range(60):
+        key = f"deck-{i:02d}"
+        rows.append({
+            "key": key, "name": key, "commander": f"Commander {i}",
+            "color_identity": ["U"], "oracle_complete": True,
+            "unresolved_card_names": [], "decklist_sha256": str(i),
+            "active_opponent": False, "qualification": "queued_not_approved",
+            "oracle_card_annotations": [
+                {"name": f"Commander {i}", "count": 1, "resolved": True},
+                {"name": "Basic Test Land", "count": 99, "resolved": True},
+            ],
+        })
+    return {
+        "schema": "gorge-precon-qualification-queue-v1",
+        "status": "certification_pending_no_activation",
+        "oracle_bulk_sha256": "fixture-sha",
+        "source_catalog_commit": "fixture-commit",
+        "decks": rows,
+    }
+
 class CompatibilityTests(unittest.TestCase):
     def test_export_and_per_deck_reports(self):
-        queue = build_queue(*fixtures())
+        queue = make_queue()
         for d in queue["decks"]:
             d["oracle_card_annotations"] = [
                 {"name": d["commander"], "count": 1, "resolved": True},
