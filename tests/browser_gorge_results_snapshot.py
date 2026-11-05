@@ -55,6 +55,8 @@ def check():
                 tiles.nth(2).locator('summary').first.click()
                 tiles.nth(3).locator('summary').first.click()
                 assert tiles.nth(3).locator('.gorge-sample-chart').count() == 1
+                page.evaluate('window.scrollTo(0,0)')
+                page.screenshot(path=str(OUT/(name+'-life.png')), full_page=True)
                 tiles.nth(3).locator('summary').first.click()
                 assert tiles.nth(1).locator('.game-outcome-finish-row').count() > 0
                 tiles.nth(1).locator('summary').first.click()
@@ -68,6 +70,7 @@ def check():
                 replacement.locator('summary').first.click()
                 assert page.locator('.gorge-full-cohort-regressions').count() == 1
                 assert page.locator('#turn-reviewer-panel').is_visible()
+                page.evaluate('window.scrollTo(0,0)')
                 page.screenshot(path=str(OUT/(name+'-results.png')), full_page=True)
                 tiles.nth(0).locator('summary').first.click()
                 page.screenshot(path=str(OUT/(name+'-matchups.png')), full_page=True)

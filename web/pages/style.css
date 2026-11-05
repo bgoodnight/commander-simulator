@@ -1427,12 +1427,16 @@ body:has(#pane-records:not([hidden])) .page-introduction a{font-size:.72rem}
 .gorge-sample-chart polyline{fill:none;stroke-width:3}
 .gorge-sample-chart .is-win{stroke:#81c5a2;fill:#81c5a2}
 .gorge-sample-chart .is-loss{stroke:#d98f8c;fill:#d98f8c}
+.gorge-sample-chart polyline.is-win,.gorge-sample-chart polyline.is-loss{fill:none}
 .gorge-sample-chart text{fill:#cbd1c8;font-size:12px}
 .gorge-sample-legend{display:flex;flex-wrap:wrap;gap:12px;font-size:.72rem;color:#cbd1c8}
 .gorge-sample-legend .is-win{color:#81c5a2}.gorge-sample-legend .is-loss{color:#d98f8c}
 @media(max-width:720px){
   .game-outcome-hero-frame>.game-outcome-hero-highlights{grid-template-columns:repeat(2,minmax(0,1fr))}
   .gorge-highlight-details[open]{grid-column:1/-1}
+  .gorge-highlight-details .gorge-full-cohort-table :is(th,td):nth-child(3),
+  .gorge-highlight-details .gorge-full-cohort-table :is(th,td):nth-child(4),
+  .gorge-highlight-details .gorge-full-cohort-table :is(th,td):nth-child(5){display:none}
 }
 @media(max-width:720px){
   .latest-insight-grid .game-outcome-hero-summary{min-height:350px}
