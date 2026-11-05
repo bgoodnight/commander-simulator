@@ -812,7 +812,7 @@ function init(){
     const sampleRuns=sampledGames.map(game=>{
       try{return window.GorgeLegacyAdapter.projectRun(game,game.player_seat,60,{});}
       catch(error){console.warn("Replay excluded from example chart",error);return null;}
-    }).filter(Boolean);
+    }).filter(run=>run && (run.outcome?.status==="win" || run.outcome?.status==="loss"));
     const hero=cohortStatsPanel(full,oldFrame,sampleRuns);
     if(oldFrame)oldFrame.replaceWith(hero);
     else if(grid)grid.prepend(hero);
