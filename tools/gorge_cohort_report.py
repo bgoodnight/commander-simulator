@@ -104,6 +104,16 @@ def grouped(rows, category):
             keys = [str(row["player_seat"]+1)]
         elif category in ("archetypes", "colors"):
             keys = source_tags(row, category)
+        elif category == "identities":
+            keys = []
+            metadata = row.get("seat_metadata")
+            if isinstance(metadata, list) and len(metadata) == 4:
+                for i, meta in enumerate(metadata):
+                    if i == row["player_seat"] or not isinstance(meta, dict) or meta.get("deck_key") != row["decks"][i]:
+                        continue
+                    colors = meta.get("color_identity")
+                    if isinstance(colors, list) and all(c in "WUBRG" for c in colors):
+                        keys.append("".join(c for c in "WUBRG" if c in colors) or "Colorless")
         elif category == "pods":
             keys = [" / ".join(sorted(opponents(row)))]
         else:
@@ -263,11 +273,13 @@ def make_report(games):
               if r.get("player_deck",r["decks"][r["player_seat"]])==key]
         groups={family:sorted(grouped(rows,family),
                  key=lambda g:(-g["n"],g["name"]))
-                for family in ("opponents","pods","seats","archetypes","colors")}
+                for family in ("opponents","pods","seats","archetypes","colors","identities")}
         models={family:regression(rows,family)
                 for family in ("opponents","archetypes","colors")}
         result["decks"][key]={"player_deck":key,
              **bucket(rows),"groups":groups,"regressions":models,
+             "game_turn_histogram": [{"turns": turn, "games": sum(r.get("turns") == turn for r in rows)}
+                                     for turn in sorted({r["turns"] for r in rows if type(r.get("turns")) is int and r["turns"] >= 0})],
              "detailed_replay_count":sum(r.get("detailed_replay_retained") is True
                                           for r in rows)}
     return result

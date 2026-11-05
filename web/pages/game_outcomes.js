@@ -1913,11 +1913,23 @@
             metric.append(create("span",null,label),
               create("strong",null,value===null?"—":nfmt(value)));
             metric.disabled=!examples.length;
-            metric.onclick=openExample;
+            metric.onclick=options.isGorge?()=>{
+              if(!examples.length)return;
+              exampleIndex=(exampleIndex+1)%examples.length;
+              const entry=examples[exampleIndex];
+              onReviewRun(entry.group.id,entry.run.seed,entry.turn);
+            }:openExample;
             tileSet.appendChild(metric);
           }
           stats.appendChild(tileSet);
           if(examples.length){
+            if(options.isGorge){
+              const open=textButton("View an example game ↗","game-outcome-review-link",()=>{
+                const entry=examples[0];
+                onReviewRun(entry.group.id,entry.run.seed,entry.turn);
+              });
+              evidence.appendChild(open);
+            }else{
             tracker=create("details","insight-inline-tracker insight-inline-tracker-compact");
             const trigger=create("summary",null,"View example games");
             tracker.appendChild(trigger);
@@ -1970,6 +1982,7 @@
               if(tracker.open)draw();
             });
             evidence.appendChild(tracker);
+            }
           }
         }
         ranking.appendChild(create("strong","insight-featured-chart-title","Top cards"));
@@ -2388,7 +2401,35 @@
           "instant","spell","land","seen","seenCreature","unplayed","longest",
           "activated","removal","creatureKills","damage","finisher",
           ...(signals.confirmedTutors?["tutorFound","tutorUsed"]:[])];
+      const playedTypes=["played","creature","artifact","enchantment","instant","spell","land"];
+      function groupedPlayedPanel(kind){
+        const panel=cardPerformancePanel(kind,signals.ranked[kind]||[],
+          signals.coverage,groups,{...options,isGorge,tutorSearchCount:signals.confirmedTutors},onReviewRun);
+        if(!panel)return null;
+        const body=panel.querySelector(".game-outcome-body");
+        const chooser=create("select","gorge-full-cohort-select");
+        chooser.setAttribute("aria-label","Choose card type");
+        for(const type of playedTypes){
+          if(!signals.ranked[type]?.length)continue;
+          const option=create("option",null,insightCategoryLabel(type));
+          option.value=type;chooser.appendChild(option);
+        }
+        chooser.value=kind;
+        chooser.addEventListener("change",()=>{
+          const replacement=groupedPlayedPanel(chooser.value);
+          if(replacement){replacement.open=true;panel.replaceWith(replacement);
+            replacement.querySelector("select")?.focus();}
+        });
+        body.prepend(chooser);
+        return panel;
+      }
       for(const kind of kinds){
+        if(isGorge&&playedTypes.includes(kind)&&kind!=="played")continue;
+        if(isGorge&&kind==="played"){
+          const panel=groupedPlayedPanel(kind);
+          if(panel)cards.appendChild(panel);
+          continue;
+        }
         const panel=cardPerformancePanel(kind,signals.ranked[kind],
           signals.coverage,groups,
           {...options,isGorge,tutorSearchCount:signals.confirmedTutors},onReviewRun);

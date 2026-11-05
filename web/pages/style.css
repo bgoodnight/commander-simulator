@@ -1407,6 +1407,24 @@ body:has(#pane-records:not([hidden])) .page-introduction a{font-size:.72rem}
   font-size:.67rem;line-height:1.35;color:#cbd1c8;
   overflow-wrap:anywhere
 }
+.game-outcome-hero-frame>.game-outcome-hero-highlights{
+  grid-template-columns:repeat(2,minmax(0,1fr));max-width:none;margin-top:10px
+}
+.gorge-highlight-details{padding:0;display:block;overflow:hidden}
+.gorge-highlight-details>summary{display:flex;flex-direction:column;gap:3px;
+  padding:11px 13px;cursor:pointer;list-style:none}
+.gorge-highlight-details>summary::-webkit-details-marker{display:none}
+.gorge-highlight-details>summary>span{font-size:.68rem;letter-spacing:.045em;
+  text-transform:uppercase;color:#ddcca7}
+.gorge-highlight-details>summary>strong{font-size:1.6rem;color:#f4e4c8}
+.gorge-highlight-details>summary>small{font-size:.67rem;color:#cbd1c8}
+.gorge-highlight-details>.gorge-full-cohort-groups{border:0;background:transparent}
+.gorge-highlight-details>.gorge-full-cohort-groups>summary{display:none}
+.gorge-highlight-details .game-outcome-body{padding:12px}
+.gorge-full-cohort-regressions{grid-column:1/-1}
+@media(max-width:720px){
+  .game-outcome-hero-frame>.game-outcome-hero-highlights{grid-template-columns:1fr}
+}
 @media(max-width:720px){
   .latest-insight-grid .game-outcome-hero-summary{min-height:350px}
   .latest-insight-grid .game-outcome-hero-copy{

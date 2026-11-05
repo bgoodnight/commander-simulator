@@ -497,23 +497,6 @@ function init(){
     const ranked=(stats.groups?.opponents||[])
       .filter(group=>group.n>=10)
       .sort((a,b)=>b.win_rate-a.win_rate||b.n-a.n);
-    for(const [label,value,detail] of [
-      ["Best matchup",ranked.length?cohortPercent(ranked[0].win_rate):"—",
-        ranked.length?ranked[0].name+" · "+ranked[0].n+" games":"No supported opponent group"],
-      ["Game length",stats.median_game_turns===null?"—":
-        String(stats.median_game_turns),"Median recorded game turns"],
-      ["Verified games",String(stats.n),"Complete simulation cohort"],
-      ["Replay coverage",String(stats.detailed_replay_count),
-        "Detailed source-backed replays"]]){
-      const tile=node("div","game-outcome-hero-highlight");
-      tile.append(node("span",null,label),node("strong",null,value),
-        node("small",null,detail));
-      highlights.append(tile);
-    }
-    copy.append(highlights);
-    copy.append(node("span","game-outcome-hero-meta",
-      stats.n+" source-verified Gorge games · "+
-      stats.detailed_replay_count+" detailed replay samples"));
     summary.append(copy);panel.append(summary);
     const body=node("div","game-outcome-body");
     for(const [state,label,count] of [
@@ -533,7 +516,35 @@ function init(){
         cohortPercent(stats.wilson_95[1])+
         ". Games may be dependent because pods and seeds are systematically rotated."));
     panel.append(body);frame.append(panel);
+    for(const [label,value,detail,content] of [
+      ["Best matchup",ranked.length?cohortPercent(ranked[0].win_rate):"—",
+        ranked.length?ranked[0].name+" · "+ranked[0].n+" games":"No supported opponent group",cohortGroupPanel(stats)],
+      ["Game length",stats.median_game_turns==null?"—":String(stats.median_game_turns),
+        "Median recorded game turns",cohortLengthPanel(stats)]]){
+      const tile=node("details","game-outcome-hero-highlight gorge-highlight-details");
+      const heading=node("summary");
+      heading.append(node("span",null,label),node("strong",null,value),node("small",null,detail));
+      if(content.tagName==="DETAILS")content.open=true;
+      tile.append(heading,content);highlights.append(tile);
+    }
+    frame.append(highlights);
     return frame;
+  }
+  function cohortLengthPanel(stats){
+    const body=node("div","game-outcome-body gorge-length-histogram");
+    const values=stats.game_turn_histogram||[];
+    if(!values.length){body.append(node("p","micro","Game length distribution is not available for this cohort."));return body;}
+    body.append(node("p","micro","Recorded game turns · "+stats.game_turns_coverage+" games"));
+    const highest=Math.max(...values.map(v=>v.games),1);
+    const chart=node("div","game-outcome-finish-bars");
+    for(const item of values){
+      const row=node("div","game-outcome-finish-row");
+      const track=node("div","game-outcome-finish-track");
+      const fill=node("span","game-outcome-finish-fill");
+      fill.style.width=(100*item.games/highest)+"%";
+      track.append(fill);row.append(node("span",null,String(item.turns)),track,node("strong",null,String(item.games)));chart.append(row);
+    }
+    body.append(chart);return body;
   }
   function cohortGroupPanel(stats){
     const details=node("details",
@@ -555,6 +566,7 @@ function init(){
       ["pods","Whole-table matchup"],
       ["archetypes","Opponent archetype present"],
       ["colors","Opponent color present"],
+      ["identities","Opponent exact color identity"],
       ["seats","Player seat"],
     ]){
       const opt=node("option",null,label);
@@ -572,7 +584,9 @@ function init(){
       top.append(header);
       table.append(top);
       const body=node("tbody");
-      for(const group of stats.groups?.[chooser.value]||[]){
+      const groups=[...(stats.groups?.[chooser.value]||[])].sort((a,b)=>
+        (b.win_rate??-1)-(a.win_rate??-1)||b.n-a.n||a.name.localeCompare(b.name));
+      for(const group of groups){
         const row=node("tr");
         for(const cell of [group.name,group.n,group.wins,group.losses,
                            group.draws,cohortPercent(group.win_rate)]){
@@ -679,15 +693,11 @@ function init(){
     if(oldFrame)oldFrame.replaceWith(hero);
     else if(grid)grid.prepend(hero);
     else outcomes.prepend(hero);
-    const sampleTitle=node("p","gorge-sampled-insights-label",
-      "Card and turn insights · "+sampledCount+
-      " retained detailed replays, not all "+full.n+" games");
-    const groups=cohortGroupPanel(full);
     const regressions=cohortRegressionPanel(full);
     if(grid){
-      hero.after(groups,regressions,sampleTitle);
+      grid.append(regressions);
     }else{
-      outcomes.append(groups,regressions,sampleTitle);
+      outcomes.append(regressions);
     }
     if(status)status.textContent=full.n+" verified Gorge games · "+
       sampledCount+" detailed replay samples · full-cohort statistics";

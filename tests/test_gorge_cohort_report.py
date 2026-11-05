@@ -46,6 +46,9 @@ class FullCohortTests(unittest.TestCase):
         self.assertEqual(full["regressions"]["opponents"]["status"],"ready")
         self.assertEqual(full["regressions"]["colors"]["status"],"ready")
         self.assertGreaterEqual(full["median_game_turns"],25)
+        self.assertEqual(sum(x["games"] for x in full["game_turn_histogram"]),150)
+        identities={x["name"]:x["n"] for x in full["groups"]["identities"]}
+        self.assertEqual(identities,{"B":150,"WUR":150})
 
     def test_rejects_wrong_player_seat_or_duplicate_seeds(self):
         row=game(7000,0)
