@@ -1,0 +1,129 @@
+name: Gorge · matched pilot narrative audit
+
+# Exploratory source-backed pilot comparisons. No Deck Lab publication.
+on:
+  push:
+    branches: [main]
+    paths:
+      - ".github/workflows/gorge-pilot-narratives.yml"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  actions: read
+
+jobs:
+  narratives:
+    name: ${{ matrix.deck }} · ${{ matrix.policy }} · 10 source recordings
+    runs-on: ubuntu-latest
+    timeout-minutes: 100
+    strategy:
+      fail-fast: false
+      max-parallel: 4
+      matrix:
+        deck: [mortarion_current, magnus_budget]
+        policy: [bot, forge-heuristic]
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Reuse verified, pinned Gorge rules engine and deck corpus
+        env:
+          GH_TOKEN: ${{ github.token }}
+          GH_REPO: ${{ github.repository }}
+        run: |
+          mkdir -p "$RUNNER_TEMP/bundle"
+          gh run download 41938112091 --name gorge-500-pinned-bundle --dir "$RUNNER_TEMP/bundle"
+          chmod +x "$RUNNER_TEMP/bundle/gorge-probe"
+      - name: Play ten verified games, retain complete authoritative recordings
+        env:
+          DECK: ${{ matrix.deck }}
+          POLICY: ${{ matrix.policy }}
+        run: |
+          set -euo pipefail
+          case "$DECK" in
+            mortarion_current) seed=91000 ;;
+            magnus_budget) seed=92000 ;;
+            *) exit 1 ;;
+          esac
+          opponents="$(python -c 'import json,os;print(",".join(json.load(open(os.environ["RUNNER_TEMP"]+"/bundle/pods/"+os.environ["DECK"]+"-pod.json"))["opponent_pool"]))')"
+          target="$RUNNER_TEMP/results/$DECK/$POLICY"
+          mkdir -p "$target/native"
+          "$RUNNER_TEMP/bundle/gorge-probe" \
+            -corpus "$RUNNER_TEMP/bundle/.cards" \
+            -deck-dir "$RUNNER_TEMP/bundle/decks" \
+            -hero-deck "$DECK" -opponents "$opponents" \
+            -games 10 -seed "$seed" -max-turns 60 \
+            -retry-unverified=true -max-attempts 80 \
+            -pilot bot -hero-pilot "$POLICY" -verify=true \
+            -native-dir "$target/native" -native-limit 10 \
+            > "$target/outcomes.jsonl"
+          python -m tools.gorge_pilot_narratives summarize "$target" "$DECK" "$POLICY"
+          python - "$target" <<'PY'
+          import json,sys
+          from pathlib import Path
+          path=Path(sys.argv[1]);rows=[json.loads(x) for x in (path/"outcomes.jsonl").read_text().splitlines()]
+          assert len(rows)==10 and len(list((path/"native").glob("gorge-seed-*.json")))==10
+          assert all(r["finished"] and r["replay_verified"] for r in rows)
+          wins=sum(r["winner_seat"]==r["hero_seat"] and not r["draw"] for r in rows)
+          print("NARRATIVE_PILOT",path.parent.name,path.name,"wins",wins,"/10")
+          PY
+      - name: Save short-lived audit recordings, separate from public results
+        uses: actions/upload-artifact@v4
+        with:
+          name: pilot-narrative-${{ matrix.deck }}-${{ matrix.policy }}
+          path: ${{ runner.temp }}/results/${{ matrix.deck }}/${{ matrix.policy }}/
+          if-no-files-found: error
+          retention-days: 7
+
+  compare:
+    name: Compare game narratives across pilot policies
+    needs: narratives
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - uses: actions/download-artifact@v4
+        with:
+          pattern: pilot-narrative-*
+          path: ${{ runner.temp }}/source
+          merge-multiple: false
+      - name: Align sources and compare decisions at matching seeds
+        run: |
+          set -euo pipefail
+          mkdir -p "$RUNNER_TEMP/comparison"
+          for deck in mortarion_current magnus_budget; do
+            for policy in bot forge-heuristic; do
+              mkdir -p "$RUNNER_TEMP/comparison/$deck/$policy"
+              cp "$RUNNER_TEMP/source/pilot-narrative-$deck-$policy/narrative.json" \
+                "$RUNNER_TEMP/comparison/$deck/$policy/narrative.json"
+            done
+            python -m tools.gorge_pilot_narratives compare "$RUNNER_TEMP/comparison" "$deck"
+          done
+          python - <<'PY'
+          import json,os
+          from pathlib import Path
+          path=Path(os.environ["RUNNER_TEMP"])/"comparison/comparison.jsonl"
+          reports=[json.loads(line) for line in path.read_text().splitlines()]
+          with open(os.environ["GITHUB_STEP_SUMMARY"],"a") as file:
+              file.write("# Gorge pilot narrative comparison\n\n")
+              file.write("Real Gorge event evidence, ten verified games per pilot and deck. Opponent bots are unchanged.\n\n")
+              for r in reports:
+                  file.write(f"## {r['deck']}\n\n")
+                  file.write(f"- Bot: {r['bot_wins']}/10 wins; Forge: {r['forge_wins']}/10 wins\n")
+                  file.write(f"- {r['matched']} shared accepted seeds; {len(r['discordant'])} changed outcomes\n")
+                  for game in r["discordant"][:5]:
+                      file.write(f"- Seed {game['seed']}: bot {game['bot_outcome']}, forge {game['forge_outcome']}; "+
+                         f"casts {game['bot_casts']} vs {game['forge_casts']}; activations "+
+                         f"{game['bot_activations']} vs {game['forge_activations']}\n")
+                  file.write("\n")
+          PY
+      - uses: actions/upload-artifact@v4
+        with:
+          name: pilot-narrative-comparisons
+          path: ${{ runner.temp }}/comparison/comparison.jsonl
+          if-no-files-found: error
+          retention-days: 7
