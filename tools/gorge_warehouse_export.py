@@ -68,7 +68,19 @@ def build_rows(folder: Path, batch_id: str, deck: str, shard: int):
                 "secret": bool(event.get("secret")),
                 "event_json": canonical(event).decode("utf-8"),
             })
+        # Preserve provenance as explicit nullable fields. Older R2 shards
+        # remain historical because their version fingerprints are missing.
+        from tools.gorge_cohort_eligibility import IDENTITY_FIELDS
+        recorded = {
+            "cohort_id": row.get("cohort_id"),
+            "cohort_manifest_sha256": row.get("cohort_manifest_sha256"),
+            **{key: row.get(key) for key in IDENTITY_FIELDS},
+        }
         games.append({
+            **recorded,
+            "finished": row["finished"],
+            "replay_verified": row["replay_verified"],
+            "error": row.get("error"),
             "game_id": gid, "batch_id": batch_id, "deck": deck, "shard": shard,
             "seed": seed, "chain": chain,
             "hero_seat": seat, "winner_seat": row.get("winner_seat"),
