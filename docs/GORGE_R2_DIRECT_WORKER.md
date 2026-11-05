@@ -46,16 +46,15 @@ approved current cohorts, so the correct live response is
    GitHub Actions > **Deploy private-bucket Gorge R2 read-only Worker** >
    **Run workflow** on `main`. It is manual-only, never triggered by
    unrelated commits.
-3. Save the returned `workers.dev` URL. Visit `<URL>/health`.
-   For the private benchmark, run from an authenticated Cloudflare Wrangler
-   session in `workers/gorge-r2-api`:
-   `npx wrangler secret put BENCHMARK_TOKEN`
-   using a newly generated random value, then
-   `curl -H 'Authorization: Bearer <token>' '<URL>/v1/benchmark?deck=mortarion_current'`.
-   Do not put tokens in browser query parameters or Pages JavaScript.
-4. Measure 10 cold and 10 warm requests, reporting median/P95 total,
-   R2 listing, and Parquet decoding time. Compare to the current static
-   page and query the other player deck(s).
+3. The manual deployment workflow will automatically verify `/health`,
+   generate a temporary randomly generated `BENCHMARK_TOKEN` Worker secret,
+   run seven actual bounded, private R2 Parquet reads, publish median and
+   P95 phase timings to its GitHub Actions summary, and **delete the token**
+   afterward. If revocation fails, the workflow fails and explicitly flags
+   manual cleanup. No token is included in the report.
+4. Save the `workers.dev` URL from the successful action. Compare R2 listing,
+   manifest, decoding and total API time to an initial target of P95
+   below one second. Repeat benchmarks across larger warehouse panels later.
 5. For the visual preview, the separate, still-unmerged UI adapter uses
    `?r2Api=<URL>`. It displays explicitly approved statistics and actual
    server/client latency. When the Worker is unavailable the existing
