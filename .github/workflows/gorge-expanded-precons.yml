@@ -1,9 +1,11 @@
-name: Gorge expanded official precon validation
+name: Gorge stock Commander candidate catalog audit
 
 on:
   pull_request:
     paths:
+      - "data/gorge_stock_precon_candidates_v1.json"
       - "data/commander_deck_library.json"
+      - "tools/audit_gorge_candidate_catalog.py"
       - "tools/import_mtgjson_stock_precons.py"
       - "tests/test_expanded_stock_precons.py"
       - "tests/test_commander_deck_library.py"
@@ -14,75 +16,33 @@ permissions:
   contents: read
 
 jobs:
-  validate:
+  candidate-catalog:
     runs-on: ubuntu-latest
-    timeout-minutes: 100
+    timeout-minutes: 15
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-python@v5
         with:
           python-version: "3.12"
-      - name: Run offline validation tests
+      - name: Validate stock deck candidate importer and identity rules
         run: python -m unittest tests.test_expanded_stock_precons tests.test_commander_deck_library tests.test_gorge_precons_and_replay -v
-      - name: Resolve eight authentic MTGJSON stock Commander products
+      - name: Validate at least 100 immutable stock precon candidate lists
         run: |
-          mkdir -p "$RUNNER_TEMP/decks"
-          python -m tools.export_gorge_decks --out "$RUNNER_TEMP/decks" --decks mortarion_current
-          python -m tools.fetch_gorge_precons --out "$RUNNER_TEMP/decks"
-          python -m tools.import_mtgjson_stock_precons --out "$RUNNER_TEMP/decks" > "$RUNNER_TEMP/import-report.json"
-          python -m tools.commander_deck_library --hero mortarion_current \
-            --opponents necron_dynasties,wretched_ranks,cavalry-charge,science-pip,deadly-disguise,avengers-assemble,explorers-of-the-deep,veloci-ramp-tor,quick-draw,desert-bloom,creative-energy,squirreled-away,endless-punishment,tricky-terrain \
-            --deck-dir "$RUNNER_TEMP/decks" --output "$RUNNER_TEMP/expanded-pod.json"
-      - name: Clone exact pinned Gorge commit
-        env:
-          GORGE_COMMIT: b78e4c8b16078f6decbc48875bba953ce5535b85
-        run: |
-          git clone --filter=blob:none https://github.com/adams-shaun/gorge.git "$RUNNER_TEMP/gorge"
-          git -C "$RUNNER_TEMP/gorge" checkout --detach "$GORGE_COMMIT"
-          test "$(git -C "$RUNNER_TEMP/gorge" rev-parse HEAD)" = "$GORGE_COMMIT"
-      - uses: actions/setup-go@v5
-        with:
-          go-version-file: ${{ runner.temp }}/gorge/go.mod
-          cache: false
-      - name: Build current Gorge probe
-        working-directory: ${{ runner.temp }}/gorge
-        run: |
-          make fetch-cards compile-cards
-          cp "$GITHUB_WORKSPACE/tools/gorge_commander_probe.go" commander_probe.go
-          go build -o "$RUNNER_TEMP/gorge-probe" ./commander_probe.go
-      - name: Smoke each newly imported deck against Mortarion using exact Gorge rules
-        shell: bash
-        run: |
-          set -euo pipefail
-          mkdir -p "$RUNNER_TEMP/results"
-          seed=77000
-          for extra in explorers-of-the-deep veloci-ramp-tor quick-draw desert-bloom creative-energy squirreled-away endless-punishment tricky-terrain; do
-            "$RUNNER_TEMP/gorge-probe" \
-              -corpus "$RUNNER_TEMP/gorge/.cards" \
-              -deck-dir "$RUNNER_TEMP/decks" \
-              -hero-deck mortarion_current \
-              -opponents "necron_dynasties,wretched_ranks,$extra" \
-              -games 1 -seed "$seed" -max-turns 60 \
-              -retry-unverified=true -max-attempts 30 \
-              -pilot bot -verify=true \
-              > "$RUNNER_TEMP/results/$extra.jsonl"
-            python - "$RUNNER_TEMP/results/$extra.jsonl" "$extra" <<'PY'
-          import json,sys
-          rows=[json.loads(line) for line in open(sys.argv[1]) if line.strip()]
-          assert len(rows)==1 and rows[0]["finished"] and rows[0]["replay_verified"] and not rows[0].get("error")
-          assert sys.argv[2] in rows[0]["decks"], "New opponent missing from pod"
+          python -m tools.audit_gorge_candidate_catalog --minimum 100 --output "$RUNNER_TEMP/candidate-audit.json"
+          python - "$RUNNER_TEMP/candidate-audit.json" <<'PY'
+          import json,sys,os
+          r=json.load(open(sys.argv[1]))
+          with open(os.environ["GITHUB_STEP_SUMMARY"],"a") as f:
+              f.write("# Candidate precon catalog (NOT Gorge-qualified)\\n\\n")
+              f.write(f"- Structurally valid precons: **{r['candidates']}**\\n")
+              f.write(f"- Distinct product set codes: **{r['set_count']}**\\n")
+              f.write(f"- Distinct card names: **{r['unique_card_names']}**\\n")
+              f.write("- Benchmark admission: **none from this workflow**\\n")
           PY
-            seed=$((seed+100))
-          done
-          echo "Eight added stock Commander decks passed individual real-game smoke tests." >> "$GITHUB_STEP_SUMMARY"
-      - name: Upload import audit evidence (not simulation archive)
-        if: always()
+      - name: Upload read-only catalog integrity report
         uses: actions/upload-artifact@v4
         with:
-          name: expanded-precon-validation
-          path: |
-            ${{ runner.temp }}/decks/expanded_stock_manifest.json
-            ${{ runner.temp }}/expanded-pod.json
-            ${{ runner.temp }}/results/*.jsonl
-          if-no-files-found: warn
+          name: stock-commander-candidate-audit
+          path: ${{ runner.temp }}/candidate-audit.json
+          if-no-files-found: error
           retention-days: 14
