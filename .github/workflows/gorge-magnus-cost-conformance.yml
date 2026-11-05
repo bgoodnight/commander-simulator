@@ -4,6 +4,7 @@ on:
     branches: [main]
     paths:
       - ".github/workflows/gorge-magnus-cost-conformance.yml"
+      - "tools/gorge_magnus_cost_conformance_test.go"
   workflow_dispatch:
 permissions:
   contents: read
