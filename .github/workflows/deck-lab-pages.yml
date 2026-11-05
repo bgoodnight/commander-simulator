@@ -9,6 +9,11 @@ on:
       - "tools/gorge_card_insights_extract.cjs"
       - "tests/test_gorge_card_insights.py"
       - "tools/gorge_cohort_report.py"
+      - "tools/gorge_display_labels.py"
+      - "data/gorge_display_labels.json"
+      - "data/commander_deck_library.json"
+      - "tests/test_gorge_display_labels.py"
+      - "tests/pages_display_names.test.cjs"
       - "tests/test_gorge_cohort_report.py"
       - "commander_sim/**"
       - "simulator/card_data/**"
@@ -30,6 +35,11 @@ on:
     paths:
       - "web/pages/**"
       - "tools/build_pages_deck_lab.py"
+      - "tools/gorge_display_labels.py"
+      - "data/gorge_display_labels.json"
+      - "data/commander_deck_library.json"
+      - "tests/test_gorge_display_labels.py"
+      - "tests/pages_display_names.test.cjs"
       - "tests/test_pages_export.py"
       - "tests/pages_insight_explorer.test.cjs"
       - ".github/workflows/deck-lab-pages.yml"
@@ -75,7 +85,8 @@ jobs:
           fi
       - name: Validate export contracts and Javascript syntax
         run: |
-          python -m unittest tests.test_pages_export tests.test_gorge_ui_export tests.test_gorge_public_state tests.test_gorge_cohort_report tests.test_gorge_card_insights -v
+          python -m unittest tests.test_pages_export tests.test_gorge_ui_export tests.test_gorge_public_state tests.test_gorge_cohort_report tests.test_gorge_card_insights tests.test_gorge_display_labels -v
+          node --test tests/pages_display_names.test.cjs
           node --check web/pages/app.js
           node --check web/pages/replay.js
           node --check web/pages/gorge_dashboard.js
