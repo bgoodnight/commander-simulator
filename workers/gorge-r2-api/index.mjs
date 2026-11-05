@@ -1,7 +1,7 @@
 import { parquetReadObjects, parquetMetadataAsync, parquetSchema } from "hyparquet";
 import { compressors } from "hyparquet-compressors";
 import registry from "../../data/gorge_analytics_cohort_registry_v1.json";
-import { aggregate, isApproved, validateDeck, normalizeRow, approvedGameIndex } from "./core.mjs";
+import { aggregate, isApproved, validateDeck, normalizeRow, approvedGameIndex, approvedGameDetail } from "./core.mjs";
 
 // Read-only Cloudflare Worker. The R2 binding has no credentials in JS or HTML.
 // Never return native logs, intents, event_json, object catalog, or hidden zones.
@@ -113,22 +113,32 @@ async function getSummary(env,deck,metrics) {
   return {...aggregate(rows,deck),status:rows.length?"ready":"awaiting_cohort_approval",
     raw_shards_seen:matching.length};
 }
-async function getApprovedGames(env,deck,limit,metrics) {
+async function getApprovedGames(env,deck,limit,metrics,gameId=null) {
   const {shards,truncated}=await listShards(env.GORGE_R2);
   const matching=shards.filter(x=>x.deck===deck);
   metrics.shards_scanned=matching.length;
   metrics.list_truncated=truncated;
   if(truncated)throw Error("shard_scan_limit_reached");
   const approved=registry.cohorts.filter(c=>c.status==="current"&&c.approved===true);
-  if(!approved.length)return {...approvedGameIndex([],deck,limit),
-    status:matching.length?"awaiting_cohort_approval":"no_warehouse_shards",
-    raw_shards_seen:matching.length};
+  if(!approved.length)return gameId===null?
+    {...approvedGameIndex([],deck,limit),
+      status:matching.length?"awaiting_cohort_approval":"no_warehouse_shards",
+      raw_shards_seen:matching.length}:
+    {schema:"gorge-r2-approved-game-detail-v1",deck,
+      population:"approved_current_decisive_only",game:null,
+      status:matching.length?"awaiting_cohort_approval":"no_warehouse_shards"};
   const rows=[],fingerprints=new Map();
   for(const shard of matching) {
     const manifest=await readManifest(env.GORGE_R2,shard);
     const games=await readGames(env.GORGE_R2,shard,manifest);
     for(const game of games)
       if(await isApproved(game,registry,fingerprints))rows.push(game);
+  }
+  if(gameId!==null) {
+    const game=approvedGameDetail(rows,deck,gameId);
+    return {schema:"gorge-r2-approved-game-detail-response-v1",
+      deck,population:"approved_current_decisive_only",game,
+      status:game?"ready":"game_not_found",raw_shards_seen:matching.length};
   }
   return {...approvedGameIndex(rows,deck,limit),
     status:rows.length?"ready":"awaiting_cohort_approval",
@@ -176,8 +186,16 @@ export default {
         return fail(503,"benchmark_unavailable",started);
       }
     }
-    if(url.pathname!=="/v1/summary" && url.pathname!=="/v1/games")
+    const detailMatch=url.pathname.match(/^\/v1\/games\/([^/]+)$/);
+    if(url.pathname!=="/v1/summary" && url.pathname!=="/v1/games" && !detailMatch)
       return fail(404,"not_found",started);
+    let gameId=null;
+    if(detailMatch) {
+      try {
+        gameId=decodeURIComponent(detailMatch[1]);
+        if(!/^[a-zA-Z0-9_.:/-]{1,200}$/.test(gameId))throw Error("invalid_game_id");
+      }catch{return fail(400,"invalid_game_id",started);}
+    }
     if(!env.GORGE_R2)return fail(503,"r2_binding_missing",started);
     let deck;
     try { deck=validateDeck(url.searchParams.get("deck")); }
@@ -193,8 +211,8 @@ export default {
     }
     const metrics={};
     try{
-      const payload=url.pathname==="/v1/games"?
-        await getApprovedGames(env,deck,limit,metrics):
+      const payload=(url.pathname==="/v1/games" || gameId!==null)?
+        await getApprovedGames(env,deck,limit,metrics,gameId):
         await getSummary(env,deck,metrics);
       return json({...payload,query:{...metrics,server_ms:duration(started)}},200,duration(started));
     }catch(err){
