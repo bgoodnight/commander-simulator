@@ -1,15 +1,8 @@
 name: Gorge 60-precon experimental gameplay qualification
 
-# Explicitly experimental: never writes R2, Pages, production catalog or
-# active-eligible analytics. Requires manual launch after import validation.
+# Explicitly experimental: manually launched only after the UI is ready.
+# Does not write R2, Pages, production catalog or active eligible analytics.
 on:
-  pull_request:
-    paths:
-      - ".github/workflows/gorge-precon-60-qualification.yml"
-      - "tools/gorge_commander_probe.go"
-      - "tools/patch_gorge_ward_blight.py"
-      - "tools/check_gorge_precon_compatibility.py"
-      - "tools/stage_gorge_precon_qualification.py"
   workflow_dispatch:
     inputs:
       games:
