@@ -1,7 +1,7 @@
-import { parquetReadObjects } from "hyparquet";
+import { parquetReadObjects, parquetMetadataAsync, parquetSchema } from "hyparquet";
 import { compressors } from "hyparquet-compressors";
 import registry from "../../data/gorge_analytics_cohort_registry_v1.json";
-import { aggregate, isApproved, validateDeck } from "./core.mjs";
+import { aggregate, isApproved, validateDeck, normalizeRow } from "./core.mjs";
 
 // Read-only Cloudflare Worker. The R2 binding has no credentials in JS or HTML.
 // Never return native logs, intents, event_json, object catalog, or hidden zones.
@@ -64,8 +64,8 @@ async function readGames(bucket,shard,manifest) {
   const file={
     byteLength:info.size,
     async slice(begin,end) {
-      const from=Math.max(0,begin);
-      const to=end===undefined?info.size:Math.min(info.size,end);
+      const from=Math.max(0,begin<0?info.size+begin:begin);
+      const to=end===undefined?info.size:Math.min(info.size,end<0?info.size+end:end);
       if(to<from)throw Error("invalid_range");
       const length=to-from;
       if(!length)return new ArrayBuffer(0);
@@ -74,14 +74,15 @@ async function readGames(bucket,shard,manifest) {
       return chunk.arrayBuffer();
     }
   };
-  const rows=await parquetReadObjects({
-    file,compressors,
-    columns:["game_id","deck","finished","replay_verified","error","draw",
+  const metadata=await parquetMetadataAsync(file);
+  const columnsAvailable=new Set(parquetSchema(metadata).children.map(x=>x.element.name));
+  const requested=["game_id","deck","finished","replay_verified","error","draw",
       "hero_seat","winner_seat","turns","decks_json","source_sha256","cohort_id",
       "cohort_manifest_sha256","engine_commit","rules_patch_sha256",
       "card_corpus_sha256","player_deck_sha256","pilot_version",
-      "opponent_panel_sha256","oracle_bulk_sha256","simulation_protocol_sha256"]
-  });
+      "opponent_panel_sha256","oracle_bulk_sha256","simulation_protocol_sha256"];
+  const rows=(await parquetReadObjects({file,compressors,
+    columns:requested.filter(key=>columnsAvailable.has(key))})).map(normalizeRow);
   if(rows.length!==manifest.files["games.parquet"].rows)
     throw Error("parquet_row_count_mismatch");
   return rows;
