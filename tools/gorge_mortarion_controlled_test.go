@@ -12,21 +12,22 @@ import (
 // Diagnostic under the exact pinned Gorge rules version, with the real
 // Mortarion corpus card; no fabricated script or game-state projections.
 func TestMortarionGuaranteedLifeLossAndMana(t *testing.T) {
-  e := layerEngine(t)
+  e := newSeats(t, 2)
   card := corpusCard(t, "Mortarion, Daemon Primarch")
   id := onBoardCard(t,e,0,card)
   if e.G.Obj(id).Zone != state.ZBattlefield {
     t.Fatal("Mortarion not present")
   }
-  e.emit(events.Event{Kind: events.TurnChange, Player: 0, Amount: 1})
+  driveToStep(t,e,1,0,state.StepMain1)
   e.emit(events.Event{Kind: events.Damage, Player: 0, Amount: 3})
   if loss:=e.LifeLostThisTurn(0); loss!=3 {
     t.Fatalf("life lost %d not 3",loss)
   }
+  driveToStep(t,e,1,0,state.StepEnd)
+  // Mana added at end step: pools empty on step transitions.
   addMana(t,e,0,"CCC")
   t.Logf("PRECONDITION life=%d loss=%d mana=%d",e.G.Players[0].Life,
     e.LifeLostThisTurn(0),e.G.Players[0].Pool.Total())
-  driveToStep(t,e,1,0,state.StepEnd)
   t.Logf("AT_ENDSTEP turn=%d phase=%v stack=%d pending=%v",e.G.Turn,
     e.G.Step,len(e.G.Stack),e.Pending())
   for i:=0;i<120;i++ {
