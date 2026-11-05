@@ -72,7 +72,7 @@ class StaticPagesTests(unittest.TestCase):
     def test_only_allowlisted_site_data_and_no_workspace_are_exported(self):
         self.run_build()
         permitted={"index.html","summary.html","results.html","editor.html",
-                   "app.js","results_insights.js","brackets.js","replay.js","gorge_legacy_adapter.js","gorge_replay.js","insight_explorer.js","insight_catalog.js","game_outcomes.js","style.css","game-changers.json","decks.json",
+                   "app.js","results_insights.js","brackets.js","replay.js","display_names.js","display_names_data.js","gorge_legacy_adapter.js","gorge_replay.js","insight_explorer.js","insight_catalog.js","game_outcomes.js","style.css","game-changers.json","decks.json",
                    "observations.json","names.json","bounded-batches.json","build-manifest.json",".nojekyll"}
         published=json.loads((self.destination/"bounded-batches.json").read_text())
         permitted.update(f"bounded-runs-{key}.json" for key in published["decks"])
@@ -142,7 +142,7 @@ class StaticPagesTests(unittest.TestCase):
                     self.assertLessEqual(row["detailed_replay_count"],row["n"])
                     for model in row["regressions"].values():
                         self.assertEqual(model["data_scope"],
-                                         "all verified cohort outcomes")
+                                         "completed and replay-verified decisive wins and losses")
             self.assertEqual({p.name for p in gorge_dir.iterdir()},allowed)
             for game in manifest["games"]:
                 replay=json.loads((gorge_dir/game["file"]).read_text())
@@ -200,7 +200,7 @@ class StaticPagesTests(unittest.TestCase):
     def test_ui_asset_urls_are_fingerprinted_from_contents(self):
         self.run_build()
         shell=(self.destination/"index.html").read_text(encoding="utf-8")
-        for name in ("app.js","results_insights.js","brackets.js","replay.js",
+        for name in ("app.js","results_insights.js","brackets.js","replay.js","display_names.js","display_names_data.js",
                      "insight_explorer.js","insight_catalog.js","game_outcomes.js",
                      "style.css"):
             digest=hashlib.sha256((self.destination/name).read_bytes()).hexdigest()[:12]
