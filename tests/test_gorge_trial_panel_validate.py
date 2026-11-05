@@ -2,7 +2,7 @@
 import unittest
 from tools.stage_gorge_precon_qualification import build_queue
 from tools.gorge_trial_panel_validate import validate
-from tests.test_stage_gorge_precon_qualification import fixtures
+from test_stage_gorge_precon_qualification import fixtures
 
 
 def setup():
