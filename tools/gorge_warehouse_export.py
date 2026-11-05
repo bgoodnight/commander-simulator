@@ -18,10 +18,12 @@ def canonical(value):
                       separators=(",", ":")).encode("utf-8")
 
 
-def build_rows(folder: Path, batch_id: str, deck: str, shard: int):
+def build_rows(folder: Path, batch_id: str, deck: str, shard: int, runs_file="runs.jsonl"):
     """Validate all sources before creating any output. No sampled-game fallback."""
     folder = Path(folder)
-    records = [json.loads(line) for line in (folder / "runs.jsonl").read_text().splitlines()
+    if runs_file not in ("runs.jsonl", "runs-stamped.jsonl"):
+        raise ValueError("Unsupported provenance-bearing runs input")
+    records = [json.loads(line) for line in (folder / runs_file).read_text().splitlines()
                if line.strip()]
     if not records:
         raise ValueError("Empty Gorge shard")
@@ -68,6 +70,9 @@ def build_rows(folder: Path, batch_id: str, deck: str, shard: int):
                 "secret": bool(event.get("secret")),
                 "event_json": canonical(event).decode("utf-8"),
             })
+        raw_sha = hashlib.sha256(raw).hexdigest()
+        if row.get("source_sha256") is not None and row["source_sha256"] != raw_sha:
+            raise ValueError(f"Stamped native recording digest mismatch: {seed}")
         # Preserve provenance as explicit nullable fields. Older R2 shards
         # remain historical because their version fingerprints are missing.
         from tools.gorge_cohort_eligibility import IDENTITY_FIELDS
@@ -87,20 +92,20 @@ def build_rows(folder: Path, batch_id: str, deck: str, shard: int):
             "draw": bool(row.get("draw")), "turns": row.get("turns"),
             "decks_json": canonical(decks).decode("utf-8"),
             "policies_json": canonical(row.get("policies")).decode("utf-8"),
-            "source_sha256": hashlib.sha256(raw).hexdigest(),
+            "source_sha256": raw_sha,
             "native_event_count": len(native_events),
             "native_intent_count": len(log["intents"]),
         })
     return games, events
 
 
-def export(folder: Path, out: Path, batch_id: str, deck: str, shard: int):
+def export(folder: Path, out: Path, batch_id: str, deck: str, shard: int, runs_file="runs.jsonl"):
     try:
         import pyarrow as pa
         import pyarrow.parquet as pq
     except ImportError as exc:
         raise RuntimeError("Install pyarrow to export the Gorge warehouse") from exc
-    games, events = build_rows(folder, batch_id, deck, shard)
+    games, events = build_rows(folder, batch_id, deck, shard, runs_file)
     out = Path(out)
     out.mkdir(parents=True, exist_ok=True)
     files = {}
@@ -125,9 +130,11 @@ def main():
     parser.add_argument("--batch-id", required=True)
     parser.add_argument("--deck", required=True)
     parser.add_argument("--shard", required=True, type=int)
+    parser.add_argument("--runs-file", choices=("runs.jsonl", "runs-stamped.jsonl"),
+                        default="runs.jsonl", help="Stamped source-backed input for eligible cohorts")
     args = parser.parse_args()
     print(json.dumps(export(args.shard_folder, args.out, args.batch_id,
-                            args.deck, args.shard), sort_keys=True))
+                            args.deck, args.shard, args.runs_file), sort_keys=True))
 
 
 if __name__ == "__main__":
