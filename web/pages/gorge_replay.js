@@ -510,7 +510,7 @@ function init(){
     }
     copy.append(highlights);
     copy.append(node("span","game-outcome-hero-meta",
-      stats.n+" completed decisive Gorge games · "
+      stats.n+" completed decisive Gorge games · "+
       stats.detailed_replay_count+" detailed replay samples"));
     summary.append(copy);panel.append(summary);
     const body=node("div","game-outcome-body");
