@@ -1,0 +1,69 @@
+name: Explore historical R2 Gorge warehouse (read only)
+on:
+  workflow_dispatch:
+    inputs:
+      batch_id:
+        description: "Exact existing warehouse/v1 batch ID (not a broad R2 scan)"
+        required: true
+        type: string
+
+permissions:
+  contents: read
+
+jobs:
+  historical-diagnostics:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    env:
+      R2_ACCOUNT_ID: ${{ secrets.GORGE_R2_ACCOUNT_ID }}
+      R2_ACCESS_KEY_ID: ${{ secrets.GORGE_R2_ACCESS_KEY_ID }}
+      R2_SECRET_ACCESS_KEY: ${{ secrets.GORGE_R2_SECRET_ACCESS_KEY }}
+      BATCH_ID: ${{ inputs.batch_id }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Validate input and fetch one existing batch from private R2
+        shell: bash
+        run: |
+          set -euo pipefail
+          [[ "$BATCH_ID" =~ ^[a-zA-Z0-9_-]+$ ]] || { echo "::error::Invalid batch ID"; exit 1; }
+          [[ -n "$R2_ACCOUNT_ID" && -n "$R2_ACCESS_KEY_ID" && -n "$R2_SECRET_ACCESS_KEY" ]] || { echo "::error::Missing R2 secrets"; exit 1; }
+          export AWS_ACCESS_KEY_ID="$R2_ACCESS_KEY_ID"
+          export AWS_SECRET_ACCESS_KEY="$R2_SECRET_ACCESS_KEY"
+          export AWS_DEFAULT_REGION=auto
+          endpoint="https://$R2_ACCOUNT_ID.r2.cloudflarestorage.com"
+          mkdir -p "$RUNNER_TEMP/r2-shards"
+          aws --endpoint-url "$endpoint" s3 cp \
+            "s3://gorge-simulations/warehouse/v1/$BATCH_ID/" \
+            "$RUNNER_TEMP/r2-shards/" --recursive \
+            --exclude "*" --include "*/games.parquet" --include "*/events.parquet" \
+            --no-progress
+          test -n "$(find "$RUNNER_TEMP/r2-shards" -name games.parquet -print -quit)"
+      - name: Run historical descriptive diagnostics only
+        run: |
+          python -m pip install --disable-pip-version-check 'duckdb==1.4.1' 'pandas>=2,<3'
+          python tools/gorge_r2_exploratory_diagnostics.py \
+            --warehouse-root "$RUNNER_TEMP/r2-shards" \
+            --output "$RUNNER_TEMP/r2-historical-diagnostics.json"
+          python - "$RUNNER_TEMP/r2-historical-diagnostics.json" <<'PY'
+          import json,os,sys
+          r=json.load(open(sys.argv[1]))
+          with open(os.environ["GITHUB_STEP_SUMMARY"],"a") as f:
+              f.write("# Historical R2 diagnostics (NOT current win rates)\n\n")
+              f.write(f"Game shards: {r['source_shards']}; event shards: {r['event_shards']}\n\n")
+              f.write("| Deck | Decisive games | Win rate | Draws |\n|---|---:|---:|---:|\n")
+              for row in r["game_counts_by_deck"]:
+                  pct="n/a" if row["win_rate_decisive"] is None else f"{row['win_rate_decisive']:.1%}"
+                  f.write(f"| {row['deck']} | {row['decisive']} | {pct} | {row['draws']} |\n")
+              f.write("\nHistorical exploratory sample only. No cohorts approved; no elastic net fitted.\n")
+          PY
+      - name: Retain small local-only report as Actions artifact
+        uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: r2-historical-diagnostics
+          path: ${{ runner.temp }}/r2-historical-diagnostics.json
+          if-no-files-found: warn
+          retention-days: 14
