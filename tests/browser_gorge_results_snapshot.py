@@ -18,8 +18,17 @@ class Handler(SimpleHTTPRequestHandler):
 
 def check():
     manifest = json.loads((ROOT/'gorge-data'/'manifest.json').read_text())
-    cards = json.loads((ROOT/'gorge-data'/'card-insights.json').read_text())
     cohort = json.loads((ROOT/'gorge-data'/'cohort.json').read_text())
+    if manifest.get('eligibility') == 'approved_current_only' and not manifest['games']:
+        # This is the real, fail-closed production state before signoff.
+        # Detailed visual regression is exercised on the UI staging branch;
+        # never manufacture an approved cohort for this deployment test.
+        assert cohort['total_verified_games'] == 0
+        assert cohort['decks'] == {}
+        assert not (ROOT/'gorge-data'/'card-insights.json').exists()
+        print('PASS: no stale card insights, sample outcomes or regressions published')
+        return
+    cards = json.loads((ROOT/'gorge-data'/'card-insights.json').read_text())
     key = 'wretched_ranks'
     assert any(g.get('player_deck') == key for g in manifest['games'])
     assert cards['decks'][key]['verified_games'] == cohort['decks'][key]['n']
