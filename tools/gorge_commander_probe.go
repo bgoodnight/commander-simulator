@@ -85,6 +85,37 @@ func objectCrosswalk(e *rules.Engine) []any {
   return rows
 }
 
+// repairBaralCorpus adds the printed generic mana discount omitted by the
+// pinned Forge script. The normal Gorge static-cost evaluator applies it; no
+// special mana payment or pilot logic is introduced.
+func repairBaralCorpus(reg *cards.Registry) error {
+  card,ok:=reg.Lookup("Baral, Chief of Compliance")
+  if !ok || card==nil || len(card.Faces)!=1 || card.Faces[0]==nil {
+    return fmt.Errorf("pinned corpus lacks a single-face Baral")
+  }
+  face:=card.Faces[0]
+  if face.Name!="Baral, Chief of Compliance" {
+    return fmt.Errorf("unexpected Baral face %q",face.Name)
+  }
+  // Fail closed if a future pinned corpus already carries the ability:
+  // don't double-reduce spell costs or silently create a duplicate static.
+  for _,st:=range face.Statics {
+    if st.ModeKind()==cards.StaticReduceCost {
+      return fmt.Errorf("Baral already has a cost reducer; inspect corpus before applying overlay")
+    }
+  }
+  overlay:= "Name:Baral, Chief of Compliance\\nTypes:Legendary Creature Human Wizard\\n" +
+    "S:Mode$ ReduceCost | ValidCard$ Instant,Sorcery | Type$ Spell | Activator$ You | Amount$ 1\\n"
+  parsed,diags:=cards.ParseBytes("baral-cost-reducer-overlay",[]byte(overlay))
+  if parsed==nil||len(diags)>0||len(parsed.Faces)!=1||len(parsed.Faces[0].Statics)!=1 {
+    return fmt.Errorf("invalid Baral cost reducer overlay: %v",diags)
+  }
+  if d:=parsed.Link();len(d)>0 {return fmt.Errorf("Baral overlay link: %v",d)}
+  face.Statics=append(face.Statics,parsed.Faces[0].Statics[0])
+  face.ApplyIntrinsics()
+  return nil
+}
+
 func main() {
   corpus:=flag.String("corpus",".cards","compiled Forge card corpus")
   directory:=flag.String("deck-dir","","directory of deck JSON exported from pinned lists")
@@ -133,6 +164,7 @@ func main() {
   if *nativeLimit<0||*nativeLimit>100{panic("Invalid trace count")}
   if *nativeDir!=""{if err:=os.MkdirAll(*nativeDir,0700);err!=nil{panic(err)}}
   reg,err:=testutil.OpenCorpusRegistry(*corpus);if err!=nil {panic(err)}
+  if err:=repairBaralCorpus(reg);err!=nil {panic(err)}
   // A pinned Forge token corpus may omit a script referenced by a card.
   // Mortarion's end-step ability correctly resolves its X payment but would
   // otherwise emit "unknown token script" instead of creating permanents.
