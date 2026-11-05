@@ -26,9 +26,83 @@ jobs:
           npm install --ignore-scripts --no-audit --no-fund
           npm test
       - name: Deploy the read-only Worker; do not run simulations or publish Pages
+        id: deploy
         uses: cloudflare/wrangler-action@v4
         with:
           apiToken: ${{ secrets.CLOUDFLARE_API_TOKEN }}
           accountId: ${{ secrets.GORGE_R2_ACCOUNT_ID }}
           workingDirectory: workers/gorge-r2-api
           command: deploy
+      - name: Benchmark actual R2 Parquet using a temporary private token
+        working-directory: workers/gorge-r2-api
+        env:
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          CLOUDFLARE_ACCOUNT_ID: ${{ secrets.GORGE_R2_ACCOUNT_ID }}
+          WORKER_URL: ${{ steps.deploy.outputs.deployment-url }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          test -n "$WORKER_URL" || { echo "Worker deployment URL unavailable"; exit 1; }
+          # Prevent an automation from overwriting a user-managed benchmark secret.
+          if npx wrangler secret list --format=json | node -e '
+             let x="";process.stdin.on("data",d=>x+=d);process.stdin.on("end",()=>{
+               if(JSON.parse(x).some(s=>s.name==="BENCHMARK_TOKEN"))process.exit(1);
+             });'; then
+            echo "Temporary benchmark token slot is available"
+          else
+            echo "::error::BENCHMARK_TOKEN already exists; refuse to replace it"
+            exit 1
+          fi
+          token="$(openssl rand -hex 32)"
+          echo "::add-mask::$token"
+          put=0
+          cleanup() {
+            if [[ "$put" -eq 1 ]]; then
+              if ! printf 'y\n' | npx wrangler secret delete BENCHMARK_TOKEN --name gorge-r2-direct-api-preview >/dev/null; then
+                echo "::error::Failed to revoke temporary BENCHMARK_TOKEN; revoke it in Cloudflare immediately."
+                trap - EXIT
+                exit 1
+              fi
+            fi
+          }
+          trap cleanup EXIT
+          printf '%s' "$token" | npx wrangler secret put BENCHMARK_TOKEN --name gorge-r2-direct-api-preview >/dev/null
+          put=1
+          sleep 3
+          curl --fail --silent --show-error --max-time 25 "$WORKER_URL/health" >/dev/null
+          : > "$RUNNER_TEMP/r2-api-benchmark.jsonl"
+          for i in {1..7}; do
+            curl --fail --silent --show-error --retry 2 --retry-delay 2 --max-time 30 \
+              -H "Authorization: Bearer $token" \
+              "$WORKER_URL/v1/benchmark?deck=mortarion_current" \
+              >> "$RUNNER_TEMP/r2-api-benchmark.jsonl"
+            printf '\n' >> "$RUNNER_TEMP/r2-api-benchmark.jsonl"
+          done
+          python - <<'PY'
+          import json,os,statistics,math
+          from pathlib import Path
+          rows=[json.loads(x) for x in
+                (Path(os.environ["RUNNER_TEMP"])/"r2-api-benchmark.jsonl").read_text().splitlines()
+                if x.strip()]
+          if len(rows)!=7 or any(x.get("status")!="ok" for x in rows):
+              raise ValueError("Benchmark did not retrieve a real Parquet shard seven times")
+          fields=["listing","manifest","parquet","total"]
+          values={field:[x["timing_ms"][field] for x in rows] for field in fields}
+          with open(os.environ["GITHUB_STEP_SUMMARY"],"a") as f:
+              f.write("# R2 direct-query Worker, seven sequential real Parquet reads\n\n")
+              f.write("No full Gorge traces, secrets, or private source events were exposed.\n\n")
+              f.write("| Phase | Median (ms) | P95 (ms) |\n|---|---:|---:|\n")
+              for field in fields:
+                  a=sorted(values[field])
+                  f.write(f"| {field} | {statistics.median(a):.1f} | {a[math.ceil(.95*len(a))-1]:.1f} |\n")
+              f.write(f"\nGames decoded per request: **{rows[0]['rows_read']}**. ")
+              f.write("These are raw diagnostic reads, not approved analytics.\n")
+          print("Gorge R2 direct benchmark completed; see GitHub Step Summary")
+          PY
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: gorge-r2-worker-latency
+          path: ${{ runner.temp }}/r2-api-benchmark.jsonl
+          retention-days: 7
+          if-no-files-found: warn
