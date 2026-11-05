@@ -123,9 +123,9 @@ def demo_ebm(rows: list[dict], min_rows: int = 8) -> dict:
     # Purely illustrative in-sample fit. Interactions disabled due tiny sample.
     m = ExplainableBoostingClassifier(interactions=0, outer_bags=1,
         inner_bags=0, min_samples_leaf=2, max_rounds=25, validation_size=0,
-        random_state=20261105)
+        random_state=20261105, feature_names=names)
     try:
-        m.fit(X, np.array(y), feature_names=names)
+        m.fit(X, np.array(y))
         probs = m.predict_proba(X)[:,1]
     except (ValueError, RuntimeError) as exc:
         result["reason"] = f"EBM fit unavailable on this cohort: {type(exc).__name__}: {exc}"
