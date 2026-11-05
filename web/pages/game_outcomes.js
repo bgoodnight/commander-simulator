@@ -1913,11 +1913,23 @@
             metric.append(create("span",null,label),
               create("strong",null,value===null?"—":nfmt(value)));
             metric.disabled=!examples.length;
-            metric.onclick=openExample;
+            metric.onclick=options.isGorge?()=>{
+              if(!examples.length)return;
+              exampleIndex=(exampleIndex+1)%examples.length;
+              const entry=examples[exampleIndex];
+              onReviewRun(entry.group.id,entry.run.seed,entry.turn);
+            }:openExample;
             tileSet.appendChild(metric);
           }
           stats.appendChild(tileSet);
           if(examples.length){
+            if(options.isGorge){
+              const open=textButton("View an example game ↗","game-outcome-review-link",()=>{
+                const entry=examples[0];
+                onReviewRun(entry.group.id,entry.run.seed,entry.turn);
+              });
+              evidence.appendChild(open);
+            }else{
             tracker=create("details","insight-inline-tracker insight-inline-tracker-compact");
             const trigger=create("summary",null,"View example games");
             tracker.appendChild(trigger);
@@ -1970,9 +1982,11 @@
               if(tracker.open)draw();
             });
             evidence.appendChild(tracker);
+            }
           }
         }
-        ranking.appendChild(create("strong","insight-featured-chart-title","Top cards"));
+        ranking.appendChild(create("strong","insight-featured-chart-title",isHeld?"Top cards · mean rounds held":"Top cards"));
+        if(isHeld)ranking.appendChild(create("p","micro","The headline shows the median; bars show the mean of the same recorded holding times. Cards are ranked by mean."));
         const barList=create("div","insight-featured-bars");
         ranking.appendChild(barList);
         for(const item of ranked.slice(0,10)){
@@ -1983,7 +1997,7 @@
           button.setAttribute("aria-pressed","false");
           const caption=create("span","insight-featured-bar-caption");
           caption.append(create("span",null,item.name),
-            create("strong",null,valueFor(item)));
+            create("strong",null,isHeld?nfmt(item.average)+" rounds":valueFor(item)));
           const track=create("span","insight-featured-bar-track");
           const fill=create("span","insight-featured-bar-fill");
           fill.style.width=Math.max(1,100*item.score/maxScore)+"%";
@@ -2031,6 +2045,9 @@
   }
   function readablePredictor(feature){
     const name=String(feature||"");
+    if(typeof window!=="undefined"&&window.DeckDisplayNames&&
+       /^(opponent|archetype|color|seat):/.test(name))
+      return window.DeckDisplayNames.feature(name);
     if(name.includes(" × ")){
       return name.split(" × ").map(readablePredictor).join(" when facing ");
     }
@@ -2358,9 +2375,23 @@
       if(matching){
         const examples=new Map(runs.map(run=>[run.seed,run]));
         const ranked={};
+        const ownNames=Array.isArray(options.deckCardNames)?new Set(options.deckCardNames.map(n=>n.toLowerCase())):null;
+        const typeMatches=(kind,item)=>{
+          if(ownNames&&!ownNames.has(item.name.toLowerCase()))return false;
+          const type=String(options.lookupRecordedCard?.(item.name)?.type_line||"").toLowerCase();
+          if(!ownNames)return true;
+          if(kind==="creature")return /\bcreature\b/.test(type);
+          if(kind==="artifact")return /\bartifact\b/.test(type);
+          if(kind==="enchantment")return /\benchantment\b/.test(type);
+          if(kind==="instant")return /\binstant\b/.test(type);
+          if(kind==="spell")return /\b(instant|sorcery)\b/.test(type);
+          if(kind==="land")return /\bland\b/.test(type)&&!/\bbasic\s+land\b/.test(type);
+          if(kind==="seenCreature")return /\bcreature\b/.test(type);
+          return true;
+        };
         for(const [kind,items] of Object.entries(report.categories)){
           if(!Array.isArray(items))continue;
-          ranked[kind]=items.map(item=>({
+          ranked[kind]=items.filter(item=>typeMatches(kind,item)).map(item=>({
             ...item,
             // Evidence is clickable only for a genuinely retained recording.
             events:(item.exampleEvents||[]).filter(([seed])=>examples.has(seed))
@@ -2382,13 +2413,60 @@
       const kinds=isGorge?
         ["played","creature","artifact","enchantment","instant","spell","land",
           ...(runs.some(r=>r.gorge_source?.visibility==="omniscient")?
-             ["seen","seenCreature","unplayed","longest"]:[]),
+             ["longest"]:[]),
           "activated","triggered"]:
         ["played","creature","artifact","enchantment",
-          "instant","spell","land","seen","seenCreature","unplayed","longest",
+          "instant","spell","land","longest",
           "activated","removal","creatureKills","damage","finisher",
           ...(signals.confirmedTutors?["tutorFound","tutorUsed"]:[])];
+      const playedTypes=["played","creature","artifact","enchantment","instant","spell","land"];
+      const seenTypes=["seen","seenCreature"];
+      function groupedPlayedPanel(kind,types=playedTypes,ascending=false){
+        const source=signals.ranked[kind]||[];
+        const sorted=types===playedTypes?source.slice().sort((a,b)=>
+          (ascending?a.games-b.games:b.games-a.games)||a.name.localeCompare(b.name)):source;
+        const panel=cardPerformancePanel(kind,sorted,
+          signals.coverage,groups,{...options,isGorge,tutorSearchCount:signals.confirmedTutors},onReviewRun);
+        if(!panel)return null;
+        const body=panel.querySelector(".game-outcome-body");
+        const controls=create("div","gorge-card-type-controls");
+        controls.setAttribute("role","group");controls.setAttribute("aria-label","Card type and ranking");
+        const typesMeta={played:["▣","All cards"],creature:["♞","Creatures"],artifact:["⚙","Artifacts"],enchantment:["✦","Enchantments"],instant:["ϟ","Instants"],spell:["✧","Instants and sorceries"],land:["♜","Nonbasic lands"],seen:["▣","All cards"],seenCreature:["♞","Creatures"]};
+        const render=(next,order,focusLabel)=>{
+          const replacement=groupedPlayedPanel(next,types,order);
+          if(replacement){replacement.open=true;panel.replaceWith(replacement);
+            replacement.querySelector('[aria-label="'+focusLabel+'"]')?.focus();}
+        };
+        for(const type of types){
+          if(!signals.ranked[type]?.length)continue;
+          const [icon,label]=typesMeta[type];
+          const button=textButton(icon,"gorge-icon-button",()=>render(type,ascending,label));
+          button.title=label;button.setAttribute("aria-label",label);button.setAttribute("aria-pressed",String(type===kind));controls.appendChild(button);
+        }
+        if(types===playedTypes){
+          const label=ascending?"Show most played first":"Show least played first";
+          const order=textButton(ascending?"↑":"↓","gorge-icon-button gorge-sort-button",()=>render(kind,!ascending,ascending?"Show least played first":"Show most played first"));
+          order.title=label;order.setAttribute("aria-label",label);order.setAttribute("aria-pressed",String(ascending));controls.appendChild(order);
+          if(ascending)panel.querySelector(".game-outcome-title").textContent="Least played "+(kind==="played"?"card":typesMeta[kind][1].toLowerCase());
+          const note=create("p","micro","Least-played rankings include recorded candidates in this snapshot; cards without recorded plays may be absent.");
+          note.hidden=!ascending;body.prepend(note);
+        }
+        body.prepend(controls);
+        return panel;
+      }
       for(const kind of kinds){
+        if(isGorge&&playedTypes.includes(kind)&&kind!=="played")continue;
+        if(isGorge&&kind==="played"){
+          const panel=groupedPlayedPanel(kind);
+          if(panel)cards.appendChild(panel);
+          continue;
+        }
+        if(isGorge&&kind==="seenCreature")continue;
+        if(isGorge&&kind==="seen"){
+          const panel=groupedPlayedPanel(kind,seenTypes);
+          if(panel)cards.appendChild(panel);
+          continue;
+        }
         const panel=cardPerformancePanel(kind,signals.ranked[kind],
           signals.coverage,groups,
           {...options,isGorge,tutorSearchCount:signals.confirmedTutors},onReviewRun);
