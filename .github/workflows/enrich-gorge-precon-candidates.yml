@@ -120,6 +120,8 @@ jobs:
           cp "$GITHUB_WORKSPACE/tools/gorge_commander_probe.go" commander_probe.go
           go build -o "$RUNNER_TEMP/gorge-probe" ./commander_probe.go
       - name: Test each staged deck independently for import and Commander validity
+        env:
+          PYTHONPATH: ${{ github.workspace }}
         working-directory: ${{ runner.temp }}/gorge
         shell: bash
         run: |
