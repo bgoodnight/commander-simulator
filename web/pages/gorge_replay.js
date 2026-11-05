@@ -433,7 +433,7 @@ function init(){
   const loadButton=$("gorge-replay-load");
   const available=new Set();
   const loadedGames=new Map();
-  let manifestVisibility=null,catalogReady=false,requestId=0;
+  let manifestVisibility=null,manifestEligibility=null,catalogReady=false,requestId=0;
   const catalog=[];
   // Full-cohort report is precomputed from all verified Gorge outcomes.
   // This small summary is the sole source of headline statistics and
@@ -936,7 +936,9 @@ function init(){
     if(typeof window!=="undefined")window.__gorgeLoadedGames=[];
     if(!available.size){
       rootElement.replaceChildren(node("p","small",
-        "No simulations have been run with this selected deck in the player seat."));
+        manifestEligibility==="approved_current_only"
+          ? "No approved current simulations are published for this deck. Historical and experimental games are excluded until their cohort is verified and approved."
+          : "No published simulations are available for this deck in the player seat."));
       window.GorgeDashboard?.render([],null,key);
       return;
     }
@@ -963,6 +965,7 @@ function init(){
         throw Error("Unsupported Gorge catalog");
       if(!Array.isArray(manifest.games))throw Error("Unsupported manifest games");
       manifestVisibility=omniscient?"omniscient":"public_events_only";
+      manifestEligibility=manifest.eligibility||null;
       catalog.push(...manifest.games);
       catalogReady=true;
       refreshForPlayer();
