@@ -4,10 +4,7 @@ name: Gorge · four-deck 500-game benchmark
 # opponents. Native logs are retained for 10 source-backed replays per player;
 # all 2,000 verified game outcomes go into separate lightweight analytics.
 on:
-  push:
-    branches: [main]
-    paths:
-      - ".github/workflows/gorge-four-deck-500.yml"
+  # The full 2,000-game benchmark is expensive; run only on manual request.
   workflow_dispatch:
 
 permissions:
@@ -163,12 +160,12 @@ jobs:
             archive="$RUNNER_TEMP/gorge-$DECK-$SHARD-${GITHUB_RUN_ID}-${GITHUB_RUN_ATTEMPT}.tar.gz"
             tar -czf "$archive" -C "$folder" native runs.jsonl pod.json card-insights.json
             python - "$archive" "$folder" <<'PY_ARCHIVE'
-import hashlib, json, pathlib, sys
-archive=pathlib.Path(sys.argv[1]); root=pathlib.Path(sys.argv[2])
-n=len(list((root/"native").glob("gorge-seed-*.json")))
-assert n==100, f"Refusing incomplete native archive: {n} recordings"
-print(f"Archiving {n} native games; sha256={hashlib.sha256(archive.read_bytes()).hexdigest()}; bytes={archive.stat().st_size}")
-PY_ARCHIVE
+            import hashlib, pathlib, sys
+            archive=pathlib.Path(sys.argv[1]); root=pathlib.Path(sys.argv[2])
+            n=len(list((root/"native").glob("gorge-seed-*.json")))
+            assert n==100, f"Refusing incomplete native archive: {n} recordings"
+            print(f"Archiving {n} native games; sha256={hashlib.sha256(archive.read_bytes()).hexdigest()}; bytes={archive.stat().st_size}")
+            PY_ARCHIVE
             AWS_ACCESS_KEY_ID="$R2_ACCESS_KEY_ID" AWS_SECRET_ACCESS_KEY="$R2_SECRET_ACCESS_KEY" \
               AWS_DEFAULT_REGION=auto aws --endpoint-url "https://$R2_ACCOUNT_ID.r2.cloudflarestorage.com" \
               s3 cp "$archive" "s3://gorge-simulations/native/v1/$DECK/$SHARD/$(basename "$archive")" \
