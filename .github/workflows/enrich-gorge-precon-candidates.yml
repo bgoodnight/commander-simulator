@@ -5,6 +5,8 @@ on:
     paths:
       - "tools/enrich_gorge_candidate_precons.py"
       - "tests/test_enrich_gorge_candidate_precons.py"
+      - "tools/select_gorge_precon_panel.py"
+      - "tests/test_select_gorge_precon_panel.py"
       - ".github/workflows/enrich-gorge-precon-candidates.yml"
   workflow_dispatch:
 
@@ -21,19 +23,25 @@ jobs:
         with:
           python-version: "3.12"
       - name: Test source and functional classification contracts offline
-        run: python -m unittest tests.test_enrich_gorge_candidate_precons tests.test_gorge_candidate_coverage -v
+        run: python -m unittest tests.test_enrich_gorge_candidate_precons tests.test_gorge_candidate_coverage tests.test_select_gorge_precon_panel -v
       - name: Fetch bulk Oracle identities and enrich released candidates
         run: |
           mkdir -p "$RUNNER_TEMP/precon-enrichment"
           python -m tools.enrich_gorge_candidate_precons \
             --as-of 2026-11-05 \
             --out "$RUNNER_TEMP/precon-enrichment/full-enrichment.json"
+          python -m tools.select_gorge_precon_panel \
+            --enrichment "$RUNNER_TEMP/precon-enrichment/full-enrichment.json" \
+            --out "$RUNNER_TEMP/precon-enrichment/candidate-panel-60.json" --panel-size 60
           python - <<'PY'
           import json,os
           from pathlib import Path
           p=Path(os.environ["RUNNER_TEMP"])/"precon-enrichment"
           a=json.loads((p/"full-enrichment.json").read_text())
           assert a["distinct_decklists"]>=100
+          panel=json.loads((p/"candidate-panel-60.json").read_text())
+          assert panel["candidate_count"]==a["distinct_decklists"]
+          assert len(panel["shortlist"])==60
           summary={k:a[k] for k in ("schema","as_of","source_catalog_commit",
                        "oracle_bulk_sha256","oracle_bulk_metadata",
                        "released_products","distinct_decklists",
@@ -51,6 +59,7 @@ jobs:
               f.write(f"- Unresolved card names: **{a['unresolved_card_name_count']}**\n")
               f.write("- Functional counts are exploratory text proxies, not reviewed deck strategies.\n")
               f.write("- No Gorge opponent promotion or simulation.\n")
+              f.write(f"- Provisional diversity shortlist: **{len(panel['shortlist'])}** distinct opponents.\n")
           PY
       - name: Preserve compact and detailed metadata for assessment
         uses: actions/upload-artifact@v4
