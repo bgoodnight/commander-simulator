@@ -1,12 +1,10 @@
-name: Test direct R2 Gorge Worker and Pages adapter
+name: Test direct R2 Gorge Worker
 on:
   pull_request:
     paths:
       - "workers/gorge-r2-api/**"
-      - "web/pages/r2_live.js"
-      - "web/pages/index.html"
-      - "tools/build_pages_deck_lab.py"
       - ".github/workflows/gorge-r2-worker-check.yml"
+      - ".github/workflows/gorge-r2-worker-deploy.yml"
   workflow_dispatch:
 permissions:
   contents: read
@@ -19,26 +17,9 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version: "22"
-      - name: Install and verify ZSTD Parquet Worker dependencies
+      - name: Validate read-only Worker and ZSTD Parquet bundling
         working-directory: workers/gorge-r2-api
         run: |
           npm install --ignore-scripts --no-audit --no-fund
           npm test
           npm run check
-      - name: Validate optional browser adapter and existing UI contracts
-        run: |
-          node --check web/pages/r2_live.js
-          node --test tests/pages_gorge_replay.test.cjs
-      - uses: actions/setup-python@v5
-        with:
-          python-version: "3.12"
-      - name: Build static UI without Worker credentials
-        run: |
-          python -m tools.build_pages_deck_lab --output "$RUNNER_TEMP/r2-ui"
-          test -s "$RUNNER_TEMP/r2-ui/r2_live.js"
-          grep -q 'r2_live.js' "$RUNNER_TEMP/r2-ui/results.html"
-      - uses: actions/upload-artifact@v4
-        with:
-          name: gorge-r2-live-ui-prototype
-          path: ${{ runner.temp }}/r2-ui/
-          retention-days: 7
