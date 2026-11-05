@@ -52,7 +52,7 @@ class WarehouseExportTests(unittest.TestCase):
         other = dict(self.row, seed=1235, replay_chain="chain-1235")
         rows = [self.row, other]
         (self.folder / "runs.jsonl").write_text(
-            "".join(json.dumps(r) + "\\n" for r in rows))
+            "".join(json.dumps(r) + "\n" for r in rows))
         source2 = dict(self.source, seed=1235, chain="chain-1235")
         (self.folder / "native" / "gorge-seed-1235.json").write_text(
             json.dumps(source2))
