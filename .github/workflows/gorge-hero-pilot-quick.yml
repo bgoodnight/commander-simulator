@@ -1,0 +1,89 @@
+name: Gorge · quick hero pilot benchmark
+
+# Small, disposable comparison: default bot vs forge-heuristic on the hero
+# seat, against identical default-bot precon opponents and matched seed starts.
+# Only outcome percentages are logged; no replays or UI data are published.
+on:
+  push:
+    branches: [main]
+    paths:
+      - ".github/workflows/gorge-hero-pilot-quick.yml"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  actions: read
+
+jobs:
+  benchmark:
+    name: ${{ matrix.deck }} · ${{ matrix.policy }} · 100 games
+    runs-on: ubuntu-latest
+    timeout-minutes: 120
+    strategy:
+      fail-fast: false
+      max-parallel: 4
+      matrix:
+        deck: [mortarion_current, magnus_budget]
+        policy: [bot, forge-heuristic]
+    steps:
+      - uses: actions/checkout@v4
+      - name: Reuse the pinned Gorge executable and verified deck bundle
+        env:
+          GH_TOKEN: ${{ github.token }}
+          GH_REPO: ${{ github.repository }}
+        run: |
+          mkdir -p "$RUNNER_TEMP/bundle"
+          gh run download 41938112091 --name gorge-500-pinned-bundle --dir "$RUNNER_TEMP/bundle"
+          test -x "$RUNNER_TEMP/bundle/gorge-probe" || chmod +x "$RUNNER_TEMP/bundle/gorge-probe"
+          test -d "$RUNNER_TEMP/bundle/.cards"
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Run matched-seed games against rotating default-bot precons
+        env:
+          DECK: ${{ matrix.deck }}
+          POLICY: ${{ matrix.policy }}
+        run: |
+          set -euo pipefail
+          case "$DECK" in
+            mortarion_current) seed=70000 ;;
+            magnus_budget) seed=80000 ;;
+            *) exit 1 ;;
+          esac
+          opponents="$(python -c 'import json,os;print(",".join(json.load(open(os.environ["RUNNER_TEMP"]+"/bundle/pods/"+os.environ["DECK"]+"-pod.json"))["opponent_pool"]))')"
+          "$RUNNER_TEMP/bundle/gorge-probe" \
+            -corpus "$RUNNER_TEMP/bundle/.cards" \
+            -deck-dir "$RUNNER_TEMP/bundle/decks" \
+            -hero-deck "$DECK" -opponents "$opponents" \
+            -games 100 -seed "$seed" -max-turns 60 \
+            -retry-unverified=true -max-attempts 500 \
+            -pilot bot -hero-pilot "$POLICY" -verify=true \
+            -native-limit 0 > "$RUNNER_TEMP/outcomes.jsonl"
+      - name: Calculate verified player win percentage and discard individual outcomes
+        env:
+          DECK: ${{ matrix.deck }}
+          POLICY: ${{ matrix.policy }}
+        run: |
+          python - <<'PY'
+          import json,os
+          from pathlib import Path
+          rows=[json.loads(x) for x in (Path(os.environ["RUNNER_TEMP"])/"outcomes.jsonl").read_text().splitlines()]
+          assert len(rows)==100 and len({r["seed"] for r in rows})==100
+          assert all(r["finished"] and r["replay_verified"] and not r.get("error") for r in rows)
+          assert all(r["decks"][r["hero_seat"]]==os.environ["DECK"] for r in rows)
+          assert all(r["policies"][r["hero_seat"]]==os.environ["POLICY"] for r in rows)
+          assert all(all(p=="bot" for i,p in enumerate(r["policies"]) if i!=r["hero_seat"]) for r in rows)
+          wins=sum(not r["draw"] and r["winner_seat"]==r["hero_seat"] for r in rows)
+          draws=sum(bool(r["draw"]) for r in rows)
+          result={"deck":os.environ["DECK"],"hero_pilot":os.environ["POLICY"],
+                  "opponents":"default bot stock precons","verified_games":len(rows),
+                  "wins":wins,"draws":draws,"losses":len(rows)-wins-draws,
+                  "win_percent":round(wins*100/len(rows),1),
+                  "seed_min":min(r["seed"] for r in rows),"seed_max":max(r["seed"] for r in rows)}
+          print("PILOT_RESULT "+json.dumps(result,sort_keys=True))
+          with open(os.environ["GITHUB_STEP_SUMMARY"],"a") as f:
+              f.write(f"### {result['deck']} · {result['hero_pilot']}\n\n")
+              f.write(f"**{wins}/100 wins = {result['win_percent']}%**; {draws} draws, {result['losses']} losses.\n\n")
+              f.write("Opponents: rotating stock precons using `bot`. Full recordings not saved.\n")
+          (Path(os.environ["RUNNER_TEMP"])/"outcomes.jsonl").unlink()
+          PY
