@@ -1,8 +1,8 @@
 package rules
 
 import (
-  "fmt"
   "testing"
+  "strings"
 
   "github.com/adams-shaun/gorge/engine/decision"
   "github.com/adams-shaun/gorge/engine/events"
@@ -32,7 +32,9 @@ func TestMortarionGuaranteedLifeLossAndMana(t *testing.T) {
     e.LifeLostThisTurn(0),e.G.Players[0].Pool.Total())
   t.Logf("AT_ENDSTEP turn=%d phase=%v stack=%d pending=%v",e.G.Turn,
     e.G.Step,len(e.G.Stack),e.Pending())
-  for i:=0;i<120;i++ {
+  chosenX:=false
+  paid:=false
+  for i:=0;i<80;i++ {
     d:=e.Pending()
     if d==nil {
       e.Advance()
@@ -41,35 +43,39 @@ func TestMortarionGuaranteedLifeLossAndMana(t *testing.T) {
       if d==nil {continue}
     }
     if d.Kind==decision.KPriority {
+      if paid && len(e.G.Stack)==0 {break}
       passPriorityOnce(t,e)
       continue
     }
-    t.Logf("DECISION step=%d kind=%v player=%d options=%+v",
-      i,d.Kind,d.Player,d.Options)
-    pick:=0
-    // Intentionally choose affirmative/pay and maximum offered X;
-    // log the options to make the choice auditable.
+    if d.Kind!=decision.KChoose {
+      t.Fatalf("unexpected decision kind %v: %+v",d.Kind,d)
+    }
+    pick:=-1
     for _,opt:=range d.Options {
-      if opt.Index>pick {pick=opt.Index}
+      switch opt.Kind {
+      case "trigger_cost_x":
+        if opt.Amount==3 {pick=opt.Index;chosenX=true}
+      case "trigger_cost_pay":
+        pick=opt.Index;paid=true
+      }
+    }
+    if pick<0 {
+      t.Fatalf("unexpected choice options: %+v",d.Options)
     }
     if err:=e.Submit(decision.Intent{Seq:d.Seq,Player:d.Player,
       Choices:[]int{pick}});err!=nil {t.Fatalf("choice %d: %v",pick,err)}
-    if i>100 {t.Fatalf("too many pending decisions")}
+    t.Logf("CHOSEN kind=%s index=%d",d.Options[pick].Kind,pick)
   }
+  if !chosenX || !paid {t.Fatalf("Did not choose X=3 and Pay: X=%v, pay=%v",chosenX,paid)}
   tokens:=0
   for _,o:=range e.G.Objs {
     if !o.IsToken {continue}
-    if o.Face()!=nil && o.Face().Name=="Astartes Warrior Token" {tokens++}
+    if o.Face()!=nil && strings.Contains(strings.ToLower(o.Face().Name),"astartes") {tokens++}
     if o.Face()!=nil && len(o.Face().Name)>0 {
       t.Logf("TOKEN name=%q zone=%v owner=%v",o.Face().Name,o.Zone,o.Owner)
     }
   }
-  for _,ev:=range e.L.Events {
-    if ev.Kind==events.Note && len(ev.Text)>0 {
-      fmt.Printf("SOURCE_NOTE %s\n",ev.Text)
-    }
-  }
   t.Logf("RESULT token_count=%d life=%d loss=%d mana=%d",
     tokens,e.G.Players[0].Life,e.LifeLostThisTurn(0),e.G.Players[0].Pool.Total())
-  if tokens==0 {t.Fatal("No Astartes Warrior tokens created despite life lost and mana available")}
+  if tokens!=3 {t.Fatalf("Created %d Astartes tokens, expected 3 after paying X=3",tokens)}
 }
