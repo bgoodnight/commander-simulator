@@ -1,0 +1,105 @@
+name: Gorge 60-precon experimental gameplay qualification
+
+# Explicitly experimental: never writes R2, Pages, production catalog or
+# active-eligible analytics. Requires manual launch after import validation.
+on:
+  workflow_dispatch:
+    inputs:
+      games:
+        description: "12 quick probes or 60 for full panel"
+        required: true
+        default: "12"
+        type: choice
+        options: ["12", "60"]
+
+permissions:
+  contents: read
+
+jobs:
+  probe:
+    runs-on: ubuntu-latest
+    timeout-minutes: 120
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Reproduce exact candidate selection and Oracle provenance
+        run: |
+          mkdir -p "$RUNNER_TEMP/panel" "$RUNNER_TEMP/decks" "$RUNNER_TEMP/results/native"
+          python -m tools.enrich_gorge_candidate_precons --as-of 2026-11-05 --out "$RUNNER_TEMP/panel/full-enrichment.json"
+          python -m tools.select_gorge_precon_panel --enrichment "$RUNNER_TEMP/panel/full-enrichment.json" --out "$RUNNER_TEMP/panel/panel-60.json" --panel-size 60
+          python -m tools.stage_gorge_precon_qualification --enrichment "$RUNNER_TEMP/panel/full-enrichment.json" --panel "$RUNNER_TEMP/panel/panel-60.json" --out "$RUNNER_TEMP/panel/qualification-60.json"
+          python -m tools.check_gorge_precon_compatibility --queue "$RUNNER_TEMP/panel/qualification-60.json" --deck-dir "$RUNNER_TEMP/decks" --report "$RUNNER_TEMP/panel/opponents.txt"
+          python -m tools.export_gorge_decks --out "$RUNNER_TEMP/decks" --decks mortarion_current
+      - name: Get pinned Gorge and compile original card scripts
+        env:
+          GORGE_COMMIT: b78e4c8b16078f6decbc48875bba953ce5535b85
+        run: |
+          git clone --filter=blob:none https://github.com/adams-shaun/gorge.git "$RUNNER_TEMP/gorge"
+          git -C "$RUNNER_TEMP/gorge" checkout --detach "$GORGE_COMMIT"
+          test "$(git -C "$RUNNER_TEMP/gorge" rev-parse HEAD)" = "$GORGE_COMMIT"
+      - uses: actions/setup-go@v5
+        with:
+          go-version-file: ${{ runner.temp }}/gorge/go.mod
+          cache: false
+      - name: Build verified four-player Gorge probe
+        working-directory: ${{ runner.temp }}/gorge
+        run: |
+          make fetch-cards compile-cards
+          cp "$GITHUB_WORKSPACE/tools/gorge_commander_probe.go" commander_probe.go
+          go build -o "$RUNNER_TEMP/gorge-probe" ./commander_probe.go
+      - name: Run bounded four-player experimental games with real precons
+        working-directory: ${{ runner.temp }}/gorge
+        shell: bash
+        run: |
+          set -euo pipefail
+          count="${{ inputs.games }}"
+          names="$(cat "$RUNNER_TEMP/panel/opponents.txt")"
+          "$RUNNER_TEMP/gorge-probe" -corpus "$RUNNER_TEMP/gorge/.cards" \
+            -deck-dir "$RUNNER_TEMP/decks" \
+            -hero-deck mortarion_current -opponents "$names" \
+            -pilot bot -games "$count" -seed 186000 -max-turns 60 \
+            -verify=true -native-dir "$RUNNER_TEMP/results/native" -native-limit 12 \
+            > "$RUNNER_TEMP/results/runs.jsonl"
+      - name: Report observed results without granting qualification
+        env:
+          GAME_COUNT: ${{ inputs.games }}
+        run: |
+          python - <<'PY'
+          import json, os
+          from pathlib import Path
+          root=Path(os.environ["RUNNER_TEMP"])
+          queue=json.loads((root/"panel/qualification-60.json").read_text())
+          pool={d["key"] for d in queue["decks"]}
+          lines=[json.loads(x) for x in (root/"results/runs.jsonl").read_text().splitlines() if x.strip()]
+          assert len(lines)==int(os.environ["GAME_COUNT"])
+          seen=set()
+          status={"attempted":len(lines),"completed":0,"replay_verified":0,"distinct_precons_seen":0,
+                  "eligible_for_current_statistics":0,"status":"experimental_unqualified"}
+          for r in lines:
+              seat=r["hero_seat"]
+              assert r["decks"][seat]=="mortarion_current"
+              opp=[d for i,d in enumerate(r["decks"]) if i!=seat]
+              assert len(opp)==3 and len(set(opp))==3 and set(opp)<=pool
+              seen.update(opp)
+              status["completed"]+=int(r.get("finished") is True)
+              status["replay_verified"]+=int(r.get("replay_verified") is True)
+          status["distinct_precons_seen"]=len(seen)
+          (root/"results/qualification-summary.json").write_text(json.dumps(status,indent=2)+"\\n")
+          with open(os.environ["GITHUB_STEP_SUMMARY"],"a") as out:
+              out.write("# Experimental Gorge precon gameplay\\n\\n")
+              out.write(f"Attempted: {status['attempted']}; completed: {status['completed']}; replay-verified: {status['replay_verified']}.\\n\\n")
+              out.write(f"Precons observed: **{len(seen)}/60**. These are **not** certified for rules or pilot fidelity.\\n")
+              out.write("No active opponent pool changes, R2 writes, Pages publication or current-statistics eligibility.\\n")
+          PY
+      - name: Retain experimental evidence outside production analytics
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: gorge-precon-60-experimental-gameplay
+          path: |
+            ${{ runner.temp }}/panel/
+            ${{ runner.temp }}/results/
+          retention-days: 14
+          if-no-files-found: warn
