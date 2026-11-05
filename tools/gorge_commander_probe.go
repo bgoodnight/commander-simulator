@@ -273,7 +273,7 @@ func main() {
         if count>=625 {
           dj,_:=json.Marshal(d)
           ij,_:=json.Marshal(in)
-          fmt.Fprintf(os.Stderr,"GORGE_DIAGNOSTIC seed=%d intent=%d seat=%d decision=%s answer=%s\\n",gs,count,seatIdx,dj,ij)
+          fmt.Fprintf(os.Stderr,"GORGE_DIAGNOSTIC seed=%d intent=%d seat=%d decision=%s answer=%s\n",gs,count,seatIdx,dj,ij)
         }
         count++
         return nil
