@@ -99,11 +99,21 @@ func repairBaralCorpus(reg *cards.Registry) error {
   }
   // Fail closed if a future pinned corpus already carries the ability:
   // don't double-reduce spell costs or silently create a duplicate static.
+  reducers:=0
   for _,st:=range face.Statics {
-    if st.ModeKind()==cards.StaticReduceCost {
-      return fmt.Errorf("Baral already has a cost reducer; inspect corpus before applying overlay")
+    if st.ModeKind()!=cards.StaticReduceCost {continue}
+    reducers++
+    // The pinned compiled image can contain repaired metadata even when
+    // its plaintext Forge script is incomplete. Reuse the existing ability.
+    if st.ParamStr(cards.PKValidCard)!="Instant,Sorcery" ||
+       st.ParamStr(cards.PKAmount)!="1" ||
+       st.ParamStr(cards.PKActivator)!="You" ||
+       st.ParamStr(cards.PKType)!="Spell" {
+      return fmt.Errorf("Baral has a noncanonical reducer; inspect corpus before proceeding")
     }
   }
+  if reducers==1 {return nil}
+  if reducers>1 {return fmt.Errorf("Baral has %d reducers; refusing duplicate discount",reducers)}
   overlay:= "Name:Baral, Chief of Compliance\nTypes:Legendary Creature Human Wizard\n" +
     "S:Mode$ ReduceCost | ValidCard$ Instant,Sorcery | Type$ Spell | Activator$ You | Amount$ 1\n"
   parsed,diags:=cards.ParseBytes("baral-cost-reducer-overlay",[]byte(overlay))
