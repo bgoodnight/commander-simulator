@@ -84,3 +84,36 @@ The generated full-enrichment artifact is available for 21 days from the run.
 Before using these covariates in long-running modeling pipelines, publish an
 immutable compact dataset in the versioned analytics store/R2 with its source
 checksums, rather than assuming Actions artifacts are permanent.
+
+
+## Quantitative certification-priority panel
+
+The next stage is implemented in `tools/select_gorge_precon_panel.py` and
+executed in the same read-only Oracle enrichment workflow. Successful run:
+https://github.com/bgoodnight/commander-simulator/actions/runs/42036620107
+
+The workflow generates `candidate-panel-60.json` alongside
+`full-enrichment.json` and `summary.json`. These are attached to the
+`commander-precon-oracle-enrichment` artifact. All 13 targeted unit tests
+passed, and all dataset generation steps passed.
+
+- **159 distinct released candidates** evaluated.
+- **60 decks** provisionally selected for subsequent rules and pilot review.
+- **32 observed commander color identities** all appear in the panel; rare
+  identities have a minimum one-deck anchor where available.
+- **18 unique decklists** have at least one unresolved card name. These
+  remain staged with explicit completeness flags, not guessed substitutes.
+- Numeric candidate/panel summaries include min, p10, median, p90, maximum,
+  and positive-deck counts for 17 card-type and functional indicators plus
+  average nonland mana value.
+- Selection then applies a greedy max-min rank-normalized feature-distance
+  criterion with modest adjustments for color, era and card-name completeness.
+  This shortlist is **only a review priority ordering**, not a guarantee that
+  the decks express distinct true gameplay archetypes.
+
+The panel is designed for broad *observed composition* coverage, not
+representative estimates of population frequencies. The active benchmark
+design must record the panel selection mechanism and may need sampling
+weights depending on the target estimand. We should add reviewed commander/
+strategy archetypes and real Gorge rules capability before treating the
+panel as a validated simulation opponent pool.
