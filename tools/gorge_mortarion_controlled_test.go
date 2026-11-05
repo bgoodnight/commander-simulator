@@ -4,6 +4,7 @@ import (
   "testing"
   "strings"
 
+  "github.com/adams-shaun/gorge/engine/cards"
   "github.com/adams-shaun/gorge/engine/decision"
   "github.com/adams-shaun/gorge/engine/events"
   "github.com/adams-shaun/gorge/engine/state"
@@ -13,6 +14,15 @@ import (
 // Mortarion corpus card; no fabricated script or game-state projections.
 func TestMortarionGuaranteedLifeLossAndMana(t *testing.T) {
   e := newSeats(t, 2)
+  // Inject the shared corpus repair into this isolated control scenario.
+  // The production probe uses the same token definition.
+  script:=[]byte("Name:Astartes Warrior Token\\nTypes:Creature Astartes Warrior\\nColors:B\\nPT:2/2\\nK:Menace\\nOracle:Token\\n")
+  token,diags:=cards.ParseBytes("b_2_2_astartes_warrior_menace",script)
+  if token==nil||len(diags)>0 {t.Fatalf("Token parse: %v",diags)}
+  if diags:=token.Link();len(diags)>0 {t.Fatalf("Token link: %v",diags)}
+  for _,face:=range token.Faces {face.ApplyIntrinsics()}
+  if e.G.Tokens==nil {e.G.Tokens=make(map[string]*cards.Card)}
+  e.G.Tokens["b_2_2_astartes_warrior_menace"]=token
   // Enter the first main phase before placing Mortarion, so the fixture
   // cannot encounter an unrelated turn-0 optional trigger.
   driveToStep(t,e,1,0,state.StepMain1)
