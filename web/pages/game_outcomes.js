@@ -2402,21 +2402,22 @@
           "activated","removal","creatureKills","damage","finisher",
           ...(signals.confirmedTutors?["tutorFound","tutorUsed"]:[])];
       const playedTypes=["played","creature","artifact","enchantment","instant","spell","land"];
-      function groupedPlayedPanel(kind){
+      const seenTypes=["seen","seenCreature"];
+      function groupedPlayedPanel(kind,types=playedTypes){
         const panel=cardPerformancePanel(kind,signals.ranked[kind]||[],
           signals.coverage,groups,{...options,isGorge,tutorSearchCount:signals.confirmedTutors},onReviewRun);
         if(!panel)return null;
         const body=panel.querySelector(".game-outcome-body");
         const chooser=create("select","gorge-full-cohort-select");
         chooser.setAttribute("aria-label","Choose card type");
-        for(const type of playedTypes){
+        for(const type of types){
           if(!signals.ranked[type]?.length)continue;
           const option=create("option",null,insightCategoryLabel(type));
           option.value=type;chooser.appendChild(option);
         }
         chooser.value=kind;
         chooser.addEventListener("change",()=>{
-          const replacement=groupedPlayedPanel(chooser.value);
+          const replacement=groupedPlayedPanel(chooser.value,types);
           if(replacement){replacement.open=true;panel.replaceWith(replacement);
             replacement.querySelector("select")?.focus();}
         });
@@ -2427,6 +2428,12 @@
         if(isGorge&&playedTypes.includes(kind)&&kind!=="played")continue;
         if(isGorge&&kind==="played"){
           const panel=groupedPlayedPanel(kind);
+          if(panel)cards.appendChild(panel);
+          continue;
+        }
+        if(isGorge&&kind==="seenCreature")continue;
+        if(isGorge&&kind==="seen"){
+          const panel=groupedPlayedPanel(kind,seenTypes);
           if(panel)cards.appendChild(panel);
           continue;
         }

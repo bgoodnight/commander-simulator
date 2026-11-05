@@ -68,6 +68,12 @@ def check():
                 replacement = page.locator('#game-outcome-results .insight-featured-panel').first
                 assert 'Most played creature' in replacement.locator('summary').first.inner_text()
                 replacement.locator('summary').first.click()
+                seen = page.locator('#game-outcome-results .insight-featured-panel').filter(has_text='Most frequently seen card').first
+                seen.locator('summary').first.click()
+                seen.get_by_label('Choose card type').select_option('seenCreature')
+                seen_selected = page.locator('#game-outcome-results .insight-featured-panel').filter(has_text='Most frequently seen creature').first
+                assert seen_selected.is_visible()
+                seen_selected.locator('summary').first.click()
                 assert page.locator('.gorge-full-cohort-regressions').count() == 1
                 assert page.locator('#turn-reviewer-panel').is_visible()
                 page.evaluate('window.scrollTo(0,0)')
