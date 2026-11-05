@@ -1,0 +1,18 @@
+{
+  "schema": "gorge-analytics-cohort-registry-v1",
+  "description": "No historical game is automatically approved. Empty current cohort until first rules/pilot/opponent panel baseline certified.",
+  "cohorts": [
+    {
+      "cohort_id": "legacy-unversioned-pre-20261105",
+      "status": "archived",
+      "approved": false,
+      "reason": "Pre-cohort-registry provenance cannot guarantee post-fix rules; retained solely for historical access."
+    },
+    {
+      "cohort_id": "precon-60-qualification-20261105",
+      "status": "experimental",
+      "approved": false,
+      "reason": "Import and gameplay qualification are experiments, not benchmark denominators."
+    }
+  ]
+}

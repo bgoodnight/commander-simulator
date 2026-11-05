@@ -270,7 +270,8 @@
     const finished=winner==="draw"||Number.isInteger(winner);
     const opponent_decks=[0,1,2,3].filter(i=>i!==hero).map(i=>({
       seat:mapSeat(i,hero),native_seat:i,deck_key:g.decks[i],
-      commander_name:namedZone(baseline.players[i],"command")?.[0]||g.decks[i],
+      commander_name:namedZone(baseline.players[i],"command")?.[0]||
+        (typeof window!=="undefined"?window.DeckDisplayNames?.deck(g.decks[i]):null)||g.decks[i],
       deck_sha256:deckHashes?.[g.decks[i]]||"",
     })).sort((a,b)=>a.seat-b.seat);
     return {
@@ -380,6 +381,7 @@
       isGorge:true,
       reviewerRoot:reviewer,reviewerPanel:panel,
       lookupRecordedCard:cardInfo,
+      deckCardNames:selected.cardNames,
       renderMana:value=>window.GorgeDeckLabMana?.(value),
       onOpenRecordedCard:name=>window.GorgeDeckLabOpenCard?.(name),
       fullCardInsights:window.__gorgeCardInsights?.[key]||null,
