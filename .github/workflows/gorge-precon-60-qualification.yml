@@ -20,6 +20,7 @@ on:
 
 permissions:
   contents: read
+  actions: read
 
 jobs:
   probe:
@@ -37,8 +38,34 @@ jobs:
       - name: Reproduce exact candidate selection and Oracle provenance
         run: |
           mkdir -p "$RUNNER_TEMP/panel" "$RUNNER_TEMP/decks" "$RUNNER_TEMP/results/native"
-          python -m tools.enrich_gorge_candidate_precons --as-of 2026-11-05 --out "$RUNNER_TEMP/panel/full-enrichment.json"
-          python -m tools.select_gorge_precon_panel --enrichment "$RUNNER_TEMP/panel/full-enrichment.json" --out "$RUNNER_TEMP/panel/panel-60.json" --panel-size 60
+          set -euo pipefail
+          if [ "${{ inputs.panel_mode || 'initial12' }}" = "initial12" ]; then
+            # Reuse source-pinned Oracle enrichment from the actual evidence run.
+            # Re-fetching the rolling Scryfall snapshot would change the bulk SHA
+            # and must never silently requalify the immutable 12-deck panel.
+            GH_TOKEN="${{ github.token }}" gh run download 42053608363 \
+              --name "gorge-precon-60-experimental-gameplay-${{ matrix.hero }}" \
+              --dir "$RUNNER_TEMP/pinned"
+            test -s "$RUNNER_TEMP/pinned/panel/full-enrichment.json"
+            test -s "$RUNNER_TEMP/pinned/panel/panel-60.json"
+            cp "$RUNNER_TEMP/pinned/panel/full-enrichment.json" "$RUNNER_TEMP/panel/full-enrichment.json"
+            cp "$RUNNER_TEMP/pinned/panel/panel-60.json" "$RUNNER_TEMP/panel/panel-60.json"
+            python - <<'PY'
+          import json,os
+          from pathlib import Path
+          root=Path(os.environ["RUNNER_TEMP"])
+          evidence=json.loads((root/"panel/full-enrichment.json").read_text())
+          pinned=json.loads(Path("data/gorge_initial_trial_opponents_v1.json").read_text())
+          if evidence.get("oracle_bulk_sha256")!=pinned.get("source_oracle_sha256"):
+              raise ValueError("Archived evidence has wrong pinned Oracle hash")
+          print("Using source-pinned Oracle enrichment:", evidence["oracle_bulk_sha256"])
+          PY
+          else
+            # The all60 mode remains experimental and can use a new Oracle
+            # snapshot; it does not certify or alter the locked initial12 panel.
+            python -m tools.enrich_gorge_candidate_precons --as-of 2026-11-05 --out "$RUNNER_TEMP/panel/full-enrichment.json"
+            python -m tools.select_gorge_precon_panel --enrichment "$RUNNER_TEMP/panel/full-enrichment.json" --out "$RUNNER_TEMP/panel/panel-60.json" --panel-size 60
+          fi
           python -m tools.stage_gorge_precon_qualification --enrichment "$RUNNER_TEMP/panel/full-enrichment.json" --panel "$RUNNER_TEMP/panel/panel-60.json" --out "$RUNNER_TEMP/panel/qualification-60.json"
           python -m tools.check_gorge_precon_compatibility --queue "$RUNNER_TEMP/panel/qualification-60.json" --deck-dir "$RUNNER_TEMP/decks" --report "$RUNNER_TEMP/panel/opponents.txt"
           if [ "${{ inputs.panel_mode || 'initial12' }}" = "initial12" ]; then
@@ -77,6 +104,7 @@ jobs:
           names="$(cat "$RUNNER_TEMP/panel/opponents.txt")"
           # Gorge exits 2 when any game stalls at the bounded turn cap.
           # Preserve such games as *incomplete*, never as wins or passes.
+          cd "$RUNNER_TEMP/gorge"
           set +e
           "$RUNNER_TEMP/gorge-probe" -corpus "$RUNNER_TEMP/gorge/.cards" \
             -deck-dir "$RUNNER_TEMP/decks" \
@@ -142,10 +170,9 @@ jobs:
           PY
       - name: Capture failing seed 186047 with exact rotated pod and decision evidence
         if: ${{ always() && matrix.hero == 'mortarion_current' }}
-        working-directory: ${{ runner.temp }}/gorge
         shell: bash
         run: |
-          if [[ ! -f "$RUNNER_TEMP/panel/opponents.txt" || ! -x "$RUNNER_TEMP/gorge-probe" ]]; then
+          if [[ ! -f "$RUNNER_TEMP/panel/opponents.txt" || ! -x "$RUNNER_TEMP/gorge-probe" || ! -d "$RUNNER_TEMP/gorge" ]]; then
             echo "Diagnostic unavailable: card export or compiled Gorge missing."
             exit 0
           fi
