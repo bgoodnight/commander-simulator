@@ -1,9 +1,10 @@
 "use strict";
 // Optional preview adapter: never receives R2 credentials or private source logs.
-// Configure window.GORGE_R2_API_BASE only after a Worker is actually deployed.
+// Approved live endpoint; URL overrides are optional for preview diagnostics.
 (function(){
   const query=new URLSearchParams(location.search);
-  const candidate=query.get("r2Api")||window.GORGE_R2_API_BASE||"";
+  const candidate=query.get("r2Api")||window.GORGE_R2_API_BASE||
+    "https://gorge-r2-direct-api-preview.darbosama.workers.dev";
   let api;
   try{
     api=new URL(candidate);
@@ -23,8 +24,15 @@
     root.replaceChildren();
     const card=el("section","panel gorge-r2-live-panel");
     const heading=el("h3","panel-title","Live R2 results");
+    const refreshButton=el("button","game-outcome-refresh","↻");
+    refreshButton.type="button";
+    refreshButton.setAttribute("aria-label","Refresh live R2 results");
+    refreshButton.title="Refresh live R2 results";
+    refreshButton.addEventListener("click",()=>refresh(true));
+    const header=el("div","latest-results-topline");
+    header.append(heading,refreshButton);
     const meta=el("p","micro","Direct R2 Parquet query · read-only API · "+latency+" ms browser round trip");
-    card.append(heading,meta);
+    card.append(header,meta);
     if(result.status==="awaiting_cohort_approval"){
       card.append(el("p","small","Recorded games are present in R2, but no current cohort has been approved for these statistics."));
       card.append(el("p","micro",result.raw_shards_seen+" source shards found · historical and experimental games remain excluded"));
@@ -55,9 +63,9 @@
     card.append(el("p","micro","Server processing: "+(result.query?.server_ms??"—")+" ms · "+(result.query?.shards_scanned??"—")+" shard(s) scanned"));
     root.append(card);
   }
-  async function refresh(){
+  async function refresh(force=false){
     const selected=window.__deckLabActiveKey;
-    if(!selected||selected===deck)return;
+    if(!selected || (!force && selected===deck))return;
     deck=selected;const ticket=++seq;
     const started=performance.now();
     root.replaceChildren(el("p","micro","Querying approved R2 game records…"));
@@ -72,11 +80,17 @@
       render(data,Math.round(performance.now()-started));
     }catch(err){
       if(ticket!==seq)return;
-      root.replaceChildren(el("p","micro","R2 live query unavailable; existing published UI remains available. "+String(err.message||err)));
+      inFlight=false;
+      const message=el("p","micro","R2 live query unavailable; existing published UI remains available. "+String(err.message||err));
+      const retry=el("button","game-outcome-refresh","Try again");
+      retry.type="button";retry.addEventListener("click",()=>refresh(true));
+      root.replaceChildren(message,retry);
     }
   }
   addEventListener("DOMContentLoaded",()=>{
     refresh();setTimeout(refresh,150);
+    const existingRefresh=document.getElementById("game-outcome-refresh");
+    existingRefresh?.addEventListener("click",()=>refresh(true));
     document.addEventListener("change",()=>setTimeout(refresh,0));
     document.addEventListener("click",()=>setTimeout(refresh,100));
     addEventListener("popstate",refresh);
