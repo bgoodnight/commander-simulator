@@ -54,6 +54,9 @@ jobs:
           retention-days: 90
 
   publish:
+    # Historical Python releases are now independently archived in R2.
+    # Do not republish or expand this deprecated catalog by manual dispatch.
+    if: ${{ false }}
     name: Validate and stage immutable Pages archive
     runs-on: ubuntu-latest
     timeout-minutes: 20
