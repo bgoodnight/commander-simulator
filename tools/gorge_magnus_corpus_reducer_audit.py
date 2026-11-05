@@ -29,7 +29,13 @@ def check(name,parts):
         arms.append({"type":params.get("Type"),"valid_card":params.get("ValidCard"),
              "valid_spell":params.get("ValidSpell"),"caster":params.get("Activator") or params.get("Caster"),
              "amount_expression":meaning,"dynamic":bool(meaning and "Count$" in meaning)})
-    return {"card":name,"script_found":True,"reduce_arms":arms}
+    return {"card":name,"script_found":True,"reduce_arms":arms,
+       "static_modes":[line.split("Mode$",1)[1].split("|",1)[0].strip() if "Mode$" in line else "no-mode"
+                       for line in text.splitlines() if line.startswith("S:")],
+       "keyword_heads":[line[2:].split(":",1)[0].strip() for line in text.splitlines() if line.startswith("K:")],
+       "has_discount_oracle":any("cost" in line.lower() and "less" in line.lower()
+                                 for line in text.splitlines() if line.startswith("Oracle:")),
+       "source_line_count":len(text.splitlines())}
 out={"scope":"pinned Forge corpus script fields only; no behavior claim",
      "cards":[check(n,v) for n,v in names.items()]}
 print("MAGNUS_CORPUS_STATIC "+json.dumps(out,sort_keys=True))
