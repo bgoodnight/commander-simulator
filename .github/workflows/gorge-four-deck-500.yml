@@ -140,6 +140,9 @@ jobs:
         env:
           DECK: ${{ matrix.deck }}
           SHARD: ${{ matrix.shard }}
+          R2_ACCOUNT_ID: ${{ secrets.GORGE_R2_ACCOUNT_ID }}
+          R2_ACCESS_KEY_ID: ${{ secrets.GORGE_R2_ACCESS_KEY_ID }}
+          R2_SECRET_ACCESS_KEY: ${{ secrets.GORGE_R2_SECRET_ACCESS_KEY }}
         run: |
           set -euo pipefail
           folder="data/$DECK/$SHARD"
@@ -149,6 +152,31 @@ jobs:
           node --max-old-space-size=4096 tools/gorge_card_insights_extract.cjs \
             "$RUNNER_TEMP/feature-ui" "$folder/runs.jsonl" \
             "$folder/pod.json" docs/deck-lab/decks.json "$folder/card-insights.json"
+          # Preserve ALL authoritative Gorge recordings before the existing
+          # two-per-shard replay pruning. No credentials are printed.
+          # A missing Cloudflare configuration preserves legacy behavior.
+          if [[ -n "${R2_ACCOUNT_ID}" || -n "${R2_ACCESS_KEY_ID}" || -n "${R2_SECRET_ACCESS_KEY}" ]]; then
+            if [[ -z "${R2_ACCOUNT_ID}" || -z "${R2_ACCESS_KEY_ID}" || -z "${R2_SECRET_ACCESS_KEY}" ]]; then
+              echo "::error::Incomplete Gorge R2 credentials"
+              exit 1
+            fi
+            archive="$RUNNER_TEMP/gorge-$DECK-$SHARD-${GITHUB_RUN_ID}-${GITHUB_RUN_ATTEMPT}.tar.gz"
+            tar -czf "$archive" -C "$folder" native runs.jsonl pod.json card-insights.json
+            python - "$archive" "$folder" <<'PY_ARCHIVE'
+import hashlib, json, pathlib, sys
+archive=pathlib.Path(sys.argv[1]); root=pathlib.Path(sys.argv[2])
+n=len(list((root/"native").glob("gorge-seed-*.json")))
+assert n==100, f"Refusing incomplete native archive: {n} recordings"
+print(f"Archiving {n} native games; sha256={hashlib.sha256(archive.read_bytes()).hexdigest()}; bytes={archive.stat().st_size}")
+PY_ARCHIVE
+            AWS_ACCESS_KEY_ID="$R2_ACCESS_KEY_ID" AWS_SECRET_ACCESS_KEY="$R2_SECRET_ACCESS_KEY" \
+              AWS_DEFAULT_REGION=auto aws --endpoint-url "https://$R2_ACCOUNT_ID.r2.cloudflarestorage.com" \
+              s3 cp "$archive" "s3://gorge-simulations/native/v1/$DECK/$SHARD/$(basename "$archive")" \
+              --no-progress
+            echo "Archived full $DECK shard $SHARD to private R2 before pruning." >> "$GITHUB_STEP_SUMMARY"
+          else
+            echo "::notice::R2 not configured; only two native recordings per shard will be retained."
+          fi
           python - "$folder" <<'PY'
           import json,sys
           from pathlib import Path
