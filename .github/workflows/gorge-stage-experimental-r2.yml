@@ -69,23 +69,28 @@ jobs:
           for game in runs:
               if game.get("error") or "cohort_id" in game:
                   raise ValueError("Unapproved cohort or engine error")
+              source=src/"native"/f"gorge-seed-{game['seed']}.json"
+              if not source.is_file():
+                  raise ValueError("Missing authoritative source trace")
+              # Preserve ALL native evidence, including the unfinished Magnus
+              # turn-cap recording, while never including that game in Parquet.
+              (dest/"native"/source.name).write_bytes(source.read_bytes())
               if not game.get("finished"):
                   if game.get("stall_reason")!="turns" or game.get("replay_verified"):
                       raise ValueError("Unexpected unfinished game")
                   continue
               if game.get("replay_verified") is not True:
                   raise ValueError("Unverified finished game")
-              source=src/"native"/f"gorge-seed-{game['seed']}.json"
-              if not source.is_file():
-                  raise ValueError("Missing authoritative source trace")
               approved_for_archive.append(game)
-              # Native logs stay private in R2 and are never published to Pages.
-              (dest/"native"/source.name).write_bytes(source.read_bytes())
           if len(approved_for_archive)!=expected:
               raise ValueError("Finished source count differs from qualification")
           (dest/"runs.jsonl").write_text("".join(
               json.dumps(r,sort_keys=True,separators=(",",":"))+"\n"
               for r in approved_for_archive))
+          (dest/"native"/"qualification-summary.json").write_bytes(
+              (src/"qualification-summary.json").read_bytes())
+          (dest/"native"/"all-runs.jsonl").write_bytes(
+              (src/"runs.jsonl").read_bytes())
           print(f"{hero}: {expected} source-verified completed experimental records")
           PY
       - name: Convert into immutable private experimental warehouse shard
