@@ -17,5 +17,24 @@
     "world-shaper--eoc",
     "science--pip",
     "eldrazi-incursion--m3c"
-  ]
+  ],
+  "approved_for_production": false,
+  "observed_by_hero": {
+    "mortarion_current": 3,
+    "magnus_premium": 3
+  },
+  "pinned_decklists": {
+    "guided-by-nature--c14": "83b9f317086d666cc88b70a32e0bddc512730f01473398c732567cf557fea89e",
+    "peer-through-time--c14": "3d42cd8fbe3cd315d8220a8e9ab4e7155e71b59e281317abca23478d8cf67980",
+    "sneak-attack--znc": "7b83316aae7a295c363ad1635dd20426574aa2402a564b974a60d1421c82bf07",
+    "party-time--clb": "2326b84eabb48e98ededd8a17011a945433be6fefb246e2d5dbd6d6bd96a6809",
+    "draconic-rage--afc": "d9fde5726ef4b4f48fa4b1d60d645dda6bde9cbd7a9558937d5dcfd1e7bc90f8",
+    "swell-the-host--c15": "0777fedd7fe141c10c8c075746329e3112987a7ccf27dbfe13a62f62d3339f64",
+    "virtue-and-valor--woc": "c40b984b30dd6ab568095fd7347ede7d05fe287a3ffb7ece3dfbb248f14dddff",
+    "quick-draw--otc": "c8cea1f3135be6a10632a3c5a10a2da8d1bd43dd3e8e4a51b92ebb46578816a4",
+    "arm-for-battle--cmr": "d1386676633e2b7c6ffb39acc38546fe7dd0da0f824e1216f4285b5d4735231b",
+    "world-shaper--eoc": "bda2feb57f3820555f42e219c9b543b45e7725e9344a9c14eab049ca50a4f8d7",
+    "science--pip": "26ecacfe73702eda29390c2befbbdccad2c0ec790337d7cd658e6b3006bc1027",
+    "eldrazi-incursion--m3c": "49e1d44fd1c3d8a398b643113ea0b8cf766ec72dded493efc72a38e127953198"
+  }
 }
