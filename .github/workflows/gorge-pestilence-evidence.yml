@@ -1,0 +1,76 @@
+name: Gorge · Pestilence and Astartes native evidence audit
+on:
+  push:
+    branches: [main]
+    paths:
+      - ".github/workflows/gorge-pestilence-evidence.yml"
+  workflow_dispatch:
+permissions:
+  contents: read
+  actions: read
+jobs:
+  audit:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Retrieve private narrative source artifacts for direct event verification
+        env:
+          GH_TOKEN: ${{ github.token }}
+          GH_REPO: ${{ github.repository }}
+        run: |
+          mkdir -p "$RUNNER_TEMP/pilots"
+          for policy in bot forge-heuristic; do
+            gh run download 41946030960 --name "pilot-narrative-mortarion_current-$policy" --dir "$RUNNER_TEMP/pilots/$policy"
+          done
+      - name: Count linked Pestilence, Mortarion, and token events
+        run: |
+          python - <<'PY'
+          from pathlib import Path
+          import collections,json,os
+          base=Path(os.environ["RUNNER_TEMP"])/"pilots"
+          names={"Pestilence","Pestilence Demon","Crypt Rats","Thrashing Wumpus"}
+          for policy in ("bot","forge-heuristic"):
+              folder=base/policy
+              counts=collections.Counter()
+              examples=[]
+              for path in sorted((folder/"native").glob("gorge-seed-*.json")):
+                  source=json.loads(path.read_text())
+                  hero=source["hero_seat"]
+                  objs={o["object_id"]:o.get("card_name") or o.get("effective_name")
+                        for o in source.get("objects",[]) if isinstance(o,dict)}
+                  ownPest,ownMort,ownAstartes=[],[],[]
+                  tokens=collections.Counter()
+                  for e in source["log"]["events"]:
+                      seat=e.get("player",0)
+                      name=objs.get(e.get("obj"),"")
+                      k=e.get("kind")
+                      if seat!=hero:continue
+                      if k in (34,55,67,79,88) and name in names:
+                          ownPest.append((e["seq"],name))
+                      if k in (27,38,46,54,72,80) and name=="Mortarion, Daemon Primarch":
+                          ownMort.append(e["seq"])
+                      if k==31:
+                          txt=str(e.get("text",""))
+                          tokens[txt]+=1
+                          if "astartes" in txt.lower():
+                              ownAstartes.append((e["seq"],txt))
+                  counts["games"]+=1
+                  counts["pest_games"]+=bool(ownPest)
+                  counts["pest_activations"]+=len(ownPest)
+                  counts["mort_trigger_games"]+=bool(ownMort)
+                  counts["mort_triggers"]+=len(ownMort)
+                  counts["astartes_games"]+=bool(ownAstartes)
+                  counts["astartes_token_events"]+=len(ownAstartes)
+                  counts["pest_and_trigger_games"]+=bool(ownPest and ownMort)
+                  counts["pest_and_astartes_games"]+=bool(ownPest and ownAstartes)
+                  if ownPest or ownAstartes:
+                      examples.append({"seed":source["seed"],
+                        "pest":ownPest[:12],"mort":ownMort[:12],
+                        "astartes":ownAstartes[:12],
+                        "tokens":tokens.most_common(8)})
+              print("PEST_AUDIT",json.dumps({"policy":policy,"counts":counts,"examples":examples[:10]},sort_keys=True))
+          PY
