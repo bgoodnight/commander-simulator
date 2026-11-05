@@ -60,6 +60,27 @@ class FullCohortTests(unittest.TestCase):
         with self.assertRaisesRegex(ValueError,"Duplicate"):
             make_report([row,row])
 
+    def test_nondecisive_never_enters_any_statistical_population(self):
+        win=game(9101,9101%4)
+        loss=game(9102,(9102%4+1)%4)
+        drawn={**game(9103,None),"draw":True,"winner_seat":None}
+        capped={**game(9104,None),"finished":False,
+                "replay_verified":False,"winner_seat":None,
+                "stall_reason":"turns"}
+        report=make_report([win,loss,drawn,capped])
+        stats=report["decks"]["mortarion_current"]
+        self.assertEqual(report["total_verified_games"],2)
+        self.assertEqual(report["nondecisive_excluded"],2)
+        self.assertEqual(stats["n"],2)
+        self.assertEqual((stats["wins"],stats["losses"],stats["draws"]),(1,1,0))
+        self.assertEqual(stats["win_rate"],0.5)
+        self.assertEqual(stats["groups"]["opponents"][0]["n"],2)
+        self.assertEqual(stats["regressions"]["opponents"]["n"],2)
+        self.assertEqual(stats["game_turns_coverage"],2)
+        self.assertEqual(sum(x["games"] for x in stats["game_turn_histogram"]),2)
+        self.assertFalse(eligible(drawn))
+        self.assertFalse(eligible(capped))
+
     def test_regression_reports_insufficient_outcome_variation(self):
         rows=[game(20000+i,i%4) for i in range(100)]
         model=regression(rows,"opponents")
