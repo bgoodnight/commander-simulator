@@ -2344,8 +2344,40 @@
     // Game detail panels are now reached from the four overview tiles.
     // Card-specific discoveries follow the commander dashboard.
     // Missing named sources never become guessed card-level findings.
-    const signals=observationCardStats(runs,options.lookupRecordedCard,
-      options.commanderName);
+    // Gorge key insights must use a complete precomputed native-feature
+    // cohort. Sampled replay events are evidence only; never the ranking
+    // denominator. Historical non-Gorge renderers retain their own logic.
+    let signals;
+    if(isGorge){
+      const report=options.fullCardInsights;
+      const fullN=options.fullCohortGames;
+      const matching=report&&Number.isInteger(fullN)&&fullN>0&&
+        report.verified_games===fullN&&report.observed_games===fullN&&
+        report.coverage?.missing===0&&report.coverage?.level==="full-cohort"&&
+        report.categories&&typeof report.categories==="object";
+      if(matching){
+        const examples=new Map(runs.map(run=>[run.seed,run]));
+        const ranked={};
+        for(const [kind,items] of Object.entries(report.categories)){
+          if(!Array.isArray(items))continue;
+          ranked[kind]=items.map(item=>({
+            ...item,
+            // Evidence is clickable only for a genuinely retained recording.
+            events:(item.exampleEvents||[]).filter(([seed])=>examples.has(seed))
+              .map(([seed,turn])=>({seed,turn,run:examples.get(seed)})),
+            seen:new Set((item.exampleSeenSeeds||[]).map(seed=>examples.get(seed))
+              .filter(Boolean)),
+          }));
+        }
+        signals={coverage:fullN,total:fullN,
+          confirmedTutors:report.confirmed_tutors||0,ranked};
+      }else{
+        signals={coverage:0,total:fullN||0,confirmedTutors:0,ranked:{}};
+      }
+    }else{
+      signals=observationCardStats(runs,options.lookupRecordedCard,
+        options.commanderName);
+    }
     if(signals.coverage){
       const kinds=isGorge?
         ["played","creature","artifact","enchantment","instant","spell","land",
@@ -2364,7 +2396,9 @@
       }
     }else{
       cards.appendChild(create("p","game-outcome-empty",
-        "Card insights require named card and hand observations from the current published batch."));
+        isGorge?
+          "Complete-cohort card insights are not yet available. The previous sample-only card rankings are intentionally hidden until every verified game has been measured.":
+          "Card insights require named card and hand observations from the current published batch."));
     }
     // The regression story belongs after every game/card panel, immediately
     // above the independent turn reviewer.
