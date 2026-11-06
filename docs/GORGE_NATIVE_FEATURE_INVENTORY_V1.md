@@ -41,3 +41,20 @@
 2. Audit exact draw/cast/zone-transition/player-turn mapping on hand-reviewed games. Flag unsupported measures instead of inferring them.
 3. Add a pinned card-roster join and card lifecycle view (drawn/not drawn, played/held/censored) with independent evidence checks.
 4. Materialize partitioned feature files with a versioned data dictionary and hashes; request the Worker expose only the necessary authorized datasets.
+
+## Empirical native field inventory — 24 R2 games
+
+[Source-audit run 42150745799](https://github.com/bgoodnight/commander-simulator/actions/runs/42150745799) finished successfully for both heroes. The keys listed below were **observed in the native records**; presence does not establish completeness or semantic correctness.
+
+| Family | Top-level observed fields |
+|---|---|
+| Event | `amount`, `counter`, `from`, `ids`, `kind`, `obj`, `pairs`, `player`, `secret`, `seq`, `step`, `text`, `to` |
+| Intent | `choices`, `payment`, `player`, `seq` |
+| Object | `card_name`, `controller_at_end`, `effective_name`, `is_copy`, `is_token`, `object_id`, `owner`, `types_at_end` |
+| Snapshot | `active_seat`, `after_event_seq`, `boundary`, `players`, `step`, `turn` |
+
+Record totals: Mortarion **122,040 events**, **23,239 intents**, **6,055 objects**, **460 snapshots**; Magnus **136,472 events**, **25,656 intents**, **6,480 objects**, **502 snapshots**. There were **60 distinct numeric event kinds** in Mortarion and **64** in Magnus. Both source archives have **12/12 native recordings**.
+
+**Interpretation priority:** there is significantly richer evidence in events and intents than the current feature extractor consumes. Before feature generation, perform source-backed actor/owner/controller disambiguation for `player` (including omitted seat zero), resolve `choices` and `payment` semantics, and map additional numerical event kinds to documented Gorge engine definitions. `controller_at_end` is not a historical controller field; end-state information must not leak into landmark predictors. For true hand dwell or cost-reduction attribution, confirm that the raw event / intent timeline provides enough information rather than claiming such metrics are already available.
+
+**Worker handoff:** request versioned private source-backed event, intent, object crosswalk and turn/snapshot datasets (or a manifest for corresponding immutable Parquet partitions). The generic public UI batch must remain sanitized. Do not request dedicated fields for every engineered indicator until after this semantic audit; `kind`/`seq`/`obj`/`player`/`from`/`to` and contextual card, turn, choice and payment data form the minimum raw material, subject to privacy and field verification.
