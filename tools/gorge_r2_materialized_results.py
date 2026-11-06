@@ -52,7 +52,7 @@ def safe_run(value):
     visit(value)
 
 
-def project(source: Path, registry_path: Path, output: Path):
+def project(source: Path, registry_path: Path, output: Path, expected_batches=None):
     import pyarrow.parquet as pq
 
     registry_bytes = registry_path.read_bytes()
@@ -64,6 +64,9 @@ def project(source: Path, registry_path: Path, output: Path):
     manifests = sorted(source.glob("*/*/*/manifest.json"))
     if not manifests:
         raise ValueError("No source shards")
+    present = {p.relative_to(source).parts[0] for p in manifests}
+    if expected_batches is not None and not set(expected_batches).issubset(present):
+        raise ValueError("Missing source batch shards: " + ",".join(sorted(set(expected_batches)-present)))
     by_deck = defaultdict(list)
     projections = defaultdict(dict)
     source_refs = []
@@ -260,8 +263,10 @@ def main():
     parser.add_argument("--source", type=Path, required=True)
     parser.add_argument("--registry", type=Path, required=True)
     parser.add_argument("--out", type=Path, required=True)
+    parser.add_argument("--expected-batches-file", type=Path)
     args = parser.parse_args()
-    print(json.dumps(project(args.source, args.registry, args.out), sort_keys=True))
+    batches = args.expected_batches_file.read_text().splitlines() if args.expected_batches_file else None
+    print(json.dumps(project(args.source, args.registry, args.out, batches), sort_keys=True))
 
 
 if __name__ == "__main__":
