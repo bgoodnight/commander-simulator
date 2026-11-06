@@ -115,10 +115,18 @@ class FullCohortCardInsights:
         result = all_reports["decks"].get(deck)
         if result is None or result["verified_games"] != len(approved_rows):
             raise ValueError("Incomplete merged card insights")
-        # Examples use globally reassigned IDs and are not actionable replay
-        # references. Only a separately verified game-id crosswalk can link them.
+        # Translate temporary merge IDs back to authoritative full game IDs.
+        # Seeds can repeat across batches, so never expose them as replay keys.
+        game_ids = {index: game_id for game_id, index in order.items()}
         for items in result["categories"].values():
             for item in items:
+                examples = [{"game_id": game_ids[seed], "turn": turn}
+                            for seed, turn in item.get("exampleEvents", [])]
+                used = {entry["game_id"] for entry in examples}
+                examples.extend({"game_id": game_ids[seed], "turn": None}
+                                for seed in item.get("exampleSeenSeeds", [])
+                                if game_ids[seed] not in used)
+                item["exampleGames"] = examples[:60]
                 item["exampleEvents"] = []
                 item["exampleSeenSeeds"] = []
         return result
