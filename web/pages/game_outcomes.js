@@ -1223,7 +1223,7 @@
     for(const [label,cards] of zones){
       if(!Array.isArray(cards))continue;
       const group=create("details","insight-end-zone insight-board-"+label.toLowerCase().replace(/[^a-z]+/g,"-"));
-      group.open=true;
+      group.open=label!=="Graveyard";
       const icon=({Hand:"▤","Command zone":"♛",Creatures:"♟",Lands:"◇",
         Artifacts:"⚙",Enchantments:"✦","Other permanents":"◈",
         Graveyard:"◆",Exile:"⊘"})[label]||"◈";
@@ -1231,6 +1231,39 @@
       trigger.append(create("span","insight-end-zone-icon",icon),
         create("span",null,label+" · "+cards.length));
       group.appendChild(trigger);
+      if(label==="Graveyard"&&cards.length){
+        // Only the last few recorded items are shown. The source exports
+        // zone arrays but does not guarantee a physical pile ordering.
+        const preview=create("div","insight-graveyard-preview");
+        preview.setAttribute("aria-label","Graveyard preview; select a card behind the front card to expand");
+        const recent=cards.slice(-Math.min(3,cards.length));
+        recent.forEach((name,index)=>{
+          const front=index===recent.length-1;
+          const sleeve=create("div","insight-graveyard-layer"+(front?" is-front":""));
+          sleeve.style.zIndex=String(index+1);
+          if(front){
+            sleeve.appendChild(insightActionCard(name,options));
+          }else{
+            const expand=textButton(name,"insight-graveyard-expand",()=>{
+              group.open=true;
+              group.querySelector("summary")?.focus();
+            });
+            expand.setAttribute("aria-label","Expand graveyard to inspect all "+cards.length+" cards");
+            // Match the normal miniature's visual identity, but its click
+            // expands the full zone instead of opening the card modal.
+            const printed=options.lookupRecordedCard?.(name);
+            const art=printed?.art||printed?.image;
+            if(typeof art==="string"&&/^https:\/\//.test(art)){
+              const img=create("img","insight-graveyard-layer-art");
+              img.src=art;img.alt="";img.loading="lazy";
+              expand.prepend(img);
+            }
+            sleeve.appendChild(expand);
+          }
+          preview.appendChild(sleeve);
+        });
+        group.appendChild(preview);
+      }
       const list=create("div","insight-action-cards");
       const entries=label==="Creatures"||label==="Artifacts"||
         label==="Enchantments"||label==="Other permanents"?
