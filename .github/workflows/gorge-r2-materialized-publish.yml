@@ -80,6 +80,7 @@ jobs:
           python -m tools.gorge_r2_materialized_results \
             --source "$RUNNER_TEMP/source" \
             --registry data/gorge_analytics_cohort_registry_v1.json \
+            --expected-batches-file "$RUNNER_TEMP/previous/batch-list.txt" \
             --out "$RUNNER_TEMP/build" > "$RUNNER_TEMP/build-report.json"
           cat "$RUNNER_TEMP/build-report.json" >> "$GITHUB_STEP_SUMMARY"
       - name: Publish immutable version contents, then atomic current pointer last
@@ -91,17 +92,38 @@ jobs:
           prefix="s3://gorge-simulations/results/materialized/v1"
           version="$(python -c 'import json,os; print(json.load(open(os.environ["RUNNER_TEMP"]+"/build/current.json"))["version"])')"
           [[ "$version" =~ ^[a-f0-9]{64}$ ]]
-          # Immutable versions: reruns may only publish identical bytes.
+          # Manifest-last within the immutable version, and pointer-last globally.
+          # Refuse republishing a version with different bytes.
           if aws --endpoint-url "$endpoint" s3 cp "$prefix/versions/$version/manifest.json" "$RUNNER_TEMP/existing-manifest.json" --no-progress; then
             cmp "$RUNNER_TEMP/build/versions/$version/manifest.json" "$RUNNER_TEMP/existing-manifest.json"
-          else
-            aws --endpoint-url "$endpoint" s3 cp \
-              "$RUNNER_TEMP/build/versions/$version/" "$prefix/versions/$version/" \
-              --recursive --no-progress
           fi
-          # Read-back the manifest before changing the public active version.
-          aws --endpoint-url "$endpoint" s3 cp "$prefix/versions/$version/manifest.json" "$RUNNER_TEMP/check-manifest.json" --no-progress
-          cmp "$RUNNER_TEMP/build/versions/$version/manifest.json" "$RUNNER_TEMP/check-manifest.json"
+          aws --endpoint-url "$endpoint" s3 cp \
+            "$RUNNER_TEMP/build/versions/$version/" "$prefix/versions/$version/" \
+            --recursive --exclude "manifest.json" --no-progress
+          aws --endpoint-url "$endpoint" s3 cp \
+            "$RUNNER_TEMP/build/versions/$version/manifest.json" \
+            "$prefix/versions/$version/manifest.json" --no-progress
+          # Read back EVERY referenced object to verify the snapshot, not only its manifest.
+          python - <<'PY'
+          import json,os
+          from pathlib import Path
+          manifest=json.loads((Path(os.environ["RUNNER_TEMP"])/"build/current.json").read_text())
+          version=manifest["version"]
+          index=json.loads((Path(os.environ["RUNNER_TEMP"])/"build/versions"/version/"manifest.json").read_text())
+          paths=["manifest.json"]
+          for deck,record in index["decks"].items():
+              paths.append(f"{deck}/summary.json")
+              paths += [f"{deck}/{p['path']}" for p in record["pages"]]
+              for game in (Path(os.environ["RUNNER_TEMP"])/"build/versions"/version/deck/"games").glob("*.json"):
+                  paths.append(f"{deck}/games/{game.name}")
+          (Path(os.environ["RUNNER_TEMP"])/"verify-paths.txt").write_text("\n".join(paths)+"\n")
+          PY
+          while IFS= read -r path; do
+            mkdir -p "$RUNNER_TEMP/readback/$(dirname "$path")"
+            aws --endpoint-url "$endpoint" s3 cp "$prefix/versions/$version/$path" \
+              "$RUNNER_TEMP/readback/$path" --no-progress >/dev/null
+            cmp "$RUNNER_TEMP/build/versions/$version/$path" "$RUNNER_TEMP/readback/$path"
+          done < "$RUNNER_TEMP/verify-paths.txt"
           aws --endpoint-url "$endpoint" s3 cp "$RUNNER_TEMP/build/current.json" \
             "$prefix/current.json" --content-type application/json --cache-control "no-store" --no-progress
           echo "Published verified current version $version" >> "$GITHUB_STEP_SUMMARY"
