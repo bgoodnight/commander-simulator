@@ -68,13 +68,32 @@ class MaterializedResultsTests(unittest.TestCase):
                 run["native_events"] = [{"secret": True}]
             games.append({"game_id": gid, "source_sha256": row["source_sha256"],
                           "chain": row["chain"], "run": run})
+        # Complete native events are indexed by the warehouse game source.
+        events = []
+        for i, row in enumerate(rows):
+            row["event_start_row"] = len(events)
+            row["native_event_count"] = 2
+            for seq, secret in ((0, True), (1, False)):
+                event = {"seq": seq, "kind": 3 if secret else 19,
+                         "secret": secret, "obj": i + 1}
+                events.append({
+                    "game_id": row["game_id"], "chain": row["chain"],
+                    "seed": row["seed"], "seq": seq,
+                    "kind_id": event["kind"], "secret": secret,
+                    "event_json": json.dumps(event)
+                })
         pq.write_table(pa.Table.from_pylist(rows), self.shard / "games.parquet")
+        pq.write_table(pa.Table.from_pylist(events), self.shard / "events.parquet")
         raw = (self.shard / "games.parquet").read_bytes()
+        event_raw = (self.shard / "events.parquet").read_bytes()
         manifest = {
             "schema": "gorge-warehouse-shard-v1",
             "batch_id": "123456-1", "player_deck": deck, "shard": 0, "games": count,
+            "native_events": len(events),
             "files": {"games.parquet": {"bytes": len(raw), "rows": count,
-                                      "sha256": hashlib.sha256(raw).hexdigest()}}
+                                      "sha256": hashlib.sha256(raw).hexdigest()},
+                      "events.parquet": {"bytes": len(event_raw), "rows": len(events),
+                                      "sha256": hashlib.sha256(event_raw).hexdigest()}}
         }
         (self.shard / "manifest.json").write_text(json.dumps(manifest))
         if not omit_projection:
@@ -101,6 +120,13 @@ class MaterializedResultsTests(unittest.TestCase):
         self.assertEqual((len(first["games"]), len(second["games"])), (25, 1))
         self.assertNotIn("batch", first)
         self.assertEqual(len(list((prefix / "games").glob("*.json"))), 26)
+        first_game = json.loads(next((prefix / "games").glob("*.json")).read_text())
+        self.assertEqual(first_game["native_event_count"], 2)
+        native_part = json.loads((prefix / first_game["event_parts"][0]["path"]).read_text())
+        self.assertEqual(len(native_part["events"]), 2)
+        self.assertTrue(native_part["events"][0]["secret"],
+                        "Omniscient native draws must not be filtered")
+        self.assertEqual(native_part["events"][1]["kind"], 19)
         pointer = json.loads((self.root / "built" / "current.json").read_text())
         raw = (self.root / "built" / "versions" / version / "manifest.json").read_bytes()
         self.assertEqual(hashlib.sha256(raw).hexdigest(), pointer["manifest_sha256"])
