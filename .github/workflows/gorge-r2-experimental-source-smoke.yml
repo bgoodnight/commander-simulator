@@ -6,6 +6,7 @@ on:
       - "tools/gorge_r2_experiment_ingest.py"
       - "tools/gorge_landmark_features.py"
       - "tools/gorge_event_features.py"
+      - "tools/gorge_native_schema_audit.py"
       - "tools/gorge_sparse_card_features.py"
       - "tests/test_gorge_sparse_card_features.py"
       - "tools/gorge_assemble_model_table.py"
@@ -55,6 +56,7 @@ jobs:
             --hero "$HERO" --account-id "$ACCOUNT" --destination "$RUNNER_TEMP/source"
           python -m tools.gorge_landmark_features --native-root "$RUNNER_TEMP/source/extracted/results" \
             --hero "$HERO" --output "$RUNNER_TEMP/landmarks.jsonl"
+          python -m tools.gorge_native_schema_audit --native-root "$RUNNER_TEMP/source/extracted/results" --hero "$HERO" --output "$RUNNER_TEMP/native-schema-audit.json"
           python -m tools.gorge_event_features --native-root "$RUNNER_TEMP/source/extracted/results" \
             --hero "$HERO" --output "$RUNNER_TEMP/event-features.jsonl"
           python tools/gorge_hero_ebm_prototype.py --source "$RUNNER_TEMP/source/extracted/results" --hero "$HERO" --output "$RUNNER_TEMP/private-analytics"
