@@ -101,11 +101,9 @@
     return "reviewed_generic_spell_cast";
   }
   function mapSeat(real,hero){return (real-hero+4)%4;}
-  function actor(e){
-    // Gorge omits the zero-valued player field in native event JSON.
-    // Missing means native seat 0, not the player whose turn it is.
-    return Number.isInteger(e.player)?e.player:0;
-  }
+  // Native Go JSON omits player=0; missing actor does NOT imply the active
+  // turn owner. Seat zero can cast an instant during another seat's turn.
+  function actor(e){return Number.isInteger(e.player)?e.player:0;}
   function nativeAbilityActor(e){
     // Gorge omits player:0 on JSON encoding, including when the ability
     // fires during another seat's turn.  Use the exact native zero value,
@@ -163,7 +161,7 @@
          t.turn>=turnEnd)continue;
       for(let i=0;i<(t.events||[]).length;i++){
         const actionStart=actions.length;
-        const e=t.events[i],real=actor(e),seat=mapSeat(real,hero);
+        const e=t.events[i],real=actor(e,t),seat=mapSeat(real,hero);
         const ability=abilityAction(e,hero,names);
         if(ability){
           ability.native_turn=t.turn;
@@ -227,6 +225,9 @@
         seat:mapSeat(real,hero),deck_key:g.decks[real],
         hand:omniscient?namedZone(p,"hand"):null,
         hand_count:p.hand_count,
+        library:omniscient?namedZone(p,"library"):null,
+        library_count:p.library_count,
+        life:p.life,lost:p.lost,mana_pool:[...p.mana_pool],
         battlefield:namedZone(p,"battlefield"),
         graveyard:namedZone(p,"graveyard"),exile:namedZone(p,"exile"),
         command:namedZone(p,"command"),
@@ -289,6 +290,7 @@
         source_event_count:g.source?.total_native_events,
         public_event_count:g.source?.exported_events,
         snapshot_boundary:"first_pending_decision_of_turn",
+        opening_hand_boundary:"first_pending_decision_of_turn",
         synthetic_simulation_only:omniscient,
         outcome_provenance:finished?"native_game_over_event":"not_exported"},
       outcome:{status,complete:finished,reason:finished?
