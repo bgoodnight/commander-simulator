@@ -51,3 +51,17 @@ Status: proposed coordination contract for the Worker and analysis branches. NOT
 2. Analysis branch materializes normalized private datasets and publishes versioned feature manifest contracts on a **separate branch**.
 3. Once new native batches are available, run cross-check: cohort catalog -> manifest -> per-shard digest -> game/event/feature counts -> filtered feature query -> compare original source replay.
 4. Only after successful private smoke tests and auth/security review, implement and deploy the private Worker `/v1/analytics` endpoints.
+
+## Live API check, 2026-11-05
+
+[Actions run 42147484769](https://github.com/bgoodnight/commander-simulator/actions/runs/42147484769) queried deployed `https://gorge-r2-direct-api-preview.darbosama.workers.dev`:
+- `/v1/summary?deck=mortarion_current` and `magnus_premium`: HTTP **200**, `gorge-r2-live-summary-v1` validated.
+- `/v1/ui/overview?deck=...`: HTTP **404** for both; source exists on main, but production Worker deployment lags.
+- `/v1/analytics/cohorts?hero=mortarion_current`: HTTP **404**, proposed endpoint not implemented.
+- These were unauthenticated read-only requests. They prove availability of public summaries, not analytics extraction or access to native archives.
+
+### Smallest testable private analytics API change
+
+A private service-to-service route `/v1/analytics/experimental/batches/<run-attempt>/manifest?hero=<hero>` should return only the pinned batch metadata and source file availability from an R2-side `source-manifest.json`/archive index; it must authenticate and reject arbitrary key paths and unauthorized cohorts. The next route `/v1/analytics/experimental/batches/<run-attempt>/games?hero=<hero>&cursor=...` should return game IDs, seed/group IDs (private), opponents, hero seat, terminal status, winner and replay/source identity. To test the planned high-dimensional feature extractor **via API**, add bounded private access to the native source archive or derived versioned card/snapshot/event Parquet partitions (not just aggregate summary counters). The trusted analysis client should compare game and feature denominators with the already validated direct R2 extraction; only then fit a smoke model. No public CORS, no secret payload in CI logs or public artifacts.
+
+The 2026-11-05 corrected pilot is stored under `native/experimental/corrected-pilot/v1/42143344243-1/{mortarion_current,magnus_premium}.tar.gz`. It is **not** an approved `warehouse/v1` cohort. Preserve this distinction in the new endpoint and testing.
