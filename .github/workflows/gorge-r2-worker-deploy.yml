@@ -6,6 +6,7 @@ on:
     branches: [main]
     paths:
       - ".github/workflows/gorge-r2-worker-deploy.yml"
+      - "data/gorge_analytics_cohort_registry_v1.json"
   workflow_dispatch:
 permissions:
   contents: read
