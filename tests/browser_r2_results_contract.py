@@ -104,6 +104,7 @@ def run():
                 root.get_by_role("button",name="Refresh live R2 results").click()
                 root.get_by_text("2 approved decisive games",exact=False).wait_for(timeout=20000)
                 root.get_by_text("Approved games · R2 timeline preview").wait_for(timeout=20000)
+                root.locator("details").filter(has_text="Approved games · R2 timeline preview").locator("summary").click()
                 try:
                     root.get_by_role("button",name="Win · 14 turns",exact=False).click(timeout=10000)
                 except Exception:
