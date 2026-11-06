@@ -82,6 +82,90 @@
     // Core section visibility is tied to result readiness, not card ranking count.
   }
   function ownsRenderedDeck(key){return renderedDeck===key;}
+  // Small, approved materialized cohorts can use the *existing* original
+  // Results renderer, including its original Key Insights and Turn Reviewer.
+  // Reassemble only Worker-verified single-game projections; do not infer
+  // hidden hands from public replay or use unapproved source recordings.
+  async function originalBatchFromMaterialized(catalog,key,ticket,selected){
+    if(!Number.isInteger(catalog.total)||catalog.total<1||catalog.total>200||
+       !Number.isInteger(catalog.page_count)||
+       catalog.page_count!==Math.ceil(catalog.total/25)||
+       !/^[a-f0-9]{64}$/.test(catalog.version||""))
+      throw Error("Invalid original-layout materialized cohort");
+    const live=()=>ticket===generation&&key===window.__deckLabActiveKey;
+    const read=async(path,params)=>{
+      const url=new URL(path,api);
+      url.searchParams.set("deck",key);
+      for(const [name,value] of Object.entries(params))
+        url.searchParams.set(name,String(value));
+      const response=await fetch(url,{cache:"no-store"});
+      if(!response.ok)throw Error("Materialized replay HTTP "+response.status);
+      const result=await response.json();
+      if(result.schema!=="gorge-r2-materialized-response-v1"||
+         result.status!=="ready"||result.deck!==key||
+         result.version!==catalog.version)
+        throw Error("Materialized replay cohort changed");
+      return result;
+    };
+    const indexed=[];
+    const ids=new Set();
+    for(let page=0;page<catalog.page_count;page++){
+      const result=await read("/v1/ui/page",{page});
+      if(!live())return null;
+      if(result.page?.page!==page||result.page?.total!==catalog.total||
+         !Array.isArray(result.page.games)||result.page.games.length<1||
+         result.page.games.length>25)
+        throw Error("Incomplete materialized game index");
+      for(const game of result.page.games){
+        if(typeof game.game_id!=="string"||!game.game_id||
+           ids.has(game.game_id)||!["win","loss"].includes(game.result))
+          throw Error("Invalid materialized game identity");
+        ids.add(game.game_id);
+        indexed.push({page,id:game.game_id});
+      }
+    }
+    if(indexed.length!==catalog.total)throw Error("Incomplete approved cohort");
+    let original=null;
+    const runs=[];
+    // Bound concurrency and memory; the large-cohort path remains on demand.
+    for(let offset=0;offset<indexed.length;offset+=4){
+      const details=await Promise.all(indexed.slice(offset,offset+4).map(
+        async item=>read("/v1/ui/game",{page:item.page,game_id:item.id})));
+      if(!live())return null;
+      for(let i=0;i<details.length;i++){
+        const item=indexed[offset+i],detail=details[i];
+        if(detail.game?.game_id!==item.id||
+           !window.DeckGameOutcomes?.validate(detail.game.batch))
+          throw Error("Invalid approved native replay");
+        const batch=detail.game.batch;
+        if(batch.deck_key!==key||batch.deck_sha256!==selected.sha||
+           batch.engine!=="gorge"||batch.runs.length!==1)
+          throw Error("Materialized deck revision or run count mismatch");
+        if(original&&(batch.format!==original.format||
+                      batch.scenario!==original.scenario||
+                      batch.pilot_style!==original.pilot_style))
+          throw Error("Mixed original Results cohort");
+        // This release-check must demonstrate genuinely omniscient hands.
+        const run=batch.runs[0];
+        if(run.gorge_source?.visibility!=="omniscient"||
+           run.gorge_source?.synthetic_simulation_only!==true||
+           !Array.isArray(run.opening_hand)||
+           run.opening_hand.length!==run.opening_hand_count||
+           !Array.isArray(run.opening_hands_by_seat)||
+           run.opening_hands_by_seat.length!==3)
+          throw Error("Approved game is missing omniscient hand identities");
+        original ||= batch;
+        runs.push(run);
+      }
+    }
+    const rounds=Math.max(...runs.map(run=>run.completed_rounds));
+    const batch={...original,requested_rounds:rounds,
+      runs:runs.map(run=>({...run,
+        outcome:{...run.outcome,requested_rounds:rounds}}))};
+    if(!window.DeckGameOutcomes.validate(batch))
+      throw Error("Complete original Results cohort failed validation");
+    return batch;
+  }
   // Materialized views keep statistics cohort-wide while replay is loaded per click.
   async function loadMaterialized(key,ticket,selected){
     const endpoint=new URL("/v1/ui/catalog",api);
@@ -122,7 +206,10 @@
       // Existing outcomes remain available, but never use partial card rankings.
       verifiedInsights=null;verifiedInsightCount=null;
     }
-    if(catalog.total<=200 && !preview)return false;
+    if(catalog.total<=200 && !preview){
+      const batch=await originalBatchFromMaterialized(catalog,key,ticket,selected);
+      return batch?{batch}:true;
+    }
     const summary=catalog.summary;
     if(summary?.schema!=="gorge-r2-live-summary-v1" ||
        summary.cohort_version!==catalog.version ||
@@ -286,12 +373,20 @@
     }
     statusMessage("Checking approved Gorge game results…");
     try{
-      if(await loadMaterialized(key,ticket,selected))return;
-      const url=new URL("/v1/ui/batch",api);
-      url.searchParams.set("deck",key);
-      const response=await fetch(url,{cache:"no-store"});
-      if(!response.ok)throw Error("Worker returned HTTP "+response.status);
-      const result=await response.json();
+      const materialized=await loadMaterialized(key,ticket,selected);
+      if(materialized===true)return;
+      let result;
+      if(materialized?.batch){
+        result={schema:"gorge-r2-original-ui-batch-response-v1",deck:key,
+          population:"approved_current_decisive_only",status:"ready",
+          batch:materialized.batch};
+      }else{
+        const url=new URL("/v1/ui/batch",api);
+        url.searchParams.set("deck",key);
+        const response=await fetch(url,{cache:"no-store"});
+        if(!response.ok)throw Error("Worker returned HTTP "+response.status);
+        result=await response.json();
+      }
       if(ticket!==generation||key!==window.__deckLabActiveKey)return;
       if(result.schema!=="gorge-r2-original-ui-batch-response-v1"||
          result.deck!==key||result.population!=="approved_current_decisive_only")
