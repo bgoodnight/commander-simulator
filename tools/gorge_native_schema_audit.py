@@ -35,11 +35,11 @@ def audit(root,hero):
                 counts[name]+=len(items)
                 for item in items:
                     if not isinstance(item,dict):raise ValueError("bad source record")
-                    fields[name].update(item)
+                    fields[name].update(item.keys())
                     if name=="events":
                         kind=item.get("kind")
                         kind_counts[str(kind)]+=1
-                        kind_fields[str(kind)].update(item)
+                        kind_fields[str(kind)].update(item.keys())
     if not seen:raise ValueError("no hero games")
     return {"schema":"gorge-native-schema-audit-v1","hero":hero,
             "attempts":len(seen),"counts":dict(counts),
