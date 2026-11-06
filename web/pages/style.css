@@ -791,11 +791,17 @@ button.replay-zone-card{cursor:pointer}
 button.replay-zone-card:hover,button.replay-zone-card:focus-visible{border-color:#e4be7e;box-shadow:0 0 0 2px rgba(228,190,126,.15)}
 .replay-zone-art{width:100%;height:117px;object-fit:cover;object-position:center 20%;border-radius:5px}
 .replay-zone-unpictured{display:grid;place-items:center;width:100%;height:117px;border-radius:5px;background:radial-gradient(ellipse at center,#49646466,#203137);font-size:.77rem;color:#d3c19d}
+/* Token silhouettes intentionally require no image asset or external lookup. */
+.replay-zone-token{border-color:rgba(211,187,143,.45)}
+.replay-token-frame{height:117px;min-width:0;display:flex;flex-direction:column;align-items:center;justify-content:space-between;gap:4px;padding:8px 5px;border:2px double rgba(218,193,144,.62);border-radius:6px;background:radial-gradient(ellipse at 50% 47%,rgba(84,109,104,.3),transparent 70%),linear-gradient(160deg,#253438,#15252a);box-shadow:inset 0 0 0 3px rgba(11,20,23,.55);text-align:center;overflow:hidden}
+.replay-token-header{font-size:.49rem;letter-spacing:.12em;font-weight:700;color:#dbc69b}
+.replay-token-motif{display:grid;place-items:center;flex:1;font-family:Georgia,serif;font-size:2.7rem;line-height:1;color:#bcae90;opacity:.75}
+.replay-token-identity{max-width:100%;font-size:.64rem;font-weight:650;line-height:1.15;color:#e8e4d7;overflow-wrap:anywhere}
 .replay-zone-card-name{font-size:.69rem;line-height:1.25;overflow-wrap:anywhere;font-weight:600}
 .replay-zone-tag{font-size:.58rem;color:#dec9a5}
 .replay-zone-qty{position:absolute;top:7px;right:7px;background:#111e22ed;border:1px solid #d3bd97;border-radius:4px;padding:3px 5px;font-size:.65rem;font-weight:700}
 .replay-mana-credits{display:grid;gap:4px;padding:8px 11px;border-radius:7px;background:rgba(31,49,46,.67)}
-@media(max-width:560px){.replay-zone-gallery{grid-template-columns:repeat(auto-fill,minmax(80px,1fr));gap:7px}.replay-zone-art,.replay-zone-unpictured{height:99px}}
+@media(max-width:560px){.replay-zone-gallery{grid-template-columns:repeat(auto-fill,minmax(80px,1fr));gap:7px}.replay-zone-art,.replay-zone-unpictured,.replay-token-frame{height:99px}}
 
 
 .replay-mana-credit{display:flex;align-items:center;flex-wrap:wrap;gap:4px 7px;min-height:24px}
