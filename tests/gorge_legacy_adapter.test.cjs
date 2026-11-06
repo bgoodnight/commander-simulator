@@ -280,7 +280,7 @@ test("omitted native player means seat zero even during another player's turn",(
   assert.equal(cast.card,"Exclude");
   assert.equal(cast.seat,3,"Native seat zero must rotate to seat three for hero seat one");
   assert.equal(cast.native_turn_seat,0,"The turn owner is a separate field");
-  assert.equal(token.seat,3,"Off-turn token events retain the native actor");
+  assert.equal(token,undefined,"Opponent token events must not become hero actions");
   // Blue mana from native seat zero may not inflate native seat one's total.
   const baseline=adapt.adapt([magnusA],"magnus_premium",hashes).runs[0];
   const oldTotal=baseline.ui_observations.reduce((sum,o)=>sum+(o.mana_produced_by_color.U||0),0);
