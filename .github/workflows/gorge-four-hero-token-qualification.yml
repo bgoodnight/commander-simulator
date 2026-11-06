@@ -1,0 +1,109 @@
+name: Qualify token rules across four Gorge commanders
+on:
+  push:
+    branches: [test/gorge-four-commander-token-qualification-20261106]
+    paths:
+      - ".github/workflows/gorge-four-hero-token-qualification.yml"
+      - "tools/gorge_four_hero_token_audit.py"
+  workflow_dispatch:
+permissions:
+  contents: read
+concurrency:
+  group: gorge-four-hero-token-qualification
+  cancel-in-progress: false
+jobs:
+  qualify:
+    strategy:
+      fail-fast: false
+      matrix:
+        hero: [mortarion_current, magnus_premium, necron_dynasties, wretched_ranks]
+    runs-on: ubuntu-latest
+    timeout-minutes: 90
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Export all four hero decks and pinned stock Commander opponents
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p "$RUNNER_TEMP/decks" "$RUNNER_TEMP/results/native"
+          python -m tools.export_gorge_decks --out "$RUNNER_TEMP/decks" --decks mortarion_current magnus_premium necron_dynasties wretched_ranks
+          python -m tools.fetch_gorge_precons --out "$RUNNER_TEMP/decks"
+          python -m unittest tests.test_commander_deck_library tests.test_gorge_precons_and_replay -q
+      - name: Clone same pinned engine and checked pilot fixes as approved corrected baseline
+        shell: bash
+        run: |
+          set -euo pipefail
+          git clone --filter=blob:none https://github.com/adams-shaun/gorge.git "$RUNNER_TEMP/gorge"
+          git -C "$RUNNER_TEMP/gorge" checkout --detach b78e4c8b16078f6decbc48875bba953ce5535b85
+          python -m tools.patch_gorge_ward_blight --gorge "$RUNNER_TEMP/gorge"
+      - uses: actions/setup-go@v5
+        with:
+          go-version-file: ${{ runner.temp }}/gorge/go.mod
+          cache: false
+      - name: Apply the baseline trigger-cost pilot correction and verify rule test
+        shell: bash
+        run: |
+          set -euo pipefail
+          python tools/gorge_trigger_cost_policy_patch.py "$RUNNER_TEMP/gorge/bots/botpolicy/policy.go"
+          cp tools/gorge_trigger_cost_policy_test.go "$RUNNER_TEMP/gorge/bots/botpolicy/trigger_cost_pilot_experiment_test.go"
+          (cd "$RUNNER_TEMP/gorge" && go test ./bots/botpolicy -run '^TestTriggerCostXAndPayPilot$' -count=1)
+      - name: Build Gorge Commander probe and pinned card registry
+        working-directory: ${{ runner.temp }}/gorge
+        shell: bash
+        run: |
+          set -euo pipefail
+          make fetch-cards compile-cards
+          cp "$GITHUB_WORKSPACE/tools/gorge_commander_probe.go" commander_probe.go
+          go build -o "$RUNNER_TEMP/gorge-probe" ./commander_probe.go
+      - name: Four source-backed games and native replay verification
+        working-directory: ${{ runner.temp }}/gorge
+        shell: bash
+        env:
+          HERO: ${{ matrix.hero }}
+        run: |
+          set -euo pipefail
+          case "$HERO" in
+            mortarion_current) seed=219100; opponents="necron_dynasties,wretched_ranks,cavalry-charge,science-pip,deadly-disguise,avengers-assemble" ;;
+            magnus_premium) seed=219200; opponents="necron_dynasties,wretched_ranks,cavalry-charge,science-pip,deadly-disguise,avengers-assemble" ;;
+            necron_dynasties) seed=219300; opponents="wretched_ranks,cavalry-charge,science-pip,deadly-disguise,avengers-assemble" ;;
+            wretched_ranks) seed=219400; opponents="necron_dynasties,cavalry-charge,science-pip,deadly-disguise,avengers-assemble" ;;
+            *) exit 1 ;;
+          esac
+          set +e
+          "$RUNNER_TEMP/gorge-probe" -corpus "$RUNNER_TEMP/gorge/.cards" \
+            -deck-dir "$RUNNER_TEMP/decks" -hero-deck "$HERO" \
+            -opponents "$opponents" -games 4 -seed "$seed" -max-turns 60 \
+            -pilot bot -verify=true -native-dir "$RUNNER_TEMP/results/native" \
+            -native-limit 4 > "$RUNNER_TEMP/results/runs.jsonl" \
+            2> "$RUNNER_TEMP/results/probe-stderr.txt"
+          status=$?
+          set -e
+          if [[ "$status" != 0 && "$status" != 2 ]]; then
+            cat "$RUNNER_TEMP/results/probe-stderr.txt"
+            exit "$status"
+          fi
+          python -m tools.gorge_four_hero_token_audit --root "$RUNNER_TEMP/results" \
+            --hero "$HERO" --output "$RUNNER_TEMP/results/token-audit.json"
+          python - <<'PY'
+          import json,os
+          from pathlib import Path
+          root=Path(os.environ["RUNNER_TEMP"])/"results"
+          report=json.loads((root/"token-audit.json").read_text())
+          assert report["games"]==4
+          with open(os.environ["GITHUB_STEP_SUMMARY"],"a") as w:
+              w.write("## Four-game token qualification: "+report["hero"]+"\n\n")
+              for name in ("games","replay_verified","token_creation_events","minted_token_objects","tokens_observed_on_board","rules_risk_flags"):
+                  w.write("- "+name+": "+str(report[name])+"\n")
+              w.write("\nSource-backed only, NOT rules certification. Individual event/intent review required. No R2, production or cohort publication.\n")
+          PY
+      - name: Retain source recordings and per-game token audit
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: gorge-token-qualification-${{ matrix.hero }}
+          path: ${{ runner.temp }}/results/
+          if-no-files-found: warn
+          retention-days: 14
