@@ -2644,3 +2644,17 @@ body:has(#pane-records:not([hidden])) .compact-selection{margin-bottom:3px}
 /* Original Results includes its own turn explorer; do not show a second
    separate source navigator beneath it. */
 body.r2-original-results-active #gorge-replay-panel{display:none!important}
+
+/* Compact game search keeps large cohorts usable on desktop and mobile. */
+.game-navigator{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:8px;margin:0 0 10px}
+.game-navigator-search,.game-navigator-filter{min-width:0;padding:10px;border:1px solid #6e8077;border-radius:8px;background:#213631;color:#eddfc3;font:inherit}
+.game-navigator-controls{grid-column:1/-1;display:flex;align-items:center;gap:10px}
+.game-navigator-step,.game-navigator-game{border:1px solid #758579;border-radius:7px;background:#203831;color:#eedbb1;font:inherit;cursor:pointer}
+.game-navigator-step{min-width:40px;padding:5px 12px;font-size:1.15rem}
+.game-navigator-step:disabled{opacity:.4;cursor:default}
+.game-navigator-status{flex:1;text-align:center;color:#c9c7b8;font-size:.84rem}
+.game-navigator-results{grid-column:1/-1;display:grid;gap:5px}
+.game-navigator-game{padding:8px 10px;text-align:left;line-height:1.3}
+.game-navigator-game[aria-pressed=true]{border-color:#e3c183;background:#3a493d}
+.insight-methodology{margin:0 0 8px;color:#bac6bd}.insight-methodology summary{cursor:pointer;width:max-content;color:#e8cb91}
+@media(max-width:480px){.game-navigator{grid-template-columns:minmax(0,1fr) auto}.game-navigator-filter{max-width:118px}}
