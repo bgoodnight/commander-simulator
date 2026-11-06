@@ -106,6 +106,18 @@ def prepare(native_source: Path, shard: Path, catalog: Path,
                         str(ui_dir), str(summary), str(pod), str(catalog),
                         str(feature_path)], check=True, stdout=subprocess.DEVNULL)
         features = json.loads(feature_path.read_text())
+    # Fail closed on incorrect hero attribution: a spell credited as played by
+    # this deck must be an exact card/face on the pinned player's 100-card list.
+    # This catches the previously observed opponent-owned blue spell bug.
+    allowed = {name.casefold() for card in decks[0]["cards"]
+               for name in [card["name"], *(catalog_doc["cards"].get(
+                   card["oracle_id"], {}).get("face_names") or [])]}
+    for kind in ("played", "creature", "artifact", "enchantment", "instant",
+                 "spell", "land", "unplayed"):
+        for item in features.get("categories", {}).get(kind, []):
+            if str(item.get("name", "")).casefold() not in allowed:
+                raise ValueError("Opponent or unknown card misattributed as hero: " +
+                                 str(item.get("name")))
     if (features.get("completed_verified_games") != len(approved)
         or features.get("deck") != deck or
         features.get("deck_sha256") != projection["ui_deck_sha256"]):
