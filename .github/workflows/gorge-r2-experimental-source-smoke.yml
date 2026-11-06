@@ -1,0 +1,63 @@
+name: Verify fresh experimental Gorge R2 sources and feature extraction
+on:
+  push:
+    branches: [analysis/r2-exploratory-elastic-net-20261105]
+    paths:
+      - "tools/gorge_r2_experiment_ingest.py"
+      - "tools/gorge_landmark_features.py"
+      - "tests/test_gorge_r2_experiment_ingest.py"
+      - ".github/workflows/gorge-r2-experimental-source-smoke.yml"
+  workflow_dispatch:
+    inputs:
+      run_attempt:
+        required: true
+        default: "42143344243-1"
+        type: string
+
+permissions:
+  contents: read
+
+jobs:
+  source-test:
+    strategy:
+      fail-fast: false
+      matrix:
+        hero: [mortarion_current, magnus_premium]
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    env:
+      ACCOUNT: ${{ secrets.GORGE_R2_ACCOUNT_ID }}
+      AWS_ACCESS_KEY_ID: ${{ secrets.GORGE_R2_ACCESS_KEY_ID }}
+      AWS_SECRET_ACCESS_KEY: ${{ secrets.GORGE_R2_SECRET_ACCESS_KEY }}
+      AWS_DEFAULT_REGION: auto
+      HERO: ${{ matrix.hero }}
+      RUN_ATTEMPT: ${{ inputs.run_attempt || '42143344243-1' }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Run private R2 acquisition contract tests
+        run: python -m unittest tests.test_gorge_r2_experiment_ingest -v
+      - name: Verify exact R2 experimental archive and derive landmark observations
+        shell: bash
+        run: |
+          set -euo pipefail
+          test -n "$ACCOUNT" && test -n "$AWS_ACCESS_KEY_ID" && test -n "$AWS_SECRET_ACCESS_KEY"
+          python -m tools.gorge_r2_experiment_ingest --run-attempt "$RUN_ATTEMPT" \
+            --hero "$HERO" --account-id "$ACCOUNT" --destination "$RUNNER_TEMP/source"
+          python -m tools.gorge_landmark_features --native-root "$RUNNER_TEMP/source/extracted/results" \
+            --hero "$HERO" --output "$RUNNER_TEMP/landmarks.jsonl"
+          python - "$RUNNER_TEMP/source/acquisition-report.json" "$RUNNER_TEMP/landmarks.jsonl" <<'PY'
+          import json,os,sys
+          d=json.load(open(sys.argv[1]))
+          rows=[json.loads(s) for s in open(sys.argv[2]) if s.strip()]
+          assert len(rows)==d["attempts"]*3
+          assert len({x["seed"] for x in rows})==d["attempts"]
+          with open(os.environ["GITHUB_STEP_SUMMARY"],"a") as f:
+              f.write("# Private R2 experimental acquisition verified\n\n")
+              f.write("Hero: "+d["hero"]+"; source: "+d["run_attempt"]+"\n\n")
+              f.write("Attempts: "+str(d["attempts"])+"; completed: "+str(d["completed"])+"; replay-verified: "+str(d["replay_verified"])+"\n\n")
+              f.write("Native recordings available: "+str(d["native_available"])+"; landmark records: "+str(len(rows))+"\n\n")
+              f.write("Experimental only. No R2 writes, UI publication, model inference, or source artifact upload.\n")
+          PY
