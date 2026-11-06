@@ -1,0 +1,26 @@
+name: Community Access permission tests
+
+on:
+  pull_request:
+    paths:
+      - "workers/community-access/**"
+      - ".github/workflows/community-access-test.yml"
+  push:
+    branches:
+      - "feature/cloudflare-access-community-accounts-20261106"
+    paths:
+      - "workers/community-access/**"
+      - ".github/workflows/community-access-test.yml"
+
+permissions:
+  contents: read
+
+jobs:
+  permissions:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+      - run: node --test workers/community-access/permissions.test.mjs
