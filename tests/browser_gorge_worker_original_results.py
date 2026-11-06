@@ -60,6 +60,16 @@ def test():
                 assert "No approved simulations match" not in hero.inner_text()
                 assert "No simulations have been run" not in hero.inner_text()
                 assert page.locator("#turn-reviewer-panel").is_visible()
+                if not page.locator("#key-insights-panel").is_visible():
+                    print("KEY INSIGHTS VISIBILITY:",page.evaluate("""() => {
+                      const e=document.querySelector('#key-insights-panel');
+                      const pane=document.querySelector('#pane-records');
+                      const style=e?getComputedStyle(e):null;
+                      return {exists:!!e,hidden:e?.hidden,display:style?.display,
+                        visibility:style?.visibility,parentHidden:pane?.hidden,
+                        rendered:window.R2OriginalResults?.ownsRenderedDeck(window.__deckLabActiveKey),
+                        gridText:e?.innerText?.slice(0,250)};
+                    }"""))
                 assert page.locator("#key-insights-panel").is_visible()
                 assert "Card insights" in page.locator("#key-insights-panel").inner_text()
                 page.screenshot(path=str(OUT/f"{DECK}-{mode}-original-results.png"),full_page=True)
