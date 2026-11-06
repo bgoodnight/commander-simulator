@@ -31,7 +31,7 @@ class MaterializedResultsTests(unittest.TestCase):
         self.shard = self.root / "source" / "123456-1" / "mortarion_current" / "0"
         self.shard.mkdir(parents=True)
 
-    def build(self, count=26, leak=False, omit_projection=False):
+    def build(self, count=26, leak=False, omit_projection=False, per_game_events=2):
         rows, games = [], []
         c = self.cohort
         deck = c["deck"]
@@ -72,8 +72,9 @@ class MaterializedResultsTests(unittest.TestCase):
         events = []
         for i, row in enumerate(rows):
             row["event_start_row"] = len(events)
-            row["native_event_count"] = 2
-            for seq, secret in ((0, True), (1, False)):
+            row["native_event_count"] = per_game_events
+            for seq in range(per_game_events):
+                secret = seq % 2 == 0
                 event = {"seq": seq, "kind": 3 if secret else 19,
                          "secret": secret, "obj": i + 1}
                 events.append({
@@ -130,6 +131,27 @@ class MaterializedResultsTests(unittest.TestCase):
         pointer = json.loads((self.root / "built" / "current.json").read_text())
         raw = (self.root / "built" / "versions" / version / "manifest.json").read_bytes()
         self.assertEqual(hashlib.sha256(raw).hexdigest(), pointer["manifest_sha256"])
+
+    def test_501_native_events_are_split_without_losing_hidden_draws(self):
+        self.build(1, per_game_events=501)
+        report = project(self.root / "source", self.registry, self.root / "built")
+        root = self.root / "built" / "versions" / report["version"] / "mortarion_current"
+        detail = json.loads(next((root / "games").glob("*.json")).read_text())
+        self.assertEqual(detail["native_event_count"], 501)
+        self.assertEqual([part["count"] for part in detail["event_parts"]], [500, 1])
+        reconstructed = []
+        for part in detail["event_parts"]:
+            events = json.loads((root / part["path"]).read_text())["events"]
+            reconstructed.extend(events)
+        self.assertEqual([event["seq"] for event in reconstructed], list(range(501)))
+        self.assertTrue(reconstructed[500]["secret"])
+
+    def test_source_native_event_table_mutation_is_rejected(self):
+        self.build(1)
+        path = self.shard / "events.parquet"
+        path.write_bytes(b"corrupted")
+        with self.assertRaisesRegex(ValueError, "Unverified complete native event"):
+            project(self.root / "source", self.registry, self.root / "built")
 
     def test_versioned_insights_require_exact_full_cohort_native_evidence(self):
         self.build(2)
