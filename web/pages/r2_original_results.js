@@ -90,12 +90,7 @@
       if(text!==undefined)el.textContent=text;
       return el;
     };
-    const heading=create("h3","Approved simulation results");
-    const overview=create("section");overview.className="r2-cohort-overview";
-    const totals=create("p",summary.n+" games · "+summary.wins+" wins · "+
-      summary.losses+" losses · "+(summary.win_rate*100).toFixed(1)+
-      "% win rate (25% four-player reference)");
-    const info=create("p","Summary covers the complete approved cohort. Game pages and replays load separately.");
+    const overview=create("section");
     const detailStats=create("section");
     detailStats.className="r2-cohort-details";
     const matchupTitle=create("h4","Full-cohort opponent matchups");
@@ -151,7 +146,9 @@
     const list=create("div");
     list.className="r2-game-list";
     const replayHeading=create("h4","Select a game to review its recorded turns");
-    overview.append(heading,totals,info);
+    window.DeckGameOutcomes.renderCohortOverview(overview,summary,{
+      commanderName:selected.commander,commanderArt:selected.art
+    });
     root.replaceChildren(overview,detailStats,insightSection,navigation,list,replayHeading);
     let page=0;
     const readJson=async(url)=>{
