@@ -84,6 +84,26 @@ test("player seats rotate so the selected deck is always the old UI's seat zero"
     assert.equal(run.life_history[0].life_totals[0],40);
   }
 });
+test("omitted native seat-zero cast is never attributed to the active seat-one hero",()=>{
+  const g=structuredClone(a);
+  g.player_deck="magnus_premium";
+  g.player_seat=1;
+  const turn=g.turns.find(t=>t.seat===1&&t.turn>0);
+  assert(turn,"fixture must include an opponent/hero turn");
+  turn.events.push({seq:99999999,kind:"cast",kind_id:11,
+    obj:99991,text:"Exclude",card_name:"Exclude"});
+  const batch=adapt.adapt([g],"magnus_premium",hashes);
+  assert(batch);
+  const run=batch.runs[0];
+  const casts=run.ui_observations.flatMap(o=>o.actions)
+    .filter(e=>e.type.endsWith("_cast")&&e.card==="Exclude");
+  assert(casts.length>0,"recorded off-turn cast must stay visible");
+  assert(casts.every(e=>e.seat===3),
+    "native omitted player means seat zero, not the active seat-one pilot");
+  const stats=old.observationCardStats([run],()=>null,"Magnus the Red");
+  assert(!stats.ranked.played.some(x=>x.name==="Exclude"),
+    "opponent-owned spell cannot be credited to the selected hero");
+});
 test("a deck appearing only as an opponent is not a player result",()=>{
   assert.equal(adapt.adapt([a],"magnus_premium",hashes),null);
   assert.equal(adapt.adapt([b],"mortarion_current",hashes),null);
