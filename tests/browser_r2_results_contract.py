@@ -83,8 +83,17 @@ def run():
                 # original-style cohort dashboard and turn explorer instead.
                 page.goto(f"http://127.0.0.1:{server.server_port}/results.html?deck=mortarion_current&r2Api={API}",
                           wait_until="domcontentloaded")
-                page.wait_for_function("window.__deckLabActiveKey && document.querySelector('#gorge-r2-live .gorge-r2-live-panel')",
-                                       timeout=45000)
+                try:
+                    page.wait_for_function("window.__deckLabActiveKey && document.querySelector('#gorge-r2-live .gorge-r2-live-panel')",
+                                           timeout=15000)
+                except Exception:
+                    print("R2 CONTRACT DEBUG",json.dumps({
+                        "active":page.evaluate("window.__deckLabActiveKey || null"),
+                        "resultsState":page.evaluate("document.body.dataset.r2ResultsState || null"),
+                        "r2":page.locator("#gorge-r2-live").inner_text()[:500],
+                        "requests":requests[-20:],"errors":failures[-10:],
+                    }))
+                    raise
                 root=page.locator("#gorge-r2-live")
                 assert "no current cohort has been approved" in root.inner_text().lower()
                 assert "approved decisive games" not in root.inner_text()

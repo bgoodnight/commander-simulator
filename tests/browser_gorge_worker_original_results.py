@@ -60,18 +60,11 @@ def test():
                 assert "No approved simulations match" not in hero.inner_text()
                 assert "No simulations have been run" not in hero.inner_text()
                 assert page.locator("#turn-reviewer-panel").is_visible()
-                if not page.locator("#key-insights-panel").is_visible():
-                    print("KEY INSIGHTS VISIBILITY:",page.evaluate("""() => {
-                      const e=document.querySelector('#key-insights-panel');
-                      const pane=document.querySelector('#pane-records');
-                      const style=e?getComputedStyle(e):null;
-                      return {exists:!!e,hidden:e?.hidden,display:style?.display,
-                        visibility:style?.visibility,parentHidden:pane?.hidden,
-                        rendered:window.R2OriginalResults?.ownsRenderedDeck(window.__deckLabActiveKey),
-                        gridText:e?.innerText?.slice(0,250)};
-                    }"""))
-                assert page.locator("#key-insights-panel").is_visible()
-                assert "Card insights" in page.locator("#key-insights-panel").inner_text()
+                # No verified card report: keep the available outcome/reviewer,
+                # but do not render a pending or misleading Insights card.
+                assert page.evaluate("document.body.dataset.r2ResultsState")=="ready"
+                assert page.locator("#key-insights-panel").is_hidden()
+                assert "Complete-cohort card insights are not yet available" not in page.locator("#game-outcome-results").inner_text()
                 page.screenshot(path=str(OUT/f"{DECK}-{mode}-original-results.png"),full_page=True)
                 print(f"PASS {DECK} {mode}: real 12-game Worker batch renders original outcome cards")
                 page.close()
@@ -145,6 +138,7 @@ def test_materialized():
                 page.goto(f"http://127.0.0.1:{server.server_port}/results.html?deck={DECK}&materializedResults=1",
                           wait_until="domcontentloaded")
                 page.get_by_text("201 games · complete cohort",exact=False).wait_for(timeout=60000)
+                assert page.evaluate("document.body.dataset.r2ResultsState")=="ready"
                 assert page.locator("#key-insights-panel").is_visible()
                 assert page.locator("#key-insights-grid").get_by_text(source_card,exact=False).first.is_visible()
                 assert page.get_by_role("heading",name="Key insights").count()==1
