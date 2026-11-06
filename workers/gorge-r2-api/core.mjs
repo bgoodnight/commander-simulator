@@ -214,13 +214,13 @@ export function originalUiBatch(rows, projection, deck) {
     // Full synthetic hands are valid in omniscient simulation replays.
     // Never expose raw bot intents, reusable object crosswalks or native logs.
     const forbidden=new Set(["event_json","intents","log","objects","object_identity",
-      "secret","native_events","source_object_id","library","hidden_cards"]);
+      "secret","native_events","source_object_id","hidden_cards"]);
     const visit=(value)=>{
       if(Array.isArray(value)) {for(const part of value)visit(part);return;}
       if(!value||typeof value!=="object")return;
       for(const [key,v] of Object.entries(value)) {
         if(forbidden.has(key))throw Error("private_original_ui_field");
-        if(["hand","opening_hand","opponent_hands","opening_hands_by_seat"].includes(key)&&v!==null && !omniscient)
+        if(["hand","opening_hand","opponent_hands","opening_hands_by_seat","library"].includes(key)&&v!==null && !omniscient)
           throw Error("non_omniscient_original_ui_hand");
         visit(v);
       }
