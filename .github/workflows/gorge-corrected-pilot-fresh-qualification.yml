@@ -1,0 +1,374 @@
+name: Gorge corrected-pilot fresh 12-precon certification candidates
+
+# Explicitly experimental: manually launched only after the UI is ready.
+# Does not write R2, Pages, production catalog or active eligible analytics.
+on:
+  workflow_dispatch:
+    inputs:
+      panel_mode:
+        description: Source-pinned stock precon panel for fresh corrected-pilot runs
+        required: true
+        default: initial12
+        type: choice
+        options: [initial12, all60]
+      games:
+        description: "12 fresh trial games or 60 broader experimental probes"
+        required: true
+        default: "12"
+        type: choice
+        options: ["12", "60"]
+
+permissions:
+  contents: read
+  actions: read
+
+jobs:
+  probe:
+    strategy:
+      fail-fast: false
+      matrix:
+        hero: [mortarion_current, magnus_premium]
+    runs-on: ubuntu-latest
+    timeout-minutes: 120
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Reproduce exact candidate selection and Oracle provenance
+        run: |
+          mkdir -p "$RUNNER_TEMP/panel" "$RUNNER_TEMP/decks" "$RUNNER_TEMP/results/native"
+          set -euo pipefail
+          if [ "${{ inputs.panel_mode || 'initial12' }}" = "initial12" ]; then
+            # Reuse source-pinned Oracle enrichment from the actual evidence run.
+            # Re-fetching the rolling Scryfall snapshot would change the bulk SHA
+            # and must never silently requalify the immutable 12-deck panel.
+            GH_TOKEN="${{ github.token }}" gh run download 42053608363 \
+              --name "gorge-corrected-fresh-candidate-${{ matrix.hero }}" \
+              --dir "$RUNNER_TEMP/pinned"
+            test -s "$RUNNER_TEMP/pinned/panel/full-enrichment.json"
+            test -s "$RUNNER_TEMP/pinned/panel/panel-60.json"
+            cp "$RUNNER_TEMP/pinned/panel/full-enrichment.json" "$RUNNER_TEMP/panel/full-enrichment.json"
+            cp "$RUNNER_TEMP/pinned/panel/panel-60.json" "$RUNNER_TEMP/panel/panel-60.json"
+            python - <<'PY'
+          import json,os
+          from pathlib import Path
+          root=Path(os.environ["RUNNER_TEMP"])
+          evidence=json.loads((root/"panel/full-enrichment.json").read_text())
+          pinned=json.loads(Path("data/gorge_initial_trial_opponents_v1.json").read_text())
+          if evidence.get("oracle_bulk_sha256")!=pinned.get("source_oracle_sha256"):
+              raise ValueError("Archived evidence has wrong pinned Oracle hash")
+          print("Using source-pinned Oracle enrichment:", evidence["oracle_bulk_sha256"])
+          PY
+          else
+            # The all60 mode remains experimental and can use a new Oracle
+            # snapshot; it does not certify or alter the locked initial12 panel.
+            python -m tools.enrich_gorge_candidate_precons --as-of 2026-11-05 --out "$RUNNER_TEMP/panel/full-enrichment.json"
+            python -m tools.select_gorge_precon_panel --enrichment "$RUNNER_TEMP/panel/full-enrichment.json" --out "$RUNNER_TEMP/panel/panel-60.json" --panel-size 60
+          fi
+          python -m tools.stage_gorge_precon_qualification --enrichment "$RUNNER_TEMP/panel/full-enrichment.json" --panel "$RUNNER_TEMP/panel/panel-60.json" --out "$RUNNER_TEMP/panel/qualification-60.json"
+          python -m tools.check_gorge_precon_compatibility --queue "$RUNNER_TEMP/panel/qualification-60.json" --deck-dir "$RUNNER_TEMP/decks" --report "$RUNNER_TEMP/panel/opponents.txt"
+          if [ "${{ inputs.panel_mode || 'initial12' }}" = "initial12" ]; then
+            python -m tools.gorge_trial_panel_validate \
+              --queue "$RUNNER_TEMP/panel/qualification-60.json" \
+              --panel data/gorge_initial_trial_opponents_v1.json \
+              --out "$RUNNER_TEMP/panel/opponents.txt"
+          fi
+          python -m tools.export_gorge_decks --out "$RUNNER_TEMP/decks" --decks mortarion_current magnus_premium
+      - name: Get pinned Gorge and compile original card scripts
+        env:
+          GORGE_COMMIT: b78e4c8b16078f6decbc48875bba953ce5535b85
+        run: |
+          git clone --filter=blob:none https://github.com/adams-shaun/gorge.git "$RUNNER_TEMP/gorge"
+          git -C "$RUNNER_TEMP/gorge" checkout --detach "$GORGE_COMMIT"
+          test "$(git -C "$RUNNER_TEMP/gorge" rev-parse HEAD)" = "$GORGE_COMMIT"
+          python -m tools.patch_gorge_ward_blight --gorge "$RUNNER_TEMP/gorge"
+      - uses: actions/setup-go@v5
+        with:
+          go-version-file: ${{ runner.temp }}/gorge/go.mod
+          cache: false
+      - name: Apply generic trigger-cost-aware bot policy and verify controlled engine behavior
+        run: |
+          set -euo pipefail
+          python tools/gorge_trigger_cost_policy_patch.py "$RUNNER_TEMP/gorge/bots/botpolicy/policy.go"
+          cp tools/gorge_trigger_cost_policy_test.go "$RUNNER_TEMP/gorge/bots/botpolicy/trigger_cost_pilot_experiment_test.go"
+          (cd "$RUNNER_TEMP/gorge" && go test ./bots/botpolicy -run '^TestTriggerCostXAndPayPilot
+        working-directory: ${{ runner.temp }}/gorge
+        run: |
+          make fetch-cards compile-cards
+          cp "$GITHUB_WORKSPACE/tools/gorge_commander_probe.go" commander_probe.go
+          go build -o "$RUNNER_TEMP/gorge-probe" ./commander_probe.go
+      - name: Run fresh corrected-pilot four-player Gorge certification candidates
+        env:
+          HERO_DECK: ${{ matrix.hero }}
+        working-directory: ${{ runner.temp }}/gorge
+        shell: bash
+        run: |
+          set -euo pipefail
+          count="${{ inputs.games || '12' }}"
+          names="$(cat "$RUNNER_TEMP/panel/opponents.txt")"
+          # Gorge exits 2 when any game stalls at the bounded turn cap.
+          # Preserve such games as *incomplete*, never as wins or passes.
+          cd "$RUNNER_TEMP/gorge"
+          set +e
+          "$RUNNER_TEMP/gorge-probe" -corpus "$RUNNER_TEMP/gorge/.cards" \
+            -deck-dir "$RUNNER_TEMP/decks" \
+            -hero-deck "$HERO_DECK" -opponents "$names" \
+            -pilot bot -games "$count" -seed 187000 -max-turns 60 \
+            -verify=true -native-dir "$RUNNER_TEMP/results/native" -native-limit 12 \
+            > "$RUNNER_TEMP/results/runs.jsonl" \
+            2> "$RUNNER_TEMP/results/probe-stderr.txt"
+          status=$?
+          set -e
+          if [[ "$status" -ne 0 && "$status" -ne 2 ]]; then
+            cat "$RUNNER_TEMP/results/probe-stderr.txt" >&2
+            exit "$status"
+          fi
+          printf '%s\\n' "$status" > "$RUNNER_TEMP/results/probe-exit-code.txt"
+      - name: Report observed results without granting qualification
+        env:
+          GAME_COUNT: ${{ inputs.games || '12' }}
+          HERO_DECK: ${{ matrix.hero }}
+        run: |
+          python - <<'PY'
+          import json, os
+          from pathlib import Path
+          root=Path(os.environ["RUNNER_TEMP"])
+          queue=json.loads((root/"panel/qualification-60.json").read_text())
+          pool=set((root/"panel/opponents.txt").read_text().strip().split(","))
+          assert pool<= {d["key"] for d in queue["decks"]}
+          lines=[json.loads(x) for x in (root/"results/runs.jsonl").read_text().splitlines() if x.strip()]
+          assert len(lines)==int(os.environ["GAME_COUNT"])
+          seen=set()
+          status={"attempted":len(lines),"completed":0,"replay_verified":0,"distinct_precons_seen":0,
+                  "eligible_for_current_statistics":0,"status":"experimental_unqualified",
+                  "engine_errors":[] }
+          for r in lines:
+              seat=r["hero_seat"]
+              assert r["decks"][seat]==os.environ["HERO_DECK"]
+              opp=[d for i,d in enumerate(r["decks"]) if i!=seat]
+              assert len(opp)==3 and len(set(opp))==3 and set(opp)<=pool
+              seen.update(opp)
+              if r.get("error"):
+                  status["engine_errors"].append({"seed":r["seed"],"decks":r["decks"],"error":str(r["error"])})
+                  continue
+              if not r.get("finished") and r.get("stall_reason") != "turns":
+                  raise ValueError("Unexpected non-turn-limit Gorge failure")
+              status["completed"]+=int(r.get("finished") is True)
+              status["replay_verified"]+=int(r.get("replay_verified") is True)
+          status["distinct_precons_seen"]=len(seen)
+          if status["attempted"] == 60 and len(seen) != len(pool):
+              raise ValueError("Selected precon panel not fully exposed by 60 games")
+          status["engine_error_count"]=len(status["engine_errors"])
+          status["turn_limit_stalls"]=status["attempted"]-status["completed"]-status["engine_error_count"]
+          (root/"results/qualification-summary.json").write_text(json.dumps(status,indent=2)+"\n")
+          with open(os.environ["GITHUB_STEP_SUMMARY"],"a") as out:
+              out.write("# Experimental Gorge precon gameplay: "+os.environ["HERO_DECK"]+"\\n\\n")
+              out.write(f"Attempted: {status['attempted']}; completed: {status['completed']}; replay-verified: {status['replay_verified']}.\\n\\n")
+              out.write(f"Precons observed: **{len(seen)}/{len(pool)}**. These are **not** certified for rules or pilot fidelity.\\n")
+              out.write(f"Turn-cap stalls: **{status['turn_limit_stalls']}**; engine errors: **{status['engine_error_count']}**.\\n")
+              for problem in status["engine_errors"]:
+                  out.write(f"- BLOCKED seed {problem['seed']}: {problem['error']}; pod: {', '.join(problem['decks'])}\\n")
+              out.write("Unresolved engine errors block promotion. No R2 writes, Pages publication or current-statistics eligibility.\\n")
+          if status["engine_error_count"]:
+              raise ValueError(f"Engine errors block precon qualification: {status['engine_error_count']}")
+          PY
+      - name: Pin exact engine, rules patch, card corpus, decks, and simulation inputs
+        env:
+          HERO_DECK: ${{ matrix.hero }}
+        run: |
+          set -euo pipefail
+          python - <<'PY'
+          import hashlib,json,os
+          from pathlib import Path
+          root=Path(os.environ["RUNNER_TEMP"])
+          def sha(path):
+              return hashlib.sha256(Path(path).read_bytes()).hexdigest()
+          corpus=root/"gorge/.cards"
+          digest=hashlib.sha256()
+          cards=list(sorted(p for p in corpus.rglob("*") if p.is_file()))
+          if not cards:raise ValueError("Missing compiled card corpus")
+          for p in cards:
+              digest.update(str(p.relative_to(corpus)).encode()+b"\\x00")
+              digest.update(bytes.fromhex(sha(p)))
+          manifest={
+              "schema":"gorge-fresh-corrected-pilot-source-v1",
+              "status":"experimental_unqualified",
+              "source_run_id":os.environ["GITHUB_RUN_ID"],
+              "run_attempt":os.environ["GITHUB_RUN_ATTEMPT"],
+              "engine_commit":"b78e4c8b16078f6decbc48875bba953ce5535b85",
+              "pilot":"bot_generic_trigger_cost_x_pay_patched",
+              "pilot_patch_sha256":sha("tools/gorge_trigger_cost_policy_patch.py"),
+              "probe_sha256":sha("tools/gorge_commander_probe.go"),
+              "ward_blight_patch_sha256":sha("tools/patch_gorge_ward_blight.py"),
+              "card_corpus_sha256":digest.hexdigest(),
+              "hero_deck":os.environ["HERO_DECK"],
+              "hero_deck_sha256":sha(root/"decks"/(os.environ["HERO_DECK"]+".txt")),
+              "oracle_bulk_sha256":json.loads((root/"panel/full-enrichment.json").read_text())["oracle_bulk_sha256"],
+              "trial_panel_sha256":sha("data/gorge_initial_trial_opponents_v1.json"),
+              "opponents_sha256":sha(root/"panel/opponents.txt"),
+              "attempts_expected":int(os.environ.get("GAME_COUNT","12")),
+              "seed_start":187000,
+              "approval":False
+          }
+          (root/"results/source-manifest.json").write_text(json.dumps(manifest,sort_keys=True,indent=2)+"\\n")
+          print("Fresh corrected pilot source manifest pinned for",manifest["hero_deck"])
+          PY
+      - name: Archive fresh experiment in private R2 without approval
+        env:
+          HERO_DECK: ${{ matrix.hero }}
+          ACCOUNT: ${{ secrets.GORGE_R2_ACCOUNT_ID }}
+          ACCESS: ${{ secrets.GORGE_R2_ACCESS_KEY_ID }}
+          SECRET: ${{ secrets.GORGE_R2_SECRET_ACCESS_KEY }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          test -n "$ACCOUNT" && test -n "$ACCESS" && test -n "$SECRET"
+          export AWS_ACCESS_KEY_ID="$ACCESS" AWS_SECRET_ACCESS_KEY="$SECRET" AWS_DEFAULT_REGION=auto
+          endpoint="https://$ACCOUNT.r2.cloudflarestorage.com"
+          key="native/experimental/corrected-pilot/v1/${GITHUB_RUN_ID}-${GITHUB_RUN_ATTEMPT}/$HERO_DECK.tar.gz"
+          # The only permitted R2 write is an immutable, run-scoped experimental archive.
+          if aws --endpoint-url "$endpoint" s3api head-object --bucket gorge-simulations --key "$key" >/dev/null 2>&1; then
+            echo "::error::Refuse to overwrite existing immutable experiment $key"
+            exit 1
+          fi
+          tar -czf "$RUNNER_TEMP/fresh-experiment.tar.gz" -C "$RUNNER_TEMP" results panel
+          aws --endpoint-url "$endpoint" s3 cp "$RUNNER_TEMP/fresh-experiment.tar.gz" "s3://gorge-simulations/$key" --no-progress
+          echo "Private source-backed experiment archived; cohort remains unapproved." >> "$GITHUB_STEP_SUMMARY"
+      - name: Retain experimental evidence outside production analytics
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: gorge-precon-60-experimental-gameplay-${{ matrix.hero }}
+          path: |
+            ${{ runner.temp }}/panel/
+            ${{ runner.temp }}/results/
+          retention-days: 14
+          if-no-files-found: warn
+ -count=1)
+      - name: Build verified four-player Gorge probe
+        working-directory: ${{ runner.temp }}/gorge
+        run: |
+          make fetch-cards compile-cards
+          cp "$GITHUB_WORKSPACE/tools/gorge_commander_probe.go" commander_probe.go
+          go build -o "$RUNNER_TEMP/gorge-probe" ./commander_probe.go
+      - name: Run 60-game, full-panel experimental four-player Gorge qualification
+        env:
+          HERO_DECK: ${{ matrix.hero }}
+        working-directory: ${{ runner.temp }}/gorge
+        shell: bash
+        run: |
+          set -euo pipefail
+          count="${{ inputs.games || '60' }}"
+          names="$(cat "$RUNNER_TEMP/panel/opponents.txt")"
+          # Gorge exits 2 when any game stalls at the bounded turn cap.
+          # Preserve such games as *incomplete*, never as wins or passes.
+          cd "$RUNNER_TEMP/gorge"
+          set +e
+          "$RUNNER_TEMP/gorge-probe" -corpus "$RUNNER_TEMP/gorge/.cards" \
+            -deck-dir "$RUNNER_TEMP/decks" \
+            -hero-deck "$HERO_DECK" -opponents "$names" \
+            -pilot bot -games "$count" -seed 186000 -max-turns 60 \
+            -verify=true -native-dir "$RUNNER_TEMP/results/native" -native-limit 12 \
+            > "$RUNNER_TEMP/results/runs.jsonl" \
+            2> "$RUNNER_TEMP/results/probe-stderr.txt"
+          status=$?
+          set -e
+          if [[ "$status" -ne 0 && "$status" -ne 2 ]]; then
+            cat "$RUNNER_TEMP/results/probe-stderr.txt" >&2
+            exit "$status"
+          fi
+          printf '%s\\n' "$status" > "$RUNNER_TEMP/results/probe-exit-code.txt"
+      - name: Report observed results without granting qualification
+        env:
+          GAME_COUNT: ${{ inputs.games || '60' }}
+          HERO_DECK: ${{ matrix.hero }}
+        run: |
+          python - <<'PY'
+          import json, os
+          from pathlib import Path
+          root=Path(os.environ["RUNNER_TEMP"])
+          queue=json.loads((root/"panel/qualification-60.json").read_text())
+          pool=set((root/"panel/opponents.txt").read_text().strip().split(","))
+          assert pool<= {d["key"] for d in queue["decks"]}
+          lines=[json.loads(x) for x in (root/"results/runs.jsonl").read_text().splitlines() if x.strip()]
+          assert len(lines)==int(os.environ["GAME_COUNT"])
+          seen=set()
+          status={"attempted":len(lines),"completed":0,"replay_verified":0,"distinct_precons_seen":0,
+                  "eligible_for_current_statistics":0,"status":"experimental_unqualified",
+                  "engine_errors":[] }
+          for r in lines:
+              seat=r["hero_seat"]
+              assert r["decks"][seat]==os.environ["HERO_DECK"]
+              opp=[d for i,d in enumerate(r["decks"]) if i!=seat]
+              assert len(opp)==3 and len(set(opp))==3 and set(opp)<=pool
+              seen.update(opp)
+              if r.get("error"):
+                  status["engine_errors"].append({"seed":r["seed"],"decks":r["decks"],"error":str(r["error"])})
+                  continue
+              if not r.get("finished") and r.get("stall_reason") != "turns":
+                  raise ValueError("Unexpected non-turn-limit Gorge failure")
+              status["completed"]+=int(r.get("finished") is True)
+              status["replay_verified"]+=int(r.get("replay_verified") is True)
+          status["distinct_precons_seen"]=len(seen)
+          if status["attempted"] == 60 and len(seen) != len(pool):
+              raise ValueError("Selected precon panel not fully exposed by 60 games")
+          status["engine_error_count"]=len(status["engine_errors"])
+          status["turn_limit_stalls"]=status["attempted"]-status["completed"]-status["engine_error_count"]
+          (root/"results/qualification-summary.json").write_text(json.dumps(status,indent=2)+"\n")
+          with open(os.environ["GITHUB_STEP_SUMMARY"],"a") as out:
+              out.write("# Experimental Gorge precon gameplay: "+os.environ["HERO_DECK"]+"\\n\\n")
+              out.write(f"Attempted: {status['attempted']}; completed: {status['completed']}; replay-verified: {status['replay_verified']}.\\n\\n")
+              out.write(f"Precons observed: **{len(seen)}/{len(pool)}**. These are **not** certified for rules or pilot fidelity.\\n")
+              out.write(f"Turn-cap stalls: **{status['turn_limit_stalls']}**; engine errors: **{status['engine_error_count']}**.\\n")
+              for problem in status["engine_errors"]:
+                  out.write(f"- BLOCKED seed {problem['seed']}: {problem['error']}; pod: {', '.join(problem['decks'])}\\n")
+              out.write("Unresolved engine errors block promotion. No R2 writes, Pages publication or current-statistics eligibility.\\n")
+          if status["engine_error_count"]:
+              raise ValueError(f"Engine errors block precon qualification: {status['engine_error_count']}")
+          PY
+      - name: Capture failing seed 186047 with exact rotated pod and decision evidence
+        if: ${{ always() && matrix.hero == 'mortarion_current' }}
+        shell: bash
+        run: |
+          if [[ ! -f "$RUNNER_TEMP/panel/opponents.txt" || ! -x "$RUNNER_TEMP/gorge-probe" || ! -d "$RUNNER_TEMP/gorge" ]]; then
+            echo "Diagnostic unavailable: card export or compiled Gorge missing."
+            exit 0
+          fi
+          set +e
+          "$RUNNER_TEMP/gorge-probe" -corpus "$RUNNER_TEMP/gorge/.cards" \
+            -deck-dir "$RUNNER_TEMP/decks" \
+            -hero-deck mortarion_current \
+            -opponents "$(cat "$RUNNER_TEMP/panel/opponents.txt")" \
+            -pilot bot -games 1 -seed 186000 -start-attempt 47 -max-turns 60 \
+            -verify=true -native-dir "$RUNNER_TEMP/results/native" -native-limit 1 \
+            -diagnose-seed 186047 \
+            > "$RUNNER_TEMP/results/seed-186047-repro.jsonl" \
+            2> "$RUNNER_TEMP/results/seed-186047-diagnostic.log"
+          rc=$?
+          set -e
+          printf '%s\n' "$rc" > "$RUNNER_TEMP/results/seed-186047-repro-exit.txt"
+          python - <<'PY'
+          import json,os
+          from pathlib import Path
+          f=Path(os.environ["RUNNER_TEMP"])/"results/seed-186047-repro.jsonl"
+          rows=[json.loads(x) for x in f.read_text().splitlines() if x.strip()]
+          if len(rows)!=1 or rows[0]["seed"]!=186047:
+              raise ValueError("Failure reproduction did not preserve the deterministic seed")
+          r=rows[0]
+          print(f"Reproduced exact seed 186047: error={bool(r.get('error'))}; finished={r.get('finished')}")
+          if r.get("error") or not r.get("finished") or not r.get("replay_verified"):
+              raise ValueError("Seed 186047 ward-Blight regression is not fully verified")
+          with open(os.environ["GITHUB_STEP_SUMMARY"],"a") as out:
+              out.write(f"\nSeed 186047 recheck: finished={r.get('finished')}, error={bool(r.get('error'))}; see retained diagnostic artifact.\n")
+          PY
+      - name: Retain experimental evidence outside production analytics
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: gorge-precon-60-experimental-gameplay-${{ matrix.hero }}
+          path: |
+            ${{ runner.temp }}/panel/
+            ${{ runner.temp }}/results/
+          retention-days: 14
+          if-no-files-found: warn
