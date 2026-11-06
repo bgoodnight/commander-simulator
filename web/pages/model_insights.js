@@ -2,7 +2,7 @@
 (function(root,factory){
   const api=factory();
   if(typeof module==="object"&&module.exports)module.exports=api;
-  else root.GorgeModelInsights=api;
+  else {root.GorgeModelInsights=api;api.install();}
 })(typeof window!=="undefined"?window:globalThis,function(){
   "use strict";
   const SCHEMA="gorge-model-insights-v1";
@@ -75,5 +75,35 @@
     target.append(list);
     return true;
   }
-  return {validate,render,SCHEMA};
+  function install(){
+    if(typeof document==="undefined")return;
+    let sequence=0;
+    document.addEventListener("gorge:results-reset",()=>{
+      ++sequence;
+      const panel=document.getElementById("model-insights-panel");
+      if(panel){panel.replaceChildren();panel.hidden=true;}
+    });
+    document.addEventListener("gorge:cohort-ready",async event=>{
+      const serial=++sequence;
+      const context=event.detail;
+      const panel=document.getElementById("model-insights-panel");
+      if(!panel||!context||!context.version||!context.deck)return;
+      panel.replaceChildren();panel.hidden=true;
+      try{
+        const base=new URL(window.GORGE_R2_API_BASE||
+          "https://gorge-r2-direct-api-preview.darbosama.workers.dev");
+        if(base.protocol!=="https:"||
+           !/^[a-z0-9-]+\\.[a-z0-9-]+\\.workers\\.dev$/i.test(base.hostname))return;
+        const endpoint=new URL("/v1/ui/model-insights",base);
+        endpoint.searchParams.set("deck",context.deck);
+        const response=await fetch(endpoint,{cache:"no-store"});
+        if(!response.ok||serial!==sequence)return; // Optional, not deployed yet.
+        const envelope=await response.json();
+        if(serial!==sequence||envelope.deck!==context.deck||
+           envelope.version!==context.version||envelope.status!=="ready")return;
+        render(panel,envelope.report,context);
+      }catch{/* Never break existing Results if optional model service is absent. */}
+    });
+  }
+  return {validate,render,install,SCHEMA};
 });
