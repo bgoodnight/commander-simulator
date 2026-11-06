@@ -95,8 +95,7 @@
     if(ticket!==generation||key!==window.__deckLabActiveKey)return true;
     // Preserve the polished original renderer for cohorts it can safely handle.
     // Opt into the new layout for staging via ?materializedResults=1.
-    const preview=window.GORGE_R2_STAGING_FULLSTATE===true ||
-      new URLSearchParams(window.location.search).get("materializedResults")==="1";
+    const preview=new URLSearchParams(window.location.search).get("materializedResults")==="1";
     if(catalog.status!=="ready"){
       setResultsState("unavailable");
       statusMessage("R2 results not available for this deck.");
