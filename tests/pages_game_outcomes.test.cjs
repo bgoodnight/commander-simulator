@@ -29,6 +29,32 @@ function batch(runs,scenario='mixed',extras={}){
     opponent_fidelity:'abstract_opponent_pressure_not_card_exact',
     outcomes_are_competitive_win_rates:false,runs,...extras};
 }
+test('Gorge tokens use source identity and permanent types for exclusive zones',()=>{
+  const lookup=name=>({
+    'Saheeli, Sublime Artificer':{type_line:'Legendary Planeswalker — Saheeli'},
+    'Baleful Strix':{type_line:'Artifact Creature — Bird'},
+    'Mox Amber':{type_line:'Legendary Artifact'},
+    'Dryad Arbor':{type_line:'Land Creature — Dryad'}
+  })[name]||null;
+  const opts={lookupRecordedCard:lookup,
+    tokenNames:['Experimental Construct'],
+    tokenTypes:{'Experimental Construct':'Token Artifact Creature — Construct'}};
+  assert.equal(Outcomes.tokenInfo('Servo Token').type,'Token Artifact Creature — Servo');
+  assert.equal(Outcomes.battlefieldZone('Servo Token',opts),'Creatures');
+  assert.equal(Outcomes.battlefieldZone('Drake Token',opts),'Creatures');
+  assert.equal(Outcomes.battlefieldZone('Faerie Token',opts),'Creatures');
+  assert.equal(Outcomes.battlefieldZone('Spawn Token',opts),'Creatures');
+  assert.equal(Outcomes.battlefieldZone('Treasure Token',opts),'Artifacts');
+  assert.equal(Outcomes.battlefieldZone('Clue Token',opts),'Artifacts');
+  assert.equal(Outcomes.battlefieldZone('Experimental Construct',opts),'Creatures');
+  assert.equal(Outcomes.battlefieldZone('Saheeli, Sublime Artificer',opts),'Planeswalkers');
+  assert.equal(Outcomes.battlefieldZone('Baleful Strix',opts),'Creatures');
+  assert.equal(Outcomes.battlefieldZone('Dryad Arbor',opts),'Creatures');
+  assert.equal(Outcomes.battlefieldZone('Mox Amber',opts),'Artifacts');
+  assert.equal(Outcomes.battlefieldZone('Unknown Token',opts),'Other permanents');
+  assert.equal(Outcomes.tokenInfo('Experimental Construct',opts).tone,'generic');
+  assert.equal(Outcomes.tokenInfo('Ordinary card',opts),null);
+});
 const runWon=()=>run(0,'win',[
   [40,40,40,40],[36,26,28,29],[32,0,0,0]
 ]);
@@ -1177,8 +1203,8 @@ test('turn summary only shows supported mana colors and hand, not battlefield/gr
   assert.match(js,/mana_produced_by_color/);
   assert.match(js,/insight-hand-shortcut/);
   assert.match(js,/function endStatePanel\(observation,options\)/);
-  assert.match(js,/\["Artifacts",/);
-  assert.match(js,/\["Enchantments",/);
+  assert.match(js,/\["Creatures","Lands","Planeswalkers","Artifacts",/);
+  assert.match(js,/"Enchantments","Other permanents"/);
   assert.match(js,/\["Hand",observation.hand\]/);
   assert.match(css,/\.insight-end-zone/);
   assert.ok(!js.includes('[["▤","hand"],["♟","battlefield"],["◆","graveyard"]]'));
@@ -1236,7 +1262,7 @@ test('turn summaries and end state use actual mana pips and clickable typed card
     const zones=walk(turn).filter(n=>n.className.startsWith('insight-end-zone '));
     const labels=zones.map(z=>walk(z.children[0]).map(n=>n.textContent).join(''));
     for(const text of ['Hand · 2','Creatures · 1','Lands · 1',
-      'Artifacts · 2','Enchantments · 1','Graveyard · 1'])
+      'Artifacts · 1','Enchantments · 1','Graveyard · 1'])
       assert.ok(labels.some(x=>x.includes(text)),text);
     const hand=walk(summary).find(n=>n.className.includes('insight-hand-shortcut'));
     hand.onclick();
