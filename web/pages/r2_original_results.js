@@ -196,7 +196,7 @@
           if(typeof g.game_id!=="string"||seen.has(g.game_id)||!Array.isArray(g.opponent_decks))
             throw Error("Invalid or duplicate game metadata");
           seen.add(g.game_id);
-          const label=(g.result==="win"?"Win":"Loss")+" · "+(g.turns??"?")+
+          const label="Game "+seen.size+" · "+(g.result==="win"?"Win":"Loss")+" · "+(g.turns??"?")+
             " turns · "+g.opponent_decks.map(d=>window.DeckDisplayNames?.deck(d)||d).join(", ");
           const option=create("option",label);option.value=g.game_id;option.dataset.page=String(number);
           gameSelect.appendChild(option);
@@ -214,7 +214,7 @@
     });
     renderedDeck=key;
     const status=$("game-outcome-status");
-    if(status)status.textContent=summary.n+" approved games · complete-cohort summary · lazy replays";
+    if(status)status.textContent=summary.n+" approved games · complete-cohort summary";
     void loadGames();
     return true;
   }
