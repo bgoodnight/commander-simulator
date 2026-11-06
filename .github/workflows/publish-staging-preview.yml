@@ -58,6 +58,8 @@ jobs:
           test -s "$RUNNER_TEMP/staging-site/results.html"
           test -s "$RUNNER_TEMP/staging-site/editor.html"
           test -s "$RUNNER_TEMP/staging-site/decks.json"
+          test -s "$RUNNER_TEMP/staging-site/r2_original_results.js"
+          grep -q 'id="key-insights-panel"' "$RUNNER_TEMP/staging-site/results.html"
           python - <<'PY'
           import os, pathlib
           root=pathlib.Path(os.environ["RUNNER_TEMP"])/"staging-site"
