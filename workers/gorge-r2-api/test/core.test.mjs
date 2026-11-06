@@ -163,7 +163,7 @@ test("UI overview cannot advertise results for an unapproved or invalid cohort",
 
 test("approved public projection produces an original Results-compatible batch",async()=>{
   const row=await game({seed:712,chain:"source-chain-712",
-    player_deck_sha256:"revised-deck",game_id:"b/d/0/712"});
+    player_deck_sha256:"b".repeat(64),game_id:"b/d/0/712"});
   const run={
     seed:712,completed_rounds:1,
     life_history:[
@@ -181,12 +181,14 @@ test("approved public projection produces an original Results-compatible batch",
       completed_rounds:1,requested_rounds:1}
   };
   const source={schema:"gorge-r2-original-ui-projection-v1",deck:"mortarion_current",
+    source_deck_sha256:"b".repeat(64),ui_deck_sha256:"a".repeat(64),
     games:[{game_id:row.game_id,chain:row.chain,source_sha256:row.source_sha256,run}]};
   const batch=originalUiBatch([row],source,"mortarion_current");
   assert.equal(batch.format,"commander-gorge-outcomes-v1");
   assert.equal(batch.schema_version,1);
   assert.equal(originalRenderer.validate(batch),true,"the actual original Results renderer must accept the Worker batch");
-  assert.equal(batch.deck_sha256,"revised-deck");
+  assert.equal(batch.deck_sha256,"a".repeat(64));
+  assert.throws(()=>originalUiBatch([row],{...source,source_deck_sha256:"c".repeat(64)},"mortarion_current"),/original_ui_native_deck_hash_mismatch/);
   assert.equal(batch.opponent_fidelity,"gorge_native_full_100_card_decks");
   assert.equal(batch.runs.length,1);
   assert.equal(batch.runs[0].outcome.status,"win");
@@ -204,6 +206,6 @@ test("approved public projection produces an original Results-compatible batch",
   assert.throws(()=>originalUiBatch([row,{...row,game_id:"b/d/0/713"}],
     source,"mortarion_current"),/incomplete_original_ui_projection/);
   assert.throws(()=>originalUiBatch([row,{...row,game_id:"b/d/0/713",
-    player_deck_sha256:"other"}],source,"mortarion_current"),
+    player_deck_sha256:"c".repeat(64)}],source,"mortarion_current"),
     /mixed_original_ui_deck_revisions/);
 });
