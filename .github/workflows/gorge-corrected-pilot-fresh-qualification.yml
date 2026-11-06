@@ -10,13 +10,13 @@ on:
         required: true
         default: initial12
         type: choice
-        options: [initial12, all60]
+        options: [initial12]
       games:
-        description: "12 fresh trial games or 60 broader experimental probes"
+        description: "12 source-recorded fresh four-player games for each commander"
         required: true
         default: "12"
         type: choice
-        options: ["12", "60"]
+        options: ["12"]
 
 permissions:
   contents: read
