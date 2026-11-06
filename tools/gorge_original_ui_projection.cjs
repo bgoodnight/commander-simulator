@@ -21,7 +21,9 @@ function generate(input){
   const deck=requireText(input.deck,"deck");
   const batch=requireText(input.source_batch,"batch");
   const sha=requireText(input.deck_sha256,"deck hash");
-  if(!/^[a-f0-9]{64}$/i.test(sha))throw Error("Invalid deck SHA");
+  const sourceSha=requireText(input.source_deck_sha256,"native deck hash");
+  if(!/^[a-f0-9]{64}$/i.test(sha)|| !/^[a-f0-9]{64}$/i.test(sourceSha))
+    throw Error("Invalid original/native deck SHA");
   if(!Number.isInteger(input.shard)||input.shard<0)throw Error("Invalid shard");
   if(!Array.isArray(input.games)||input.games.length<1||input.games.length>MAX_GAMES)
     throw Error("Invalid game count");
@@ -71,7 +73,8 @@ function generate(input){
     example_replays:[]};
   if(!renderer.validate(batchEnvelope))throw Error("Original UI rejected projected batch");
   return {schema:"gorge-r2-original-ui-projection-v1",source_batch:batch,
-    deck,shard:input.shard,games:verified};
+    deck,shard:input.shard,ui_deck_sha256:sha,
+    source_deck_sha256:sourceSha,games:verified};
 }
 if(require.main===module){
   if(process.argv.length!==4)throw Error("Usage: node tools/gorge_original_ui_projection.cjs input.json output.json");
