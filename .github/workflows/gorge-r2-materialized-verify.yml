@@ -8,6 +8,8 @@ on:
       - "tests/test_gorge_r2_insight_attribution.py"
       - "tools/gorge_r2_insight_evidence.py"
       - "tests/test_gorge_materialized_results.py"
+      - "tools/gorge_r2_materialized_rollback.py"
+      - ".github/workflows/gorge-r2-materialized-rollback.yml"
       - ".github/workflows/gorge-r2-materialized-verify.yml"
   push:
     branches: [main]

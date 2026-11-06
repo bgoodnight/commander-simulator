@@ -53,7 +53,8 @@ def safe_run(value):
     visit(value)
 
 
-def project(source: Path, registry_path: Path, output: Path, expected_batches=None):
+def project(source: Path, registry_path: Path, output: Path, expected_batches=None,
+            expected_shards=None):
     import pyarrow.parquet as pq
 
     registry_bytes = registry_path.read_bytes()
@@ -68,6 +69,28 @@ def project(source: Path, registry_path: Path, output: Path, expected_batches=No
     present = {p.relative_to(source).parts[0] for p in manifests}
     if expected_batches is not None and not set(expected_batches).issubset(present):
         raise ValueError("Missing source batch shards: " + ",".join(sorted(set(expected_batches)-present)))
+    # A listing alone cannot detect a missing final shard. A complete approved
+    # source inventory must name every expected (batch, deck, shard) tuple.
+    # The inventory comes from the batch completion/approval manifest, not
+    # from the set of objects that happened to finish uploading.
+    observed_shards = {tuple(p.relative_to(source).parts[:3]) for p in manifests}
+    if expected_shards is not None:
+        if not isinstance(expected_shards, list) or not expected_shards:
+            raise ValueError("Invalid expected shard inventory")
+        required = set()
+        for item in expected_shards:
+            if (not isinstance(item, dict) or
+                set(item) != {"batch", "deck", "shard"} or
+                not all(isinstance(item[k], str) and item[k] for k in item)):
+                raise ValueError("Malformed expected shard identity")
+            identity = (item["batch"], item["deck"], item["shard"])
+            if identity in required:
+                raise ValueError("Duplicate expected shard identity")
+            required.add(identity)
+        missing = required - observed_shards
+        unexpected = observed_shards - required
+        if missing or unexpected:
+            raise ValueError(f"Incomplete shard inventory: missing={sorted(missing)} extra={sorted(unexpected)}")
     by_deck = defaultdict(list)
     projections = defaultdict(dict)
     source_refs = []
@@ -88,10 +111,22 @@ def project(source: Path, registry_path: Path, output: Path, expected_batches=No
         if len(raw) != info["bytes"] or digest(raw) != info["sha256"]:
             raise ValueError("Unverified Parquet source bytes")
         rows = pq.read_table(games_path).to_pylist()
+        if (type(manifest.get("games")) is not int or
+            manifest["games"] != info["rows"] or
+            manifest["games"] <= 0):
+            raise ValueError("Incomplete shard manifest game count")
         if len(rows) != info["rows"]:
             raise ValueError("Parquet row mismatch")
         approved = []
+        local_ids = set()
         for row in rows:
+            if (row.get("batch_id") != batch or row.get("deck") != deck or
+                str(row.get("shard")) != shard):
+                raise ValueError("Parquet row belongs to a different shard")
+            gid = row.get("game_id")
+            if not isinstance(gid, str) or not gid or gid in local_ids:
+                raise ValueError("Duplicate/missing shard game ID")
+            local_ids.add(gid)
             ok, _ = inspect(row, registry)
             if not ok:
                 continue
@@ -130,8 +165,12 @@ def project(source: Path, registry_path: Path, output: Path, expected_batches=No
         for row in approved:
             if row["player_deck_sha256"] != native_sha:
                 raise ValueError("Mixed native deck revision")
+        projection_ids = set()
         for item in projection["games"]:
             gid = item.get("game_id")
+            if gid in projection_ids:
+                raise ValueError("Duplicate projected game ID")
+            projection_ids.add(gid)
             row = indexed.get(gid)
             if (not row or gid in projections[deck]
                 or item.get("source_sha256") != row["source_sha256"]
@@ -150,6 +189,8 @@ def project(source: Path, registry_path: Path, output: Path, expected_batches=No
                    (row["winner_seat"] - row["hero_seat"]) % 4):
                 raise ValueError("Invalid projected game outcome")
             projections[deck][gid] = {"run": run, "ui_sha": ui_sha}
+        if projection_ids != set(indexed):
+            raise ValueError("Incomplete approved projection game identities")
         feature_merger.add(manifest_path.parent, manifest_bytes, raw, projection_bytes, approved)
         by_deck[deck].extend(approved)
         source_refs.append({"batch": batch, "deck": deck, "shard": shard,
@@ -283,9 +324,13 @@ def main():
     parser.add_argument("--registry", type=Path, required=True)
     parser.add_argument("--out", type=Path, required=True)
     parser.add_argument("--expected-batches-file", type=Path)
+    parser.add_argument("--expected-shards-file", type=Path,
+                        help="Approved complete list of batch/deck/shard identities")
     args = parser.parse_args()
     batches = args.expected_batches_file.read_text().splitlines() if args.expected_batches_file else None
-    print(json.dumps(project(args.source, args.registry, args.out, batches), sort_keys=True))
+    inventory = json.loads(args.expected_shards_file.read_text()) if args.expected_shards_file else None
+    print(json.dumps(project(args.source, args.registry, args.out, batches,
+                             expected_shards=inventory), sort_keys=True))
 
 
 if __name__ == "__main__":
