@@ -155,7 +155,8 @@ export function uiOverview(summary) {
  * Parquet, and never accepts a projection for an unapproved source row.
  *
  * Projection payload is produced off-request from a verified native recording.
- * UI-facing fields must be source-backed; hidden hands/objects are forbidden.
+ * UI-facing fields must be source-backed. Synthetic omniscient hands are allowed;
+ * native logs, bot intents and reusable object crosswalks are excluded.
  */
 export function originalUiBatch(rows, projection, deck) {
   if(!Array.isArray(rows)||!rows.length ||
@@ -194,6 +195,8 @@ export function originalUiBatch(rows, projection, deck) {
       "ui_observations","life_history","opponent_decks","gorge_source","outcome"]);
     if(!run||Object.keys(run).some(key=>!allowedRunFields.has(key)))
       throw Error("unexpected_original_ui_run_field");
+    const omniscient=run?.gorge_source?.visibility==="omniscient" &&
+      run?.gorge_source?.synthetic_simulation_only===true;
     if(!Number.isInteger(run.seed)||run.seed!==row.seed||
        !Number.isInteger(run.completed_rounds)||run.completed_rounds<1||
        run.completed_rounds>60||
@@ -202,14 +205,14 @@ export function originalUiBatch(rows, projection, deck) {
        !Array.isArray(run.ui_observations)||
        run.ui_observations.length!==run.completed_rounds||
        run.gorge_source?.chain!==row.chain||
-       run.gorge_source?.visibility!=="public_events_only"||
-       run.gorge_source?.synthetic_simulation_only!==false||
+       !(omniscient || (run.gorge_source?.visibility==="public_events_only" &&
+          run.gorge_source?.synthetic_simulation_only===false))||
        run.outcome?.complete!==true||
        run.outcome?.status!==(row.hero_seat===row.winner_seat?"win":"loss")||
        run.outcome?.winner_seat!==(row.winner_seat-row.hero_seat+4)%4)
       throw Error("invalid_original_ui_game");
-    // Public dashboard never receives private object identity crosswalks,
-    // hand card identities, native logs, bot intents or unfiltered events.
+    // Full synthetic hands are valid in omniscient simulation replays.
+    // Never expose raw bot intents, reusable object crosswalks or native logs.
     const forbidden=new Set(["event_json","intents","log","objects","object_identity",
       "secret","native_events","source_object_id","library","hidden_cards"]);
     const visit=(value)=>{
@@ -217,12 +220,21 @@ export function originalUiBatch(rows, projection, deck) {
       if(!value||typeof value!=="object")return;
       for(const [key,v] of Object.entries(value)) {
         if(forbidden.has(key))throw Error("private_original_ui_field");
-        if(["hand","opening_hand","opponent_hands","opening_hands_by_seat"].includes(key)&&v!==null)
-          throw Error("private_original_ui_hand");
+        if(["hand","opening_hand","opponent_hands","opening_hands_by_seat"].includes(key)&&v!==null && !omniscient)
+          throw Error("non_omniscient_original_ui_hand");
         visit(v);
       }
     };
     visit(run);
+    if(omniscient){
+      if(!Array.isArray(run.opening_hand)||
+         run.opening_hand.length!==run.opening_hand_count||
+         !Array.isArray(run.opening_hands_by_seat)||
+         run.opening_hands_by_seat.length!==3||
+         run.ui_observations.some(obs=>!Array.isArray(obs.hand)||
+             !Array.isArray(obs.opponent_hands)))
+        throw Error("incomplete_omniscient_original_ui_hand");
+    }
     runs.push(run);
   }
   const requestedRounds=Math.max(...runs.map(run=>run.completed_rounds));
@@ -239,7 +251,7 @@ export function originalUiBatch(rows, projection, deck) {
     opponent_fidelity:"gorge_native_full_100_card_decks",
     outcomes_are_competitive_win_rates:false,
     requested_rounds:requestedRounds,runs:normalizedRuns,
-    source_note:"Approved source-backed public Gorge UI projections; no private native logs or hidden hands.",
+    source_note:"Approved source-backed synthetic Gorge replay; full named hands where recorded, no native bot intents.",
     example_replays:[]
   };
 }
