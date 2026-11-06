@@ -47,7 +47,7 @@ export default {
       const verdict=await verification.json();
       if(!verdict.success || verdict.hostname!==env.REQUEST_FORM_HOSTNAME)
         return response({error:"captcha_failed"},403);
-      const {email,display_name,note}=validateRequest(payload);
+      const {email,display_name,note}=validateRequest({email:payload.email,display_name:payload.display_name,note:payload.note});
       return response(await submitInvitation(env.REQUEST_DB,{email,display_name,note}),202,allowedOrigin);
     }catch(e){
       if(e instanceof ApiError)return response({error:e.code},e.status);
