@@ -5,6 +5,9 @@ on:
     paths:
       - "tests/browser_gorge_replay.py"
       - "tests/browser_gorge_results_snapshot.py"
+      - "tests/browser_r2_results_contract.py"
+      - "web/pages/r2_live.js"
+      - "web/pages/results.html"
       - "web/pages/display_names.js"
       - "data/gorge_display_labels.json"
       - "tools/gorge_display_labels.py"
@@ -50,6 +53,11 @@ jobs:
           BROWSER_ARTIFACT_DIR: ${{ runner.temp }}/gorge-browser-evidence
         run: |
           python tests/browser_gorge_results_snapshot.py
+      - name: Validate R2 API integration states in the real Results page
+        env:
+          BROWSER_SITE_DIR: ${{ runner.temp }}/gorge-site
+          BROWSER_ARTIFACT_DIR: ${{ runner.temp }}/gorge-browser-evidence
+        run: python tests/browser_r2_results_contract.py
       - name: Upload browser screenshots and evidence
         if: always()
         uses: actions/upload-artifact@v4
