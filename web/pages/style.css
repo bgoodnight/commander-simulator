@@ -2657,4 +2657,7 @@ body.r2-original-results-active #gorge-replay-panel{display:none!important}
 .game-navigator-game{padding:8px 10px;text-align:left;line-height:1.3}
 .game-navigator-game[aria-pressed=true]{border-color:#e3c183;background:#3a493d}
 .insight-methodology{margin:0 0 8px;color:#bac6bd}.insight-methodology summary{cursor:pointer;width:max-content;color:#e8cb91}
-@media(max-width:480px){.game-navigator{grid-template-columns:minmax(0,1fr) auto}.game-navigator-filter{max-width:118px}}
+@media(max-width:480px){
+ .game-navigator{grid-template-columns:minmax(0,1fr) auto}.game-navigator-filter{max-width:118px}
+ .gorge-card-type-controls{gap:4px}.gorge-card-type-controls .gorge-icon-button{width:35px;height:38px}
+}
