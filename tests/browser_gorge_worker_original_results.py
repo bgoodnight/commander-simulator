@@ -135,6 +135,7 @@ def test_materialized():
                 page.get_by_text("201 games · complete cohort",exact=False).wait_for(timeout=60000)
                 assert page.get_by_role("heading",name="Key insights").is_visible()
                 assert page.locator("#gorge-r2-live").is_hidden()
+                assert page.locator("#gorge-replay-panel").is_hidden()
                 assert page.get_by_text(source_card,exact=False).first.is_visible()
                 picker=page.locator('select[aria-label="Choose recorded game"]:visible')
                 page.locator('select[aria-label="Choose recorded game"] option[value="fixture-8-0"]').wait_for(state="attached",timeout=60000)
