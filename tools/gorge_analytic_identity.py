@@ -30,7 +30,7 @@ def parse_game_id(value: str) -> dict:
         raise ValueError("Invalid game identity")
     batch, deck, shard, seed=match.groups()
     result={"batch_id":batch,"deck":deck,"shard":int(shard),"seed":int(seed)}
-    if game_id(**result) != value:
+    if game_id(batch,deck,int(shard),int(seed)) != value:
         raise ValueError("Noncanonical game identity")
     return result
 
