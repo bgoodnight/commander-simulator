@@ -23,6 +23,29 @@
     }
     if(status)status.textContent=message;
   };
+  // A result is either unavailable (one message) or present (all core sections).
+  // A missing optional insight report must not hide the Key insights section.
+  function setResultsVisible(ready){
+    for(const id of ["key-insights-panel","turn-reviewer-panel"]){
+      const element=$(id);if(element)element.hidden=!ready;
+    }
+    if(!ready){
+      $("r2-game-picker")?.remove();
+      const grid=$("key-insights-grid");if(grid)grid.replaceChildren();
+      const reviewer=$("turn-reviewer-results");if(reviewer)reviewer.replaceChildren();
+      document.body.classList.remove("r2-original-results-active");
+    }
+  }
+  function showCohortInsights(report,total){
+    const grid=$("key-insights-grid");
+    if(!grid)return;
+    const empty=$("key-insights-empty");if(empty)empty.hidden=true;
+    // Keep the original Key insights heading, regardless of metric coverage.
+    window.DeckGameOutcomes.renderCohortInsights(grid,report,total,{
+      lookupRecordedCard:window.GorgeDeckLabCardInfo,
+      onOpenRecordedCard:name=>window.GorgeDeckLabOpenCard?.(name)
+    });
+  }
   function ownsRenderedDeck(key){return renderedDeck===key;}
   // Materialized views keep statistics cohort-wide while replay is loaded per click.
   async function loadMaterialized(key,ticket,selected){
@@ -77,7 +100,7 @@
     document.body.classList.add("r2-original-results-active");
     const rawReplay=$("gorge-replay-panel");
     if(rawReplay)rawReplay.style.setProperty("display","none","important");
-    for(const id of ["simulation-snapshot","key-insights-panel",
+    for(const id of ["simulation-snapshot",
                       "development-panel","archive-observation-details",
                       "opponent-replay-panel"]){
       const element=$(id);if(element)element.hidden=true;
@@ -122,12 +145,8 @@
     if(!turnsList.children.length)
       turnsList.append(create("p","No game length data available."));
     detailStats.append(matchupTitle,matchupList,turnsTitle,turnsList);
-    const insightSection=create("section");
-    const insightHeading=create("h2","Key insights");
-    window.DeckGameOutcomes.renderCohortInsights(insightSection,verifiedInsights,summary.n,{
-      lookupRecordedCard:window.GorgeDeckLabCardInfo,
-      onOpenRecordedCard:name=>window.GorgeDeckLabOpenCard?.(name)
-    });
+    setResultsVisible(true);
+    showCohortInsights(verifiedInsights,summary.n);
     const picker=create("div");picker.id="r2-game-picker";
     const gameSelect=create("select");gameSelect.className="game-outcome-scenario-select";
     gameSelect.setAttribute("aria-label","Choose recorded game");
@@ -141,7 +160,7 @@
     window.DeckGameOutcomes.renderCohortOverview(overview,summary,{
       commanderName:selected.commander,commanderArt:selected.art
     });
-    root.replaceChildren(overview,detailStats,insightHeading,insightSection);
+    root.replaceChildren(overview,detailStats);
     let selectedRequest=0;
     const readJson=async(url)=>{
       const res=await fetch(url,{cache:"no-store"});
@@ -232,6 +251,7 @@
     $("r2-game-picker")?.remove();
     renderedDeck=null;
     verifiedInsights=null;verifiedInsightCount=null;
+    setResultsVisible(false);
     const selected=window.GorgeDeckLabSelectedDeck?.(key);
     if(!key||!selected?.eligible)return;
     statusMessage("Checking approved Gorge game results…");
@@ -271,7 +291,7 @@
       if(rawReplay)rawReplay.style.setProperty("display","none","important");
       const panel=$("turn-reviewer-panel");
       if(panel)panel.hidden=false;
-      for(const id of ["simulation-snapshot","key-insights-panel",
+      for(const id of ["simulation-snapshot",
                         "development-panel","archive-observation-details",
                         "opponent-replay-panel"]){
         const element=$(id);if(element)element.hidden=true;
@@ -280,6 +300,9 @@
       if(legacyRefresh)legacyRefresh.hidden=true;
       const diagnostic=$("pane-records")?.querySelector(".diagnostic-panel");
       if(diagnostic)diagnostic.hidden=true;
+      setResultsVisible(true);
+      showCohortInsights(verifiedInsights||window.__gorgeCardInsights?.[key]||null,
+        verifiedInsightCount||window.__gorgeFullCohort?.decks?.[key]?.n||batch.runs.length);
       window.DeckGameOutcomes.render(root,[batch],{
         deckKey:key,deckHash:selected.sha,
         commanderName:selected.commander,commanderArt:selected.art,
