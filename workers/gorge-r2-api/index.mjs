@@ -243,6 +243,7 @@ async function getOriginalUiBatch(env,deck,metrics) {
   if(!registry.cohorts.some(c=>c.status==="current"&&c.approved===true))
     return empty(unavailable);
   const selected=[], projected=[],fingerprints=new Map();
+  const projectionUiHashes=new Set(),projectionSourceHashes=new Set();
   let missingProjection=false;
   for(const shard of matching) {
     const manifest=await readManifest(env.GORGE_R2,shard);
@@ -260,20 +261,28 @@ async function getOriginalUiBatch(env,deck,metrics) {
     if(projection.schema!=="gorge-r2-original-ui-projection-v1"||
        projection.deck!==deck||projection.source_batch!==shard.batch||
        String(projection.shard)!==shard.shard||
-       !Array.isArray(projection.games))
+       !Array.isArray(projection.games)||
+       !/^[a-f0-9]{64}$/.test(projection.ui_deck_sha256||"")||
+       !/^[a-f0-9]{64}$/.test(projection.source_deck_sha256||""))
       throw Error("unverified_original_ui_projection");
     // Never accept rows that are not approved, even when the R2 object
     // happens to contain experimental or historical game projections.
     const allowed=new Set(approved.map(g=>g.game_id));
     if(projection.games.some(g=>!allowed.has(g?.game_id)))
       throw Error("unapproved_original_ui_projection_game");
+    projectionUiHashes.add(projection.ui_deck_sha256);
+    projectionSourceHashes.add(projection.source_deck_sha256);
     projected.push(...projection.games);
   }
   if(!selected.length)return empty(unavailable);
   if(selected.length>200)throw Error("original_ui_batch_limit");
   if(missingProjection)return empty("projection_pending");
+  if(projectionUiHashes.size!==1||projectionSourceHashes.size!==1)
+    throw Error("mixed_original_ui_projection_revisions");
   const batch=originalUiBatch(selected,
-    {schema:"gorge-r2-original-ui-projection-v1",deck,games:projected},deck);
+    {schema:"gorge-r2-original-ui-projection-v1",deck,
+      ui_deck_sha256:[...projectionUiHashes][0],
+      source_deck_sha256:[...projectionSourceHashes][0],games:projected},deck);
   return {...empty("ready"),batch};
 }
 
