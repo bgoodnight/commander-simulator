@@ -94,7 +94,8 @@ test("omitted native seat-zero cast is never attributed to the active seat-one h
     obj:99991,text:"Exclude",card_name:"Exclude"});
   const batch=adapt.adapt([g],"magnus_premium",hashes);
   assert(batch);
-  const run=batch.runs[0];
+  const run=old.model([batch],"magnus_premium",hashes.magnus_premium)
+    .groups.flatMap(group=>group.runs)[0];
   const casts=run.ui_observations.flatMap(o=>o.actions)
     .filter(e=>e.type.endsWith("_cast")&&e.card==="Exclude");
   assert(casts.length>0,"recorded off-turn cast must stay visible");
