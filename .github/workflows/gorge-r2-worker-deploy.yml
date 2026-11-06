@@ -222,9 +222,8 @@ jobs:
           set -euo pipefail
           for deck in mortarion_current magnus_premium; do
             for route in ui/overview ui/batch; do
-              tag="${route//\\//-}"
-              curl --fail --silent --show-error --max-time 30 \\
-                "$WORKER_URL/v1/$route?deck=$deck" > "$RUNNER_TEMP/$tag-$deck.json"
+              tag="$(echo "$route" | tr '/' '-')"
+              curl --fail --silent --show-error --max-time 30 "$WORKER_URL/v1/$route?deck=$deck" > "$RUNNER_TEMP/$tag-$deck.json"
             done
           done
           python - <<'PY'
