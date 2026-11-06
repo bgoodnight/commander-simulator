@@ -1,0 +1,41 @@
+name: Probe deployed Gorge Worker API schemas for analytics readiness
+on:
+  push:
+    branches: [analysis/r2-exploratory-elastic-net-20261105]
+    paths: [.github/workflows/gorge-worker-analytics-api-probe.yml]
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  probe:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - name: Probe public safe Worker endpoints and missing analytics route
+        env:
+          API: https://gorge-r2-direct-api-preview.darbosama.workers.dev
+        shell: bash
+        run: |
+          set -euo pipefail
+          for deck in mortarion_current magnus_premium; do
+            curl --fail --silent --show-error --retry 2 --max-time 25               "$API/v1/summary?deck=$deck" > "$RUNNER_TEMP/$deck-summary.json"
+            curl --fail --silent --show-error --retry 2 --max-time 25               "$API/v1/ui/overview?deck=$deck" > "$RUNNER_TEMP/$deck-ui.json"
+          done
+          code="$(curl --silent --show-error --output "$RUNNER_TEMP/private-route-body.txt"             --write-out '%{http_code}' --max-time 25 "$API/v1/analytics/cohorts?hero=mortarion_current")"
+          python - "$RUNNER_TEMP" "$code" <<'PY'
+          import json,os,sys
+          from pathlib import Path
+          home=Path(sys.argv[1]);code=sys.argv[2]
+          assert code in ("401","403","404"), "Unexpected unauthenticated analytics route response"
+          with open(os.environ["GITHUB_STEP_SUMMARY"],"a") as w:
+              w.write("# Live Worker → analytics readiness probe\n\n")
+              for deck in ("mortarion_current","magnus_premium"):
+                  summary=json.loads((home/f"{deck}-summary.json").read_text())
+                  ui=json.loads((home/f"{deck}-ui.json").read_text())
+                  assert summary["schema"]=="gorge-r2-live-summary-v1"
+                  assert ui["schema"]=="gorge-r2-ui-overview-v1"
+                  assert summary["deck"]==ui["deck"]==deck
+                  w.write(f"- {deck}: summary={summary['status']}, UI={ui['status']}, n={summary['n']}\n")
+              w.write(f"\nUnauthenticated analytics/cohorts route returned HTTP {code}; no private feature dataset retrieved.\n")
+          print("Public schemas verified; private analytics data not exposed",code)
+          PY
