@@ -198,3 +198,9 @@ export function approvedEventWindow(game, totalRows, maxGameEvents=30000) {
     throw Error("unindexed_or_oversized_game_events");
   return {rowStart:start,rowEnd:start+count,count};
 }
+
+/** Strict opt-in for short-lived, hex-only Worker diagnostic credentials. */
+export function isDiagnosticAuthorized(authHeader,token) {
+  return typeof token==="string" && /^[a-f0-9]{64}$/.test(token) &&
+    typeof authHeader==="string" && authHeader==="Bearer "+token;
+}
