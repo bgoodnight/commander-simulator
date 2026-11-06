@@ -10,7 +10,7 @@ async function verifiedJson(bucket,key,expectedHash,maxBytes=4*1024*1024) {
   if(actual!==expectedHash)throw Error("materialized_digest_mismatch");
   return JSON.parse(new TextDecoder().decode(data));
 }
-export async function getMaterialized(bucket,deck,registry,page=null,gameId=null,kind="summary") {
+export async function getMaterialized(bucket,deck,registry,page=null,gameId=null,kind="summary",eventPart=0) {
   const pointerObject=await bucket.get(MATERIALIZED_PREFIX+"current.json");
   if(!pointerObject)return null; // Existing source-backed legacy route stays available.
   if(pointerObject.size>1024)throw Error("oversized_materialized_pointer");
@@ -91,6 +91,30 @@ export async function getMaterialized(bucket,deck,registry,page=null,gameId=null
        detail.game_id!==gameId || detail.batch?.deck_sha256!==entry.ui_deck_sha256 ||
        detail.batch?.runs?.length!==1)
       throw Error("materialized_game_identity_mismatch");
+    if(kind==="events"){
+      const parts=detail.event_parts;
+      if(!Array.isArray(parts)||parts.length<1)
+        return {schema:"gorge-r2-materialized-response-v1",deck,
+          version:pointer.version,status:"events_pending",total:entry.n};
+      const part=parts[eventPart];
+      const path="events/"+hex+"/"+String(eventPart).padStart(6,"0")+".json";
+      if(!part||part.path!==path||
+         !/^[a-f0-9]{64}$/.test(part.sha256||""))
+        throw Error("invalid_native_event_part_reference");
+      const record=await verifiedJson(bucket,prefix+deck+"/"+path,
+        part.sha256,6*1024*1024);
+      if(record.schema!=="gorge-r2-native-event-part-v1" ||
+         record.deck!==deck||record.version!==pointer.version ||
+         record.game_id!==gameId||record.part!==eventPart||
+         record.total!==detail.native_event_count||
+         !Array.isArray(record.events)||record.events.length!==part.count||
+         part.count>500||part.count<1)
+        throw Error("invalid_native_event_part");
+      return {schema:"gorge-r2-materialized-response-v1",deck,
+        version:pointer.version,status:"ready",total:entry.n,
+        game_id:gameId,part:eventPart,part_count:parts.length,
+        native_event_count:detail.native_event_count,events:record.events};
+    }
     return {schema:"gorge-r2-materialized-response-v1",deck,
       version:pointer.version,status:"ready",total:entry.n,game:detail};
   }
