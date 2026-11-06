@@ -13,6 +13,7 @@ except ImportError:
 
 from tools.gorge_cohort_eligibility import fingerprint
 from tools.gorge_r2_materialized_results import project
+from tools.gorge_r2_materialized_rollback import verified_target, guarded_rollback
 
 
 @unittest.skipIf(pq is None, "pyarrow is required")
@@ -165,6 +166,44 @@ class MaterializedResultsTests(unittest.TestCase):
         manifest_path.write_text(json.dumps(manifest))
         with self.assertRaisesRegex(ValueError, "different shard"):
             project(self.root / "source", self.registry, self.root / "built")
+
+
+    def test_rollback_requires_all_verified_replay_objects(self):
+        self.build(26)
+        report = project(self.root / "source", self.registry, self.root / "built",
+                         expected_batches=["123456-1"])
+        version = report["version"]
+        built = self.root / "built"
+        pointer = verified_target(built, self.registry, version)
+        self.assertEqual(pointer, json.loads((built / "current.json").read_text()))
+        fake_current = {"schema": "gorge-r2-results-current-v1",
+                        "version": "f" * 64, "manifest_sha256": "d" * 64}
+        self.assertEqual(guarded_rollback(fake_current, "f" * 64, pointer),
+                         pointer)
+        with self.assertRaisesRegex(ValueError, "Current pointer changed"):
+            guarded_rollback(fake_current, "e" * 64, pointer)
+        with self.assertRaisesRegex(ValueError, "already active"):
+            guarded_rollback(pointer, version, pointer)
+        game = next((built / "versions" / version / "mortarion_current" /
+                     "games").glob("*.json"))
+        game.unlink()
+        with self.assertRaises(FileNotFoundError):
+            verified_target(built, self.registry, version)
+
+    def test_rollback_rejects_corrupt_page_and_outdated_registry(self):
+        self.build(1)
+        report = project(self.root / "source", self.registry, self.root / "built")
+        version = report["version"]
+        page = self.root / "built" / "versions" / version / "mortarion_current" / "pages" / "000000.json"
+        page.write_text('{"altered":true}')
+        with self.assertRaisesRegex(ValueError, "Digest mismatch"):
+            verified_target(self.root / "built", self.registry, version)
+        # Restore the page by rebuilding, then prove eligibility is rechecked.
+        project(self.root / "source", self.registry, self.root / "built")
+        obsolete = self.root / "obsolete-registry.json"
+        obsolete.write_text(self.registry.read_text() + "\n")
+        with self.assertRaisesRegex(ValueError, "no longer current"):
+            verified_target(self.root / "built", obsolete, version)
 
     def test_reject_private_projection_payload(self):
         self.build(1, leak=True)
