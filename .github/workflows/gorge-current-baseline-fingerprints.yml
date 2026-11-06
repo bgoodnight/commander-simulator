@@ -1,0 +1,35 @@
+name: Inspect corrected baseline source fingerprints
+on:
+  pull_request:
+    paths:
+      - ".github/workflows/gorge-current-baseline-fingerprints.yml"
+      - "tools/gorge_current_baseline.py"
+  workflow_dispatch:
+permissions:
+  contents: read
+  actions: read
+jobs:
+  inspect:
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        hero: [mortarion_current, magnus_premium]
+    env:
+      HERO: ${{ matrix.hero }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Read pinned source manifest, propose cohort identity
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          mkdir -p "$RUNNER_TEMP/sources"
+          gh run download 42143344243 --repo "$GITHUB_REPOSITORY" \
+            --name "gorge-corrected-fresh-candidate-$HERO" --dir "$RUNNER_TEMP/sources"
+          python -m tools.gorge_current_baseline fingerprints \
+            --source "$RUNNER_TEMP/sources/results" --deck "$HERO" \
+            --out "$RUNNER_TEMP/cohort.json"
+          cat "$RUNNER_TEMP/cohort.json"
