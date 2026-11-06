@@ -2531,6 +2531,32 @@
     if(!grid.children.length)grid.appendChild(create("p","game-outcome-empty","No recorded card insights."));
     root.replaceChildren(grid);
   }
+  // Findings derived from the approved Worker batch, not a fabricated full-cohort
+  // report. Always disclose the number of games with usable card observations.
+  function renderRecordedBatchInsights(root,batch,options={}){
+    const report=model([batch],options.deckKey,options.deckHash);
+    const runs=report.groups.flatMap(group=>group.runs);
+    const signals=observationCardStats(runs,options.lookupRecordedCard,options.commanderName);
+    const note=create("p","micro",signals.coverage?
+      "Card findings from "+signals.coverage+" of "+runs.length+
+      " approved games with complete recorded card observations. "+
+      "These are observed-game findings, not verified full-cohort rankings.":
+      "No named card observations are available in these approved games yet.");
+    const grid=create("div","board-grid game-outcome-grid latest-insight-grid");
+    if(signals.coverage){
+      const owned=Array.isArray(options.deckCardNames)?
+        new Set(options.deckCardNames.map(name=>name.toLowerCase())):null;
+      for(const kind of ["played","creature","activated","triggered"]){
+        const ranked=(signals.ranked[kind]||[]).filter(item=>
+          !owned||owned.has(item.name.toLowerCase()));
+        const panel=cardPerformancePanel(kind,ranked,signals.coverage,report.groups,
+          {...options,isGorge:true},()=>{});
+        if(panel)grid.appendChild(panel);
+      }
+    }
+    root.replaceChildren(note,grid);
+    return {coverage:signals.coverage,findings:grid.children.length};
+  }
   // Allow a paginated data source to populate the exact original turn
   // reviewer without rendering a misleading single-game outcomes dashboard.
   function renderTurnReviewer(root,batches,options={}){
@@ -2544,5 +2570,5 @@
     return report;
   }
   return {FORMAT,STATES,validate,model,lifeTrend,matchupRows,matchupMetrics,
-    knockoutRound,opponentDecks,observationCardStats,turnSpotlight,render,renderCohortOverview,renderCohortInsights,renderTurnReviewer};
+    knockoutRound,opponentDecks,observationCardStats,turnSpotlight,render,renderCohortOverview,renderCohortInsights,renderRecordedBatchInsights,renderTurnReviewer};
 });
