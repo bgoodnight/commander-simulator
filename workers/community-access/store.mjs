@@ -64,14 +64,14 @@ const listingView = (p,r) => ({
   id:p.id,label:p.label,current_revision_id:r.id,
   revision_no:r.revision_no,content_sha256:r.content_sha256
 });
-export async function createDeck(env,account,body) {
+export async function createDeck(env,account,body,{sourceRevisionId=null}={}) {
   requireOwner(account);
   const {label,decklist}=validateDraft(body);
   const blob=await storeContent(env.COMMUNITY_DECKS_R2,decklist);
   const id=token();
   await env.COMMUNITY_DB.prepare(
-    "INSERT INTO decks(id,owner_id,label,private_content_key,content_sha256,revision) VALUES(?,?,?,?,?,1)"
-  ).bind(id,account.subject,label,blob.key,blob.hash).run();
+    "INSERT INTO decks(id,owner_id,label,private_content_key,content_sha256,revision,source_publication_revision_id) VALUES(?,?,?,?,?,1,?)"
+  ).bind(id,account.subject,label,blob.key,blob.hash,sourceRevisionId).run();
   return {id,label,revision:1,content_sha256:blob.hash};
 }
 export async function getPrivateDeck(env,account,id) {
@@ -183,5 +183,5 @@ export async function copyPublication(env,account,id) {
   requireOwner(account);
   // Readlisted again and revalidate at operation time; copies become independent.
   const pub=await getListedPublication(env,id);
-  return createDeck(env,account,{label:pub.label,decklist:pub.decklist});
+  return createDeck(env,account,{label:pub.label,decklist:pub.decklist},\n    {sourceRevisionId:pub.current_revision_id});
 }
