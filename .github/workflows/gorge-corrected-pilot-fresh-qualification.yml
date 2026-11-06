@@ -1,8 +1,23 @@
 name: Gorge corrected-pilot fresh 12-precon certification candidates
 
-# Explicitly experimental: manually launched only after the UI is ready.
-# Writes only immutable private experimental R2 archives; no Pages or approval.
+# Small bounded experiments run automatically on relevant changes to main.
+# Writes only immutable private experimental R2 archives; never approves a cohort.
 on:
+  push:
+    branches: [main]
+    paths:
+      - ".github/workflows/gorge-corrected-pilot-fresh-qualification.yml"
+      - "tools/gorge_commander_probe.go"
+      - "tools/gorge_trigger_cost_policy_patch.py"
+      - "tools/gorge_trigger_cost_policy_test.go"
+      - "tools/patch_gorge_ward_blight.py"
+      - "tools/export_gorge_decks.py"
+      - "tools/gorge_trial_panel_validate.py"
+      - "tools/stage_gorge_precon_qualification.py"
+      - "tools/check_gorge_precon_compatibility.py"
+      - "commander_sim/deck_fixtures.py"
+      - "decklists/**"
+      - "data/gorge_initial_trial_opponents_v1.json"
   workflow_dispatch:
     inputs:
       panel_mode:
@@ -21,6 +36,12 @@ on:
 permissions:
   contents: read
   actions: read
+
+# Never cancel a partial run after native R2 evidence may have been written.
+# Unique run IDs maintain immutable archive keys across reruns.
+concurrency:
+  group: gorge-corrected-pilot-small-batch
+  cancel-in-progress: false
 
 jobs:
   probe:
@@ -44,7 +65,7 @@ jobs:
             # Re-fetching the rolling Scryfall snapshot would change the bulk SHA
             # and must never silently requalify the immutable 12-deck panel.
             GH_TOKEN="${{ github.token }}" gh run download 42053608363 \
-              --name "gorge-corrected-fresh-candidate-${{ matrix.hero }}" \
+              --name "gorge-precon-60-experimental-gameplay-${{ matrix.hero }}" \
               --dir "$RUNNER_TEMP/pinned"
             test -s "$RUNNER_TEMP/pinned/panel/full-enrichment.json"
             test -s "$RUNNER_TEMP/pinned/panel/panel-60.json"
