@@ -1,4 +1,5 @@
 name: Publish reusable Commander staging preview
+# Refresh source-backed token zones and planeswalkers (PR #240).
 # Preview isolated full-state R2 release-check branch (PR #241); production unaffected.
 # Publish combined token identity/art/stack integration from Results staging PR #236.
 # Refresh game-length histogram, player-only life and circular info icon (PR 231).
