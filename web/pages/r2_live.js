@@ -164,6 +164,12 @@
     }
   }
   addEventListener("DOMContentLoaded",()=>{
+    // The original Results adapter provides the summary and turn explorer.
+    // Keep this separate diagnostic panel only for explicit API previews.
+    if(window.R2OriginalResults&&!query.has("r2Api")){
+      root.hidden=true;
+      return;
+    }
     refresh();setTimeout(refresh,150);
     const existingRefresh=document.getElementById("game-outcome-refresh");
     existingRefresh?.addEventListener("click",()=>refresh(true));
