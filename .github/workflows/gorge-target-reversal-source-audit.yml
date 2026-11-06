@@ -2,7 +2,7 @@ name: Attribute target aborts to reversed Gorge objects
 on:
   push:
     branches: [test/gorge-four-commander-token-qualification-20261106]
-    paths: [".github/workflows/gorge-target-reversal-source-audit.yml"]
+    paths: [".github/workflows/gorge-target-reversal-source-audit.yml","tools/gorge_target_reversal_attribution.py"]
 permissions:
   contents: read
   actions: read
