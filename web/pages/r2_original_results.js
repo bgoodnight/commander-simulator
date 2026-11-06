@@ -101,6 +101,8 @@
         (group.win_rate*100).toFixed(1)+"%)");
       matchupList.append(row);
     }
+    if(!matchupList.children.length)
+      matchupList.append(create("p","No opponent matchup data available."));
     const turnsTitle=create("h4","Game length distribution · all approved games");
     const turnsList=create("div");
     const histogram=summary.game_turn_histogram||[];
@@ -114,8 +116,11 @@
       row.append(label,bar);
       turnsList.append(row);
     }
+    if(!turnsList.children.length)
+      turnsList.append(create("p","No game length data available."));
     detailStats.append(matchupTitle,matchupList,turnsTitle,turnsList);
     const insightSection=create("section");
+    const insightHeading=create("h2","Key insights");
     window.DeckGameOutcomes.renderCohortInsights(insightSection,verifiedInsights,summary.n,{
       lookupRecordedCard:window.GorgeDeckLabCardInfo,
       onOpenRecordedCard:name=>window.GorgeDeckLabOpenCard?.(name)
@@ -133,7 +138,7 @@
     window.DeckGameOutcomes.renderCohortOverview(overview,summary,{
       commanderName:selected.commander,commanderArt:selected.art
     });
-    root.replaceChildren(overview,detailStats,insightSection);
+    root.replaceChildren(overview,detailStats,insightHeading,insightSection);
     let selectedRequest=0;
     const readJson=async(url)=>{
       const res=await fetch(url,{cache:"no-store"});
