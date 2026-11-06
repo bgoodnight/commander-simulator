@@ -2467,7 +2467,7 @@
           if(panel)cards.appendChild(panel);
           continue;
         }
-        const panel=cardPerformancePanel(kind,signals.ranked[kind],
+        const panel=cardPerformancePanel(kind,signals.ranked[kind]||[],
           signals.coverage,groups,
           {...options,isGorge,tutorSearchCount:signals.confirmedTutors},onReviewRun);
         if(panel)cards.appendChild(panel);
