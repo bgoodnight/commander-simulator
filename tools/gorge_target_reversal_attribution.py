@@ -25,6 +25,15 @@ def audit(root,hero):
             rev=last[-1]
             o=objects.get(rev.get("obj"),{})
             name=o.get("card_name") or o.get("effective_name") or "<unnamed object>"
+            # An activated ability is minted by AbilityPush (kind 34);
+            # its temporary stack object has no card_name. Locate the most
+            # recent pushed source inside this single failed announcement.
+            ability_pushes=[ev for ev in events[max(0,i-30):i]
+                            if ev["kind"]==34 and ev.get("obj") in objects]
+            if name=="<unnamed object>" and ability_pushes:
+                source=ability_pushes[-1]
+                source_object=objects[source["obj"]]
+                name="ability of "+str(source_object.get("card_name") or source_object.get("effective_name") or "?")
             names[name]+=1
             if len(seqs)<10:
                 seqs.append({"warning_seq":e["seq"],"reverse_seq":rev["seq"],
