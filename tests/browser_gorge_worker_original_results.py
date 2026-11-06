@@ -60,10 +60,13 @@ def test():
                 assert "No approved simulations match" not in hero.inner_text()
                 assert "No simulations have been run" not in hero.inner_text()
                 assert page.locator("#turn-reviewer-panel").is_visible()
-                # No verified card report: keep the available outcome/reviewer,
-                # but do not render a pending or misleading Insights card.
+                # A valid R2 batch enables all three sections together.
+                # Card findings must state their actual recorded-game coverage.
                 assert page.evaluate("document.body.dataset.r2ResultsState")=="ready"
-                assert page.locator("#key-insights-panel").is_hidden()
+                assert page.locator("#key-insights-panel").is_visible()
+                insights=page.locator("#key-insights-panel").inner_text()
+                assert ("approved games with complete recorded card observations" in insights
+                        or "No named card observations are available" in insights)
                 assert "Complete-cohort card insights are not yet available" not in page.locator("#game-outcome-results").inner_text()
                 page.screenshot(path=str(OUT/f"{DECK}-{mode}-original-results.png"),full_page=True)
                 print(f"PASS {DECK} {mode}: real 12-game Worker batch renders original outcome cards")
