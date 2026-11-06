@@ -256,3 +256,34 @@ test("genuine cast records populate the ORIGINAL source statistics",()=>{
   assert.ok(!stats.ranked.played.some(x=>x.name==="Gravecrawler"),
     "Opponent zombie spells must not contaminate the hero ranking");
 });
+
+test("omitted native player means seat zero even during another player's turn",()=>{
+  const g=structuredClone(a);
+  // Mortarion's turn is seat 0; the off-turn actor is also seat 0 only
+  // when the event carries its own actor identity. For a stronger check,
+  // select Magnus in native seat 1 as the displayed hero.
+  g.player_deck="magnus_premium";
+  g.player_seat=1;
+  const turn=g.turns.find(t=>t.seat===1&&t.turn>0);
+  assert.ok(turn);
+  const max=Math.max(...turn.events.map(e=>e.seq));
+  turn.events.push(
+    {seq:max+1,kind:"cast",kind_id:11,obj:999991,card_name:"Exclude"},
+    {seq:max+2,kind:"mana",kind_id:13,amount:3,counter:"U"},
+    {seq:max+3,kind:"token_created",kind_id:31,obj:999992,card_name:"Zombie Token"}
+  );
+  const run=adapt.adapt([g],"magnus_premium",hashes).runs[0];
+  const observation=run.ui_observations.find(o=>o.actions.some(x=>x.source_seq===max+1));
+  assert.ok(observation);
+  const cast=observation.actions.find(x=>x.source_seq===max+1);
+  const token=observation.actions.find(x=>x.source_seq===max+3);
+  assert.equal(cast.card,"Exclude");
+  assert.equal(cast.seat,3,"Native seat zero must rotate to seat three for hero seat one");
+  assert.equal(cast.native_turn_seat,0,"The turn owner is a separate field");
+  assert.equal(token.seat,3,"Off-turn token events retain the native actor");
+  // Blue mana from native seat zero may not inflate native seat one's total.
+  const baseline=adapt.adapt([magnusA],"magnus_premium",hashes).runs[0];
+  const oldTotal=baseline.ui_observations.reduce((sum,o)=>sum+(o.mana_produced_by_color.U||0),0);
+  const newTotal=run.ui_observations.reduce((sum,o)=>sum+(o.mana_produced_by_color.U||0),0);
+  assert.equal(newTotal,oldTotal);
+});
