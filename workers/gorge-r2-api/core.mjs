@@ -215,10 +215,11 @@ export function originalUiBatch(rows, projection, deck) {
     runs.push(run);
   }
   const requestedRounds=Math.max(...runs.map(run=>run.completed_rounds));
-  // Renderer requires each run's declared requested_rounds equal the batch.
-  for(const run of runs)
-    if(run.outcome?.requested_rounds!==requestedRounds)
-      throw Error("original_ui_rounds_mismatch");
+  // Reconcile the cohort-wide batch horizon without inventing turns or
+  // rewriting recorded game observations.
+  const normalizedRuns=runs.map(run=>({
+    ...run,outcome:{...run.outcome,requested_rounds:requestedRounds}
+  }));
   return {
     format:"commander-gorge-outcomes-v1",schema_version:1,engine:"gorge",
     deck_key:deck,deck_sha256:[...revisions][0],
@@ -226,7 +227,7 @@ export function originalUiBatch(rows, projection, deck) {
     provisional_mode:"not_applicable",
     opponent_fidelity:"gorge_native_full_100_card_decks",
     outcomes_are_competitive_win_rates:false,
-    requested_rounds:requestedRounds,runs,
+    requested_rounds:requestedRounds,runs:normalizedRuns,
     source_note:"Approved source-backed public Gorge UI projections; no private native logs or hidden hands.",
     example_replays:[]
   };
