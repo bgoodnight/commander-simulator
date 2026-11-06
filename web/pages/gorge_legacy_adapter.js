@@ -223,6 +223,9 @@
         seat:mapSeat(real,hero),deck_key:g.decks[real],
         hand:omniscient?namedZone(p,"hand"):null,
         hand_count:p.hand_count,
+        library:omniscient?namedZone(p,"library"):null,
+        library_count:p.library_count,
+        life:p.life,lost:p.lost,mana_pool:[...p.mana_pool],
         battlefield:namedZone(p,"battlefield"),
         graveyard:namedZone(p,"graveyard"),exile:namedZone(p,"exile"),
         command:namedZone(p,"command"),
@@ -285,6 +288,7 @@
         source_event_count:g.source?.total_native_events,
         public_event_count:g.source?.exported_events,
         snapshot_boundary:"first_pending_decision_of_turn",
+        opening_hand_boundary:"first_pending_decision_of_turn",
         synthetic_simulation_only:omniscient,
         outcome_provenance:finished?"native_game_over_event":"not_exported"},
       outcome:{status,complete:finished,reason:finished?
