@@ -31,7 +31,7 @@ class MaterializedResultsTests(unittest.TestCase):
         self.shard = self.root / "source" / "123456-1" / "mortarion_current" / "0"
         self.shard.mkdir(parents=True)
 
-    def build(self, count=26, leak=False, omit_projection=False, per_game_events=2):
+    def build(self, count=26, leak=False, omit_projection=False, per_game_events=2, omniscient=False):
         rows, games = [], []
         c = self.cohort
         deck = c["deck"]
@@ -64,6 +64,25 @@ class MaterializedResultsTests(unittest.TestCase):
                 "outcome": {"complete": True, "status": "win" if seed % 2 == 0 else "loss",
                             "winner_seat": seed % 2}
             }
+            if omniscient:
+                run["opening_hand"] = ["Sol Ring", "Swamp"]
+                run["opening_hand_count"] = 2
+                run["opening_hands_by_seat"] = [
+                    {"seat": i, "hand": [f"Seat{i} card"], "hand_count": 1}
+                    for i in (1, 2, 3)
+                ]
+                run["opening_board_states"] = [{
+                    "seat": 0, "hand": ["Sol Ring", "Swamp"],
+                    "library": ["Forest", "Mountain"],
+                    "mana_pool": [0, 0, 0, 0, 0, 0]
+                }]
+                run["ui_observations"] = [{
+                    "turn": 1, "hand": ["Swamp"],
+                    "opponent_hands": run["opening_hands_by_seat"],
+                    "board_states": run["opening_board_states"]
+                }]
+                run["gorge_source"]["visibility"] = "omniscient"
+                run["gorge_source"]["synthetic_simulation_only"] = True
             if leak and seed == 0:
                 run["native_events"] = [{"secret": True}]
             games.append({"game_id": gid, "source_sha256": row["source_sha256"],
@@ -131,6 +150,17 @@ class MaterializedResultsTests(unittest.TestCase):
         pointer = json.loads((self.root / "built" / "current.json").read_text())
         raw = (self.root / "built" / "versions" / version / "manifest.json").read_bytes()
         self.assertEqual(hashlib.sha256(raw).hexdigest(), pointer["manifest_sha256"])
+
+    def test_complete_simulated_hands_and_libraries_survive_materialization(self):
+        self.build(1, omniscient=True)
+        report = project(self.root / "source", self.registry, self.root / "built")
+        root = self.root / "built" / "versions" / report["version"] / "mortarion_current"
+        replay = json.loads(next((root / "games").glob("*.json")).read_text())
+        run = replay["batch"]["runs"][0]
+        self.assertEqual(run["opening_hand"], ["Sol Ring", "Swamp"])
+        self.assertEqual(run["opening_hands_by_seat"][2]["hand"], ["Seat3 card"])
+        self.assertEqual(run["opening_board_states"][0]["library"], ["Forest", "Mountain"])
+        self.assertEqual(run["gorge_source"]["visibility"], "omniscient")
 
     def test_501_native_events_are_split_without_losing_hidden_draws(self):
         self.build(1, per_game_events=501)
