@@ -70,6 +70,27 @@ test("approved game index reveals only safe, deterministic summaries",async()=>{
   assert.throws(()=>approvedGameIndex([a],"mortarion_current",26),/limit/);
 });
 
+test("approved game pages use stable 25-item keyset cursors",async()=>{
+  const rows=[];
+  for(let i=0;i<57;i++)rows.push(await game({
+    game_id:"batch/a/0/"+String(i).padStart(3,"0")
+  }));
+  const first=approvedGameIndex(rows.slice().reverse(),"mortarion_current",25);
+  assert.equal(first.total,57);
+  assert.equal(first.games.length,25);
+  assert.equal(first.next_cursor,"batch/a/0/024");
+  const second=approvedGameIndex(rows,"mortarion_current",25,first.next_cursor);
+  assert.equal(second.games[0].game_id,"batch/a/0/025");
+  assert.equal(second.games.length,25);
+  const third=approvedGameIndex(rows,"mortarion_current",25,second.next_cursor);
+  assert.equal(third.games.length,7);
+  assert.equal(third.has_more,false);
+  assert.equal(third.next_cursor,null);
+  assert.equal(new Set([...first.games,...second.games,...third.games].map(x=>x.game_id)).size,57);
+  assert.throws(()=>approvedGameIndex(rows,"mortarion_current",25,"../../private"),/cursor/);
+  assert.throws(()=>approvedGameIndex(rows,"mortarion_current",25,"batch/a/0/999"),/cursor/);
+});
+
 test("individual approved game detail is limited to public-safe metadata",async()=>{
   const g=await game({event_json:"SECRET",seed:891,object_key:"PRIVATE"});
   const out=approvedGameDetail([g],"mortarion_current",g.game_id);
