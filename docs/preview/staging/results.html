@@ -20,7 +20,7 @@
   <script src="./game_outcomes.js?v=e6a9d6166295" defer></script>
   <script src="./app.js?v=090eb2f26102" defer></script>
   <script src="./r2_live.js?v=f2e946f4967b" defer></script>
-  <script src="./r2_original_results.js?v=c7f76cdac080" defer></script>
+  <script src="./r2_original_results.js?v=6b89ec774548" defer></script>
 </head>
 <body>
 <main class="wide-wrap" id="app">
@@ -123,14 +123,6 @@
         </div>
         <div id="simulation-snapshot-metrics" class="simulation-snapshot-metrics"></div>
       </section>
-      <section id="key-insights-panel" class="panel key-insights-panel" aria-labelledby="key-insights-title">
-        <div class="key-insights-heading">
-          <div><span class="eyebrow">Simulation takeaways</span><h2 id="key-insights-title">Key insights</h2></div>
-          <span class="micro">Select an insight to compare cards and inspect real seed evidence.</span>
-        </div>
-        <div id="key-insights-grid" class="board-grid"></div>
-        <p id="key-insights-empty" class="small" hidden></p>
-      </section>
       <section id="long-game-panel" class="game-outcome-panel" aria-label="Latest simulated results">
         <div class="latest-results-topline">
           <span id="game-outcome-status" role="status">Loading latest simulations…</span>
@@ -139,6 +131,14 @@
         </div>
         <div id="game-outcome-results" aria-live="polite"></div>
         <div id="gorge-r2-live" aria-live="polite"></div>
+      </section>
+      <section id="key-insights-panel" class="panel key-insights-panel" aria-labelledby="key-insights-title">
+        <div class="key-insights-heading">
+          <div><span class="eyebrow">Simulation takeaways</span><h2 id="key-insights-title">Key insights</h2></div>
+          <span class="micro">Select an insight to compare cards and inspect real seed evidence.</span>
+        </div>
+        <div id="key-insights-grid" class="board-grid"></div>
+        <p id="key-insights-empty" class="small" hidden></p>
       </section>
       <section id="turn-reviewer-panel" class="latest-turn-reviewer" aria-labelledby="turn-reviewer-heading">
         <h2 id="turn-reviewer-heading">Turn reviewer</h2>
