@@ -365,6 +365,7 @@
         isGorge:true,reviewerRoot:reviewer,reviewerPanel:panel,
         onReviewerReady:jump=>{reviewRecordedRun=jump},
         lookupRecordedCard:window.GorgeDeckLabCardInfo,
+        portraitFor:bucket=>window.GorgeDeckLabOpponentPortrait?.(bucket),
         deckCardNames:selected.cardNames,
         renderMana:value=>window.GorgeDeckLabMana?.(value),
         onOpenRecordedCard:name=>window.GorgeDeckLabOpenCard?.(name),

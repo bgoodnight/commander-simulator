@@ -466,6 +466,14 @@
         const img=create("img","game-outcome-opponent-art");
         img.src=art.art;img.alt=art.name+" card illustration";
         img.loading="lazy";img.referrerPolicy="no-referrer";
+        // Missing or rate-limited external artwork must never leave a broken
+        // image icon in the matchup panel.
+        img.onerror=()=>{
+          const missing=create("div","game-outcome-art-missing","✧");
+          if(img.parentElement)img.replaceWith(missing);
+          const note=caption?.querySelector?.("small");
+          if(note)note.textContent="Commander illustration unavailable";
+        };
         portrait.appendChild(img);
       }else{
         portrait.appendChild(create("div","game-outcome-art-missing","✧"));
