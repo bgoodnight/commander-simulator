@@ -382,10 +382,19 @@
       (batch.runs.length===1?"":"s")+" · "+batch.runs[0].ui_observations.length+
       " recorded turns · "+(batch.runs[0].gorge_source.visibility==="omniscient"?
         "omniscient simulated hands and draws":"public-only replay");
+    // Preserve the source-proven token flag across the legacy name-only
+    // projection, including token kinds the UI has never seen before.
+    const tokenNames=[...new Set(records.flatMap(game=>
+      (game.snapshots||[]).flatMap(snapshot=>
+        (snapshot.players||[]).flatMap(player=>
+          Object.values(player.zones||{}).flatMap(zone=>
+            Array.isArray(zone)?zone.filter(card=>card?.token===true&&
+              typeof card.name==="string").map(card=>card.name):[])))))];
     window.DeckGameOutcomes.render(outcomes,[batch],{
       deckKey:key,deckHash:deckHashes[key],
       commanderName:selected.commander,commanderArt:selected.art,
       isGorge:true,
+      tokenNames,
       reviewerRoot:reviewer,reviewerPanel:panel,
       lookupRecordedCard:cardInfo,
       deckCardNames:selected.cardNames,
