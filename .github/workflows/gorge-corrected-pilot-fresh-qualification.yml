@@ -1,7 +1,7 @@
 name: Gorge corrected-pilot fresh 12-precon certification candidates
 
 # Explicitly experimental: manually launched only after the UI is ready.
-# Does not write R2, Pages, production catalog or active eligible analytics.
+# Writes only immutable private experimental R2 archives; no Pages or approval.
 on:
   workflow_dispatch:
     inputs:
@@ -92,12 +92,7 @@ jobs:
           set -euo pipefail
           python tools/gorge_trigger_cost_policy_patch.py "$RUNNER_TEMP/gorge/bots/botpolicy/policy.go"
           cp tools/gorge_trigger_cost_policy_test.go "$RUNNER_TEMP/gorge/bots/botpolicy/trigger_cost_pilot_experiment_test.go"
-          (cd "$RUNNER_TEMP/gorge" && go test ./bots/botpolicy -run '^TestTriggerCostXAndPayPilot
-        working-directory: ${{ runner.temp }}/gorge
-        run: |
-          make fetch-cards compile-cards
-          cp "$GITHUB_WORKSPACE/tools/gorge_commander_probe.go" commander_probe.go
-          go build -o "$RUNNER_TEMP/gorge-probe" ./commander_probe.go
+          (cd "$RUNNER_TEMP/gorge" && go test ./bots/botpolicy -run '^TestTriggerCostXAndPayPilot$' -count=1)
       - name: Build corrected four-player Gorge probe and compiled card corpus
         working-directory: ${{ runner.temp }}/gorge
         run: |
@@ -131,7 +126,7 @@ jobs:
             cat "$RUNNER_TEMP/results/probe-stderr.txt" >&2
             exit "$status"
           fi
-          printf '%s\\n' "$status" > "$RUNNER_TEMP/results/probe-exit-code.txt"
+          printf '%s\n' "$status" > "$RUNNER_TEMP/results/probe-exit-code.txt"
       - name: Report observed results without granting qualification
         env:
           GAME_COUNT: ${{ inputs.games || '12' }}
@@ -219,7 +214,7 @@ jobs:
               "seed_start":187000,
               "approval":False
           }
-          (root/"results/source-manifest.json").write_text(json.dumps(manifest,sort_keys=True,indent=2)+"\\n")
+          (root/"results/source-manifest.json").write_text(json.dumps(manifest,sort_keys=True,indent=2)+chr(10))
           print("Fresh corrected pilot source manifest pinned for",manifest["hero_deck"])
           PY
       - name: Archive fresh experiment in private R2 without approval
