@@ -197,20 +197,37 @@ def project(source: Path, registry_path: Path, output: Path):
         pages = []
         for start in range(0, n, 25):
             selected = rows[start:start + 25]
-            runs = [projections[deck][r["game_id"]]["run"] for r in selected]
-            rounds = max(r["completed_rounds"] for r in runs)
-            batch = {
-                "format": "commander-gorge-outcomes-v1", "schema_version": 1,
-                "engine": "gorge", "deck_key": deck,
-                "deck_sha256": next(iter(revisions)),
-                "scenario": "four_real_commander_decks", "pilot_style": "gorge_bot",
-                "provisional_mode": "not_applicable",
-                "opponent_fidelity": "gorge_native_full_100_card_decks",
-                "outcomes_are_competitive_win_rates": False,
-                "requested_rounds": rounds,
-                "runs": [{**run, "outcome": {**run["outcome"], "requested_rounds": rounds}}
-                         for run in runs], "example_replays": []
-            }
+            games = []
+            for row in selected:
+                gid = row["game_id"]
+                run = projections[deck][gid]["run"]
+                rounds = run["completed_rounds"]
+                batch = {
+                    "format": "commander-gorge-outcomes-v1", "schema_version": 1,
+                    "engine": "gorge", "deck_key": deck,
+                    "deck_sha256": next(iter(revisions)),
+                    "scenario": "four_real_commander_decks", "pilot_style": "gorge_bot",
+                    "provisional_mode": "not_applicable",
+                    "opponent_fidelity": "gorge_native_full_100_card_decks",
+                    "outcomes_are_competitive_win_rates": False,
+                    "requested_rounds": rounds,
+                    "runs": [{**run, "outcome": {
+                        **run["outcome"], "requested_rounds": rounds}}],
+                    "example_replays": []
+                }
+                file_id = digest(gid.encode())
+                game_checksum = write_json(deck_root / "games" / (file_id + ".json"), {
+                    "schema": "gorge-r2-materialized-game-v1",
+                    "deck": deck, "version": version, "game_id": gid, "batch": batch
+                })
+                pod = json.loads(row["decks_json"])
+                games.append({
+                    "game_id": gid, "turns": row["turns"],
+                    "result": "win" if row["hero_seat"] == row["winner_seat"] else "loss",
+                    "opponent_decks": [d for seat, d in enumerate(pod)
+                                       if seat != row["hero_seat"]],
+                    "sha256": game_checksum
+                })
             page_no = start // 25
             rel = f"pages/{page_no:06d}.json"
             checksum = write_json(deck_root / rel, {
@@ -218,7 +235,7 @@ def project(source: Path, registry_path: Path, output: Path):
                 "deck": deck, "version": version, "page": page_no,
                 "total": n, "has_more": start + len(selected) < n,
                 "next_cursor": str(page_no + 1) if start + len(selected) < n else None,
-                "game_ids": [r["game_id"] for r in selected], "batch": batch
+                "games": games
             })
             pages.append({"path": rel, "sha256": checksum, "count": len(selected)})
         decks[deck] = {
