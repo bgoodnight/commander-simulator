@@ -388,7 +388,7 @@ export default {
       }
     }
     const detailMatch=url.pathname.match(/^\/v1\/games\/([^/]+?)(\/timeline)?$/);
-    if(url.pathname!=="/v1/summary" && url.pathname!=="/v1/ui/overview" && url.pathname!=="/v1/ui/batch" && url.pathname!=="/v1/ui/catalog" && url.pathname!=="/v1/ui/page" && url.pathname!=="/v1/ui/game" && url.pathname!=="/v1/ui/insights" && url.pathname!=="/v1/games" && !detailMatch)
+    if(url.pathname!=="/v1/summary" && url.pathname!=="/v1/ui/overview" && url.pathname!=="/v1/ui/batch" && url.pathname!=="/v1/ui/catalog" && url.pathname!=="/v1/ui/page" && url.pathname!=="/v1/ui/game" && url.pathname!=="/v1/ui/events" && url.pathname!=="/v1/ui/insights" && url.pathname!=="/v1/games" && !detailMatch)
       return fail(404,"not_found",started);
     let gameId=null;
     if(detailMatch) {
@@ -415,22 +415,32 @@ export default {
     }
     const metrics={};
     try{
-      if(url.pathname==="/v1/ui/catalog" || url.pathname==="/v1/ui/page" || url.pathname==="/v1/ui/game" || url.pathname==="/v1/ui/insights"){
+      if(url.pathname==="/v1/ui/catalog" || url.pathname==="/v1/ui/page" || url.pathname==="/v1/ui/game" || url.pathname==="/v1/ui/events" || url.pathname==="/v1/ui/insights"){
         let page=null;
-        if(url.pathname==="/v1/ui/page" || url.pathname==="/v1/ui/game"){
+        if(url.pathname==="/v1/ui/page" || url.pathname==="/v1/ui/game" || url.pathname==="/v1/ui/events"){
           const raw=url.searchParams.get("page");
           if(raw===null||!/^(0|[1-9][0-9]{0,5})$/.test(raw))
             return fail(400,"invalid_page",started);
           page=Number(raw);
         }
         let selectedGame=null;
-        if(url.pathname==="/v1/ui/game"){
+        if(url.pathname==="/v1/ui/game" || url.pathname==="/v1/ui/events"){
           selectedGame=url.searchParams.get("game_id");
           if(!selectedGame||selectedGame.length>200 ||
              !/^[a-zA-Z0-9_.:/-]+$/.test(selectedGame))
             return fail(400,"invalid_game_id",started);
         }
-        const materialized=await getMaterialized(env.GORGE_R2,deck,registry,page,selectedGame,url.pathname==="/v1/ui/insights"?"insights":"summary");
+        let part=0;
+        if(url.pathname==="/v1/ui/events"){
+          const rawPart=url.searchParams.get("part");
+          if(rawPart!==null && !/^(0|[1-9][0-9]{0,5})$/.test(rawPart))
+            return fail(400,"invalid_event_part",started);
+          part=Number(rawPart||0);
+        }
+        const kind=url.pathname==="/v1/ui/insights"?"insights":
+          url.pathname==="/v1/ui/events"?"events":"summary";
+        const materialized=await getMaterialized(env.GORGE_R2,deck,registry,
+          page,selectedGame,kind,part);
         if(!materialized)return fail(404,"materialized_not_published",started);
         return json(materialized,materialized.status==="page_not_found"?404:200,duration(started));
       }
