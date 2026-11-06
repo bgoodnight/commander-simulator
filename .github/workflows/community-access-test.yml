@@ -9,6 +9,7 @@ on:
   push:
     branches:
       - "feature/cloudflare-access-community-accounts-20261106"
+      - "stage/cloudflare-community-accounts-20261106"
     paths:
       - "workers/community-access/**"
       - "workers/invitation-intake/**"
@@ -26,3 +27,7 @@ jobs:
         with:
           node-version: "22"
       - run: node --test workers/community-access/*.test.mjs
+      - name: Bundle protected account Worker (no deployment)
+        run: npx --yes wrangler@4 deploy --dry-run --config workers/community-access/wrangler.toml
+      - name: Bundle public invitation-intake Worker (no deployment)
+        run: npx --yes wrangler@4 deploy --dry-run --config workers/invitation-intake/wrangler.toml
