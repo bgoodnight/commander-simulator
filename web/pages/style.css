@@ -2606,3 +2606,15 @@ body:has(#pane-records:not([hidden])) .compact-selection{margin-bottom:3px}
   .latest-insight-grid .gorge-cohort-hero-frame .game-outcome-hero-copy{width:100%;padding:18px 16px}
   .gorge-cohort-hero-frame>.game-outcome-hero-highlights{padding:0 12px 12px;gap:8px}
 }
+
+/* The primary Results toolbar is intentionally visually hidden. The newer
+   standalone R2 panel has its OWN interactive toolbar and must not inherit
+   the 1x1 clipped absolute positioning from #long-game-panel. */
+#long-game-panel #gorge-r2-live .latest-results-topline{
+  position:relative;top:auto;right:auto;z-index:auto;
+  width:auto;height:auto;min-height:28px;overflow:visible;
+  clip-path:none;padding:0;margin:0 0 7px;
+}
+#long-game-panel #gorge-r2-live .game-outcome-refresh{
+  position:relative;z-index:1;
+}
