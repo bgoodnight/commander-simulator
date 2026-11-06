@@ -2676,3 +2676,6 @@ body.r2-original-results-active #gorge-replay-panel{display:none!important}
 @media(max-width:560px){.insight-graveyard-layer{margin-left:-40px}
   .insight-graveyard-layer:first-child{margin-left:0}
   .insight-graveyard-layer.is-front{max-width:calc(100% - 24px)}}
+
+/* Keep preview artwork before the label when using appendChild. */
+.insight-graveyard-layer-art{order:-1}

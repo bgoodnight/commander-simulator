@@ -1256,7 +1256,7 @@
             if(typeof art==="string"&&/^https:\/\//.test(art)){
               const img=create("img","insight-graveyard-layer-art");
               img.src=art;img.alt="";img.loading="lazy";
-              expand.prepend(img);
+              expand.appendChild(img);
             }
             sleeve.appendChild(expand);
           }
