@@ -4,6 +4,7 @@ import {
   publishDeck, replacePublication, unpublish, getListedPublication,
   listPublications, copyPublication
 } from "./store.mjs";
+import { listInvitations, reviewInvitation } from "./invitations.mjs";
 
 // Development-only Worker; Access protects ALL routes. No external deployment
 // or mutations to the current Results Worker.
@@ -47,6 +48,15 @@ export default {
     if(method!=="GET"&&request.headers.get("origin")!==url.origin)
       return json({error:"origin_forbidden"},403);
     try {
+      if(method==="GET"&&path==="/v1/admin/invitations")
+        return json({requests:await listInvitations(env.COMMUNITY_DB,account)});
+      const review=path.match(/^\/v1\/admin\/invitations\/([a-z0-9-]{36})\/review$/);
+      if(method==="POST"&&review) {
+        const body=await bodyJson(request);
+        if(!body||Object.keys(body).length!==1)
+          return json({error:"invalid_review_request"},400);
+        return json({request:await reviewInvitation(env.COMMUNITY_DB,account,review[1],body.status)});
+      }
       if(method==="GET"&&path==="/v1/decks")
         return json({decks:await listPrivateDecks(env,account)});
       if(method==="POST"&&path==="/v1/decks")
