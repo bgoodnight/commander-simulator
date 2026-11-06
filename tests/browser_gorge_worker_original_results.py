@@ -328,7 +328,7 @@ def test_omniscient_materialized_original_layout():
                 opening=page.locator("#turn-reviewer-results .insight-turn-row").first
                 assert "identities private" not in opening.inner_text().lower()
                 assert run["opening_hand"][0] in opening.inner_text()
-                opening.locator("summary").click()
+                opening.locator("summary.insight-turn-row-summary").click()
                 assert "The public replay does not include card identities" not in opening.inner_text()
                 assert "/v1/ui/batch" not in calls, calls
                 assert calls.count("/v1/ui/game")==1, calls
