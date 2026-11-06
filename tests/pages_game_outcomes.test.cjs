@@ -615,6 +615,18 @@ test('hero performance metrics open original details as modal panels, not grid d
       assert.equal(dialog.open,false);
       assert.equal(tile.focused,true);
     }
+    // Game-length distribution is vertical with a sparse tick axis.
+    tiles[1].events.click({preventDefault(){},stopPropagation(){}});
+    assert.ok(walk(dialog).some(n=>n.className==='game-length-histogram-bars'));
+    const axis=walk(dialog).find(n=>n.className==='game-length-histogram-axis');
+    assert.ok(axis&&axis.children.length<=5);
+    // Life progression visualizes only seat 0, not all four opponents.
+    tiles[3].events.click({preventDefault(){},stopPropagation(){}});
+    const life=walk(dialog).find(n=>n.tag==='svg'&&
+      n.attributes['aria-label']?.includes('Your median life'));
+    assert.ok(life);
+    assert.equal(walk(life).filter(n=>n.tag==='polyline').length,1);
+    assert.ok(!walk(dialog).some(n=>n.textContent==='Seat 2'));
     assert.ok(walk(dialog).some(n=>n.className==='game-outcome-round-slider'));
   }finally{global.document=before}
 });
