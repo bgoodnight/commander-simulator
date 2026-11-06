@@ -503,9 +503,18 @@ let longGameSourceNote="Checking the published simulation library…";
 function outcomeOpponentPortrait(bucket){
   if(bucket.kind==="composition"||bucket.kind==="named_pod")return null;
   if(bucket.kind==="named"){
-    // Real opposing names are used only when the batch actually records them.
-    const card=cardInfo(bucket.portraitName||"");
-    return card?.art?{name:card.name,art:card.art}:null;
+    // Opponent commanders come from verified Gorge pod records. Most are not
+    // present in the user's six cached decklists, so a cache-only lookup
+    // leaves genuine opposing commanders without their illustrations.
+    const name=String(bucket.portraitName||"").trim();
+    if(!name||name.length>180)return null;
+    const card=cardInfo(name);
+    if(card?.art)return {name:card.name,art:card.art};
+    // Scryfall's named-card image endpoint redirects directly to its hosted
+    // art crop. It needs no local card import, API key or browser-side fetch.
+    // Failed/missing images fall back to an explicit placeholder in Results.
+    return {name,art:"https://api.scryfall.com/cards/named?exact="+
+      encodeURIComponent(name)+"&format=image&version=art_crop"};
   }
   // Illustration only: an existing pinned commander stands in for a
   // generic opponent policy, NOT a simulated opposing Commander deck.
@@ -523,6 +532,8 @@ function outcomeOpponentPortrait(bucket){
   const card=deck&&commanderCard(deck);
   return card?.art?{name:card.name,art:card.art}:null;
 }
+// Share the same opponent portrait lookup with both local and R2 Results.
+window.GorgeDeckLabOpponentPortrait=outcomeOpponentPortrait;
 function renderLongGamePanel(){
   const root=$("game-outcome-results"),status=$("game-outcome-status");
   const reviewer=$("turn-reviewer-results");

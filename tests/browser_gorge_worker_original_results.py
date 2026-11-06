@@ -101,6 +101,22 @@ def test():
                 assert ("approved games with complete recorded card observations" in insights
                         or "No named card observations are available" in insights)
                 assert "Complete-cohort card insights are not yet available" not in page.locator("#game-outcome-results").inner_text()
+                # The R2 adapter must reuse the original opponent portrait
+                # provider for named commanders (including uncached precons).
+                assert page.evaluate("typeof window.GorgeDeckLabOpponentPortrait")=="function"
+                assert page.evaluate("""() => {
+                    const data=window.GorgeDeckLabOpponentPortrait({
+                        kind:"named",portraitName:"Dr. Madison Li"
+                    });
+                    return Boolean(data&&data.name==="Dr. Madison Li"&&
+                        /^https:\\/\\/(api.scryfall.com|cards.scryfall.io)\\//.test(data.art));
+                }""")
+                matchup=page.locator("#game-outcome-results .game-outcome-hero-highlight").first
+                matchup.click()
+                art=page.locator("#game-outcome-results .game-outcome-detail-dialog .game-outcome-opponent-art")
+                art.wait_for(state="attached",timeout=15000)
+                assert art.get_attribute("src").startswith("https://")
+                page.locator("#game-outcome-results .game-outcome-detail-close").click()
                 # An open information popup overlays the nearby card, like
                 # the matching Overall Results control. Close before clicking.
                 page.locator("#key-insights-info .game-outcome-limits summary").click()
