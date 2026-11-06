@@ -220,6 +220,7 @@
           deckCardNames:selected.cardNames,
           renderMana:value=>window.GorgeDeckLabMana?.(value),
           onOpenRecordedCard:name=>window.GorgeDeckLabOpenCard?.(name),
+          onOpenTokenCard:card=>window.GorgeDeckLabOpenTokenCard?.(card),
           hideGameSelector:true,displayGameLabel:label,focusTurn:turn,
           fullCardInsights:verifiedInsights,
           fullCohortGames:verifiedInsightCount
@@ -360,6 +361,7 @@
         deckCardNames:selected.cardNames,
         renderMana:value=>window.GorgeDeckLabMana?.(value),
         onOpenRecordedCard:name=>window.GorgeDeckLabOpenCard?.(name),
+          onOpenTokenCard:card=>window.GorgeDeckLabOpenTokenCard?.(card),
         fullCardInsights:verifiedInsights||window.__gorgeCardInsights?.[key]||null,
         fullCohortGames:verifiedInsightCount||window.__gorgeFullCohort?.decks?.[key]?.n||null
       });
