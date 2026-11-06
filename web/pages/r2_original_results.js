@@ -3,7 +3,8 @@
  * No native Gorge interpretation in the browser, no experimental fallback.
  */
 (function(){
-  const base=window.GORGE_R2_API_BASE||
+  const base=new URLSearchParams(location.search).get("r2Api")||
+    window.GORGE_R2_API_BASE||
     "https://gorge-r2-direct-api-preview.darbosama.workers.dev";
   let api;
   try{
