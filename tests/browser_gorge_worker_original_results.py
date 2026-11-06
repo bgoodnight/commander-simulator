@@ -101,6 +101,9 @@ def test():
                 assert ("approved games with complete recorded card observations" in insights
                         or "No named card observations are available" in insights)
                 assert "Complete-cohort card insights are not yet available" not in page.locator("#game-outcome-results").inner_text()
+                # An open information popup overlays the nearby card, like
+                # the matching Overall Results control. Close before clicking.
+                page.locator("#key-insights-info .game-outcome-limits summary").click()
                 first=page.locator("#key-insights-grid .insight-featured-panel").first
                 if first.count():
                     first.locator("summary").first.click()
