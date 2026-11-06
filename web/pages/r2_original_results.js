@@ -36,6 +36,7 @@
       reviewer.style.setProperty("display",ready?"block":"none","important");
     }
     if(!ready){
+      document.dispatchEvent(new Event("gorge:results-reset"));
       $("r2-game-picker")?.remove();
       $("key-insights-grid")?.replaceChildren();
       $("turn-reviewer-results")?.replaceChildren();
@@ -175,6 +176,9 @@
     detailStats.append(matchupTitle,matchupList,turnsTitle,turnsList);
     setResultsState("ready");
     showCohortInsights(verifiedInsights,summary.n,catalog.version);
+    document.dispatchEvent(new CustomEvent("gorge:cohort-ready",{detail:{
+      deck:key,version:catalog.version,total:catalog.total
+    }}));
     const picker=create("div");picker.id="r2-game-picker";
     const gameSelect=create("select");gameSelect.className="game-outcome-scenario-select";
     gameSelect.setAttribute("aria-label","Choose recorded game");
