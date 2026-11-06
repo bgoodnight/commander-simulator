@@ -2595,6 +2595,19 @@
       if(panel)grid.appendChild(panel);
     }
   }
+  // Reuse the exact information control and popup treatment from the
+  // Overall Results hero; only the explanatory copy differs.
+  function insightMethodologyDisclosure(message){
+    const info=create("details","game-outcome-limits insight-methodology");
+    const trigger=create("summary",null,"ⓘ");
+    trigger.setAttribute("aria-label","About these insights");
+    trigger.title="Card insight methodology and limitations";
+    const popup=create("div","game-outcome-limits-content");
+    popup.append(create("strong",null,"Key Insights · methodology"),
+      create("p",null,message));
+    info.append(trigger,popup);
+    return info;
+  }
   // Methodology is a compact disclosure in the Key Insights title row.
   // Standalone renderers/test fixtures without that panel keep the disclosure
   // immediately above their grid.
@@ -2615,21 +2628,19 @@
       if(Array.isArray(items))rankings[kind]=items.map(item=>({...item,events:[],seen:new Set()}));
     insightPanels(grid,rankings,total,[],{...options,isGorge:true,tutorSearchCount:report.confirmed_tutors||0},()=>{});
     if(!grid.children.length)grid.appendChild(create("p","game-outcome-empty","No recorded card insights."));
-    const info=create("details","insight-methodology");
-    const trigger=create("summary",null,"ⓘ");trigger.setAttribute("aria-label","About these insights");
-    info.append(trigger,create("p","micro","Card rankings use the complete verified cohort of "+total+
-      " games. Example games link to the recorded event when source evidence is available."));
+    const info=insightMethodologyDisclosure(
+      "Card rankings use the complete verified cohort of "+total+
+      " games. Example games link to the recorded event when source evidence is available.");
     placeInsightMethodology(root,info,grid);
   }
   function renderRecordedBatchInsights(root,batch,options={}){
     const report=model([batch],options.deckKey,options.deckHash);
     const runs=report.groups.flatMap(group=>group.runs);
     const signals=observationCardStats(runs,options.lookupRecordedCard,options.commanderName);
-    const info=create("details","insight-methodology");
-    const trigger=create("summary",null,"ⓘ");trigger.setAttribute("aria-label","About these insights");
-    info.append(trigger,create("p","micro",signals.coverage?
-      "Card findings from "+signals.coverage+" of "+runs.length+" approved games with complete recorded card observations. These are observed-game findings, not verified full-cohort rankings.":
-      "No named card observations are available in these approved games yet."));
+    const info=insightMethodologyDisclosure(signals.coverage?
+      "Card findings from "+signals.coverage+" of "+runs.length+
+      " approved games with complete recorded card observations. These are observed-game findings, not verified full-cohort rankings.":
+      "No named card observations are available in these approved games yet.");
     const grid=create("div","board-grid game-outcome-grid latest-insight-grid");
     if(signals.coverage){
       const owned=Array.isArray(options.deckCardNames)?new Set(options.deckCardNames.map(name=>name.toLowerCase())):null;
