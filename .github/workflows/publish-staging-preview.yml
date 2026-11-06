@@ -1,6 +1,6 @@
 name: Publish reusable Commander staging preview
 # Refresh source-backed token zones and planeswalkers (PR #240).
-# Preview isolated full-state R2 release-check branch (PR #241); production unaffected.
+# Restore the established Results staging preview after materialized-layout regression.
 # Publish combined token identity/art/stack integration from Results staging PR #236.
 # Refresh game-length histogram, player-only life and circular info icon (PR 231).
 # Refresh verified opponent commander portraits in Best Matchup (PR #229).
@@ -16,7 +16,7 @@ on:
       source_ref:
         description: "Staging branch or immutable commit to preview"
         required: true
-        default: "stage/omniscient-r2-release-check-20261106"
+        default: "stage/r2-ui-copy-decklist-20261106"
         type: string
   push:
     branches: [main]
@@ -42,7 +42,7 @@ jobs:
           REQUESTED_REF: ${{ github.event.inputs.source_ref }}
         run: |
           set -euo pipefail
-          REF="${REQUESTED_REF:-stage/omniscient-r2-release-check-20261106}"
+          REF="${REQUESTED_REF:-stage/r2-ui-copy-decklist-20261106}"
           if [[ ! "$REF" =~ ^(stage/|work/stage-)[A-Za-z0-9._/-]+$ && ! "$REF" =~ ^[a-f0-9]{40}$ ]]; then
             echo "Only explicit staging refs or immutable commit SHAs may be previewed" >&2
             exit 1
