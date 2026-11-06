@@ -1,5 +1,11 @@
 name: Deploy private-bucket Gorge R2 read-only Worker
+# One-time verified rollout on merge of this workflow, plus manual later runs.
+# Do not automatically redeploy on every unrelated source or analysis change.
 on:
+  push:
+    branches: [main]
+    paths:
+      - ".github/workflows/gorge-r2-worker-deploy.yml"
   workflow_dispatch:
 permissions:
   contents: read
