@@ -91,11 +91,13 @@
       return el;
     };
     const heading=create("h3","Approved simulation results");
+    const overview=create("section");overview.className="r2-cohort-overview";
     const totals=create("p",summary.n+" games · "+summary.wins+" wins · "+
       summary.losses+" losses · "+(summary.win_rate*100).toFixed(1)+
       "% win rate (25% four-player reference)");
     const info=create("p","Summary covers the complete approved cohort. Game pages and replays load separately.");
     const detailStats=create("section");
+    detailStats.className="r2-cohort-details";
     const matchupTitle=create("h4","Full-cohort opponent matchups");
     const matchupList=create("div");
     for(const group of (summary.groups?.opponents||[]).slice(0,12)){
@@ -119,6 +121,7 @@
     }
     detailStats.append(matchupTitle,matchupList,turnsTitle,turnsList);
     const insightSection=create("section");
+    insightSection.className="r2-cohort-insights";
     const insightTitle=create("h4","Key Insights · complete approved cohort");
     insightSection.append(insightTitle);
     if(verifiedInsights){
@@ -144,10 +147,17 @@
         "Card-level insights are pending complete verified native evidence; outcome statistics remain available."));
     }
     const navigation=create("div");
+    navigation.className="r2-game-navigation";
     const list=create("div");
+    list.className="r2-game-list";
     const replayHeading=create("h4","Select a game to review its recorded turns");
     const replayRoot=create("div");
-    root.replaceChildren(heading,totals,info,detailStats,insightSection,navigation,list,replayHeading,replayRoot);
+    // The renderer also builds one-game outcome cards. Keep that auxiliary
+    // output hidden: it is not a summary of the full cohort. Its separate
+    // reviewerRoot remains visible and interactive.
+    replayRoot.hidden=true;
+    overview.append(heading,totals,info);
+    root.replaceChildren(overview,detailStats,insightSection,navigation,list,replayHeading,replayRoot);
     let page=0;
     const readJson=async(url)=>{
       const res=await fetch(url,{cache:"no-store"});
