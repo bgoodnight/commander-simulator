@@ -6,6 +6,9 @@ on:
       - "tools/gorge_r2_experiment_ingest.py"
       - "tools/gorge_landmark_features.py"
       - "tools/gorge_event_features.py"
+      - "tools/gorge_assemble_model_table.py"
+      - "tools/gorge_hero_ebm_prototype.py"
+      - "tests/test_gorge_assemble_model_table.py"
       - "tests/test_gorge_event_features.py"
       - "tests/test_gorge_r2_experiment_ingest.py"
       - ".github/workflows/gorge-r2-experimental-source-smoke.yml"
@@ -40,7 +43,7 @@ jobs:
         with:
           python-version: "3.12"
       - name: Run private R2 acquisition contract tests
-        run: python -m unittest tests.test_gorge_r2_experiment_ingest tests.test_gorge_event_features -v
+        run: python -m unittest tests.test_gorge_r2_experiment_ingest tests.test_gorge_event_features tests.test_gorge_assemble_model_table -v
       - name: Verify exact R2 experimental archive and derive landmark observations
         shell: bash
         run: |
@@ -52,6 +55,8 @@ jobs:
             --hero "$HERO" --output "$RUNNER_TEMP/landmarks.jsonl"
           python -m tools.gorge_event_features --native-root "$RUNNER_TEMP/source/extracted/results" \
             --hero "$HERO" --output "$RUNNER_TEMP/event-features.jsonl"
+          python tools/gorge_hero_ebm_prototype.py --source "$RUNNER_TEMP/source/extracted/results" --hero "$HERO" --output "$RUNNER_TEMP/private-analytics"
+          python tools/gorge_assemble_model_table.py --games "$RUNNER_TEMP/private-analytics/hero_features.jsonl" --landmarks "$RUNNER_TEMP/landmarks.jsonl" --events "$RUNNER_TEMP/event-features.jsonl" --output "$RUNNER_TEMP/private-analytics/analytic_features.jsonl"
           python - "$RUNNER_TEMP/source/acquisition-report.json" "$RUNNER_TEMP/landmarks.jsonl" "$RUNNER_TEMP/event-features.jsonl" <<'PY'
           import json,os,sys
           d=json.load(open(sys.argv[1]))
