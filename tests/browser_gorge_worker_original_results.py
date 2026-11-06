@@ -153,6 +153,8 @@ def test_materialized():
                     print("Replay renderer JS stack:",page.evaluate("window.__sourceReplayError || null"))
                     raise
                 assert page.locator("#turn-reviewer-results .insight-turn-row").count()>0
+                if one_batch["runs"][0].get("gorge_source",{}).get("opening_hand_boundary")=="first_pending_decision_of_turn":
+                    assert page.get_by_text("First recorded hand",exact=False).first.is_visible()
                 assert page.get_by_text("201 games · complete cohort",exact=False).is_visible()
                 assert page.get_by_text("Fixture Card",exact=False).first.is_visible()
                 # A selected replay must not render misleading one-game
