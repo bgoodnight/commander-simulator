@@ -50,7 +50,7 @@ jobs:
             --hero "$HERO" --account-id "$ACCOUNT" --destination "$RUNNER_TEMP/source"
           python -m tools.gorge_landmark_features --native-root "$RUNNER_TEMP/source/extracted/results" \
             --hero "$HERO" --output "$RUNNER_TEMP/landmarks.jsonl"
-          python -m tools.gorge_event_features --native-root "$RUNNER_TEMP/source/extracted/results" \\
+          python -m tools.gorge_event_features --native-root "$RUNNER_TEMP/source/extracted/results" \
             --hero "$HERO" --output "$RUNNER_TEMP/event-features.jsonl"
           python - "$RUNNER_TEMP/source/acquisition-report.json" "$RUNNER_TEMP/landmarks.jsonl" "$RUNNER_TEMP/event-features.jsonl" <<'PY'
           import json,os,sys
