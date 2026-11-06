@@ -134,12 +134,21 @@ def test_materialized():
                 assert not any(path.endswith("/game") for path,_ in calls)
                 page.get_by_role("button",name="Next 25").click()
                 page.get_by_text("Page 2 of 9",exact=False).wait_for(state="visible",timeout=60000)
+                # Preserve a real JS stack if replay rendering is rejected.
+                page.evaluate("""() => {
+                  const original=window.DeckGameOutcomes.render;
+                  window.DeckGameOutcomes.render=(...args)=>{
+                    try{return original(...args);}
+                    catch(err){window.__sourceReplayError=String(err.stack||err);throw err;}
+                  };
+                }""")
                 page.locator(".game-outcome-game-select").first.click()
                 try:
                     page.get_by_text("Selected game replay · individual game",exact=False).wait_for(timeout=15000)
                 except Exception:
                     print("Replay diagnostic:",page.locator("#game-outcome-results").inner_text())
                     print("Browser errors:",errors)
+                    print("Replay renderer JS stack:",page.evaluate("window.__sourceReplayError || null"))
                     raise
                 assert page.locator("#turn-reviewer-results .insight-turn-row").count()>0
                 assert page.get_by_text("201 games · 50 wins · 151 losses",exact=False).is_visible()
