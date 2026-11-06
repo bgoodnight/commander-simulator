@@ -80,8 +80,12 @@ def test_materialized():
     calls=[]
     summary={"schema":"gorge-r2-live-summary-v1","cohort_version":VERSION,
              "n":201,"wins":50,"losses":151,"win_rate":50/201,
-             "groups":{"opponents":[]},"game_turn_histogram":[]}
+             "groups":{"opponents":[{"name":"Fixture opponent","wins":50,"losses":151,"n":201,"win_rate":50/201}]},
+             "game_turn_histogram":[{"turn":10,"games":101},{"turn":11,"games":100}]}
     one_batch={**DOCUMENT["batch"],"runs":[DOCUMENT["batch"]["runs"][0]]}
+    source_card=next((name for name in one_batch["runs"][0].get("opening_hand",[])
+                      if name not in {"Swamp","Island","Plains","Mountain","Forest"}),
+                     one_batch["runs"][0].get("opening_hand",["Swamp"])[0])
     def response(route):
         parsed=urlparse(route.request.url)
         query=parse_qs(parsed.query)
@@ -96,7 +100,7 @@ def test_materialized():
                      "coverage":{"missing":0,"level":"full-cohort"},
                      "categories":{"creature":[],"artifact":[],"enchantment":[],
                          "instant":[],"spell":[],"land":[],"activated":[],"triggered":[],
-                         "played":[{"name":"Fixture Card","games":90,
+                         "played":[{"name":source_card,"games":90,
                          "eventCount":100,"score":90,"average":100/201,
                          "median":0,"heldMedian":None,"timesPlayed":100,
                          "seenGames":90,"turns":[3],"exampleEvents":[],
@@ -129,7 +133,7 @@ def test_materialized():
                 page.goto(f"http://127.0.0.1:{server.server_port}/results.html?deck={DECK}&materializedResults=1",
                           wait_until="domcontentloaded")
                 page.get_by_text("201 games · complete cohort",exact=False).wait_for(timeout=60000)
-                assert page.get_by_text("Fixture Card",exact=False).first.is_visible()
+                assert page.get_by_text(source_card,exact=False).first.is_visible()
                 picker=page.locator('select[aria-label="Choose recorded game"]:visible')
                 page.locator('select[aria-label="Choose recorded game"] option[value="fixture-8-0"]').wait_for(state="attached",timeout=60000)
                 assert picker.count()==1
@@ -156,12 +160,29 @@ def test_materialized():
                 if one_batch["runs"][0].get("gorge_source",{}).get("opening_hand_boundary")=="first_pending_decision_of_turn":
                     assert page.get_by_text("First recorded hand",exact=False).first.is_visible()
                 assert page.get_by_text("201 games · complete cohort",exact=False).is_visible()
-                assert page.get_by_text("Fixture Card",exact=False).first.is_visible()
+                assert page.get_by_text(source_card,exact=False).first.is_visible()
                 # A selected replay must not render misleading one-game
                 # outcome statistics alongside the full-cohort dashboard.
                 assert page.locator("#game-outcome-results .game-outcome-hero-frame:visible").count()==1
                 assert any(path.endswith("/game") and q.get("page")==["1"] for path,q in calls)
+                # A full-page screenshot does not scroll lazy images into view.
+                # Force the already-selected card art to load before capture,
+                # and report failed external images separately from missing DOM.
+                covers=page.locator("#turn-reviewer-results .insight-turn-cover")
+                assert covers.count()>0, "No turn artwork was selected from the card catalog"
+                artwork=page.evaluate("""async () => {
+                  const images=[...document.querySelectorAll('#turn-reviewer-results .insight-turn-cover')];
+                  for(const img of images) img.loading='eager';
+                  await Promise.race([Promise.all(images.map(img=>img.decode().catch(()=>{}))),
+                    new Promise(resolve=>setTimeout(resolve,10000))]);
+                  return images.map(img=>({src:img.currentSrc||img.src,complete:img.complete,
+                    width:img.naturalWidth,display:getComputedStyle(img).display}));
+                }""")
+                print("Turn artwork diagnostics:",json.dumps(artwork))
+                assert all(item["display"]!="none" for item in artwork)
                 page.screenshot(path=str(OUT/f"{DECK}-{mode}-materialized-results.png"),full_page=True)
+                page.locator("#turn-reviewer-results .insight-turn-row summary").first.click()
+                page.screenshot(path=str(OUT/f"{DECK}-{mode}-expanded-turn.png"),full_page=True)
                 page.close()
             browser.close()
         assert not errors,errors
