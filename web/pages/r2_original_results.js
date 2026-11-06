@@ -35,6 +35,10 @@
     if(catalog.schema!=="gorge-r2-materialized-response-v1" ||
        catalog.deck!==key)throw Error("Invalid materialized catalog");
     if(ticket!==generation||key!==window.__deckLabActiveKey)return true;
+    // Preserve the polished original renderer for cohorts it can safely handle.
+    // Opt into the new layout for staging via ?materializedResults=1.
+    const preview=new URLSearchParams(window.location.search).get("materializedResults")==="1";
+    if(catalog.status==="ready" && catalog.total<=200 && !preview)return false;
     if(catalog.status!=="ready"){
       statusMessage("No approved current results are published for this deck.");
       return true;
