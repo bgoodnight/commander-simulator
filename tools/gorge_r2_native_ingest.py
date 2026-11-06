@@ -104,9 +104,23 @@ def download(batch: str, destination: Path, endpoint: str, bucket: str,
         # Native files are named by run, not warehouse path. Download ONLY keys
         # whose filename contains the exact run-attempt suffix, then inspect
         # archive contents and native identity before deriving features.
-        listing=_aws(["s3api","list-objects-v2","--bucket",bucket,
-                      "--prefix","native/v1/","--output","json"],endpoint)
-        keys=[x["Key"] for x in json.loads(listing.stdout).get("Contents",[])]
+        # R2 list-objects-v2 is paginated. Scope by hero when possible;
+        # never silently truncate the source population at 1000 keys.
+        keys=[]
+        token=None
+        while True:
+            cmd=["s3api","list-objects-v2","--bucket",bucket,
+                 "--prefix","native/v1/"+(hero+"/" if hero else ""),
+                 "--output","json"]
+            if token:
+                cmd+=["--continuation-token",token]
+            page=json.loads(_aws(cmd,endpoint).stdout)
+            keys.extend(item["Key"] for item in page.get("Contents",[]))
+            if not page.get("IsTruncated"):
+                break
+            token=page.get("NextContinuationToken")
+            if not token:
+                raise ValueError("R2 listing truncated without continuation token")
         suffix="-"+batch+".tar.gz"
         matched=[key for key in keys if key.endswith(suffix) and
                  (hero is None or key.startswith("native/v1/"+hero+"/"))]
