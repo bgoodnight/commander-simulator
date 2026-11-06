@@ -170,15 +170,49 @@ jobs:
           endpoint="https://$ACCOUNT.r2.cloudflarestorage.com"
           root="warehouse/v1/$BATCH/$HERO/0"
           native="native/experimental/v1/$BATCH/$HERO"
-          for prefix in "$root/" "$native/"; do
-            count="$(aws --endpoint-url "$endpoint" s3api list-objects-v2 \
-              --bucket gorge-simulations --prefix "$prefix" \
-              --query KeyCount --output text)"
-            [[ "$count" == "0" ]] || {
-              echo "::error::R2 prefix $prefix already exists; refuse overwrite"
-              exit 1
-            }
-          done
+          # A previously completed immutable archive is an expected retry case.
+          # Confirm the exact bytes of BOTH prefixes before treating it as done.
+          warehouse_count="$(aws --endpoint-url "$endpoint" s3api list-objects-v2 \
+            --bucket gorge-simulations --prefix "$root/" \
+            --query KeyCount --output text)"
+          native_count="$(aws --endpoint-url "$endpoint" s3api list-objects-v2 \
+            --bucket gorge-simulations --prefix "$native/" \
+            --query KeyCount --output text)"
+          if [[ "$warehouse_count" != "0" || "$native_count" != "0" ]]; then
+            mkdir -p "$RUNNER_TEMP/remote-warehouse" "$RUNNER_TEMP/remote-native"
+            aws --endpoint-url "$endpoint" s3 cp \
+              "s3://gorge-simulations/$root/" "$RUNNER_TEMP/remote-warehouse/" \
+              --recursive --no-progress
+            aws --endpoint-url "$endpoint" s3 cp \
+              "s3://gorge-simulations/$native/" "$RUNNER_TEMP/remote-native/" \
+              --recursive --no-progress
+            python - <<'PY'
+          import hashlib,os
+          from pathlib import Path
+          root=Path(os.environ["RUNNER_TEMP"])
+          for label,expected,actual in (
+            ("warehouse",root/"warehouse",root/"remote-warehouse"),
+            ("native",root/"verified/native",root/"remote-native"),
+          ):
+              def files(directory):
+                  return {p.relative_to(directory).as_posix():
+                      hashlib.sha256(p.read_bytes()).hexdigest()
+                      for p in directory.rglob("*") if p.is_file()}
+              want,found=files(expected),files(actual)
+              if want!=found:
+                  missing=sorted(set(want)-set(found))
+                  extra=sorted(set(found)-set(want))
+                  changed=sorted(k for k in set(want)&set(found)
+                                 if want[k]!=found[k])
+                  raise SystemExit(
+                      f"R2 {label} immutable archive differs: "
+                      f"missing={missing}, extra={extra}, changed={changed}. "
+                      "No overwrite or repair attempted; investigate source.")
+              print(f"Verified existing {label}: {len(want)} exact SHA-256 matches")
+          PY
+            echo "Existing R2 archive matches exact pinned source bytes; no writes performed." >> "$GITHUB_STEP_SUMMARY"
+            exit 0
+          fi
           aws --endpoint-url "$endpoint" s3 cp "$RUNNER_TEMP/verified/native/" \
             "s3://gorge-simulations/$native/" --recursive --no-progress
           aws --endpoint-url "$endpoint" s3 cp "$RUNNER_TEMP/warehouse/" \
