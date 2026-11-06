@@ -253,7 +253,9 @@ export function validateDeck(deck) {
  * Public-safe game index: use only after isApproved verifies the source cohort.
  * This is deliberately NOT a native replay or an events.parquet export.
  */
-export function approvedGameIndex(rows, deck, limit=20) {
+export function approvedGameIndex(rows, deck, limit=20, after=null) {
+  if(after!==null && (typeof after!=="string" || after.length>200 || !/^[a-zA-Z0-9_.:/-]+$/.test(after)))
+    throw Error("invalid_game_cursor");
   if(!Number.isInteger(limit) || limit<1 || limit>25)throw Error("invalid_game_limit");
   const ids=new Set();
   const parsed=rows.map(row=>{
@@ -273,9 +275,16 @@ export function approvedGameIndex(rows, deck, limit=20) {
       // No source trace, seed, hidden hand, event payload, or object keys.
     };
   }).sort((a,b)=>a.game_id.localeCompare(b.game_id));
+  // Keyset pagination avoids repeated first-page results as the collection grows.
+  // A cursor is an opaque-to-clients *approved game id*, never an R2 object key.
+  const start=after===null?0:parsed.findIndex(g=>g.game_id===after)+1;
+  if(after!==null && start===0)throw Error("unknown_game_cursor");
+  const games=parsed.slice(start,start+limit);
+  const hasMore=start+games.length<parsed.length;
   return {schema:"gorge-r2-approved-game-index-v1",deck,
     population:"approved_current_decisive_only",
-    total:parsed.length,limit,has_more:parsed.length>limit,games:parsed.slice(0,limit)};
+    total:parsed.length,limit,has_more:hasMore,
+    next_cursor:hasMore?games[games.length-1].game_id:null,games};
 }
 
 /** Safe detail for one already-verified, approved game; never exposes the native recording. */

@@ -1,0 +1,67 @@
+name: Guarded rollback of published Gorge R2 Results
+on:
+  workflow_dispatch:
+    inputs:
+      expected_current_version:
+        description: "Exact 64-character currently active version; guard against races"
+        required: true
+        type: string
+      target_version:
+        description: "Previously published immutable version to restore"
+        required: true
+        type: string
+permissions:
+  contents: read
+concurrency:
+  group: gorge-materialized-current-publication
+  cancel-in-progress: false
+jobs:
+  rollback:
+    runs-on: ubuntu-latest
+    timeout-minutes: 90
+    environment: r2-results-rollback
+    env:
+      ACCOUNT: ${{ secrets.GORGE_R2_ACCOUNT_ID }}
+      ACCESS: ${{ secrets.GORGE_R2_ACCESS_KEY_ID }}
+      SECRET: ${{ secrets.GORGE_R2_SECRET_ACCESS_KEY }}
+      EXPECTED: ${{ inputs.expected_current_version }}
+      TARGET: ${{ inputs.target_version }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Verify complete immutable target and construct guarded pointer offline
+        shell: bash
+        run: |
+          set -euo pipefail
+          [[ "$EXPECTED" =~ ^[a-f0-9]{64}$ ]] && [[ "$TARGET" =~ ^[a-f0-9]{64}$ ]]
+          test -n "$ACCOUNT" && test -n "$ACCESS" && test -n "$SECRET"
+          export AWS_ACCESS_KEY_ID="$ACCESS" AWS_SECRET_ACCESS_KEY="$SECRET" AWS_DEFAULT_REGION=auto
+          endpoint="https://$ACCOUNT.r2.cloudflarestorage.com"
+          prefix="s3://gorge-simulations/results/materialized/v1"
+          mkdir -p "$RUNNER_TEMP/rollback/versions/$TARGET"
+          aws --endpoint-url "$endpoint" s3 cp "$prefix/current.json" "$RUNNER_TEMP/current.json" --no-progress
+          aws --endpoint-url "$endpoint" s3 cp "$prefix/versions/$TARGET/" \
+            "$RUNNER_TEMP/rollback/versions/$TARGET/" --recursive --no-progress
+          python -m tools.gorge_r2_materialized_rollback \
+            --download "$RUNNER_TEMP/rollback" \
+            --registry data/gorge_analytics_cohort_registry_v1.json \
+            --current "$RUNNER_TEMP/current.json" \
+            --expected-current "$EXPECTED" --target-version "$TARGET" \
+            --output "$RUNNER_TEMP/rollback-pointer.json"
+      - name: Check current version again and activate verified previous version
+        shell: bash
+        run: |
+          set -euo pipefail
+          export AWS_ACCESS_KEY_ID="$ACCESS" AWS_SECRET_ACCESS_KEY="$SECRET" AWS_DEFAULT_REGION=auto
+          endpoint="https://$ACCOUNT.r2.cloudflarestorage.com"
+          prefix="s3://gorge-simulations/results/materialized/v1"
+          aws --endpoint-url "$endpoint" s3 cp "$prefix/current.json" "$RUNNER_TEMP/current-second.json" --no-progress
+          cmp "$RUNNER_TEMP/current.json" "$RUNNER_TEMP/current-second.json"
+          aws --endpoint-url "$endpoint" s3 cp "$RUNNER_TEMP/rollback-pointer.json" \
+            "$prefix/current.json" --content-type application/json \
+            --cache-control "no-store" --no-progress
+          aws --endpoint-url "$endpoint" s3 cp "$prefix/current.json" "$RUNNER_TEMP/published-pointer.json" --no-progress
+          cmp "$RUNNER_TEMP/rollback-pointer.json" "$RUNNER_TEMP/published-pointer.json"
+          echo "Rolled back from $EXPECTED to previously verified version $TARGET" >> "$GITHUB_STEP_SUMMARY"
