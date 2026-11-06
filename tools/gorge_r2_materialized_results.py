@@ -12,6 +12,7 @@ from collections import Counter, defaultdict
 from pathlib import Path
 
 from tools.gorge_cohort_eligibility import inspect, fingerprint, validate_registry
+from tools.gorge_r2_full_cohort_insights import FullCohortCardInsights
 
 SCHEMA = "gorge-r2-materialized-results-v1"
 FORBIDDEN = {"event_json", "intents", "log", "objects", "object_identity",
@@ -93,6 +94,7 @@ def project(source: Path, registry_path: Path, output: Path, expected_batches=No
     by_deck = defaultdict(list)
     projections = defaultdict(dict)
     source_refs = []
+    feature_merger = FullCohortCardInsights()
     seen = set()
     for manifest_path in manifests:
         batch, deck, shard = manifest_path.relative_to(source).parts[:3]
@@ -189,6 +191,7 @@ def project(source: Path, registry_path: Path, output: Path, expected_batches=No
             projections[deck][gid] = {"run": run, "ui_sha": ui_sha}
         if projection_ids != set(indexed):
             raise ValueError("Incomplete approved projection game identities")
+        feature_merger.add(manifest_path.parent, manifest_bytes, raw, projection_bytes, approved)
         by_deck[deck].extend(approved)
         source_refs.append({"batch": batch, "deck": deck, "shard": shard,
                             "manifest_sha256": digest(manifest_bytes),
@@ -198,7 +201,8 @@ def project(source: Path, registry_path: Path, output: Path, expected_batches=No
 
     if not by_deck:
         raise ValueError("No approved decisive games")
-    basis = {"registry_sha256": digest(registry_bytes), "source_shards": source_refs}
+    basis = {"registry_sha256": digest(registry_bytes), "source_shards": source_refs,
+             "card_feature_evidence_sha256": feature_merger.input_hashes}
     version = digest(canonical(basis))
     root = output / "versions" / version
     decks = {}
@@ -237,6 +241,20 @@ def project(source: Path, registry_path: Path, output: Path, expected_batches=No
             "cohort_version": version,
         }
         deck_root = root / deck
+        insights = feature_merger.report(deck, rows)
+        if insights is None:
+            summary["card_insights"] = {"status": "incomplete_native_features",
+                                        "verified_games": n}
+            insight_ref = None
+        else:
+            if insights["coverage"]["denominator"] != n or insights["coverage"]["missing"] != 0:
+                raise ValueError("Card insight population does not match summary")
+            insights["cohort_version"] = version
+            insights["deck"] = deck
+            insights["population"] = "approved_current_decisive_only"
+            insight_ref = {"path": "insights.json",
+                           "sha256": write_json(deck_root / "insights.json", insights)}
+            summary["card_insights"] = {"status": "complete", "verified_games": n}
         summary_hash = write_json(deck_root / "summary.json", summary)
         pages = []
         for start in range(0, n, 25):
@@ -287,6 +305,7 @@ def project(source: Path, registry_path: Path, output: Path, expected_batches=No
             "ui_deck_sha256": next(iter(revisions)),
             "cohort_id": cohort_ids[0], "cohort_fingerprint": next(iter(fingerprints)),
             "summary": {"path": "summary.json", "sha256": summary_hash},
+            "insights": insight_ref,
             "pages": pages
         }
     manifest = {"schema": SCHEMA, "version": version, "registry_sha256": digest(registry_bytes),

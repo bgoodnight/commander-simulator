@@ -90,6 +90,17 @@ def test_materialized():
                 "version":VERSION,"status":"ready","total":201}
         if parsed.path.endswith("/catalog"):
             payload={**common,"page_count":9,"summary":summary}
+        elif parsed.path.endswith("/insights"):
+            payload={**common,"insights":{"cohort_version":VERSION,
+                     "verified_games":201,"observed_games":201,
+                     "coverage":{"missing":0,"level":"full-cohort"},
+                     "categories":{"creature":[],"artifact":[],"enchantment":[],
+                         "instant":[],"spell":[],"land":[],"activated":[],"triggered":[],
+                         "played":[{"name":"Fixture Card","games":90,
+                         "eventCount":100,"score":90,"average":100/201,
+                         "median":0,"heldMedian":None,"timesPlayed":100,
+                         "seenGames":90,"turns":[3],"exampleEvents":[],
+                         "exampleSeenSeeds":[]}]}}}
         elif parsed.path.endswith("/page"):
             number=int(query["page"][0])
             count=min(25,201-number*25)
@@ -112,19 +123,27 @@ def test_materialized():
                 page=browser.new_page(viewport=viewport)
                 page.on("pageerror",lambda err: errors.append(str(err)))
                 page.route(API+"/v1/ui/catalog?*",response)
+                page.route(API+"/v1/ui/insights?*",response)
                 page.route(API+"/v1/ui/page?*",response)
                 page.route(API+"/v1/ui/game?*",response)
                 page.goto(f"http://127.0.0.1:{server.server_port}/results.html?deck={DECK}&materializedResults=1",
                           wait_until="domcontentloaded")
                 page.get_by_text("201 games · 50 wins · 151 losses",exact=False).wait_for(timeout=60000)
+                assert page.get_by_text("Fixture Card · 90 games · 100 recorded events").is_visible()
                 assert page.get_by_text("Page 1 of 9",exact=False).is_visible()
                 assert not any(path.endswith("/game") for path,_ in calls)
                 page.get_by_role("button",name="Next 25").click()
                 page.get_by_text("Page 2 of 9",exact=False).wait_for(state="visible",timeout=60000)
                 page.locator(".game-outcome-game-select").first.click()
-                page.get_by_text("Selected game replay · individual game",exact=False).wait_for(timeout=60000)
+                try:
+                    page.get_by_text("Selected game replay · individual game",exact=False).wait_for(timeout=15000)
+                except Exception:
+                    print("Replay diagnostic:",page.locator("#game-outcome-results").inner_text())
+                    print("Browser errors:",errors)
+                    raise
                 assert page.locator("#turn-reviewer-results .insight-turn-row").count()>0
                 assert page.get_by_text("201 games · 50 wins · 151 losses",exact=False).is_visible()
+                assert page.get_by_text("Fixture Card · 90 games · 100 recorded events").is_visible()
                 assert any(path.endswith("/game") and q.get("page")==["1"] for path,q in calls)
                 page.screenshot(path=str(OUT/f"{DECK}-{mode}-materialized-results.png"),full_page=True)
                 page.close()

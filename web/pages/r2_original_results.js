@@ -11,7 +11,7 @@
     if(api.protocol!=="https:"||
        !/^[a-z0-9-]+\.[a-z0-9-]+\.workers\.dev$/i.test(api.hostname))return;
   }catch{return;}
-  let generation=0,renderedDeck=null;
+  let generation=0,renderedDeck=null,verifiedInsights=null,verifiedInsightCount=null;
   const $=id=>document.getElementById(id);
   const statusMessage=(message)=>{
     const root=$("game-outcome-results"),status=$("game-outcome-status");
@@ -38,11 +38,36 @@
     // Preserve the polished original renderer for cohorts it can safely handle.
     // Opt into the new layout for staging via ?materializedResults=1.
     const preview=new URLSearchParams(window.location.search).get("materializedResults")==="1";
-    if(catalog.status==="ready" && catalog.total<=200 && !preview)return false;
     if(catalog.status!=="ready"){
       statusMessage("No approved current results are published for this deck.");
       return true;
     }
+    const insightUrl=new URL("/v1/ui/insights",api);
+    insightUrl.searchParams.set("deck",key);
+    // Card insights are independently hash-verified by the Worker and must
+    // cover the same immutable cohort version as the headline statistics.
+    const insightResponse=await fetch(insightUrl,{cache:"no-store"});
+    if(ticket!==generation||key!==window.__deckLabActiveKey)return true;
+    if(insightResponse.ok){
+      const item=await insightResponse.json();
+      if(item.schema!=="gorge-r2-materialized-response-v1"||
+         item.version!==catalog.version||item.deck!==key)throw Error("Insight cohort drift");
+      if(item.status==="ready"){
+        const report=item.insights;
+        if(report?.verified_games!==catalog.total||
+           report?.observed_games!==catalog.total||
+           report?.coverage?.missing!==0||
+           report?.coverage?.level!=="full-cohort"||
+           report?.cohort_version!==catalog.version)
+          throw Error("Incomplete card insight population");
+        verifiedInsights=report;
+        verifiedInsightCount=catalog.total;
+      }
+    }else if(insightResponse.status!==404){
+      // Existing outcomes remain available, but never use partial card rankings.
+      verifiedInsights=null;verifiedInsightCount=null;
+    }
+    if(catalog.total<=200 && !preview)return false;
     const summary=catalog.summary;
     if(summary?.schema!=="gorge-r2-live-summary-v1" ||
        summary.cohort_version!==catalog.version ||
@@ -93,11 +118,36 @@
       turnsList.append(row);
     }
     detailStats.append(matchupTitle,matchupList,turnsTitle,turnsList);
+    const insightSection=create("section");
+    const insightTitle=create("h4","Key Insights · complete approved cohort");
+    insightSection.append(insightTitle);
+    if(verifiedInsights){
+      const categories=[
+        ["played","Most played cards"],
+        ["creature","Most played creatures"],
+        ["activated","Most activated abilities"],
+        ["triggered","Most triggered abilities"]
+      ];
+      for(const [kind,label] of categories){
+        const ranking=verifiedInsights.categories?.[kind]||[];
+        const section=create("div");
+        section.append(create("h5",label));
+        if(!ranking.length)section.append(create("p","No verified observations in this category."));
+        for(const card of ranking.slice(0,5)){
+          section.append(create("p",card.name+" · "+card.games+
+            " games · "+card.eventCount+" recorded events"));
+        }
+        insightSection.append(section);
+      }
+    }else{
+      insightSection.append(create("p",
+        "Card-level insights are pending complete verified native evidence; outcome statistics remain available."));
+    }
     const navigation=create("div");
     const list=create("div");
     const replayHeading=create("h4","Select a game to review its recorded turns");
     const replayRoot=create("div");
-    root.replaceChildren(heading,totals,info,detailStats,navigation,list,replayHeading,replayRoot);
+    root.replaceChildren(heading,totals,info,detailStats,insightSection,navigation,list,replayHeading,replayRoot);
     let page=0;
     const readJson=async(url)=>{
       const res=await fetch(url,{cache:"no-store"});
@@ -132,7 +182,9 @@
           lookupRecordedCard:window.GorgeDeckLabCardInfo,
           deckCardNames:selected.cardNames,
           renderMana:value=>window.GorgeDeckLabMana?.(value),
-          onOpenRecordedCard:name=>window.GorgeDeckLabOpenCard?.(name)
+          onOpenRecordedCard:name=>window.GorgeDeckLabOpenCard?.(name),
+          fullCardInsights:verifiedInsights,
+          fullCohortGames:verifiedInsightCount
         });
       }catch(err){
         if(live())replayHeading.textContent="Replay unavailable: "+String(err.message||err);
@@ -184,6 +236,7 @@
   async function refresh(key=window.__deckLabActiveKey){
     const ticket=++generation;
     renderedDeck=null;
+    verifiedInsights=null;verifiedInsightCount=null;
     const selected=window.GorgeDeckLabSelectedDeck?.(key);
     if(!key||!selected?.eligible)return;
     statusMessage("Checking approved Gorge game results…");
@@ -237,8 +290,8 @@
         deckCardNames:selected.cardNames,
         renderMana:value=>window.GorgeDeckLabMana?.(value),
         onOpenRecordedCard:name=>window.GorgeDeckLabOpenCard?.(name),
-        fullCardInsights:window.__gorgeCardInsights?.[key]||null,
-        fullCohortGames:window.__gorgeFullCohort?.decks?.[key]?.n||null
+        fullCardInsights:verifiedInsights||window.__gorgeCardInsights?.[key]||null,
+        fullCohortGames:verifiedInsightCount||window.__gorgeFullCohort?.decks?.[key]?.n||null
       });
       renderedDeck=key;
       const label=batch.runs.length+" approved native Gorge game"+

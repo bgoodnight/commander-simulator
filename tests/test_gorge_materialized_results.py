@@ -13,6 +13,7 @@ except ImportError:
 
 from tools.gorge_cohort_eligibility import fingerprint
 from tools.gorge_r2_materialized_results import project
+from tools.gorge_card_insights import KINDS
 from tools.gorge_r2_materialized_rollback import verified_target, guarded_rollback
 
 
@@ -101,6 +102,54 @@ class MaterializedResultsTests(unittest.TestCase):
         pointer = json.loads((self.root / "built" / "current.json").read_text())
         raw = (self.root / "built" / "versions" / version / "manifest.json").read_bytes()
         self.assertEqual(hashlib.sha256(raw).hexdigest(), pointer["manifest_sha256"])
+
+    def test_versioned_insights_require_exact_full_cohort_native_evidence(self):
+        self.build(2)
+        source = self.root / "source"
+        before = project(source, self.registry, self.root / "before")
+        old_version = before["version"]
+        rows = pq.read_table(self.shard / "games.parquet").to_pylist()
+        categories = {kind: [] for kind in KINDS}
+        categories["played"] = [{
+            "name": "Sol Ring",
+            "counts": [[row["seed"], 1] for row in rows],
+            "seen": [row["seed"] for row in rows],
+            "durations": [],
+            "timesPlayed": 2,
+            "events": [[row["seed"], 2] for row in rows]
+        }]
+        def digest_file(name):
+            return hashlib.sha256((self.shard / name).read_bytes()).hexdigest()
+        evidence = {
+            "schema": "gorge-r2-card-feature-evidence-v1",
+            "manifest_sha256": digest_file("manifest.json"),
+            "games_sha256": digest_file("games.parquet"),
+            "ui_sha256": digest_file("ui-original.v1.json"),
+            "source_recordings": {row["game_id"]: row["source_sha256"] for row in rows},
+            "features": {
+                "schema": "gorge-card-insights-shard-v1",
+                "deck": "mortarion_current",
+                "deck_sha256": "a" * 64,
+                "completed_verified_games": 2,
+                "seed_chains": [[row["seed"], row["chain"]] for row in rows],
+                "confirmed_tutors": 0,
+                "categories": categories
+            }
+        }
+        (self.shard / "card-insights.v1.json").write_text(json.dumps(evidence))
+        after = project(source, self.registry, self.root / "after")
+        self.assertNotEqual(after["version"], old_version)
+        root = self.root / "after" / "versions" / after["version"]
+        summary = json.loads((root / "mortarion_current/summary.json").read_text())
+        self.assertEqual(summary["card_insights"]["status"], "complete")
+        insights = json.loads((root / "mortarion_current/insights.json").read_text())
+        self.assertEqual(insights["verified_games"], 2)
+        self.assertEqual(insights["categories"]["played"][0]["games"], 2)
+        self.assertEqual(insights["cohort_version"], after["version"])
+        manifest = json.loads((root / "manifest.json").read_text())
+        expected = manifest["decks"]["mortarion_current"]["insights"]["sha256"]
+        self.assertEqual(expected,
+                         hashlib.sha256((root / "mortarion_current/insights.json").read_bytes()).hexdigest())
 
     def test_501_games_have_21_lightweight_pages_and_individual_replay_objects(self):
         self.build(501)

@@ -2,7 +2,7 @@ name: Publish complete approved Gorge Results snapshot
 # Manual gate until ingestion has an explicit approved-shard completion event.
 on:
   workflow_run:
-    workflows: ["Promote verified corrected Gorge baseline to current R2 warehouse"]
+    workflows: ["Promote verified corrected Gorge baseline to current R2 warehouse", "Publish verified native card insight evidence to R2"]
     types: [completed]
   workflow_dispatch:
     inputs:
@@ -75,7 +75,8 @@ jobs:
               "s3://gorge-simulations/warehouse/v1/$batch/" \
               "$RUNNER_TEMP/source/$batch/" --recursive --no-progress \
               --exclude "*" --include "*/manifest.json" \
-              --include "*/games.parquet" --include "*/ui-original.v1.json"
+              --include "*/games.parquet" --include "*/ui-original.v1.json" \
+              --include "*/card-insights.v1.json"
           done < "$RUNNER_TEMP/previous/batch-list.txt"
       - name: Assemble and validate complete immutable snapshot offline
         shell: bash
@@ -117,6 +118,8 @@ jobs:
           paths=["manifest.json"]
           for deck,record in index["decks"].items():
               paths.append(f"{deck}/summary.json")
+              if record.get("insights"):
+                  paths.append(f"{deck}/insights.json")
               paths += [f"{deck}/{p['path']}" for p in record["pages"]]
               for game in (Path(os.environ["RUNNER_TEMP"])/"build/versions"/version/deck/"games").glob("*.json"):
                   paths.append(f"{deck}/games/{game.name}")

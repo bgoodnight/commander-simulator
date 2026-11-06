@@ -9,7 +9,7 @@ const gid="123456-1/mortarion_current/0/123";
 const base="results/materialized/v1/";
 const enc=new TextEncoder();
 
-async function fixture(){
+async function fixture(withInsights=false){
   const store=new Map();
   function put(key,obj){
     const raw=enc.encode(JSON.stringify(obj));
@@ -28,10 +28,20 @@ async function fixture(){
   const summary={schema:"gorge-r2-live-summary-v1",deck,cohort_version:version,
     n:1,wins:1,losses:0,status:"ready"};
   const summaryHash=await put(base+"versions/"+version+"/"+deck+"/summary.json",summary);
+  let insightsRef=null;
+  if(withInsights){
+    const insights={schema:"gorge-card-insights-v1",deck,cohort_version:version,
+      verified_games:1,observed_games:1,coverage:{
+        denominator:1,numerator:1,missing:0,level:"full-cohort"
+      },categories:{played:[{name:"Sol Ring",games:1,eventCount:1}]}};
+    insightsRef={path:"insights.json",sha256:await put(
+      base+"versions/"+version+"/"+deck+"/insights.json",insights)};
+  }
   const manifest={schema:"gorge-r2-materialized-results-v1",version,
     decks:{[deck]:{cohort_id:cohort.cohort_id,cohort_fingerprint:fingerprint,
       n:1,wins:1,losses:0,ui_deck_sha256:uiHash,
       summary:{path:"summary.json",sha256:summaryHash},
+      insights:insightsRef,
       pages:[{path:"pages/000000.json",sha256:pageHash,count:1}]}}};
   const manifestHash=await put(base+"versions/"+version+"/manifest.json",manifest);
   await put(base+"current.json",{schema:"gorge-r2-results-current-v1",
@@ -73,4 +83,29 @@ test("missing active pointer explicitly signals old-route compatibility",async()
   store.delete(base+"current.json");
   const out=await getMaterialized(bucket,deck,registry);
   assert.equal(out,null);
+});
+
+test("full-cohort card insights are served only at exact active version",async()=>{
+  const {bucket}=await fixture(true);
+  const report=await getMaterialized(bucket,deck,registry,null,null,"insights");
+  assert.equal(report.status,"ready");
+  assert.equal(report.total,1);
+  assert.equal(report.insights.categories.played[0].name,"Sol Ring");
+});
+
+test("unmaterialized card insights do not produce fabricated rankings",async()=>{
+  const {bucket}=await fixture();
+  const report=await getMaterialized(bucket,deck,registry,null,null,"insights");
+  assert.equal(report.status,"insights_pending");
+  assert.equal("insights" in report,false);
+});
+
+test("incorrect complete-cohort card coverage is rejected",async()=>{
+  const {bucket,store}=await fixture(true);
+  const key=base+"versions/"+version+"/"+deck+"/insights.json";
+  store.set(key,enc.encode(JSON.stringify({verified_games:999})));
+  await assert.rejects(
+    getMaterialized(bucket,deck,registry,null,null,"insights"),
+    /materialized_digest_mismatch/
+  );
 });
