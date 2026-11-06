@@ -101,7 +101,11 @@
     return "reviewed_generic_spell_cast";
   }
   function mapSeat(real,hero){return (real-hero+4)%4;}
-  function actor(e,turn){return Number.isInteger(e.player)?e.player:turn.seat;}
+  function actor(e){
+    // Gorge omits the zero-valued player field in native event JSON.
+    // Missing means native seat 0, not the player whose turn it is.
+    return Number.isInteger(e.player)?e.player:0;
+  }
   function nativeAbilityActor(e){
     // Gorge omits player:0 on JSON encoding, including when the ability
     // fires during another seat's turn.  Use the exact native zero value,
@@ -159,7 +163,7 @@
          t.turn>=turnEnd)continue;
       for(let i=0;i<(t.events||[]).length;i++){
         const actionStart=actions.length;
-        const e=t.events[i],real=actor(e,t),seat=mapSeat(real,hero);
+        const e=t.events[i],real=actor(e),seat=mapSeat(real,hero);
         const ability=abilityAction(e,hero,names);
         if(ability){
           ability.native_turn=t.turn;
