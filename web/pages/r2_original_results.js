@@ -12,6 +12,8 @@
        !/^[a-z0-9-]+\.[a-z0-9-]+\.workers\.dev$/i.test(api.hostname))return;
   }catch{return;}
   let generation=0,renderedDeck=null,verifiedInsights=null,verifiedInsightCount=null;
+  let recoveryTimer=null;
+  const RECOVERY_DELAY_MS=[350,1200];
   const $=id=>document.getElementById(id);
   const statusMessage=(message)=>{
     const root=$("game-outcome-results"),status=$("game-outcome-status");
@@ -359,7 +361,8 @@
     return true;
   }
 
-  async function refresh(key=window.__deckLabActiveKey){
+  async function refresh(key=window.__deckLabActiveKey,attempt=0){
+    if(recoveryTimer!==null){clearTimeout(recoveryTimer);recoveryTimer=null;}
     const ticket=++generation;
     $("r2-game-picker")?.remove();
     renderedDeck=null;
@@ -469,6 +472,13 @@
       if(ticket!==generation||key!==window.__deckLabActiveKey)return;
       setResultsState("unavailable");
       statusMessage("R2 results not available: "+String(err.message||err));
+      if(attempt<RECOVERY_DELAY_MS.length){
+        recoveryTimer=setTimeout(()=>{
+          recoveryTimer=null;
+          if(ticket===generation&&key===window.__deckLabActiveKey)
+            refresh(key,attempt+1);
+        },RECOVERY_DELAY_MS[attempt]);
+      }
     }
   }
   window.R2OriginalResults={refresh,ownsRenderedDeck};
