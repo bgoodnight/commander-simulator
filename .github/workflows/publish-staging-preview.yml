@@ -1,4 +1,5 @@
 name: Publish reusable Commander staging preview
+# Refresh verified opponent commander portraits in Best Matchup (PR #229).
 # Refresh compact Key Insights ⓘ and Turn Reviewer header controls (PR 226).
 # Refresh preview for searchable games and restored insight controls (PR 225).
 # Refresh source to stage Key Insights ordering and mana symbols (PR 223).
