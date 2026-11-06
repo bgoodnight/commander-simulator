@@ -2,7 +2,7 @@ name: Publish complete approved Gorge Results snapshot
 # Manual gate until ingestion has an explicit approved-shard completion event.
 on:
   workflow_run:
-    workflows: ["Promote verified corrected Gorge baseline to current R2 warehouse"]
+    workflows: ["Promote verified corrected Gorge baseline to current R2 warehouse", "Publish verified native card insight evidence to R2"]
     types: [completed]
   workflow_dispatch:
     inputs:
