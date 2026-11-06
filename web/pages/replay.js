@@ -393,10 +393,19 @@
       tile.type="button";tile.title="View "+item.name+" card details";
       tile.onclick=()=>openCard(card.oracle_id);
     }
-    if(validateCard(card)){
+    if(item.token){
+      // Token identity comes from the recorded game state, never from a same-name
+      // regular card. No invented token art: a framed placeholder is intentional.
+      const frame=el("div","replay-token-frame");
+      const header=el("span","replay-token-header","TOKEN");
+      const motif=el("span","replay-token-motif","◇");
+      const title=el("span","replay-token-identity",item.name||"Unknown token");
+      frame.appendChild(header);frame.appendChild(motif);frame.appendChild(title);
+      tile.appendChild(frame);
+    }else if(validateCard(card)){
       const img=el("img","replay-zone-art");img.src=card.image||card.art;
       img.alt=item.name;img.loading="lazy";tile.appendChild(img);
-    }else tile.appendChild(el("span","replay-zone-unpictured",item.token?"◇ token":"◇ card"));
+    }else tile.appendChild(el("span","replay-zone-unpictured","◇ card"));
     tile.appendChild(el("span","replay-zone-card-name",item.name));
     if(item.token)tile.appendChild(el("span","replay-zone-tag","Token"));
     if(item.count>1)tile.appendChild(el("span","replay-zone-qty","×"+item.count));
