@@ -252,7 +252,7 @@ async function getOriginalUiBatch(env,deck,metrics) {
       if(await isApproved(game,registry,fingerprints))approved.push(game);
     if(!approved.length)continue;
     selected.push(...approved);
-    const key=shard.manifestKey.replace(/manifest\\.json$/,"ui-original.v1.json");
+    const key=shard.manifestKey.slice(0,-"manifest.json".length)+"ui-original.v1.json";
     const object=await env.GORGE_R2.get(key);
     if(!object) {missingProjection=true;continue;}
     if(object.size>4*1024*1024)throw Error("oversized_original_ui_projection");
