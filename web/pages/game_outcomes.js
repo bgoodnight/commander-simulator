@@ -1653,11 +1653,11 @@
   function lifePlot(trend){
     const width=680,height=230,left=36,right=12,top=18,bottom=32;
     const svg=svgNode("svg",{viewBox:"0 0 "+width+" "+height,
-      role:"img","aria-label":"Median life by round for all four seats, with middle-half bands"});
+      role:"img","aria-label":"Your median life by round, with middle-half band"});
     const plotW=width-left-right,plotH=height-top-bottom;
     const maxRound=Math.max(1,trend.at(-1)?.round||1);
     const maxLife=Math.max(40,...trend.flatMap(row=>
-      SEATS.map(s=>row.seats[s].p75||0)),1);
+      [0].map(s=>row.seats[s].p75||0)),1);
     const yCeiling=Math.ceil(maxLife/10)*10;
     const x=r=>left+r/maxRound*plotW;
     // Life can fall below zero on lethal damage. Keep the line on the
@@ -1671,7 +1671,7 @@
       const label=svgNode("text",{x:5,y:y(value)+4,fill:"#c4cbbd","font-size":11});
       label.textContent=String(value);svg.appendChild(label);
     }
-    for(const seat of SEATS){
+    for(const seat of [0]){
       const good=trend.filter(row=>Number.isFinite(row.seats[seat]?.median));
       if(!good.length)continue;
       const band=[...good.map(row=>[x(row.round),y(row.seats[seat].p75)]),
@@ -1700,7 +1700,7 @@
       "Round "+round.round+" · "+round.observed+" of "+round.total+
       " games still observed"));
     const stats=create("div","game-outcome-life-stats");
-    for(const seat of SEATS){
+    for(const seat of [0]){
       const row=round.seats[seat],stat=create("div","game-outcome-life-stat");
       stat.append(create("span",null,seat===0?"You":"Seat "+(seat+1)),
         create("strong",null,row.median.toFixed(1).replace(/\.0$/,"")+
@@ -1711,29 +1711,62 @@
     }
     root.appendChild(stats);
   }
+  // Vertical finish-round distribution, with sparse ticks and exact counts
+  // preserved as accessible bar descriptions instead of dense row labels.
+  function renderGameLengthHistogram(root,entries){
+    const counts=new Map();
+    for(const entry of entries||[]){
+      const round=Number(entry.round),games=Number(entry.games);
+      if(!Number.isInteger(round)||round<0||!Number.isInteger(games)||games<=0)continue;
+      counts.set(round,(counts.get(round)||0)+games);
+    }
+    if(!counts.size){
+      root.appendChild(create("span","micro","No finished games"));return;
+    }
+    const rounds=[...counts.keys()].sort((a,b)=>a-b);
+    const first=rounds[0],last=rounds.at(-1);
+    const maxCount=Math.max(...counts.values());
+    const total=rounds.reduce((n,r)=>n+counts.get(r),0);
+    const n=last-first+1;
+    const plot=create("div","game-length-histogram");
+    plot.setAttribute("role","img");
+    plot.setAttribute("aria-label","Game length distribution across "+total+
+      " finished games, from round "+first+" to round "+last);
+    const bars=create("div","game-length-histogram-bars");
+    // Aggregate only when the finish-round range becomes too wide for
+    // legible bars. A bin remains explicit about its inclusive round range.
+    const binWidth=Math.max(1,Math.ceil(n/32));
+    for(let low=first;low<=last;low+=binWidth){
+      const high=Math.min(last,low+binWidth-1);
+      let value=0;
+      for(let round=low;round<=high;round++)value+=counts.get(round)||0;
+      const column=create("div","game-length-histogram-column");
+      const bar=create("span","game-length-histogram-bar");
+      bar.style.height=(value/maxCount*100)+"%";
+      const label=low===high?"Round "+low:"Rounds "+low+"–"+high;
+      column.title=label+": "+value+" game"+(value===1?"":"s");
+      column.setAttribute("aria-label",column.title);
+      column.appendChild(bar);bars.appendChild(column);
+    }
+    const axis=create("div","game-length-histogram-axis");
+    const labelCount=Math.min(5,n);
+    const ticks=new Set();
+    for(let i=0;i<labelCount;i++)ticks.add(first+
+      Math.round(i*(last-first)/Math.max(1,labelCount-1)));
+    for(const tick of [...ticks].sort((a,b)=>a-b)){
+      const label=create("span",null,"R"+tick);
+      label.style.left=(n===1?50:(tick-first)/(last-first)*100)+"%";
+      axis.appendChild(label);
+    }
+    plot.append(bars,axis);root.appendChild(plot);
+  }
   function histogram(root,runs,maxRound){
     const counts=new Map();
     for(const run of runs){
       if(!run.outcome.complete)continue;
       counts.set(run.completed_rounds,(counts.get(run.completed_rounds)||0)+1);
     }
-    if(!counts.size){
-      root.appendChild(create("span","micro","No finished games"));return;
-    }
-    const highest=Math.max(...counts.values());
-    const plot=create("div","game-outcome-finish-bars");
-    const all=[...counts].sort((a,b)=>a[0]-b[0]);
-    for(const [round,count] of all){
-      const bar=create("div","game-outcome-finish-row");
-      bar.appendChild(create("span",null,"R"+round));
-      const track=create("div","game-outcome-finish-track");
-      const fill=create("span","game-outcome-finish-fill");
-      fill.style.width=(count/highest*100)+"%";
-      track.appendChild(fill);
-      bar.append(track,create("strong",null,count));
-      plot.appendChild(bar);
-    }
-    root.appendChild(plot);
+    renderGameLengthHistogram(root,[...counts].map(([round,games])=>({round,games})));
   }
   // Search and step through games without presenting an unbounded dropdown.
   function gameNavigator(root,onSelect,options={}){
@@ -2391,13 +2424,13 @@
         }
         body.appendChild(bySeat);
       }));
-    detailPanels.set("life",card("Life Progression","Four seats",
+    detailPanels.set("life",card("Life Progression","Your life",
       quantile(lastLife,.5)===null?"—":nfmt(quantile(lastLife,.5)),
       "Your median final recorded life",
       body=>{
         const legend=create("div","game-outcome-legend");
-        for(const seat of SEATS){
-          const chip=create("span",null,seat===0?"You":"Seat "+(seat+1));
+        for(const seat of [0]){
+          const chip=create("span",null,"You");
           chip.style.borderColor=SEAT_COLORS[seat];legend.appendChild(chip);
         }
         body.append(legend,lifePlot(life));
@@ -2673,6 +2706,6 @@
     turnReviewer(root,report.groups,options);
     return report;
   }
-  return {FORMAT,STATES,validate,model,lifeTrend,matchupRows,matchupMetrics,
+  return {FORMAT,STATES,validate,model,lifeTrend,renderGameLengthHistogram,matchupRows,matchupMetrics,
     knockoutRound,opponentDecks,observationCardStats,turnSpotlight,gameNavigator,render,renderCohortOverview,renderCohortInsights,renderRecordedBatchInsights,renderTurnReviewer};
 });
