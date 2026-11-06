@@ -1,4 +1,5 @@
 name: Publish reusable Commander staging preview
+# Refresh preview for searchable games and restored insight controls (PR 225).
 # Refresh source to stage Key Insights ordering and mana symbols (PR 223).
 # Refresh preview with shared Key Insights visibility from staging PR #222.
 # Preview source refreshed for unified Results visibility (PR #221).
