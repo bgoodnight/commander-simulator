@@ -27,7 +27,14 @@
   // A missing optional insight report must not hide the Key insights section.
   function setResultsVisible(ready){
     for(const id of ["key-insights-panel","turn-reviewer-panel"]){
-      const element=$(id);if(element)element.hidden=!ready;
+      const element=$(id);
+      if(element){
+        element.hidden=!ready;
+        // Existing Results styling may set display:none even after hidden is removed.
+        // Make the approved-cohort state authoritative without changing page CSS.
+        if(ready)element.style.setProperty("display","block","important");
+        else element.style.removeProperty("display");
+      }
     }
     if(!ready){
       $("r2-game-picker")?.remove();
