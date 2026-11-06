@@ -45,7 +45,7 @@ jobs:
           [[ "$STAGING_WORKER" == gorge-r2-fullstate-staging-20261106 ]]
           export AWS_ACCESS_KEY_ID="$ACCESS" AWS_SECRET_ACCESS_KEY="$SECRET" AWS_DEFAULT_REGION=auto
           endpoint="https://$ACCOUNT.r2.cloudflarestorage.com"
-          stage="s3://gorge-simulations/$STAGING_PREFIX"
+          stage="s3://gorge-simulations/${STAGING_PREFIX%/}"
           aws --endpoint-url "$endpoint" s3 cp "$stage/current.json" "$RUNNER_TEMP/current.json" --no-progress
           aws --endpoint-url "$endpoint" s3 cp "$stage/versions/$STAGING_VERSION/manifest.json" \
             "$RUNNER_TEMP/manifest.json" --no-progress
