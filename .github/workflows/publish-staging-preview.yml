@@ -1,4 +1,5 @@
 name: Publish reusable Commander staging preview
+# Preview source refreshed for unified Results visibility (PR #221).
 
 on:
   workflow_dispatch:
