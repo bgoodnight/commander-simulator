@@ -168,14 +168,32 @@ jobs:
         run: |
           set -euo pipefail
           python - <<'PY'
-          import json,os,urllib.parse,urllib.request
+          import json,os,subprocess,urllib.parse
           base=os.environ["WORKER_URL"].rstrip("/")
           private_keys=("event_json","object_id","object_key","seed","source_sha256","intents")
           def read(route,deck):
               url=base+route+("?deck="+urllib.parse.quote(deck))
-              with urllib.request.urlopen(url,timeout=30) as response:
-                  assert response.status==200, response.status
-                  return json.load(response)
+              # Match the curl client already proven by the preceding successful
+              # public summary/index checks. Python urllib's default client got
+              # HTTP 403 at the edge despite those curl probes returning HTTP 200.
+              response=subprocess.run([
+                  "curl","--silent","--show-error","--max-time","30",
+                  "--header","Accept: application/json",
+                  "--write-out","\\n%{http_code}",url
+              ],capture_output=True,text=True,timeout=35)
+              if response.returncode:
+                  raise RuntimeError(
+                      f"curl failed for {route}, deck={deck}: exit {response.returncode}")
+              try:
+                  body,status=response.stdout.rsplit("\\n",1)
+              except ValueError as exc:
+                  raise RuntimeError(f"Missing HTTP status for {route}, deck={deck}") from exc
+              if status!="200":
+                  raise RuntimeError(f"HTTP {status} on {route}, deck={deck}")
+              result=json.loads(body)
+              if not isinstance(result,dict):
+                  raise RuntimeError(f"Unexpected response object on {route}, deck={deck}")
+              return result
           for deck in ("mortarion_current","magnus_premium"):
               index=read("/v1/games",deck)
               # Ineligible/historical game identities must never be retrievable.
