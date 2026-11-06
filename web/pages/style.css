@@ -2635,3 +2635,6 @@ body:has(#pane-records:not([hidden])) .compact-selection{margin-bottom:3px}
 .r2-game-list{display:grid;gap:.4rem;max-height:19rem;overflow-y:auto;padding:.2rem}
 .r2-game-list button{width:100%;text-align:left;line-height:1.3}
 .r2-game-list button:hover,.r2-game-list button:focus-visible{border-color:#dbbb77;background:#29473b}
+/* Original Results includes its own turn explorer; do not show a second
+   separate source navigator beneath it. */
+body.r2-original-results-active #gorge-replay-panel{display:none!important}
