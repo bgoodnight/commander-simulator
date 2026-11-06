@@ -1129,17 +1129,95 @@
     "Necron Warrior Token":{type:"Token Creature",glyph:"⚙",tone:"necron"},
     "Crab Token":{type:"Token Creature — Crab",glyph:"♋",tone:"crab"},
     "Faerie Token":{type:"Token Creature — Faerie",glyph:"✧",tone:"faerie"},
-    "Clue Token":{type:"Token Artifact — Clue",glyph:"⌕",tone:"clue"}
+    "Clue Token":{type:"Token Artifact — Clue",glyph:"⌕",tone:"clue"},
+    "Treasure Token":{type:"Token Artifact — Treasure",glyph:"◆",tone:"generic"},
+    "Drake Token":{type:"Token Creature — Drake",glyph:"✧",tone:"generic"},
+    "Food Token":{type:"Token Artifact — Food",glyph:"◈",tone:"generic"},
+    "Blood Token":{type:"Token Artifact — Blood",glyph:"◇",tone:"generic"},
+    "Gold Token":{type:"Token Artifact — Gold",glyph:"◆",tone:"generic"},
+    "Map Token":{type:"Token Artifact — Map",glyph:"⌕",tone:"generic"},
+    "Servo Token":{type:"Token Artifact Creature — Servo",power:1,toughness:1,glyph:"⚙",tone:"generic"},
+    "Wizard Token":{type:"Token Creature — Wizard",glyph:"✦",tone:"generic"},
+    "Astartes Warrior Token":{type:"Token Creature — Astartes Warrior",glyph:"♜",tone:"generic"}
   });
-  function tokenInfo(name){
-    return typeof name==="string"?KNOWN_TOKENS[name]||null:null;
+  function tokenInfo(name,options={}){
+    if(typeof name!=="string")return null;
+    if(KNOWN_TOKENS[name])return KNOWN_TOKENS[name];
+    // Source flags are authoritative, including named tokens that lack a
+    // 'Token' suffix. Old flattened R2 replays retain a name-only fallback.
+    const sourceToken=Array.isArray(options.tokenNames)&&options.tokenNames.includes(name);
+    if(sourceToken||/\btoken$/i.test(name)){
+      const nativeType=options.tokenTypes?.[name];
+      return {type:typeof nativeType==="string"&&nativeType.trim()?
+        nativeType:"Token",glyph:"◇",tone:"generic"};
+    }
+    return null;
   }
-  function recordedCardTypes(name,lookup){
-    const token=tokenInfo(name);
+  // Fetch at most once per known token identity. A token's complete official
+  // printing is optional enrichment; its Gorge identity remains authoritative.
+  const TOKEN_ART_PROMISES=new Map();
+  function officialTokenArt(name,token){
+    if(!KNOWN_TOKENS[name]||typeof fetch!=="function")return Promise.resolve(null);
+    if(TOKEN_ART_PROMISES.has(name))return TOKEN_ART_PROMISES.get(name);
+    const base=name.replace(/\s+Token$/i,"");
+    const url="https://api.scryfall.com/cards/search?q="+
+      encodeURIComponent('t:token "'+base+'"')+
+      "&unique=prints&include_extras=true";
+    const promise=fetch(url,{headers:{"Accept":"application/json"}})
+      .then(r=>r.ok?r.json():null).then(result=>{
+        const matches=Array.isArray(result?.data)?result.data.filter(card=>{
+          if(card.layout!=="token"||!Array.isArray(card.image_uris?Object.keys(card.image_uris):[]))return false;
+          if(!card.image_uris?.normal||!card.scryfall_uri)return false;
+          const title=String(card.name||"").trim().toLowerCase();
+          if(title!==base.toLowerCase()&&title!==name.toLowerCase())return false;
+          if(Number.isInteger(token.power)&&String(card.power)!==String(token.power))return false;
+          if(Number.isInteger(token.toughness)&&String(card.toughness)!==String(token.toughness))return false;
+          const expected=String(token.type||"").split("—")[1]?.trim().toLowerCase();
+          if(expected&&!String(card.type_line||"").toLowerCase().includes(expected))return false;
+          return true;
+        }):[];
+        if(!matches.length)return null;
+        const card=matches[0];
+        return {name,type_line:card.type_line||token.type,
+          image:card.image_uris.normal,art:card.image_uris.art_crop||null,
+          scryfall:card.scryfall_uri,oracle_text:card.oracle_text||"",
+          power:card.power??null,toughness:card.toughness??null,
+          mana_value:card.cmc??0,mana_cost:card.mana_cost||""};
+      }).catch(()=>null);
+    TOKEN_ART_PROMISES.set(name,promise);
+    return promise;
+  }
+  function groupedBattlefieldTokens(cards,options){
+    const groups=new Map(),result=[];
+    for(const name of cards){
+      const token=tokenInfo(name,options);
+      if(!token){result.push({name,count:1});continue}
+      const key=String(name);
+      if(!groups.has(key)){
+        const group={name,count:0};groups.set(key,group);result.push(group);
+      }
+      groups.get(key).count++;
+    }
+    return result;
+  }
+  function recordedCardTypes(name,lookup,options={}){
+    const token=tokenInfo(name,options);
     if(token)return token.type.toLowerCase().split("—")[0];
     const card=lookup?.(name);
     return String(card?.type_line||card?.type||"")
       .split("—")[0].toLowerCase();
+  }
+  // Each permanent belongs in exactly one zone. Artifact creatures and
+  // enchantment creatures are creatures first; planeswalkers have a separate
+  // area rather than being mixed with untyped permanents.
+  function battlefieldZone(name,options){
+    const type=recordedCardTypes(name,options.lookupRecordedCard,options);
+    if(/\bcreature\b/.test(type))return "Creatures";
+    if(/\bland\b/.test(type))return "Lands";
+    if(/\bplaneswalker\b/.test(type))return "Planeswalkers";
+    if(/\bartifact\b/.test(type))return "Artifacts";
+    if(/\benchantment\b/.test(type))return "Enchantments";
+    return "Other permanents";
   }
   function endStatePanel(observation,options){
     const panel=create("section","insight-end-state");
@@ -1150,39 +1228,38 @@
     if(Number.isInteger(observation.hand_count)&&!Array.isArray(observation.hand))
       panel.appendChild(create("p","micro","Hand · "+observation.hand_count+
         " cards. Individual identities are private in the public export."));
+    const battlefield=Array.isArray(observation.battlefield)?observation.battlefield:[];
+    const byType=new Map(["Creatures","Lands","Planeswalkers","Artifacts",
+      "Enchantments","Other permanents"].map(name=>[name,[]]));
+    for(const name of battlefield)
+      byType.get(battlefieldZone(name,options)).push(name);
     const zones=[
       ["Exile",observation.exile],
       ["Command zone",observation.command],
-      ["Creatures",(observation.battlefield||[]).filter(n=>
-        /\bcreature\b/.test(recordedCardTypes(n,options.lookupRecordedCard)))],
-      ["Lands",(observation.battlefield||[]).filter(n=>
-        /\bland\b/.test(recordedCardTypes(n,options.lookupRecordedCard)))],
-      ["Artifacts",(observation.battlefield||[]).filter(n=>
-        /\bartifact\b/.test(recordedCardTypes(n,options.lookupRecordedCard)))],
-      ["Enchantments",(observation.battlefield||[]).filter(n=>
-        /\benchantment\b/.test(recordedCardTypes(n,options.lookupRecordedCard)))],
-      ["Other permanents",(observation.battlefield||[]).filter(n=>
-        !/\b(creature|land|artifact|enchantment)\b/.test(
-          recordedCardTypes(n,options.lookupRecordedCard)))],
+      ...[...byType].map(([name,cards])=>[name,cards]),
       ["Graveyard",observation.graveyard],
       ["Hand",observation.hand]
     ];
-    const typed=zones.slice(2,6).reduce((n,z)=>n+z[1].length,0);
-    if((observation.battlefield||[]).length&&!typed)
-      panel.appendChild(create("p","micro","Card types unavailable for recorded battlefield"));
+    const typed=battlefield.length-byType.get("Other permanents").length;
+    if(battlefield.length&&!typed)
+      panel.appendChild(create("p","micro",
+        "Card types unavailable for recorded battlefield"));
     for(const [label,cards] of zones){
       if(!Array.isArray(cards))continue;
       const group=create("details","insight-end-zone insight-board-"+label.toLowerCase().replace(/[^a-z]+/g,"-"));
       group.open=true;
       const icon=({Hand:"▤","Command zone":"♛",Creatures:"♟",Lands:"◇",
-        Artifacts:"⚙",Enchantments:"✦","Other permanents":"◈",
+        Artifacts:"⚙",Enchantments:"✦",Planeswalkers:"♛","Other permanents":"◈",
         Graveyard:"◆",Exile:"⊘"})[label]||"◈";
       const trigger=create("summary","insight-end-zone-label");
       trigger.append(create("span","insight-end-zone-icon",icon),
         create("span",null,label+" · "+cards.length));
       group.appendChild(trigger);
       const list=create("div","insight-action-cards");
-      for(const name of cards)list.appendChild(insightActionCard(name,options));
+      const entries=byType.has(label)?
+        groupedBattlefieldTokens(cards,options):cards.map(name=>({name,count:1}));
+      for(const item of entries)list.appendChild(
+        insightActionCard(item.name,options,{count:item.count}));
       if(!cards.length)list.appendChild(create("span","micro","None"));
       group.appendChild(list);panel.appendChild(group);
     }
@@ -1208,6 +1285,11 @@
     return panel;
   }
   function compactInsightTimeline(root,run,options={}){
+    // Projection metadata is tied to the recorded game, not the selected deck.
+    // Source-backed token identities take precedence over name heuristics.
+    options={...options,
+      tokenNames:run.gorge_source?.token_names||options.tokenNames,
+      tokenTypes:run.gorge_source?.token_types||options.tokenTypes};
     root.replaceChildren();
     const head=create("div","game-outcome-evidence-head");
     head.append(create("strong",null,options.displayGameLabel||
@@ -1605,13 +1687,17 @@
     }
   }
   function insightActionCard(name,options,display={}){
-    const token=tokenInfo(name);
+    const token=tokenInfo(name,options);
     const card=token?null:options.lookupRecordedCard?.(name);
+    let resolvedTokenCard=null;
     const button=textButton("","insight-action-card"+
       (display.artOnly?" is-art-only":"")+
       (display.textOnly?" is-text-only":"")+
       (token?" is-token is-token-"+token.tone:""),
-      ()=>{if(!token)options.onOpenRecordedCard?.(name)});
+      ()=>{if(token)options.onOpenTokenCard?.(resolvedTokenCard||
+        {name,type_line:token.type,oracle_text:"",power:token.power??null,
+         toughness:token.toughness??null});
+        else options.onOpenRecordedCard?.(name)});
     button.setAttribute("aria-label",token?
       name+(Number.isInteger(token.power)?" "+token.power+"/"+token.toughness:""):
       "View "+name+" card details");
@@ -1619,6 +1705,16 @@
       const tokenArt=create("span","insight-token-art",token.glyph);
       tokenArt.setAttribute("aria-hidden","true");
       button.appendChild(tokenArt);
+      officialTokenArt(name,token).then(official=>{
+        if(!official)return;
+        resolvedTokenCard=official;
+        if(!button.isConnected)return;
+        const img=create("img","insight-token-card-image");
+        img.src=official.image;img.alt=name+" official token card";
+        img.loading="lazy";img.referrerPolicy="no-referrer";
+        img.onerror=()=>{resolvedTokenCard=null;img.replaceWith(tokenArt)};
+        tokenArt.replaceWith(img);
+      });
     }
     const art=card?.art||card?.image;
     if(!token&&!display.textOnly&&typeof art==="string"&&/^https:\/\//.test(art)){
@@ -1638,6 +1734,12 @@
     }
     if(token)button.title=token.type+
       (Number.isInteger(token.power)?" · base "+token.power+"/"+token.toughness:"");
+    if(token&&display.count>1){
+      const quantity=create("span","insight-token-quantity","×"+display.count);
+      quantity.setAttribute("aria-label",display.count+" identical tokens");
+      button.appendChild(quantity);
+      button.setAttribute("aria-label",display.count+" × "+button.getAttribute("aria-label"));
+    }
     return button;
   }
   // Canonical turn viewer used by card insights and the full-game reviewer.
@@ -2711,5 +2813,5 @@
     return report;
   }
   return {FORMAT,STATES,validate,model,lifeTrend,renderGameLengthHistogram,matchupRows,matchupMetrics,
-    knockoutRound,opponentDecks,observationCardStats,turnSpotlight,gameNavigator,render,renderCohortOverview,renderCohortInsights,renderRecordedBatchInsights,renderTurnReviewer};
+    knockoutRound,opponentDecks,tokenInfo,battlefieldZone,observationCardStats,turnSpotlight,gameNavigator,render,renderCohortOverview,renderCohortInsights,renderRecordedBatchInsights,renderTurnReviewer};
 });

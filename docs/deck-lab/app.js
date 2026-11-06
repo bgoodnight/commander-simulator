@@ -92,6 +92,7 @@ function cardInfo(name){
 // Read-only public identity/art bridge for the original Gorge-powered result panels.
 window.GorgeDeckLabCardInfo=cardInfo;
 window.GorgeDeckLabOpenCard=name=>{const card=cardInfo(name);if(card?.oracle_id)showCard(card.oracle_id)};
+window.GorgeDeckLabOpenTokenCard=card=>{if(card?.name)showCardRecord(card)};
 window.GorgeDeckLabMana=value=>manaSymbols(value);
 window.GorgeDeckLabDeckHashes=()=>Object.fromEntries((data?.decks||[])
   .map(deck=>[deck.key,deck.deck_sha256]));
@@ -1042,17 +1043,20 @@ function renderLibrary(){
 }
 let cardDialogReturnFocus=null;
 function showCard(id){
-  const card=cardForId(id);if(!card)return;
+  const card=cardForId(id);if(card)showCardRecord(card);
+}
+function showCardRecord(card){
   cardDialogReturnFocus=document.activeElement;
   const box=$("modal-art");clear(box);box.appendChild(imageNode(card,!card.image&&!!card.art));
   $("card-dialog-title").textContent=card.name;
-  $("modal-meta").textContent=[card.type_line,"Mana value "+card.mana_value,
+  $("modal-meta").textContent=[card.type_line,card.mana_cost===""&&String(card.type_line||"").includes("Token")?null:"Mana value "+card.mana_value,
     card.power!=null&&card.toughness!=null?card.power+"/"+card.toughness:null].filter(Boolean).join(" · ");
   const cost=$("modal-cost");clear(cost);
   cost.append(el("span","Mana cost","modal-cost-label"),manaSymbols(card.mana_cost));
   const oracle=$("modal-oracle");clear(oracle);
   oracle.appendChild(manaSymbols(card.oracle_text||"No Oracle text in the saved record."));
   $("modal-scryfall").href=card.scryfall||"https://scryfall.com/";
+  $("modal-scryfall").hidden=!card.scryfall;
   $("dialog-backdrop").hidden=false;$("modal-close").focus();
   originalSound("click");
 }
