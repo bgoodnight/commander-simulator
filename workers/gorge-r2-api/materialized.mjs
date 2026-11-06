@@ -10,7 +10,7 @@ async function verifiedJson(bucket,key,expectedHash,maxBytes=4*1024*1024) {
   if(actual!==expectedHash)throw Error("materialized_digest_mismatch");
   return JSON.parse(new TextDecoder().decode(data));
 }
-export async function getMaterialized(bucket,deck,registry,page=null,gameId=null) {
+export async function getMaterialized(bucket,deck,registry,page=null,gameId=null,kind="summary") {
   const pointerObject=await bucket.get(MATERIALIZED_PREFIX+"current.json");
   if(!pointerObject)return null; // Existing source-backed legacy route stays available.
   if(pointerObject.size>1024)throw Error("oversized_materialized_pointer");
@@ -41,6 +41,25 @@ export async function getMaterialized(bucket,deck,registry,page=null,gameId=null
      !/^[a-f0-9]{64}$/.test(entry.ui_deck_sha256||"")||
      !Array.isArray(entry.pages)||entry.pages.length!==Math.ceil(entry.n/25))
     throw Error("invalid_materialized_deck_manifest");
+  if(kind==="insights"){
+    if(entry.insights===null || entry.insights===undefined)
+      return {schema:"gorge-r2-materialized-response-v1",deck,
+        version:pointer.version,status:"insights_pending",total:entry.n};
+    if(entry.insights.path!=="insights.json" ||
+       !/^[a-f0-9]{64}$/.test(entry.insights.sha256||""))
+      throw Error("invalid_materialized_insights_reference");
+    const report=await verifiedJson(bucket,prefix+deck+"/insights.json",
+      entry.insights.sha256,8*1024*1024);
+    if(report.deck!==deck||report.cohort_version!==pointer.version||
+       report.verified_games!==entry.n||report.observed_games!==entry.n||
+       report.coverage?.missing!==0||
+       report.coverage?.denominator!==entry.n||
+       report.coverage?.level!=="full-cohort"||
+       !report.categories||typeof report.categories!=="object")
+      throw Error("invalid_materialized_insights_coverage");
+    return {schema:"gorge-r2-materialized-response-v1",deck,
+      version:pointer.version,status:"ready",total:entry.n,insights:report};
+  }
   const target=page===null?entry.summary:entry.pages[page];
   if(!target || (page!==null && page>=entry.pages.length))
     return {schema:"gorge-r2-materialized-response-v1",deck,
