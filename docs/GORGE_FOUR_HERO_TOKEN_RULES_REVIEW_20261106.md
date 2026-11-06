@@ -49,3 +49,21 @@ This section supersedes earlier wording that all three findings remain untouched
 - **Artistic Refusal**: [exact original seed 219201 and modes captured](https://github.com/bgoodnight/commander-simulator/actions/runs/42296117836). The card (owner seat 1) had 97 proposals and 96 reversals in the original trace, from `KChoose` Convoke announcements / subsequent cost or target reversals. The experimental generic `tools/patch_gorge_convoke_pilot_fallback.py` retains available non-mana-producer Convoke helpers even if the **current floating pool** alone cannot finish the cost; the Gorge 601.2g/h payment-stranded guard still enforces real payment. [Same failing seed passed](https://github.com/bgoodnight/commander-simulator/actions/runs/42296990411), with cost aborts **80 → 28**, target aborts **16 → 6**, total **96 → 34**, finished/replay-verified. The **34 remaining** are unresolved and the heuristic may need stronger independent pilot fairness testing. Do not infer valid strategic play merely from fewer aborts.
 
 [Combined four-hero fresh-seed CI](https://github.com/bgoodnight/commander-simulator/actions/workflows/gorge-four-hero-rules-regression.yml) integrates all three overlays, four games per hero, immutable local private artifacts only; gate promotion on its result plus targeted still-missing cases. Do not approve a new source cohort until the engine/pilot fingerprints and full rules audit have passed and reviewed source inventory has been updated.
+
+## Combined repaired-engine run — fresh seeds 229100–229403
+
+[Four-job combined regression 42297372712](https://github.com/bgoodnight/commander-simulator/actions/runs/42297372712): **all 16/16** games finished, native replay-verified, zero engine errors, and token event integrity audit passed. The experimental overlay includes patched Technomancer, patched Adeline, and the reduced-abort Convoke pilot. Result warnings across all four opponents/game seats:
+
+| Hero | New games | Token recipe events | AnyNumber ignored | Adeline unsupported | Cost aborts | No legal target aborts |
+|---|---:|---:|---:|---:|---:|---:|
+| Mortarion | 4 | 79 | 0 | 0 | 0 | 4 |
+| Magnus | 4 | 101 | 0 | 0 | 0 | 4 |
+| Necrons | 4 | 87 | 0 | 0 | 0 | 60 |
+| Wretched Ranks | 4 | 95 | 0 | 0 | 0 | 0 |
+| **Total** | **16** | **362** | **0** | **0** | **0** | **68** |
+
+The 68 remaining **cast aborted: no legal target** notes are clustered in Magnus seed 229200 (4), Necron 229300 (28), Necron 229301 (32) and Mortarion 229101 (4). The [source-based preceding-cast investigation](https://github.com/bgoodnight/commander-simulator/actions/runs/42297954261) finds many with no recent PutOnStack spell, so *some may relate to activated-ability or other transaction forms*. The nearest preceding cast is **not reliable evidence of the failing ability's source**, and should **not** be used to accuse a named card of a rules defect. Instrument the pending decision's source, selected choice, target candidates, and proposal kind for these seeds before editing target rules.
+
+The [Adeline positive planeswalker-choice Go test](https://github.com/bgoodnight/commander-simulator/actions/runs/42297516866) passed alongside existing token/rule tests. It verifies a defender choice offering the named opponent and exactly their planeswalker, plus fallback, tapped and attacking state. A taped explicit planeswalker selection remains useful but is no longer an untested offered branch.
+
+**Promotion decision: NO-GO.** The two rule-coverage corrections are validated in isolation, and the Convoke pilot change materially reduced seed 219201's reversals, but target aborts are still common and source attribution requires explicit instrumentation. Do not create a larger approved batch or merge the experimental pilot as settled.
