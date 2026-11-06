@@ -1,0 +1,78 @@
+name: Smoke production omniscient R2 opening hands
+on:
+  workflow_run:
+    workflows: ["Publish complete approved Gorge Results snapshot"]
+    types: [completed]
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  verify:
+    if: github.event_name == 'workflow_dispatch' || github.event.workflow_run.conclusion == 'success'
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - name: Verify all approved game hands using real production HTTPS Worker
+        shell: bash
+        env:
+          WORKER: https://gorge-r2-direct-api-preview.darbosama.workers.dev
+        run: |
+          set -euo pipefail
+          mkdir -p "$RUNNER_TEMP/probe"
+          for deck in mortarion_current magnus_premium; do
+            curl --fail --silent --show-error --retry 3 --max-time 45 \
+              "$WORKER/v1/ui/catalog?deck=$deck" > "$RUNNER_TEMP/probe/catalog-$deck.json"
+            curl --fail --silent --show-error --retry 3 --max-time 45 \
+              "$WORKER/v1/ui/page?deck=$deck&page=0" > "$RUNNER_TEMP/probe/page-$deck.json"
+            DECK="$deck" python - <<'PY'
+          import json,os
+          from pathlib import Path
+          tmp=Path(os.environ["RUNNER_TEMP"])/"probe"
+          deck=os.environ["DECK"]
+          cat=json.loads((tmp/f"catalog-{deck}.json").read_text())
+          page=json.loads((tmp/f"page-{deck}.json").read_text())
+          assert cat["schema"]=="gorge-r2-materialized-response-v1"
+          assert page["schema"]=="gorge-r2-materialized-response-v1"
+          assert cat["status"]==page["status"]=="ready"
+          assert cat["deck"]==page["deck"]==deck
+          assert cat["version"]==page["version"]
+          assert cat["total"]==12 and cat["page_count"]==1
+          assert len(page["page"]["games"])==12
+          assert page["page"]["total"]==12
+          (tmp/f"ids-{deck}.txt").write_text(
+            "\n".join(x["game_id"] for x in page["page"]["games"])+"\n")
+          PY
+            i=0
+            while IFS= read -r id; do
+              curl --get --fail --silent --show-error --retry 3 --max-time 45 \
+                --data-urlencode "deck=$deck" --data-urlencode "page=0" \
+                --data-urlencode "game_id=$id" \
+                "$WORKER/v1/ui/game" > "$RUNNER_TEMP/probe/game-$deck-$i.json"
+              DECK="$deck" INDEX="$i" python - <<'PY'
+          import json,os
+          from pathlib import Path
+          tmp=Path(os.environ["RUNNER_TEMP"])/"probe"
+          deck=os.environ["DECK"]
+          index=os.environ["INDEX"]
+          game=json.loads((tmp/f"game-{deck}-{index}.json").read_text())
+          catalog=json.loads((tmp/f"catalog-{deck}.json").read_text())
+          assert game["status"]=="ready" and game["version"]==catalog["version"]
+          assert game["deck"]==deck
+          batch=game["game"]["batch"]
+          assert batch["deck_key"]==deck and len(batch["runs"])==1
+          run=batch["runs"][0]
+          assert run["gorge_source"]["visibility"]=="omniscient"
+          assert run["gorge_source"]["synthetic_simulation_only"] is True
+          assert run["gorge_source"]["opening_hand_boundary"]=="first_pending_decision_of_turn"
+          assert len(run["opening_hand"])==run["opening_hand_count"]
+          assert len(run["opening_hands_by_seat"])==3
+          assert all(isinstance(x.get("hand"),list) and
+                     isinstance(x.get("opponent_hands"),list)
+                     for x in run["ui_observations"])
+          PY
+              i=$((i+1))
+            done < "$RUNNER_TEMP/probe/ids-$deck.txt"
+            test "$i" -eq 12
+            echo "$deck: 12/12 production HTTPS games have complete omniscient hands" >> "$GITHUB_STEP_SUMMARY"
+          done
+          echo "Verified 24 approved production game responses; source identities remain unchanged." >> "$GITHUB_STEP_SUMMARY"
