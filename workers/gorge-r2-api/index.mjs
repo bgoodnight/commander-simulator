@@ -440,7 +440,7 @@ export default {
         const kind=url.pathname==="/v1/ui/insights"?"insights":
           url.pathname==="/v1/ui/events"?"events":"summary";
         const materialized=await getMaterialized(env.GORGE_R2,deck,registry,
-          page,selectedGame,kind,part);
+          page,selectedGame,kind,part,env.GORGE_R2_RESULTS_PREFIX||undefined);
         if(!materialized)return fail(404,"materialized_not_published",started);
         return json(materialized,materialized.status==="page_not_found"?404:200,duration(started));
       }

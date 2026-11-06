@@ -101,7 +101,9 @@
     return "reviewed_generic_spell_cast";
   }
   function mapSeat(real,hero){return (real-hero+4)%4;}
-  function actor(e,turn){return Number.isInteger(e.player)?e.player:turn.seat;}
+  // Native Go JSON omits player=0; missing actor does NOT imply the active
+  // turn owner. Seat zero can cast an instant during another seat's turn.
+  function actor(e){return Number.isInteger(e.player)?e.player:0;}
   function nativeAbilityActor(e){
     // Gorge omits player:0 on JSON encoding, including when the ability
     // fires during another seat's turn.  Use the exact native zero value,
