@@ -1,8 +1,4 @@
-// Pure authorization helpers. Never trust roles, deck ownership or email from the browser.
-export const COMMUNITY_DECKS = Object.freeze([
-  Object.freeze({ id: "mortarion_current", label: "Mortarion", visibility: "community" }),
-  Object.freeze({ id: "magnus_premium", label: "Magnus the Red", visibility: "community" }),
-]);
+// Authorization is enforced server-side, never by UI visibility alone.
 export function normalizeEmail(value) {
   return typeof value === "string" ? value.trim().toLowerCase() : "";
 }
@@ -13,16 +9,26 @@ export function resolveAccount(identity, env) {
   const email = normalizeEmail(identity?.email);
   if (!email) return null;
   const owners = ownerEmails(env.ACCESS_OWNER_EMAILS);
-  return Object.freeze({ email, role: owners.has(email) ? "owner" : "member" });
+  const role = owners.has(email) ? "owner" : "member";
+  // Cloudflare Access's stable identity id is needed for personal deck ownership.
+  // Don't silently use a mutable email address as a persistent identity key.
+  const subject = typeof identity?.id === "string" && identity.id.trim()
+    ? "access:" + identity.id.trim() : null;
+  return Object.freeze({ email, subject, role });
 }
 export function canRunSimulations(account) {
   return account?.role === "owner";
 }
 export function canReadDeck(account, deck) {
   if (!deck || !["community", "private"].includes(deck.visibility)) return false;
-  if (deck.visibility === "community") return true;
-  return Boolean(account && normalizeEmail(deck.owner_email) === account.email);
+  if (deck.visibility === "community") return Boolean(account);
+  return canEditDeck(account, deck);
 }
 export function canEditDeck(account, deck) {
-  return Boolean(account && deck && normalizeEmail(deck.owner_email) === account.email);
+  if (!account || !deck) return false;
+  if (deck.owner_id === "site-owner") return account.role === "owner";
+  return Boolean(account.subject && deck.owner_id === account.subject);
+}
+export function isValidVisibility(value) {
+  return value === "private" || value === "community";
 }
