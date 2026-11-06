@@ -5,6 +5,7 @@ Worker batch projection. No experimental response is sent to public R2.
 """
 import json
 import os
+import re
 from http.server import ThreadingHTTPServer, SimpleHTTPRequestHandler
 from pathlib import Path
 from threading import Thread
@@ -16,7 +17,12 @@ OUT=Path(os.environ["BROWSER_ARTIFACT_DIR"])
 OUT.mkdir(parents=True,exist_ok=True)
 DOCUMENT=json.loads(Path(os.environ["ORIGINAL_UI_BATCH"]).read_text())
 DECK=DOCUMENT["deck"]
-API="https://gorge-r2-direct-api-preview.darbosama.workers.dev"
+# Preview branches may select an isolated Worker in their generated HTML.
+# Mock only that declared endpoint; never contact R2 from browser contracts.
+page_html=(ROOT/"results.html").read_text()
+api_match=re.search(r'GORGE_R2_API_BASE\\s*=\\s*"([^"]+)"',page_html)
+API=api_match.group(1) if api_match else (
+    "https://gorge-r2-direct-api-preview.darbosama.workers.dev")
 VERSION="a"*64
 
 class Handler(SimpleHTTPRequestHandler):
