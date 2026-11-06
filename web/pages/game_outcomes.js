@@ -2599,7 +2599,11 @@
       if(Array.isArray(items))rankings[kind]=items.map(item=>({...item,events:[],seen:new Set()}));
     insightPanels(grid,rankings,total,[],{...options,isGorge:true,tutorSearchCount:report.confirmed_tutors||0},()=>{});
     if(!grid.children.length)grid.appendChild(create("p","game-outcome-empty","No recorded card insights."));
-    root.replaceChildren(grid);
+    const info=create("details","insight-methodology");
+    const trigger=create("summary",null,"ⓘ");trigger.setAttribute("aria-label","About these insights");
+    info.append(trigger,create("p","micro","Card rankings use the complete verified cohort of "+total+
+      " games. Example games link to the recorded event when source evidence is available."));
+    root.replaceChildren(info,grid);
   }
   function renderRecordedBatchInsights(root,batch,options={}){
     const report=model([batch],options.deckKey,options.deckHash);
