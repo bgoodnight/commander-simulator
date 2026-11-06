@@ -98,6 +98,13 @@ jobs:
           make fetch-cards compile-cards
           cp "$GITHUB_WORKSPACE/tools/gorge_commander_probe.go" commander_probe.go
           go build -o "$RUNNER_TEMP/gorge-probe" ./commander_probe.go
+      - name: Build corrected four-player Gorge probe and compiled card corpus
+        working-directory: ${{ runner.temp }}/gorge
+        run: |
+          set -euo pipefail
+          make fetch-cards compile-cards
+          cp "$GITHUB_WORKSPACE/tools/gorge_commander_probe.go" commander_probe.go
+          go build -o "$RUNNER_TEMP/gorge-probe" ./commander_probe.go
       - name: Run fresh corrected-pilot four-player Gorge certification candidates
         env:
           HERO_DECK: ${{ matrix.hero }}
@@ -176,6 +183,7 @@ jobs:
       - name: Pin exact engine, rules patch, card corpus, decks, and simulation inputs
         env:
           HERO_DECK: ${{ matrix.hero }}
+          GAME_COUNT: ${{ inputs.games || '12' }}
         run: |
           set -euo pipefail
           python - <<'PY'
@@ -203,7 +211,7 @@ jobs:
               "ward_blight_patch_sha256":sha("tools/patch_gorge_ward_blight.py"),
               "card_corpus_sha256":digest.hexdigest(),
               "hero_deck":os.environ["HERO_DECK"],
-              "hero_deck_sha256":sha(root/"decks"/(os.environ["HERO_DECK"]+".txt")),
+              "hero_deck_sha256":sha(root/"decks"/(os.environ["HERO_DECK"]+".json")),
               "oracle_bulk_sha256":json.loads((root/"panel/full-enrichment.json").read_text())["oracle_bulk_sha256"],
               "trial_panel_sha256":sha("data/gorge_initial_trial_opponents_v1.json"),
               "opponents_sha256":sha(root/"panel/opponents.txt"),
