@@ -90,12 +90,9 @@
       if(text!==undefined)el.textContent=text;
       return el;
     };
-    const heading=create("h3","Approved simulation results");
-    const totals=create("p",summary.n+" games · "+summary.wins+" wins · "+
-      summary.losses+" losses · "+(summary.win_rate*100).toFixed(1)+
-      "% win rate (25% four-player reference)");
-    const info=create("p","Summary covers the complete approved cohort. Game pages and replays load separately.");
+    const overview=create("section");
     const detailStats=create("section");
+    detailStats.className="r2-cohort-details";
     const matchupTitle=create("h4","Full-cohort opponent matchups");
     const matchupList=create("div");
     for(const group of (summary.groups?.opponents||[]).slice(0,12)){
@@ -119,35 +116,19 @@
     }
     detailStats.append(matchupTitle,matchupList,turnsTitle,turnsList);
     const insightSection=create("section");
-    const insightTitle=create("h4","Key Insights · complete approved cohort");
-    insightSection.append(insightTitle);
-    if(verifiedInsights){
-      const categories=[
-        ["played","Most played cards"],
-        ["creature","Most played creatures"],
-        ["activated","Most activated abilities"],
-        ["triggered","Most triggered abilities"]
-      ];
-      for(const [kind,label] of categories){
-        const ranking=verifiedInsights.categories?.[kind]||[];
-        const section=create("div");
-        section.append(create("h5",label));
-        if(!ranking.length)section.append(create("p","No verified observations in this category."));
-        for(const card of ranking.slice(0,5)){
-          section.append(create("p",card.name+" · "+card.games+
-            " games · "+card.eventCount+" recorded events"));
-        }
-        insightSection.append(section);
-      }
-    }else{
-      insightSection.append(create("p",
-        "Card-level insights are pending complete verified native evidence; outcome statistics remain available."));
-    }
+    window.DeckGameOutcomes.renderCohortInsights(insightSection,verifiedInsights,summary.n,{
+      lookupRecordedCard:window.GorgeDeckLabCardInfo,
+      onOpenRecordedCard:name=>window.GorgeDeckLabOpenCard?.(name)
+    });
     const navigation=create("div");
+    navigation.className="r2-game-navigation";
     const list=create("div");
+    list.className="r2-game-list";
     const replayHeading=create("h4","Select a game to review its recorded turns");
-    const replayRoot=create("div");
-    root.replaceChildren(heading,totals,info,detailStats,insightSection,navigation,list,replayHeading,replayRoot);
+    window.DeckGameOutcomes.renderCohortOverview(overview,summary,{
+      commanderName:selected.commander,commanderArt:selected.art
+    });
+    root.replaceChildren(overview,detailStats,insightSection,navigation,list,replayHeading);
     let page=0;
     const readJson=async(url)=>{
       const res=await fetch(url,{cache:"no-store"});
@@ -175,7 +156,7 @@
         if(!window.DeckGameOutcomes?.validate(batch))
           throw Error("Original replay format rejected");
         replayHeading.textContent="Selected game replay · individual game (not cohort statistics)";
-        window.DeckGameOutcomes.render(replayRoot,[batch],{
+        window.DeckGameOutcomes.renderTurnReviewer(reviewer,[batch],{
           deckKey:key,deckHash:selected.sha,
           commanderName:selected.commander,commanderArt:selected.art,
           isGorge:true,reviewerRoot:reviewer,reviewerPanel:panel,
@@ -220,7 +201,7 @@
           return button;
         });
         list.replaceChildren(...rows);
-        replayRoot.replaceChildren();
+        reviewer.replaceChildren();
         replayHeading.textContent="Select a game to review its recorded turns";
       }catch(err){
         if(live())navigation.textContent="Game page unavailable: "+String(err.message||err);
