@@ -1748,6 +1748,7 @@
       gameSelect.appendChild(option);
     });
     choices.appendChild(gameSelect);
+    if(options.hideGameSelector)choices.hidden=true;
     const evidence=create("div","game-outcome-evidence game-outcome-review-evidence");
     root.append(choices,evidence);
     let focusTurn=null;
@@ -1763,7 +1764,7 @@
         lookupRecordedCard:options.lookupRecordedCard,
         renderMana:options.renderMana,
         focusTurn:focusTurn,
-        displayGameLabel:gameLabel(entry,index)
+        displayGameLabel:options.displayGameLabel||gameLabel(entry,index)
       });
     }
     gameSelect.addEventListener("change",()=>{
