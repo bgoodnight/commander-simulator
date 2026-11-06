@@ -75,7 +75,7 @@ jobs:
               "$RUNNER_TEMP/source/$batch/" --recursive --no-progress \
               --exclude "*" --include "*/manifest.json" \
               --include "*/games.parquet" --include "*/events.parquet" --include "*/ui-original.v1.json" \
-              --include "*/card-insights.v1.json"
+              --include "*/card-insights.v1.json" --include "*/card-insights.v2.json"
           done < "$RUNNER_TEMP/previous/batch-list.txt"
       - name: Validate reviewed complete shard inventory before materialization
         shell: bash
