@@ -1728,7 +1728,7 @@
     root.appendChild(plot);
   }
   // Search and step through games without presenting an unbounded dropdown.
-  function gameNavigator(root,onSelect){
+  function gameNavigator(root,onSelect,options={}){
     const controls=create("div","game-navigator");
     const search=create("input","game-navigator-search");
     search.type="search";search.value="";search.placeholder="Find game or opponent";
@@ -1747,7 +1747,11 @@
     const status=create("span","game-navigator-status","Choose a game");
     const list=create("div","game-navigator-results");
     list.setAttribute("aria-label","Matching games");
-    nav.append(previous,status,next);controls.append(search,result,nav,list);root.appendChild(controls);
+    nav.append(previous,status,next);
+    controls.append(search,result,list);root.appendChild(controls);
+    // Keep the pager alongside the reviewer title, while search and result
+    // filtering remain beneath the heading. Detached fixtures still work.
+    (options.controlsHost||controls).appendChild(nav);
     let games=[],selected=null,filtered=[];
     function refresh(){
       const term=search.value.trim().toLowerCase();
@@ -1796,13 +1800,16 @@
     const items=games.map((entry,index)=>({id:String(index),entry,
       label:gameLabel(entry,index),result:entry.run.outcome.status,
       search:gameLabel(entry,index)+" seed "+entry.run.seed}));
+    const headerNav=!options.hideGameSelector?
+      document.getElementById("turn-reviewer-nav"):null;
+    if(headerNav)headerNav.replaceChildren();
     const nav=gameNavigator(choices,(item,turn)=>{
       const {group,run}=item.entry;
       runDetails(evidence,run,{example:group.exampleBySeed.get(run.seed),
         onShowRecordedActions:options.onShowRecordedActions,onOpenRecordedCard:options.onOpenRecordedCard,
         lookupRecordedCard:options.lookupRecordedCard,renderMana:options.renderMana,
         focusTurn:turn,displayGameLabel:options.displayGameLabel||item.label});
-    });
+    },{controlsHost:headerNav});
     nav.setGames(items);if(options.hideGameSelector)choices.hidden=true;
     const first=games.findIndex(({group,run})=>group.exampleBySeed.has(run.seed));
     nav.choose(String(first>=0?first:0),options.focusTurn??null);
@@ -2588,6 +2595,15 @@
       if(panel)grid.appendChild(panel);
     }
   }
+  // Methodology is a compact disclosure in the Key Insights title row.
+  // Standalone renderers/test fixtures without that panel keep the disclosure
+  // immediately above their grid.
+  function placeInsightMethodology(root,info,grid){
+    const slot=root.id==="key-insights-grid"?
+      document.getElementById("key-insights-info"):null;
+    if(slot){slot.replaceChildren(info);root.replaceChildren(grid);}
+    else root.replaceChildren(info,grid);
+  }
   function renderCohortInsights(root,report,total,options={}){
     const grid=create("div","board-grid game-outcome-grid latest-insight-grid");
     if(!report||report.verified_games!==total||report.observed_games!==total||
@@ -2603,7 +2619,7 @@
     const trigger=create("summary",null,"ⓘ");trigger.setAttribute("aria-label","About these insights");
     info.append(trigger,create("p","micro","Card rankings use the complete verified cohort of "+total+
       " games. Example games link to the recorded event when source evidence is available."));
-    root.replaceChildren(info,grid);
+    placeInsightMethodology(root,info,grid);
   }
   function renderRecordedBatchInsights(root,batch,options={}){
     const report=model([batch],options.deckKey,options.deckHash);
@@ -2622,7 +2638,7 @@
       insightPanels(grid,rankings,signals.coverage,report.groups,{...options,isGorge:true},
         (id,seed,turn)=>options.onReviewRun?.(id,seed,turn));
     }
-    root.replaceChildren(info,grid);return {coverage:signals.coverage,findings:grid.children.length};
+    placeInsightMethodology(root,info,grid);return {coverage:signals.coverage,findings:grid.children.length};
   }
   // Allow a paginated data source to populate the exact original turn
   // reviewer without rendering a misleading single-game outcomes dashboard.
