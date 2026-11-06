@@ -35,6 +35,10 @@ test("explicit player-seat games become valid original-renderer batches",()=>{
   assert.equal(run.outcome.winner_seat,0);
   assert.equal(run.gorge_source.outcome_provenance,"native_game_over_event");
   assert.equal(run.gorge_source.chain,a.chain);
+  assert.ok(run.gorge_source.token_names.includes("Zombie Token"));
+  assert.ok(run.gorge_source.token_names.includes("Spawn Token"));
+  assert.ok(!run.gorge_source.token_names.includes("Sol Ring"));
+  assert.equal(typeof run.gorge_source.token_types,"object");
   assert.equal(run.life_history.length,run.completed_rounds+1);
   assert.equal(run.ui_observations.length,run.completed_rounds);
   assert.equal(run.ui_observations[0].snapshot_is_turn_end,false);
