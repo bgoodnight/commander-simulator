@@ -83,6 +83,14 @@ def run():
                 # original-style cohort dashboard and turn explorer instead.
                 page.goto(f"http://127.0.0.1:{server.server_port}/results.html?deck=mortarion_current&r2Api={API}",
                           wait_until="domcontentloaded")
+                if page.locator("#gorge-r2-live").count()==0:
+                    # The optional diagnostics box is intentionally absent.
+                    page.wait_for_function("Boolean(window.__deckLabActiveKey)",timeout=15000)
+                    assert page.locator("#game-outcome-results").count()==1
+                    assert not any(path=="/v1/summary" for path,_ in requests)
+                    page.screenshot(path=str(OUT/(form+"-live-r2-hidden.png")))
+                    page.close()
+                    continue
                 try:
                     page.wait_for_function("window.__deckLabActiveKey && document.querySelector('#gorge-r2-live .gorge-r2-live-panel')",
                                            timeout=15000)
