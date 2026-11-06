@@ -169,7 +169,7 @@ async function getDiagnosticGame(env,deck,gameId) {
   if(match.length!==1)return {schema:"gorge-r2-private-diagnostic-timeline-v1",
     status:"game_not_found",deck,game:null};
   const g=match[0];
-  const detail=approvedGameDetail([g],deck,gameId);
+  const detail=approvedGameIndex([g],deck,1).games[0];
   const timeline=await readEventSegments(env.GORGE_R2,shard,manifest,g);
   return {schema:"gorge-r2-private-diagnostic-timeline-v1",
     status:"experimental_not_certified",
