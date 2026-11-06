@@ -12,7 +12,7 @@ def row(seed, won, status="decisive", native=True):
 
 class ModelReadinessTests(unittest.TestCase):
     def test_small_batch_not_fit_ready(self):
-        r=audit([row(i,i%3==0) for i in range(12)])
+        r=audit([row(i,int(i%3==0)) for i in range(12)])
         self.assertEqual(r["attempts"],12)
         self.assertEqual(r["statistical_readiness"],"not_ready")
         self.assertEqual(r["independent_seed_groups_complete"],12)
