@@ -82,7 +82,7 @@ def project(source: Path, registry_path: Path, output: Path, expected_batches=No
         for item in expected_shards:
             if (not isinstance(item, dict) or
                 set(item) not in ({"batch", "deck", "shard"}, {"batch", "deck", "shard", "games"}) or
-                not all(isinstance(item[k], str) and item[k] for k in item)):
+                not all(isinstance(item[k], str) and item[k] for k in ("batch", "deck", "shard"))):
                 raise ValueError("Malformed expected shard identity")
             identity = (item["batch"], item["deck"], item["shard"])
             if identity in required:
