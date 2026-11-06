@@ -1,7 +1,7 @@
 name: Requalify four commanders with corrected Gorge pilot and rules
 on:
   push:
-    branches: [integration/stage-gorge-rules-audit-20261106]
+    branches: [integration/stage-gorge-rules-audit-20261106, stage/omniscient-r2-release-check-20261106]
     paths: [".github/workflows/gorge-four-hero-rules-regression.yml"]
 permissions:
   contents: read
