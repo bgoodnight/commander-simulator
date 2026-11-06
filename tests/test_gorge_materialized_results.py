@@ -34,7 +34,7 @@ class MaterializedResultsTests(unittest.TestCase):
         for seed in range(count):
             gid = f"123456-1/{deck}/0/{seed}"
             row = {
-                "game_id": gid, "batch_id": "123456-1", "deck": deck,
+                "game_id": gid, "batch_id": "123456-1", "deck": deck, "shard": 0,
                 "seed": seed, "chain": f"chain-{seed}",
                 "source_sha256": "b" * 64,
                 "cohort_id": c["cohort_id"],
@@ -68,7 +68,7 @@ class MaterializedResultsTests(unittest.TestCase):
         raw = (self.shard / "games.parquet").read_bytes()
         manifest = {
             "schema": "gorge-warehouse-shard-v1",
-            "batch_id": "123456-1", "player_deck": deck, "shard": 0,
+            "batch_id": "123456-1", "player_deck": deck, "shard": 0, "games": count,
             "files": {"games.parquet": {"bytes": len(raw), "rows": count,
                                       "sha256": hashlib.sha256(raw).hexdigest()}}
         }
@@ -122,6 +122,49 @@ class MaterializedResultsTests(unittest.TestCase):
         with self.assertRaisesRegex(ValueError, "Missing source batch"):
             project(self.root / "source", self.registry, self.root / "built",
                     expected_batches=["123456-1", "123457-1"])
+
+
+    def test_expected_inventory_rejects_missing_entire_shard(self):
+        self.build(1)
+        inventory = [
+            {"batch": "123456-1", "deck": "mortarion_current", "shard": "0"},
+            {"batch": "123456-1", "deck": "mortarion_current", "shard": "1"},
+        ]
+        with self.assertRaisesRegex(ValueError, "Incomplete shard inventory"):
+            project(self.root / "source", self.registry, self.root / "built",
+                    expected_shards=inventory)
+
+    def test_manifest_game_count_cannot_hide_partial_upload(self):
+        self.build(2)
+        manifest_path = self.shard / "manifest.json"
+        manifest = json.loads(manifest_path.read_text())
+        manifest["games"] = 3
+        manifest_path.write_text(json.dumps(manifest))
+        with self.assertRaisesRegex(ValueError, "Incomplete shard manifest"):
+            project(self.root / "source", self.registry, self.root / "built")
+
+    def test_projection_must_cover_exact_approved_game_ids(self):
+        self.build(2)
+        path = self.shard / "ui-original.v1.json"
+        projection = json.loads(path.read_text())
+        projection["games"][1] = dict(projection["games"][0])
+        path.write_text(json.dumps(projection))
+        with self.assertRaisesRegex(ValueError, "Duplicate projected game ID"):
+            project(self.root / "source", self.registry, self.root / "built")
+
+    def test_mismatched_shard_parquet_identity_rejected(self):
+        self.build(1)
+        rows = pq.read_table(self.shard / "games.parquet").to_pylist()
+        rows[0]["shard"] = 99
+        pq.write_table(pa.Table.from_pylist(rows), self.shard / "games.parquet")
+        raw = (self.shard / "games.parquet").read_bytes()
+        manifest_path = self.shard / "manifest.json"
+        manifest = json.loads(manifest_path.read_text())
+        manifest["files"]["games.parquet"]["bytes"] = len(raw)
+        manifest["files"]["games.parquet"]["sha256"] = hashlib.sha256(raw).hexdigest()
+        manifest_path.write_text(json.dumps(manifest))
+        with self.assertRaisesRegex(ValueError, "different shard"):
+            project(self.root / "source", self.registry, self.root / "built")
 
     def test_reject_private_projection_payload(self):
         self.build(1, leak=True)
