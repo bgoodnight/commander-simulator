@@ -120,7 +120,7 @@ def test_materialized():
                 assert page.get_by_text("Page 1 of 9",exact=False).is_visible()
                 assert not any(path.endswith("/game") for path,_ in calls)
                 page.get_by_role("button",name="Next 25").click()
-                assert page.get_by_text("Page 2 of 9",exact=False).is_visible()
+                page.get_by_text("Page 2 of 9",exact=False).wait_for(state="visible",timeout=60000)
                 page.locator(".game-outcome-game-select").first.click()
                 page.get_by_text("Selected game replay · individual game",exact=False).wait_for(timeout=60000)
                 assert page.locator("#turn-reviewer-results .insight-turn-row").count()>0
