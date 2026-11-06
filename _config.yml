@@ -1,0 +1,21 @@
+# Restrict branch-based GitHub Pages to the generated website.
+# Preserve the repository-root index.html and docs/deck-lab/ and
+# docs/preview/ (including the permanent staging preview).
+exclude:
+  - commander_sim
+  - simulator
+  - tests
+  - tools
+  - data
+  - decklists
+  - web
+  - workers
+  - prior_work
+  - .github
+  - README.md
+  - ROADMAP.md
+  - AGENTS.md
+  - BACKUP_LOCATIONS.md
+  - MANIFEST_SHA256.txt
+  - RECOVERY_README.md
+  - REPO_SETUP.md
