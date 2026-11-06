@@ -1,6 +1,6 @@
 import test from "node:test";
 import assert from "node:assert/strict";
-import worker from "../index.mjs";
+import {getMaterialized} from "../materialized.mjs";
 import registry from "../../../data/gorge_analytics_cohort_registry_v1.json" with {type:"json"};
 import {sha256,stableJson,IDENTITY_FIELDS} from "../core.mjs";
 
@@ -45,41 +45,32 @@ async function fixture(){
   }};
   return {bucket,store};
 }
-async function request(bucket,path){
-  const url=new URL(path,"https://unit.example");
-  const res=await worker.fetch(new Request(url),{GORGE_R2:bucket});
-  return {status:res.status,body:await res.json()};
-}
-
 test("R2 materialized catalog, 25-game index and on-demand game use verified hashes",async()=>{
   const {bucket}=await fixture();
-  const catalog=await request(bucket,"/v1/ui/catalog?deck="+deck);
-  assert.equal(catalog.status,200);
-  assert.equal(catalog.body.summary.n,1);
-  assert.equal(catalog.body.version,version);
-  const page=await request(bucket,"/v1/ui/page?deck="+deck+"&page=0");
-  assert.equal(page.status,200);
-  assert.equal(page.body.page.games[0].game_id,gid);
-  assert.equal("batch" in page.body.page,false);
-  const game=await request(bucket,"/v1/ui/game?deck="+deck+"&page=0&game_id="+encodeURIComponent(gid));
-  assert.equal(game.status,200);
-  assert.equal(game.body.game.batch.runs.length,1);
-  const out=await request(bucket,"/v1/ui/page?deck="+deck+"&page=1");
-  assert.equal(out.status,404);
+  const catalog=await getMaterialized(bucket,deck,registry);
+  assert.equal(catalog.status,"ready");
+  assert.equal(catalog.summary.n,1);
+  assert.equal(catalog.version,version);
+  const page=await getMaterialized(bucket,deck,registry,0);
+  assert.equal(page.status,"ready");
+  assert.equal(page.page.games[0].game_id,gid);
+  assert.equal("batch" in page.page,false);
+  const game=await getMaterialized(bucket,deck,registry,0,gid);
+  assert.equal(game.status,"ready");
+  assert.equal(game.game.batch.runs.length,1);
+  const out=await getMaterialized(bucket,deck,registry,1);
+  assert.equal(out.status,"page_not_found");
 });
 
 test("source digest mutation fails closed without falling back to legacy results",async()=>{
   const {bucket,store}=await fixture();
   store.set(base+"versions/"+version+"/"+deck+"/summary.json",enc.encode('{"n":999}'));
-  const out=await request(bucket,"/v1/ui/catalog?deck="+deck);
-  assert.equal(out.status,503);
-  assert.equal(out.body.error,"r2_query_unavailable");
+  await assert.rejects(getMaterialized(bucket,deck,registry),/materialized_digest_mismatch/);
 });
 
-test("missing active pointer permits the original verified Results route",async()=>{
+test("missing active pointer explicitly signals old-route compatibility",async()=>{
   const {bucket,store}=await fixture();
   store.delete(base+"current.json");
-  const out=await request(bucket,"/v1/ui/catalog?deck="+deck);
-  assert.equal(out.status,404);
-  assert.equal(out.body.error,"materialized_not_published");
+  const out=await getMaterialized(bucket,deck,registry);
+  assert.equal(out,null);
 });
