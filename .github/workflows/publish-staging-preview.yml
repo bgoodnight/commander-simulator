@@ -1,0 +1,100 @@
+name: Publish reusable Commander staging preview
+
+on:
+  workflow_dispatch:
+    inputs:
+      source_ref:
+        description: "Staging branch or immutable commit to preview"
+        required: true
+        default: "stage/r2-ui-copy-decklist-20261106"
+        type: string
+  push:
+    branches: [main]
+    paths:
+      - ".github/workflows/publish-staging-preview.yml"
+
+permissions:
+  contents: write
+
+concurrency:
+  group: commander-staging-preview
+  cancel-in-progress: false
+
+jobs:
+  preview:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - name: Select known staging source
+        id: source
+        shell: bash
+        env:
+          REQUESTED_REF: ${{ github.event.inputs.source_ref }}
+        run: |
+          set -euo pipefail
+          REF="${REQUESTED_REF:-stage/r2-ui-copy-decklist-20261106}"
+          if [[ ! "$REF" =~ ^(stage/|work/stage-)[A-Za-z0-9._/-]+$ && ! "$REF" =~ ^[a-f0-9]{40}$ ]]; then
+            echo "Only explicit staging refs or immutable commit SHAs may be previewed" >&2
+            exit 1
+          fi
+          echo "ref=$REF" >> "$GITHUB_OUTPUT"
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ steps.source.outputs.ref }}
+          persist-credentials: false
+          fetch-depth: 0
+          path: staged
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+      - name: Build staged static site
+        working-directory: staged
+        run: python tools/build_pages_deck_lab.py --output "$RUNNER_TEMP/staging-site"
+      - name: Validate preview output and exclude secrets
+        shell: bash
+        run: |
+          set -euo pipefail
+          test -s "$RUNNER_TEMP/staging-site/index.html"
+          test -s "$RUNNER_TEMP/staging-site/results.html"
+          test -s "$RUNNER_TEMP/staging-site/editor.html"
+          test -s "$RUNNER_TEMP/staging-site/decks.json"
+          python - <<'PY'
+          import os, pathlib
+          root=pathlib.Path(os.environ["RUNNER_TEMP"])/"staging-site"
+          for p in root.rglob("*"):
+              if p.is_symlink() or (p.is_file() and (p.name.startswith(".env") or p.suffix in (".pem",".key"))):
+                  raise ValueError(f"Unsafe preview file: {p}")
+          PY
+      - name: Checkout publishing branch separately
+        uses: actions/checkout@v4
+        with:
+          ref: main
+          fetch-depth: 0
+          path: published
+      - name: Publish preview folder only
+        shell: bash
+        working-directory: published
+        run: |
+          set -euo pipefail
+          mkdir -p docs/preview/staging
+          rsync -ac --delete "$RUNNER_TEMP/staging-site/" docs/preview/staging/
+          printf '%s\n' "${{ steps.source.outputs.ref }}" > docs/preview/staging/.source-ref
+          printf '%s\n' "$(git -C ../staged rev-parse HEAD)" > docs/preview/staging/.source-commit
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add -A docs/preview/staging
+          if git diff --cached --quiet; then
+            echo "Preview already current" >> "$GITHUB_STEP_SUMMARY"
+            exit 0
+          fi
+          git commit -m "Refresh isolated staging preview"
+          git fetch origin main
+          if [ "$(git rev-parse HEAD^)" != "$(git rev-parse origin/main)" ]; then
+            echo "Main advanced: refusing unsafe preview push" >&2
+            exit 1
+          fi
+          git push origin HEAD:main
+          echo "Preview: https://bgoodnight.github.io/commander-simulator/docs/preview/staging/results.html" >> "$GITHUB_STEP_SUMMARY"
+      - name: Provide direct preview link
+        run: |
+          echo "https://bgoodnight.github.io/commander-simulator/docs/preview/staging/results.html" >> "$GITHUB_STEP_SUMMARY"
