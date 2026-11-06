@@ -1,6 +1,6 @@
 """Build immutable, cohort-complete public Results from verified R2 source shards.
 
-Input layout: <source>/<batch>/<deck>/<shard>/{manifest.json,games.parquet,ui-original.v1.json}
+Input layout: <source>/<batch>/<deck>/<shard>/{manifest.json,games.parquet,events.parquet,ui-original.v1.json}
 No R2 writes. Publishing is a separate, manifest-last workflow.
 """
 from __future__ import annotations
@@ -110,6 +110,7 @@ def project(source: Path, registry_path: Path, output: Path, expected_batches=No
             raise ValueError(f"Incomplete shard inventory: missing={sorted(missing)} extra={sorted(unexpected)}")
     by_deck = defaultdict(list)
     projections = defaultdict(dict)
+    complete_events = defaultdict(dict)
     source_refs = []
     feature_merger = FullCohortCardInsights()
     seen = set()
@@ -137,6 +138,49 @@ def project(source: Path, registry_path: Path, output: Path, expected_batches=No
         if expected_shards is not None and (batch, deck, shard) in expected_counts:
             if len(rows) != expected_counts[batch, deck, shard]:
                 raise ValueError("Incomplete attested shard game count")
+        # The native event table contains ALL simulated events, including
+        # secret/hidden draw and zone movements. Verify original row offsets
+        # before exposing any approved game's on-demand complete trace.
+        events_path = manifest_path.parent / "events.parquet"
+        event_info = manifest["files"].get("events.parquet")
+        if not isinstance(event_info, dict) or not events_path.is_file():
+            raise ValueError("Missing complete native events shard")
+        events_raw = events_path.read_bytes()
+        if (len(events_raw) != event_info.get("bytes") or
+            digest(events_raw) != event_info.get("sha256")):
+            raise ValueError("Unverified complete native event Parquet")
+        native_rows = pq.read_table(events_path).to_pylist()
+        if (len(native_rows) != event_info.get("rows") or
+            len(native_rows) != manifest.get("native_events")):
+            raise ValueError("Incomplete native event table")
+        indexed_events = {}
+        end = 0
+        for source_row in rows:
+            start = source_row.get("event_start_row")
+            count = source_row.get("native_event_count")
+            if (type(start) is not int or type(count) is not int or
+                start != end or count < 1 or start + count > len(native_rows)):
+                raise ValueError("Native event offset/count does not match source")
+            segment = native_rows[start:start + count]
+            previous = -1
+            verified_events = []
+            for native in segment:
+                event = json.loads(native["event_json"])
+                seq, kind = event.get("seq"), event.get("kind")
+                if (native.get("game_id") != source_row["game_id"] or
+                    native.get("chain") != source_row["chain"] or
+                    native.get("seed") != source_row["seed"] or
+                    type(seq) is not int or seq <= previous or
+                    type(kind) is not int or kind < 0 or
+                    native.get("seq") != seq or native.get("kind_id") != kind or
+                    native.get("secret") is not bool(event.get("secret"))):
+                    raise ValueError("Native event source identity/ordering mismatch")
+                verified_events.append(event)
+                previous = seq
+            indexed_events[source_row["game_id"]] = verified_events
+            end = start + count
+        if end != len(native_rows):
+            raise ValueError("Unindexed native events in warehouse shard")
         approved = []
         local_ids = set()
         for row in rows:
@@ -216,10 +260,13 @@ def project(source: Path, registry_path: Path, output: Path, expected_batches=No
         if projection_ids != set(indexed):
             raise ValueError("Incomplete approved projection game identities")
         feature_merger.add(manifest_path.parent, manifest_bytes, raw, projection_bytes, approved)
+        for row in approved:
+            complete_events[deck][row["game_id"]] = indexed_events[row["game_id"]]
         by_deck[deck].extend(approved)
         source_refs.append({"batch": batch, "deck": deck, "shard": shard,
                             "manifest_sha256": digest(manifest_bytes),
                             "games_sha256": digest(raw),
+                            "events_sha256": digest(events_raw),
                             "ui_sha256": digest(projection_bytes),
                             "approved_games": len(approved)})
 
@@ -302,9 +349,27 @@ def project(source: Path, registry_path: Path, output: Path, expected_batches=No
                     "example_replays": []
                 }
                 file_id = digest(gid.encode())
+                native_events = complete_events[deck][gid]
+                # Exact native event ordering and payloads, including secret
+                # events, are retained as separately fetched bounded parts.
+                # The original renderer only needs the lighter UI projection.
+                parts = []
+                for part_no, offset in enumerate(range(0, len(native_events), 500)):
+                    subset = native_events[offset:offset + 500]
+                    event_path = f"events/{file_id}/{part_no:06d}.json"
+                    part_sha = write_json(deck_root / event_path, {
+                        "schema": "gorge-r2-native-event-part-v1",
+                        "deck": deck, "version": version, "game_id": gid,
+                        "part": part_no, "total": len(native_events),
+                        "events": subset
+                    })
+                    parts.append({"path": event_path, "sha256": part_sha,
+                                  "count": len(subset)})
                 game_checksum = write_json(deck_root / "games" / (file_id + ".json"), {
                     "schema": "gorge-r2-materialized-game-v1",
-                    "deck": deck, "version": version, "game_id": gid, "batch": batch
+                    "deck": deck, "version": version, "game_id": gid,
+                    "batch": batch, "native_event_count": len(native_events),
+                    "event_parts": parts, "event_visibility": "omniscient_simulation"
                 })
                 pod = json.loads(row["decks_json"])
                 games.append({
