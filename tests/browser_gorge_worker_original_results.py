@@ -186,6 +186,11 @@ def test_materialized():
                 insight=page.locator("#key-insights-grid .insight-featured-panel").first
                 insight.locator("summary").first.click()
                 assert insight.get_by_role("group",name="Card type and ranking").is_visible()
+                insight.get_by_role("button",name="Show least played first").click()
+                insight=page.locator("#key-insights-grid .insight-featured-panel").first
+                assert "Least played" in insight.locator("summary").first.inner_text()
+                insight.get_by_role("button",name="Show most played first").click()
+                insight=page.locator("#key-insights-grid .insight-featured-panel").first
                 insight.get_by_role("button",name="View an example game",exact=False).click()
                 page.locator("#turn-reviewer-results .insight-turn-row[open]").first.wait_for(timeout=15000)
                 assert any(path.endswith("/game") and q.get("page")==["1"] and q.get("game_id")==["fixture-1-0"] for path,q in calls)
