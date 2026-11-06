@@ -10,8 +10,13 @@ async function verifiedJson(bucket,key,expectedHash,maxBytes=4*1024*1024) {
   if(actual!==expectedHash)throw Error("materialized_digest_mismatch");
   return JSON.parse(new TextDecoder().decode(data));
 }
-export async function getMaterialized(bucket,deck,registry,page=null,gameId=null,kind="summary") {
-  const pointerObject=await bucket.get(MATERIALIZED_PREFIX+"current.json");
+export async function getMaterialized(bucket,deck,registry,page=null,gameId=null,kind="summary",eventPart=0,prefix=MATERIALIZED_PREFIX) {
+  // Explicit staging prefixes enable isolated R2 integration without changing
+  // the immutable production current pointer. No arbitrary object key access.
+  if(prefix!==MATERIALIZED_PREFIX &&
+     !/^results\/materialized\/staging\/[0-9]+-[0-9]+\/$/.test(prefix))
+    throw Error("invalid_materialized_prefix");
+  const pointerObject=await bucket.get(prefix+"current.json");
   if(!pointerObject)return null; // Existing source-backed legacy route stays available.
   if(pointerObject.size>1024)throw Error("oversized_materialized_pointer");
   const pointer=await pointerObject.json();
@@ -19,8 +24,8 @@ export async function getMaterialized(bucket,deck,registry,page=null,gameId=null
      !/^[a-f0-9]{64}$/.test(pointer.version||"") ||
      !/^[a-f0-9]{64}$/.test(pointer.manifest_sha256||""))
     throw Error("invalid_materialized_pointer");
-  const prefix=MATERIALIZED_PREFIX+"versions/"+pointer.version+"/";
-  const manifest=await verifiedJson(bucket,prefix+"manifest.json",pointer.manifest_sha256);
+  const versionPrefix=prefix+"versions/"+pointer.version+"/";
+  const manifest=await verifiedJson(bucket,versionPrefix+"manifest.json",pointer.manifest_sha256);
   if(manifest.schema!=="gorge-r2-materialized-results-v1" ||
      manifest.version!==pointer.version)throw Error("invalid_materialized_manifest");
   const entry=manifest.decks?.[deck];
@@ -48,7 +53,7 @@ export async function getMaterialized(bucket,deck,registry,page=null,gameId=null
     if(entry.insights.path!=="insights.json" ||
        !/^[a-f0-9]{64}$/.test(entry.insights.sha256||""))
       throw Error("invalid_materialized_insights_reference");
-    const report=await verifiedJson(bucket,prefix+deck+"/insights.json",
+    const report=await verifiedJson(bucket,versionPrefix+deck+"/insights.json",
       entry.insights.sha256,8*1024*1024);
     if(report.deck!==deck||report.cohort_version!==pointer.version||
        report.verified_games!==entry.n||report.observed_games!==entry.n||
@@ -67,7 +72,7 @@ export async function getMaterialized(bucket,deck,registry,page=null,gameId=null
   const path=page===null?"summary.json":"pages/"+String(page).padStart(6,"0")+".json";
   if(target.path!==path || !/^[a-f0-9]{64}$/.test(target.sha256||""))
     throw Error("invalid_materialized_object_reference");
-  const payload=await verifiedJson(bucket,prefix+deck+"/"+path,target.sha256);
+  const payload=await verifiedJson(bucket,versionPrefix+deck+"/"+path,target.sha256);
   if(payload.deck!==deck || (payload.cohort_version!==undefined &&
      payload.cohort_version!==pointer.version) ||
      (page===null && (payload.n!==entry.n || payload.wins!==entry.wins ||
@@ -85,12 +90,36 @@ export async function getMaterialized(bucket,deck,registry,page=null,gameId=null
     const hex=[...new Uint8Array(keyDigest)].map(x=>x.toString(16).padStart(2,"0")).join("");
     if(!/^[a-f0-9]{64}$/.test(found[0].sha256||""))
       throw Error("invalid_game_digest");
-    const detail=await verifiedJson(bucket,prefix+deck+"/games/"+hex+".json",found[0].sha256);
+    const detail=await verifiedJson(bucket,versionPrefix+deck+"/games/"+hex+".json",found[0].sha256);
     if(detail.schema!=="gorge-r2-materialized-game-v1" ||
        detail.deck!==deck || detail.version!==pointer.version ||
        detail.game_id!==gameId || detail.batch?.deck_sha256!==entry.ui_deck_sha256 ||
        detail.batch?.runs?.length!==1)
       throw Error("materialized_game_identity_mismatch");
+    if(kind==="events"){
+      const parts=detail.event_parts;
+      if(!Array.isArray(parts)||parts.length<1)
+        return {schema:"gorge-r2-materialized-response-v1",deck,
+          version:pointer.version,status:"events_pending",total:entry.n};
+      const part=parts[eventPart];
+      const path="events/"+hex+"/"+String(eventPart).padStart(6,"0")+".json";
+      if(!part||part.path!==path||
+         !/^[a-f0-9]{64}$/.test(part.sha256||""))
+        throw Error("invalid_native_event_part_reference");
+      const record=await verifiedJson(bucket,versionPrefix+deck+"/"+path,
+        part.sha256,6*1024*1024);
+      if(record.schema!=="gorge-r2-native-event-part-v1" ||
+         record.deck!==deck||record.version!==pointer.version ||
+         record.game_id!==gameId||record.part!==eventPart||
+         record.total!==detail.native_event_count||
+         !Array.isArray(record.events)||record.events.length!==part.count||
+         part.count>500||part.count<1)
+        throw Error("invalid_native_event_part");
+      return {schema:"gorge-r2-materialized-response-v1",deck,
+        version:pointer.version,status:"ready",total:entry.n,
+        game_id:gameId,part:eventPart,part_count:parts.length,
+        native_event_count:detail.native_event_count,events:record.events};
+    }
     return {schema:"gorge-r2-materialized-response-v1",deck,
       version:pointer.version,status:"ready",total:entry.n,game:detail};
   }

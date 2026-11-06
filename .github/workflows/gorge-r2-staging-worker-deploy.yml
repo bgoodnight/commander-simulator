@@ -1,0 +1,181 @@
+name: Deploy isolated full-state Gorge R2 staging Worker and smoke real API
+on:
+  push:
+    branches: [stage/r2-full-state-rehearsal-20261106]
+    paths: [".github/workflows/gorge-r2-staging-worker-deploy.yml"]
+  workflow_dispatch:
+    inputs:
+      confirm_staging_only:
+        description: "I confirm only the isolated staging pointer and staging Worker may change"
+        type: boolean
+        required: true
+        default: false
+permissions:
+  contents: read
+concurrency:
+  group: gorge-omniscient-staging-worker
+  cancel-in-progress: false
+jobs:
+  stage-worker:
+    if: (github.event_name == 'push' && github.ref == 'refs/heads/stage/r2-full-state-rehearsal-20261106') || (github.event_name == 'workflow_dispatch' && inputs.confirm_staging_only == true)
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    env:
+      ACCOUNT: ${{ secrets.GORGE_R2_ACCOUNT_ID }}
+      ACCESS: ${{ secrets.GORGE_R2_ACCESS_KEY_ID }}
+      SECRET: ${{ secrets.GORGE_R2_SECRET_ACCESS_KEY }}
+      CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+      CLOUDFLARE_ACCOUNT_ID: ${{ secrets.GORGE_R2_ACCOUNT_ID }}
+      STAGING_PREFIX: "results/materialized/staging/42247580961-1/"
+      STAGING_VERSION: "3324b7540d93fcdabe37e35161a407f1539e22856dd73ee3692ef08d5dd2cc9a"
+      PREVIOUS_VERSION: "fe2fa941fca112d7a5ad38d20b2f4435879bf6bd4c317e7f97dd5c5ed4eb38e2"
+      STAGING_WORKER: "gorge-r2-fullstate-staging-20261106"
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+      - name: Verify exact prior rollback and activate full staged cohort only
+        shell: bash
+        run: |
+          set -euo pipefail
+          test -n "$ACCOUNT" && test -n "$ACCESS" && test -n "$SECRET"
+          test -n "$CLOUDFLARE_API_TOKEN"
+          [[ "$STAGING_PREFIX" == results/materialized/staging/42247580961-1/ ]]
+          [[ "$STAGING_WORKER" == gorge-r2-fullstate-staging-20261106 ]]
+          export AWS_ACCESS_KEY_ID="$ACCESS" AWS_SECRET_ACCESS_KEY="$SECRET" AWS_DEFAULT_REGION=auto
+          endpoint="https://$ACCOUNT.r2.cloudflarestorage.com"
+          stage="s3://gorge-simulations/${STAGING_PREFIX%/}"
+          aws --endpoint-url "$endpoint" s3 cp "$stage/current.json" "$RUNNER_TEMP/current.json" --no-progress
+          aws --endpoint-url "$endpoint" s3 cp "$stage/versions/$STAGING_VERSION/manifest.json" \
+            "$RUNNER_TEMP/manifest.json" --no-progress
+          python - <<'PY'
+          import hashlib,json,os
+          from pathlib import Path
+          old=json.loads((Path(os.environ["RUNNER_TEMP"])/"current.json").read_text())
+          manifest_raw=(Path(os.environ["RUNNER_TEMP"])/"manifest.json").read_bytes()
+          manifest=json.loads(manifest_raw)
+          assert old["schema"]=="gorge-r2-results-current-v1"
+          assert old["version"] in {os.environ["PREVIOUS_VERSION"],os.environ["STAGING_VERSION"]},"Unexpected stage pointer version"
+          assert manifest["schema"]=="gorge-r2-materialized-results-v1"
+          assert manifest["version"]==os.environ["STAGING_VERSION"]
+          assert set(manifest["decks"])=={"mortarion_current","magnus_premium"}
+          assert all(value["n"]==12 and value["insights"] for value in manifest["decks"].values())
+          digest=hashlib.sha256(manifest_raw).hexdigest()
+          pointer={"schema":"gorge-r2-results-current-v1",
+                   "version":os.environ["STAGING_VERSION"],"manifest_sha256":digest}
+          (Path(os.environ["RUNNER_TEMP"])/"staging-ready.json").write_text(
+              json.dumps(pointer,sort_keys=True,separators=(",",":"))+"\n")
+          print("PASS: audited full 24-game staging snapshot, distinct production pointer")
+          PY
+          aws --endpoint-url "$endpoint" s3 cp "$RUNNER_TEMP/staging-ready.json" \
+            "$stage/current.json" --cache-control no-store --content-type application/json --no-progress
+          aws --endpoint-url "$endpoint" s3 cp "$stage/current.json" \
+            "$RUNNER_TEMP/staging-readback.json" --no-progress
+          cmp "$RUNNER_TEMP/staging-ready.json" "$RUNNER_TEMP/staging-readback.json"
+      - name: Install, test and deploy separate staging-only Cloudflare Worker
+        working-directory: workers/gorge-r2-api
+        shell: bash
+        run: |
+          set -euo pipefail
+          test "$STAGING_WORKER" != "gorge-r2-direct-api-preview"
+          npm install --ignore-scripts --no-audit --no-fund
+          npm test
+          npx wrangler deploy --name "$STAGING_WORKER" \
+            --var "GORGE_R2_RESULTS_PREFIX:$STAGING_PREFIX" \
+            2>&1 | tee "$RUNNER_TEMP/stage-worker-deploy.log"
+          python - <<'PY'
+          import os,re
+          from pathlib import Path
+          output=(Path(os.environ["RUNNER_TEMP"])/"stage-worker-deploy.log").read_text()
+          urls=re.findall(r"https://[A-Za-z0-9.-]+\.workers\.dev",output)
+          expected=os.environ["STAGING_WORKER"]+"."
+          urls=[x for x in urls if expected in x]
+          if not urls:raise ValueError("Dedicated staging Worker URL missing from Wrangler deploy")
+          (Path(os.environ["RUNNER_TEMP"])/"stage-worker-url.txt").write_text(urls[-1])
+          print("Staging Worker:",urls[-1])
+          PY
+      - name: Smoke actual HTTPS Worker endpoints for both decks and native draws
+        shell: bash
+        run: |
+          set -euo pipefail
+          url="$(cat "$RUNNER_TEMP/stage-worker-url.txt")"
+          # A newly created workers.dev hostname may briefly return 404 while
+          # the route propagates. Require an actual health response first.
+          ready=0
+          for attempt in {1..15}; do
+            code="$(curl --silent --show-error --max-time 20 --output "$RUNNER_TEMP/worker-health.json" --write-out '%{http_code}' "$url/health" || true)"
+            if [[ "$code" == 200 ]]; then ready=1; break; fi
+            echo "Staging hostname propagation: health HTTP $code (attempt $attempt/15)"
+            sleep 3
+          done
+          if [[ "$ready" != 1 ]]; then
+            cat "$RUNNER_TEMP/worker-health.json" || true
+            echo "::error::Staging Worker health never became ready"
+            exit 1
+          fi
+          for deck in mortarion_current magnus_premium; do
+            ready=0
+            for attempt in {1..12}; do
+              code="$(curl --silent --show-error --max-time 45 --output "$RUNNER_TEMP/catalog-$deck.json" --write-out '%{http_code}' "$url/v1/ui/catalog?deck=$deck" || true)"
+              if [[ "$code" == 200 ]]; then ready=1; break; fi
+              echo "Staging R2 catalog $deck HTTP $code (attempt $attempt/12)"
+              cat "$RUNNER_TEMP/catalog-$deck.json" || true
+              sleep 3
+            done
+            if [[ "$ready" != 1 ]]; then
+              echo "::error::Staging Worker catalog failed for $deck"
+              exit 1
+            fi
+            curl --fail --silent --show-error --retry 3 --retry-delay 3 --max-time 45 \
+              "$url/v1/ui/insights?deck=$deck" > "$RUNNER_TEMP/insights-$deck.json"
+            curl --fail --silent --show-error --retry 3 --retry-delay 3 --max-time 45 \
+              "$url/v1/ui/page?deck=$deck&page=0" > "$RUNNER_TEMP/page-$deck.json"
+            gid="$(DECK="$deck" python - <<'PY'
+          import json,os
+          from pathlib import Path
+          home=Path(os.environ["RUNNER_TEMP"])
+          deck=os.environ["DECK"]
+          summary=json.loads((home/f"catalog-{deck}.json").read_text())
+          insight=json.loads((home/f"insights-{deck}.json").read_text())
+          page=json.loads((home/f"page-{deck}.json").read_text())
+          assert summary["status"]=="ready" and summary["total"]==12
+          assert summary["version"]==os.environ["STAGING_VERSION"]
+          assert summary["summary"]["n"]==12
+          assert insight["status"]=="ready" and insight["insights"]["verified_games"]==12
+          assert insight["insights"]["coverage"]["missing"]==0
+          assert page["status"]=="ready" and len(page["page"]["games"])==12
+          print(page["page"]["games"][0]["game_id"])
+          PY
+          )"
+            curl --get --fail --silent --show-error --retry 3 --retry-delay 3 --max-time 45 \
+              --data-urlencode "deck=$deck" --data-urlencode "page=0" \
+              --data-urlencode "game_id=$gid" \
+              "$url/v1/ui/game" > "$RUNNER_TEMP/game-$deck.json"
+            curl --get --fail --silent --show-error --retry 3 --retry-delay 3 --max-time 45 \
+              --data-urlencode "deck=$deck" --data-urlencode "page=0" \
+              --data-urlencode "game_id=$gid" --data-urlencode "part=0" \
+              "$url/v1/ui/events" > "$RUNNER_TEMP/events-$deck.json"
+            DECK="$deck" python - <<'PY'
+          import json,os
+          from pathlib import Path
+          home=Path(os.environ["RUNNER_TEMP"])
+          deck=os.environ["DECK"]
+          game=json.loads((home/f"game-{deck}.json").read_text())
+          events=json.loads((home/f"events-{deck}.json").read_text())
+          assert game["status"]=="ready"
+          run=game["game"]["batch"]["runs"][0]
+          assert run["gorge_source"]["visibility"]=="omniscient"
+          assert len(run["opening_hand"])==run["opening_hand_count"]
+          assert len(run["opening_hands_by_seat"])==3
+          assert all(isinstance(s.get("library"),list) for s in run["opening_board_states"])
+          assert events["status"]=="ready" and events["native_event_count"]>1000
+          assert events["part_count"]>=1
+          assert any(e.get("secret") for e in events["events"])
+          print(f"PASS HTTPS Worker {deck}: 12 games, named hands, native hidden events")
+          PY
+          done
+          echo "## Live isolated staging Worker ready for browser UI verification" >> "$GITHUB_STEP_SUMMARY"
+          echo "Worker URL: $url" >> "$GITHUB_STEP_SUMMARY"
+          echo "Snapshot: $STAGING_VERSION" >> "$GITHUB_STEP_SUMMARY"
+          echo "Production Worker and production results pointer were untouched." >> "$GITHUB_STEP_SUMMARY"

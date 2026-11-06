@@ -74,8 +74,8 @@ jobs:
               "s3://gorge-simulations/warehouse/v1/$batch/" \
               "$RUNNER_TEMP/source/$batch/" --recursive --no-progress \
               --exclude "*" --include "*/manifest.json" \
-              --include "*/games.parquet" --include "*/ui-original.v1.json" \
-              --include "*/card-insights.v1.json"
+              --include "*/games.parquet" --include "*/events.parquet" --include "*/ui-original.v1.json" \
+              --include "*/card-insights.v1.json" --include "*/card-insights.v2.json"
           done < "$RUNNER_TEMP/previous/batch-list.txt"
       - name: Validate reviewed complete shard inventory before materialization
         shell: bash
@@ -94,6 +94,7 @@ jobs:
             --source "$RUNNER_TEMP/source" \
             --registry data/gorge_analytics_cohort_registry_v1.json \
             --expected-batches-file "$RUNNER_TEMP/previous/batch-list.txt" \
+            --expected-shards-file "$RUNNER_TEMP/expected-shards.json" \
             --out "$RUNNER_TEMP/build" > "$RUNNER_TEMP/build-report.json"
           cat "$RUNNER_TEMP/build-report.json" >> "$GITHUB_STEP_SUMMARY"
       - name: Publish immutable version contents, then atomic current pointer last
@@ -131,6 +132,8 @@ jobs:
               paths += [f"{deck}/{p['path']}" for p in record["pages"]]
               for game in (Path(os.environ["RUNNER_TEMP"])/"build/versions"/version/deck/"games").glob("*.json"):
                   paths.append(f"{deck}/games/{game.name}")
+              for part in (Path(os.environ["RUNNER_TEMP"])/"build/versions"/version/deck/"events").glob("*/*.json"):
+                  paths.append(f"{deck}/events/{part.parent.name}/{part.name}")
           (Path(os.environ["RUNNER_TEMP"])/"verify-paths.txt").write_text("\n".join(paths)+"\n")
           PY
           while IFS= read -r path; do

@@ -226,6 +226,37 @@ test("approved public projection produces an original Results-compatible batch",
   ])assert.throws(()=>originalUiBatch([row],{...source,...change},"mortarion_current"));
   assert.throws(()=>originalUiBatch([row,{...row,game_id:"b/d/0/713"}],
     source,"mortarion_current"),/incomplete_original_ui_projection/);
+  const omniscientRun={
+    ...run,opening_hand:["Sol Ring","Swamp"],opening_hand_count:2,
+    opening_hands_by_seat:[
+      {seat:1,hand:["Island"],hand_count:1},
+      {seat:2,hand:["Forest"],hand_count:1},
+      {seat:3,hand:["Mountain"],hand_count:1}],
+    ui_observations:run.ui_observations.map(obs=>({
+      ...obs,hand:["Sol Ring"],opponent_hands:[
+        {seat:1,hand:["Island"],hand_count:1},
+        {seat:2,hand:["Forest"],hand_count:1},
+        {seat:3,hand:["Mountain"],hand_count:1}]
+    })),
+    gorge_source:{...run.gorge_source,visibility:"omniscient",
+      synthetic_simulation_only:true}
+  };
+  const omniscientBatch=originalUiBatch([row],{
+    ...source,games:[{...source.games[0],run:omniscientRun}]
+  },"mortarion_current");
+  assert.deepEqual(omniscientBatch.runs[0].opening_hand,["Sol Ring","Swamp"]);
+  assert.equal(omniscientBatch.runs[0].opening_hands_by_seat[1].hand[0],"Forest");
+  assert.equal(originalRenderer.validate(omniscientBatch),true);
+  assert.throws(()=>originalUiBatch([row],{
+    ...source,games:[{...source.games[0],run:{
+      ...omniscientRun,opening_hand_count:3
+    }}]
+  },"mortarion_current"),/incomplete_omniscient_original_ui_hand/);
+  assert.throws(()=>originalUiBatch([row],{
+    ...source,games:[{...source.games[0],run:{
+      ...omniscientRun,native_events:[{kind:3,secret:true}]
+    }}]
+  },"mortarion_current"),/unexpected_original_ui_run_field/);
   assert.throws(()=>originalUiBatch([row,{...row,game_id:"b/d/0/713",
     player_deck_sha256:"c".repeat(64)}],source,"mortarion_current"),
     /mixed_original_ui_deck_revisions/);

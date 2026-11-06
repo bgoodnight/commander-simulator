@@ -58,12 +58,38 @@ jobs:
             "$RUNNER_TEMP/ui/ui-original.v1.json" --no-progress
           aws --endpoint-url "$endpoint" s3 cp "$prefix/archive-audit.json" \
             "$RUNNER_TEMP/ui/archive-audit.json" --no-progress
+      - name: Reconstruct approved synthetic omniscient replay from immutable native files
+        shell: bash
+        run: |
+          set -euo pipefail
+          deck_sha="$(python -c 'import json,os; doc=json.load(open("docs/deck-lab/decks.json")); print(next(x["deck_sha256"] for x in doc["decks"] if x["key"]==os.environ["HERO"]))')"
+          python -m tools.gorge_original_ui_shard \
+            --source-dir "$RUNNER_TEMP/source/results" \
+            --deck "$HERO" --batch "$BATCH" --shard 0 \
+            --ui-deck-sha "$deck_sha" \
+            --out "$RUNNER_TEMP/ui/ui-omniscient.v1.json"
+          python - <<'PY'
+          import json,os
+          from pathlib import Path
+          p=Path(os.environ["RUNNER_TEMP"])/"ui/ui-omniscient.v1.json"
+          projection=json.loads(p.read_text())
+          assert len(projection["games"])==12
+          for item in projection["games"]:
+              run=item["run"]
+              assert run["gorge_source"]["visibility"]=="omniscient"
+              assert run["gorge_source"]["synthetic_simulation_only"] is True
+              assert isinstance(run["opening_hand"],list)
+              assert len(run["opening_hand"])==run["opening_hand_count"]
+              assert len(run["opening_hands_by_seat"])==3
+              assert all(isinstance(obs["hand"],list) for obs in run["ui_observations"])
+          print("PASS: 12 native-derived all-seat omniscient UI replays")
+          PY
       - name: Verify source/projection and materialize stamped baseline in isolation
         run: |
           set -euo pipefail
           python -m tools.gorge_current_baseline promote \
             --source "$RUNNER_TEMP/source/results" --deck "$HERO" \
-            --projection "$RUNNER_TEMP/ui/ui-original.v1.json" \
+            --projection "$RUNNER_TEMP/ui/ui-omniscient.v1.json" \
             --registry data/gorge_analytics_cohort_registry_v1.json \
             --out "$RUNNER_TEMP/promoted"
           python - <<'PY'
@@ -112,7 +138,7 @@ jobs:
           console.log("PASS: 12 approved source-backed games accepted by original UI",process.argv[4]);
           JS
       - name: Preserve prior unapproved warehouse objects before promotion
-        if: github.ref == 'refs/heads/main' && github.event_name != 'pull_request'
+        if: github.ref == 'refs/heads/main' && github.event_name == 'workflow_dispatch'
         shell: bash
         run: |
           set -euo pipefail

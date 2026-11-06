@@ -31,7 +31,7 @@ class MaterializedResultsTests(unittest.TestCase):
         self.shard = self.root / "source" / "123456-1" / "mortarion_current" / "0"
         self.shard.mkdir(parents=True)
 
-    def build(self, count=26, leak=False, omit_projection=False):
+    def build(self, count=26, leak=False, omit_projection=False, per_game_events=2, omniscient=False):
         rows, games = [], []
         c = self.cohort
         deck = c["deck"]
@@ -64,17 +64,56 @@ class MaterializedResultsTests(unittest.TestCase):
                 "outcome": {"complete": True, "status": "win" if seed % 2 == 0 else "loss",
                             "winner_seat": seed % 2}
             }
+            if omniscient:
+                run["opening_hand"] = ["Sol Ring", "Swamp"]
+                run["opening_hand_count"] = 2
+                run["opening_hands_by_seat"] = [
+                    {"seat": i, "hand": [f"Seat{i} card"], "hand_count": 1}
+                    for i in (1, 2, 3)
+                ]
+                run["opening_board_states"] = [{
+                    "seat": 0, "hand": ["Sol Ring", "Swamp"],
+                    "library": ["Forest", "Mountain"],
+                    "mana_pool": [0, 0, 0, 0, 0, 0]
+                }]
+                run["ui_observations"] = [{
+                    "turn": 1, "hand": ["Swamp"],
+                    "opponent_hands": run["opening_hands_by_seat"],
+                    "board_states": run["opening_board_states"]
+                }]
+                run["gorge_source"]["visibility"] = "omniscient"
+                run["gorge_source"]["synthetic_simulation_only"] = True
             if leak and seed == 0:
                 run["native_events"] = [{"secret": True}]
             games.append({"game_id": gid, "source_sha256": row["source_sha256"],
                           "chain": row["chain"], "run": run})
+        # Complete native events are indexed by the warehouse game source.
+        events = []
+        for i, row in enumerate(rows):
+            row["event_start_row"] = len(events)
+            row["native_event_count"] = per_game_events
+            for seq in range(per_game_events):
+                secret = seq % 2 == 0
+                event = {"seq": seq, "kind": 3 if secret else 19,
+                         "secret": secret, "obj": i + 1}
+                events.append({
+                    "game_id": row["game_id"], "chain": row["chain"],
+                    "seed": row["seed"], "seq": seq,
+                    "kind_id": event["kind"], "secret": secret,
+                    "event_json": json.dumps(event)
+                })
         pq.write_table(pa.Table.from_pylist(rows), self.shard / "games.parquet")
+        pq.write_table(pa.Table.from_pylist(events), self.shard / "events.parquet")
         raw = (self.shard / "games.parquet").read_bytes()
+        event_raw = (self.shard / "events.parquet").read_bytes()
         manifest = {
             "schema": "gorge-warehouse-shard-v1",
             "batch_id": "123456-1", "player_deck": deck, "shard": 0, "games": count,
+            "native_events": len(events),
             "files": {"games.parquet": {"bytes": len(raw), "rows": count,
-                                      "sha256": hashlib.sha256(raw).hexdigest()}}
+                                      "sha256": hashlib.sha256(raw).hexdigest()},
+                      "events.parquet": {"bytes": len(event_raw), "rows": len(events),
+                                      "sha256": hashlib.sha256(event_raw).hexdigest()}}
         }
         (self.shard / "manifest.json").write_text(json.dumps(manifest))
         if not omit_projection:
@@ -101,9 +140,48 @@ class MaterializedResultsTests(unittest.TestCase):
         self.assertEqual((len(first["games"]), len(second["games"])), (25, 1))
         self.assertNotIn("batch", first)
         self.assertEqual(len(list((prefix / "games").glob("*.json"))), 26)
+        first_game = json.loads(next((prefix / "games").glob("*.json")).read_text())
+        self.assertEqual(first_game["native_event_count"], 2)
+        native_part = json.loads((prefix / first_game["event_parts"][0]["path"]).read_text())
+        self.assertEqual(len(native_part["events"]), 2)
+        self.assertTrue(native_part["events"][0]["secret"],
+                        "Omniscient native draws must not be filtered")
+        self.assertEqual(native_part["events"][1]["kind"], 19)
         pointer = json.loads((self.root / "built" / "current.json").read_text())
         raw = (self.root / "built" / "versions" / version / "manifest.json").read_bytes()
         self.assertEqual(hashlib.sha256(raw).hexdigest(), pointer["manifest_sha256"])
+
+    def test_complete_simulated_hands_and_libraries_survive_materialization(self):
+        self.build(1, omniscient=True)
+        report = project(self.root / "source", self.registry, self.root / "built")
+        root = self.root / "built" / "versions" / report["version"] / "mortarion_current"
+        replay = json.loads(next((root / "games").glob("*.json")).read_text())
+        run = replay["batch"]["runs"][0]
+        self.assertEqual(run["opening_hand"], ["Sol Ring", "Swamp"])
+        self.assertEqual(run["opening_hands_by_seat"][2]["hand"], ["Seat3 card"])
+        self.assertEqual(run["opening_board_states"][0]["library"], ["Forest", "Mountain"])
+        self.assertEqual(run["gorge_source"]["visibility"], "omniscient")
+
+    def test_501_native_events_are_split_without_losing_hidden_draws(self):
+        self.build(1, per_game_events=501)
+        report = project(self.root / "source", self.registry, self.root / "built")
+        root = self.root / "built" / "versions" / report["version"] / "mortarion_current"
+        detail = json.loads(next((root / "games").glob("*.json")).read_text())
+        self.assertEqual(detail["native_event_count"], 501)
+        self.assertEqual([part["count"] for part in detail["event_parts"]], [500, 1])
+        reconstructed = []
+        for part in detail["event_parts"]:
+            events = json.loads((root / part["path"]).read_text())["events"]
+            reconstructed.extend(events)
+        self.assertEqual([event["seq"] for event in reconstructed], list(range(501)))
+        self.assertTrue(reconstructed[500]["secret"])
+
+    def test_source_native_event_table_mutation_is_rejected(self):
+        self.build(1)
+        path = self.shard / "events.parquet"
+        path.write_bytes(b"corrupted")
+        with self.assertRaisesRegex(ValueError, "Unverified complete native event"):
+            project(self.root / "source", self.registry, self.root / "built")
 
     def test_versioned_insights_require_exact_full_cohort_native_evidence(self):
         self.build(2)

@@ -33,7 +33,11 @@ class FullCohortCardInsights:
         """Register exact approved games, or explicitly mark missing insights."""
         if not approved_rows:
             return
-        path = folder / "card-insights.v1.json"
+        # Each presentation-projection revision has its own immutable
+        # evidence sidecar. v2 attests omniscient UI; v1 stays as archive.
+        path = folder / "card-insights.v2.json"
+        if not path.is_file():
+            path = folder / "card-insights.v1.json"
         if not path.is_file():
             self.pending.append({"batch": approved_rows[0]["batch_id"],
                                  "deck": approved_rows[0]["deck"],

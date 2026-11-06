@@ -99,6 +99,39 @@ def verified_target(directory: Path, registry_path: Path, target_version: str):
                         detail.get("batch", {}).get("deck_sha256") !=
                         record["ui_deck_sha256"]):
                     raise ValueError("Rollback game identity mismatch")
+                if "event_parts" in detail:
+                    parts = detail["event_parts"]
+                    total = detail.get("native_event_count")
+                    if (not isinstance(parts, list) or not parts or
+                        type(total) is not int or total < 1 or
+                        len(parts) != (total + 499) // 500):
+                        raise ValueError("Incomplete rollback event inventory")
+                    counted = 0
+                    prev = -1
+                    for part_no, part_ref in enumerate(parts):
+                        event_path = f"events/{file_id}/{part_no:06d}.json"
+                        if part_ref["path"] != event_path:
+                            raise ValueError("Unexpected rollback event path")
+                        payload = read_checked(root / event_path, part_ref["sha256"])
+                        events = payload.get("events")
+                        if (payload.get("schema") != "gorge-r2-native-event-part-v1" or
+                            payload.get("version") != target_version or
+                            payload.get("deck") != deck or
+                            payload.get("game_id") != gid or
+                            payload.get("part") != part_no or
+                            payload.get("total") != total or
+                            not isinstance(events, list) or
+                            len(events) != part_ref["count"] or
+                            not 1 <= len(events) <= 500):
+                            raise ValueError("Rollback native event part mismatch")
+                        for event in events:
+                            seq = event.get("seq")
+                            if type(seq) is not int or seq <= prev:
+                                raise ValueError("Rollback native event order mismatch")
+                            prev = seq
+                        counted += len(events)
+                    if counted != total:
+                        raise ValueError("Rollback native event coverage mismatch")
         if len(seen) != n:
             raise ValueError("Rollback page count inconsistent with full cohort")
     return {"schema": POINTER_SCHEMA, "version": target_version,

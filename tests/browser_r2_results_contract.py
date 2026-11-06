@@ -79,7 +79,9 @@ def run():
                         headers={"Access-Control-Allow-Origin":"*"},
                         body=json.dumps(body))
                 page.route(API+"/**",handle)
-                page.goto(f"http://127.0.0.1:{server.server_port}/results.html?deck=mortarion_current",
+                # The legacy diagnostic is opt-in; normal Results uses the
+                # original-style cohort dashboard and turn explorer instead.
+                page.goto(f"http://127.0.0.1:{server.server_port}/results.html?deck=mortarion_current&r2Api={API}",
                           wait_until="domcontentloaded")
                 page.wait_for_function("window.__deckLabActiveKey && document.querySelector('#gorge-r2-live .gorge-r2-live-panel')",
                                        timeout=45000)
