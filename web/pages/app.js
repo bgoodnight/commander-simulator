@@ -1906,6 +1906,7 @@ function renderDraft(){
   $("workshop-message").classList.toggle("error",total!==100);
   $("save-local").disabled=total!==100;
   $("export-deck").disabled=total!==100;
+  $("copy-deck").disabled=total!==100;
   renderDeckVersionSelector();
   renderGlobalDeckSelector();
 }
@@ -2057,6 +2058,22 @@ function newDeckVersion(){
   renderDraft();renderDeckVersionSelector();
   syncPageNavigation();
   note("New draft created. Enter a name and save to keep it.");
+}
+function decklistClipboardText(counts,commander){
+  const lines=["Commander","1 "+commander,"","Deck"];
+  for(const name of Object.keys(counts).sort((a,b)=>a.localeCompare(b)))
+    if(counts[name]>0)lines.push(counts[name]+" "+name);
+  return lines.join("\n")+"\n";
+}
+async function copyDecklist(){
+  if(!selected)return;
+  try{
+    validateCounts(activeCounts);
+    if(!navigator.clipboard?.writeText)throw Error("Clipboard access is unavailable in this browser.");
+    await navigator.clipboard.writeText(decklistClipboardText(activeCounts,selectedDeck().commander));
+    originalSound("success");
+    note("Decklist copied. Paste it into your deck builder.");
+  }catch(err){note("Could not copy decklist: "+err.message,true)}
 }
 function exportDeck(){
   if(!selected)return;
@@ -2287,6 +2304,7 @@ function registerEvents(){
   $("reset-button").onclick=revertDraft;
   $("save-local").onclick=saveVersion;
   $("export-deck").onclick=exportDeck;
+  $("copy-deck").onclick=copyDecklist;
   $("fetch-card").onclick=fetchCard;
   $("add-name").oninput=listenToNameInput;
   $("fetch-name").oninput=listenToNameInput;
