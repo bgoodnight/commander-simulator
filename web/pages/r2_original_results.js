@@ -116,31 +116,10 @@
     }
     detailStats.append(matchupTitle,matchupList,turnsTitle,turnsList);
     const insightSection=create("section");
-    insightSection.className="r2-cohort-insights";
-    const insightTitle=create("h4","Key Insights · complete approved cohort");
-    insightSection.append(insightTitle);
-    if(verifiedInsights){
-      const categories=[
-        ["played","Most played cards"],
-        ["creature","Most played creatures"],
-        ["activated","Most activated abilities"],
-        ["triggered","Most triggered abilities"]
-      ];
-      for(const [kind,label] of categories){
-        const ranking=verifiedInsights.categories?.[kind]||[];
-        const section=create("div");
-        section.append(create("h5",label));
-        if(!ranking.length)section.append(create("p","No verified observations in this category."));
-        for(const card of ranking.slice(0,5)){
-          section.append(create("p",card.name+" · "+card.games+
-            " games · "+card.eventCount+" recorded events"));
-        }
-        insightSection.append(section);
-      }
-    }else{
-      insightSection.append(create("p",
-        "Card-level insights are pending complete verified native evidence; outcome statistics remain available."));
-    }
+    window.DeckGameOutcomes.renderCohortInsights(insightSection,verifiedInsights,summary.n,{
+      lookupRecordedCard:window.GorgeDeckLabCardInfo,
+      onOpenRecordedCard:name=>window.GorgeDeckLabOpenCard?.(name)
+    });
     const navigation=create("div");
     navigation.className="r2-game-navigation";
     const list=create("div");
