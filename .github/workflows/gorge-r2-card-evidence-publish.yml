@@ -1,0 +1,127 @@
+name: Publish verified native card insight evidence to R2
+# Manual producer: never derive hero cards from public partial replay data.
+on:
+  workflow_dispatch:
+    inputs:
+      batch:
+        description: "Exact approved warehouse batch (e.g. 42143344243-1)"
+        required: true
+        type: string
+      deck:
+        description: "Exact hero deck key"
+        required: true
+        type: string
+      shard:
+        description: "Exact shard number"
+        required: true
+        type: string
+      source_run_id:
+        description: "GitHub run retaining all native recordings"
+        required: true
+        type: string
+      source_artifact:
+        description: "Exact original source artifact name"
+        required: true
+        type: string
+permissions:
+  contents: read
+  actions: read
+concurrency:
+  group: gorge-native-insights-sidecar-${{ inputs.batch }}-${{ inputs.deck }}-${{ inputs.shard }}
+  cancel-in-progress: false
+jobs:
+  verify-and-publish:
+    runs-on: ubuntu-latest
+    timeout-minutes: 35
+    env:
+      BATCH: ${{ inputs.batch }}
+      DECK: ${{ inputs.deck }}
+      SHARD: ${{ inputs.shard }}
+      RUN_ID: ${{ inputs.source_run_id }}
+      SOURCE_ARTIFACT: ${{ inputs.source_artifact }}
+      ACCOUNT: ${{ secrets.GORGE_R2_ACCOUNT_ID }}
+      ACCESS: ${{ secrets.GORGE_R2_ACCESS_KEY_ID }}
+      SECRET: ${{ secrets.GORGE_R2_SECRET_ACCESS_KEY }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+      - name: Validate exact approved source inputs
+        shell: bash
+        run: |
+          set -euo pipefail
+          [[ "$BATCH" =~ ^[0-9]+-[0-9]+$ ]]
+          [[ "$DECK" =~ ^[a-z][a-z0-9_-]+$ ]]
+          [[ "$SHARD" =~ ^[0-9]+$ ]]
+          [[ "$RUN_ID" =~ ^[0-9]+$ ]]
+          [[ "$SOURCE_ARTIFACT" =~ ^[a-zA-Z0-9_.-]+$ ]]
+          test -n "$ACCOUNT" && test -n "$ACCESS" && test -n "$SECRET"
+          python - <<'PY'
+          import json,os
+          doc=json.load(open("data/gorge_analytics_cohort_registry_v1.json"))
+          matches=[c for c in doc["cohorts"] if c.get("deck")==os.environ["DECK"]
+                   and c.get("approved") is True and c.get("status")=="current"]
+          if len(matches)!=1:
+              raise SystemExit("No singular approved current deck cohort")
+          print("Approved current cohort:",matches[0]["cohort_id"])
+          PY
+      - name: Retrieve exact original native recordings and warehouse sources
+        env:
+          GH_TOKEN: ${{ github.token }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p "$RUNNER_TEMP/source" "$RUNNER_TEMP/shard"
+          gh run download "$RUN_ID" --repo "$GITHUB_REPOSITORY" \
+            --name "$SOURCE_ARTIFACT" --dir "$RUNNER_TEMP/source"
+          export AWS_ACCESS_KEY_ID="$ACCESS" AWS_SECRET_ACCESS_KEY="$SECRET" AWS_DEFAULT_REGION=auto
+          endpoint="https://$ACCOUNT.r2.cloudflarestorage.com"
+          prefix="s3://gorge-simulations/warehouse/v1/$BATCH/$DECK/$SHARD"
+          for item in manifest.json games.parquet ui-original.v1.json; do
+            aws --endpoint-url "$endpoint" s3 cp "$prefix/$item" \
+              "$RUNNER_TEMP/shard/$item" --no-progress
+          done
+      - name: Produce verified card evidence from complete native recordings
+        shell: bash
+        run: |
+          set -euo pipefail
+          pip install 'pyarrow==21.0.0'
+          source="$RUNNER_TEMP/source"
+          if [ -f "$source/results/runs.jsonl" ]; then
+            source="$source/results"
+          fi
+          test -f "$source/runs.jsonl"
+          test -d "$source/native"
+          python -m tools.gorge_r2_insight_evidence \
+            --native-source "$source" \
+            --shard "$RUNNER_TEMP/shard" \
+            --out "$RUNNER_TEMP/card-insights.v1.json"
+      - name: Publish immutable evidence sidecar and verify R2 readback
+        shell: bash
+        run: |
+          set -euo pipefail
+          export AWS_ACCESS_KEY_ID="$ACCESS" AWS_SECRET_ACCESS_KEY="$SECRET" AWS_DEFAULT_REGION=auto
+          endpoint="https://$ACCOUNT.r2.cloudflarestorage.com"
+          target="s3://gorge-simulations/warehouse/v1/$BATCH/$DECK/$SHARD/card-insights.v1.json"
+          if aws --endpoint-url "$endpoint" s3 cp "$target" \
+            "$RUNNER_TEMP/existing-insights.json" --no-progress; then
+            cmp "$RUNNER_TEMP/existing-insights.json" "$RUNNER_TEMP/card-insights.v1.json"
+          else
+            aws --endpoint-url "$endpoint" s3 cp "$RUNNER_TEMP/card-insights.v1.json" \
+              "$target" --content-type application/json --no-progress
+          fi
+          aws --endpoint-url "$endpoint" s3 cp "$target" \
+            "$RUNNER_TEMP/readback-insights.json" --no-progress
+          cmp "$RUNNER_TEMP/readback-insights.json" "$RUNNER_TEMP/card-insights.v1.json"
+          echo "Verified native card evidence for $BATCH/$DECK/$SHARD" >> "$GITHUB_STEP_SUMMARY"
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: gorge-card-insight-evidence-audit
+          path: ${{ runner.temp }}/card-insights.v1.json
+          retention-days: 7
+          if-no-files-found: warn
