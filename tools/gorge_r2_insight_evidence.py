@@ -76,12 +76,12 @@ def prepare(native_source: Path, shard: Path, catalog: Path,
     by_seed = {r["seed"]: r for r in source_rows}
     if len(by_seed) != len(source_rows):
         raise ValueError("Duplicate native source seeds")
-    if set(by_seed) != {row["seed"] for row in approved}:
-        raise ValueError("Native recordings must cover exactly approved games")
+    if not {row["seed"] for row in approved}.issubset(by_seed):
+        raise ValueError("Native recordings must cover every approved game")
     native = native_source / "native"
     expected_files = {f"gorge-seed-{row['seed']}.json" for row in approved}
-    if {p.name for p in native.glob("gorge-seed-*.json")} != expected_files:
-        raise ValueError("Missing or unexpected native recordings")
+    if not expected_files.issubset({p.name for p in native.glob("gorge-seed-*.json")}):
+        raise ValueError("Missing approved native recordings")
     source_hashes = {}
     for row in approved:
         recorded = by_seed[row["seed"]]
