@@ -1,7 +1,7 @@
 import { parquetReadObjects, parquetMetadataAsync, parquetSchema } from "hyparquet";
 import { compressors } from "hyparquet-compressors";
 import registry from "../../data/gorge_analytics_cohort_registry_v1.json";
-import { aggregate, isApproved, validateDeck, normalizeRow, approvedGameIndex, approvedGameDetail, approvedEventSegments, approvedEventWindow } from "./core.mjs";
+import { aggregate, isApproved, isDecisive, isDiagnosticAuthorized, validateDeck, normalizeRow, approvedGameIndex, approvedGameDetail, approvedEventSegments, approvedEventWindow } from "./core.mjs";
 
 // Read-only Cloudflare Worker. The R2 binding has no credentials in JS or HTML.
 // Never return native logs, intents, event_json, object catalog, or hidden zones.
@@ -9,6 +9,17 @@ const PREFIX="warehouse/v1/";
 const MAX_SHARDS=40;
 const MAX_OBJECT_SIZE=16*1024*1024;  // initial latency/memory guardrail
 const ORIGIN="https://bgoodnight.github.io";
+const DIAGNOSTIC_BATCH="42129260132-1";
+const DIAGNOSTIC_DECKS=new Set(["mortarion_current","magnus_premium"]);
+function diagnosticJson(value,status=200) {
+  // No public CORS and no browser/proxy caching for experimental recordings.
+  return new Response(JSON.stringify(value),{status,headers:{
+    "Content-Type":"application/json; charset=utf-8",
+    "Cache-Control":"private, no-store, max-age=0",
+    "X-Content-Type-Options":"nosniff"
+  }});
+}
+
 const now=()=>performance.now();
 const duration=t=>Math.round((now()-t)*10)/10;
 function json(value,status=200,ms=0) {
@@ -81,7 +92,7 @@ async function readGames(bucket,shard,manifest) {
       "cohort_manifest_sha256","engine_commit","rules_patch_sha256",
       "card_corpus_sha256","player_deck_sha256","pilot_version",
       "opponent_panel_sha256","oracle_bulk_sha256","simulation_protocol_sha256",
-      "event_start_row","native_event_count"];
+      "event_start_row","native_event_count","batch_id"];
   const rows=(await parquetReadObjects({file,compressors,
     columns:requested.filter(key=>columnsAvailable.has(key))})).map(normalizeRow);
   if(rows.length!==manifest.files["games.parquet"].rows)
@@ -123,6 +134,47 @@ async function readEventSegments(bucket,shard,manifest,game) {
   if(rows.length!==window.count || rows.some(row=>row.game_id!==game.game_id))
     throw Error("event_window_source_mismatch");
   return approvedEventSegments(rows,game.game_id);
+}
+// Strictly private test bridge: a pinned experimental recording is allowed to
+// exercise the REAL R2 Parquet path but is never approved for public analytics.
+// The bearer token is installed only during deployment and revoked afterward.
+async function getDiagnosticGame(env,deck,gameId) {
+  const {shards,truncated}=await listShards(env.GORGE_R2);
+  if(truncated)throw Error("shard_scan_limit_reached");
+  const pinned=shards.filter(s=>s.batch===DIAGNOSTIC_BATCH && s.deck===deck);
+  if(pinned.length!==1 || pinned[0].shard!=="0")
+    throw Error("missing_or_duplicate_pinned_experiment");
+  const shard=pinned[0];
+  const manifest=await readManifest(env.GORGE_R2,shard);
+  const games=await readGames(env.GORGE_R2,shard,manifest);
+  const valid=games.filter(g=>g.deck===deck && g.batch_id===DIAGNOSTIC_BATCH &&
+    g.cohort_id==null && isDecisive(g) &&
+    typeof g.source_sha256==="string" &&
+    /^[a-f0-9]{64}$/i.test(g.source_sha256) &&
+    Number.isSafeInteger(g.native_event_count) &&
+    g.native_event_count>0);
+  // A partial or unexpectedly modified experimental source fails closed.
+  if(valid.length!==(deck==="mortarion_current"?12:11) ||
+     valid.length!==games.length)
+    throw Error("experimental_source_population_mismatch");
+  if(gameId===null){
+    const index=approvedGameIndex(valid,deck,5);
+    return {schema:"gorge-r2-private-diagnostic-index-v1",
+      status:"experimental_not_certified",
+      population:"pinned_experimental_not_approved",
+      deck,batch:DIAGNOSTIC_BATCH,
+      total:index.total,games:index.games};
+  }
+  const match=valid.filter(g=>g.game_id===gameId);
+  if(match.length!==1)return {schema:"gorge-r2-private-diagnostic-timeline-v1",
+    status:"game_not_found",deck,game:null};
+  const g=match[0];
+  const detail=approvedGameIndex([g],deck,1).games[0];
+  const timeline=await readEventSegments(env.GORGE_R2,shard,manifest,g);
+  return {schema:"gorge-r2-private-diagnostic-timeline-v1",
+    status:"experimental_not_certified",
+    population:"pinned_experimental_not_approved",
+    deck,game:{...detail,timeline}};
 }
 async function getApprovedTimeline(env,deck,gameId,metrics) {
   const {shards,truncated}=await listShards(env.GORGE_R2);
@@ -217,6 +269,32 @@ export default {
     if(url.pathname==="/health")
       return json({ok:true,service:"gorge-r2-direct-api",schema:1,
         r2_binding:!!env.GORGE_R2},200,duration(started));
+    if(url.pathname==="/v1/diagnostic/games" ||
+       url.pathname.startsWith("/v1/diagnostic/games/")){
+      const expected=env.BENCHMARK_TOKEN;
+      if(!isDiagnosticAuthorized(request.headers.get("Authorization"),expected))
+        return diagnosticJson({error:"diagnostic_not_authorized"},401);
+      if(!env.GORGE_R2)return diagnosticJson({error:"r2_binding_missing"},503);
+      const match=url.pathname.match(/^\/v1\/diagnostic\/games\/([^/]+?)\/timeline$/);
+      if(url.pathname!=="/v1/diagnostic/games" && !match)
+        return diagnosticJson({error:"not_found"},404);
+      const deck=url.searchParams.get("deck");
+      if(!DIAGNOSTIC_DECKS.has(deck))
+        return diagnosticJson({error:"invalid_diagnostic_deck"},400);
+      let gameId=null;
+      if(match) {
+        try{
+          gameId=decodeURIComponent(match[1]);
+          if(!/^[a-zA-Z0-9_.:/-]{1,200}$/.test(gameId))
+            throw Error("invalid_game_id");
+        }catch{return diagnosticJson({error:"invalid_game_id"},400);}
+      }
+      try{return diagnosticJson(await getDiagnosticGame(env,deck,gameId));}
+      catch(err){
+        console.error("Private experimental Gorge read failed:",String(err?.message||err));
+        return diagnosticJson({error:"diagnostic_source_unavailable"},503);
+      }
+    }
     // Authenticated diagnostic only: time a REAL raw R2 ZSTD Parquet read
     // without returning source game data or granting statistical approval.
     if(url.pathname==="/v1/benchmark"){

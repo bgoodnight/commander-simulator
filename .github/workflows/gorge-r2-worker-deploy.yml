@@ -102,6 +102,59 @@ jobs:
               >> "$RUNNER_TEMP/r2-api-benchmark.jsonl"
             printf '\n' >> "$RUNNER_TEMP/r2-api-benchmark.jsonl"
           done
+          # Exercise the protected native-data bridge against actual private
+          # R2 Parquet while this token is temporarily installed. The public
+          # UI never receives this credential or experimental game data.
+          status="$(curl --silent --show-error --max-time 30 --output "$RUNNER_TEMP/diagnostic-denied.json" --write-out '%{http_code}' \
+            "$WORKER_URL/v1/diagnostic/games?deck=mortarion_current")"
+          [[ "$status" == "401" ]] || {
+            echo "::error::Unauthenticated experimental diagnostic returned HTTP $status"
+            exit 1
+          }
+          for deck in mortarion_current magnus_premium; do
+            curl --fail --silent --show-error --max-time 45 \
+              -H "Authorization: Bearer $token" \
+              "$WORKER_URL/v1/diagnostic/games?deck=$deck" \
+              > "$RUNNER_TEMP/diagnostic-$deck.json"
+            game_id="$(python - "$RUNNER_TEMP/diagnostic-$deck.json" "$deck" <<'PY'
+          import json,sys
+          row=json.load(open(sys.argv[1]))
+          deck=sys.argv[2]
+          expected=12 if deck=="mortarion_current" else 11
+          assert row["schema"]=="gorge-r2-private-diagnostic-index-v1"
+          assert row["deck"]==deck and row["total"]==expected
+          assert row["status"]=="experimental_not_certified"
+          assert row["population"]=="pinned_experimental_not_approved"
+          assert 1<=len(row["games"])<=5
+          print(row["games"][0]["game_id"])
+          PY
+            )"
+            escaped="$(python - "$game_id" <<'PY'
+          import sys,urllib.parse
+          print(urllib.parse.quote(sys.argv[1],safe=""))
+          PY
+            )"
+            curl --fail --silent --show-error --max-time 45 \
+              -H "Authorization: Bearer $token" \
+              "$WORKER_URL/v1/diagnostic/games/$escaped/timeline?deck=$deck" \
+              > "$RUNNER_TEMP/diagnostic-timeline-$deck.json"
+            python - "$RUNNER_TEMP/diagnostic-timeline-$deck.json" "$deck" "$game_id" <<'PY'
+          import json,sys
+          row=json.load(open(sys.argv[1]))
+          deck,game_id=sys.argv[2:]
+          assert row["schema"]=="gorge-r2-private-diagnostic-timeline-v1"
+          assert row["status"]=="experimental_not_certified"
+          assert row["deck"]==deck and row["game"]["game_id"]==game_id
+          timeline=row["game"]["timeline"]
+          assert timeline["schema"]=="gorge-r2-event-segments-v1"
+          assert timeline["event_count"]>1000 and timeline["raw_events_exposed"] is False
+          assert timeline["event_count"]==sum(
+              s["public_events"]+s["withheld_events"] for s in timeline["segments"])
+          for secret in ("event_json","object_id","object_key","source_sha256","intents"):
+              assert secret not in json.dumps(row)
+          print(f"{deck}: private R2 game timeline verified, {timeline['event_count']} native events")
+          PY
+          done
           python - <<'PY'
           import json,os,statistics,math
           from pathlib import Path
