@@ -1731,13 +1731,14 @@
   function gameNavigator(root,onSelect){
     const controls=create("div","game-navigator");
     const search=create("input","game-navigator-search");
-    search.type="search";search.placeholder="Find a game or opponent";
+    search.type="search";search.value="";search.placeholder="Find a game or opponent";
     search.setAttribute("aria-label","Find a game or opponent");
     const result=create("select","game-navigator-filter");
     result.setAttribute("aria-label","Filter games by result");
     for(const [value,label] of [["","All results"],["win","Wins"],["loss","Losses"]]){
       const option=create("option",null,label);option.value=value;result.appendChild(option);
     }
+    result.value="";
     const nav=create("div","game-navigator-controls");
     const previous=textButton("‹","game-navigator-step",()=>step(-1));
     previous.setAttribute("aria-label","Previous matching game");
