@@ -2513,6 +2513,21 @@
     }
     grid.appendChild(hero);root.replaceChildren(grid);
   }
+  function renderCohortInsights(root,report,total,options={}){
+    const grid=create("div","board-grid game-outcome-grid latest-insight-grid");
+    if(!report||report.verified_games!==total||report.observed_games!==total||
+       report.coverage?.level!=="full-cohort"||report.coverage?.missing!==0){
+      root.replaceChildren(create("p","game-outcome-empty","Card insights are pending complete cohort evidence."));
+      return;
+    }
+    for(const kind of ["played","creature","activated","triggered"]){
+      const ranked=(report.categories?.[kind]||[]).map(item=>({...item,events:[],seen:new Set()}));
+      const panel=cardPerformancePanel(kind,ranked,total,[],{...options,isGorge:true},()=>{});
+      if(panel)grid.appendChild(panel);
+    }
+    if(!grid.children.length)grid.appendChild(create("p","game-outcome-empty","No recorded card insights."));
+    root.replaceChildren(grid);
+  }
   // Allow a paginated data source to populate the exact original turn
   // reviewer without rendering a misleading single-game outcomes dashboard.
   function renderTurnReviewer(root,batches,options={}){
@@ -2526,5 +2541,5 @@
     return report;
   }
   return {FORMAT,STATES,validate,model,lifeTrend,matchupRows,matchupMetrics,
-    knockoutRound,opponentDecks,observationCardStats,turnSpotlight,render,renderCohortOverview,renderTurnReviewer};
+    knockoutRound,opponentDecks,observationCardStats,turnSpotlight,render,renderCohortOverview,renderCohortInsights,renderTurnReviewer};
 });
