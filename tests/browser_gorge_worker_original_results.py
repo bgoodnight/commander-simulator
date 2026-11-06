@@ -315,8 +315,8 @@ def test_omniscient_materialized_original_layout():
                 page.on("pageerror",lambda error: errors.append(str(error)))
                 page.route(staging+"/v1/ui/*",fulfill)
                 page.route(API+"/v1/ui/*",fulfill)
-                page.goto(f"http://127.0.0.1:{server.server_port}/results.html?deck={DECK}",
-                    wait_until="domcontentloaded")
+                page.goto(f"http://127.0.0.1:{server.server_port}/results.html?deck={DECK}"
+                    f"&r2Api={staging}",wait_until="domcontentloaded")
                 page.locator("#game-outcome-results .game-outcome-hero-frame").wait_for(
                     state="visible",timeout=60000)
                 assert page.evaluate("document.body.dataset.r2ResultsState")=="ready"
