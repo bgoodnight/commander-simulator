@@ -1,6 +1,6 @@
 import test from "node:test";
 import assert from "node:assert/strict";
-import { aggregate, uiOverview, isApproved, isDecisive, sha256, stableJson, validateDeck, normalizeRow, IDENTITY_FIELDS, approvedGameIndex, approvedGameDetail, approvedEventSegments, approvedEventWindow, isDiagnosticAuthorized } from "../core.mjs";
+import { aggregate, uiOverview, originalUiBatch, isApproved, isDecisive, sha256, stableJson, validateDeck, normalizeRow, IDENTITY_FIELDS, approvedGameIndex, approvedGameDetail, approvedEventSegments, approvedEventWindow, isDiagnosticAuthorized } from "../core.mjs";
 
 const fp = Object.fromEntries(IDENTITY_FIELDS.map(k=>[k,"pinned-"+k]));
 const approved={cohort_id:"baseline-1",status:"current",approved:true,approval_ref:"reviewed",...fp};
@@ -156,4 +156,50 @@ test("UI overview cannot advertise results for an unapproved or invalid cohort",
   assert.deepEqual(view.groups.opponents,[]);
   assert.throws(()=>uiOverview({...pending,status:"ready",n:2}),/invalid_ui_outcomes/);
   assert.throws(()=>uiOverview({...pending,status:"experimental"}),/invalid_ui_overview_source/);
+});
+
+test("approved public projection produces an original Results-compatible batch",async()=>{
+  const row=await game({seed:712,chain:"source-chain-712",
+    player_deck_sha256:"revised-deck",game_id:"b/d/0/712"});
+  const run={
+    seed:712,completed_rounds:1,
+    life_history:[
+      {round:0,life_totals:{"0":40,"1":40,"2":40,"3":40},
+       life_changes:[],new_eliminations:[],alive_seats:[0,1,2,3]},
+      {round:1,life_totals:{"0":37,"1":40,"2":40,"3":40},
+       life_changes:[],new_eliminations:[],alive_seats:[0,1,2,3]}
+    ],
+    ui_observations:[{turn:1,actions:[],hand:null,opponent_hands:null,
+      board_states:[{seat:0,hand:null}],snapshot_is_turn_end:false}],
+    opening_hand:null,opening_hands_by_seat:null,
+    gorge_source:{chain:"source-chain-712",visibility:"public_events_only",
+      synthetic_simulation_only:false},
+    outcome:{status:"win",complete:true,winner_seat:0,
+      completed_rounds:1,requested_rounds:1}
+  };
+  const source={schema:"gorge-r2-original-ui-projection-v1",deck:"mortarion_current",
+    games:[{game_id:row.game_id,chain:row.chain,run}]};
+  const batch=originalUiBatch([row],source,"mortarion_current");
+  assert.equal(batch.format,"commander-gorge-outcomes-v1");
+  assert.equal(batch.schema_version,1);
+  assert.equal(batch.deck_sha256,"revised-deck");
+  assert.equal(batch.opponent_fidelity,"gorge_native_full_100_card_decks");
+  assert.equal(batch.runs.length,1);
+  assert.equal(batch.runs[0].outcome.status,"win");
+  assert.equal(batch.runs[0].outcome.requested_rounds,batch.requested_rounds);
+  assert.equal(batch.runs[0].ui_observations.length,1);
+  assert.equal(JSON.stringify(batch).includes('"intents"'),false);
+  for(const change of [
+    {games:[]},
+    {games:[{...source.games[0],chain:"wrong"}]},
+    {games:[{...source.games[0],run:{...run,opening_hand:["Private Card"]}}]},
+    {games:[{...source.games[0],run:{...run,log:{events:[]}}}]},
+    {games:[{...source.games[0],run:{...run,source_object_id:123}}]},
+    {games:[{...source.games[0],run:{...run,outcome:{...run.outcome,status:"loss"}}}]}
+  ])assert.throws(()=>originalUiBatch([row],{...source,...change},"mortarion_current"));
+  assert.throws(()=>originalUiBatch([row,{...row,game_id:"b/d/0/713"}],
+    source,"mortarion_current"),/incomplete_original_ui_projection/);
+  assert.throws(()=>originalUiBatch([row,{...row,game_id:"b/d/0/713",
+    player_deck_sha256:"other"}],source,"mortarion_current"),
+    /mixed_original_ui_deck_revisions/);
 });
