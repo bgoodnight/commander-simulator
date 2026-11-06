@@ -38,6 +38,8 @@
     if(!ready){
       $("r2-game-picker")?.remove();
       $("key-insights-grid")?.replaceChildren();
+      $("key-insights-info")?.replaceChildren();
+      $("turn-reviewer-nav")?.replaceChildren();
       $("turn-reviewer-results")?.replaceChildren();
       document.body.classList.remove("r2-original-results-active");
     }
@@ -66,6 +68,7 @@
       placeholder.className="game-outcome-empty";
       placeholder.textContent="Approved game results are available; named-card findings "+
         "have not yet been published for this cohort.";
+      $("key-insights-info")?.replaceChildren();
       grid.replaceChildren(placeholder);
       return;
     }
@@ -178,8 +181,10 @@
     const picker=create("div");picker.id="r2-game-picker";
     const replayHeading=create("p","");replayHeading.className="micro";
     const gameItems=[];
+    const navHost=$("turn-reviewer-nav");
+    navHost?.replaceChildren();
     const navigator=window.DeckGameOutcomes.gameNavigator(picker,(item,turn)=>
-      showGame(item.id,item.page,item.label,turn));
+      showGame(item.id,item.page,item.label,turn),{controlsHost:navHost});
     picker.append(replayHeading);
     $("r2-game-picker")?.remove();
     reviewer.replaceChildren();
