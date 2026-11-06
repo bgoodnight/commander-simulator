@@ -2,10 +2,6 @@ name: Archive original Results projections from verified Gorge recordings
 # This publishes ONLY private experimental UI projections, never approved
 # warehouse data, analytics, Pages statistics or cohort registry changes.
 on:
-  push:
-    branches: [main]
-    paths:
-      - ".github/workflows/gorge-original-ui-private-r2-archive.yml"
   workflow_dispatch:
 permissions:
   contents: read
@@ -49,7 +45,7 @@ jobs:
           gh run download 42143344243 --repo "$GITHUB_REPOSITORY" \
             --name "gorge-corrected-fresh-candidate-$HERO" --dir "$RUNNER_TEMP/native-source"
           test -f "$RUNNER_TEMP/native-source/results/source-manifest.json"
-      - name: Generate public-safe UI projection locally from complete native evidence
+      - name: Generate all-seat omniscient UI projection locally from complete native evidence
         env:
           HERO: ${{ matrix.hero }}
         shell: bash
@@ -71,7 +67,7 @@ jobs:
           if projection["source_batch"]!=os.environ["SOURCE_BATCH"] or len(projection["games"])!=12:
               raise ValueError("Incomplete or mismatched experimental UI projection")
           info={
-              "schema":"gorge-r2-private-experimental-ui-archive-v1",
+              "schema":"gorge-r2-private-experimental-ui-archive-v2",
               "approval":False,"production_eligible":False,
               "source_batch":projection["source_batch"],
               "hero":projection["deck"],"game_count":len(projection["games"]),
@@ -88,7 +84,7 @@ jobs:
           set -euo pipefail
           export AWS_ACCESS_KEY_ID="$ACCESS" AWS_SECRET_ACCESS_KEY="$SECRET" AWS_DEFAULT_REGION=auto
           endpoint="https://$ACCOUNT.r2.cloudflarestorage.com"
-          prefix="ui/experimental/corrected-pilot/v1/$SOURCE_BATCH/$HERO"
+          prefix="ui/experimental/corrected-pilot/v2/$SOURCE_BATCH/$HERO"
           for filename in ui-original.v1.json archive-audit.json; do
             path="$RUNNER_TEMP/ui/$filename"
             key="$prefix/$filename"
