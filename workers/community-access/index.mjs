@@ -56,7 +56,7 @@ export default {
         ...publicFields(row), can_edit: canEditDeck(account, row)
       })) });
     }
-    const deckId = match[1];
+    // Cookie-authenticated writes require a same-origin browser request.\n    // Cross-origin Pages integration needs a reviewed CSRF/session design first.\n    if (request.headers.get("origin") !== url.origin) return json({ error: "origin_forbidden" }, 403);\n    const deckId = match[1];
     // Never accept owner_id, owner email, or arbitrary fields from the client.
     let body;
     try {
