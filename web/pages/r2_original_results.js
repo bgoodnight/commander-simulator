@@ -33,7 +33,7 @@
         // Existing Results styling may set display:none even after hidden is removed.
         // Make the approved-cohort state authoritative without changing page CSS.
         if(ready)element.style.setProperty("display","block","important");
-        else element.style.removeProperty("display");
+        else element.style.setProperty("display","none","important");
       }
     }
     if(!ready){
