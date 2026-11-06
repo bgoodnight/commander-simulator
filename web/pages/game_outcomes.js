@@ -1130,6 +1130,12 @@
     "Crab Token":{type:"Token Creature — Crab",glyph:"♋",tone:"crab"},
     "Faerie Token":{type:"Token Creature — Faerie",glyph:"✧",tone:"faerie"},
     "Clue Token":{type:"Token Artifact — Clue",glyph:"⌕",tone:"clue"},
+    "Treasure Token":{type:"Token Artifact — Treasure",glyph:"◆",tone:"generic"},
+    "Drake Token":{type:"Token Creature — Drake",glyph:"✧",tone:"generic"},
+    "Food Token":{type:"Token Artifact — Food",glyph:"◈",tone:"generic"},
+    "Blood Token":{type:"Token Artifact — Blood",glyph:"◇",tone:"generic"},
+    "Gold Token":{type:"Token Artifact — Gold",glyph:"◆",tone:"generic"},
+    "Map Token":{type:"Token Artifact — Map",glyph:"⌕",tone:"generic"},
     "Servo Token":{type:"Token Artifact Creature — Servo",power:1,toughness:1,glyph:"⚙",tone:"generic"},
     "Wizard Token":{type:"Token Creature — Wizard",glyph:"✦",tone:"generic"},
     "Astartes Warrior Token":{type:"Token Creature — Astartes Warrior",glyph:"♜",tone:"generic"}
@@ -1137,11 +1143,13 @@
   function tokenInfo(name,options={}){
     if(typeof name!=="string")return null;
     if(KNOWN_TOKENS[name])return KNOWN_TOKENS[name];
-    // Gorge's source object metadata is authoritative. The suffix is only a
-    // backward-compatible fallback for flattened/older replay exports.
+    // Source flags are authoritative, including named tokens that lack a
+    // 'Token' suffix. Old flattened R2 replays retain a name-only fallback.
     const sourceToken=Array.isArray(options.tokenNames)&&options.tokenNames.includes(name);
     if(sourceToken||/\btoken$/i.test(name)){
-      return {type:"Token",glyph:"◇",tone:"generic"};
+      const nativeType=options.tokenTypes?.[name];
+      return {type:typeof nativeType==="string"&&nativeType.trim()?
+        nativeType:"Token",glyph:"◇",tone:"generic"};
     }
     return null;
   }
@@ -1199,6 +1207,18 @@
     return String(card?.type_line||card?.type||"")
       .split("—")[0].toLowerCase();
   }
+  // Each permanent belongs in exactly one zone. Artifact creatures and
+  // enchantment creatures are creatures first; planeswalkers have a separate
+  // area rather than being mixed with untyped permanents.
+  function battlefieldZone(name,options){
+    const type=recordedCardTypes(name,options.lookupRecordedCard,options);
+    if(/\bcreature\b/.test(type))return "Creatures";
+    if(/\bland\b/.test(type))return "Lands";
+    if(/\bplaneswalker\b/.test(type))return "Planeswalkers";
+    if(/\bartifact\b/.test(type))return "Artifacts";
+    if(/\benchantment\b/.test(type))return "Enchantments";
+    return "Other permanents";
+  }
   function endStatePanel(observation,options){
     const panel=create("section","insight-end-state");
     // The recorded snapshot boundary stays in the data; the replay view
@@ -1208,40 +1228,35 @@
     if(Number.isInteger(observation.hand_count)&&!Array.isArray(observation.hand))
       panel.appendChild(create("p","micro","Hand · "+observation.hand_count+
         " cards. Individual identities are private in the public export."));
+    const battlefield=Array.isArray(observation.battlefield)?observation.battlefield:[];
+    const byType=new Map(["Creatures","Lands","Planeswalkers","Artifacts",
+      "Enchantments","Other permanents"].map(name=>[name,[]]));
+    for(const name of battlefield)
+      byType.get(battlefieldZone(name,options)).push(name);
     const zones=[
       ["Exile",observation.exile],
       ["Command zone",observation.command],
-      ["Creatures",(observation.battlefield||[]).filter(n=>
-        /\bcreature\b/.test(recordedCardTypes(n,options.lookupRecordedCard,options)))],
-      ["Lands",(observation.battlefield||[]).filter(n=>
-        /\bland\b/.test(recordedCardTypes(n,options.lookupRecordedCard,options)))],
-      ["Artifacts",(observation.battlefield||[]).filter(n=>
-        /\bartifact\b/.test(recordedCardTypes(n,options.lookupRecordedCard,options)))],
-      ["Enchantments",(observation.battlefield||[]).filter(n=>
-        /\benchantment\b/.test(recordedCardTypes(n,options.lookupRecordedCard,options)))],
-      ["Other permanents",(observation.battlefield||[]).filter(n=>
-        !/\b(creature|land|artifact|enchantment)\b/.test(
-          recordedCardTypes(n,options.lookupRecordedCard,options)))],
+      ...[...byType].map(([name,cards])=>[name,cards]),
       ["Graveyard",observation.graveyard],
       ["Hand",observation.hand]
     ];
-    const typed=zones.slice(2,6).reduce((n,z)=>n+z[1].length,0);
-    if((observation.battlefield||[]).length&&!typed)
-      panel.appendChild(create("p","micro","Card types unavailable for recorded battlefield"));
+    const typed=battlefield.length-byType.get("Other permanents").length;
+    if(battlefield.length&&!typed)
+      panel.appendChild(create("p","micro",
+        "Card types unavailable for recorded battlefield"));
     for(const [label,cards] of zones){
       if(!Array.isArray(cards))continue;
       const group=create("details","insight-end-zone insight-board-"+label.toLowerCase().replace(/[^a-z]+/g,"-"));
       group.open=true;
       const icon=({Hand:"▤","Command zone":"♛",Creatures:"♟",Lands:"◇",
-        Artifacts:"⚙",Enchantments:"✦","Other permanents":"◈",
+        Artifacts:"⚙",Enchantments:"✦",Planeswalkers:"♛","Other permanents":"◈",
         Graveyard:"◆",Exile:"⊘"})[label]||"◈";
       const trigger=create("summary","insight-end-zone-label");
       trigger.append(create("span","insight-end-zone-icon",icon),
         create("span",null,label+" · "+cards.length));
       group.appendChild(trigger);
       const list=create("div","insight-action-cards");
-      const entries=label==="Creatures"||label==="Artifacts"||
-        label==="Enchantments"||label==="Other permanents"?
+      const entries=byType.has(label)?
         groupedBattlefieldTokens(cards,options):cards.map(name=>({name,count:1}));
       for(const item of entries)list.appendChild(
         insightActionCard(item.name,options,{count:item.count}));
@@ -1270,6 +1285,11 @@
     return panel;
   }
   function compactInsightTimeline(root,run,options={}){
+    // Projection metadata is tied to the recorded game, not the selected deck.
+    // Source-backed token identities take precedence over name heuristics.
+    options={...options,
+      tokenNames:run.gorge_source?.token_names||options.tokenNames,
+      tokenTypes:run.gorge_source?.token_types||options.tokenTypes};
     root.replaceChildren();
     const head=create("div","game-outcome-evidence-head");
     head.append(create("strong",null,options.displayGameLabel||
@@ -2793,5 +2813,5 @@
     return report;
   }
   return {FORMAT,STATES,validate,model,lifeTrend,renderGameLengthHistogram,matchupRows,matchupMetrics,
-    knockoutRound,opponentDecks,observationCardStats,turnSpotlight,gameNavigator,render,renderCohortOverview,renderCohortInsights,renderRecordedBatchInsights,renderTurnReviewer};
+    knockoutRound,opponentDecks,tokenInfo,battlefieldZone,observationCardStats,turnSpotlight,gameNavigator,render,renderCohortOverview,renderCohortInsights,renderRecordedBatchInsights,renderTurnReviewer};
 });
