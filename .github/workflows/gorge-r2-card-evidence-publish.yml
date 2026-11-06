@@ -99,29 +99,29 @@ jobs:
           python -m tools.gorge_r2_insight_evidence \
             --native-source "$source" \
             --shard "$RUNNER_TEMP/shard" \
-            --out "$RUNNER_TEMP/card-insights.v1.json"
+            --out "$RUNNER_TEMP/card-insights.v2.json"
       - name: Publish immutable evidence sidecar and verify R2 readback
         shell: bash
         run: |
           set -euo pipefail
           export AWS_ACCESS_KEY_ID="$ACCESS" AWS_SECRET_ACCESS_KEY="$SECRET" AWS_DEFAULT_REGION=auto
           endpoint="https://$ACCOUNT.r2.cloudflarestorage.com"
-          target="s3://gorge-simulations/warehouse/v1/$BATCH/$DECK/$SHARD/card-insights.v1.json"
+          target="s3://gorge-simulations/warehouse/v1/$BATCH/$DECK/$SHARD/card-insights.v2.json"
           if aws --endpoint-url "$endpoint" s3 cp "$target" \
             "$RUNNER_TEMP/existing-insights.json" --no-progress; then
-            cmp "$RUNNER_TEMP/existing-insights.json" "$RUNNER_TEMP/card-insights.v1.json"
+            cmp "$RUNNER_TEMP/existing-insights.json" "$RUNNER_TEMP/card-insights.v2.json"
           else
-            aws --endpoint-url "$endpoint" s3 cp "$RUNNER_TEMP/card-insights.v1.json" \
+            aws --endpoint-url "$endpoint" s3 cp "$RUNNER_TEMP/card-insights.v2.json" \
               "$target" --content-type application/json --no-progress
           fi
           aws --endpoint-url "$endpoint" s3 cp "$target" \
             "$RUNNER_TEMP/readback-insights.json" --no-progress
-          cmp "$RUNNER_TEMP/readback-insights.json" "$RUNNER_TEMP/card-insights.v1.json"
+          cmp "$RUNNER_TEMP/readback-insights.json" "$RUNNER_TEMP/card-insights.v2.json"
           echo "Verified native card evidence for $BATCH/$DECK/$SHARD" >> "$GITHUB_STEP_SUMMARY"
       - uses: actions/upload-artifact@v4
         if: always()
         with:
           name: gorge-card-insight-evidence-audit
-          path: ${{ runner.temp }}/card-insights.v1.json
+          path: ${{ runner.temp }}/card-insights.v2.json
           retention-days: 7
           if-no-files-found: warn
