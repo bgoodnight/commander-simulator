@@ -28,7 +28,7 @@ jobs:
       CLOUDFLARE_ACCOUNT_ID: ${{ secrets.GORGE_R2_ACCOUNT_ID }}
       STAGING_PREFIX: "results/materialized/staging/42247580961-1/"
       STAGING_VERSION: "3324b7540d93fcdabe37e35161a407f1539e22856dd73ee3692ef08d5dd2cc9a"
-      PREVIOUS_VERSION: "fe2fa941fca112d7a5ad38d20b2f4435879bf6bd4c317e7f97dd5dd2cc9a"
+      PREVIOUS_VERSION: "fe2fa941fca112d7a5ad38d20b2f4435879bf6bd4c317e7f97dd5c5ed4eb38e2"
       STAGING_WORKER: "gorge-r2-fullstate-staging-20261106"
     steps:
       - uses: actions/checkout@v4
