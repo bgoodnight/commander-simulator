@@ -1,4 +1,5 @@
 name: Publish reusable Commander staging preview
+# Refresh preview with shared Key Insights visibility from staging PR #222.
 # Preview source refreshed for unified Results visibility (PR #221).
 
 on:
