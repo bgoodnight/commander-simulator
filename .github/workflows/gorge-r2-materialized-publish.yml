@@ -1,0 +1,114 @@
+name: Publish complete approved Gorge Results snapshot
+# Manual gate until ingestion has an explicit approved-shard completion event.
+on:
+  workflow_dispatch:
+    inputs:
+      batches:
+        description: "Comma-separated new, approved R2 batch IDs (e.g. 123456-1,123457-1)"
+        required: true
+        type: string
+permissions:
+  contents: read
+concurrency:
+  group: gorge-materialized-current-publication
+  cancel-in-progress: false
+jobs:
+  publish:
+    runs-on: ubuntu-latest
+    timeout-minutes: 90
+    env:
+      ACCOUNT: ${{ secrets.GORGE_R2_ACCOUNT_ID }}
+      ACCESS: ${{ secrets.GORGE_R2_ACCESS_KEY_ID }}
+      SECRET: ${{ secrets.GORGE_R2_SECRET_ACCESS_KEY }}
+      BATCHES: ${{ inputs.batches }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Install pinned Parquet reader
+        run: pip install 'pyarrow==21.0.0'
+      - name: Download prior published provenance and approved source batch list
+        shell: bash
+        run: |
+          set -euo pipefail
+          test -n "$ACCOUNT" && test -n "$ACCESS" && test -n "$SECRET"
+          export AWS_ACCESS_KEY_ID="$ACCESS" AWS_SECRET_ACCESS_KEY="$SECRET" AWS_DEFAULT_REGION=auto
+          endpoint="https://$ACCOUNT.r2.cloudflarestorage.com"
+          prefix="s3://gorge-simulations/results/materialized/v1"
+          mkdir -p "$RUNNER_TEMP/previous" "$RUNNER_TEMP/source"
+          if aws --endpoint-url "$endpoint" s3 cp "$prefix/current.json" "$RUNNER_TEMP/previous/current.json" --no-progress; then
+            version="$(python -c 'import json,os; p=os.environ["RUNNER_TEMP"]+"/previous/current.json"; print(json.load(open(p))["version"])')"
+            [[ "$version" =~ ^[a-f0-9]{64}$ ]]
+            aws --endpoint-url "$endpoint" s3 cp "$prefix/versions/$version/manifest.json" "$RUNNER_TEMP/previous/manifest.json" --no-progress
+          fi
+          python - <<'PY'
+          import hashlib,json,os,re
+          from pathlib import Path
+          home=Path(os.environ["RUNNER_TEMP"])/"previous"
+          raw=os.environ["BATCHES"]
+          batches=set(raw.split(","))
+          if not batches or any(not re.fullmatch(r"[0-9]+-[0-9]+", x) for x in batches):
+              raise ValueError("Invalid new batch IDs")
+          registry=json.loads(Path("data/gorge_analytics_cohort_registry_v1.json").read_text())
+          batches.update(c["source_batch"] for c in registry["cohorts"]
+                         if c.get("approved") is True and c.get("source_batch"))
+          if (home/"current.json").exists():
+              pointer=json.loads((home/"current.json").read_text())
+              payload=(home/"manifest.json").read_bytes()
+              if hashlib.sha256(payload).hexdigest()!=pointer["manifest_sha256"]:
+                  raise ValueError("Prior published manifest digest mismatch")
+              old=json.loads(payload)
+              if old.get("version")!=pointer["version"]:
+                  raise ValueError("Prior version mismatch")
+              batches.update(s["batch"] for s in old["source_shards"])
+          (home/"batch-list.txt").write_text("\n".join(sorted(batches))+"\n")
+          print(f"Rebuilding complete approved cohort from {len(batches)} source batches")
+          PY
+          while IFS= read -r batch; do
+            mkdir -p "$RUNNER_TEMP/source/$batch"
+            aws --endpoint-url "$endpoint" s3 cp \
+              "s3://gorge-simulations/warehouse/v1/$batch/" \
+              "$RUNNER_TEMP/source/$batch/" --recursive --no-progress \
+              --exclude "*" --include "*/manifest.json" \
+              --include "*/games.parquet" --include "*/ui-original.v1.json"
+          done < "$RUNNER_TEMP/previous/batch-list.txt"
+      - name: Assemble and validate complete immutable snapshot offline
+        shell: bash
+        run: |
+          set -euo pipefail
+          python -m tools.gorge_r2_materialized_results \
+            --source "$RUNNER_TEMP/source" \
+            --registry data/gorge_analytics_cohort_registry_v1.json \
+            --out "$RUNNER_TEMP/build" > "$RUNNER_TEMP/build-report.json"
+          cat "$RUNNER_TEMP/build-report.json" >> "$GITHUB_STEP_SUMMARY"
+      - name: Publish immutable version contents, then atomic current pointer last
+        shell: bash
+        run: |
+          set -euo pipefail
+          export AWS_ACCESS_KEY_ID="$ACCESS" AWS_SECRET_ACCESS_KEY="$SECRET" AWS_DEFAULT_REGION=auto
+          endpoint="https://$ACCOUNT.r2.cloudflarestorage.com"
+          prefix="s3://gorge-simulations/results/materialized/v1"
+          version="$(python -c 'import json,os; print(json.load(open(os.environ["RUNNER_TEMP"]+"/build/current.json"))["version"])')"
+          [[ "$version" =~ ^[a-f0-9]{64}$ ]]
+          # Immutable versions: reruns may only publish identical bytes.
+          if aws --endpoint-url "$endpoint" s3 cp "$prefix/versions/$version/manifest.json" "$RUNNER_TEMP/existing-manifest.json" --no-progress; then
+            cmp "$RUNNER_TEMP/build/versions/$version/manifest.json" "$RUNNER_TEMP/existing-manifest.json"
+          else
+            aws --endpoint-url "$endpoint" s3 cp \
+              "$RUNNER_TEMP/build/versions/$version/" "$prefix/versions/$version/" \
+              --recursive --no-progress
+          fi
+          # Read-back the manifest before changing the public active version.
+          aws --endpoint-url "$endpoint" s3 cp "$prefix/versions/$version/manifest.json" "$RUNNER_TEMP/check-manifest.json" --no-progress
+          cmp "$RUNNER_TEMP/build/versions/$version/manifest.json" "$RUNNER_TEMP/check-manifest.json"
+          aws --endpoint-url "$endpoint" s3 cp "$RUNNER_TEMP/build/current.json" \
+            "$prefix/current.json" --content-type application/json --cache-control "no-store" --no-progress
+          echo "Published verified current version $version" >> "$GITHUB_STEP_SUMMARY"
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: gorge-materialized-publication-audit
+          path: ${{ runner.temp }}/build-report.json
+          if-no-files-found: warn
+          retention-days: 30
