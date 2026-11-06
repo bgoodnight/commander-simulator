@@ -84,7 +84,19 @@ def test():
                 for item in mana:
                     if item["printed"] and "{" in item["printed"]:
                         assert item["count"]>0 or item["printed"] in item["fallback"],item
-                page.locator("#key-insights-grid .insight-methodology summary").click()
+                # The same ⓘ icon and popup as Overall Results must sit in
+                # the Key Insights heading, not above the card grid.
+                assert page.locator("#key-insights-info .game-outcome-limits summary").count()==1
+                assert page.locator("#key-insights-grid .insight-methodology").count()==0
+                page.locator("#key-insights-info .game-outcome-limits summary").click()
+                assert page.locator("#key-insights-info .game-outcome-limits-content").is_visible()
+                assert page.locator("#key-insights-info .game-outcome-limits-content").evaluate(
+                    "(el) => getComputedStyle(el).position")=="absolute"
+                # All page navigation operates in the reviewer heading, while
+                # the search/result filters stay in the body.
+                assert page.locator("#turn-reviewer-nav .game-navigator-controls").is_visible()
+                assert page.locator("#turn-reviewer-results .game-navigator-search").is_visible()
+                assert page.locator("#turn-reviewer-nav .game-navigator-status").count()==1
                 insights=page.locator("#key-insights-panel").inner_text()
                 assert ("approved games with complete recorded card observations" in insights
                         or "No named card observations are available" in insights)
@@ -173,6 +185,9 @@ def test_materialized():
                 assert page.evaluate("document.body.dataset.r2ResultsState")=="ready"
                 assert page.locator("#key-insights-panel").is_visible()
                 assert page.locator("#key-insights-grid").get_by_text(source_card,exact=False).first.is_visible()
+                assert page.locator("#key-insights-info .game-outcome-limits summary").count()==1
+                assert page.locator("#turn-reviewer-nav .game-navigator-controls").is_visible()
+                assert page.locator("#r2-game-picker .game-navigator-search").is_visible()
                 assert page.get_by_role("heading",name="Key insights").count()==1
                 assert page.locator("#gorge-r2-live").is_hidden()
                 assert page.locator("#gorge-replay-panel").is_hidden()
