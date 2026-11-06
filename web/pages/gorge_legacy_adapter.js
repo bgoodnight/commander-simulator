@@ -210,6 +210,20 @@
     if(!own.length||own.length>60)throw Error("Unsupported Gorge round count");
     const snapshots=new Map(g.snapshots.map(s=>[s.turn,s]));
     const names=visibleNames(g),baseline=g.snapshots[0];
+    // Preserve source-confirmed token identities without exporting object IDs.
+    // Existing simulations contain this flag, so projections can be rebuilt
+    // from retained R2 recordings; no Gorge rules rerun is required.
+    const tokenNames=new Set(),tokenTypes={};
+    for(const snapshot of g.snapshots)for(const player of snapshot.players)
+      for(const zone of Object.values(player.zones||{}))
+        for(const obj of Array.isArray(zone)?zone:[]){
+          if(obj?.token!==true||typeof obj.name!=="string")continue;
+          tokenNames.add(obj.name);
+          const type=typeof obj.type_line==="string"?obj.type_line:
+            typeof obj.type==="string"?obj.type:null;
+          if(type&&type.length<160&&/\b(artifact|creature|land|enchantment|planeswalker)\b/i.test(type))
+            tokenTypes[obj.name]=type;
+        }
     const omniscient=g.visibility==="omniscient";
     const otherHands=frame=>[0,1,2,3].filter(seat=>seat!==hero).map(seat=>({
       seat:mapSeat(seat,hero),
@@ -287,6 +301,7 @@
       opening_hand_count:baseline.players[hero].hand_count,
       mulligan:null,ui_observations,life_history,opponent_decks,
       gorge_source:{chain:g.chain,original_seat:hero,visibility:g.visibility,
+        token_names:[...tokenNames].sort(),token_types:tokenTypes,
         source_event_count:g.source?.total_native_events,
         public_event_count:g.source?.exported_events,
         snapshot_boundary:"first_pending_decision_of_turn",
@@ -382,15 +397,25 @@
       (batch.runs.length===1?"":"s")+" · "+batch.runs[0].ui_observations.length+
       " recorded turns · "+(batch.runs[0].gorge_source.visibility==="omniscient"?
         "omniscient simulated hands and draws":"public-only replay");
+    // Preserve the source-proven token flag across the legacy name-only
+    // projection, including token kinds the UI has never seen before.
+    const tokenNames=[...new Set(records.flatMap(game=>
+      (game.snapshots||[]).flatMap(snapshot=>
+        (snapshot.players||[]).flatMap(player=>
+          Object.values(player.zones||{}).flatMap(zone=>
+            Array.isArray(zone)?zone.filter(card=>card?.token===true&&
+              typeof card.name==="string").map(card=>card.name):[])))))];
     window.DeckGameOutcomes.render(outcomes,[batch],{
       deckKey:key,deckHash:deckHashes[key],
       commanderName:selected.commander,commanderArt:selected.art,
       isGorge:true,
+      tokenNames,
       reviewerRoot:reviewer,reviewerPanel:panel,
       lookupRecordedCard:cardInfo,
       deckCardNames:selected.cardNames,
       renderMana:value=>window.GorgeDeckLabMana?.(value),
       onOpenRecordedCard:name=>window.GorgeDeckLabOpenCard?.(name),
+      onOpenTokenCard:card=>window.GorgeDeckLabOpenTokenCard?.(card),
       fullCardInsights:window.__gorgeCardInsights?.[key]||null,
       fullCohortGames:window.__gorgeFullCohort?.decks?.[key]?.n||null,
     });
