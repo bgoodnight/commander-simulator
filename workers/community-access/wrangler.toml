@@ -1,0 +1,11 @@
+# Isolated, NOT deployed, future authenticated account API.
+name = "commander-community-access-dev"
+main = "index.mjs"
+compatibility_date = "2026-11-06"
+workers_dev = true
+
+[vars]
+# Hard fail closed unless explicitly enabled after Cloudflare Access is configured.
+ENABLE_COMMUNITY_ACCESS = "false"
+# Set ACCESS_OWNER_EMAILS privately in the Cloudflare Worker dashboard, never in Git.
+# Worker-level Access must protect ALL traffic; do not exempt workers.dev aliases.
