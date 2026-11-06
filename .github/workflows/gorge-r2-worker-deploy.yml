@@ -214,6 +214,51 @@ jobs:
               output.write("\n## Live public API smoke check\\n")
               output.write("Both /v1/summary and /v1/games returned validated schemas for Mortarion and Magnus.\\n")
           PY
+      - name: Verify UI contracts alongside unchanged analysis API routes
+        env:
+          WORKER_URL: ${{ steps.deploy.outputs.deployment-url }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          for deck in mortarion_current magnus_premium; do
+            for route in ui/overview ui/batch; do
+              tag="$(echo "$route" | tr '/' '-')"
+              curl --fail --silent --show-error --max-time 30 "$WORKER_URL/v1/$route?deck=$deck" > "$RUNNER_TEMP/$tag-$deck.json"
+            done
+          done
+          python - <<'PY'
+          import json,os
+          from pathlib import Path
+          root=Path(os.environ["RUNNER_TEMP"])
+          statuses=("ready","awaiting_cohort_approval","no_warehouse_shards")
+          for deck in ("mortarion_current","magnus_premium"):
+              overview=json.loads((root/f"ui-overview-{deck}.json").read_text())
+              batch=json.loads((root/f"ui-batch-{deck}.json").read_text())
+              summary=json.loads((root/f"summary-{deck}.json").read_text())
+              index=json.loads((root/f"games-{deck}.json").read_text())
+              assert overview["schema"]=="gorge-r2-ui-overview-v1"
+              assert batch["schema"]=="gorge-r2-original-ui-batch-response-v1"
+              assert all(r["deck"]==deck for r in (overview,batch,summary,index))
+              assert overview["status"]==summary["status"]
+              assert overview["outcomes"]["n"]==summary["n"]
+              assert overview["status"] in statuses
+              assert batch["status"] in (*statuses,"projection_pending")
+              if batch["status"]=="ready":
+                  item=batch["batch"]
+                  assert item["format"]=="commander-gorge-outcomes-v1"
+                  assert item["deck_key"]==deck and item["schema_version"]==1
+                  assert item["runs"]
+              else:
+                  assert batch["batch"] is None
+              for obj in (overview,batch):
+                  serialized=json.dumps(obj)
+                  for private in ('"event_json"','"source_sha256"','"objects"','"intents"'):
+                      assert private not in serialized
+              print(f"{deck}: summary={summary['status']}, ui={batch['status']}")
+          with open(os.environ["GITHUB_STEP_SUMMARY"],"a") as output:
+              output.write("\\n## UI/analytics contract compatibility\\n")
+              output.write("Existing summary/index and both UI responses retain approved-only source populations.\\n")
+          PY
       - name: Smoke-test individual game and native event-segment routes
         env:
           WORKER_URL: ${{ steps.deploy.outputs.deployment-url }}

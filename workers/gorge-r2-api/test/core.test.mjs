@@ -1,5 +1,8 @@
 import test from "node:test";
 import assert from "node:assert/strict";
+import {createRequire} from "node:module";
+const require=createRequire(import.meta.url);
+const originalRenderer=require("../../../web/pages/game_outcomes.js");
 import { aggregate, uiOverview, originalUiBatch, isApproved, isDecisive, sha256, stableJson, validateDeck, normalizeRow, IDENTITY_FIELDS, approvedGameIndex, approvedGameDetail, approvedEventSegments, approvedEventWindow, isDiagnosticAuthorized } from "../core.mjs";
 
 const fp = Object.fromEntries(IDENTITY_FIELDS.map(k=>[k,"pinned-"+k]));
@@ -182,6 +185,7 @@ test("approved public projection produces an original Results-compatible batch",
   const batch=originalUiBatch([row],source,"mortarion_current");
   assert.equal(batch.format,"commander-gorge-outcomes-v1");
   assert.equal(batch.schema_version,1);
+  assert.equal(originalRenderer.validate(batch),true,"the actual original Results renderer must accept the Worker batch");
   assert.equal(batch.deck_sha256,"revised-deck");
   assert.equal(batch.opponent_fidelity,"gorge_native_full_100_card_decks");
   assert.equal(batch.runs.length,1);
