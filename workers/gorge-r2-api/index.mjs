@@ -275,7 +275,7 @@ export default {
       if(!isDiagnosticAuthorized(request.headers.get("Authorization"),expected))
         return diagnosticJson({error:"diagnostic_not_authorized"},401);
       if(!env.GORGE_R2)return diagnosticJson({error:"r2_binding_missing"},503);
-      const match=url.pathname.match(/^\\/v1\\/diagnostic\\/games\\/([^/]+?)\\/timeline$/);
+      const match=url.pathname.match(/^\/v1\/diagnostic\/games\/([^/]+?)\/timeline$/);
       if(url.pathname!=="/v1/diagnostic/games" && !match)
         return diagnosticJson({error:"not_found"},404);
       const deck=url.searchParams.get("deck");
