@@ -179,7 +179,7 @@ def test_materialized():
                 assert page.get_by_text(source_card,exact=False).first.is_visible()
                 search=page.get_by_role("searchbox",name="Find a game or opponent")
                 assert search.count()==1
-                page.get_by_text("201 matching games",exact=True).wait_for(timeout=60000)
+                page.get_by_text("Choose a game · 201 available",exact=True).wait_for(timeout=60000)
                 assert page.locator('select[aria-label="Choose recorded game"]:visible').count()==0
                 assert page.get_by_role("button",name="Next 25").count()==0
                 assert not any(path.endswith("/game") for path,_ in calls)
