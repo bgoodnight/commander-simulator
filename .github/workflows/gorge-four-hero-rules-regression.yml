@@ -1,0 +1,103 @@
+name: Requalify four commanders with corrected Gorge pilot and rules
+on:
+  push:
+    branches: [integration/stage-gorge-rules-audit-20261106, stage/omniscient-r2-release-check-20261106]
+    paths: [".github/workflows/gorge-four-hero-rules-regression.yml"]
+permissions:
+  contents: read
+concurrency:
+  group: experimental-four-hero-rules-regression
+  cancel-in-progress: false
+jobs:
+  qualification:
+    strategy:
+      fail-fast: false
+      matrix:
+        hero: [mortarion_current, magnus_premium, necron_dynasties, wretched_ranks]
+    runs-on: ubuntu-latest
+    timeout-minutes: 90
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Prepare pinned decks and Gorge rules
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p "$RUNNER_TEMP/decks" "$RUNNER_TEMP/results/native"
+          python -m tools.export_gorge_decks --out "$RUNNER_TEMP/decks" --decks mortarion_current magnus_premium necron_dynasties wretched_ranks
+          python -m tools.fetch_gorge_precons --out "$RUNNER_TEMP/decks"
+          git clone --filter=blob:none https://github.com/adams-shaun/gorge.git "$RUNNER_TEMP/gorge"
+          git -C "$RUNNER_TEMP/gorge" checkout --detach b78e4c8b16078f6decbc48875bba953ce5535b85
+          python -m tools.patch_gorge_ward_blight --gorge "$RUNNER_TEMP/gorge"
+          python tools/gorge_trigger_cost_policy_patch.py "$RUNNER_TEMP/gorge/bots/botpolicy/policy.go"
+          python -m tools.patch_gorge_changezone_anynumber --gorge "$RUNNER_TEMP/gorge"
+          python -m tools.patch_gorge_adeline_token_defender --gorge "$RUNNER_TEMP/gorge"
+          python -m tools.patch_gorge_convoke_pilot_fallback --policy "$RUNNER_TEMP/gorge/bots/botpolicy/policy.go"
+      - uses: actions/setup-go@v5
+        with:
+          go-version-file: ${{ runner.temp }}/gorge/go.mod
+          cache: false
+      - name: Pin critical rule tests and compile probe
+        working-directory: ${{ runner.temp }}/gorge
+        shell: bash
+        run: |
+          set -euo pipefail
+          make fetch-cards compile-cards
+          cp "$GITHUB_WORKSPACE/tools/gorge_changezone_anynumber_test.go" engine/effects/experimental_anynumber_test.go
+          go test ./engine/effects -run 'TestExperimentalTechnomancerAnyNumberCompiled|TestTokenAttackingPlaneswalkerArmDegradesLoud' -count=1
+          go test ./engine/rules -run '^TestAdelineTokenAttackingRememberedPlayerAttacksThatOpponent$' -count=1
+          go test ./bots/botpolicy -run 'TestConvoke|TestTriggerCostXAndPayPilot' -count=1
+          cp "$GITHUB_WORKSPACE/tools/gorge_commander_probe.go" commander_probe.go
+          go build -o "$RUNNER_TEMP/gorge-probe" ./commander_probe.go
+      - name: Four new experimental full-trace games and token audit
+        env:
+          HERO: ${{ matrix.hero }}
+          PYTHONPATH: ${{ github.workspace }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          case "$HERO" in
+            mortarion_current) seed=229100; opponents=necron_dynasties,wretched_ranks,cavalry-charge,science-pip,deadly-disguise,avengers-assemble ;;
+            magnus_premium) seed=229200; opponents=necron_dynasties,wretched_ranks,cavalry-charge,science-pip,deadly-disguise,avengers-assemble ;;
+            necron_dynasties) seed=229300; opponents=wretched_ranks,cavalry-charge,science-pip,deadly-disguise,avengers-assemble ;;
+            wretched_ranks) seed=229400; opponents=necron_dynasties,cavalry-charge,science-pip,deadly-disguise,avengers-assemble ;;
+          esac
+          set +e
+          "$RUNNER_TEMP/gorge-probe" -corpus "$RUNNER_TEMP/gorge/.cards" -deck-dir "$RUNNER_TEMP/decks" \
+            -hero-deck "$HERO" -opponents "$opponents" -games 4 -seed "$seed" -max-turns 60 \
+            -pilot bot -verify=true -native-dir "$RUNNER_TEMP/results/native" -native-limit 4 \
+            > "$RUNNER_TEMP/results/runs.jsonl" 2> "$RUNNER_TEMP/results/probe-stderr.txt"
+          rc=$?
+          set -e
+          if [ "$rc" != 0 ] && [ "$rc" != 2 ]; then cat "$RUNNER_TEMP/results/probe-stderr.txt";exit "$rc";fi
+          python -m tools.gorge_four_hero_token_audit --root "$RUNNER_TEMP/results" \
+            --hero "$HERO" --output "$RUNNER_TEMP/results/token-audit.json"
+          python - <<'PY'
+          import json,os
+          from pathlib import Path
+          from collections import Counter
+          root=Path(os.environ["RUNNER_TEMP"])/"results"
+          runs=[json.loads(s) for s in (root/"runs.jsonl").read_text().splitlines() if s.strip()]
+          assert len(runs)==4 and all(r["finished"] and r["replay_verified"] and not r.get("error") for r in runs)
+          records=[]
+          for r in runs:
+              native=json.loads((root/"native"/f"gorge-seed-{r['seed']}.json").read_text())
+              notes=Counter(e.get("text") for e in native["log"]["events"] if e["kind"]==22)
+              records.append({"seed":r["seed"],"token_creations":sum(e["kind"]==31 for e in native["log"]["events"]),
+                "adeline_unimplemented":sum("planeswalker arm is not implemented" in str(k) for k in notes.elements()),
+                "technomancer_anynumber_ignored":notes["ChangeZone ignores unread parameter(s) AnyNumber$"],
+                "cast_cost_aborts":notes["cast aborted: cost no longer payable"],
+                "cast_target_aborts":notes["cast aborted: no legal target"]})
+          assert all(x["adeline_unimplemented"]==0 and x["technomancer_anynumber_ignored"]==0 for x in records)
+          print("FOUR_HERO_RULES_QUALIFICATION",json.dumps({"hero":os.environ["HERO"],"games":records},sort_keys=True))
+          (root/"rules-qualification.json").write_text(json.dumps(records,indent=2)+"\n")
+          PY
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: gorge-rule-requalification-${{ matrix.hero }}
+          path: ${{ runner.temp }}/results/
+          retention-days: 14
+          if-no-files-found: warn

@@ -5,6 +5,7 @@ Worker batch projection. No experimental response is sent to public R2.
 """
 import json
 import os
+import re
 from http.server import ThreadingHTTPServer, SimpleHTTPRequestHandler
 from pathlib import Path
 from threading import Thread
@@ -16,7 +17,12 @@ OUT=Path(os.environ["BROWSER_ARTIFACT_DIR"])
 OUT.mkdir(parents=True,exist_ok=True)
 DOCUMENT=json.loads(Path(os.environ["ORIGINAL_UI_BATCH"]).read_text())
 DECK=DOCUMENT["deck"]
-API="https://gorge-r2-direct-api-preview.darbosama.workers.dev"
+# Preview branches may select an isolated Worker in their generated HTML.
+# Mock only that declared endpoint; never contact R2 from browser contracts.
+page_html=(ROOT/"results.html").read_text()
+api_match=re.search(r'GORGE_R2_API_BASE\\s*=\\s*"([^"]+)"',page_html)
+API=api_match.group(1) if api_match else (
+    "https://gorge-r2-direct-api-preview.darbosama.workers.dev")
 VERSION="a"*64
 
 class Handler(SimpleHTTPRequestHandler):
@@ -44,10 +50,10 @@ def test():
                 # This scenario exercises the legacy route on a Worker without
                 # materialized results. Do not depend on an external Worker or
                 # whatever deployment happens to be live while CI is running.
-                page.route(API+"/v1/ui/catalog?*",lambda route: route.fulfill(
+                page.route("**/v1/ui/catalog?*",lambda route: route.fulfill(
                     status=404,content_type="application/json",
                     headers={"Access-Control-Allow-Origin":"*"},body="{}"))
-                page.route(API+"/v1/ui/batch?*",route)
+                page.route("**/v1/ui/batch?*",route)
                 page.goto(f"http://127.0.0.1:{server.server_port}/results.html?deck={DECK}",
                           wait_until="domcontentloaded")
                 hero=page.locator("#game-outcome-results .game-outcome-hero-frame")
@@ -194,10 +200,10 @@ def test_materialized():
                 calls.clear()
                 page=browser.new_page(viewport=viewport)
                 page.on("pageerror",lambda err: errors.append(str(err)))
-                page.route(API+"/v1/ui/catalog?*",response)
-                page.route(API+"/v1/ui/insights?*",response)
-                page.route(API+"/v1/ui/page?*",response)
-                page.route(API+"/v1/ui/game?*",response)
+                page.route("**/v1/ui/catalog?*",response)
+                page.route("**/v1/ui/insights?*",response)
+                page.route("**/v1/ui/page?*",response)
+                page.route("**/v1/ui/game?*",response)
                 page.goto(f"http://127.0.0.1:{server.server_port}/results.html?deck={DECK}&materializedResults=1",
                           wait_until="domcontentloaded")
                 page.get_by_text("201 games · complete cohort",exact=False).wait_for(timeout=60000)
