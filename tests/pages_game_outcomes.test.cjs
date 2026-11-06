@@ -1203,8 +1203,8 @@ test('turn summary only shows supported mana colors and hand, not battlefield/gr
   assert.match(js,/mana_produced_by_color/);
   assert.match(js,/insight-hand-shortcut/);
   assert.match(js,/function endStatePanel\(observation,options\)/);
-  assert.match(js,/\["Artifacts",/);
-  assert.match(js,/\["Enchantments",/);
+  assert.match(js,/\["Creatures","Lands","Planeswalkers","Artifacts",/);
+  assert.match(js,/"Enchantments","Other permanents"/);
   assert.match(js,/\["Hand",observation.hand\]/);
   assert.match(css,/\.insight-end-zone/);
   assert.ok(!js.includes('[["▤","hand"],["♟","battlefield"],["◆","graveyard"]]'));
@@ -1262,7 +1262,7 @@ test('turn summaries and end state use actual mana pips and clickable typed card
     const zones=walk(turn).filter(n=>n.className.startsWith('insight-end-zone '));
     const labels=zones.map(z=>walk(z.children[0]).map(n=>n.textContent).join(''));
     for(const text of ['Hand · 2','Creatures · 1','Lands · 1',
-      'Artifacts · 2','Enchantments · 1','Graveyard · 1'])
+      'Artifacts · 1','Enchantments · 1','Graveyard · 1'])
       assert.ok(labels.some(x=>x.includes(text)),text);
     const hand=walk(summary).find(n=>n.className.includes('insight-hand-shortcut'));
     hand.onclick();
