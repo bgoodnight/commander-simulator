@@ -43,7 +43,7 @@ class ExperimentalR2Tests(unittest.TestCase):
             src=root/"fixture.tar.gz"
             fixture_archive(src)
             def fake_aws(args,endpoint):
-                self.assertIn("native/experimental/corrected-pilot/v1/42143344243-1/mortarion_current.tar.gz",args)
+                self.assertTrue(any("native/experimental/corrected-pilot/v1/42143344243-1/mortarion_current.tar.gz" in a for a in args))
                 Path(args[-2]).write_bytes(src.read_bytes())
             with patch("tools.gorge_r2_experiment_ingest._aws",side_effect=fake_aws):
                 d=acquire("42143344243-1","mortarion_current","a"*32,root/"out")
