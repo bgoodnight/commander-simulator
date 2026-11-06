@@ -266,6 +266,44 @@ def test_materialized():
     finally:
         server.shutdown()
 
+def test_initial_worker_recovery():
+    """An initial transient R2 error recovers without switching decks or reloading."""
+    server=ThreadingHTTPServer(("127.0.0.1",0),Handler)
+    Thread(target=server.serve_forever,daemon=True).start()
+    try:
+        with sync_playwright() as p:
+            browser=p.chromium.launch(headless=True)
+            page=browser.new_page()
+            calls=[]
+            def intermittent(route):
+                calls.append(route.request.url)
+                if len(calls)==1:
+                    route.fulfill(status=503,content_type="application/json",
+                                  headers={"Access-Control-Allow-Origin":"*"},
+                                  body='{"error":"temporary upstream failure"}')
+                else:
+                    route.fulfill(status=200,content_type="application/json",
+                                  headers={"Access-Control-Allow-Origin":"*"},
+                                  body=json.dumps(DOCUMENT))
+            page.route(API+"/v1/ui/catalog?*",lambda route: route.fulfill(
+                status=404,content_type="application/json",
+                headers={"Access-Control-Allow-Origin":"*"},body="{}"))
+            page.route(API+"/v1/ui/batch?*",intermittent)
+            page.goto(f"http://127.0.0.1:{server.server_port}/results.html?deck={DECK}",
+                      wait_until="domcontentloaded")
+            page.locator("#game-outcome-results .game-outcome-hero-frame").wait_for(
+                state="visible",timeout=60000)
+            assert len(calls)==2, calls
+            assert page.evaluate("(key)=>window.R2OriginalResults.ownsRenderedDeck(key)",DECK)
+            assert page.evaluate("document.body.dataset.r2ResultsState")=="ready"
+            assert page.locator("#key-insights-panel").is_visible()
+            assert page.locator("#turn-reviewer-panel").is_visible()
+            page.close()
+            browser.close()
+    finally:
+        server.shutdown()
+
 if __name__=="__main__":
     test()
     test_materialized()
+    test_initial_worker_recovery()
