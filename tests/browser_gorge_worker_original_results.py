@@ -95,7 +95,10 @@ def test_materialized():
                      "verified_games":201,"observed_games":201,
                      "coverage":{"missing":0,"level":"full-cohort"},
                      "categories":{"played":[{"name":"Fixture Card","games":90,
-                                                   "eventCount":100}]}}}
+                         "eventCount":100,"score":90,"average":100/201,
+                         "median":0,"heldMedian":None,"timesPlayed":100,
+                         "seenGames":90,"turns":[3],"exampleEvents":[],
+                         "exampleSeenSeeds":[]}]}}}
         elif parsed.path.endswith("/page"):
             number=int(query["page"][0])
             count=min(25,201-number*25)
