@@ -46,3 +46,5 @@ jobs:
               response=(root/"analytics-response.txt").read_text()
               w.write(f"\nPrivate analytics cohort endpoint: HTTP {response[-3:]} (not an authenticated analysis pull).\n")
           PY
+          echo "API response statuses:"
+          for file in "$RUNNER_TEMP"/*-response.txt; do printf "%s " "$(basename "$file")"; tail -c 3 "$file"; echo; done
