@@ -1,3 +1,29 @@
+## Implementation update — November 6, 2026
+
+The draft PR now includes a Python source-manifest/SHA-verified materializer, immutable
+`results/materialized/v1/versions/<version>/` snapshot objects, a `current.json`
+activation pointer, a manifest-last publication workflow, testable Worker endpoints
+`/v1/ui/catalog`, `/v1/ui/page?page=N`, and `/v1/ui/game?page=N&game_id=...`,
+and a 25-game browser list with one-game-at-a-time replay fetching.
+
+The normal polished Results renderer remains the default for cohorts of 200 games
+or fewer; `?materializedResults=1` previews the new large-cohort layout.
+The new layout is selected automatically for larger materialized cohorts.
+
+**Release caveats:** This is an isolated draft implementation, not yet deployed
+or tested against a complete real appended cohort. Current materialized summary
+includes full-cohort outcomes, turns and opponent groups; **full-cohort named-card
+insights and calibrated predictive statistics are not yet generated** and must
+be integrated from separately verified native analysis. The browser still needs
+live desktop/mobile UI validation. New approved source batches must have a
+complete adjacent `ui-original.v1.json` projection to publish. Automatic refresh
+is wired to the existing approved-baseline promotion workflow, while additional
+approved batches can be submitted explicitly with the manual dispatch; R2 object
+creation alone is not a publish authorization. Keep the original Worker endpoints
+until the preview, source certification and migration checks are complete.
+
+---
+
 # R2 scalable Results delivery — implementation staging (2026-11-06)
 
 ## Decision
