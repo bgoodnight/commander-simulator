@@ -37,6 +37,23 @@ class AssembleTests(unittest.TestCase):
                      [{"seed":1,"hero":"mortarion_current","landmark_global_turn":4},
                       {"seed":1,"hero":"mortarion_current","landmark_global_turn":4}])
 
+    def test_source_event_join_cutoff_and_missing(self):
+        game={"seed":9,"deck":"mortarion_current","hero_seat":0,"status":"decisive","won":1}
+        land=[{"seed":9,"hero":"mortarion_current","landmark_global_turn":4,
+               "landmark_observed":True,"source_event_seq":22,
+               "native_available":True,"hero_life":32}]
+        ev=[{"seed":9,"hero":"mortarion_current","landmark_global_turn":4,
+             "landmark_observed":True,"event_cutoff_seq":22,
+             "pod_cast_events":3,"hero_owned_card_cast_events":2,
+             "evidence_event_sequences":{"pod_cast_events":[1,8,17]}}]
+        r=assemble([game],land,ev)
+        self.assertEqual(r[0]["pod_cast_events"],3)
+        self.assertEqual(r[0]["hero_owned_card_cast_events"],2)
+        self.assertEqual(r[0]["event_evidence_sequences"]["pod_cast_events"],[1,8,17])
+        ev[0]["event_cutoff_seq"]=23
+        with self.assertRaisesRegex(ValueError,"cutoff"):
+            assemble([game],land,ev)
+
 
 if __name__=="__main__":
     unittest.main()
