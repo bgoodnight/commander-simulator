@@ -15,7 +15,7 @@ FIELDS_NEW='\tAnyNumber          bool // explicit AnyNumber$ True (Technomancer)
 KNOWN='\t"AnnounceTitle",\n'
 KNOWN_NEW='\t"AnnounceTitle",\n\t"AnyNumber",\n'
 READ='\tcn, cnOK := sa.Param(cards.PKChangeNum)\n'
-READ_NEW='\tp.AnyNumber = isTrue(sa.ParamStr("AnyNumber"))\n'+READ
+READ_NEW='\tp.AnyNumber = isTrue(sa.Params["AnyNumber"])\n'+READ
 CHOOSER='\tchooseFromAll := hasChooseFromDefined && cz.ChangeNum.Text == ""'
 CHOOSER_NEW='\tchooseFromAll := (hasChooseFromDefined || cz.AnyNumber) && cz.ChangeNum.Text == ""'
 
