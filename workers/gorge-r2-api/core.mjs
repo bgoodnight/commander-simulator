@@ -83,6 +83,8 @@ export function aggregate(rows, deck) {
     }
   }
   turns.sort((a,b)=>a-b);
+  const histogram=new Map();
+  for(const turn of turns)histogram.set(turn,(histogram.get(turn)||0)+1);
   const median = turns.length ? (turns[(turns.length-1)>>1]+turns[turns.length>>1])/2 : null;
   return {
     schema:"gorge-r2-live-summary-v1",
@@ -94,12 +96,58 @@ export function aggregate(rows, deck) {
     win_rate:selected.length?wins/selected.length:null,
     baseline:0.25,
     median_game_turns:median,
+    game_turn_histogram:[...histogram].map(([turn,games])=>({turn,games})),
     groups:{opponents:[...group.values()].map(g=>({...g,win_rate:g.wins/g.n}))
       .sort((a,b)=>b.n-a.n||a.name.localeCompare(b.name))},
     regressions:{status:"not_precomputed"},
     disclaimer:"Only completed, verified decisive games from explicitly approved current cohorts."
   };
 }
+/**
+ * Stable, presentation-oriented projection: original Results overview metrics
+ * with exact denominators and explicit unavailable detail coverage. No native
+ * event payloads, hidden identities, seeds, or experimental statistics.
+ *
+ * Individual game/turn UI data needs its own safe native-source projection;
+ * this overview never pretends that event-family counts are a card replay.
+ */
+export function uiOverview(summary) {
+  if(!summary || summary.schema!=="gorge-r2-live-summary-v1" ||
+     !["ready","awaiting_cohort_approval","no_warehouse_shards"].includes(summary.status))
+    throw Error("invalid_ui_overview_source");
+  const ready=summary.status==="ready";
+  const groups=ready?summary.groups?.opponents||[]:[];
+  const count=ready?summary.n:0;
+  if(!Number.isSafeInteger(count)||count<0 ||
+     (ready && (summary.wins+summary.losses!==count ||
+       !Number.isFinite(summary.win_rate))))throw Error("invalid_ui_outcomes");
+  const histogram=ready?summary.game_turn_histogram||[]:[];
+  if(ready && histogram.reduce((sum,x)=>sum+x.games,0)!==count)
+    throw Error("incomplete_turn_histogram");
+  return {
+    schema:"gorge-r2-ui-overview-v1",
+    deck:summary.deck,
+    status:summary.status,
+    population:"approved_current_decisive_only",
+    source:"r2-direct-parquet",
+    outcomes:{n:count,wins:ready?summary.wins:0,
+      losses:ready?summary.losses:0,
+      win_rate:ready?summary.win_rate:null,baseline:.25},
+    game_turn_histogram:histogram,
+    median_game_turns:ready?summary.median_game_turns:null,
+    groups:{opponents:groups},
+    coverage:{
+      outcome_games:count,
+      turn_histogram_games:ready?histogram.reduce((sum,x)=>sum+x.games,0):0,
+      card_insights:"not_exported_from_warehouse",
+      named_turn_actions:"requires_source_backed_ui_projection",
+      turn_entry_boards:"requires_source_backed_ui_projection",
+      hand_durations:"requires_source_backed_ui_projection"
+    },
+    disclaimer:"Approved, replay-verified decisive games only. Unavailable detail fields are not inferred."
+  };
+}
+
 export function validateDeck(deck) {
   if (!/^[a-z][a-z0-9_-]{1,75}$/.test(deck||"")) throw Error("Invalid deck");
   return deck;

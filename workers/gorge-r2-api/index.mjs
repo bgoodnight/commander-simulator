@@ -1,7 +1,7 @@
 import { parquetReadObjects, parquetMetadataAsync, parquetSchema } from "hyparquet";
 import { compressors } from "hyparquet-compressors";
 import registry from "../../data/gorge_analytics_cohort_registry_v1.json";
-import { aggregate, isApproved, isDecisive, isDiagnosticAuthorized, validateDeck, normalizeRow, approvedGameIndex, approvedGameDetail, approvedEventSegments, approvedEventWindow } from "./core.mjs";
+import { aggregate, uiOverview, isApproved, isDecisive, isDiagnosticAuthorized, validateDeck, normalizeRow, approvedGameIndex, approvedGameDetail, approvedEventSegments, approvedEventWindow } from "./core.mjs";
 
 // Read-only Cloudflare Worker. The R2 binding has no credentials in JS or HTML.
 // Never return native logs, intents, event_json, object catalog, or hidden zones.
@@ -329,7 +329,7 @@ export default {
       }
     }
     const detailMatch=url.pathname.match(/^\/v1\/games\/([^/]+?)(\/timeline)?$/);
-    if(url.pathname!=="/v1/summary" && url.pathname!=="/v1/games" && !detailMatch)
+    if(url.pathname!=="/v1/summary" && url.pathname!=="/v1/ui/overview" && url.pathname!=="/v1/games" && !detailMatch)
       return fail(404,"not_found",started);
     let gameId=null;
     if(detailMatch) {
@@ -357,7 +357,8 @@ export default {
         (url.pathname==="/v1/games" || gameId!==null)?
         await getApprovedGames(env,deck,limit,metrics,gameId):
         await getSummary(env,deck,metrics);
-      return json({...payload,query:{...metrics,server_ms:duration(started)}},200,duration(started));
+      const projected=url.pathname==="/v1/ui/overview"?uiOverview(payload):payload;
+      return json({...projected,query:{...metrics,server_ms:duration(started)}},200,duration(started));
     }catch(err){
       console.error("R2 approved query failed:",String(err?.message||err));
       return fail(503,"r2_query_unavailable",started);
