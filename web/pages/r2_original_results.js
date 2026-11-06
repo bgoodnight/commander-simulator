@@ -23,35 +23,55 @@
     }
     if(status)status.textContent=message;
   };
-  // A result is either unavailable (one message) or present (all core sections).
-  // A missing optional insight report must not hide the Key insights section.
-  function setResultsVisible(ready){
-    for(const id of ["key-insights-panel","turn-reviewer-panel"]){
-      const element=$(id);
-      if(element){
-        element.hidden=!ready;
-        // Existing Results styling may set display:none even after hidden is removed.
-        // Make the approved-cohort state authoritative without changing page CSS.
-        if(ready)element.style.setProperty("display","block","important");
-        else element.style.setProperty("display","none","important");
-      }
+  // One Results readiness policy. Authorization and cohort approval are
+  // enforced by R2; the browser never guesses access from a local toggle.
+  // Optional panels render only when their own source-backed data exists.
+  function setResultsState(state){
+    if(!["loading","unavailable","ready"].includes(state))throw Error("Invalid results state");
+    const ready=state==="ready";
+    document.body.dataset.r2ResultsState=state;
+    const reviewer=$("turn-reviewer-panel");
+    if(reviewer){
+      reviewer.hidden=!ready;
+      reviewer.style.setProperty("display",ready?"block":"none","important");
     }
     if(!ready){
       $("r2-game-picker")?.remove();
-      const grid=$("key-insights-grid");if(grid)grid.replaceChildren();
-      const reviewer=$("turn-reviewer-results");if(reviewer)reviewer.replaceChildren();
+      $("key-insights-grid")?.replaceChildren();
+      $("turn-reviewer-results")?.replaceChildren();
       document.body.classList.remove("r2-original-results-active");
     }
+    // The insights panel is controlled by content validity, not by permission.
+    if(!ready)setInsightsVisible(false);
   }
-  function showCohortInsights(report,total){
+  function setInsightsVisible(available){
+    const panel=$("key-insights-panel");
+    if(!panel)return;
+    panel.hidden=!available;
+    panel.style.setProperty("display",available?"block":"none","important");
+  }
+  function verifiedReport(report,total,version=null){
+    return Number.isInteger(total)&&total>0&&report?.verified_games===total&&
+      report?.observed_games===total&&report?.coverage?.missing===0&&
+      report?.coverage?.level==="full-cohort"&&
+      (!version||report.cohort_version===version)&&
+      report.categories&&typeof report.categories==="object";
+  }
+  function showCohortInsights(report,total,version=null){
     const grid=$("key-insights-grid");
     if(!grid)return;
-    const empty=$("key-insights-empty");if(empty)empty.hidden=true;
-    // Keep the original Key insights heading, regardless of metric coverage.
+    if(!verifiedReport(report,total,version)){
+      grid.replaceChildren();
+      setInsightsVisible(false);
+      return;
+    }
+    $("key-insights-empty").hidden=true;
     window.DeckGameOutcomes.renderCohortInsights(grid,report,total,{
       lookupRecordedCard:window.GorgeDeckLabCardInfo,
       onOpenRecordedCard:name=>window.GorgeDeckLabOpenCard?.(name)
     });
+    // An empty category inventory isn't a finding. Don't show filler.
+    setInsightsVisible(Boolean(grid.querySelector(".board-summary, .game-outcome-card, .insight-card")));
   }
   function ownsRenderedDeck(key){return renderedDeck===key;}
   // Materialized views keep statistics cohort-wide while replay is loaded per click.
@@ -69,7 +89,8 @@
     // Opt into the new layout for staging via ?materializedResults=1.
     const preview=new URLSearchParams(window.location.search).get("materializedResults")==="1";
     if(catalog.status!=="ready"){
-      statusMessage("No approved current results are published for this deck.");
+      setResultsState("unavailable");
+      statusMessage("R2 results not available for this deck.");
       return true;
     }
     const insightUrl=new URL("/v1/ui/insights",api);
@@ -84,14 +105,10 @@
          item.version!==catalog.version||item.deck!==key)throw Error("Insight cohort drift");
       if(item.status==="ready"){
         const report=item.insights;
-        if(report?.verified_games!==catalog.total||
-           report?.observed_games!==catalog.total||
-           report?.coverage?.missing!==0||
-           report?.coverage?.level!=="full-cohort"||
-           report?.cohort_version!==catalog.version)
-          throw Error("Incomplete card insight population");
-        verifiedInsights=report;
-        verifiedInsightCount=catalog.total;
+        if(verifiedReport(report,catalog.total,catalog.version)){
+          verifiedInsights=report;
+          verifiedInsightCount=catalog.total;
+        }
       }
     }else if(insightResponse.status!==404){
       // Existing outcomes remain available, but never use partial card rankings.
@@ -152,8 +169,8 @@
     if(!turnsList.children.length)
       turnsList.append(create("p","No game length data available."));
     detailStats.append(matchupTitle,matchupList,turnsTitle,turnsList);
-    setResultsVisible(true);
-    showCohortInsights(verifiedInsights,summary.n);
+    setResultsState("ready");
+    showCohortInsights(verifiedInsights,summary.n,catalog.version);
     const picker=create("div");picker.id="r2-game-picker";
     const gameSelect=create("select");gameSelect.className="game-outcome-scenario-select";
     gameSelect.setAttribute("aria-label","Choose recorded game");
@@ -258,9 +275,13 @@
     $("r2-game-picker")?.remove();
     renderedDeck=null;
     verifiedInsights=null;verifiedInsightCount=null;
-    setResultsVisible(false);
+    setResultsState("loading");
     const selected=window.GorgeDeckLabSelectedDeck?.(key);
-    if(!key||!selected?.eligible)return;
+    if(!key||!selected?.eligible){
+      setResultsState("unavailable");
+      statusMessage("R2 results not available for this deck.");
+      return;
+    }
     statusMessage("Checking approved Gorge game results…");
     try{
       if(await loadMaterialized(key,ticket,selected))return;
@@ -280,13 +301,15 @@
           projection_pending:"The approved games are awaiting original-UI replay projections."
         }[result.status];
         if(!description||result.batch!==null)throw Error("Invalid Worker batch status");
-        statusMessage(description);
+        setResultsState("unavailable");
+        statusMessage("R2 results not available for this deck. "+description);
         return;
       }
       const batch=result.batch;
       if(!batch||batch.deck_key!==key||
          batch.deck_sha256!==selected.sha){
-        statusMessage("No approved simulations match this exact Deck Lab deck revision.");
+        setResultsState("unavailable");
+        statusMessage("R2 results not available for this deck revision.");
         return;
       }
       if(!window.DeckGameOutcomes?.validate(batch))
@@ -307,9 +330,10 @@
       if(legacyRefresh)legacyRefresh.hidden=true;
       const diagnostic=$("pane-records")?.querySelector(".diagnostic-panel");
       if(diagnostic)diagnostic.hidden=true;
-      setResultsVisible(true);
-      showCohortInsights(verifiedInsights||window.__gorgeCardInsights?.[key]||null,
-        verifiedInsightCount||window.__gorgeFullCohort?.decks?.[key]?.n||batch.runs.length);
+      setResultsState("ready");
+      const report=verifiedInsights||window.__gorgeCardInsights?.[key]||null;
+      const population=verifiedInsightCount||window.__gorgeFullCohort?.decks?.[key]?.n||batch.runs.length;
+      showCohortInsights(report,population);
       window.DeckGameOutcomes.render(root,[batch],{
         deckKey:key,deckHash:selected.sha,
         commanderName:selected.commander,commanderArt:selected.art,
@@ -328,7 +352,8 @@
       if(status)status.textContent=label;
     }catch(err){
       if(ticket!==generation||key!==window.__deckLabActiveKey)return;
-      statusMessage("Original Results API unavailable: "+String(err.message||err));
+      setResultsState("unavailable");
+      statusMessage("R2 results not available: "+String(err.message||err));
     }
   }
   window.R2OriginalResults={refresh,ownsRenderedDeck};
