@@ -118,6 +118,29 @@ jobs:
                          for s in run['opening_board_states'])
           print('PASS: native omniscient source-derived 12-game projection',deck)
           PY
+            DECK="$deck" DEST="$dest" SOURCE="$src/results" python - <<'PY'
+          import json,os
+          from pathlib import Path
+          folder=Path(os.environ["SOURCE"])
+          projection=json.loads((Path(os.environ["DEST"])/"ui-original.v1.json").read_text())
+          for entry in projection["games"]:
+              bad=[(o["turn"], a.get("type"), a.get("seat"), a.get("native_turn"),
+                    a.get("native_turn_seat"), a.get("source_seq"))
+                   for o in entry["run"]["ui_observations"]
+                   for a in o.get("actions",[]) if a.get("card")=="Exclude"]
+              if not bad: continue
+              trace=json.loads((folder/"native"/f"gorge-seed-{entry['run']['seed']}.json").read_text())
+              active=None
+              native=[]
+              for event in trace["log"]["events"]:
+                  if event["kind"]==9: active=event.get("player")
+                  if event["kind"]==11 and event.get("text")=="Exclude":
+                      native.append({"seq":event.get("seq"),"player":event.get("player"),
+                                     "turn_active":active,"obj":event.get("obj")})
+              print("DIAGNOSTIC opponent Exclude",os.environ["DECK"],
+                    "seed",entry["run"]["seed"],"hero",entry["run"]["gorge_source"]["original_seat"],
+                    "adapter",bad,"native_casts",native)
+          PY
             python -m tools.gorge_r2_insight_evidence \
               --native-source "$src/results" --shard "$dest" \
               --out "$dest/card-insights.v2.json"
