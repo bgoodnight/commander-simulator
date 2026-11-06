@@ -29,5 +29,6 @@ jobs:
         working-directory: ${{ runner.temp }}/gorge
         run: |
           make fetch-cards compile-cards
-          go test ./engine/effects -run 'TestToken' -count=1
+          cp "$GITHUB_WORKSPACE/tools/gorge_adeline_planeswalker_test.go" engine/effects/experimental_adeline_walker_test.go
+          go test ./engine/effects -run 'TestToken|TestExperimentalAdelineOffersRememberedOpponentAndTheirWalker' -count=1
           go test ./engine/rules -run '^TestAdelineTokenAttackingRememberedPlayerAttacksThatOpponent$' -count=1 -v
