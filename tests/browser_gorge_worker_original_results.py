@@ -39,7 +39,7 @@ def test():
                     request.fulfill(status=200,content_type="application/json",
                         headers={"Access-Control-Allow-Origin":"*"},
                         body=json.dumps(DOCUMENT))
-                page.route(API+"/v1/ui/batch?*",route)
+                # The legacy renderer must remain usable before the first materialized pointer is published.\n                page.route(API+"/v1/ui/catalog?*",lambda request: request.fulfill(\n                    status=404,content_type="application/json",\n                    headers={"Access-Control-Allow-Origin":"*"},\n                    body=json.dumps({"error":"materialized_not_published"})))\n                page.route(API+"/v1/ui/batch?*",route)
                 page.goto(f"http://127.0.0.1:{server.server_port}/results.html?deck={DECK}",
                           wait_until="domcontentloaded")
                 hero=page.locator("#game-outcome-results .game-outcome-hero-frame")
