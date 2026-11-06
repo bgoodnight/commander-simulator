@@ -297,7 +297,7 @@ async function verifiedJson(bucket,key,expectedHash,maxBytes=4*1024*1024) {
   if(actual!==expectedHash)throw Error("materialized_digest_mismatch");
   return JSON.parse(new TextDecoder().decode(data));
 }
-async function getMaterialized(env,deck,page=null) {
+async function getMaterialized(env,deck,page=null,gameId=null) {
   const pointerObject=await env.GORGE_R2.get(MATERIALIZED_PREFIX+"current.json");
   if(!pointerObject)return null; // Existing source-backed legacy route stays available.
   if(pointerObject.size>1024)throw Error("oversized_materialized_pointer");
@@ -342,9 +342,26 @@ async function getMaterialized(env,deck,page=null) {
        payload.losses!==entry.losses || payload.schema!=="gorge-r2-live-summary-v1")) ||
      (page!==null && (payload.schema!=="gorge-r2-materialized-page-v1" ||
        payload.version!==pointer.version||payload.page!==page||
-       payload.total!==entry.n||payload.batch?.deck_sha256!==entry.ui_deck_sha256||
-       payload.batch?.runs?.length!==target.count)))
+       payload.total!==entry.n||!Array.isArray(payload.games)||
+       payload.games.length!==target.count)))
     throw Error("materialized_payload_mismatch");
+  if(gameId!==null){
+    if(page===null)throw Error("game_page_required");
+    const found=payload.games.filter(g=>g.game_id===gameId);
+    if(found.length!==1)throw Error("game_not_in_page");
+    const keyDigest=await crypto.subtle.digest("SHA-256",new TextEncoder().encode(gameId));
+    const hex=[...new Uint8Array(keyDigest)].map(x=>x.toString(16).padStart(2,"0")).join("");
+    if(!/^[a-f0-9]{64}$/.test(found[0].sha256||""))
+      throw Error("invalid_game_digest");
+    const detail=await verifiedJson(env.GORGE_R2,prefix+deck+"/games/"+hex+".json",found[0].sha256);
+    if(detail.schema!=="gorge-r2-materialized-game-v1" ||
+       detail.deck!==deck || detail.version!==pointer.version ||
+       detail.game_id!==gameId || detail.batch?.deck_sha256!==entry.ui_deck_sha256 ||
+       detail.batch?.runs?.length!==1)
+      throw Error("materialized_game_identity_mismatch");
+    return {schema:"gorge-r2-materialized-response-v1",deck,
+      version:pointer.version,status:"ready",total:entry.n,game:detail};
+  }
   return {schema:"gorge-r2-materialized-response-v1",deck,
     version:pointer.version,status:"ready",
     total:entry.n,page_count:entry.pages.length,
@@ -451,7 +468,7 @@ export default {
       }
     }
     const detailMatch=url.pathname.match(/^\/v1\/games\/([^/]+?)(\/timeline)?$/);
-    if(url.pathname!=="/v1/summary" && url.pathname!=="/v1/ui/overview" && url.pathname!=="/v1/ui/batch" && url.pathname!=="/v1/ui/catalog" && url.pathname!=="/v1/ui/page" && url.pathname!=="/v1/games" && !detailMatch)
+    if(url.pathname!=="/v1/summary" && url.pathname!=="/v1/ui/overview" && url.pathname!=="/v1/ui/batch" && url.pathname!=="/v1/ui/catalog" && url.pathname!=="/v1/ui/page" && url.pathname!=="/v1/ui/game" && url.pathname!=="/v1/games" && !detailMatch)
       return fail(404,"not_found",started);
     let gameId=null;
     if(detailMatch) {
@@ -478,15 +495,22 @@ export default {
     }
     const metrics={};
     try{
-      if(url.pathname==="/v1/ui/catalog" || url.pathname==="/v1/ui/page"){
+      if(url.pathname==="/v1/ui/catalog" || url.pathname==="/v1/ui/page" || url.pathname==="/v1/ui/game"){
         let page=null;
-        if(url.pathname==="/v1/ui/page"){
+        if(url.pathname!=="/v1/ui/catalog"){
           const raw=url.searchParams.get("page");
           if(raw===null||!/^(0|[1-9][0-9]{0,5})$/.test(raw))
             return fail(400,"invalid_page",started);
           page=Number(raw);
         }
-        const materialized=await getMaterialized(env,deck,page);
+        let selectedGame=null;
+        if(url.pathname==="/v1/ui/game"){
+          selectedGame=url.searchParams.get("game_id");
+          if(!selectedGame||selectedGame.length>200 ||
+             !/^[a-zA-Z0-9_.:/-]+$/.test(selectedGame))
+            return fail(400,"invalid_game_id",started);
+        }
+        const materialized=await getMaterialized(env,deck,page,selectedGame);
         if(!materialized)return fail(404,"materialized_not_published",started);
         return json(materialized,materialized.status==="page_not_found"?404:200,duration(started));
       }
