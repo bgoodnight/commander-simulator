@@ -1,11 +1,24 @@
-# Isolated, NOT deployed, future authenticated account API.
+# Isolated accounts API. Do NOT deploy before enabling Worker-level Access.
 name = "commander-community-access-dev"
 main = "index.mjs"
 compatibility_date = "2026-11-06"
 workers_dev = true
 
 [vars]
-# Hard fail closed unless explicitly enabled after Cloudflare Access is configured.
 ENABLE_COMMUNITY_ACCESS = "false"
-# Set ACCESS_OWNER_EMAILS privately in the Cloudflare Worker dashboard, never in Git.
-# Worker-level Access must protect ALL traffic; do not exempt workers.dev aliases.
+
+# Before staging, create an ISOLATED private D1 database and R2 bucket,
+# then add bindings locally (do not replace the Results R2 bucket):
+#
+# [[d1_databases]]
+# binding = "COMMUNITY_DB"
+# database_name = "commander-community-dev"
+# database_id = "<your-isolated-d1-id>"
+#
+# [[r2_buckets]]
+# binding = "COMMUNITY_DECKS_R2"
+# bucket_name = "commander-decks-dev"
+#
+# Set ACCESS_OWNER_EMAILS using Worker secrets/config, never commit real emails.
+# Worker-level Access policy must protect ALL traffic for this Worker, including
+# workers.dev and preview URLs. Simulations remain disabled in all environments.
