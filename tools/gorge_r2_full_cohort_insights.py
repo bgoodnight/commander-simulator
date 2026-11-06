@@ -61,6 +61,9 @@ class FullCohortCardInsights:
         if envelope.get("source_recordings") != source_ids:
             raise ValueError("Native source digests are not exact")
         deck = approved_rows[0]["deck"]
+        projection = json.loads(ui_bytes)
+        if features.get("deck_sha256") != projection.get("ui_deck_sha256"):
+            raise ValueError("Card features use the wrong UI deck revision")
         if features.get("deck") != deck or any(row["deck"] != deck for row in approved_rows):
             raise ValueError("Feature deck mismatch")
         if not isinstance(features.get("categories"), dict) or set(features["categories"]) != set(KINDS):
