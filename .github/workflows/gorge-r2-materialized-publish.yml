@@ -1,6 +1,9 @@
 name: Publish complete approved Gorge Results snapshot
 # Manual gate until ingestion has an explicit approved-shard completion event.
 on:
+  workflow_run:
+    workflows: ["Promote verified corrected Gorge baseline to current R2 warehouse"]
+    types: [completed]
   workflow_dispatch:
     inputs:
       batches:
@@ -14,13 +17,14 @@ concurrency:
   cancel-in-progress: false
 jobs:
   publish:
+    if: github.event_name == 'workflow_dispatch' || github.event.workflow_run.conclusion == 'success'
     runs-on: ubuntu-latest
     timeout-minutes: 90
     env:
       ACCOUNT: ${{ secrets.GORGE_R2_ACCOUNT_ID }}
       ACCESS: ${{ secrets.GORGE_R2_ACCESS_KEY_ID }}
       SECRET: ${{ secrets.GORGE_R2_SECRET_ACCESS_KEY }}
-      BATCHES: ${{ inputs.batches }}
+      BATCHES: ${{ inputs.batches || '' }}
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-python@v5
@@ -47,8 +51,8 @@ jobs:
           from pathlib import Path
           home=Path(os.environ["RUNNER_TEMP"])/"previous"
           raw=os.environ["BATCHES"]
-          batches=set(raw.split(","))
-          if not batches or any(not re.fullmatch(r"[0-9]+-[0-9]+", x) for x in batches):
+          batches=set(raw.split(",")) if raw else set()
+          if any(not re.fullmatch(r"[0-9]+-[0-9]+", x) for x in batches):
               raise ValueError("Invalid new batch IDs")
           registry=json.loads(Path("data/gorge_analytics_cohort_registry_v1.json").read_text())
           batches.update(c["source_batch"] for c in registry["cohorts"]
