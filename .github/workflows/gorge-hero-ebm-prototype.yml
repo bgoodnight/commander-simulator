@@ -53,7 +53,8 @@ jobs:
           python tools/gorge_hero_ebm_prototype.py \
             --source "$RUNNER_TEMP/input/results" --hero "$HERO" \
             --output "$RUNNER_TEMP/output" --demo-ebm
-          python tools/gorge_landmark_features.py --native-root "$RUNNER_TEMP/input/results" --hero "$HERO" --output "$RUNNER_TEMP/output/landmark_features.jsonl"\n          python tools/gorge_model_readiness.py --features "$RUNNER_TEMP/output/hero_features.jsonl" --output "$RUNNER_TEMP/output/model-readiness.json"
+          python tools/gorge_landmark_features.py --native-root "$RUNNER_TEMP/input/results" --hero "$HERO" --output "$RUNNER_TEMP/output/landmark_features.jsonl"
+          python tools/gorge_model_readiness.py --features "$RUNNER_TEMP/output/hero_features.jsonl" --output "$RUNNER_TEMP/output/model-readiness.json"
           python - "$RUNNER_TEMP/output/feasibility.json" "$RUNNER_TEMP/output/model-readiness.json" <<'PY'
           import json,os,sys
           r=json.load(open(sys.argv[1]))
