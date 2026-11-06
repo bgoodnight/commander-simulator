@@ -1,6 +1,6 @@
 {
   "schema": "gorge-analytics-cohort-registry-v1",
-  "description": "No historical game is automatically approved. Empty current cohort until first rules/pilot/opponent panel baseline certified.",
+  "description": "Audited, corrected-pilot baseline currently approved for display and exploratory analysis; revisions archived when superseded. Source recordings unchanged.",
   "cohorts": [
     {
       "cohort_id": "legacy-unversioned-pre-20261105",
@@ -13,6 +13,48 @@
       "status": "experimental",
       "approved": false,
       "reason": "Import and gameplay qualification are experiments, not benchmark denominators."
+    },
+    {
+      "approval_level": "best_available_current_baseline",
+      "approval_ref": "github:bgoodnight/commander-simulator/actions/runs/42154033809; user-authorized best-available-current baseline 2026-11-05",
+      "approved": true,
+      "card_corpus_sha256": "0c89ba623a8b5d761b3a6826a8ad07aa0325ffab00a18cac8182f60a765422cf",
+      "cohort_id": "corrected-pilot-current-20261105-magnus_premium",
+      "deck": "magnus_premium",
+      "engine_commit": "b78e4c8b16078f6decbc48875bba953ce5535b85",
+      "limitations": "Small source-verified sample, gameplay/pilot fidelity not exhaustively certified; descriptive and exploratory use, no calibrated inference.",
+      "opponent_panel_sha256": "24e78026664b5d9154976f0e643ccff24c121e0f383c5b76c7edcd669d2da57a",
+      "oracle_bulk_sha256": "bedd71445ad4010ad4f4cf23f88bf2460d1fdc7279ed962e403eef85af08e07b",
+      "pilot_version": "bot_generic_trigger_cost_x_pay_patched",
+      "player_deck_sha256": "047894840643e001a3bc99d7eecc8a50464988c49e70a9972e6eac705edc2f68",
+      "protocol_digest_definition": "composite: probe_sha256 + opponents_sha256 + trial_panel_sha256",
+      "rules_digest_definition": "composite: pilot_patch_sha256 + ward_blight_patch_sha256",
+      "rules_patch_sha256": "5f6db0967b20a7c3e7d595eaab1f2587167f97e000a43205530ca6b1139b5a0e",
+      "simulation_protocol_sha256": "313a66fef4e27a78b20d15d833f7d9aa1b9bbcfb7f45aec77b7df70607625455",
+      "source_batch": "42143344243-1",
+      "source_manifest_fingerprint": "4bfc50eaeccaffbb47f05d64be689abb7f5ffa2b3ce9ad98901fe8bd1899bccc",
+      "status": "current"
+    },
+    {
+      "approval_level": "best_available_current_baseline",
+      "approval_ref": "github:bgoodnight/commander-simulator/actions/runs/42154033809; user-authorized best-available-current baseline 2026-11-05",
+      "approved": true,
+      "card_corpus_sha256": "0c89ba623a8b5d761b3a6826a8ad07aa0325ffab00a18cac8182f60a765422cf",
+      "cohort_id": "corrected-pilot-current-20261105-mortarion_current",
+      "deck": "mortarion_current",
+      "engine_commit": "b78e4c8b16078f6decbc48875bba953ce5535b85",
+      "limitations": "Small source-verified sample, gameplay/pilot fidelity not exhaustively certified; descriptive and exploratory use, no calibrated inference.",
+      "opponent_panel_sha256": "24e78026664b5d9154976f0e643ccff24c121e0f383c5b76c7edcd669d2da57a",
+      "oracle_bulk_sha256": "bedd71445ad4010ad4f4cf23f88bf2460d1fdc7279ed962e403eef85af08e07b",
+      "pilot_version": "bot_generic_trigger_cost_x_pay_patched",
+      "player_deck_sha256": "5b4fbe6fd4f32e81a96da347d5eb246b770f3d85ec972acbe1d0ff4ee7d558ff",
+      "protocol_digest_definition": "composite: probe_sha256 + opponents_sha256 + trial_panel_sha256",
+      "rules_digest_definition": "composite: pilot_patch_sha256 + ward_blight_patch_sha256",
+      "rules_patch_sha256": "5f6db0967b20a7c3e7d595eaab1f2587167f97e000a43205530ca6b1139b5a0e",
+      "simulation_protocol_sha256": "313a66fef4e27a78b20d15d833f7d9aa1b9bbcfb7f45aec77b7df70607625455",
+      "source_batch": "42143344243-1",
+      "source_manifest_fingerprint": "922c0f574ed892bcd3a41f85ff78c855103c618745a11f5248c787ccce45159b",
+      "status": "current"
     }
   ]
 }
