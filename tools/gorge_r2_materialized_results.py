@@ -78,15 +78,20 @@ def project(source: Path, registry_path: Path, output: Path, expected_batches=No
         if not isinstance(expected_shards, list) or not expected_shards:
             raise ValueError("Invalid expected shard inventory")
         required = set()
+        expected_counts = {}
         for item in expected_shards:
             if (not isinstance(item, dict) or
-                set(item) != {"batch", "deck", "shard"} or
+                set(item) not in ({"batch", "deck", "shard"}, {"batch", "deck", "shard", "games"}) or
                 not all(isinstance(item[k], str) and item[k] for k in item)):
                 raise ValueError("Malformed expected shard identity")
             identity = (item["batch"], item["deck"], item["shard"])
             if identity in required:
                 raise ValueError("Duplicate expected shard identity")
             required.add(identity)
+            if "games" in item:
+                if type(item["games"]) is not int or item["games"] < 1:
+                    raise ValueError("Invalid attested shard game count")
+                expected_counts[identity] = item["games"]
         missing = required - observed_shards
         unexpected = observed_shards - required
         if missing or unexpected:
@@ -117,6 +122,9 @@ def project(source: Path, registry_path: Path, output: Path, expected_batches=No
             raise ValueError("Incomplete shard manifest game count")
         if len(rows) != info["rows"]:
             raise ValueError("Parquet row mismatch")
+        if expected_shards is not None and (batch, deck, shard) in expected_counts:
+            if len(rows) != expected_counts[batch, deck, shard]:
+                raise ValueError("Incomplete attested shard game count")
         approved = []
         local_ids = set()
         for row in rows:
