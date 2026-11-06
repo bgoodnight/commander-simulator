@@ -25,7 +25,8 @@ def run():
                 page.on("response",lambda response:seen.append((
                     response.url,response.status)) if "/v1/ui/batch" in response.url else None)
                 try:
-                    page.goto(BASE+"?deck="+deck,wait_until="domcontentloaded",timeout=60000)
+                    response=page.goto(BASE+"?deck="+deck,wait_until="domcontentloaded",timeout=60000)
+                print("NAV",deck,form,"status",response.status if response else None,"url",page.url,"title",page.title())
                     page.wait_for_function(
                         "(key)=>window.R2OriginalResults?.ownsRenderedDeck(key)===true",
                         arg=deck,timeout=60000)
@@ -42,10 +43,11 @@ def run():
                                     full_page=True,timeout=30000)
                     print(f"PASS {deck} {form}: 12 real approved games in original Results UI")
                 except Exception:
-                    print("DEBUG",deck,form,"status=",page.locator(
-                        "#game-outcome-status").inner_text(),
-                        "results=",page.locator("#game-outcome-results").inner_text()[:1800],
-                        "responses=",seen,"pageerrors=",errors)
+                    print("DEBUG",deck,form,"url",page.url,
+                          "title",page.title(),
+                          "body",page.locator("body").inner_text(timeout=5000)[:1200] if page.locator("body").count() else "(missing)",
+                          "status",page.locator("#game-outcome-status").inner_text(timeout=3000) if page.locator("#game-outcome-status").count() else "(missing)",
+                          "responses",seen,"pageerrors",errors)
                     page.screenshot(path=str(OUT/f"{deck}-{form}-failure.png"),
                                     full_page=True,timeout=30000)
                     raise
