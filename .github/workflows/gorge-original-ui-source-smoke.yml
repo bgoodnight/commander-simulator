@@ -1,0 +1,104 @@
+name: Verify original Results projection from real corrected Gorge recordings
+on:
+  pull_request:
+    paths:
+      - "tools/gorge_original_ui_projection.cjs"
+      - "tools/gorge_original_ui_shard.py"
+      - "tools/gorge_ui_export.py"
+      - "web/pages/gorge_legacy_adapter.js"
+      - "web/pages/game_outcomes.js"
+      - "workers/gorge-r2-api/**"
+      - ".github/workflows/gorge-original-ui-source-smoke.yml"
+  workflow_dispatch:
+permissions:
+  contents: read
+  actions: read
+jobs:
+  source-backed-ui:
+    name: Real Gorge -> Worker batch -> original Results validator (${{ matrix.hero }})
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    strategy:
+      fail-fast: false
+      matrix:
+        hero: [mortarion_current, magnus_premium]
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+      - name: Retrieve immutable 12-game corrected Gorge source artifact
+        env:
+          GH_TOKEN: ${{ github.token }}
+          HERO: ${{ matrix.hero }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p "$RUNNER_TEMP/native-source"
+          gh run download 42143344243 --repo "$GITHUB_REPOSITORY" \
+            --name "gorge-corrected-fresh-candidate-$HERO" --dir "$RUNNER_TEMP/native-source"
+          test -f "$RUNNER_TEMP/native-source/results/source-manifest.json"
+          test -f "$RUNNER_TEMP/native-source/results/runs.jsonl"
+      - name: Rebuild complete public-only projection using existing Gorge adapter
+        env:
+          HERO: ${{ matrix.hero }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          deck_sha="$(python -c 'import json,os; doc=json.load(open("docs/deck-lab/decks.json")); print(next(x["deck_sha256"] for x in doc["decks"] if x["key"]==os.environ["HERO"]))')"
+          mkdir -p "$RUNNER_TEMP/ui-projection"
+          python -m tools.gorge_original_ui_shard \
+            --source-dir "$RUNNER_TEMP/native-source/results" \
+            --deck "$HERO" --batch 42143344243-1 --shard 0 \
+            --ui-deck-sha "$deck_sha" \
+            --out "$RUNNER_TEMP/ui-projection/ui-original.v1.json"
+      - name: Verify real generated batch through Worker security gate and old renderer
+        env:
+          HERO: ${{ matrix.hero }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          node --input-type=module - "$RUNNER_TEMP/ui-projection/ui-original.v1.json" "$HERO" "$RUNNER_TEMP/ui-projection/ui-batch.json" <<'JS'
+          import fs from "node:fs";
+          import {createRequire} from "node:module";
+          import {originalUiBatch} from "./workers/gorge-r2-api/core.mjs";
+          const require=createRequire(import.meta.url);
+          const old=require("./web/pages/game_outcomes.js");
+          const projection=JSON.parse(fs.readFileSync(process.argv[2],"utf8"));
+          const deck=process.argv[3];
+          const rows=projection.games.map(({game_id,chain,source_sha256,run})=>{
+            const seat=run.gorge_source.original_seat;
+            const winner=(run.outcome.winner_seat+seat)%4;
+            return {game_id,chain,source_sha256,seed:run.seed,deck,
+              finished:true,replay_verified:true,error:null,draw:false,
+              hero_seat:seat,winner_seat:winner,
+              player_deck_sha256:projection.source_deck_sha256};
+          });
+          const batch=originalUiBatch(rows,projection,deck);
+          if(!old.validate(batch))throw Error("Original Results renderer rejected real projection");
+          if(batch.runs.length!==12)throw Error("Missing a native game");
+          if(!batch.runs.some(g=>g.ui_observations.some(t=>
+              t.actions.some(a=>a.card&&typeof a.card==="string"))))
+            throw Error("No real named card actions reached original UI");
+          const encoded=JSON.stringify(batch);
+          for(const key of ['"event_json"','"source_object_id"','"object_identity"',
+                            '"intents"','"objects"'])
+            if(encoded.includes(key))throw Error("Private data key exposed: "+key);
+          console.log(JSON.stringify({deck,games:batch.runs.length,
+            turns:batch.runs.reduce((n,r)=>n+r.completed_rounds,0),
+            named_actions:batch.runs.reduce((n,r)=>n+r.ui_observations.reduce(
+              (m,t)=>m+t.actions.filter(a=>a.card).length,0),0)}));
+          fs.writeFileSync(process.argv[4],JSON.stringify({
+            schema:"gorge-r2-original-ui-batch-response-v1",
+            population:"approved_current_decisive_only",deck,status:"ready",batch})+"\n");
+          JS
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: experimental-original-ui-compatibility-${{ matrix.hero }}
+          path: ${{ runner.temp }}/ui-projection/
+          if-no-files-found: warn
+          retention-days: 7
