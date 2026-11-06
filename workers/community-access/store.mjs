@@ -183,5 +183,6 @@ export async function copyPublication(env,account,id) {
   requireOwner(account);
   // Readlisted again and revalidate at operation time; copies become independent.
   const pub=await getListedPublication(env,id);
-  return createDeck(env,account,{label:pub.label,decklist:pub.decklist},\n    {sourceRevisionId:pub.current_revision_id});
+  return createDeck(env,account,{label:pub.label,decklist:pub.decklist},
+    {sourceRevisionId:pub.current_revision_id});
 }
