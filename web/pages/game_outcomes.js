@@ -1725,9 +1725,17 @@
     }
     const rounds=[...counts.keys()].sort((a,b)=>a-b);
     const first=rounds[0],last=rounds.at(-1);
-    const maxCount=Math.max(...counts.values());
     const total=rounds.reduce((n,r)=>n+counts.get(r),0);
     const n=last-first+1;
+    const binWidth=Math.max(1,Math.ceil(n/32));
+    const bins=[];
+    for(let low=first;low<=last;low+=binWidth){
+      const high=Math.min(last,low+binWidth-1);
+      let value=0;
+      for(let round=low;round<=high;round++)value+=counts.get(round)||0;
+      bins.push({low,high,value});
+    }
+    const maxCount=Math.max(1,...bins.map(bin=>bin.value));
     const plot=create("div","game-length-histogram");
     plot.setAttribute("role","img");
     plot.setAttribute("aria-label","Game length distribution across "+total+
@@ -1735,11 +1743,7 @@
     const bars=create("div","game-length-histogram-bars");
     // Aggregate only when the finish-round range becomes too wide for
     // legible bars. A bin remains explicit about its inclusive round range.
-    const binWidth=Math.max(1,Math.ceil(n/32));
-    for(let low=first;low<=last;low+=binWidth){
-      const high=Math.min(last,low+binWidth-1);
-      let value=0;
-      for(let round=low;round<=high;round++)value+=counts.get(round)||0;
+    for(const {low,high,value} of bins){
       const column=create("div","game-length-histogram-column");
       const bar=create("span","game-length-histogram-bar");
       bar.style.height=(value/maxCount*100)+"%";
