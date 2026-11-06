@@ -50,10 +50,10 @@ def test():
                 # This scenario exercises the legacy route on a Worker without
                 # materialized results. Do not depend on an external Worker or
                 # whatever deployment happens to be live while CI is running.
-                page.route(API+"/v1/ui/catalog?*",lambda route: route.fulfill(
+                page.route("**/v1/ui/catalog?*",lambda route: route.fulfill(
                     status=404,content_type="application/json",
                     headers={"Access-Control-Allow-Origin":"*"},body="{}"))
-                page.route(API+"/v1/ui/batch?*",route)
+                page.route("**/v1/ui/batch?*",route)
                 page.goto(f"http://127.0.0.1:{server.server_port}/results.html?deck={DECK}",
                           wait_until="domcontentloaded")
                 hero=page.locator("#game-outcome-results .game-outcome-hero-frame")
@@ -200,10 +200,10 @@ def test_materialized():
                 calls.clear()
                 page=browser.new_page(viewport=viewport)
                 page.on("pageerror",lambda err: errors.append(str(err)))
-                page.route(API+"/v1/ui/catalog?*",response)
-                page.route(API+"/v1/ui/insights?*",response)
-                page.route(API+"/v1/ui/page?*",response)
-                page.route(API+"/v1/ui/game?*",response)
+                page.route("**/v1/ui/catalog?*",response)
+                page.route("**/v1/ui/insights?*",response)
+                page.route("**/v1/ui/page?*",response)
+                page.route("**/v1/ui/game?*",response)
                 page.goto(f"http://127.0.0.1:{server.server_port}/results.html?deck={DECK}&materializedResults=1",
                           wait_until="domcontentloaded")
                 page.get_by_text("201 games · complete cohort",exact=False).wait_for(timeout=60000)
