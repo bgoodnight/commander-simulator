@@ -70,11 +70,34 @@
       summary.losses+" losses · "+(summary.win_rate*100).toFixed(1)+
       "% win rate (25% four-player reference)");
     const info=create("p","Summary covers the complete approved cohort. Game pages and replays load separately.");
+    const detailStats=create("section");
+    const matchupTitle=create("h4","Full-cohort opponent matchups");
+    const matchupList=create("div");
+    for(const group of (summary.groups?.opponents||[]).slice(0,12)){
+      const row=create("p",group.name+" · "+group.wins+" wins / "+
+        group.losses+" losses across "+group.n+" games ("+
+        (group.win_rate*100).toFixed(1)+"%)");
+      matchupList.append(row);
+    }
+    const turnsTitle=create("h4","Game length distribution · all approved games");
+    const turnsList=create("div");
+    const histogram=summary.game_turn_histogram||[];
+    const maxFrequency=Math.max(1,...histogram.map(item=>item.games));
+    for(const group of histogram){
+      const row=create("div");
+      const label=create("span","Turn "+group.turn+": "+group.games+" games ");
+      const bar=create("progress");
+      bar.max=maxFrequency;bar.value=group.games;
+      bar.setAttribute("aria-label","Games ending on turn "+group.turn);
+      row.append(label,bar);
+      turnsList.append(row);
+    }
+    detailStats.append(matchupTitle,matchupList,turnsTitle,turnsList);
     const navigation=create("div");
     const list=create("div");
     const replayHeading=create("h4","Select a game to review its recorded turns");
     const replayRoot=create("div");
-    root.replaceChildren(heading,totals,info,navigation,list,replayHeading,replayRoot);
+    root.replaceChildren(heading,totals,info,detailStats,navigation,list,replayHeading,replayRoot);
     let page=0;
     const readJson=async(url)=>{
       const res=await fetch(url,{cache:"no-store"});
