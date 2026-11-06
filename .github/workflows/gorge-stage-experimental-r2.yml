@@ -172,13 +172,38 @@ jobs:
           native="native/experimental/v1/$BATCH/$HERO"
           # A previously completed immutable archive is an expected retry case.
           # Confirm the exact bytes of BOTH prefixes before treating it as done.
-          warehouse_count="$(aws --endpoint-url "$endpoint" s3api list-objects-v2 \
-            --bucket gorge-simulations --prefix "$root/" \
-            --query KeyCount --output text)"
-          native_count="$(aws --endpoint-url "$endpoint" s3api list-objects-v2 \
-            --bucket gorge-simulations --prefix "$native/" \
-            --query KeyCount --output text)"
-          if [[ "$warehouse_count" != "0" || "$native_count" != "0" ]]; then
+          # R2 can contain 0-byte directory marker objects even when there
+          # are no real files. A marker alone is not an existing archive.
+          export R2_WAREHOUSE_PREFIX="$root/" R2_NATIVE_PREFIX="$native/"
+          aws --endpoint-url "$endpoint" s3api list-objects-v2 \
+            --bucket gorge-simulations --prefix "$root/" --output json \
+            > "$RUNNER_TEMP/r2-warehouse-list.json"
+          aws --endpoint-url "$endpoint" s3api list-objects-v2 \
+            --bucket gorge-simulations --prefix "$native/" --output json \
+            > "$RUNNER_TEMP/r2-native-list.json"
+          archive_state="$(python - <<'PY'
+          import json,os,sys
+          from pathlib import Path
+          root=Path(os.environ["RUNNER_TEMP"])
+          real=0
+          for label,prefix in (
+              ("warehouse",os.environ["R2_WAREHOUSE_PREFIX"]),
+              ("native",os.environ["R2_NATIVE_PREFIX"]),
+          ):
+              data=json.loads((root/f"r2-{label}-list.json").read_text())
+              objects=data.get("Contents",[])
+              markers=[o for o in objects if o.get("Key")==prefix
+                       and o.get("Size")==0]
+              others=[o for o in objects if o not in markers]
+              if any(not str(o.get("Key","")).startswith(prefix) for o in others):
+                  raise SystemExit("Unexpected R2 object outside prefix")
+              print(f"{label}: {len(markers)} empty prefix markers; "
+                    f"{len(others)} stored files",file=sys.stderr)
+              real+=len(others)
+          print("occupied" if real else "empty")
+          PY
+          )"
+          if [[ "$archive_state" == "occupied" ]]; then
             mkdir -p "$RUNNER_TEMP/remote-warehouse" "$RUNNER_TEMP/remote-native"
             aws --endpoint-url "$endpoint" s3 cp \
               "s3://gorge-simulations/$root/" "$RUNNER_TEMP/remote-warehouse/" \
