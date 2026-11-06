@@ -791,11 +791,17 @@ button.replay-zone-card{cursor:pointer}
 button.replay-zone-card:hover,button.replay-zone-card:focus-visible{border-color:#e4be7e;box-shadow:0 0 0 2px rgba(228,190,126,.15)}
 .replay-zone-art{width:100%;height:117px;object-fit:cover;object-position:center 20%;border-radius:5px}
 .replay-zone-unpictured{display:grid;place-items:center;width:100%;height:117px;border-radius:5px;background:radial-gradient(ellipse at center,#49646466,#203137);font-size:.77rem;color:#d3c19d}
+/* Token silhouettes intentionally require no image asset or external lookup. */
+.replay-zone-token{border-color:rgba(211,187,143,.45)}
+.replay-token-frame{height:117px;min-width:0;display:flex;flex-direction:column;align-items:center;justify-content:space-between;gap:4px;padding:8px 5px;border:2px double rgba(218,193,144,.62);border-radius:6px;background:radial-gradient(ellipse at 50% 47%,rgba(84,109,104,.3),transparent 70%),linear-gradient(160deg,#253438,#15252a);box-shadow:inset 0 0 0 3px rgba(11,20,23,.55);text-align:center;overflow:hidden}
+.replay-token-header{font-size:.49rem;letter-spacing:.12em;font-weight:700;color:#dbc69b}
+.replay-token-motif{display:grid;place-items:center;flex:1;font-family:Georgia,serif;font-size:2.7rem;line-height:1;color:#bcae90;opacity:.75}
+.replay-token-identity{max-width:100%;font-size:.64rem;font-weight:650;line-height:1.15;color:#e8e4d7;overflow-wrap:anywhere}
 .replay-zone-card-name{font-size:.69rem;line-height:1.25;overflow-wrap:anywhere;font-weight:600}
 .replay-zone-tag{font-size:.58rem;color:#dec9a5}
 .replay-zone-qty{position:absolute;top:7px;right:7px;background:#111e22ed;border:1px solid #d3bd97;border-radius:4px;padding:3px 5px;font-size:.65rem;font-weight:700}
 .replay-mana-credits{display:grid;gap:4px;padding:8px 11px;border-radius:7px;background:rgba(31,49,46,.67)}
-@media(max-width:560px){.replay-zone-gallery{grid-template-columns:repeat(auto-fill,minmax(80px,1fr));gap:7px}.replay-zone-art,.replay-zone-unpictured{height:99px}}
+@media(max-width:560px){.replay-zone-gallery{grid-template-columns:repeat(auto-fill,minmax(80px,1fr));gap:7px}.replay-zone-art,.replay-zone-unpictured,.replay-token-frame{height:99px}}
 
 
 .replay-mana-credit{display:flex;align-items:center;flex-wrap:wrap;gap:4px 7px;min-height:24px}
@@ -2618,3 +2624,23 @@ body:has(#pane-records:not([hidden])) .compact-selection{margin-bottom:3px}
 #long-game-panel #gorge-r2-live .game-outcome-refresh{
   position:relative;z-index:1;
 }
+.r2-cohort-overview,.r2-cohort-details,.r2-cohort-insights{
+  margin:1rem 0;padding:1rem;border:1px solid #526157;border-radius:14px;
+  background:rgba(25,47,43,.78);color:#e8dfc5;
+}
+.r2-cohort-overview h3,.r2-cohort-details h4,.r2-cohort-insights h4{
+  color:#eed9a6;margin:.15rem 0 .6rem;
+}
+.r2-cohort-overview p,.r2-cohort-insights p{margin:.4rem 0;line-height:1.45}
+.r2-game-navigation{display:flex;align-items:center;justify-content:space-between;gap:.5rem;margin:1rem 0 .5rem}
+.r2-game-navigation button,.r2-game-list button{
+  border:1px solid #627669;border-radius:8px;background:#1b332e;color:#e8dfc5;
+  padding:.55rem .7rem;font:inherit;
+}
+.r2-game-navigation button:disabled{opacity:.45}
+.r2-game-list{display:grid;gap:.4rem;max-height:19rem;overflow-y:auto;padding:.2rem}
+.r2-game-list button{width:100%;text-align:left;line-height:1.3}
+.r2-game-list button:hover,.r2-game-list button:focus-visible{border-color:#dbbb77;background:#29473b}
+/* Original Results includes its own turn explorer; do not show a second
+   separate source navigator beneath it. */
+body.r2-original-results-active #gorge-replay-panel{display:none!important}

@@ -1072,10 +1072,12 @@
     return (observation.actions||[]).map(a=>a?.card||a?.source).find(hasArt)||null;
   }
   function openingHandDescription(run){
+    const handLabel=run.gorge_source?.opening_hand_boundary==="first_pending_decision_of_turn"?
+      "First recorded hand":"Opening hand";
     if(run.batch?.engine==="gorge"&&Array.isArray(run.opening_hand))
-      return "Opening hand · "+run.opening_hand.join(", ");
+      return handLabel+" · "+run.opening_hand.join(", ");
     if(run.batch?.engine==="gorge")
-      return "Opening hand · "+(Number.isInteger(run.opening_hand_count)?
+      return handLabel+" · "+(Number.isInteger(run.opening_hand_count)?
         run.opening_hand_count:"unknown")+" cards (identities private)";
     const hand=Array.isArray(run.opening_hand)?run.opening_hand:[];
     const mulligan=run.mulligan;
@@ -1748,6 +1750,7 @@
       gameSelect.appendChild(option);
     });
     choices.appendChild(gameSelect);
+    if(options.hideGameSelector)choices.hidden=true;
     const evidence=create("div","game-outcome-evidence game-outcome-review-evidence");
     root.append(choices,evidence);
     let focusTurn=null;
@@ -1763,7 +1766,7 @@
         lookupRecordedCard:options.lookupRecordedCard,
         renderMana:options.renderMana,
         focusTurn:focusTurn,
-        displayGameLabel:gameLabel(entry,index)
+        displayGameLabel:options.displayGameLabel||gameLabel(entry,index)
       });
     }
     gameSelect.addEventListener("change",()=>{
@@ -2467,16 +2470,16 @@
           if(panel)cards.appendChild(panel);
           continue;
         }
-        const panel=cardPerformancePanel(kind,signals.ranked[kind],
+        const panel=cardPerformancePanel(kind,signals.ranked[kind]||[],
           signals.coverage,groups,
           {...options,isGorge,tutorSearchCount:signals.confirmedTutors},onReviewRun);
         if(panel)cards.appendChild(panel);
       }
-    }else{
+    }else if(!isGorge){
+      // The R2 adapter owns the optional Key Insights panel. Do not inject
+      // another placeholder into the Results dashboard when data is absent.
       cards.appendChild(create("p","game-outcome-empty",
-        isGorge?
-          "Complete-cohort card insights are not yet available. The previous sample-only card rankings are intentionally hidden until every verified game has been measured.":
-          "Card insights require named card and hand observations from the current published batch."));
+        "Card insights require named card and hand observations from the current published batch."));
     }
     // The regression story belongs after every game/card panel, immediately
     // above the independent turn reviewer.
@@ -2488,6 +2491,84 @@
     }
     return report;
   }
+  // Render the existing outcome card from complete-cohort Worker statistics.
+  // Missing metrics stay unavailable; they are never inferred from a replay.
+  function renderCohortOverview(root,summary,options={}){
+    if(!summary||!Number.isInteger(summary.n)||summary.n<1||
+       summary.wins+summary.losses!==summary.n)throw Error("Invalid cohort overview");
+    const counts={win:summary.wins,loss:summary.losses,draw:0,unresolved:0,not_evaluated:0};
+    const opponents=summary.groups?.opponents||[];
+    const best=opponents.filter(x=>Number.isFinite(x.win_rate)).sort((a,b)=>b.win_rate-a.win_rate)[0];
+    const highlights=[
+      {key:"matchup",label:"Best matchup",value:best?(100*best.win_rate).toFixed(1)+"%":"—",detail:best?.name||"Not available"},
+      {key:"length",label:"Game length",value:Number.isFinite(summary.median_game_turns)?nfmt(summary.median_game_turns):"—",detail:"Median recorded turns"},
+      {key:"survival",label:"Survival",value:"—",detail:"Not yet available"},
+      {key:"life",label:"Final life",value:"—",detail:"Not yet available"}
+    ];
+    const grid=create("div","board-grid game-outcome-grid latest-insight-grid");
+    const hero=outcomeCard({counts,total:summary.n,terminal:summary.n,terminalRounds:[]},
+      {...options,isGorge:true,heroHighlights:highlights,outcomeMeta:summary.n+" games · complete cohort"},
+      body=>body.appendChild(create("p","micro","Complete cohort results from the Worker.")));
+    // These values are visual summaries, not the former drilldown panels.
+    // Make them non-interactive until the complete-cohort drilldowns exist.
+    for(const button of hero.querySelectorAll(".game-outcome-hero-highlight")){
+      button.removeAttribute("aria-haspopup");button.disabled=true;
+    }
+    grid.appendChild(hero);root.replaceChildren(grid);
+  }
+  function renderCohortInsights(root,report,total,options={}){
+    const grid=create("div","board-grid game-outcome-grid latest-insight-grid");
+    if(!report||report.verified_games!==total||report.observed_games!==total||
+       report.coverage?.level!=="full-cohort"||report.coverage?.missing!==0){
+      root.replaceChildren(create("p","game-outcome-empty","Card insights are pending complete cohort evidence."));
+      return;
+    }
+    for(const kind of ["played","creature","activated","triggered"]){
+      const ranked=(report.categories?.[kind]||[]).map(item=>({...item,events:[],seen:new Set()}));
+      const panel=cardPerformancePanel(kind,ranked,total,[],{...options,isGorge:true},()=>{});
+      if(panel)grid.appendChild(panel);
+    }
+    if(!grid.children.length)grid.appendChild(create("p","game-outcome-empty","No recorded card insights."));
+    root.replaceChildren(grid);
+  }
+  // Findings derived from the approved Worker batch, not a fabricated full-cohort
+  // report. Always disclose the number of games with usable card observations.
+  function renderRecordedBatchInsights(root,batch,options={}){
+    const report=model([batch],options.deckKey,options.deckHash);
+    const runs=report.groups.flatMap(group=>group.runs);
+    const signals=observationCardStats(runs,options.lookupRecordedCard,options.commanderName);
+    const note=create("p","micro",signals.coverage?
+      "Card findings from "+signals.coverage+" of "+runs.length+
+      " approved games with complete recorded card observations. "+
+      "These are observed-game findings, not verified full-cohort rankings.":
+      "No named card observations are available in these approved games yet.");
+    const grid=create("div","board-grid game-outcome-grid latest-insight-grid");
+    if(signals.coverage){
+      const owned=Array.isArray(options.deckCardNames)?
+        new Set(options.deckCardNames.map(name=>name.toLowerCase())):null;
+      for(const kind of ["played","creature","activated","triggered"]){
+        const ranked=(signals.ranked[kind]||[]).filter(item=>
+          !owned||owned.has(item.name.toLowerCase()));
+        const panel=cardPerformancePanel(kind,ranked,signals.coverage,report.groups,
+          {...options,isGorge:true},()=>{});
+        if(panel)grid.appendChild(panel);
+      }
+    }
+    root.replaceChildren(note,grid);
+    return {coverage:signals.coverage,findings:grid.children.length};
+  }
+  // Allow a paginated data source to populate the exact original turn
+  // reviewer without rendering a misleading single-game outcomes dashboard.
+  function renderTurnReviewer(root,batches,options={}){
+    const report=model(batches,options.deckKey,options.deckHash);
+    root.replaceChildren();
+    if(!report.groups.length){
+      root.appendChild(create("span","micro","No recorded turns."));
+      return report;
+    }
+    turnReviewer(root,report.groups,options);
+    return report;
+  }
   return {FORMAT,STATES,validate,model,lifeTrend,matchupRows,matchupMetrics,
-    knockoutRound,opponentDecks,observationCardStats,turnSpotlight,render};
+    knockoutRound,opponentDecks,observationCardStats,turnSpotlight,render,renderCohortOverview,renderCohortInsights,renderRecordedBatchInsights,renderTurnReviewer};
 });
