@@ -104,7 +104,12 @@ def run():
                 root.get_by_role("button",name="Refresh live R2 results").click()
                 root.get_by_text("2 approved decisive games",exact=False).wait_for(timeout=20000)
                 root.get_by_text("Approved games · R2 timeline preview").wait_for(timeout=20000)
-                root.get_by_role("button",name="Win · 14 turns",exact=False).click()
+                try:
+                    root.get_by_role("button",name="Win · 14 turns",exact=False).click(timeout=10000)
+                except Exception:
+                    print("DEBUG R2 index body:",root.inner_text())
+                    print("DEBUG API requests:",requests)
+                    raise
                 root.get_by_text("5 native events",exact=False).wait_for(timeout=20000)
                 assert any(p=="/v1/games/browser-test-1/timeline" for p,_ in requests)
                 assert "event_json" not in root.inner_text()
