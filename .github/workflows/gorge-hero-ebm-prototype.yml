@@ -7,6 +7,9 @@ on:
       - "tests/test_gorge_hero_ebm_prototype.py"
       - "tools/gorge_model_readiness.py"
       - "tests/test_gorge_model_readiness.py"
+      - "tools/gorge_landmark_features.py"
+      - "tools/gorge_r2_native_ingest.py"
+      - "tests/test_gorge_r2_native_landmarks.py"
       - ".github/workflows/gorge-hero-ebm-prototype.yml"
   workflow_dispatch:
 
@@ -41,7 +44,7 @@ jobs:
       - name: Install EBM and run tests
         run: |
           python -m pip install --disable-pip-version-check "interpret-core>=0.6,<0.8" "numpy>=1.26,<3"
-          python -m unittest tests.test_gorge_hero_ebm_prototype tests.test_gorge_model_readiness -v
+          python -m unittest tests.test_gorge_hero_ebm_prototype tests.test_gorge_model_readiness tests.test_gorge_r2_native_landmarks -v
       - name: Extract experimental features and optionally demo EBM
         env:
           HERO: ${{ matrix.hero }}
@@ -50,7 +53,7 @@ jobs:
           python tools/gorge_hero_ebm_prototype.py \
             --source "$RUNNER_TEMP/input/results" --hero "$HERO" \
             --output "$RUNNER_TEMP/output" --demo-ebm
-          python tools/gorge_model_readiness.py --features "$RUNNER_TEMP/output/hero_features.jsonl" --output "$RUNNER_TEMP/output/model-readiness.json"
+          python tools/gorge_landmark_features.py --native-root "$RUNNER_TEMP/input/results" --hero "$HERO" --output "$RUNNER_TEMP/output/landmark_features.jsonl"\n          python tools/gorge_model_readiness.py --features "$RUNNER_TEMP/output/hero_features.jsonl" --output "$RUNNER_TEMP/output/model-readiness.json"
           python - "$RUNNER_TEMP/output/feasibility.json" "$RUNNER_TEMP/output/model-readiness.json" <<'PY'
           import json,os,sys
           r=json.load(open(sys.argv[1]))
