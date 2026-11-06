@@ -1,6 +1,6 @@
 import test from "node:test";
 import assert from "node:assert/strict";
-import { aggregate, isApproved, isDecisive, sha256, stableJson, validateDeck, normalizeRow, IDENTITY_FIELDS, approvedGameIndex, approvedGameDetail, approvedEventSegments, approvedEventWindow, isDiagnosticAuthorized } from "../core.mjs";
+import { aggregate, uiOverview, isApproved, isDecisive, sha256, stableJson, validateDeck, normalizeRow, IDENTITY_FIELDS, approvedGameIndex, approvedGameDetail, approvedEventSegments, approvedEventWindow, isDiagnosticAuthorized } from "../core.mjs";
 
 const fp = Object.fromEntries(IDENTITY_FIELDS.map(k=>[k,"pinned-"+k]));
 const approved={cohort_id:"baseline-1",status:"current",approved:true,approval_ref:"reviewed",...fp};
@@ -125,4 +125,35 @@ test("private diagnostic auth cannot be enabled by default or short tokens",()=>
     ["Bearer "+token,"a".repeat(63)],["bearer "+token,token],
     ["Bearer "+token+"x",token],["Bearer "+"b".repeat(64),token]
   ])assert.equal(isDiagnosticAuthorized(header,secret),false);
+});
+
+test("UI overview retains source-backed outcomes, histogram, and no invented card details",async()=>{
+  const first=await game();
+  const second=await game({game_id:"batch/a/0/2",winner_seat:1,turns:16});
+  const source={...aggregate([first,second],"mortarion_current"),status:"ready"};
+  const view=uiOverview(source);
+  assert.equal(view.schema,"gorge-r2-ui-overview-v1");
+  assert.deepEqual(view.outcomes,{n:2,wins:1,losses:1,win_rate:.5,baseline:.25});
+  assert.deepEqual(view.game_turn_histogram,[{turn:16,games:1},{turn:18,games:1}]);
+  assert.equal(view.groups.opponents.length,3);
+  assert.equal(view.coverage.turn_histogram_games,2);
+  assert.equal(view.coverage.card_insights,"not_exported_from_warehouse");
+  for(const secret of ["source_sha256","seed","event_json","source_object_id","intent","hand"]){
+    // "hand" can appear only as an explicit unavailable coverage key.
+    const serialized=JSON.stringify(view);
+    if(secret==="hand") assert.equal(view.coverage.hand_durations,"requires_source_backed_ui_projection");
+    else assert.equal(serialized.includes('"'+secret+'"'),false);
+  }
+});
+test("UI overview cannot advertise results for an unapproved or invalid cohort",()=>{
+  const pending={schema:"gorge-r2-live-summary-v1",deck:"magnus_premium",
+    status:"awaiting_cohort_approval",n:0,wins:0,losses:0,win_rate:null,
+    groups:{opponents:[]},median_game_turns:null,game_turn_histogram:[]};
+  const view=uiOverview(pending);
+  assert.equal(view.outcomes.n,0);
+  assert.equal(view.outcomes.win_rate,null);
+  assert.deepEqual(view.game_turn_histogram,[]);
+  assert.deepEqual(view.groups.opponents,[]);
+  assert.throws(()=>uiOverview({...pending,status:"ready",n:2}),/invalid_ui_outcomes/);
+  assert.throws(()=>uiOverview({...pending,status:"experimental"}),/invalid_ui_overview_source/);
 });
