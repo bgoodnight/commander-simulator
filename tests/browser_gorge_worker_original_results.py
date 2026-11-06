@@ -144,6 +144,9 @@ def test_materialized():
                 assert page.locator("#turn-reviewer-results .insight-turn-row").count()>0
                 assert page.get_by_text("201 games · 50 wins · 151 losses",exact=False).is_visible()
                 assert page.get_by_text("Fixture Card · 90 games · 100 recorded events").is_visible()
+                # A selected replay must not render misleading one-game
+                # outcome statistics alongside the full-cohort dashboard.
+                assert page.locator("#game-outcome-results .game-outcome-hero-frame:visible").count()==0
                 assert any(path.endswith("/game") and q.get("page")==["1"] for path,q in calls)
                 page.screenshot(path=str(OUT/f"{DECK}-{mode}-materialized-results.png"),full_page=True)
                 page.close()
