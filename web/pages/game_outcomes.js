@@ -1123,11 +1123,19 @@
     "Faerie Token":{type:"Token Creature — Faerie",glyph:"✧",tone:"faerie"},
     "Clue Token":{type:"Token Artifact — Clue",glyph:"⌕",tone:"clue"}
   });
-  function tokenInfo(name){
-    return typeof name==="string"?KNOWN_TOKENS[name]||null:null;
+  function tokenInfo(name,options={}){
+    if(typeof name!=="string")return null;
+    if(KNOWN_TOKENS[name])return KNOWN_TOKENS[name];
+    // Gorge's source object metadata is authoritative. The suffix is only a
+    // backward-compatible fallback for flattened/older replay exports.
+    const sourceToken=Array.isArray(options.tokenNames)&&options.tokenNames.includes(name);
+    if(sourceToken||/\btoken$/i.test(name)){
+      return {type:"Token",glyph:"◇",tone:"generic"};
+    }
+    return null;
   }
-  function recordedCardTypes(name,lookup){
-    const token=tokenInfo(name);
+  function recordedCardTypes(name,lookup,options={}){
+    const token=tokenInfo(name,options);
     if(token)return token.type.toLowerCase().split("—")[0];
     const card=lookup?.(name);
     return String(card?.type_line||card?.type||"")
@@ -1146,16 +1154,16 @@
       ["Exile",observation.exile],
       ["Command zone",observation.command],
       ["Creatures",(observation.battlefield||[]).filter(n=>
-        /\bcreature\b/.test(recordedCardTypes(n,options.lookupRecordedCard)))],
+        /\bcreature\b/.test(recordedCardTypes(n,options.lookupRecordedCard,options)))],
       ["Lands",(observation.battlefield||[]).filter(n=>
-        /\bland\b/.test(recordedCardTypes(n,options.lookupRecordedCard)))],
+        /\bland\b/.test(recordedCardTypes(n,options.lookupRecordedCard,options)))],
       ["Artifacts",(observation.battlefield||[]).filter(n=>
-        /\bartifact\b/.test(recordedCardTypes(n,options.lookupRecordedCard)))],
+        /\bartifact\b/.test(recordedCardTypes(n,options.lookupRecordedCard,options)))],
       ["Enchantments",(observation.battlefield||[]).filter(n=>
-        /\benchantment\b/.test(recordedCardTypes(n,options.lookupRecordedCard)))],
+        /\benchantment\b/.test(recordedCardTypes(n,options.lookupRecordedCard,options)))],
       ["Other permanents",(observation.battlefield||[]).filter(n=>
         !/\b(creature|land|artifact|enchantment)\b/.test(
-          recordedCardTypes(n,options.lookupRecordedCard)))],
+          recordedCardTypes(n,options.lookupRecordedCard,options)))],
       ["Graveyard",observation.graveyard],
       ["Hand",observation.hand]
     ];
@@ -1597,7 +1605,7 @@
     }
   }
   function insightActionCard(name,options,display={}){
-    const token=tokenInfo(name);
+    const token=tokenInfo(name,options);
     const card=token?null:options.lookupRecordedCard?.(name);
     const button=textButton("","insight-action-card"+
       (display.artOnly?" is-art-only":"")+
