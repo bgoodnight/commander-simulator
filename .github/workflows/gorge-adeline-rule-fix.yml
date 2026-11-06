@@ -1,0 +1,33 @@
+name: Test Adeline token-attacking planeswalker option
+on:
+  push:
+    branches: [test/gorge-four-commander-token-qualification-20261106]
+    paths:
+      - "tools/patch_gorge_adeline_token_defender.py"
+      - ".github/workflows/gorge-adeline-rule-fix.yml"
+permissions:
+  contents: read
+jobs:
+  rules:
+    runs-on: ubuntu-latest
+    timeout-minutes: 35
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Clone and patch exactly pinned Gorge source
+        run: |
+          git clone --filter=blob:none https://github.com/adams-shaun/gorge.git "$RUNNER_TEMP/gorge"
+          git -C "$RUNNER_TEMP/gorge" checkout --detach b78e4c8b16078f6decbc48875bba953ce5535b85
+          python -m tools.patch_gorge_adeline_token_defender --gorge "$RUNNER_TEMP/gorge"
+      - uses: actions/setup-go@v5
+        with:
+          go-version-file: ${{ runner.temp }}/gorge/go.mod
+          cache: false
+      - name: Test Adeline named defender, token semantics and replay stability
+        working-directory: ${{ runner.temp }}/gorge
+        run: |
+          make fetch-cards compile-cards
+          go test ./engine/effects -run 'TestToken' -count=1
+          go test ./engine/rules -run '^TestAdelineTokenAttackingRememberedPlayerAttacksThatOpponent$' -count=1 -v
