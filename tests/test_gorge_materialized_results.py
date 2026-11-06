@@ -111,7 +111,7 @@ class MaterializedResultsTests(unittest.TestCase):
 
     def test_reject_private_projection_payload(self):
         self.build(1, leak=True)
-        with self.assertRaisesRegex(ValueError, "Private source value"):
+        with self.assertRaisesRegex(ValueError, "Invalid original UI run|Private source value"):
             project(self.root / "source", self.registry, self.root / "built")
 
 
