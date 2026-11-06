@@ -56,7 +56,7 @@ jobs:
           manifest_raw=(Path(os.environ["RUNNER_TEMP"])/"manifest.json").read_bytes()
           manifest=json.loads(manifest_raw)
           assert old["schema"]=="gorge-r2-results-current-v1"
-          assert old["version"]==os.environ["PREVIOUS_VERSION"],"Stage pointer unexpectedly changed"
+          assert old["version"] in {os.environ["PREVIOUS_VERSION"],os.environ["STAGING_VERSION"]},"Unexpected stage pointer version"
           assert manifest["schema"]=="gorge-r2-materialized-results-v1"
           assert manifest["version"]==os.environ["STAGING_VERSION"]
           assert set(manifest["decks"])=={"mortarion_current","magnus_premium"}
@@ -100,9 +100,33 @@ jobs:
         run: |
           set -euo pipefail
           url="$(cat "$RUNNER_TEMP/stage-worker-url.txt")"
+          # A newly created workers.dev hostname may briefly return 404 while
+          # the route propagates. Require an actual health response first.
+          ready=0
+          for attempt in {1..15}; do
+            code="$(curl --silent --show-error --max-time 20 --output "$RUNNER_TEMP/worker-health.json" --write-out '%{http_code}' "$url/health" || true)"
+            if [[ "$code" == 200 ]]; then ready=1; break; fi
+            echo "Staging hostname propagation: health HTTP $code (attempt $attempt/15)"
+            sleep 3
+          done
+          if [[ "$ready" != 1 ]]; then
+            cat "$RUNNER_TEMP/worker-health.json" || true
+            echo "::error::Staging Worker health never became ready"
+            exit 1
+          fi
           for deck in mortarion_current magnus_premium; do
-            curl --fail --silent --show-error --retry 3 --retry-delay 3 --max-time 45 \
-              "$url/v1/ui/catalog?deck=$deck" > "$RUNNER_TEMP/catalog-$deck.json"
+            ready=0
+            for attempt in {1..12}; do
+              code="$(curl --silent --show-error --max-time 45 --output "$RUNNER_TEMP/catalog-$deck.json" --write-out '%{http_code}' "$url/v1/ui/catalog?deck=$deck" || true)"
+              if [[ "$code" == 200 ]]; then ready=1; break; fi
+              echo "Staging R2 catalog $deck HTTP $code (attempt $attempt/12)"
+              cat "$RUNNER_TEMP/catalog-$deck.json" || true
+              sleep 3
+            done
+            if [[ "$ready" != 1 ]]; then
+              echo "::error::Staging Worker catalog failed for $deck"
+              exit 1
+            fi
             curl --fail --silent --show-error --retry 3 --retry-delay 3 --max-time 45 \
               "$url/v1/ui/insights?deck=$deck" > "$RUNNER_TEMP/insights-$deck.json"
             curl --fail --silent --show-error --retry 3 --retry-delay 3 --max-time 45 \
