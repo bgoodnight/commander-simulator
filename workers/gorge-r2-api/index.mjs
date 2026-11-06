@@ -1,7 +1,7 @@
 import { parquetReadObjects, parquetMetadataAsync, parquetSchema } from "hyparquet";
 import { compressors } from "hyparquet-compressors";
 import registry from "../../data/gorge_analytics_cohort_registry_v1.json";
-import { aggregate, isApproved, isDecisive, validateDeck, normalizeRow, approvedGameIndex, approvedGameDetail, approvedEventSegments, approvedEventWindow } from "./core.mjs";
+import { aggregate, isApproved, isDecisive, isDiagnosticAuthorized, validateDeck, normalizeRow, approvedGameIndex, approvedGameDetail, approvedEventSegments, approvedEventWindow } from "./core.mjs";
 
 // Read-only Cloudflare Worker. The R2 binding has no credentials in JS or HTML.
 // Never return native logs, intents, event_json, object catalog, or hidden zones.
@@ -92,7 +92,7 @@ async function readGames(bucket,shard,manifest) {
       "cohort_manifest_sha256","engine_commit","rules_patch_sha256",
       "card_corpus_sha256","player_deck_sha256","pilot_version",
       "opponent_panel_sha256","oracle_bulk_sha256","simulation_protocol_sha256",
-      "event_start_row","native_event_count"];
+      "event_start_row","native_event_count","batch_id"];
   const rows=(await parquetReadObjects({file,compressors,
     columns:requested.filter(key=>columnsAvailable.has(key))})).map(normalizeRow);
   if(rows.length!==manifest.files["games.parquet"].rows)
@@ -147,7 +147,7 @@ async function getDiagnosticGame(env,deck,gameId) {
   const shard=pinned[0];
   const manifest=await readManifest(env.GORGE_R2,shard);
   const games=await readGames(env.GORGE_R2,shard,manifest);
-  const valid=games.filter(g=>g.deck===deck && g.batch_id!==null &&
+  const valid=games.filter(g=>g.deck===deck && g.batch_id===DIAGNOSTIC_BATCH &&
     g.cohort_id==null && isDecisive(g) &&
     typeof g.source_sha256==="string" &&
     /^[a-f0-9]{64}$/i.test(g.source_sha256) &&
@@ -272,8 +272,7 @@ export default {
     if(url.pathname==="/v1/diagnostic/games" ||
        url.pathname.startsWith("/v1/diagnostic/games/")){
       const expected=env.BENCHMARK_TOKEN;
-      if(!expected || !/^[a-f0-9]{64}$/.test(expected) ||
-         request.headers.get("Authorization")!==("Bearer "+expected))
+      if(!isDiagnosticAuthorized(request.headers.get("Authorization"),expected))
         return diagnosticJson({error:"diagnostic_not_authorized"},401);
       if(!env.GORGE_R2)return diagnosticJson({error:"r2_binding_missing"},503);
       const match=url.pathname.match(/^\\/v1\\/diagnostic\\/games\\/([^/]+?)\\/timeline$/);
