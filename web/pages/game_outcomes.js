@@ -1756,11 +1756,11 @@
       const current=filtered.findIndex(game=>game.id===selected);
       previous.disabled=current<=0;next.disabled=!filtered.length||current===filtered.length-1;
       status.textContent=selected&&current>=0?(current+1)+" of "+filtered.length:
-        filtered.length?filtered.length+" matching games":"No matching games";
+        filtered.length?"Choose a game · "+filtered.length+" available":"No matching games";
       list.replaceChildren();
       // A short choice list stays useful on a phone even for enormous cohorts.
       const center=Math.max(0,current);const begin=Math.max(0,Math.min(center-2,filtered.length-5));
-      for(const game of filtered.slice(begin,begin+5)){
+      for(const game of (term?filtered.slice(begin,begin+5):[])){
         const button=textButton(game.label,"game-navigator-game",()=>choose(game.id));
         button.setAttribute("aria-pressed",String(game.id===selected));list.appendChild(button);
       }
