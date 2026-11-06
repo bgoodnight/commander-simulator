@@ -9,7 +9,7 @@ const gid="123456-1/mortarion_current/0/123";
 const base="results/materialized/v1/";
 const enc=new TextEncoder();
 
-async function fixture(withInsights=false){
+async function fixture(withInsights=false,withEvents=false){
   const store=new Map();
   function put(key,obj){
     const raw=enc.encode(JSON.stringify(obj));
@@ -21,6 +21,18 @@ async function fixture(withInsights=false){
     ...Object.fromEntries(IDENTITY_FIELDS.map(k=>[k,cohort[k]]))}));
   const game={schema:"gorge-r2-materialized-game-v1",deck,version,game_id:gid,
     batch:{deck_sha256:uiHash,runs:[{seed:123}]}};
+  if(withEvents){
+    const hash=await sha256(gid);
+    const path="events/"+hash+"/000000.json";
+    const native={schema:"gorge-r2-native-event-part-v1",deck,version,
+      game_id:gid,part:0,total:2,events:[
+        {seq:0,kind:3,secret:true,obj:42},
+        {seq:1,kind:11,secret:false,text:"Sol Ring"}]};
+    game.native_event_count=2;
+    game.event_visibility="omniscient_simulation";
+    game.event_parts=[{path,sha256:await put(
+      base+"versions/"+version+"/"+deck+"/"+path,native),count:2}];
+  }
   const gameHash=await put(base+"versions/"+version+"/"+deck+"/games/"+await sha256(gid)+".json",game);
   const page={schema:"gorge-r2-materialized-page-v1",deck,version,page:0,
     total:1,games:[{game_id:gid,result:"win",sha256:gameHash}],has_more:false};
@@ -108,4 +120,24 @@ test("incorrect complete-cohort card coverage is rejected",async()=>{
     getMaterialized(bucket,deck,registry,null,null,"insights"),
     /materialized_digest_mismatch/
   );
+});
+
+test("complete native game trace returns secret draws and public actions",async()=>{
+  const {bucket}=await fixture(false,true);
+  const response=await getMaterialized(bucket,deck,registry,0,gid,"events",0);
+  assert.equal(response.status,"ready");
+  assert.equal(response.native_event_count,2);
+  assert.equal(response.part_count,1);
+  assert.deepEqual(response.events.map(e=>e.seq),[0,1]);
+  assert.equal(response.events[0].secret,true);
+  await assert.rejects(getMaterialized(bucket,deck,registry,0,gid,"events",1),
+    /invalid_native_event_part_reference/);
+});
+
+test("tampered hidden event digest cannot be served",async()=>{
+  const {bucket,store}=await fixture(false,true);
+  const path=base+"versions/"+version+"/"+deck+"/events/"+await sha256(gid)+"/000000.json";
+  store.set(path,enc.encode('{"events":[{"seq":999}]}'));
+  await assert.rejects(getMaterialized(bucket,deck,registry,0,gid,"events",0),
+    /materialized_digest_mismatch/);
 });
