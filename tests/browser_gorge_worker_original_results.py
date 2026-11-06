@@ -84,10 +84,50 @@ def test():
                 for item in mana:
                     if item["printed"] and "{" in item["printed"]:
                         assert item["count"]>0 or item["printed"] in item["fallback"],item
+                # The same ⓘ icon and popup as Overall Results must sit in
+                # the Key Insights heading, not above the card grid.
+                assert page.locator("#key-insights-info .game-outcome-limits summary").count()==1
+                assert page.locator("#key-insights-grid .insight-methodology").count()==0
+                page.locator("#key-insights-info .game-outcome-limits summary").click()
+                assert page.locator("#key-insights-info .game-outcome-limits-content").is_visible()
+                assert page.locator("#key-insights-info .game-outcome-limits-content").evaluate(
+                    "(el) => getComputedStyle(el).position")=="absolute"
+                # All page navigation operates in the reviewer heading, while
+                # the search/result filters stay in the body.
+                assert page.locator("#turn-reviewer-nav .game-navigator-controls").is_visible()
+                assert page.locator("#turn-reviewer-results .game-navigator-search").is_visible()
+                assert page.locator("#turn-reviewer-nav .game-navigator-status").count()==1
                 insights=page.locator("#key-insights-panel").inner_text()
                 assert ("approved games with complete recorded card observations" in insights
                         or "No named card observations are available" in insights)
                 assert "Complete-cohort card insights are not yet available" not in page.locator("#game-outcome-results").inner_text()
+                # The R2 adapter must reuse the original opponent portrait
+                # provider for named commanders (including uncached precons).
+                assert page.evaluate("typeof window.GorgeDeckLabOpponentPortrait")=="function"
+                assert page.evaluate("""() => {
+                    const data=window.GorgeDeckLabOpponentPortrait({
+                        kind:"named",portraitName:"Dr. Madison Li"
+                    });
+                    return Boolean(data&&data.name==="Dr. Madison Li"&&
+                        /^https:\\/\\/(api.scryfall.com|cards.scryfall.io)\\//.test(data.art));
+                }""")
+                matchup=page.locator("#game-outcome-results .game-outcome-hero-highlight").first
+                matchup.click()
+                art=page.locator("#game-outcome-results .game-outcome-detail-dialog .game-outcome-opponent-art")
+                art.wait_for(state="attached",timeout=15000)
+                assert art.get_attribute("src").startswith("https://")
+                page.locator("#game-outcome-results .game-outcome-detail-close").click()
+                # An open information popup overlays the nearby card, like
+                # the matching Overall Results control. Close before clicking.
+                page.locator("#key-insights-info .game-outcome-limits summary").click()
+                first=page.locator("#key-insights-grid .insight-featured-panel").first
+                if first.count():
+                    first.locator("summary").first.click()
+                    assert first.get_by_role("group",name="Card type and ranking").is_visible()
+                    link=first.get_by_role("button",name="View an example game",exact=False)
+                    if link.count():
+                        link.click()
+                        assert page.locator("#turn-reviewer-results .insight-turn-row[open]").count()>0
                 page.screenshot(path=str(OUT/f"{DECK}-{mode}-original-results.png"),full_page=True)
                 print(f"PASS {DECK} {mode}: real 12-game Worker batch renders original outcome cards")
                 page.close()
@@ -132,7 +172,7 @@ def test_materialized():
                          "eventCount":100,"score":90,"average":100/201,
                          "median":0,"heldMedian":None,"timesPlayed":100,
                          "seenGames":90,"turns":[3],"exampleEvents":[],
-                         "exampleSeenSeeds":[]}]}}}
+                         "exampleSeenSeeds":[],"exampleGames":[{"game_id":"fixture-1-0","turn":1}]}]}}}
         elif parsed.path.endswith("/page"):
             number=int(query["page"][0])
             count=min(25,201-number*25)
@@ -164,32 +204,35 @@ def test_materialized():
                 assert page.evaluate("document.body.dataset.r2ResultsState")=="ready"
                 assert page.locator("#key-insights-panel").is_visible()
                 assert page.locator("#key-insights-grid").get_by_text(source_card,exact=False).first.is_visible()
+                assert page.locator("#key-insights-info .game-outcome-limits summary").count()==1
+                assert page.locator("#turn-reviewer-nav .game-navigator-controls").is_visible()
+                assert page.locator("#r2-game-picker .game-navigator-search").is_visible()
                 assert page.get_by_role("heading",name="Key insights").count()==1
                 assert page.locator("#gorge-r2-live").is_hidden()
                 assert page.locator("#gorge-replay-panel").is_hidden()
                 assert page.get_by_text(source_card,exact=False).first.is_visible()
-                picker=page.locator('select[aria-label="Choose recorded game"]:visible')
-                page.locator('select[aria-label="Choose recorded game"] option[value="fixture-8-0"]').wait_for(state="attached",timeout=60000)
-                assert picker.count()==1
-                assert picker.locator("option").count()==202
+                search=page.get_by_role("searchbox",name="Find a game or opponent")
+                assert search.count()==1
+                page.get_by_text("Choose a game · 201 available",exact=True).wait_for(timeout=60000)
+                assert page.locator('select[aria-label="Choose recorded game"]:visible').count()==0
                 assert page.get_by_role("button",name="Next 25").count()==0
                 assert not any(path.endswith("/game") for path,_ in calls)
-                # Preserve a real JS stack if replay rendering is rejected.
-                page.evaluate("""() => {
-                  const original=window.DeckGameOutcomes.renderTurnReviewer;
-                  window.DeckGameOutcomes.renderTurnReviewer=(...args)=>{
-                    try{return original(...args);}
-                    catch(err){window.__sourceReplayError=String(err.stack||err);throw err;}
-                  };
-                }""")
-                picker.select_option("fixture-1-0")
-                try:
-                    page.get_by_text("Selected game replay · individual game",exact=False).wait_for(timeout=15000)
-                except Exception:
-                    print("Replay diagnostic:",page.locator("#game-outcome-results").inner_text())
-                    print("Browser errors:",errors)
-                    print("Replay renderer JS stack:",page.evaluate("window.__sourceReplayError || null"))
-                    raise
+                insight=page.locator("#key-insights-grid .insight-featured-panel").first
+                insight.locator("summary").first.click()
+                assert insight.get_by_role("group",name="Card type and ranking").is_visible()
+                insight.get_by_role("button",name="Show least played first").click()
+                insight=page.locator("#key-insights-grid .insight-featured-panel").first
+                assert "Least played" in insight.locator("summary").first.inner_text()
+                insight.get_by_role("button",name="Show most played first").click()
+                insight=page.locator("#key-insights-grid .insight-featured-panel").first
+                insight.get_by_role("button",name="View an example game",exact=False).click()
+                page.locator("#turn-reviewer-results .insight-turn-row[open]").first.wait_for(timeout=15000)
+                assert any(path.endswith("/game") and q.get("page")==["1"] and q.get("game_id")==["fixture-1-0"] for path,q in calls)
+                search.fill("Game 201")
+                with page.expect_response(lambda response: "/v1/ui/game?" in response.url and "page=8" in response.url):
+                    page.get_by_role("button",name="Game 201 · Loss",exact=False).click()
+                page.locator("#turn-reviewer-results .insight-turn-row").first.wait_for(timeout=15000)
+                assert any(path.endswith("/game") and q.get("page")==["8"] for path,q in calls)
                 assert page.locator("#turn-reviewer-results .insight-turn-row").count()>0
                 if one_batch["runs"][0].get("gorge_source",{}).get("opening_hand_boundary")=="first_pending_decision_of_turn":
                     assert page.get_by_text("First recorded hand",exact=False).first.is_visible()

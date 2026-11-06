@@ -2644,3 +2644,69 @@ body:has(#pane-records:not([hidden])) .compact-selection{margin-bottom:3px}
 /* Original Results includes its own turn explorer; do not show a second
    separate source navigator beneath it. */
 body.r2-original-results-active #gorge-replay-panel{display:none!important}
+
+/* Compact game search keeps large cohorts usable on desktop and mobile. */
+.game-navigator{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:8px;margin:0 0 10px}
+.game-navigator-search,.game-navigator-filter{min-width:0;padding:10px;border:1px solid #6e8077;border-radius:8px;background:#213631;color:#eddfc3;font:inherit}
+.game-navigator-controls{grid-column:1/-1;display:flex;align-items:center;gap:10px}
+.game-navigator-step,.game-navigator-game{border:1px solid #758579;border-radius:7px;background:#203831;color:#eedbb1;font:inherit;cursor:pointer}
+.game-navigator-step{min-width:40px;padding:5px 12px;font-size:1.15rem}
+.game-navigator-step:disabled{opacity:.4;cursor:default}
+.game-navigator-status{flex:1;text-align:center;color:#c9c7b8;font-size:.84rem}
+.game-navigator-results{grid-column:1/-1;display:grid;gap:5px}
+.game-navigator-game{padding:8px 10px;text-align:left;line-height:1.3}
+.game-navigator-game[aria-pressed=true]{border-color:#e3c183;background:#3a493d}
+.insight-methodology{margin:0 0 8px;color:#bac6bd}.insight-methodology summary{cursor:pointer;width:max-content;color:#e8cb91}
+@media(max-width:480px){
+ .game-navigator{grid-template-columns:minmax(0,1fr) auto}.game-navigator-filter{max-width:118px}
+ .gorge-card-type-controls{gap:4px}.gorge-card-type-controls .gorge-icon-button{width:35px;height:38px}
+}
+
+/* Results section heading controls. Reuse the Overall Results ⓘ control
+   and popup CSS, changing only its positioning inside the heading. */
+#pane-records .key-insights-heading{align-items:center;flex-wrap:nowrap}
+#pane-records .key-insights-info{margin-left:auto;flex:0 0 auto;position:relative;z-index:12}
+#pane-records .key-insights-info .game-outcome-limits{position:relative;right:auto;top:auto;margin:0}
+#pane-records .key-insights-info .game-outcome-limits-content{z-index:13}
+#pane-records .key-insights-panel:has(.insight-methodology[open]){z-index:13;position:relative;overflow:visible}
+#pane-records .turn-reviewer-heading-row{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-bottom:8px}
+#pane-records .turn-reviewer-heading-row h2{margin:0;min-width:0}
+#pane-records .turn-reviewer-nav{flex:0 1 auto;min-width:0}
+#pane-records .turn-reviewer-nav .game-navigator-controls{display:flex;gap:6px;align-items:center;white-space:nowrap}
+#pane-records .turn-reviewer-nav .game-navigator-step{min-width:32px;padding:3px 9px}
+#pane-records .turn-reviewer-nav .game-navigator-status{flex:none;font-size:.8rem}
+#pane-records .game-navigator{margin-top:0}
+#pane-records .game-navigator>.game-navigator-results{grid-column:1/-1}
+@media(max-width:480px){
+  #pane-records .turn-reviewer-heading-row{gap:8px}
+  #pane-records .turn-reviewer-nav .game-navigator-controls{gap:3px}
+  #pane-records .turn-reviewer-nav .game-navigator-step{min-width:28px;padding:3px 7px}
+  #pane-records .turn-reviewer-nav .game-navigator-status{font-size:.72rem}
+}
+
+/* Vertical game-length distribution with sparse round ticks and bar tooltips. */
+.game-length-histogram{width:100%;min-width:0;padding:12px 4px 0}
+.game-length-histogram-bars{height:190px;display:flex;align-items:stretch;gap:3px;
+ border-bottom:1px solid #8f9b86;padding:0 8px}
+.game-length-histogram-column{flex:1 1 0;min-width:0;display:flex;align-items:flex-end;
+ cursor:help}
+.game-length-histogram-bar{display:block;width:100%;min-height:0;
+ background:linear-gradient(180deg,#dec39b,#83b8a5);
+ border-radius:4px 4px 0 0}
+.game-length-histogram-column:hover .game-length-histogram-bar{filter:brightness(1.2)}
+.game-length-histogram-axis{height:25px;margin:0 8px;position:relative}
+.game-length-histogram-axis span{position:absolute;top:5px;transform:translateX(-50%);
+ color:#cbd1c8;font-size:.72rem;white-space:nowrap}
+@media(max-width:480px){
+  .game-length-histogram-bars{height:145px;gap:2px}
+  .game-length-histogram-axis span{font-size:.65rem}
+}
+/* Keep the shared ⓘ motif perfectly circular even inside a flex heading.
+   Explicit box sizing avoids an oval when inherited summary sizing applies. */
+#pane-records .key-insights-info .game-outcome-limits>summary{
+ display:grid;place-items:center;box-sizing:border-box;
+ width:29px;min-width:29px;max-width:29px;
+ height:29px;min-height:29px;max-height:29px;
+ padding:0;flex:none;aspect-ratio:1 / 1;border-radius:50%;
+ line-height:1
+}
