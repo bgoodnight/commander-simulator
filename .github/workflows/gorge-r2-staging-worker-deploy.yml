@@ -88,7 +88,7 @@ jobs:
           import os,re
           from pathlib import Path
           output=(Path(os.environ["RUNNER_TEMP"])/"stage-worker-deploy.log").read_text()
-          urls=re.findall(r"https://[A-Za-z0-9.-]+\\.workers\\.dev",output)
+          urls=re.findall(r"https://[A-Za-z0-9.-]+\.workers\.dev",output)
           expected=os.environ["STAGING_WORKER"]+"."
           urls=[x for x in urls if expected in x]
           if not urls:raise ValueError("Dedicated staging Worker URL missing from Wrangler deploy")
