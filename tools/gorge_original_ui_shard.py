@@ -1,7 +1,6 @@
 """Build an original Results-compatible R2 projection from immutable Gorge sources.
 
-Offline, no cloud writes, no cohort approval. Reuses existing Python source
-sanitizer and existing JavaScript original-renderer adapter. Only run on a
+Offline, no cloud writes, no cohort approval. Reuses the synthetic omniscient exporter and original-renderer adapter. Only run on a
 verified source archive; never infer omitted data.
 """
 from __future__ import annotations
@@ -66,7 +65,7 @@ def build(source_dir:Path, deck:str, batch:str, shard:int, out:Path,
             native.get("hero_seat")!=seat or
             native.get("decks")!=row.get("decks")):
             raise ValueError(f"Native trace provenance mismatch: {seed}")
-        replay=convert(native,include_hidden=False)
+        replay=convert(native,include_hidden=True)
         winner=row.get("winner_seat")
         if type(winner) is not int or winner not in range(4):
             raise ValueError("No decisive winner")
@@ -87,7 +86,9 @@ def build(source_dir:Path, deck:str, batch:str, shard:int, out:Path,
                         str(input_file),str(out)],
                        check=True,cwd=ROOT)
     projection=json.loads(out.read_text())
-    if len(projection["games"])!=len(runs):
+    if (len(projection["games"])!=len(runs) or
+        any(game["run"]["gorge_source"]["visibility"]!="omniscient"
+            for game in projection["games"])):
         raise ValueError("Projection dropped a source run")
     return {"schema":projection["schema"],"deck":deck,
             "games":len(runs),"ui_deck_sha256":ui_deck_sha,
