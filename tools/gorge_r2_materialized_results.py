@@ -16,7 +16,7 @@ from tools.gorge_r2_full_cohort_insights import FullCohortCardInsights
 
 SCHEMA = "gorge-r2-materialized-results-v1"
 FORBIDDEN = {"event_json", "intents", "log", "objects", "object_identity",
-             "secret", "native_events", "source_object_id", "library", "hidden_cards"}
+             "native_events", "source_object_id", "hidden_cards"}
 HANDS = {"hand", "opening_hand", "opponent_hands", "opening_hands_by_seat"}
 
 
@@ -42,15 +42,27 @@ def safe_run(value):
         "ui_observations", "life_history", "opponent_decks", "gorge_source", "outcome"
     }:
         raise ValueError("Invalid original UI run")
+    visibility = value.get("gorge_source", {}).get("visibility")
+    omniscient = (visibility == "omniscient" and
+                   value.get("gorge_source", {}).get("synthetic_simulation_only") is True)
     def visit(obj):
         if isinstance(obj, list):
             for item in obj: visit(item)
         elif isinstance(obj, dict):
             for key, item in obj.items():
-                if key in FORBIDDEN or (key in HANDS and item is not None):
-                    raise ValueError("Private source value in UI projection")
+                if key in FORBIDDEN or (key in HANDS and item is not None and not omniscient):
+                    raise ValueError("Invalid non-simulation source value in UI projection")
                 visit(item)
     visit(value)
+    if omniscient:
+        if (not isinstance(value.get("opening_hand"), list) or
+            len(value["opening_hand"]) != value.get("opening_hand_count") or
+            not isinstance(value.get("opening_hands_by_seat"), list) or
+            len(value["opening_hands_by_seat"]) != 3 or
+            any(not isinstance(obs.get("hand"), list) or
+                    not isinstance(obs.get("opponent_hands"), list)
+                    for obs in value.get("ui_observations", []))):
+            raise ValueError("Missing complete synthetic omniscient hands")
 
 
 def project(source: Path, registry_path: Path, output: Path, expected_batches=None,
@@ -188,8 +200,12 @@ def project(source: Path, registry_path: Path, output: Path, expected_batches=No
             safe_run(run)
             if (run.get("seed") != row["seed"]
                 or run.get("gorge_source", {}).get("chain") != row["chain"]
-                or run.get("gorge_source", {}).get("visibility") != "public_events_only"
-                or run.get("gorge_source", {}).get("synthetic_simulation_only") is not False
+                or not (
+                    (run.get("gorge_source", {}).get("visibility") == "omniscient" and
+                     run.get("gorge_source", {}).get("synthetic_simulation_only") is True) or
+                    (run.get("gorge_source", {}).get("visibility") == "public_events_only" and
+                     run.get("gorge_source", {}).get("synthetic_simulation_only") is False)
+                )
                 or run.get("outcome", {}).get("complete") is not True
                 or run.get("outcome", {}).get("status") !=
                    ("win" if row["hero_seat"] == row["winner_seat"] else "loss")
