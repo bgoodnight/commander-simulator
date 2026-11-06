@@ -1,0 +1,74 @@
+name: Analyze one private Gorge R2 batch (read-only)
+on:
+  workflow_dispatch:
+    inputs:
+      batch_id:
+        description: Exact warehouse/v1 batch identifier
+        required: true
+        type: string
+      hero:
+        description: Player deck to extract
+        required: true
+        type: choice
+        options: [mortarion_current, magnus_premium]
+
+permissions:
+  contents: read
+
+jobs:
+  extract:
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    env:
+      ACCOUNT_ID: ${{ secrets.GORGE_R2_ACCOUNT_ID }}
+      AWS_ACCESS_KEY_ID: ${{ secrets.GORGE_R2_ACCESS_KEY_ID }}
+      AWS_SECRET_ACCESS_KEY: ${{ secrets.GORGE_R2_SECRET_ACCESS_KEY }}
+      AWS_DEFAULT_REGION: auto
+      BATCH_ID: ${{ inputs.batch_id }}
+      HERO: ${{ inputs.hero }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Verify bounded R2 access
+        shell: bash
+        run: |
+          set -euo pipefail
+          [[ "$BATCH_ID" =~ ^[A-Za-z0-9_-]+$ ]] || { echo "::error::Unsafe batch"; exit 1; }
+          [[ -n "$ACCOUNT_ID" && -n "$AWS_ACCESS_KEY_ID" && -n "$AWS_SECRET_ACCESS_KEY" ]] || {
+            echo "::error::Missing R2 credentials"; exit 1;
+          }
+      - name: Download source-backed Parquet and matching complete native traces
+        shell: bash
+        run: |
+          set -euo pipefail
+          python tools/gorge_r2_native_ingest.py \
+            --batch-id "$BATCH_ID" --hero "$HERO" \
+            --account-id "$ACCOUNT_ID" \
+            --destination "$RUNNER_TEMP/r2"
+      - name: Engineer source-backed turn-entry features
+        shell: bash
+        run: |
+          set -euo pipefail
+          python tools/gorge_landmark_features.py \
+            --native-root "$RUNNER_TEMP/r2/native_shards" \
+            --hero "$HERO" \
+            --output "$RUNNER_TEMP/report/landmark_features.jsonl"
+          cp "$RUNNER_TEMP/r2/r2-acquisition.json" "$RUNNER_TEMP/report/r2-acquisition.json"
+          python - "$RUNNER_TEMP/report/landmark_features.jsonl" <<'PY'
+          import json, os, sys
+          rows=[json.loads(x) for x in open(sys.argv[1]) if x.strip()]
+          with open(os.environ["GITHUB_STEP_SUMMARY"],"a") as f:
+              f.write("# R2 Gorge native feature extraction\n\n")
+              f.write(f"Hero: **{os.environ['HERO']}**; source batch: {os.environ['BATCH_ID']}\n\n")
+              f.write(f"Landmark rows: **{len(rows)}**, observed: **{sum(x.get('landmark_observed',False) for x in rows)}**\n\n")
+              f.write("EXPERIMENTAL extraction only; no cohort promotion, model inference, R2 writes or UI publication.\n")
+          PY
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: gorge-r2-experimental-feature-report
+          path: ${{ runner.temp }}/report/
+          if-no-files-found: warn
+          retention-days: 14
