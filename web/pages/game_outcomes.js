@@ -1801,7 +1801,8 @@
       label:gameLabel(entry,index),result:entry.run.outcome.status,
       search:gameLabel(entry,index)+" seed "+entry.run.seed}));
     const headerNav=!options.hideGameSelector?
-      document.getElementById("turn-reviewer-nav"):null;
+      (typeof document!=="undefined"&&typeof document.getElementById==="function"?
+        document.getElementById("turn-reviewer-nav"):null):null;
     if(headerNav)headerNav.replaceChildren();
     const nav=gameNavigator(choices,(item,turn)=>{
       const {group,run}=item.entry;
@@ -2613,7 +2614,8 @@
   // immediately above their grid.
   function placeInsightMethodology(root,info,grid){
     const slot=root.id==="key-insights-grid"?
-      document.getElementById("key-insights-info"):null;
+      (typeof document!=="undefined"&&typeof document.getElementById==="function"?
+        document.getElementById("key-insights-info"):null):null;
     if(slot){slot.replaceChildren(info);root.replaceChildren(grid);}
     else root.replaceChildren(info,grid);
   }
