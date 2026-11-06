@@ -12,6 +12,7 @@ on:
         default: false
 permissions:
   contents: read
+  actions: read
 concurrency:
   group: gorge-materialized-current-publication
   cancel-in-progress: false
