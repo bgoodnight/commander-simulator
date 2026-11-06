@@ -208,6 +208,11 @@ jobs:
           aws --endpoint-url "$endpoint" s3 cp "$prefix/current.json" \
             "$RUNNER_TEMP/current-new.json" --no-progress
           cmp "$RUNNER_TEMP/complete/current.json" "$RUNNER_TEMP/current-new.json"
+          # Exercise the exact Worker reader against the newly uploaded and
+          # downloaded R2 stage objects, including all seats and hidden events.
+          node tools/gorge_r2_staging_reader_smoke.mjs \
+            "$RUNNER_TEMP/readback" "$RUNNER_TEMP/current-new.json" \
+            "$GITHUB_RUN_ID-$GITHUB_RUN_ATTEMPT"
           python -m tools.gorge_r2_materialized_rollback \
             --download "$RUNNER_TEMP/readback" \
             --registry data/gorge_analytics_cohort_registry_v1.json \
@@ -221,4 +226,5 @@ jobs:
             "$RUNNER_TEMP/rolled-back.json" --no-progress
           cmp "$RUNNER_TEMP/rollback.json" "$RUNNER_TEMP/rolled-back.json"
           echo "SUCCESS: isolated R2 staging publish $old -> $new -> rollback $old" >> "$GITHUB_STEP_SUMMARY"
+          echo "Verified exact native source for both 12-game cohorts, v2 omniscient projections and all-stage Worker reader responses." >> "$GITHUB_STEP_SUMMARY"
           echo "Staging prefix: results/materialized/staging/$GITHUB_RUN_ID-$GITHUB_RUN_ATTEMPT/" >> "$GITHUB_STEP_SUMMARY"
