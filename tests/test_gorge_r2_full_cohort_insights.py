@@ -20,7 +20,7 @@ class FullCohortInsightsTests(unittest.TestCase):
         self.root = Path(self.tmp.name)
         self.manifest = b"manifest"
         self.games = b"games"
-        self.ui = b"projection"
+        self.ui = json.dumps({"ui_deck_sha256": "a"*64}).encode()
 
     def shard(self, batch, count=1, bad_hash=False, coverage=True):
         deck = "mortarion_current"
