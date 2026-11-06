@@ -158,3 +158,33 @@ test("invalid cross-origin and disabled simulation mutations",async()=>{
   assert.equal((await call(e,bob,"/v1/simulations","POST")).status,403);
   assert.equal((await call(e,alice,"/v1/decks/magnus/visibility","PATCH",{visibility:"community"})).status,410);
 });
+
+test("failed R2 readback leaves no published D1 pointer",async()=>{
+  const e=env(),deck=await newDeck(e);
+  const key=e.COMMUNITY_DB.sql.prepare("SELECT private_content_key FROM decks WHERE id=?").get(deck.id).private_content_key;
+  e.COMMUNITY_DECKS_R2.objects.delete(key);
+  const result=await call(e,alice,"/v1/decks/"+deck.id+"/publications","POST");
+  assert.equal(result.status,503);
+  assert.equal(e.COMMUNITY_DB.sql.prepare("SELECT count(*) AS n FROM publications").get().n,0);
+});
+test("other accounts cannot publish or replace someone else's snapshots",async()=>{
+  const e=env(),deck=await newDeck(e);
+  assert.equal((await call(e,bob,"/v1/decks/"+deck.id+"/publications","POST")).status,404);
+  const pub=(await call(e,alice,"/v1/decks/"+deck.id+"/publications","POST")).data.publication;
+  assert.equal((await call(e,bob,"/v1/publications/"+pub.id+"/replace","POST",{
+    source_deck_id:deck.id,expected_revision_id:pub.current_revision_id
+  })).status,404);
+  assert.equal((await call(e,bob,"/v1/publications/"+pub.id+"/unpublish","POST")).status,404);
+});
+test("D1 transaction rollback prevents partial public publication",async()=>{
+  const e=env(),deck=await newDeck(e);
+  const realBatch=e.COMMUNITY_DB.batch.bind(e.COMMUNITY_DB);
+  e.COMMUNITY_DB.batch=async (statements)=>{
+    // Duplicate the first publication insert to force a constraint failure
+    // in the same transaction, after the first statement succeeds.
+    return realBatch([statements[0],statements[0],statements[1]]);
+  };
+  assert.equal((await call(e,alice,"/v1/decks/"+deck.id+"/publications","POST")).status,503);
+  assert.equal(e.COMMUNITY_DB.sql.prepare("SELECT count(*) AS n FROM publications").get().n,0);
+  assert.equal(e.COMMUNITY_DB.sql.prepare("SELECT count(*) AS n FROM publication_revisions").get().n,0);
+});
