@@ -58,7 +58,7 @@
       (!version||report.cohort_version===version)&&
       report.categories&&typeof report.categories==="object";
   }
-  function showCohortInsights(report,total,version=null){
+  function showCohortInsights(report,total,version=null,onReviewGame=null){
     const grid=$("key-insights-grid");
     if(!grid)return;
     if(!verifiedReport(report,total,version)){
@@ -72,6 +72,7 @@
     $("key-insights-empty").hidden=true;
     window.DeckGameOutcomes.renderCohortInsights(grid,report,total,{
       lookupRecordedCard:window.GorgeDeckLabCardInfo,
+      onReviewGame,
       renderMana:value=>window.GorgeDeckLabMana?.(value),
       onOpenRecordedCard:name=>window.GorgeDeckLabOpenCard?.(name)
     });
@@ -174,14 +175,12 @@
       turnsList.append(create("p","No game length data available."));
     detailStats.append(matchupTitle,matchupList,turnsTitle,turnsList);
     setResultsState("ready");
-    showCohortInsights(verifiedInsights,summary.n,catalog.version);
     const picker=create("div");picker.id="r2-game-picker";
-    const gameSelect=create("select");gameSelect.className="game-outcome-scenario-select";
-    gameSelect.setAttribute("aria-label","Choose recorded game");
-    const placeholder=create("option","Choose a game to review");placeholder.value="";
-    gameSelect.appendChild(placeholder);
-    const replayHeading=create("p","Loading games…");replayHeading.className="micro";
-    picker.append(gameSelect,replayHeading);
+    const replayHeading=create("p","");replayHeading.className="micro";
+    const gameItems=[];
+    const navigator=window.DeckGameOutcomes.gameNavigator(picker,(item,turn)=>
+      showGame(item.id,item.page,item.label,turn));
+    picker.append(replayHeading);
     $("r2-game-picker")?.remove();
     reviewer.replaceChildren();
     reviewer.before(picker);
@@ -196,7 +195,7 @@
       return res.json();
     };
     const live=()=>ticket===generation&&key===window.__deckLabActiveKey;
-    const showGame=async(gameId,pageNumber,label)=>{
+    const showGame=async(gameId,pageNumber,label,turn=null)=>{
       const request=++selectedRequest;
       replayHeading.textContent="Loading selected game…";
       try{
@@ -216,7 +215,7 @@
         }
         if(!window.DeckGameOutcomes?.validate(batch))
           throw Error("Original replay format rejected");
-        replayHeading.textContent="Selected game replay · individual game (not cohort statistics)";
+        replayHeading.textContent="";
         window.DeckGameOutcomes.renderTurnReviewer(reviewer,[batch],{
           deckKey:key,deckHash:selected.sha,
           commanderName:selected.commander,commanderArt:selected.art,
@@ -225,10 +224,11 @@
           deckCardNames:selected.cardNames,
           renderMana:value=>window.GorgeDeckLabMana?.(value),
           onOpenRecordedCard:name=>window.GorgeDeckLabOpenCard?.(name),
-          hideGameSelector:true,displayGameLabel:label,
+          hideGameSelector:true,displayGameLabel:label,focusTurn:turn,
           fullCardInsights:verifiedInsights,
           fullCohortGames:verifiedInsightCount
         });
+        if(turn!==null)panel?.scrollIntoView?.({behavior:"smooth",block:"start"});
       }catch(err){
         if(live()&&request===selectedRequest)replayHeading.textContent="Replay unavailable: "+String(err.message||err);
       }
@@ -253,24 +253,25 @@
           seen.add(g.game_id);
           const label="Game "+seen.size+" · "+(g.result==="win"?"Win":"Loss")+" · "+(g.turns??"?")+
             " turns · "+g.opponent_decks.map(d=>window.DeckDisplayNames?.deck(d)||d).join(", ");
-          const option=create("option",label);option.value=g.game_id;option.dataset.page=String(number);
-          gameSelect.appendChild(option);
+          gameItems.push({id:g.game_id,page:number,label,result:g.result,search:label});
         }
-        if(number===0)replayHeading.textContent="Choose a game to review.";
+        navigator.setGames(gameItems);
         }
         if(seen.size!==summary.n)throw Error("Incomplete game index");
       }catch(err){
         if(live())replayHeading.textContent="Some games could not be loaded: "+String(err.message||err);
       }
     };
-    gameSelect.addEventListener("change",()=>{
-      const option=gameSelect.selectedOptions[0];
-      if(option?.value)showGame(option.value,Number(option.dataset.page),option.textContent);
+    const loadingGames=loadGames();
+    showCohortInsights(verifiedInsights,summary.n,catalog.version,async(gameId,turn)=>{
+      await loadingGames;
+      if(!live())return;
+      navigator.clearFilters();
+      if(!navigator.choose(gameId,turn))replayHeading.textContent="Example game is unavailable in this cohort.";
     });
     renderedDeck=key;
     const status=$("game-outcome-status");
     if(status)status.textContent=summary.n+" approved games · complete-cohort summary";
-    void loadGames();
     return true;
   }
 
@@ -337,6 +338,7 @@
       setResultsState("ready");
       const report=verifiedInsights||window.__gorgeCardInsights?.[key]||null;
       const population=verifiedInsightCount||window.__gorgeFullCohort?.decks?.[key]?.n||batch.runs.length;
+      let reviewRecordedRun=null;
       if(verifiedReport(report,population)){
         showCohortInsights(report,population);
       }else{
@@ -345,6 +347,7 @@
         window.DeckGameOutcomes.renderRecordedBatchInsights(
           $("key-insights-grid"),batch,{
             deckKey:key,deckHash:selected.sha,commanderName:selected.commander,
+            onReviewRun:(id,seed,turn)=>reviewRecordedRun?.(id,seed,turn),
             lookupRecordedCard:window.GorgeDeckLabCardInfo,
             deckCardNames:selected.cardNames,
             renderMana:value=>window.GorgeDeckLabMana?.(value),
@@ -355,6 +358,7 @@
         deckKey:key,deckHash:selected.sha,
         commanderName:selected.commander,commanderArt:selected.art,
         isGorge:true,reviewerRoot:reviewer,reviewerPanel:panel,
+        onReviewerReady:jump=>{reviewRecordedRun=jump},
         lookupRecordedCard:window.GorgeDeckLabCardInfo,
         deckCardNames:selected.cardNames,
         renderMana:value=>window.GorgeDeckLabMana?.(value),
