@@ -1,0 +1,174 @@
+name: Promote verified corrected Gorge baseline to current R2 warehouse
+on:
+  pull_request:
+    paths:
+      - "tools/gorge_current_baseline.py"
+      - "data/gorge_analytics_cohort_registry_v1.json"
+      - ".github/workflows/gorge-current-baseline-promotion.yml"
+  push:
+    branches: [main]
+    paths:
+      - "data/gorge_analytics_cohort_registry_v1.json"
+      - ".github/workflows/gorge-current-baseline-promotion.yml"
+  workflow_dispatch:
+permissions:
+  contents: read
+  actions: read
+concurrency:
+  group: gorge-current-baseline-promote-42143344243-1
+  cancel-in-progress: false
+jobs:
+  promote:
+    name: Verify and publish current baseline (${{ matrix.hero }})
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    strategy:
+      fail-fast: false
+      matrix:
+        hero: [mortarion_current, magnus_premium]
+    env:
+      ACCOUNT: ${{ secrets.GORGE_R2_ACCOUNT_ID }}
+      ACCESS: ${{ secrets.GORGE_R2_ACCESS_KEY_ID }}
+      SECRET: ${{ secrets.GORGE_R2_SECRET_ACCESS_KEY }}
+      BATCH: "42143344243-1"
+      HERO: ${{ matrix.hero }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+      - name: Install pinned Parquet support
+        run: pip install pyarrow==21.0.0
+      - name: Download source and previously audited UI projection from private R2
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          set -euo pipefail
+          test -n "$ACCOUNT" && test -n "$ACCESS" && test -n "$SECRET"
+          mkdir -p "$RUNNER_TEMP/source" "$RUNNER_TEMP/ui"
+          gh run download 42143344243 --repo "$GITHUB_REPOSITORY" \
+            --name "gorge-corrected-fresh-candidate-$HERO" --dir "$RUNNER_TEMP/source"
+          export AWS_ACCESS_KEY_ID="$ACCESS" AWS_SECRET_ACCESS_KEY="$SECRET" AWS_DEFAULT_REGION=auto
+          endpoint="https://$ACCOUNT.r2.cloudflarestorage.com"
+          prefix="s3://gorge-simulations/ui/experimental/corrected-pilot/v1/$BATCH/$HERO"
+          aws --endpoint-url "$endpoint" s3 cp "$prefix/ui-original.v1.json" \
+            "$RUNNER_TEMP/ui/ui-original.v1.json" --no-progress
+          aws --endpoint-url "$endpoint" s3 cp "$prefix/archive-audit.json" \
+            "$RUNNER_TEMP/ui/archive-audit.json" --no-progress
+      - name: Verify source/projection and materialize stamped baseline in isolation
+        run: |
+          set -euo pipefail
+          python -m tools.gorge_current_baseline promote \
+            --source "$RUNNER_TEMP/source/results" --deck "$HERO" \
+            --projection "$RUNNER_TEMP/ui/ui-original.v1.json" \
+            --registry data/gorge_analytics_cohort_registry_v1.json \
+            --out "$RUNNER_TEMP/promoted"
+          python - <<'PY'
+          import json,os,hashlib
+          from pathlib import Path
+          import pyarrow.parquet as pq
+          from tools.gorge_cohort_eligibility import eligible_partition
+          from tools.gorge_corrected_cohort_certification import audit
+          tmp=Path(os.environ["RUNNER_TEMP"])
+          registry=Path("data/gorge_analytics_cohort_registry_v1.json")
+          report=audit(tmp/"source/results",tmp/"ui/ui-original.v1.json",
+                       tmp/"ui/archive-audit.json",registry,
+                       batch=os.environ["BATCH"],deck=os.environ["HERO"])
+          assert report["source_integrity"]=="passed" and report["verified_decisive_games"]==12
+          rows=pq.read_table(tmp/"promoted/warehouse/games.parquet").to_pylist()
+          selected,excluded=eligible_partition(rows,json.loads(registry.read_text()))
+          assert len(rows)==len(selected)==12 and len(excluded)==0
+          assert len({x["game_id"] for x in selected})==12
+          projection=json.loads((tmp/"promoted/warehouse/ui-original.v1.json").read_text())
+          assert len(projection["games"])==12
+          assert all(p["game_id"] in {r["game_id"] for r in rows}
+                     and next(r for r in rows if r["game_id"]==p["game_id"])["source_sha256"]==p["source_sha256"]
+                     for p in projection["games"])
+          print("PASS: exact current-cohort source, approved Parquet, private UI projection and no excluded rows")
+          PY
+          python - <<'PY'
+          import json,os
+          from pathlib import Path
+          import pyarrow.parquet as pq
+          tmp=Path(os.environ["RUNNER_TEMP"])
+          rows=pq.read_table(tmp/"promoted/warehouse/games.parquet").to_pylist()
+          (tmp/"promoted/approved-rows.json").write_text(json.dumps(rows))
+          PY
+          node --input-type=module - "$RUNNER_TEMP/promoted/approved-rows.json" \
+             "$RUNNER_TEMP/promoted/warehouse/ui-original.v1.json" "$HERO" <<'JS'
+          import fs from "node:fs";
+          import {createRequire} from "node:module";
+          import {originalUiBatch} from "./workers/gorge-r2-api/core.mjs";
+          const require=createRequire(import.meta.url);
+          const original=require("./web/pages/game_outcomes.js");
+          const rows=JSON.parse(fs.readFileSync(process.argv[2],"utf8"));
+          const projection=JSON.parse(fs.readFileSync(process.argv[3],"utf8"));
+          const batch=originalUiBatch(rows,projection,process.argv[4]);
+          if(!original.validate(batch)||batch.runs.length!==12)
+            throw Error("Original UI rejected the approved Parquet-backed cohort");
+          console.log("PASS: 12 approved source-backed games accepted by original UI",process.argv[4]);
+          JS
+      - name: Preserve prior unapproved warehouse objects before promotion
+        if: github.ref == 'refs/heads/main' && github.event_name != 'pull_request'
+        shell: bash
+        run: |
+          set -euo pipefail
+          export AWS_ACCESS_KEY_ID="$ACCESS" AWS_SECRET_ACCESS_KEY="$SECRET" AWS_DEFAULT_REGION=auto
+          endpoint="https://$ACCOUNT.r2.cloudflarestorage.com"
+          old="s3://gorge-simulations/warehouse/v1/$BATCH/$HERO/0/"
+          archive="s3://gorge-simulations/warehouse/archive/pre-current-baseline/v1/$BATCH/$HERO/0/"
+          if aws --endpoint-url "$endpoint" s3api head-object --bucket gorge-simulations \
+              --key "warehouse/v1/$BATCH/$HERO/0/manifest.json" >/dev/null 2>&1; then
+            mkdir -p "$RUNNER_TEMP/previous"
+            aws --endpoint-url "$endpoint" s3 cp "$old" "$RUNNER_TEMP/previous/" --recursive --no-progress
+            python - <<'PY'
+          import json,os
+          from pathlib import Path
+          source=Path(os.environ["RUNNER_TEMP"])/"previous"
+          manifest=json.loads((source/"manifest.json").read_text())
+          assert manifest["schema"]=="gorge-warehouse-shard-v1"
+          assert manifest["batch_id"]==os.environ["BATCH"]
+          assert manifest["player_deck"]==os.environ["HERO"]
+          PY
+            if ! aws --endpoint-url "$endpoint" s3api head-object --bucket gorge-simulations \
+                --key "warehouse/archive/pre-current-baseline/v1/$BATCH/$HERO/0/manifest.json" >/dev/null 2>&1; then
+              aws --endpoint-url "$endpoint" s3 cp "$RUNNER_TEMP/previous/" "$archive" --recursive --no-progress
+            else
+              aws --endpoint-url "$endpoint" s3 cp "$archive" "$RUNNER_TEMP/archived/" --recursive --no-progress
+              diff -rq "$RUNNER_TEMP/previous/" "$RUNNER_TEMP/archived/" || {
+                echo "::error::Previously archived warehouse differs; refuse mutation"; exit 1;
+              }
+            fi
+          fi
+      - name: Publish validated Parquet and original-UI projection; commit manifest last
+        if: github.ref == 'refs/heads/main' && github.event_name != 'pull_request'
+        shell: bash
+        run: |
+          set -euo pipefail
+          export AWS_ACCESS_KEY_ID="$ACCESS" AWS_SECRET_ACCESS_KEY="$SECRET" AWS_DEFAULT_REGION=auto
+          endpoint="https://$ACCOUNT.r2.cloudflarestorage.com"
+          dest="s3://gorge-simulations/warehouse/v1/$BATCH/$HERO/0"
+          # Existing source recording stays immutable in native/. This only
+          # replaces derived warehouse tables with their versioned current view.
+          for file in games.parquet events.parquet ui-original.v1.json; do
+            aws --endpoint-url "$endpoint" s3 cp "$RUNNER_TEMP/promoted/warehouse/$file" \
+              "$dest/$file" --no-progress
+          done
+          aws --endpoint-url "$endpoint" s3 cp "$RUNNER_TEMP/promoted/warehouse/manifest.json" \
+            "$dest/manifest.json" --no-progress
+          mkdir -p "$RUNNER_TEMP/readback"
+          aws --endpoint-url "$endpoint" s3 cp "$dest/manifest.json" "$RUNNER_TEMP/readback/manifest.json" --no-progress
+          aws --endpoint-url "$endpoint" s3 cp "$dest/ui-original.v1.json" "$RUNNER_TEMP/readback/ui-original.v1.json" --no-progress
+          cmp "$RUNNER_TEMP/readback/manifest.json" "$RUNNER_TEMP/promoted/warehouse/manifest.json"
+          cmp "$RUNNER_TEMP/readback/ui-original.v1.json" "$RUNNER_TEMP/promoted/warehouse/ui-original.v1.json"
+          echo "Promoted $HERO source-verified 12-game current baseline. Experimental native recordings unchanged." >> "$GITHUB_STEP_SUMMARY"
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: current-baseline-promotion-${{ matrix.hero }}
+          path: ${{ runner.temp }}/promoted/warehouse/manifest.json
+          if-no-files-found: warn
+          retention-days: 14
