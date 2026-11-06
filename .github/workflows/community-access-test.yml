@@ -31,3 +31,25 @@ jobs:
         run: npx --yes wrangler@4 deploy --dry-run --config workers/community-access/wrangler.toml
       - name: Bundle public invitation-intake Worker (no deployment)
         run: npx --yes wrangler@4 deploy --dry-run --config workers/invitation-intake/wrangler.toml
+      - name: Smoke-test real local Wrangler Worker with simulated Access and local D1/R2
+        shell: bash
+        run: |
+          set -euo pipefail
+          CONF=workers/community-access/wrangler.local.toml
+          npx --yes wrangler@4 d1 execute commander-community-local --local --config "$CONF" --file workers/community-access/migrations/0001_deck_visibility.sql
+          npx --yes wrangler@4 d1 execute commander-community-local --local --config "$CONF" --file workers/community-access/migrations/0002_invitation_requests.sql
+          npx --yes wrangler@4 dev --config "$CONF" --ip 127.0.0.1 --port 8789 > /tmp/commander-access-worker.log 2>&1 &
+          WORKER_PID=$!
+          trap 'kill "$WORKER_PID" 2>/dev/null || true; cat /tmp/commander-access-worker.log' EXIT
+          for i in {1..40}; do
+            if curl -sf http://127.0.0.1:8789/v1/account/me > /tmp/access-me.json; then break; fi
+            sleep 1
+          done
+          node -e 'const r=require("/tmp/access-me.json"); if(r.account?.role!=="owner" || r.account?.email!=="owner@example.test") process.exit(1)'
+          curl --fail-with-body -sS -X POST http://127.0.0.1:8789/v1/decks \
+            -H 'Origin: http://127.0.0.1:8789' -H 'Content-Type: application/json' \
+            --data '{"label":"Local smoke","decklist":"1 Sol Ring\\n99 Swamp"}' > /tmp/deck-create.json
+          node -e 'const r=require("/tmp/deck-create.json"); if(!r.deck?.id || r.deck?.revision!==1) process.exit(1)'
+          curl -sf http://127.0.0.1:8789/v1/decks > /tmp/deck-list.json
+          node -e 'const r=require("/tmp/deck-list.json"); if(r.decks?.length!==1) process.exit(1)'
+
