@@ -151,13 +151,8 @@
     const list=create("div");
     list.className="r2-game-list";
     const replayHeading=create("h4","Select a game to review its recorded turns");
-    const replayRoot=create("div");
-    // The renderer also builds one-game outcome cards. Keep that auxiliary
-    // output hidden: it is not a summary of the full cohort. Its separate
-    // reviewerRoot remains visible and interactive.
-    replayRoot.hidden=true;
     overview.append(heading,totals,info);
-    root.replaceChildren(overview,detailStats,insightSection,navigation,list,replayHeading,replayRoot);
+    root.replaceChildren(overview,detailStats,insightSection,navigation,list,replayHeading);
     let page=0;
     const readJson=async(url)=>{
       const res=await fetch(url,{cache:"no-store"});
@@ -185,7 +180,7 @@
         if(!window.DeckGameOutcomes?.validate(batch))
           throw Error("Original replay format rejected");
         replayHeading.textContent="Selected game replay · individual game (not cohort statistics)";
-        window.DeckGameOutcomes.render(replayRoot,[batch],{
+        window.DeckGameOutcomes.renderTurnReviewer(reviewer,[batch],{
           deckKey:key,deckHash:selected.sha,
           commanderName:selected.commander,commanderArt:selected.art,
           isGorge:true,reviewerRoot:reviewer,reviewerPanel:panel,
@@ -230,7 +225,7 @@
           return button;
         });
         list.replaceChildren(...rows);
-        replayRoot.replaceChildren();
+        reviewer.replaceChildren();
         replayHeading.textContent="Select a game to review its recorded turns";
       }catch(err){
         if(live())navigation.textContent="Game page unavailable: "+String(err.message||err);
