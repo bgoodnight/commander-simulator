@@ -143,7 +143,6 @@
         list.replaceChildren(...rows);
         replayRoot.replaceChildren();
         replayHeading.textContent="Select a game to review its recorded turns";
-        if(page===0&&rows.length)await showGame(result.page.games[0].game_id,page);
       }catch(err){
         if(live())navigation.textContent="Game page unavailable: "+String(err.message||err);
       }
