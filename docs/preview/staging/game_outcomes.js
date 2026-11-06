@@ -2475,11 +2475,11 @@
           {...options,isGorge,tutorSearchCount:signals.confirmedTutors},onReviewRun);
         if(panel)cards.appendChild(panel);
       }
-    }else{
+    }else if(!isGorge){
+      // The R2 adapter owns the optional Key Insights panel. Do not inject
+      // another placeholder into the Results dashboard when data is absent.
       cards.appendChild(create("p","game-outcome-empty",
-        isGorge?
-          "Complete-cohort card insights are not yet available. The previous sample-only card rankings are intentionally hidden until every verified game has been measured.":
-          "Card insights require named card and hand observations from the current published batch."));
+        "Card insights require named card and hand observations from the current published batch."));
     }
     // The regression story belongs after every game/card panel, immediately
     // above the independent turn reviewer.
