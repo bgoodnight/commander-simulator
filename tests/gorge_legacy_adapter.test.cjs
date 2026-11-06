@@ -256,3 +256,29 @@ test("genuine cast records populate the ORIGINAL source statistics",()=>{
   assert.ok(!stats.ranked.played.some(x=>x.name==="Gravecrawler"),
     "Opponent zombie spells must not contaminate the hero ranking");
 });
+
+// Regression: the native writer elides player:0. Off-turn responses must not
+// inherit the player whose turn it is (or pollute that player's statistics).
+test("off-turn omitted native player remains seat zero for casts and mana",()=>{
+  const g=structuredClone(a);
+  g.player_deck="magnus_premium";
+  g.player_seat=1;
+  const t=g.turns.find(t=>t.seat===1&&t.turn>0);
+  assert.ok(t,"fixture contains a turn owned by native seat one");
+  const seq=Math.max(...t.events.map(e=>e.seq));
+  t.events.push(
+    {seq:seq+1,kind:"cast",kind_id:11,obj:999991,card_name:"Exclude"},
+    {seq:seq+2,kind:"mana",kind_id:13,amount:3,counter:"U"}
+  );
+  const actual=adapt.adapt([g],"magnus_premium",hashes).runs[0];
+  const baseline=adapt.adapt([magnusA],"magnus_premium",hashes).runs[0];
+  const cast=actual.ui_observations.flatMap(o=>o.actions).find(x=>x.source_seq===seq+1);
+  assert.ok(cast,"off-turn response appears in the recorded replay");
+  assert.equal(cast.card,"Exclude");
+  assert.equal(cast.seat,3,"native seat zero maps to opponent seat three");
+  assert.equal(cast.native_turn_seat,0,"native seat one still owns the turn");
+  const total=run=>run.ui_observations.reduce(
+    (n,o)=>n+(o.mana_produced_by_color.U||0),0);
+  assert.equal(total(actual),total(baseline),
+    "opponent blue mana may not be counted as the hero's");
+});
