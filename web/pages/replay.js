@@ -397,7 +397,7 @@
       // Token identity comes from the recorded game state, never from a same-name
       // regular card. No invented token art: a framed placeholder is intentional.
       const frame=el("div","replay-token-frame");
-      const header=el("span","replay-token-header","TOKEN CREATURE");
+      const header=el("span","replay-token-header","TOKEN");
       const motif=el("span","replay-token-motif","◇");
       const title=el("span","replay-token-identity",item.name||"Unknown token");
       frame.appendChild(header);frame.appendChild(motif);frame.appendChild(title);
