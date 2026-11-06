@@ -2488,6 +2488,18 @@
     }
     return report;
   }
+  // Allow a paginated data source to populate the exact original turn
+  // reviewer without rendering a misleading single-game outcomes dashboard.
+  function renderTurnReviewer(root,batches,options={}){
+    const report=model(batches,options.deckKey,options.deckHash);
+    root.replaceChildren();
+    if(!report.groups.length){
+      root.appendChild(create("span","micro","No recorded turns."));
+      return report;
+    }
+    turnReviewer(root,report.groups,options);
+    return report;
+  }
   return {FORMAT,STATES,validate,model,lifeTrend,matchupRows,matchupMetrics,
-    knockoutRound,opponentDecks,observationCardStats,turnSpotlight,render};
+    knockoutRound,opponentDecks,observationCardStats,turnSpotlight,render,renderTurnReviewer};
 });
