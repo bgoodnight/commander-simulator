@@ -224,7 +224,7 @@ def build(output, *, catalog_path=SHARED_CATALOG, name_catalog_path=DEFAULT_NAME
     # attractive Deck Summary by default; results.html retains the
     # interpretive observation archive and editor.html the deck workshop.
     # The same source shell selects content by pathname without a server.
-    for filename in ("app.js", "results_insights.js", "brackets.js", "replay.js", "display_names.js", "gorge_legacy_adapter.js", "gorge_replay.js", "r2_live.js", "insight_explorer.js", "insight_catalog.js", "game_outcomes.js", "style.css", "game-changers.json"):
+    for filename in ("app.js", "results_insights.js", "brackets.js", "replay.js", "display_names.js", "gorge_legacy_adapter.js", "gorge_replay.js", "r2_live.js", "r2_original_results.js", "insight_explorer.js", "insight_catalog.js", "game_outcomes.js", "style.css", "game-changers.json"):
         shutil.copy2(static / filename, output / filename)
     # Cache-bust every local JS/CSS asset from its actual content hash.
     # GitHub Pages and browsers may cache a script despite a fresh HTML
@@ -232,7 +232,7 @@ def build(output, *, catalog_path=SHARED_CATALOG, name_catalog_path=DEFAULT_NAME
     # Render the *same* versioned shell on all four static routes.
     shell=(static / "index.html").read_text(encoding="utf-8")
     for filename in ("app.js","results_insights.js","brackets.js","replay.js",
-                     "display_names_data.js","display_names.js","gorge_legacy_adapter.js","gorge_replay.js","r2_live.js","insight_explorer.js","insight_catalog.js","game_outcomes.js",
+                     "display_names_data.js","display_names.js","gorge_legacy_adapter.js","gorge_replay.js","r2_live.js","r2_original_results.js","insight_explorer.js","insight_catalog.js","game_outcomes.js",
                      "style.css"):
         digest=hashlib.sha256((output / filename).read_bytes()).hexdigest()[:12]
         pattern=r'(?P<asset>\./'+re.escape(filename)+r')(?:\?v=[^"]*)?(?=")'

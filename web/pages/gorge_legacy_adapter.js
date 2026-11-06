@@ -319,6 +319,7 @@
   function render(games,activeSeed,deckKey){
     if(typeof document==="undefined")return;
     const key=deckKey||window.__deckLabActiveKey;
+    if(window.R2OriginalResults?.ownsRenderedDeck?.(key))return;
     const selected=window.GorgeDeckLabSelectedDeck?.(key);
     const outcomes=$("game-outcome-results");
     const status=$("game-outcome-status");

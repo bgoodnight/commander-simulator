@@ -72,7 +72,7 @@ class StaticPagesTests(unittest.TestCase):
     def test_only_allowlisted_site_data_and_no_workspace_are_exported(self):
         self.run_build()
         permitted={"index.html","summary.html","results.html","editor.html",
-                   "app.js","results_insights.js","brackets.js","replay.js","display_names.js","display_names_data.js","gorge_legacy_adapter.js","gorge_replay.js","r2_live.js","insight_explorer.js","insight_catalog.js","game_outcomes.js","style.css","game-changers.json","decks.json",
+                   "app.js","results_insights.js","brackets.js","replay.js","display_names.js","display_names_data.js","gorge_legacy_adapter.js","gorge_replay.js","r2_live.js","r2_original_results.js","insight_explorer.js","insight_catalog.js","game_outcomes.js","style.css","game-changers.json","decks.json",
                    "observations.json","names.json","bounded-batches.json","build-manifest.json",".nojekyll"}
         published=json.loads((self.destination/"bounded-batches.json").read_text())
         permitted.update(f"bounded-runs-{key}.json" for key in published["decks"])

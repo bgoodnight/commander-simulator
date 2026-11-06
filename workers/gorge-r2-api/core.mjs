@@ -160,7 +160,9 @@ export function uiOverview(summary) {
 export function originalUiBatch(rows, projection, deck) {
   if(!Array.isArray(rows)||!rows.length ||
      !projection||projection.schema!=="gorge-r2-original-ui-projection-v1" ||
-     projection.deck!==deck||!Array.isArray(projection.games))
+     projection.deck!==deck||!Array.isArray(projection.games)||
+     !/^[a-f0-9]{64}$/.test(projection.ui_deck_sha256||"")||
+     !/^[a-f0-9]{64}$/.test(projection.source_deck_sha256||""))
     throw Error("invalid_original_ui_projection");
   const indexed=new Map();
   const revisions=new Set();
@@ -173,6 +175,8 @@ export function originalUiBatch(rows, projection, deck) {
     revisions.add(row.player_deck_sha256);
   }
   if(revisions.size!==1)throw Error("mixed_original_ui_deck_revisions");
+  if(!revisions.has(projection.source_deck_sha256))
+    throw Error("original_ui_native_deck_hash_mismatch");
   if(projection.games.length!==indexed.size)throw Error("incomplete_original_ui_projection");
   const runs=[];
   const matched=new Set();
@@ -229,7 +233,7 @@ export function originalUiBatch(rows, projection, deck) {
   }));
   return {
     format:"commander-gorge-outcomes-v1",schema_version:1,engine:"gorge",
-    deck_key:deck,deck_sha256:[...revisions][0],
+    deck_key:deck,deck_sha256:projection.ui_deck_sha256,
     scenario:"four_real_commander_decks",pilot_style:"gorge_bot",
     provisional_mode:"not_applicable",
     opponent_fidelity:"gorge_native_full_100_card_decks",
