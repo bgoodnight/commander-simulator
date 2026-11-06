@@ -1,67 +1,72 @@
-# Cloudflare Access community accounts and deck visibility (draft, NOT deployed)
+# Cloudflare Access + immutable community deck snapshots (draft, undeployed)
 
-## Design
-The isolated Worker in `workers/community-access/` verifies Cloudflare Access identity
-and uses a future isolated D1 `COMMUNITY_DB` binding for persistent per-deck visibility.
-No password handling, deployment, simulation dispatch or current R2/Pages alterations.
+## Decision
+Personal deck = editable, owned, protected source of truth. Publishing makes a **distinct
+immutable snapshot** with a content SHA-256, stable publication ID, and revision ID.
+The personal source is never made public or modified by publication. Cloudflare Access
+limits community browsing to invited authenticated accounts.
 
-### Visibility semantics
-- `private` (default for newly created personal decks): only the deck owner can list/read/edit.
-- `community`: visible to **all authenticated invited members** of the Access app,
-  not publicly accessible without sign-in. The deck owner alone controls this toggle.
-- The current Magnus and Mortarion entries are **initial database migration seeds**,
-  each shared with invited members and owned by the special `site-owner` role.
-  These are metadata, not newly stored decklist contents.
-- Visibility is a database field, not a hardcoded deck-name allowlist. A new public
-  deck needs no code changes, just an owner-controlled visibility update.
+Actions:
+1. **Publish snapshot** copies verified deck content to an immutable, privately held
+   object accessible only through an authenticated Worker. Publishing must only
+   succeed after byte-for-byte content hash readback and a D1 transaction.
+2. **Replace snapshot** publishes a NEW immutable revision, advances the listing
+   pointer atomically, and leaves the prior revision available by exact ID for
+   reproducible simulations. Do not mutate the original revision.
+3. **Remove from Community** marks listing `unlisted` immediately; removes it from
+   discovery and blocks new ordinary community reads. The underlying immutable
+   revisions remain in protected archival storage for simulation audit references.
+   Owner-held copies and previously downloaded decks cannot be retracted.
+4. **Copy to My Decks** creates a separate new private deck owned by the copier,
+   with recorded `source_publication_revision_id`; later replacements/unpublishes
+   cannot change that copy. This action is future work, not implemented.
 
-### API endpoints
-- `GET /v1/account/me`: signed-in identity, owner/member permissions.
-- `GET /v1/decks`: shared metadata plus caller-owned private deck metadata, with `can_edit`.
-- `GET /v1/decks/community`: shared metadata only.
-- `PATCH /v1/decks/:id/visibility`: exact body `{"visibility":"private"}` or
-  `{"visibility":"community"}`; identity-derived owner permission, parameter binding,
-  fail-closed on missing database. Requires Access-authenticated session.
-- `POST /v1/simulations`: still intentionally nonfunctional (owner receives 501,
-  other users 403). No simulation workload can be started.
+## First Magnus and Mortarion publications
+They are intended as the first two community snapshots, but must **not** be
+hardcoded or seeded as fake snapshot metadata. First import the real decklists,
+hash content, verify storage, then create listings pointing to those revisions.
+The public GitHub Pages files remain public until content is migrated.
 
-The unmounted `web/pages/deck_visibility.js` exports `mountDeckVisibility(root)` for
-the eventual signed-in deck list. It displays owner-only Public-to-members toggles,
-calls PATCH, and restores the checkbox after errors. It is not referenced by the live UI.
+## Implemented now
+- Standalone undeployed Cloudflare Access Worker; login identity from verified
+  Access context only; owner/member roles; fail closed without credentials or D1.
+- Read-only `GET /v1/publications` (alias `GET /v1/decks/community`) returns
+  the current listed revision metadata from D1, not private personal decks.
+- `workers/community-access/publications.mjs` pure ownership and lifecycle
+  planning helpers; tests for publication, replacement, unpublication and auth.
+- D1 **new-database-only** migration defining private decks, publication listings
+  and immutable publication revisions.
+- Unmounted `web/pages/deck_visibility.js` now offers `Publish snapshot`
+  rather than a reversible public/private checkbox; no production UI changes.
+- Existing PATCH visibility route retired (410). Planned publish/replace/unpublish
+  routes return 501 and do not write data. Simulations likewise remain disabled.
 
-## Next staging steps (not performed)
-1. Configure a **separate Cloudflare Access protected Worker** for all routes and
-   hostnames. Limit policy to specifically invited emails. Do not allow public bypass.
-2. Create isolated development D1 and apply
-   `workers/community-access/migrations/0001_deck_visibility.sql`.
-   Bind it as `COMMUNITY_DB` to this isolated Worker only.
-3. Set `ACCESS_OWNER_EMAILS` privately and enable `ENABLE_COMMUNITY_ACCESS=true`
-   only after verified Access enforcement. Do not commit real account data.
-4. Run `node --test workers/community-access/permissions.test.mjs` and
-   staging integration tests for unauthorized/owner/friend requests, logout/revocation,
-   persistence across Worker restarts, two-account visibility changes and browser cookies.
-5. Integrate `mountDeckVisibility` into the actual signed-in Deck Editor only after
-   the current R2 UI stabilization and branch reconciliation.
+## Not yet implemented
+- Real publication writes, content storage, R2 hash verification, D1 transactions,
+  account-owned deck CRUD, personal-deck content delivery, community snapshot
+  content retrieval, copy-to-my-decks, logged-in UI, or Cloudflare configuration.
+- Access revocation, origin/CSRF and rollback tests on a deployed staging Worker.
+- Versioned simulation inputs pinned to `publication_revision_id` and content SHA.
 
-## Critical security boundaries
-**The toggle does not make existing GitHub Pages decklists private.**
-Files already checked into this public repository or served as static Pages assets
-remain accessible at their original URLs even when database metadata says private.
-Before offering a real private deck feature, migrate decklist contents to protected
-R2 or D1 storage and enforce the visibility filter for every retrieval and mutation.
-Never treat a hidden UI button as authorization.
+## Important production conditions
+A hidden UI toggle cannot secure data. A deck stored under a public GitHub Pages
+URL remains public even if a private database record exists; migrate the content
+before offering private decks. Keep public discovery distinct from private historical
+revision resolution: unpublishing must stop new public reads but not invalidate
+restricted internal simulation evidence. Never expose content keys or private
+archive endpoints to normal community users.
 
-No Access account is created by this code. Private deck ownership uses the verified
-Access identity ID (`access:<id>`) rather than a mutable email; current site-owned
-catalog seeds are editable only by the explicitly configured owner role.
-Design separate idempotent deck migration and authenticated CRUD before onboarding
-private deck records. The frontend must not download private contents in its public
-static assets.
+All publishing/mutation endpoints must check Access identity, verify exact ownership
+server-side, enforce an origin/CSRF policy, be idempotent, rate limited, audited,
+and transactionally update current revision pointers only after object readback.
 
-Review CORS, CSRF/session mechanics, write rate limits, audit records, and abuse
-controls before connecting real signed-in browser mutations or allowing workflows.
-Prefer same-origin authenticated deployment or deliberate CSRF protections.
-The current branch is **prototype only**, with Access and D1 unset and
-`ENABLE_COMMUNITY_ACCESS=false`.
+Suggested future API shapes:
+- POST /v1/decks/:id/publications (publish)
+- POST /v1/publications/:id/replace (new revision)
+- POST /v1/publications/:id/unpublish (remove from discovery)
+- POST /v1/publications/:id/copy (private copy)
+- GET /v1/publications (listed snapshots only)
+- GET /v1/publications/:id/revisions/:revision_id (owner/authorized use only)
 
-Reference: https://developers.cloudflare.com/workers/configuration/cloudflare-access/
+The existing separate development branch is deliberately NOT integrated with
+the R2 Results UI or production Worker.
