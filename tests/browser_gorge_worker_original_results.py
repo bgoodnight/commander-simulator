@@ -64,6 +64,26 @@ def test():
                 # Card findings must state their actual recorded-game coverage.
                 assert page.evaluate("document.body.dataset.r2ResultsState")=="ready"
                 assert page.locator("#key-insights-panel").is_visible()
+                assert page.evaluate("""() => {
+                  const results=document.getElementById('long-game-panel');
+                  const insights=document.getElementById('key-insights-panel');
+                  const reviewer=document.getElementById('turn-reviewer-panel');
+                  return Boolean(results.compareDocumentPosition(insights)&Node.DOCUMENT_POSITION_FOLLOWING)
+                    && Boolean(insights.compareDocumentPosition(reviewer)&Node.DOCUMENT_POSITION_FOLLOWING);
+                }"""), "Results, Key Insights, Turn Reviewer must appear in that order"
+                # Named-card insight headings use the shared mana-symbol component,
+                # rather than rendering the raw {W}/{U}/{B}/{R}/{G} text.
+                mana=page.evaluate("""() => [...document.querySelectorAll(
+                    '#key-insights-panel .insight-featured-panel')].map(panel=>{
+                      const name=panel.querySelector('.insight-head-name')?.textContent;
+                      const printed=window.GorgeDeckLabCardInfo?.(name)?.mana_cost||'';
+                      const symbols=panel.querySelectorAll('.insight-head-mana img.mana-symbol');
+                      return {name,printed,count:symbols.length,
+                        fallback:panel.querySelector('.insight-head-mana')?.textContent||''};
+                    })""")
+                for item in mana:
+                    if item["printed"] and "{" in item["printed"]:
+                        assert item["count"]>0 or item["printed"] in item["fallback"],item
                 insights=page.locator("#key-insights-panel").inner_text()
                 assert ("approved games with complete recorded card observations" in insights
                         or "No named card observations are available" in insights)
