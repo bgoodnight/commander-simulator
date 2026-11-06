@@ -57,6 +57,12 @@ jobs:
           python -m tools.gorge_landmark_features --native-root "$RUNNER_TEMP/source/extracted/results" \
             --hero "$HERO" --output "$RUNNER_TEMP/landmarks.jsonl"
           python -m tools.gorge_native_schema_audit --native-root "$RUNNER_TEMP/source/extracted/results" --hero "$HERO" --output "$RUNNER_TEMP/native-schema-audit.json"
+          python - "$RUNNER_TEMP/native-schema-audit.json" <<'PY'
+          import json,sys
+          d=json.load(open(sys.argv[1]))
+          print("SOURCE_SCHEMA_FIELDS",json.dumps({k:sorted(v) for k,v in d["fields"].items()},sort_keys=True))
+          print("SOURCE_EVENT_KINDS",json.dumps(sorted(d["event_kinds"],key=int)))
+          PY
           python -m tools.gorge_event_features --native-root "$RUNNER_TEMP/source/extracted/results" \
             --hero "$HERO" --output "$RUNNER_TEMP/event-features.jsonl"
           python tools/gorge_hero_ebm_prototype.py --source "$RUNNER_TEMP/source/extracted/results" --hero "$HERO" --output "$RUNNER_TEMP/private-analytics"
