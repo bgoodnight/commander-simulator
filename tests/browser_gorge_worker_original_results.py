@@ -128,21 +128,23 @@ def test_materialized():
                 page.route(API+"/v1/ui/game?*",response)
                 page.goto(f"http://127.0.0.1:{server.server_port}/results.html?deck={DECK}&materializedResults=1",
                           wait_until="domcontentloaded")
-                page.get_by_text("201 games · 50 wins · 151 losses",exact=False).wait_for(timeout=60000)
-                assert page.get_by_text("Fixture Card · 90 games · 100 recorded events").is_visible()
-                assert page.get_by_text("Page 1 of 9",exact=False).is_visible()
+                page.get_by_text("201 games · complete cohort",exact=False).wait_for(timeout=60000)
+                assert page.get_by_text("Fixture Card",exact=False).first.is_visible()
+                picker=page.locator('select[aria-label="Choose recorded game"]:visible')
+                page.locator('select[aria-label="Choose recorded game"] option[value="fixture-8-0"]').wait_for(state="attached",timeout=60000)
+                assert picker.count()==1
+                assert picker.locator("option").count()==202
+                assert page.get_by_role("button",name="Next 25").count()==0
                 assert not any(path.endswith("/game") for path,_ in calls)
-                page.get_by_role("button",name="Next 25").click()
-                page.get_by_text("Page 2 of 9",exact=False).wait_for(state="visible",timeout=60000)
                 # Preserve a real JS stack if replay rendering is rejected.
                 page.evaluate("""() => {
-                  const original=window.DeckGameOutcomes.render;
-                  window.DeckGameOutcomes.render=(...args)=>{
+                  const original=window.DeckGameOutcomes.renderTurnReviewer;
+                  window.DeckGameOutcomes.renderTurnReviewer=(...args)=>{
                     try{return original(...args);}
                     catch(err){window.__sourceReplayError=String(err.stack||err);throw err;}
                   };
                 }""")
-                page.locator(".game-outcome-game-select").first.click()
+                picker.select_option("fixture-1-0")
                 try:
                     page.get_by_text("Selected game replay · individual game",exact=False).wait_for(timeout=15000)
                 except Exception:
@@ -151,8 +153,11 @@ def test_materialized():
                     print("Replay renderer JS stack:",page.evaluate("window.__sourceReplayError || null"))
                     raise
                 assert page.locator("#turn-reviewer-results .insight-turn-row").count()>0
-                assert page.get_by_text("201 games · 50 wins · 151 losses",exact=False).is_visible()
-                assert page.get_by_text("Fixture Card · 90 games · 100 recorded events").is_visible()
+                assert page.get_by_text("201 games · complete cohort",exact=False).is_visible()
+                assert page.get_by_text("Fixture Card",exact=False).first.is_visible()
+                # A selected replay must not render misleading one-game
+                # outcome statistics alongside the full-cohort dashboard.
+                assert page.locator("#game-outcome-results .game-outcome-hero-frame:visible").count()==1
                 assert any(path.endswith("/game") and q.get("page")==["1"] for path,q in calls)
                 page.screenshot(path=str(OUT/f"{DECK}-{mode}-materialized-results.png"),full_page=True)
                 page.close()
