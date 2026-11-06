@@ -120,23 +120,29 @@
       lookupRecordedCard:window.GorgeDeckLabCardInfo,
       onOpenRecordedCard:name=>window.GorgeDeckLabOpenCard?.(name)
     });
-    const navigation=create("div");
-    navigation.className="r2-game-navigation";
-    const list=create("div");
-    list.className="r2-game-list";
-    const replayHeading=create("h4","Select a game to review its recorded turns");
+    const picker=create("div");picker.id="r2-game-picker";
+    const gameSelect=create("select");gameSelect.className="game-outcome-scenario-select";
+    gameSelect.setAttribute("aria-label","Choose recorded game");
+    const placeholder=create("option","Choose a game to review");placeholder.value="";
+    gameSelect.appendChild(placeholder);
+    const replayHeading=create("p","Loading games…");replayHeading.className="micro";
+    picker.append(gameSelect,replayHeading);
+    $("r2-game-picker")?.remove();
+    reviewer.replaceChildren();
+    reviewer.before(picker);
     window.DeckGameOutcomes.renderCohortOverview(overview,summary,{
       commanderName:selected.commander,commanderArt:selected.art
     });
-    root.replaceChildren(overview,detailStats,insightSection,navigation,list,replayHeading);
-    let page=0;
+    root.replaceChildren(overview,detailStats,insightSection);
+    let selectedRequest=0;
     const readJson=async(url)=>{
       const res=await fetch(url,{cache:"no-store"});
       if(!res.ok)throw Error("R2 Results HTTP "+res.status);
       return res.json();
     };
     const live=()=>ticket===generation&&key===window.__deckLabActiveKey;
-    const showGame=async(gameId,pageNumber)=>{
+    const showGame=async(gameId,pageNumber,label)=>{
+      const request=++selectedRequest;
       replayHeading.textContent="Loading selected game…";
       try{
         const url=new URL("/v1/ui/game",api);
@@ -144,7 +150,7 @@
         url.searchParams.set("page",String(pageNumber));
         url.searchParams.set("game_id",gameId);
         const detail=await readJson(url);
-        if(!live())return;
+        if(!live()||request!==selectedRequest)return;
         if(detail.schema!=="gorge-r2-materialized-response-v1" ||
            detail.version!==catalog.version || detail.deck!==key ||
            detail.game?.game_id!==gameId)throw Error("Replay version mismatch");
@@ -164,16 +170,18 @@
           deckCardNames:selected.cardNames,
           renderMana:value=>window.GorgeDeckLabMana?.(value),
           onOpenRecordedCard:name=>window.GorgeDeckLabOpenCard?.(name),
+          hideGameSelector:true,displayGameLabel:label,
           fullCardInsights:verifiedInsights,
           fullCohortGames:verifiedInsightCount
         });
       }catch(err){
-        if(live())replayHeading.textContent="Replay unavailable: "+String(err.message||err);
+        if(live()&&request===selectedRequest)replayHeading.textContent="Replay unavailable: "+String(err.message||err);
       }
     };
-    const showPage=async(number)=>{
-      navigation.textContent="Loading games…";
+    const loadGames=async()=>{
       try{
+        const seen=new Set();
+        for(let number=0;number<catalog.page_count;number++){
         const url=new URL("/v1/ui/page",api);
         url.searchParams.set("deck",key);
         url.searchParams.set("page",String(number));
@@ -184,38 +192,36 @@
            result.page?.page!==number ||result.page?.total!==summary.n ||
            !Array.isArray(result.page.games) ||
            result.page.games.length>25)throw Error("Game page version mismatch");
-        page=number;
-        const prev=create("button","Previous 25");
-        prev.type="button";prev.disabled=page===0;
-        prev.addEventListener("click",()=>showPage(page-1));
-        const next=create("button","Next 25");
-        next.type="button";next.disabled=!result.page.has_more;
-        next.addEventListener("click",()=>showPage(page+1));
-        const counter=create("span"," Page "+(page+1)+" of "+catalog.page_count+" ");
-        navigation.replaceChildren(prev,counter,next);
-        const rows=result.page.games.map(g=>{
-          const button=create("button",g.result.toUpperCase()+" · "+
-            (g.turns??"?")+" turns · "+g.opponent_decks.join(", "));
-          button.type="button";button.className="game-outcome-game-select";
-          button.addEventListener("click",()=>showGame(g.game_id,page));
-          return button;
-        });
-        list.replaceChildren(...rows);
-        reviewer.replaceChildren();
-        replayHeading.textContent="Select a game to review its recorded turns";
+        for(const g of result.page.games){
+          if(typeof g.game_id!=="string"||seen.has(g.game_id)||!Array.isArray(g.opponent_decks))
+            throw Error("Invalid or duplicate game metadata");
+          seen.add(g.game_id);
+          const label="Game "+seen.size+" · "+(g.result==="win"?"Win":"Loss")+" · "+(g.turns??"?")+
+            " turns · "+g.opponent_decks.map(d=>window.DeckDisplayNames?.deck(d)||d).join(", ");
+          const option=create("option",label);option.value=g.game_id;option.dataset.page=String(number);
+          gameSelect.appendChild(option);
+        }
+        if(number===0)replayHeading.textContent="Choose a game to review.";
+        }
+        if(seen.size!==summary.n)throw Error("Incomplete game index");
       }catch(err){
-        if(live())navigation.textContent="Game page unavailable: "+String(err.message||err);
+        if(live())replayHeading.textContent="Some games could not be loaded: "+String(err.message||err);
       }
     };
+    gameSelect.addEventListener("change",()=>{
+      const option=gameSelect.selectedOptions[0];
+      if(option?.value)showGame(option.value,Number(option.dataset.page),option.textContent);
+    });
     renderedDeck=key;
     const status=$("game-outcome-status");
-    if(status)status.textContent=summary.n+" approved games · complete-cohort summary · lazy replays";
-    await showPage(0);
+    if(status)status.textContent=summary.n+" approved games · complete-cohort summary";
+    void loadGames();
     return true;
   }
 
   async function refresh(key=window.__deckLabActiveKey){
     const ticket=++generation;
+    $("r2-game-picker")?.remove();
     renderedDeck=null;
     verifiedInsights=null;verifiedInsightCount=null;
     const selected=window.GorgeDeckLabSelectedDeck?.(key);
