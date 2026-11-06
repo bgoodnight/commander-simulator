@@ -56,6 +56,12 @@ REPLACEMENT='''	if objectArm {
 	}
 	return true, seats[0], 0
 }'''
+EFFECT_TEST_OLD='''\tif n := notesContaining(h, "planeswalker arm is not implemented"); n != 1 {
+\t\tt.Fatalf("%d planeswalker-arm notes, want exactly 1; log=%+v", n, h.log)
+\t}'''
+EFFECT_TEST_NEW='''\tif n := notesContaining(h, "planeswalker arm is not implemented"); n != 0 {
+\t\tt.Fatalf("%d unsupported planeswalker-arm notes; named player/walker choice must be modeled; log=%+v", n, h.log)
+\t}'''
 TEST_OLD='''	if planeNotes != 1 {
 		t.Fatalf("%d planeswalker-arm notes, want exactly 1; log=%+v", planeNotes, e.L.Events)
 	}'''
@@ -76,8 +82,11 @@ def patch(root):
     a=replace_exact(a,IMPORT,IMPORTED)
     a=replace_exact(a,TARGET,REPLACEMENT)
     b=replace_exact(b,TEST_OLD,TEST_NEW)
+    effect_test=root/"engine/effects/token_attacking_selectors_test.go"
+    c=replace_exact(effect_test.read_text(),EFFECT_TEST_OLD,EFFECT_TEST_NEW)
     source.write_text(a)
     test.write_text(b)
+    effect_test.write_text(c)
     print("Enabled named-opponent player/planeswalker token defender choice")
 
 if __name__=="__main__":
