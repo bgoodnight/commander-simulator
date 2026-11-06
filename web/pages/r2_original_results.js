@@ -72,6 +72,7 @@
     $("key-insights-empty").hidden=true;
     window.DeckGameOutcomes.renderCohortInsights(grid,report,total,{
       lookupRecordedCard:window.GorgeDeckLabCardInfo,
+      renderMana:value=>window.GorgeDeckLabMana?.(value),
       onOpenRecordedCard:name=>window.GorgeDeckLabOpenCard?.(name)
     });
     // Core section visibility is tied to result readiness, not card ranking count.
@@ -346,6 +347,7 @@
             deckKey:key,deckHash:selected.sha,commanderName:selected.commander,
             lookupRecordedCard:window.GorgeDeckLabCardInfo,
             deckCardNames:selected.cardNames,
+            renderMana:value=>window.GorgeDeckLabMana?.(value),
             onOpenRecordedCard:name=>window.GorgeDeckLabOpenCard?.(name)
           });
       }
