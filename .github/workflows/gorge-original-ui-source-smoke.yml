@@ -7,6 +7,11 @@ on:
       - "tools/gorge_ui_export.py"
       - "web/pages/gorge_legacy_adapter.js"
       - "web/pages/game_outcomes.js"
+      - "web/pages/r2_original_results.js"
+      - "web/pages/app.js"
+      - "web/pages/index.html"
+      - "tools/build_pages_deck_lab.py"
+      - "tests/browser_gorge_worker_original_results.py"
       - "workers/gorge-r2-api/**"
       - ".github/workflows/gorge-original-ui-source-smoke.yml"
   workflow_dispatch:
@@ -95,6 +100,16 @@ jobs:
             schema:"gorge-r2-original-ui-batch-response-v1",
             population:"approved_current_decisive_only",deck,status:"ready",batch})+"\n");
           JS
+      - name: Verify rebuilt original Results visuals in real Chromium
+        env:
+          BROWSER_SITE_DIR: ${{ runner.temp }}/built-site
+          BROWSER_ARTIFACT_DIR: ${{ runner.temp }}/ui-projection/screenshots
+          ORIGINAL_UI_BATCH: ${{ runner.temp }}/ui-projection/ui-batch.json
+        run: |
+          python -m pip install "playwright==1.56.0"
+          python -m playwright install --with-deps chromium
+          python tools/build_pages_deck_lab.py --output "$BROWSER_SITE_DIR"
+          python tests/browser_gorge_worker_original_results.py
       - uses: actions/upload-artifact@v4
         if: always()
         with:
