@@ -178,7 +178,7 @@ test("approved public projection produces an original Results-compatible batch",
       completed_rounds:1,requested_rounds:1}
   };
   const source={schema:"gorge-r2-original-ui-projection-v1",deck:"mortarion_current",
-    games:[{game_id:row.game_id,chain:row.chain,run}]};
+    games:[{game_id:row.game_id,chain:row.chain,source_sha256:row.source_sha256,run}]};
   const batch=originalUiBatch([row],source,"mortarion_current");
   assert.equal(batch.format,"commander-gorge-outcomes-v1");
   assert.equal(batch.schema_version,1);
