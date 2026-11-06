@@ -74,6 +74,7 @@
        summary.n!==catalog.total)throw Error("Materialized summary mismatch");
     const root=$("game-outcome-results"),reviewer=$("turn-reviewer-results");
     if(!root)return true;
+    document.body.classList.add("r2-original-results-active");
     for(const id of ["simulation-snapshot","key-insights-panel",
                       "development-panel","archive-observation-details",
                       "opponent-replay-panel"]){
@@ -263,6 +264,7 @@
         throw Error("Original Results renderer rejected Worker batch");
       const root=$("game-outcome-results"),reviewer=$("turn-reviewer-results");
       if(!root)return;
+      document.body.classList.add("r2-original-results-active");
       const panel=$("turn-reviewer-panel");
       if(panel)panel.hidden=false;
       for(const id of ["simulation-snapshot","key-insights-panel",
