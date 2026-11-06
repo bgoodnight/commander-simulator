@@ -1,0 +1,11 @@
+# Separate public request intake: NOT deployed. Only enable after Turnstile
+# challenge, Cloudflare WAF rate limits, origin-host verification and D1 setup.
+name = "commander-invitation-intake-dev"
+main = "index.mjs"
+compatibility_date = "2026-11-06"
+workers_dev = true
+[vars]
+ENABLE_INVITATION_INTAKE = "false"
+# REQUEST_FORM_ORIGIN and REQUEST_FORM_HOSTNAME: configured at staging.
+# REQUEST_DB: isolated D1 binding using 0001 + 0002 migrations.
+# TURNSTILE_SECRET_KEY: secret, never commit.
