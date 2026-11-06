@@ -3,6 +3,7 @@ import hashlib
 import json
 import tempfile
 import unittest
+import shutil
 from pathlib import Path
 
 try:
@@ -15,6 +16,7 @@ from tools.gorge_cohort_eligibility import fingerprint
 from tools.gorge_r2_materialized_results import project
 from tools.gorge_card_insights import KINDS
 from tools.gorge_r2_materialized_rollback import verified_target, guarded_rollback
+from tools.gorge_r2_source_inventory import validate_inventory
 
 
 @unittest.skipIf(pq is None, "pyarrow is required")
@@ -253,6 +255,65 @@ class MaterializedResultsTests(unittest.TestCase):
         obsolete.write_text(self.registry.read_text() + "\n")
         with self.assertRaisesRegex(ValueError, "no longer current"):
             verified_target(self.root / "built", obsolete, version)
+
+
+    def test_reviewed_inventory_requires_every_batch_and_approved_deck(self):
+        registry = json.loads(self.registry.read_text())
+        approved = json.loads(Path("data/gorge_r2_source_inventory_v1.json").read_text())
+        expected = validate_inventory(approved, registry, ["42143344243-1"])
+        self.assertEqual(len(expected), 2)
+        self.assertEqual({x["deck"] for x in expected},
+                         {"magnus_premium", "mortarion_current"})
+        with self.assertRaisesRegex(ValueError, "Requested batches differ"):
+            validate_inventory(approved, registry, ["42143344243-1", "99999-1"])
+        bad = json.loads(json.dumps(approved))
+        bad["batches"][0]["shards"].append(
+            {"deck": "unapproved_deck", "shard": 9, "games": 1})
+        with self.assertRaisesRegex(ValueError, "lacks approved current cohort"):
+            validate_inventory(bad, registry, ["42143344243-1"])
+
+    def test_attested_game_count_rejects_partial_shard_even_when_rehashed(self):
+        self.build(2)
+        with self.assertRaisesRegex(ValueError, "Incomplete attested shard game count"):
+            project(self.root / "source", self.registry, self.root / "built",
+                    expected_shards=[{"batch":"123456-1",
+                                      "deck":"mortarion_current", "shard":"0",
+                                      "games":3}])
+
+    def test_isolated_staging_publish_interrupt_and_rollback_rehearsal(self):
+        # Local object-store rehearsal uses the same immutable version/pointer
+        # contract as R2, but never connects to or mutates production R2.
+        self.build(26)
+        a = self.root / "build-old"
+        old_version = project(self.root / "source", self.registry, a)["version"]
+        self.build(27)
+        b = self.root / "build-new"
+        new_version = project(self.root / "source", self.registry, b)["version"]
+        self.assertNotEqual(old_version, new_version)
+        store = self.root / "staging-object-store"
+        shutil.copytree(a / "versions", store / "versions")
+        shutil.copy2(a / "current.json", store / "current.json")
+        before = (store / "current.json").read_bytes()
+        # A failed/partial upload cannot activate an unpublished manifest.
+        (store / "versions" / new_version).mkdir(parents=True)
+        self.assertEqual((store / "current.json").read_bytes(), before)
+        with self.assertRaises(FileNotFoundError):
+            verified_target(store, self.registry, new_version)
+        shutil.copytree(b / "versions" / new_version,
+                        store / "versions" / new_version, dirs_exist_ok=True)
+        target = verified_target(store, self.registry, new_version)
+        (store / "current.json").write_text(json.dumps(target) + "\n")
+        self.assertEqual(json.loads((store / "current.json").read_text())["version"],
+                         new_version)
+        rollback = verified_target(store, self.registry, old_version)
+        activated = guarded_rollback(
+            json.loads((store / "current.json").read_text()), new_version, rollback)
+        (store / "current.json").write_text(json.dumps(activated) + "\n")
+        self.assertEqual(json.loads((store / "current.json").read_text())["version"],
+                         old_version)
+        # The forward version is still immutable and recoverable.
+        self.assertEqual(verified_target(store, self.registry, new_version),
+                         target)
 
     def test_reject_private_projection_payload(self):
         self.build(1, leak=True)

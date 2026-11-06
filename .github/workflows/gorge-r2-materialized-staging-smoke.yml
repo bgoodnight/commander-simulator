@@ -1,0 +1,134 @@
+name: Rehearse materialized Results publication and rollback in isolated R2 staging
+on:
+  workflow_dispatch:
+    inputs:
+      confirm_staging_only:
+        description: "I confirm only an isolated per-run staging prefix may be modified"
+        type: boolean
+        required: true
+        default: false
+permissions:
+  contents: read
+concurrency:
+  group: gorge-materialized-staging-rehearsal
+  cancel-in-progress: false
+jobs:
+  rehearse:
+    if: inputs.confirm_staging_only == true
+    runs-on: ubuntu-latest
+    timeout-minutes: 90
+    env:
+      ACCOUNT: ${{ secrets.GORGE_R2_ACCOUNT_ID }}
+      ACCESS: ${{ secrets.GORGE_R2_ACCESS_KEY_ID }}
+      SECRET: ${{ secrets.GORGE_R2_SECRET_ACCESS_KEY }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Install pinned Parquet reader
+        run: pip install 'pyarrow==21.0.0'
+      - name: Download source only; validate explicitly approved shard inventory
+        shell: bash
+        run: |
+          set -euo pipefail
+          test -n "$ACCOUNT" && test -n "$ACCESS" && test -n "$SECRET"
+          export AWS_ACCESS_KEY_ID="$ACCESS" AWS_SECRET_ACCESS_KEY="$SECRET" AWS_DEFAULT_REGION=auto
+          endpoint="https://$ACCOUNT.r2.cloudflarestorage.com"
+          mkdir -p "$RUNNER_TEMP/source" "$RUNNER_TEMP/inventory"
+          python - <<'PY'
+          import json,os
+          from pathlib import Path
+          data=json.loads(Path('data/gorge_r2_source_inventory_v1.json').read_text())
+          batches=sorted(b['batch'] for b in data['batches'])
+          Path(os.environ['RUNNER_TEMP'],'inventory','batches.txt').write_text('\n'.join(batches)+'\n')
+          PY
+          while IFS= read -r batch; do
+            aws --endpoint-url "$endpoint" s3 cp \
+              "s3://gorge-simulations/warehouse/v1/$batch/" \
+              "$RUNNER_TEMP/source/$batch/" --recursive --no-progress \
+              --exclude "*" --include "*/manifest.json" \
+              --include "*/games.parquet" --include "*/ui-original.v1.json"
+          done < "$RUNNER_TEMP/inventory/batches.txt"
+          python -m tools.gorge_r2_source_inventory \
+            --inventory data/gorge_r2_source_inventory_v1.json \
+            --registry data/gorge_analytics_cohort_registry_v1.json \
+            --batches-file "$RUNNER_TEMP/inventory/batches.txt" \
+            --out "$RUNNER_TEMP/inventory/shards.json"
+      - name: Materialize complete approved snapshot and earlier staging-only subset
+        shell: bash
+        run: |
+          set -euo pipefail
+          python -m tools.gorge_r2_materialized_results \
+            --source "$RUNNER_TEMP/source" \
+            --registry data/gorge_analytics_cohort_registry_v1.json \
+            --expected-batches-file "$RUNNER_TEMP/inventory/batches.txt" \
+            --expected-shards-file "$RUNNER_TEMP/inventory/shards.json" \
+            --out "$RUNNER_TEMP/complete"
+          mkdir -p "$RUNNER_TEMP/source-old"
+          python - <<'PY'
+          import json,os,shutil
+          from pathlib import Path
+          tmp=Path(os.environ['RUNNER_TEMP'])
+          inventory=json.loads((tmp/'inventory/shards.json').read_text())
+          first=inventory[0]
+          src=tmp/'source'/first['batch']/first['deck']/first['shard']
+          if not src.is_dir(): raise ValueError('Missing rehearsal source shard')
+          dst=tmp/'source-old'/first['batch']/first['deck']/first['shard']
+          shutil.copytree(src,dst)
+          PY
+          # Staging-only predecessor is deliberately limited to one approved shard,
+          # to exercise a genuine version change. Never publish it in production.
+          python -m tools.gorge_r2_materialized_results \
+            --source "$RUNNER_TEMP/source-old" \
+            --registry data/gorge_analytics_cohort_registry_v1.json \
+            --out "$RUNNER_TEMP/previous"
+      - name: Upload and verify two immutable versions; exercise pointer-last rollback
+        shell: bash
+        run: |
+          set -euo pipefail
+          export AWS_ACCESS_KEY_ID="$ACCESS" AWS_SECRET_ACCESS_KEY="$SECRET" AWS_DEFAULT_REGION=auto
+          endpoint="https://$ACCOUNT.r2.cloudflarestorage.com"
+          # Unique staging prefix; never use results/materialized/v1/current.json.
+          prefix="s3://gorge-simulations/results/materialized/staging/$GITHUB_RUN_ID-$GITHUB_RUN_ATTEMPT"
+          old="$(python -c 'import json,os;print(json.load(open(os.environ["RUNNER_TEMP"]+"/previous/current.json"))["version"])')"
+          new="$(python -c 'import json,os;print(json.load(open(os.environ["RUNNER_TEMP"]+"/complete/current.json"))["version"])')"
+          test "$old" != "$new"
+          for stage in previous complete; do
+            if [ "$stage" = previous ]; then version="$old"; else version="$new"; fi
+            aws --endpoint-url "$endpoint" s3 cp \
+              "$RUNNER_TEMP/$stage/versions/$version/" "$prefix/versions/$version/" \
+              --recursive --no-progress
+            mkdir -p "$RUNNER_TEMP/readback/versions/$version"
+            aws --endpoint-url "$endpoint" s3 cp \
+              "$prefix/versions/$version/" "$RUNNER_TEMP/readback/versions/$version/" \
+              --recursive --no-progress
+            diff -qr "$RUNNER_TEMP/$stage/versions/$version" \
+              "$RUNNER_TEMP/readback/versions/$version"
+          done
+          aws --endpoint-url "$endpoint" s3 cp \
+            "$RUNNER_TEMP/previous/current.json" "$prefix/current.json" \
+            --content-type application/json --cache-control no-store --no-progress
+          aws --endpoint-url "$endpoint" s3 cp "$prefix/current.json" \
+            "$RUNNER_TEMP/current-old.json" --no-progress
+          cmp "$RUNNER_TEMP/previous/current.json" "$RUNNER_TEMP/current-old.json"
+          aws --endpoint-url "$endpoint" s3 cp \
+            "$RUNNER_TEMP/complete/current.json" "$prefix/current.json" \
+            --content-type application/json --cache-control no-store --no-progress
+          aws --endpoint-url "$endpoint" s3 cp "$prefix/current.json" \
+            "$RUNNER_TEMP/current-new.json" --no-progress
+          cmp "$RUNNER_TEMP/complete/current.json" "$RUNNER_TEMP/current-new.json"
+          python -m tools.gorge_r2_materialized_rollback \
+            --download "$RUNNER_TEMP/readback" \
+            --registry data/gorge_analytics_cohort_registry_v1.json \
+            --current "$RUNNER_TEMP/current-new.json" \
+            --expected-current "$new" --target-version "$old" \
+            --output "$RUNNER_TEMP/rollback.json"
+          aws --endpoint-url "$endpoint" s3 cp \
+            "$RUNNER_TEMP/rollback.json" "$prefix/current.json" \
+            --content-type application/json --cache-control no-store --no-progress
+          aws --endpoint-url "$endpoint" s3 cp "$prefix/current.json" \
+            "$RUNNER_TEMP/rolled-back.json" --no-progress
+          cmp "$RUNNER_TEMP/rollback.json" "$RUNNER_TEMP/rolled-back.json"
+          echo "SUCCESS: isolated R2 staging publish $old -> $new -> rollback $old" >> "$GITHUB_STEP_SUMMARY"
+          echo "Staging prefix: results/materialized/staging/$GITHUB_RUN_ID-$GITHUB_RUN_ATTEMPT/" >> "$GITHUB_STEP_SUMMARY"

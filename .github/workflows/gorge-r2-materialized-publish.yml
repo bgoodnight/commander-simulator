@@ -17,7 +17,6 @@ concurrency:
   cancel-in-progress: false
 jobs:
   publish:
-    if: github.event_name == 'workflow_dispatch' || github.event.workflow_run.conclusion == 'success'
     runs-on: ubuntu-latest
     timeout-minutes: 90
     env:
@@ -78,6 +77,15 @@ jobs:
               --include "*/games.parquet" --include "*/ui-original.v1.json" \
               --include "*/card-insights.v1.json"
           done < "$RUNNER_TEMP/previous/batch-list.txt"
+      - name: Validate reviewed complete shard inventory before materialization
+        shell: bash
+        run: |
+          set -euo pipefail
+          python -m tools.gorge_r2_source_inventory \\
+            --inventory data/gorge_r2_source_inventory_v1.json \\
+            --registry data/gorge_analytics_cohort_registry_v1.json \\
+            --batches-file "$RUNNER_TEMP/previous/batch-list.txt" \\
+            --out "$RUNNER_TEMP/expected-shards.json"
       - name: Assemble and validate complete immutable snapshot offline
         shell: bash
         run: |
