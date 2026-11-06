@@ -29,6 +29,32 @@ function batch(runs,scenario='mixed',extras={}){
     opponent_fidelity:'abstract_opponent_pressure_not_card_exact',
     outcomes_are_competitive_win_rates:false,runs,...extras};
 }
+test('Gorge tokens use source identity and permanent types for exclusive zones',()=>{
+  const lookup=name=>({
+    'Saheeli, Sublime Artificer':{type_line:'Legendary Planeswalker — Saheeli'},
+    'Baleful Strix':{type_line:'Artifact Creature — Bird'},
+    'Mox Amber':{type_line:'Legendary Artifact'},
+    'Dryad Arbor':{type_line:'Land Creature — Dryad'}
+  })[name]||null;
+  const opts={lookupRecordedCard:lookup,
+    tokenNames:['Experimental Construct'],
+    tokenTypes:{'Experimental Construct':'Token Artifact Creature — Construct'}};
+  assert.equal(Outcomes.tokenInfo('Servo Token').type,'Token Artifact Creature — Servo');
+  assert.equal(Outcomes.battlefieldZone('Servo Token',opts),'Creatures');
+  assert.equal(Outcomes.battlefieldZone('Drake Token',opts),'Creatures');
+  assert.equal(Outcomes.battlefieldZone('Faerie Token',opts),'Creatures');
+  assert.equal(Outcomes.battlefieldZone('Spawn Token',opts),'Creatures');
+  assert.equal(Outcomes.battlefieldZone('Treasure Token',opts),'Artifacts');
+  assert.equal(Outcomes.battlefieldZone('Clue Token',opts),'Artifacts');
+  assert.equal(Outcomes.battlefieldZone('Experimental Construct',opts),'Creatures');
+  assert.equal(Outcomes.battlefieldZone('Saheeli, Sublime Artificer',opts),'Planeswalkers');
+  assert.equal(Outcomes.battlefieldZone('Baleful Strix',opts),'Creatures');
+  assert.equal(Outcomes.battlefieldZone('Dryad Arbor',opts),'Creatures');
+  assert.equal(Outcomes.battlefieldZone('Mox Amber',opts),'Artifacts');
+  assert.equal(Outcomes.battlefieldZone('Unknown Token',opts),'Other permanents');
+  assert.equal(Outcomes.tokenInfo('Experimental Construct',opts).tone,'generic');
+  assert.equal(Outcomes.tokenInfo('Ordinary card',opts),null);
+});
 const runWon=()=>run(0,'win',[
   [40,40,40,40],[36,26,28,29],[32,0,0,0]
 ]);
