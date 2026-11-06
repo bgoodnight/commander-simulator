@@ -1,7 +1,7 @@
 import { parquetReadObjects, parquetMetadataAsync, parquetSchema } from "hyparquet";
 import { compressors } from "hyparquet-compressors";
 import registry from "../../data/gorge_analytics_cohort_registry_v1.json";
-import { aggregate, uiOverview, isApproved, isDecisive, isDiagnosticAuthorized, validateDeck, normalizeRow, approvedGameIndex, approvedGameDetail, approvedEventSegments, approvedEventWindow } from "./core.mjs";
+import { aggregate, uiOverview, originalUiBatch, isApproved, isDecisive, isDiagnosticAuthorized, validateDeck, normalizeRow, approvedGameIndex, approvedGameDetail, approvedEventSegments, approvedEventWindow } from "./core.mjs";
 
 // Read-only Cloudflare Worker. The R2 binding has no credentials in JS or HTML.
 // Never return native logs, intents, event_json, object catalog, or hidden zones.
@@ -92,7 +92,7 @@ async function readGames(bucket,shard,manifest) {
       "cohort_manifest_sha256","engine_commit","rules_patch_sha256",
       "card_corpus_sha256","player_deck_sha256","pilot_version",
       "opponent_panel_sha256","oracle_bulk_sha256","simulation_protocol_sha256",
-      "event_start_row","native_event_count","batch_id"];
+      "event_start_row","native_event_count","batch_id","seed","chain"];
   const rows=(await parquetReadObjects({file,compressors,
     columns:requested.filter(key=>columnsAvailable.has(key))})).map(normalizeRow);
   if(rows.length!==manifest.files["games.parquet"].rows)
@@ -229,6 +229,54 @@ async function getSummary(env,deck,metrics) {
   return {...aggregate(rows,deck),status:rows.length?"ready":"awaiting_cohort_approval",
     raw_shards_seen:matching.length};
 }
+// R2 stores the source-backed original-renderer projection alongside the
+// Parquet shard. It is created by a separate verified native replay exporter.
+// The Worker alone decides which games are approved to enter a public batch.
+async function getOriginalUiBatch(env,deck,metrics) {
+  const {shards,truncated}=await listShards(env.GORGE_R2);
+  if(truncated)throw Error("shard_scan_limit_reached");
+  const matching=shards.filter(shard=>shard.deck===deck);
+  metrics.shards_scanned=matching.length;
+  const unavailable=matching.length?"awaiting_cohort_approval":"no_warehouse_shards";
+  const empty=(status)=>({schema:"gorge-r2-original-ui-batch-response-v1",
+    population:"approved_current_decisive_only",deck,status,batch:null});
+  if(!registry.cohorts.some(c=>c.status==="current"&&c.approved===true))
+    return empty(unavailable);
+  const selected=[], projected=[],fingerprints=new Map();
+  let missingProjection=false;
+  for(const shard of matching) {
+    const manifest=await readManifest(env.GORGE_R2,shard);
+    const games=await readGames(env.GORGE_R2,shard,manifest);
+    const approved=[];
+    for(const game of games)
+      if(await isApproved(game,registry,fingerprints))approved.push(game);
+    if(!approved.length)continue;
+    selected.push(...approved);
+    const key=shard.manifestKey.slice(0,-"manifest.json".length)+"ui-original.v1.json";
+    const object=await env.GORGE_R2.get(key);
+    if(!object) {missingProjection=true;continue;}
+    if(object.size>4*1024*1024)throw Error("oversized_original_ui_projection");
+    const projection=await object.json();
+    if(projection.schema!=="gorge-r2-original-ui-projection-v1"||
+       projection.deck!==deck||projection.source_batch!==shard.batch||
+       String(projection.shard)!==shard.shard||
+       !Array.isArray(projection.games))
+      throw Error("unverified_original_ui_projection");
+    // Never accept rows that are not approved, even when the R2 object
+    // happens to contain experimental or historical game projections.
+    const allowed=new Set(approved.map(g=>g.game_id));
+    if(projection.games.some(g=>!allowed.has(g?.game_id)))
+      throw Error("unapproved_original_ui_projection_game");
+    projected.push(...projection.games);
+  }
+  if(!selected.length)return empty(unavailable);
+  if(selected.length>200)throw Error("original_ui_batch_limit");
+  if(missingProjection)return empty("projection_pending");
+  const batch=originalUiBatch(selected,
+    {schema:"gorge-r2-original-ui-projection-v1",deck,games:projected},deck);
+  return {...empty("ready"),batch};
+}
+
 async function getApprovedGames(env,deck,limit,metrics,gameId=null) {
   const {shards,truncated}=await listShards(env.GORGE_R2);
   const matching=shards.filter(x=>x.deck===deck);
@@ -329,7 +377,7 @@ export default {
       }
     }
     const detailMatch=url.pathname.match(/^\/v1\/games\/([^/]+?)(\/timeline)?$/);
-    if(url.pathname!=="/v1/summary" && url.pathname!=="/v1/ui/overview" && url.pathname!=="/v1/games" && !detailMatch)
+    if(url.pathname!=="/v1/summary" && url.pathname!=="/v1/ui/overview" && url.pathname!=="/v1/ui/batch" && url.pathname!=="/v1/games" && !detailMatch)
       return fail(404,"not_found",started);
     let gameId=null;
     if(detailMatch) {
@@ -353,7 +401,9 @@ export default {
     }
     const metrics={};
     try{
-      const payload=detailMatch?.[2]?await getApprovedTimeline(env,deck,gameId,metrics):
+      const payload=url.pathname==="/v1/ui/batch"?
+        await getOriginalUiBatch(env,deck,metrics):
+        detailMatch?.[2]?await getApprovedTimeline(env,deck,gameId,metrics):
         (url.pathname==="/v1/games" || gameId!==null)?
         await getApprovedGames(env,deck,limit,metrics,gameId):
         await getSummary(env,deck,metrics);

@@ -148,6 +148,98 @@ export function uiOverview(summary) {
   };
 }
 
+/**
+ * Convert independently precomputed, public-only per-game projections into
+ * the EXACT batch envelope used by the original DeckGameOutcomes renderer.
+ * This never attempts to reconstruct missing native turn snapshots from
+ * Parquet, and never accepts a projection for an unapproved source row.
+ *
+ * Projection payload is produced off-request from a verified native recording.
+ * UI-facing fields must be source-backed; hidden hands/objects are forbidden.
+ */
+export function originalUiBatch(rows, projection, deck) {
+  if(!Array.isArray(rows)||!rows.length ||
+     !projection||projection.schema!=="gorge-r2-original-ui-projection-v1" ||
+     projection.deck!==deck||!Array.isArray(projection.games))
+    throw Error("invalid_original_ui_projection");
+  const indexed=new Map();
+  const revisions=new Set();
+  for(const row of rows) {
+    if(!isDecisive(row)||row.deck!==deck||
+       typeof row.game_id!=="string"||indexed.has(row.game_id)||
+       typeof row.player_deck_sha256!=="string"||!row.player_deck_sha256)
+      throw Error("invalid_original_ui_source");
+    indexed.set(row.game_id,row);
+    revisions.add(row.player_deck_sha256);
+  }
+  if(revisions.size!==1)throw Error("mixed_original_ui_deck_revisions");
+  if(projection.games.length!==indexed.size)throw Error("incomplete_original_ui_projection");
+  const runs=[];
+  const matched=new Set();
+  for(const item of projection.games) {
+    if(!item||typeof item.game_id!=="string"||matched.has(item.game_id))
+      throw Error("duplicate_original_ui_game");
+    const row=indexed.get(item.game_id);
+    if(!row||item.chain!==row.chain)throw Error("original_ui_source_mismatch");
+    matched.add(item.game_id);
+    if(item.source_sha256!==row.source_sha256)
+      throw Error("original_ui_source_digest_mismatch");
+    const run=item.run;
+    const allowedRunFields=new Set(["seed","completed_rounds","opening_board_states",
+      "opening_hand","opening_hands_by_seat","opening_hand_count","mulligan",
+      "ui_observations","life_history","opponent_decks","gorge_source","outcome"]);
+    if(!run||Object.keys(run).some(key=>!allowedRunFields.has(key)))
+      throw Error("unexpected_original_ui_run_field");
+    if(!Number.isInteger(run.seed)||run.seed!==row.seed||
+       !Number.isInteger(run.completed_rounds)||run.completed_rounds<1||
+       run.completed_rounds>60||
+       !Array.isArray(run.life_history)||
+       run.life_history.length!==run.completed_rounds+1||
+       !Array.isArray(run.ui_observations)||
+       run.ui_observations.length!==run.completed_rounds||
+       run.gorge_source?.chain!==row.chain||
+       run.gorge_source?.visibility!=="public_events_only"||
+       run.gorge_source?.synthetic_simulation_only!==false||
+       run.outcome?.complete!==true||
+       run.outcome?.status!==(row.hero_seat===row.winner_seat?"win":"loss")||
+       run.outcome?.winner_seat!==(row.winner_seat-row.hero_seat+4)%4)
+      throw Error("invalid_original_ui_game");
+    // Public dashboard never receives private object identity crosswalks,
+    // hand card identities, native logs, bot intents or unfiltered events.
+    const forbidden=new Set(["event_json","intents","log","objects","object_identity",
+      "secret","native_events","source_object_id","library","hidden_cards"]);
+    const visit=(value)=>{
+      if(Array.isArray(value)) {for(const part of value)visit(part);return;}
+      if(!value||typeof value!=="object")return;
+      for(const [key,v] of Object.entries(value)) {
+        if(forbidden.has(key))throw Error("private_original_ui_field");
+        if(["hand","opening_hand","opponent_hands","opening_hands_by_seat"].includes(key)&&v!==null)
+          throw Error("private_original_ui_hand");
+        visit(v);
+      }
+    };
+    visit(run);
+    runs.push(run);
+  }
+  const requestedRounds=Math.max(...runs.map(run=>run.completed_rounds));
+  // Reconcile the cohort-wide batch horizon without inventing turns or
+  // rewriting recorded game observations.
+  const normalizedRuns=runs.map(run=>({
+    ...run,outcome:{...run.outcome,requested_rounds:requestedRounds}
+  }));
+  return {
+    format:"commander-gorge-outcomes-v1",schema_version:1,engine:"gorge",
+    deck_key:deck,deck_sha256:[...revisions][0],
+    scenario:"four_real_commander_decks",pilot_style:"gorge_bot",
+    provisional_mode:"not_applicable",
+    opponent_fidelity:"gorge_native_full_100_card_decks",
+    outcomes_are_competitive_win_rates:false,
+    requested_rounds:requestedRounds,runs:normalizedRuns,
+    source_note:"Approved source-backed public Gorge UI projections; no private native logs or hidden hands.",
+    example_replays:[]
+  };
+}
+
 export function validateDeck(deck) {
   if (!/^[a-z][a-z0-9_-]{1,75}$/.test(deck||"")) throw Error("Invalid deck");
   return deck;
