@@ -6,7 +6,7 @@ import { canEditDeck, canReadDeck, resolveAccount } from "./permissions.mjs";
 const env = { ENABLE_COMMUNITY_ACCESS: "true", ACCESS_OWNER_EMAILS: " OWNER@example.test " };
 const context = (email, id = email) => ({ access: { getIdentity: async () => ({ email, id }) } });
 const req = (path, method = "GET", body) => new Request("https://example.test" + path, {
-  method, ...(body ? { headers: { "content-type": "application/json" }, body: JSON.stringify(body) } : {})
+  method, ...(body ? { headers: { "content-type": "application/json", "origin": "https://example.test" }, body: JSON.stringify(body) } : {})
 });
 const rows = [
   { id: "magnus_premium", label: "Magnus the Red", visibility: "community", owner_id: "site-owner" },
@@ -92,4 +92,15 @@ test("validate payload and prevent ownership spoofing", async () => {
 test("simulations remain disabled even for owner", async () => {
   const r = await worker.fetch(req("/v1/simulations", "POST"), env, context("owner@example.test"));
   assert.equal(r.status, 501);
+});
+
+test("cross-origin changes are refused", async () => {
+  const db = database();
+  const request = new Request("https://example.test/v1/decks/magnus_premium/visibility", {
+    method: "PATCH", headers: { origin: "https://malicious.example", "content-type": "application/json" },
+    body: JSON.stringify({ visibility: "private" })
+  });
+  const r = await worker.fetch(request, { ...env, COMMUNITY_DB: db }, context("owner@example.test"));
+  assert.equal(r.status, 403);
+  assert.equal(db.records[0].visibility, "community");
 });
