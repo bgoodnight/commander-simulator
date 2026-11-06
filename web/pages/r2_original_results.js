@@ -41,8 +41,9 @@
       $("turn-reviewer-results")?.replaceChildren();
       document.body.classList.remove("r2-original-results-active");
     }
-    // The insights panel is controlled by content validity, not by permission.
-    if(!ready)setInsightsVisible(false);
+    // A valid R2 result activates all three sections as one group.
+    // Missing named card metrics are described *inside* Key Insights.
+    setInsightsVisible(ready);
   }
   function setInsightsVisible(available){
     const panel=$("key-insights-panel");
@@ -61,8 +62,11 @@
     const grid=$("key-insights-grid");
     if(!grid)return;
     if(!verifiedReport(report,total,version)){
-      grid.replaceChildren();
-      setInsightsVisible(false);
+      const placeholder=document.createElement("p");
+      placeholder.className="game-outcome-empty";
+      placeholder.textContent="Approved game results are available; named-card findings "+
+        "have not yet been published for this cohort.";
+      grid.replaceChildren(placeholder);
       return;
     }
     $("key-insights-empty").hidden=true;
@@ -70,8 +74,7 @@
       lookupRecordedCard:window.GorgeDeckLabCardInfo,
       onOpenRecordedCard:name=>window.GorgeDeckLabOpenCard?.(name)
     });
-    // An empty category inventory isn't a finding. Don't show filler.
-    setInsightsVisible(Boolean(grid.querySelector(".board-summary, .game-outcome-card, .insight-card")));
+    // Core section visibility is tied to result readiness, not card ranking count.
   }
   function ownsRenderedDeck(key){return renderedDeck===key;}
   // Materialized views keep statistics cohort-wide while replay is loaded per click.
@@ -333,7 +336,19 @@
       setResultsState("ready");
       const report=verifiedInsights||window.__gorgeCardInsights?.[key]||null;
       const population=verifiedInsightCount||window.__gorgeFullCohort?.decks?.[key]?.n||batch.runs.length;
-      showCohortInsights(report,population);
+      if(verifiedReport(report,population)){
+        showCohortInsights(report,population);
+      }else{
+        // Use only the approved native games already returned by R2, with an
+        // explicit observed-game denominator. Do not call them full-cohort.
+        window.DeckGameOutcomes.renderRecordedBatchInsights(
+          $("key-insights-grid"),batch,{
+            deckKey:key,deckHash:selected.sha,commanderName:selected.commander,
+            lookupRecordedCard:window.GorgeDeckLabCardInfo,
+            deckCardNames:selected.cardNames,
+            onOpenRecordedCard:name=>window.GorgeDeckLabOpenCard?.(name)
+          });
+      }
       window.DeckGameOutcomes.render(root,[batch],{
         deckKey:key,deckHash:selected.sha,
         commanderName:selected.commander,commanderArt:selected.art,
