@@ -101,6 +101,20 @@ class MaterializedResultsTests(unittest.TestCase):
         raw = (self.root / "built" / "versions" / version / "manifest.json").read_bytes()
         self.assertEqual(hashlib.sha256(raw).hexdigest(), pointer["manifest_sha256"])
 
+    def test_501_games_have_21_lightweight_pages_and_individual_replay_objects(self):
+        self.build(501)
+        report = project(self.root / "source", self.registry, self.root / "built",
+                         expected_batches=["123456-1"])
+        prefix = self.root / "built" / "versions" / report["version"] / "mortarion_current"
+        manifest = json.loads((prefix.parent / "manifest.json").read_text())
+        self.assertEqual(manifest["decks"]["mortarion_current"]["n"], 501)
+        self.assertEqual(len(manifest["decks"]["mortarion_current"]["pages"]), 21)
+        self.assertEqual(len(json.loads((prefix / "pages" / "000020.json").read_text())["games"]), 1)
+        self.assertEqual(len(list((prefix / "games").glob("*.json"))), 501)
+        summary = json.loads((prefix / "summary.json").read_text())
+        self.assertEqual(summary["wins"] + summary["losses"], 501)
+        self.assertEqual(sum(x["games"] for x in summary["game_turn_histogram"]), 501)
+
     def test_reject_missing_source_and_projection(self):
         self.build(1, omit_projection=True)
         with self.assertRaisesRegex(ValueError, "Missing approved shard replay"):
