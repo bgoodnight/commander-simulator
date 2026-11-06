@@ -1072,10 +1072,12 @@
     return (observation.actions||[]).map(a=>a?.card||a?.source).find(hasArt)||null;
   }
   function openingHandDescription(run){
+    const handLabel=run.gorge_source?.opening_hand_boundary==="first_pending_decision_of_turn"?
+      "First recorded hand":"Opening hand";
     if(run.batch?.engine==="gorge"&&Array.isArray(run.opening_hand))
-      return "Opening hand · "+run.opening_hand.join(", ");
+      return handLabel+" · "+run.opening_hand.join(", ");
     if(run.batch?.engine==="gorge")
-      return "Opening hand · "+(Number.isInteger(run.opening_hand_count)?
+      return handLabel+" · "+(Number.isInteger(run.opening_hand_count)?
         run.opening_hand_count:"unknown")+" cards (identities private)";
     const hand=Array.isArray(run.opening_hand)?run.opening_hand:[];
     const mulligan=run.mulligan;
