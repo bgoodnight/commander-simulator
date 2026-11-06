@@ -11,7 +11,8 @@
     if(api.protocol!=="https:"||
        !/^[a-z0-9-]+\.[a-z0-9-]+\.workers\.dev$/i.test(api.hostname))return;
   }catch{return;}
-  let generation=0,renderedDeck=null;
+  let generation=0,renderedDeck=null,retryTimer=null;
+  const RETRY_DELAYS=[350,1200]; // Bounded recovery for a transient initial Worker failure.
   const $=id=>document.getElementById(id);
   const statusMessage=(message)=>{
     const root=$("game-outcome-results"),status=$("game-outcome-status");
@@ -24,7 +25,8 @@
     if(status)status.textContent=message;
   };
   function ownsRenderedDeck(key){return renderedDeck===key;}
-  async function refresh(key=window.__deckLabActiveKey){
+  async function refresh(key=window.__deckLabActiveKey,attempt=0){
+    if(retryTimer!==null){clearTimeout(retryTimer);retryTimer=null;}
     const ticket=++generation;
     renderedDeck=null;
     const selected=window.GorgeDeckLabSelectedDeck?.(key);
@@ -90,6 +92,15 @@
     }catch(err){
       if(ticket!==generation||key!==window.__deckLabActiveKey)return;
       statusMessage("Original Results API unavailable: "+String(err.message||err));
+      // A first-load network or renderer failure must not require changing
+      // commander to kick the adapter. Keep retries scoped to this selection.
+      if(attempt<RETRY_DELAYS.length){
+        retryTimer=setTimeout(()=>{
+          retryTimer=null;
+          if(ticket===generation&&key===window.__deckLabActiveKey)
+            refresh(key,attempt+1);
+        },RETRY_DELAYS[attempt]);
+      }
     }
   }
   window.R2OriginalResults={refresh,ownsRenderedDeck};
