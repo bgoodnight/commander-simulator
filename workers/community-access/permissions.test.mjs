@@ -6,6 +6,7 @@ import worker from "./index.mjs";
 import { sha256 } from "./store.mjs";
 
 const migration=readFileSync(new URL("./migrations/0001_deck_visibility.sql",import.meta.url),"utf8");
+const invitationMigration=readFileSync(new URL("./migrations/0002_invitation_requests.sql",import.meta.url),"utf8");
 const baseEnv={ENABLE_COMMUNITY_ACCESS:"true",ACCESS_OWNER_EMAILS:"owner@example.test"};
 const context=(email,id=email)=>({access:{getIdentity:async()=>({email,id})}});
 const alice=context("owner@example.test","alice");
@@ -21,6 +22,7 @@ async function call(env,who,path,method="GET",body,origin) {
 function makeD1(){
   const sql=new DatabaseSync(":memory:");
   sql.exec(migration);
+  sql.exec(invitationMigration);
   const prepare=(query)=>{
     let args=[];
     const stmt=sql.prepare(query);
@@ -187,4 +189,43 @@ test("D1 transaction rollback prevents partial public publication",async()=>{
   assert.equal((await call(e,alice,"/v1/decks/"+deck.id+"/publications","POST")).status,503);
   assert.equal(e.COMMUNITY_DB.sql.prepare("SELECT count(*) AS n FROM publications").get().n,0);
   assert.equal(e.COMMUNITY_DB.sql.prepare("SELECT count(*) AS n FROM publication_revisions").get().n,0);
+});
+
+test("pending invitations can only be reviewed by the site owner",async()=>{
+  const e=env();
+  const id=crypto.randomUUID();
+  e.COMMUNITY_DB.sql.prepare(
+    "INSERT INTO invitation_requests(id,email,display_name) VALUES(?,?,?)"
+  ).run(id,"friend@example.test","Friend");
+  assert.equal((await call(e,bob,"/v1/admin/invitations")).status,403);
+  assert.equal((await call(e,bob,"/v1/admin/invitations/"+id+"/review","POST",{
+    status:"awaiting_access_allowlist"
+  })).status,403);
+  const pending=await call(e,alice,"/v1/admin/invitations");
+  assert.equal(pending.status,200);
+  assert.equal(pending.data.requests[0].status,"pending");
+  const review=await call(e,alice,"/v1/admin/invitations/"+id+"/review","POST",{
+    status:"awaiting_access_allowlist"
+  });
+  assert.equal(review.status,200,JSON.stringify(review.data));
+  assert.equal(review.data.request.cloudflare_allowlist_updated,false);
+  assert.equal(e.COMMUNITY_DB.sql.prepare(
+    "SELECT status FROM invitation_requests WHERE id=?"
+  ).get(id).status,"awaiting_access_allowlist");
+  assert.equal((await call(e,alice,"/v1/admin/invitations/"+id+"/review","POST",{
+    status:"declined"
+  })).status,409);
+});
+test("owner cannot grant Access merely by posting arbitrary review statuses",async()=>{
+  const e=env(),id=crypto.randomUUID();
+  e.COMMUNITY_DB.sql.prepare(
+    "INSERT INTO invitation_requests(id,email) VALUES(?,?)"
+  ).run(id,"friend@example.test");
+  for(const status of ["active","approved","owner",null]){
+    const response=await call(e,alice,"/v1/admin/invitations/"+id+"/review","POST",{status});
+    assert.equal(response.status,400);
+  }
+  assert.equal(e.COMMUNITY_DB.sql.prepare(
+    "SELECT status FROM invitation_requests WHERE id=?"
+  ).get(id).status,"pending");
 });
