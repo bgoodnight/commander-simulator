@@ -1727,64 +1727,89 @@
     }
     root.appendChild(plot);
   }
+  // Search and step through games without presenting an unbounded dropdown.
+  function gameNavigator(root,onSelect){
+    const controls=create("div","game-navigator");
+    const search=create("input","game-navigator-search");
+    search.type="search";search.placeholder="Find a game or opponent";
+    search.setAttribute("aria-label","Find a game or opponent");
+    const result=create("select","game-navigator-filter");
+    result.setAttribute("aria-label","Filter games by result");
+    for(const [value,label] of [["","All results"],["win","Wins"],["loss","Losses"]]){
+      const option=create("option",null,label);option.value=value;result.appendChild(option);
+    }
+    const nav=create("div","game-navigator-controls");
+    const previous=textButton("‹","game-navigator-step",()=>step(-1));
+    previous.setAttribute("aria-label","Previous matching game");
+    const next=textButton("›","game-navigator-step",()=>step(1));
+    next.setAttribute("aria-label","Next matching game");
+    const status=create("span","game-navigator-status","Choose a game");
+    const list=create("div","game-navigator-results");
+    list.setAttribute("aria-label","Matching games");
+    nav.append(previous,status,next);controls.append(search,result,nav,list);root.appendChild(controls);
+    let games=[],selected=null,filtered=[];
+    function refresh(){
+      const term=search.value.trim().toLowerCase();
+      filtered=games.filter(game=>(!result.value||game.result===result.value)&&
+        (!term||(game.search||game.label).toLowerCase().includes(term)));
+      const current=filtered.findIndex(game=>game.id===selected);
+      previous.disabled=current<=0;next.disabled=!filtered.length||current===filtered.length-1;
+      status.textContent=selected&&current>=0?(current+1)+" of "+filtered.length:
+        filtered.length?filtered.length+" matching games":"No matching games";
+      list.replaceChildren();
+      // A short choice list stays useful on a phone even for enormous cohorts.
+      const center=Math.max(0,current);const begin=Math.max(0,Math.min(center-2,filtered.length-5));
+      for(const game of filtered.slice(begin,begin+5)){
+        const button=textButton(game.label,"game-navigator-game",()=>choose(game.id));
+        button.setAttribute("aria-pressed",String(game.id===selected));list.appendChild(button);
+      }
+    }
+    function choose(id,turn=null){
+      const game=games.find(x=>x.id===id);if(!game)return false;
+      selected=id;refresh();onSelect(game,turn);return true;
+    }
+    function step(direction){
+      if(!filtered.length)return;
+      const current=filtered.findIndex(game=>game.id===selected);
+      const index=current<0?0:Math.max(0,Math.min(filtered.length-1,current+direction));
+      choose(filtered[index].id);
+    }
+    search.addEventListener("input",refresh);result.addEventListener("change",refresh);
+    refresh();
+    return {setGames(items){games=items.slice();refresh()},choose,
+      clearFilters(){search.value="";result.value="";refresh()}};
+  }
   function turnReviewer(root,groups,options={}){
     root.replaceChildren();
-    const choices=create("div","game-outcome-review-controls");
-    const gameSelect=create("select","game-outcome-scenario-select");
-    gameSelect.setAttribute("aria-label","Choose recorded game");
     const available=groups.filter(g=>g.runs.length);
     if(!available.length){root.textContent="No recorded games.";return}
-    // All games share a single selection surface. Retain their source group
-    // and exact seed for drilldowns, but do not expose internal scenario IDs.
     const games=available.flatMap(group=>group.runs.map(run=>({group,run})));
     function gameLabel(entry,index){
-      const enemies=opponentDecks(entry.run,entry.run.batch)
-        .map(deck=>deck.name);
-      return "Game "+(index+1)+"/"+games.length+" · "+
-        stateLabel(entry.run.outcome.status)+
+      const enemies=opponentDecks(entry.run,entry.run.batch).map(deck=>deck.name);
+      return "Game "+(index+1)+"/"+games.length+" · "+stateLabel(entry.run.outcome.status)+
         (enemies.length?" · "+enemies.join(" · "):"");
     }
-    games.forEach((entry,index)=>{
-      const option=create("option",null,gameLabel(entry,index));
-      option.value=String(index);
-      gameSelect.appendChild(option);
-    });
-    choices.appendChild(gameSelect);
-    if(options.hideGameSelector)choices.hidden=true;
+    const choices=create("div","game-outcome-review-controls");root.appendChild(choices);
     const evidence=create("div","game-outcome-evidence game-outcome-review-evidence");
-    root.append(choices,evidence);
-    let focusTurn=null;
-    function showGame(){
-      const index=Number(gameSelect.value);
-      const entry=games[index];
-      if(!entry)return;
-      const {group,run}=entry;
-      runDetails(evidence,run,{
-        example:group.exampleBySeed.get(run.seed),
-        onShowRecordedActions:options.onShowRecordedActions,
-        onOpenRecordedCard:options.onOpenRecordedCard,
-        lookupRecordedCard:options.lookupRecordedCard,
-        renderMana:options.renderMana,
-        focusTurn:focusTurn,
-        displayGameLabel:options.displayGameLabel||gameLabel(entry,index)
-      });
-    }
-    gameSelect.addEventListener("change",()=>{
-      focusTurn=null;
-      showGame();
+    root.appendChild(evidence);
+    const items=games.map((entry,index)=>({id:String(index),entry,
+      label:gameLabel(entry,index),result:entry.run.outcome.status,
+      search:gameLabel(entry,index)+" seed "+entry.run.seed}));
+    const nav=gameNavigator(choices,(item,turn)=>{
+      const {group,run}=item.entry;
+      runDetails(evidence,run,{example:group.exampleBySeed.get(run.seed),
+        onShowRecordedActions:options.onShowRecordedActions,onOpenRecordedCard:options.onOpenRecordedCard,
+        lookupRecordedCard:options.lookupRecordedCard,renderMana:options.renderMana,
+        focusTurn:turn,displayGameLabel:options.displayGameLabel||item.label});
     });
-    const firstExample=games.findIndex(({group,run})=>group.exampleBySeed.has(run.seed));
-    gameSelect.value=String(firstExample>=0?firstExample:0);
-    showGame();
+    nav.setGames(items);if(options.hideGameSelector)choices.hidden=true;
+    const first=games.findIndex(({group,run})=>group.exampleBySeed.has(run.seed));
+    nav.choose(String(first>=0?first:0),options.focusTurn??null);
     return function jump(id,seed,turn=null){
-      const index=games.findIndex(({group,run})=>
-        group.id===id&&String(run.seed)===String(seed));
+      const index=games.findIndex(({group,run})=>group.id===id&&String(run.seed)===String(seed));
       if(index<0)return;
-      focusTurn=turn;
-      gameSelect.value=String(index);
-      showGame();
-      if(options.reviewerPanel?.scrollIntoView)
-        options.reviewerPanel.scrollIntoView({behavior:"smooth",block:"start"});
+      nav.clearFilters();nav.choose(String(index),turn);
+      options.reviewerPanel?.scrollIntoView?.({behavior:"smooth",block:"start"});
     };
   }
 
@@ -1880,6 +1905,12 @@
           for(const run of item.seen)
             if(!eventRuns.has(run))addExample(run,1);
           const examples=relevant.slice(0,12);
+          if(typeof options.onReviewGame==="function")for(const entry of (item.exampleGames||[])){
+            if(examples.length>=12)break;
+            if(typeof entry.game_id==="string")examples.push({gameId:entry.game_id,turn:entry.turn??null});
+          }
+          const reviewExample=entry=>entry.gameId?
+            options.onReviewGame?.(entry.gameId,entry.turn):onReviewRun(entry.group.id,entry.run.seed,entry.turn);
           let tracker=null,detailsRoot=null;
           let exampleIndex=-1;
           let draw=()=>{
@@ -1903,7 +1934,10 @@
             draw();
           };
           const tileSet=create("div","game-outcome-insight-grid insight-featured-metrics");
-          for(const [label,value] of isAbility?[
+          for(const [label,value] of isHeld?[
+            ["Median turns held",item.heldMedian],
+            ["Mean turns held",item.average]
+          ]:isAbility?[
             [kind==="activated"?"Recorded activations":"Recorded triggers",item.eventCount],
             ["Median event turn",quantile(item.turns,.5)]
           ]:[
@@ -1920,7 +1954,7 @@
               if(!examples.length)return;
               exampleIndex=(exampleIndex+1)%examples.length;
               const entry=examples[exampleIndex];
-              onReviewRun(entry.group.id,entry.run.seed,entry.turn);
+              reviewExample(entry);
             }:openExample;
             tileSet.appendChild(metric);
           }
@@ -1929,7 +1963,7 @@
             if(options.isGorge){
               const open=textButton("View an example game ↗","game-outcome-review-link",()=>{
                 const entry=examples[0];
-                onReviewRun(entry.group.id,entry.run.seed,entry.turn);
+                reviewExample(entry);
               });
               evidence.appendChild(open);
             }else{
@@ -2489,6 +2523,7 @@
     if(options.reviewerRoot){
       jumpToReview=turnReviewer(options.reviewerRoot,groups,options);
     }
+    if(typeof options.onReviewerReady==="function")options.onReviewerReady(jumpToReview);
     return report;
   }
   // Render the existing outcome card from complete-cohort Worker statistics.
@@ -2516,46 +2551,73 @@
     }
     grid.appendChild(hero);root.replaceChildren(grid);
   }
+  const playedInsightKinds=["played","creature","artifact","enchantment","instant","spell","land"];
+  const insightTypes={played:["▣","All cards"],creature:["♞","Creatures"],artifact:["⚙","Artifacts"],enchantment:["✦","Enchantments"],instant:["ϟ","Instants"],spell:["✧","Instants and sorceries"],land:["♜","Nonbasic lands"]};
+  function insightPanels(grid,rankings,coverage,groups,options,onReviewRun){
+    function grouped(kind,ascending=false){
+      const items=(rankings[kind]||[]).slice().sort((a,b)=>
+        (ascending?a.games-b.games:b.games-a.games)||a.name.localeCompare(b.name));
+      const panel=cardPerformancePanel(kind,items,coverage,groups,options,onReviewRun);
+      if(!panel)return null;
+      const body=panel.querySelector(".game-outcome-body");
+      const controls=create("div","gorge-card-type-controls");
+      controls.setAttribute("role","group");controls.setAttribute("aria-label","Card type and ranking");
+      const change=(next,order,label)=>{const replacement=grouped(next,order);if(replacement){
+        replacement.open=true;panel.replaceWith(replacement);
+        replacement.querySelector('[aria-label="'+label+'"]')?.focus();}};
+      for(const type of playedInsightKinds){
+        if(!rankings[type]?.length)continue;
+        const [icon,label]=insightTypes[type];
+        const button=textButton(icon,"gorge-icon-button",()=>change(type,ascending,label));
+        button.title=label;button.setAttribute("aria-label",label);
+        button.setAttribute("aria-pressed",String(type===kind));controls.appendChild(button);
+      }
+      const label=ascending?"Show most played first":"Show least played first";
+      const order=textButton(ascending?"↑":"↓","gorge-icon-button gorge-sort-button",()=>
+        change(kind,!ascending,ascending?"Show least played first":"Show most played first"));
+      order.title=label;order.setAttribute("aria-label",label);controls.appendChild(order);
+      if(ascending)panel.querySelector(".game-outcome-title").textContent="Least played "+
+        (kind==="played"?"card":insightTypes[kind][1].toLowerCase());
+      body.prepend(controls);return panel;
+    }
+    const played=grouped("played");if(played)grid.appendChild(played);
+    for(const kind of ["longest","activated","triggered","removal","creatureKills","damage","finisher","tutorFound","tutorUsed"]){
+      if((kind==="tutorFound"||kind==="tutorUsed")&&!options.tutorSearchCount)continue;
+      const panel=cardPerformancePanel(kind,rankings[kind]||[],coverage,groups,options,onReviewRun);
+      if(panel)grid.appendChild(panel);
+    }
+  }
   function renderCohortInsights(root,report,total,options={}){
     const grid=create("div","board-grid game-outcome-grid latest-insight-grid");
     if(!report||report.verified_games!==total||report.observed_games!==total||
        report.coverage?.level!=="full-cohort"||report.coverage?.missing!==0){
-      root.replaceChildren(create("p","game-outcome-empty","Card insights are pending complete cohort evidence."));
-      return;
+      root.replaceChildren(create("p","game-outcome-empty","Card insights are pending complete cohort evidence."));return;
     }
-    for(const kind of ["played","creature","activated","triggered"]){
-      const ranked=(report.categories?.[kind]||[]).map(item=>({...item,events:[],seen:new Set()}));
-      const panel=cardPerformancePanel(kind,ranked,total,[],{...options,isGorge:true},()=>{});
-      if(panel)grid.appendChild(panel);
-    }
+    const rankings={};
+    for(const [kind,items] of Object.entries(report.categories||{}))
+      if(Array.isArray(items))rankings[kind]=items.map(item=>({...item,events:[],seen:new Set()}));
+    insightPanels(grid,rankings,total,[],{...options,isGorge:true,tutorSearchCount:report.confirmed_tutors||0},()=>{});
     if(!grid.children.length)grid.appendChild(create("p","game-outcome-empty","No recorded card insights."));
     root.replaceChildren(grid);
   }
-  // Findings derived from the approved Worker batch, not a fabricated full-cohort
-  // report. Always disclose the number of games with usable card observations.
   function renderRecordedBatchInsights(root,batch,options={}){
     const report=model([batch],options.deckKey,options.deckHash);
     const runs=report.groups.flatMap(group=>group.runs);
     const signals=observationCardStats(runs,options.lookupRecordedCard,options.commanderName);
-    const note=create("p","micro",signals.coverage?
-      "Card findings from "+signals.coverage+" of "+runs.length+
-      " approved games with complete recorded card observations. "+
-      "These are observed-game findings, not verified full-cohort rankings.":
-      "No named card observations are available in these approved games yet.");
+    const info=create("details","insight-methodology");
+    const trigger=create("summary",null,"ⓘ");trigger.setAttribute("aria-label","About these insights");
+    info.append(trigger,create("p","micro",signals.coverage?
+      "Card findings from "+signals.coverage+" of "+runs.length+" approved games with complete recorded card observations. These are observed-game findings, not verified full-cohort rankings.":
+      "No named card observations are available in these approved games yet."));
     const grid=create("div","board-grid game-outcome-grid latest-insight-grid");
     if(signals.coverage){
-      const owned=Array.isArray(options.deckCardNames)?
-        new Set(options.deckCardNames.map(name=>name.toLowerCase())):null;
-      for(const kind of ["played","creature","activated","triggered"]){
-        const ranked=(signals.ranked[kind]||[]).filter(item=>
-          !owned||owned.has(item.name.toLowerCase()));
-        const panel=cardPerformancePanel(kind,ranked,signals.coverage,report.groups,
-          {...options,isGorge:true},()=>{});
-        if(panel)grid.appendChild(panel);
-      }
+      const owned=Array.isArray(options.deckCardNames)?new Set(options.deckCardNames.map(name=>name.toLowerCase())):null;
+      const rankings={};for(const [kind,items] of Object.entries(signals.ranked))
+        rankings[kind]=items.filter(item=>!owned||owned.has(item.name.toLowerCase()));
+      insightPanels(grid,rankings,signals.coverage,report.groups,{...options,isGorge:true},
+        (id,seed,turn)=>options.onReviewRun?.(id,seed,turn));
     }
-    root.replaceChildren(note,grid);
-    return {coverage:signals.coverage,findings:grid.children.length};
+    root.replaceChildren(info,grid);return {coverage:signals.coverage,findings:grid.children.length};
   }
   // Allow a paginated data source to populate the exact original turn
   // reviewer without rendering a misleading single-game outcomes dashboard.
@@ -2570,5 +2632,5 @@
     return report;
   }
   return {FORMAT,STATES,validate,model,lifeTrend,matchupRows,matchupMetrics,
-    knockoutRound,opponentDecks,observationCardStats,turnSpotlight,render,renderCohortOverview,renderCohortInsights,renderRecordedBatchInsights,renderTurnReviewer};
+    knockoutRound,opponentDecks,observationCardStats,turnSpotlight,gameNavigator,render,renderCohortOverview,renderCohortInsights,renderRecordedBatchInsights,renderTurnReviewer};
 });
