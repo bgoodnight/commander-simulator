@@ -1,6 +1,6 @@
 import test from "node:test";
 import assert from "node:assert/strict";
-import { aggregate, isApproved, isDecisive, sha256, stableJson, validateDeck, normalizeRow, IDENTITY_FIELDS, approvedGameIndex, approvedGameDetail, approvedEventSegments, approvedEventWindow } from "../core.mjs";
+import { aggregate, isApproved, isDecisive, sha256, stableJson, validateDeck, normalizeRow, IDENTITY_FIELDS, approvedGameIndex, approvedGameDetail, approvedEventSegments, approvedEventWindow, isDiagnosticAuthorized } from "../core.mjs";
 
 const fp = Object.fromEntries(IDENTITY_FIELDS.map(k=>[k,"pinned-"+k]));
 const approved={cohort_id:"baseline-1",status:"current",approved:true,approval_ref:"reviewed",...fp};
@@ -115,4 +115,14 @@ test("approved event windows are bounded to one source-backed game",()=>{
   ])assert.throws(()=>approvedEventWindow(bad,123434),/unindexed/);
   assert.throws(()=>approvedEventWindow({event_start_row:1n,native_event_count:2},100),
     /unindexed/);
+});
+
+test("private diagnostic auth cannot be enabled by default or short tokens",()=>{
+  const token="a".repeat(64);
+  assert.equal(isDiagnosticAuthorized("Bearer "+token,token),true);
+  for(const [header,secret] of [
+    [null,token],["Bearer "+token,null],["Bearer "+token,"short"],
+    ["Bearer "+token,"a".repeat(63)],["bearer "+token,token],
+    ["Bearer "+token+"x",token],["Bearer "+"b".repeat(64),token]
+  ])assert.equal(isDiagnosticAuthorized(header,secret),false);
 });
