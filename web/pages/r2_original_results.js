@@ -75,6 +75,8 @@
     const root=$("game-outcome-results"),reviewer=$("turn-reviewer-results");
     if(!root)return true;
     document.body.classList.add("r2-original-results-active");
+    const rawReplay=$("gorge-replay-panel");
+    if(rawReplay)rawReplay.style.setProperty("display","none","important");
     for(const id of ["simulation-snapshot","key-insights-panel",
                       "development-panel","archive-observation-details",
                       "opponent-replay-panel"]){
@@ -265,6 +267,8 @@
       const root=$("game-outcome-results"),reviewer=$("turn-reviewer-results");
       if(!root)return;
       document.body.classList.add("r2-original-results-active");
+      const rawReplay=$("gorge-replay-panel");
+      if(rawReplay)rawReplay.style.setProperty("display","none","important");
       const panel=$("turn-reviewer-panel");
       if(panel)panel.hidden=false;
       for(const id of ["simulation-snapshot","key-insights-panel",
