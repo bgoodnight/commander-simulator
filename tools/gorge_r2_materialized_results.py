@@ -138,6 +138,11 @@ def project(source: Path, registry_path: Path, output: Path, expected_batches=No
         if expected_shards is not None and (batch, deck, shard) in expected_counts:
             if len(rows) != expected_counts[batch, deck, shard]:
                 raise ValueError("Incomplete attested shard game count")
+        for source_row in rows:
+            if (source_row.get("batch_id") != batch or
+                source_row.get("deck") != deck or
+                str(source_row.get("shard")) != shard):
+                raise ValueError("Parquet row belongs to a different shard")
         # The native event table contains ALL simulated events, including
         # secret/hidden draw and zone movements. Verify original row offsets
         # before exposing any approved game's on-demand complete trace.
