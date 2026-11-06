@@ -286,7 +286,7 @@ async function getOriginalUiBatch(env,deck,metrics) {
   return {...empty("ready"),batch};
 }
 
-async function getApprovedGames(env,deck,limit,metrics,gameId=null) {
+async function getApprovedGames(env,deck,limit,metrics,gameId=null,after=null) {
   const {shards,truncated}=await listShards(env.GORGE_R2);
   const matching=shards.filter(x=>x.deck===deck);
   metrics.shards_scanned=matching.length;
@@ -294,7 +294,7 @@ async function getApprovedGames(env,deck,limit,metrics,gameId=null) {
   if(truncated)throw Error("shard_scan_limit_reached");
   const approved=registry.cohorts.filter(c=>c.status==="current"&&c.approved===true);
   if(!approved.length)return gameId===null?
-    {...approvedGameIndex([],deck,limit),
+    {...approvedGameIndex([],deck,limit,after),
       status:matching.length?"awaiting_cohort_approval":"no_warehouse_shards",
       raw_shards_seen:matching.length}:
     {schema:"gorge-r2-approved-game-detail-v1",deck,
@@ -313,7 +313,7 @@ async function getApprovedGames(env,deck,limit,metrics,gameId=null) {
       deck,population:"approved_current_decisive_only",game,
       status:game?"ready":"game_not_found",raw_shards_seen:matching.length};
   }
-  return {...approvedGameIndex(rows,deck,limit),
+  return {...approvedGameIndex(rows,deck,limit,after),
     status:rows.length?"ready":"awaiting_cohort_approval",
     raw_shards_seen:matching.length};
 }
@@ -399,8 +399,11 @@ export default {
     let deck;
     try { deck=validateDeck(url.searchParams.get("deck")); }
     catch {return fail(400,"invalid_deck",started);}
-    let limit=20;
+    let limit=25,after=null;
     if(url.pathname==="/v1/games"){
+      after=url.searchParams.get("cursor");
+      if(after!==null && (after.length>200 || !/^[a-zA-Z0-9_.:/-]+$/.test(after)))
+        return fail(400,"invalid_cursor",started);
       const rawLimit=url.searchParams.get("limit");
       if(rawLimit!==null){
         if(!/^(?:[1-9]|1[0-9]|2[0-5])$/.test(rawLimit))
@@ -414,7 +417,7 @@ export default {
         await getOriginalUiBatch(env,deck,metrics):
         detailMatch?.[2]?await getApprovedTimeline(env,deck,gameId,metrics):
         (url.pathname==="/v1/games" || gameId!==null)?
-        await getApprovedGames(env,deck,limit,metrics,gameId):
+        await getApprovedGames(env,deck,limit,metrics,gameId,after):
         await getSummary(env,deck,metrics);
       const projected=url.pathname==="/v1/ui/overview"?uiOverview(payload):payload;
       return json({...projected,query:{...metrics,server_ms:duration(started)}},200,duration(started));
