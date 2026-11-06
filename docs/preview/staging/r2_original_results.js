@@ -163,19 +163,10 @@
       matchupList.append(create("p","No opponent matchup data available."));
     const turnsTitle=create("h4","Game length distribution · all approved games");
     const turnsList=create("div");
-    const histogram=summary.game_turn_histogram||[];
-    const maxFrequency=Math.max(1,...histogram.map(item=>item.games));
-    for(const group of histogram){
-      const row=create("div");
-      const label=create("span","Turn "+group.turn+": "+group.games+" games ");
-      const bar=create("progress");
-      bar.max=maxFrequency;bar.value=group.games;
-      bar.setAttribute("aria-label","Games ending on turn "+group.turn);
-      row.append(label,bar);
-      turnsList.append(row);
-    }
-    if(!turnsList.children.length)
-      turnsList.append(create("p","No game length data available."));
+    window.DeckGameOutcomes.renderGameLengthHistogram(turnsList,
+      (summary.game_turn_histogram||[]).map(item=>({
+        round:item.turn,games:item.games
+      })));
     detailStats.append(matchupTitle,matchupList,turnsTitle,turnsList);
     setResultsState("ready");
     const picker=create("div");picker.id="r2-game-picker";

@@ -2683,3 +2683,30 @@ body.r2-original-results-active #gorge-replay-panel{display:none!important}
   #pane-records .turn-reviewer-nav .game-navigator-step{min-width:28px;padding:3px 7px}
   #pane-records .turn-reviewer-nav .game-navigator-status{font-size:.72rem}
 }
+
+/* Vertical game-length distribution with sparse round ticks and bar tooltips. */
+.game-length-histogram{width:100%;min-width:0;padding:12px 4px 0}
+.game-length-histogram-bars{height:190px;display:flex;align-items:stretch;gap:3px;
+ border-bottom:1px solid #8f9b86;padding:0 8px}
+.game-length-histogram-column{flex:1 1 0;min-width:0;display:flex;align-items:flex-end;
+ cursor:help}
+.game-length-histogram-bar{display:block;width:100%;min-height:0;
+ background:linear-gradient(180deg,#dec39b,#83b8a5);
+ border-radius:4px 4px 0 0}
+.game-length-histogram-column:hover .game-length-histogram-bar{filter:brightness(1.2)}
+.game-length-histogram-axis{height:25px;margin:0 8px;position:relative}
+.game-length-histogram-axis span{position:absolute;top:5px;transform:translateX(-50%);
+ color:#cbd1c8;font-size:.72rem;white-space:nowrap}
+@media(max-width:480px){
+  .game-length-histogram-bars{height:145px;gap:2px}
+  .game-length-histogram-axis span{font-size:.65rem}
+}
+/* Keep the shared ⓘ motif perfectly circular even inside a flex heading.
+   Explicit box sizing avoids an oval when inherited summary sizing applies. */
+#pane-records .key-insights-info .game-outcome-limits>summary{
+ display:grid;place-items:center;box-sizing:border-box;
+ width:29px;min-width:29px;max-width:29px;
+ height:29px;min-height:29px;max-height:29px;
+ padding:0;flex:none;aspect-ratio:1 / 1;border-radius:50%;
+ line-height:1
+}
