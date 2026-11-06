@@ -12,8 +12,8 @@ from pathlib import Path
 
 FIELDS='\tChangeNum          ParamText\n'
 FIELDS_NEW='\tAnyNumber          bool // explicit AnyNumber$ True (Technomancer)\n'+FIELDS
-KNOWN='\t"AlreadyRevealed", "AlternateCost",\n'
-KNOWN_NEW='\t"AlreadyRevealed", "AlternateCost", "AnyNumber",\n'
+KNOWN='\t"AnnounceTitle",\n'
+KNOWN_NEW='\t"AnnounceTitle",\n\t"AnyNumber",\n'
 READ='\tcn, cnOK := sa.Param(cards.PKChangeNum)\n'
 READ_NEW='\tp.AnyNumber = isTrue(sa.ParamStr("AnyNumber"))\n'+READ
 CHOOSER='\tchooseFromAll := hasChooseFromDefined && cz.ChangeNum.Text == ""'
