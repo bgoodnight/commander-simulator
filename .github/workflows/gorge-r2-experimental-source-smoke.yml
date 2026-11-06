@@ -5,6 +5,8 @@ on:
     paths:
       - "tools/gorge_r2_experiment_ingest.py"
       - "tools/gorge_landmark_features.py"
+      - "tools/gorge_event_features.py"
+      - "tests/test_gorge_event_features.py"
       - "tests/test_gorge_r2_experiment_ingest.py"
       - ".github/workflows/gorge-r2-experimental-source-smoke.yml"
   workflow_dispatch:
@@ -38,7 +40,7 @@ jobs:
         with:
           python-version: "3.12"
       - name: Run private R2 acquisition contract tests
-        run: python -m unittest tests.test_gorge_r2_experiment_ingest -v
+        run: python -m unittest tests.test_gorge_r2_experiment_ingest tests.test_gorge_event_features -v
       - name: Verify exact R2 experimental archive and derive landmark observations
         shell: bash
         run: |
@@ -48,11 +50,16 @@ jobs:
             --hero "$HERO" --account-id "$ACCOUNT" --destination "$RUNNER_TEMP/source"
           python -m tools.gorge_landmark_features --native-root "$RUNNER_TEMP/source/extracted/results" \
             --hero "$HERO" --output "$RUNNER_TEMP/landmarks.jsonl"
-          python - "$RUNNER_TEMP/source/acquisition-report.json" "$RUNNER_TEMP/landmarks.jsonl" <<'PY'
+          python -m tools.gorge_event_features --native-root "$RUNNER_TEMP/source/extracted/results" \\
+            --hero "$HERO" --output "$RUNNER_TEMP/event-features.jsonl"
+          python - "$RUNNER_TEMP/source/acquisition-report.json" "$RUNNER_TEMP/landmarks.jsonl" "$RUNNER_TEMP/event-features.jsonl" <<'PY'
           import json,os,sys
           d=json.load(open(sys.argv[1]))
           rows=[json.loads(s) for s in open(sys.argv[2]) if s.strip()]
+          events=[json.loads(x) for x in open(sys.argv[3]) if x.strip()]
           assert len(rows)==d["attempts"]*3
+          assert len(events)==len(rows)
+          assert all(e["landmark_global_turn"]==r["landmark_global_turn"] and e["seed"]==r["seed"] for e,r in zip(events,rows))
           assert len({x["seed"] for x in rows})==d["attempts"]
           with open(os.environ["GITHUB_STEP_SUMMARY"],"a") as f:
               f.write("# Private R2 experimental acquisition verified\n\n")
