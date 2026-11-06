@@ -277,7 +277,10 @@ def project(source: Path, registry_path: Path, output: Path, expected_batches=No
 
     if not by_deck:
         raise ValueError("No approved decisive games")
-    basis = {"registry_sha256": digest(registry_bytes), "source_shards": source_refs,
+    # Projection revisions change published bytes even when source shards do
+    # not. Give this format its own immutable snapshot version.
+    basis = {"materializer_revision": "insight-game-links-v1",
+             "registry_sha256": digest(registry_bytes), "source_shards": source_refs,
              "card_feature_evidence_sha256": feature_merger.input_hashes}
     version = digest(canonical(basis))
     root = output / "versions" / version

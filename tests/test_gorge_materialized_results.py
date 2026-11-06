@@ -13,7 +13,7 @@ except ImportError:
     pa = pq = None
 
 from tools.gorge_cohort_eligibility import fingerprint
-from tools.gorge_r2_materialized_results import project
+from tools.gorge_r2_materialized_results import project, canonical
 from tools.gorge_card_insights import KINDS
 from tools.gorge_r2_materialized_rollback import verified_target, guarded_rollback
 from tools.gorge_r2_source_inventory import validate_inventory
@@ -150,6 +150,12 @@ class MaterializedResultsTests(unittest.TestCase):
         pointer = json.loads((self.root / "built" / "current.json").read_text())
         raw = (self.root / "built" / "versions" / version / "manifest.json").read_bytes()
         self.assertEqual(hashlib.sha256(raw).hexdigest(), pointer["manifest_sha256"])
+        manifest = json.loads(raw)
+        old_basis = {"registry_sha256": manifest["registry_sha256"],
+                     "source_shards": manifest["source_shards"],
+                     "card_feature_evidence_sha256": []}
+        self.assertNotEqual(version, hashlib.sha256(canonical(old_basis)).hexdigest(),
+                            "Changed insight bytes need a new immutable version")
 
     def test_complete_simulated_hands_and_libraries_survive_materialization(self):
         self.build(1, omniscient=True)

@@ -75,6 +75,10 @@ class FullCohortInsightsTests(unittest.TestCase):
         self.assertEqual(result["categories"]["played"][0]["average"], 1)
         self.assertEqual(result["categories"]["played"][0]["median"], 1)
         self.assertEqual(result["categories"]["played"][0]["exampleEvents"], [])
+        examples = result["categories"]["played"][0]["exampleGames"]
+        self.assertEqual({e["game_id"] for e in examples},
+                         {r["game_id"] for r in rows_a + rows_b})
+        self.assertTrue(all(e["turn"] == 2 for e in examples))
 
     def test_missing_shard_does_not_publish_partial_card_rankings(self):
         folder, rows = self.shard("111-1")
