@@ -1,0 +1,25 @@
+# LOCAL DEVELOPMENT ONLY. Never deploy this config to any public URL.
+name = "commander-community-accounts-local"
+main = "index.mjs"
+compatibility_date = "2026-11-06"
+workers_dev = false
+
+[vars]
+ENABLE_COMMUNITY_ACCESS = "true"
+ACCESS_OWNER_EMAILS = "owner@example.test"
+
+[[d1_databases]]
+binding = "COMMUNITY_DB"
+database_name = "commander-community-local"
+database_id = "00000000-0000-4000-8000-000000000001"
+
+[[r2_buckets]]
+binding = "COMMUNITY_DECKS_R2"
+bucket_name = "commander-community-local"
+
+[access.dev]
+aud = "local-accounts-only"
+
+[access.dev.identity]
+email = "owner@example.test"
+id = "local-owner"
