@@ -1,0 +1,25 @@
+name: Verify materialized R2 Results
+on:
+  pull_request:
+    paths:
+      - "tools/gorge_r2_materialized_results.py"
+      - "tests/test_gorge_materialized_results.py"
+      - ".github/workflows/gorge-r2-materialized-verify.yml"
+  push:
+    branches: [main]
+    paths:
+      - "tools/gorge_r2_materialized_results.py"
+      - "tests/test_gorge_materialized_results.py"
+permissions:
+  contents: read
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - run: pip install 'pyarrow==21.0.0'
+      - run: python -m unittest tests.test_gorge_materialized_results -v
