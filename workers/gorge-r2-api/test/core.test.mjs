@@ -70,6 +70,27 @@ test("approved game index reveals only safe, deterministic summaries",async()=>{
   assert.throws(()=>approvedGameIndex([a],"mortarion_current",26),/limit/);
 });
 
+test("approved game pages use stable 25-item keyset cursors",async()=>{
+  const rows=[];
+  for(let i=0;i<57;i++)rows.push(await game({
+    game_id:"batch/a/0/"+String(i).padStart(3,"0")
+  }));
+  const first=approvedGameIndex(rows.slice().reverse(),"mortarion_current",25);
+  assert.equal(first.total,57);
+  assert.equal(first.games.length,25);
+  assert.equal(first.next_cursor,"batch/a/0/024");
+  const second=approvedGameIndex(rows,"mortarion_current",25,first.next_cursor);
+  assert.equal(second.games[0].game_id,"batch/a/0/025");
+  assert.equal(second.games.length,25);
+  const third=approvedGameIndex(rows,"mortarion_current",25,second.next_cursor);
+  assert.equal(third.games.length,7);
+  assert.equal(third.has_more,false);
+  assert.equal(third.next_cursor,null);
+  assert.equal(new Set([...first.games,...second.games,...third.games].map(x=>x.game_id)).size,57);
+  assert.throws(()=>approvedGameIndex(rows,"mortarion_current",25,"../../private"),/cursor/);
+  assert.throws(()=>approvedGameIndex(rows,"mortarion_current",25,"batch/a/0/999"),/cursor/);
+});
+
 test("individual approved game detail is limited to public-safe metadata",async()=>{
   const g=await game({event_json:"SECRET",seed:891,object_key:"PRIVATE"});
   const out=approvedGameDetail([g],"mortarion_current",g.game_id);
@@ -205,6 +226,37 @@ test("approved public projection produces an original Results-compatible batch",
   ])assert.throws(()=>originalUiBatch([row],{...source,...change},"mortarion_current"));
   assert.throws(()=>originalUiBatch([row,{...row,game_id:"b/d/0/713"}],
     source,"mortarion_current"),/incomplete_original_ui_projection/);
+  const omniscientRun={
+    ...run,opening_hand:["Sol Ring","Swamp"],opening_hand_count:2,
+    opening_hands_by_seat:[
+      {seat:1,hand:["Island"],hand_count:1},
+      {seat:2,hand:["Forest"],hand_count:1},
+      {seat:3,hand:["Mountain"],hand_count:1}],
+    ui_observations:run.ui_observations.map(obs=>({
+      ...obs,hand:["Sol Ring"],opponent_hands:[
+        {seat:1,hand:["Island"],hand_count:1},
+        {seat:2,hand:["Forest"],hand_count:1},
+        {seat:3,hand:["Mountain"],hand_count:1}]
+    })),
+    gorge_source:{...run.gorge_source,visibility:"omniscient",
+      synthetic_simulation_only:true}
+  };
+  const omniscientBatch=originalUiBatch([row],{
+    ...source,games:[{...source.games[0],run:omniscientRun}]
+  },"mortarion_current");
+  assert.deepEqual(omniscientBatch.runs[0].opening_hand,["Sol Ring","Swamp"]);
+  assert.equal(omniscientBatch.runs[0].opening_hands_by_seat[1].hand[0],"Forest");
+  assert.equal(originalRenderer.validate(omniscientBatch),true);
+  assert.throws(()=>originalUiBatch([row],{
+    ...source,games:[{...source.games[0],run:{
+      ...omniscientRun,opening_hand_count:3
+    }}]
+  },"mortarion_current"),/incomplete_omniscient_original_ui_hand/);
+  assert.throws(()=>originalUiBatch([row],{
+    ...source,games:[{...source.games[0],run:{
+      ...omniscientRun,native_events:[{kind:3,secret:true}]
+    }}]
+  },"mortarion_current"),/unexpected_original_ui_run_field/);
   assert.throws(()=>originalUiBatch([row,{...row,game_id:"b/d/0/713",
     player_deck_sha256:"c".repeat(64)}],source,"mortarion_current"),
     /mixed_original_ui_deck_revisions/);

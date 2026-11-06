@@ -1,7 +1,7 @@
 "use strict";
-/* Convert sanitized source-backed Gorge replays to the ORIGINAL Results runs.
- * Offline exporter only. Never put raw Gorge logs, object identity maps,
- * hidden hands, or source event object IDs in the public R2 projection.
+/* Source-backed synthetic Gorge replays to ORIGINAL Results runs.
+ * Full simulated hands and hidden draw names are first-class observations.
+ * Native logs, bot intents, and object crosswalks stay in verified R2 source.
  */
 const fs=require("node:fs");
 const adapter=require("../web/pages/gorge_legacy_adapter.js");
@@ -38,11 +38,11 @@ function generate(input){
     const expected=batch+"/"+deck+"/"+input.shard+"/"+entry.seed;
     if(entry.game_id!==expected)throw Error("Game ID differs from warehouse identity");
     const replay=entry.replay;
-    if(!adapter.validateReplay(replay)||replay.visibility!=="public_events_only"||
-       replay.synthetic_simulation_only!==false||
+    if(!adapter.validateReplay(replay)||replay.visibility!=="omniscient"||
+       replay.synthetic_simulation_only!==true||
        replay.seed!==entry.seed||replay.chain!==entry.chain||
        replay.decks[entry.hero_seat]!==deck)
-      throw Error("Invalid or nonpublic native-derived replay");
+      throw Error("Expected source-backed synthetic omniscient replay");
     if(!Number.isInteger(entry.hero_seat)||entry.hero_seat<0||entry.hero_seat>3||
        !Number.isInteger(entry.winner_seat)||entry.winner_seat<0||entry.winner_seat>3||
        adapter.realWinner(replay)!==entry.winner_seat)
@@ -55,9 +55,10 @@ function generate(input){
     if(!run.outcome.complete || !["win","loss"].includes(run.outcome.status))
       throw Error("Nondecisive game cannot enter approved projection");
     run=removeObjectIds(run);
-    if(run.opening_hand!==null||run.opening_hands_by_seat!==null||
-       run.ui_observations.some(t=>t.hand!==null||t.opponent_hands!==null))
-      throw Error("Projected hidden hand leaked");
+    if(!Array.isArray(run.opening_hand)||run.opening_hand.length!==run.opening_hand_count||
+       !Array.isArray(run.opening_hands_by_seat)||run.opening_hands_by_seat.length!==3||
+       run.ui_observations.some(t=>!Array.isArray(t.hand)||!Array.isArray(t.opponent_hands)))
+      throw Error("Incomplete omniscient hand observations");
     verified.push({game_id:entry.game_id,chain:entry.chain,
       source_sha256:entry.source_sha256,run});
   }
