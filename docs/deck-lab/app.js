@@ -458,6 +458,7 @@ function summon(key,{versionId=null,remember=true}={}){
     const status=$("game-outcome-status");
     if(status)status.textContent="Loading complete Gorge cohort…";
     window.GorgeDeckLabRefreshSamples?.();
+    window.R2OriginalResults?.refresh(key);
   }
 }
 function physicalArchive(){
