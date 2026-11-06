@@ -1,6 +1,7 @@
 name: Publish reusable Commander staging preview
 # Refresh source-backed token zones and planeswalkers (PR #240).
 # Use verified original-layout omniscient staging branch (PR #243).
+# Refresh preview without the redundant Live R2 diagnostics panel.
 # Publish combined token identity/art/stack integration from Results staging PR #236.
 # Refresh game-length histogram, player-only life and circular info icon (PR 231).
 # Refresh verified opponent commander portraits in Best Matchup (PR #229).
