@@ -182,8 +182,15 @@ export function originalUiBatch(rows, projection, deck) {
     const row=indexed.get(item.game_id);
     if(!row||item.chain!==row.chain)throw Error("original_ui_source_mismatch");
     matched.add(item.game_id);
+    if(item.source_sha256!==row.source_sha256)
+      throw Error("original_ui_source_digest_mismatch");
     const run=item.run;
-    if(!run||!Number.isInteger(run.seed)||run.seed!==row.seed||
+    const allowedRunFields=new Set(["seed","completed_rounds","opening_board_states",
+      "opening_hand","opening_hands_by_seat","opening_hand_count","mulligan",
+      "ui_observations","life_history","opponent_decks","gorge_source","outcome"]);
+    if(!run||Object.keys(run).some(key=>!allowedRunFields.has(key)))
+      throw Error("unexpected_original_ui_run_field");
+    if(!Number.isInteger(run.seed)||run.seed!==row.seed||
        !Number.isInteger(run.completed_rounds)||run.completed_rounds<1||
        run.completed_rounds>60||
        !Array.isArray(run.life_history)||
