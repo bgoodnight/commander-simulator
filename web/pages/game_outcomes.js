@@ -2088,6 +2088,7 @@
               lookupRecordedCard:options.lookupRecordedCard,
               renderMana:options.renderMana,
               onOpenRecordedCard:options.onOpenRecordedCard,
+              onOpenTokenCard:options.onOpenTokenCard,
               example:entry.group.exampleBySeed?.get(entry.run.seed),
               onShowRecordedActions:options.onShowRecordedActions
             });
