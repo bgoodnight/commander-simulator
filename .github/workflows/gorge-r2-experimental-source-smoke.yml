@@ -8,6 +8,8 @@ on:
       - "tools/gorge_event_features.py"
       - "tools/gorge_native_schema_audit.py"
       - "tools/gorge_sparse_card_features.py"
+      - "tools/gorge_validate_private_extraction.py"
+      - "tests/test_gorge_validate_private_extraction.py"
       - "tests/test_gorge_sparse_card_features.py"
       - "tools/gorge_assemble_model_table.py"
       - "tools/gorge_hero_ebm_prototype.py"
@@ -46,7 +48,7 @@ jobs:
         with:
           python-version: "3.12"
       - name: Run private R2 acquisition contract tests
-        run: python -m unittest tests.test_gorge_r2_experiment_ingest tests.test_gorge_event_features tests.test_gorge_assemble_model_table tests.test_gorge_sparse_card_features -v
+        run: python -m unittest tests.test_gorge_r2_experiment_ingest tests.test_gorge_event_features tests.test_gorge_assemble_model_table tests.test_gorge_sparse_card_features tests.test_gorge_validate_private_extraction -v
       - name: Verify exact R2 experimental archive and derive landmark observations
         shell: bash
         run: |
@@ -84,3 +86,31 @@ jobs:
               f.write("Native recordings available: "+str(d["native_available"])+"; landmark records: "+str(len(rows))+"\n\n")
               f.write("Experimental only. No R2 writes, UI publication, model inference, or source artifact upload.\n")
           PY
+      - name: Validate complete private feature extraction and emit count-only receipt
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p "$RUNNER_TEMP/private-receipt"
+          cp "$RUNNER_TEMP/source/acquisition-report.json" "$RUNNER_TEMP/private-analytics/acquisition-report.json"
+          cp "$RUNNER_TEMP/landmarks.jsonl" "$RUNNER_TEMP/private-analytics/landmarks.jsonl"
+          cp "$RUNNER_TEMP/event-features.jsonl" "$RUNNER_TEMP/private-analytics/event-features.jsonl"
+          python -m tools.gorge_validate_private_extraction \
+            --root "$RUNNER_TEMP/private-analytics" --run-attempt "$RUN_ATTEMPT" \
+            --hero "$HERO" --report "$RUNNER_TEMP/private-receipt/validation.json"
+          python - "$RUNNER_TEMP/private-receipt/validation.json" <<'PY'
+          import json, os, sys
+          r=json.load(open(sys.argv[1]))
+          with open(os.environ["GITHUB_STEP_SUMMARY"],"a") as f:
+              f.write("\\n## Private modeling-data contract\\n\\n")
+              f.write(f"Game rows: {r['games']}; landmarks: {r['observed_landmarks']}/{r['expected_landmarks']}; ")
+              f.write(f"joined rows: {r['joined_rows']}; sparse card exposures: {r['sparse_card_rows']}.\\n\\n")
+              f.write("Validated count-only receipt; raw private model tables remain on the runner.\\n")
+          PY
+      - name: Retain non-sensitive verification receipt only
+        uses: actions/upload-artifact@v4
+        if: success()
+        with:
+          name: r2-private-analytics-receipt-${{ matrix.hero }}
+          path: ${{ runner.temp }}/private-receipt/validation.json
+          if-no-files-found: error
+          retention-days: 14
