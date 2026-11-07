@@ -384,14 +384,25 @@
     }
     return items;
   }
-  function galleryCard(item,lookup,openCard){
-    const card=typeof lookup==="function"?lookup(item.name):null;
-    const interactive=validateCard(card)&&typeof openCard==="function";
+  function galleryCard(item,lookup,openCard,openTokenCard){
+    // The recorded object flag is authoritative: a token must never open a
+    // same-name ordinary card from the local lookup catalog.
+    const card=!item.token&&typeof lookup==="function"?lookup(item.name):null;
+    const interactive=item.token?
+      typeof openTokenCard==="function":
+      validateCard(card)&&typeof openCard==="function";
     const tile=el(interactive?"button":"div",
       "replay-zone-card"+(item.token?" replay-zone-token":""));
     if(interactive){
-      tile.type="button";tile.title="View "+item.name+" card details";
-      tile.onclick=()=>openCard(card.oracle_id);
+      tile.type="button";
+      tile.title="View "+item.name+(item.token?" token":" card")+" details";
+      tile.setAttribute("aria-label",tile.title);
+      tile.onclick=item.token?()=>openTokenCard({
+        name:item.name,type_line:item.type_line||"Token",
+        oracle_text:item.oracle_text||"",
+        power:item.power??null,toughness:item.toughness??null,
+        mana_cost:"",mana_value:0
+      }):()=>openCard(card.oracle_id);
     }
     if(item.token){
       // Token identity comes from the recorded game state, never from a same-name
@@ -415,25 +426,30 @@
     const grouped=new Map();
     for(const obj of items){
       const key=(obj.token?"token:":"card:")+obj.name;
-      if(!grouped.has(key))grouped.set(key,{name:obj.name,token:!!obj.token,count:0});
+      if(!grouped.has(key))grouped.set(key,{
+        name:obj.name,token:!!obj.token,count:0,
+        type_line:obj.type_line||null,
+        oracle_text:obj.oracle_text||null,
+        power:obj.power??null,toughness:obj.toughness??null
+      });
       grouped.get(key).count++;
     }
     return [...grouped.values()];
   }
-  function cardGallery(items,lookup,openCard){
+  function cardGallery(items,lookup,openCard,openTokenCard){
     const gallery=el("div","replay-zone-gallery");
     for(const item of groupCardObjects(items))gallery.appendChild(
-      galleryCard(item,lookup,openCard));
+      galleryCard(item,lookup,openCard,openTokenCard));
     return gallery;
   }
-  function zoneInspector(round,topic,lookup,openCard){
+  function zoneInspector(round,topic,lookup,openCard,openTokenCard){
     const snapshot=statsForRound(round,0),zones=snapshot?.zones;
     if(!zones)return null;
     const box=el("section","replay-zone-inspector");
     const named=(items)=>items.filter(item=>item&&typeof item.name==="string");
     const show=(heading,items,empty)=>{
       box.appendChild(el("strong","replay-zone-title",heading));
-      if(items.length)box.appendChild(cardGallery(items,lookup,openCard));
+      if(items.length)box.appendChild(cardGallery(items,lookup,openCard,openTokenCard));
       else box.appendChild(el("p","micro",empty));
     };
     if(topic==="hand"){
@@ -485,7 +501,7 @@
         }
         box.appendChild(cardGallery([...counts.values()].map(x=>({
           name:x.name,token:false,count:x.count
-        })),lookup,openCard));
+        })),lookup,openCard,openTokenCard));
         const list=el("div","replay-mana-credits");
         for(const value of counts.values()){
           const credit=el("div","replay-mana-credit");
@@ -505,7 +521,7 @@
     }
     return null;
   }
-  function roundSection(round,previous,seats,lookup,openCard,index,commanderName,focus={}){
+  function roundSection(round,previous,seats,lookup,openCard,openTokenCard,index,commanderName,focus={}){
     const snapshot=statsForRound(round,0)||{};
     const life=typeof snapshot.life==="number"?snapshot.life:null;
     const healthDelta=changeIn(round,previous,"life");
@@ -585,7 +601,7 @@
         combat:"Combat and targeting"
       }[topic];
       detail.appendChild(el("strong","replay-focus-heading",label));
-      const cards=zoneInspector(round,topic,lookup,openCard);
+      const cards=zoneInspector(round,topic,lookup,openCard,openTokenCard);
       if(cards)detail.appendChild(cards);
       detail.appendChild(el("p","micro",cards?
         "This is an exact end-of-round pilot snapshot; action causes may still be abbreviated.":
@@ -735,7 +751,7 @@
         {unit:"turn",index:Number.isInteger(options.eventIndex)?options.eventIndex:null,
           topic:options.focusTopic||null}:{unit:"turn"};
       timeline.appendChild(roundSection(round,rounds[i-1]||null,seats,
-        options.lookup,options.openCard,i,options.commanderName,focus));
+        options.lookup,options.openCard,options.openTokenCard,i,options.commanderName,focus));
     });
     root.appendChild(timeline);
     return {rounds,focusedTurn:options.turn??null};
@@ -764,7 +780,7 @@
         {unit:"round",index:Number.isInteger(options.eventIndex)?options.eventIndex:null,
           topic:options.focusTopic||"creatures"}:{unit:"round"};
       timeline.appendChild(roundSection(round,game.rounds[i-1]||null,
-        game.seats,options.lookup,options.openCard,i,options.commanderName,focus));
+        game.seats,options.lookup,options.openCard,options.openTokenCard,i,options.commanderName,focus));
     });
     root.appendChild(timeline);
     return {game,focusedRound:options.turn};
