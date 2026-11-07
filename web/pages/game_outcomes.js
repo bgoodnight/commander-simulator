@@ -2276,6 +2276,19 @@
     if(initialSelect)initialSelect();
     return panel;
   }
+  // A native selector keeps long filter lists compact and works with touch,
+  // keyboard and assistive technology without a custom popup.
+  function insightFilterControl(entries,current,onChange){
+    const select=create("select","gorge-icon-button insight-filter-select");
+    select.setAttribute("aria-label","Card type filter");
+    for(const [id,label] of entries){
+      const option=create("option",null,label);
+      option.value=id;option.selected=id===current;select.appendChild(option);
+    }
+    select.value=current;
+    select.addEventListener("change",()=>onChange(select.value));
+    return select;
+  }
   // Card-based rankings share one compact, labelled set of controls.
   // Filter only using recorded card metadata, never by guessing from names.
   function filteredInsightPanel(kind,source,coverage,groups,options,onReviewRun,
@@ -2308,14 +2321,10 @@
     const change=(next,order,label)=>{
       const replacement=filteredInsightPanel(kind,source,coverage,groups,options,onReviewRun,next,order);
       if(replacement){replacement.open=true;panel.replaceWith(replacement);
-        [...replacement.querySelectorAll("button")].find(button=>button.getAttribute("aria-label")===label)?.focus();}
+        [...replacement.querySelectorAll("button, select")].find(button=>button.getAttribute("aria-label")===label)?.focus();}
     };
-    for(const [id,label] of available){
-      const button=textButton(label,"gorge-icon-button",()=>change(id,ascending,"Filter: "+label));
-      button.style.width="auto";button.style.padding="0.4rem 0.65rem";
-      button.title="Filter: "+label;button.setAttribute("aria-label","Filter: "+label);
-      button.setAttribute("aria-pressed",String(id===type));controls.appendChild(button);
-    }
+    controls.appendChild(insightFilterControl(available.map(([id,label])=>[id,label]),type,
+      next=>change(next,ascending,"Card type filter")));
     const nextLabel=ascending?"Show highest first":"Show lowest first";
     const order=textButton(ascending?"Lowest ↑":"Highest ↓","gorge-icon-button gorge-sort-button",
       ()=>change(type,!ascending,ascending?"Show lowest first":"Show highest first"));
@@ -2801,12 +2810,9 @@
           if(replacement){replacement.open=true;panel.replaceWith(replacement);
             replacement.querySelector('[aria-label="'+focusLabel+'"]')?.focus();}
         };
-        for(const type of types){
-          if(!signals.ranked[type]?.length)continue;
-          const [icon,label]=typesMeta[type];
-          const button=textButton(icon+" "+label,"gorge-icon-button",()=>render(type,ascending,label));
-          button.style.width="auto";button.style.padding="0.4rem 0.65rem";button.title=label;button.setAttribute("aria-label",label);button.setAttribute("aria-pressed",String(type===kind));controls.appendChild(button);
-        }
+        controls.appendChild(insightFilterControl(types.filter(type=>signals.ranked[type]?.length)
+          .map(type=>[type,typesMeta[type][0]+" "+typesMeta[type][1]]),kind,
+          next=>render(next,ascending,"Card type filter")));
         if(types===playedTypes){
           const label=ascending?"Show most played first":"Show least played first";
           const order=textButton(ascending?"Least ↑":"Most ↓","gorge-icon-button gorge-sort-button",()=>render(kind,!ascending,ascending?"Show least played first":"Show most played first"));
@@ -2896,13 +2902,9 @@
       const change=(next,order,label)=>{const replacement=grouped(next,order);if(replacement){
         replacement.open=true;panel.replaceWith(replacement);
         replacement.querySelector('[aria-label="'+label+'"]')?.focus();}};
-      for(const type of playedInsightKinds){
-        if(!rankings[type]?.length)continue;
-        const [icon,label]=insightTypes[type];
-        const button=textButton(icon+" "+label,"gorge-icon-button",()=>change(type,ascending,label));
-        button.style.width="auto";button.style.padding="0.4rem 0.65rem";button.title=label;button.setAttribute("aria-label",label);
-        button.setAttribute("aria-pressed",String(type===kind));controls.appendChild(button);
-      }
+      controls.appendChild(insightFilterControl(playedInsightKinds.filter(type=>rankings[type]?.length)
+        .map(type=>[type,insightTypes[type][0]+" "+insightTypes[type][1]]),kind,
+        next=>change(next,ascending,"Card type filter")));
       const label=ascending?"Show most played first":"Show least played first";
       const order=textButton(ascending?"Least ↑":"Most ↓","gorge-icon-button gorge-sort-button",()=>
         change(kind,!ascending,ascending?"Show least played first":"Show most played first"));
