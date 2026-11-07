@@ -1,6 +1,7 @@
 name: Publish reusable Commander staging preview
 # Refresh source-backed token zones and planeswalkers (PR #240).
 # Stage combined current production UI and verified full-state R2 (PR #250).
+# Rebuild preview with localhost-only browser mock isolation.
 # Refresh preview with Live R2 diagnostics root removed, asset contract retained.
 # Publish combined token identity/art/stack integration from Results staging PR #236.
 # Refresh game-length histogram, player-only life and circular info icon (PR 231).
