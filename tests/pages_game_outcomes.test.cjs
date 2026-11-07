@@ -58,6 +58,7 @@ test('Gorge tokens use source identity and permanent types for exclusive zones',
 const runWon=()=>run(0,'win',[
   [40,40,40,40],[36,26,28,29],[32,0,0,0]
 ]);
+const runWonThree=()=>run(1,'win',[[40,40,40,40],[35,38,39,40],[20,12,23,30],[18,0,0,0]]);
 const runUnresolved=()=>run(1,'unresolved',[
   [40,40,40,40],[35,38,39,40],[20,12,23,30],[18,9,20,26]
 ]);
@@ -221,8 +222,9 @@ test('modeled panels expose distinct outcome, life and matchup disclosures with 
     matchupTile.events.click({preventDefault(){},stopPropagation(){}});
     nodes=walk(root);
     assert.ok(nodes.some(n=>n.className==='game-outcome-matchup-view'));
-    assert.ok(nodes.some(n=>n.textContent==='Wins · 1/2'));
-    assert.ok(nodes.some(n=>n.textContent==='50%'));
+    assert.ok(nodes.some(n=>n.textContent==='Wins · 1/1'));
+    assert.ok(nodes.some(n=>n.textContent==='100%'));
+    assert.ok(!nodes.some(n=>String(n.textContent).toLowerCase().includes('unresolved')));
     assert.ok(nodes.some(n=>n.textContent==='Game Outcomes'));
     assert.ok(nodes.some(n=>String(n.textContent).includes('One opponent type recorded')));
     const rank=nodes.find(n=>n.tag==='button'&&n.className==='game-outcome-rank-row');
@@ -251,6 +253,11 @@ test('modeled panels expose distinct outcome, life and matchup disclosures with 
     assert.ok(nodes.some(n=>String(n.textContent).includes('One opponent type recorded')));
     assert.ok(!nodes.some(n=>String(n.textContent).includes(
       'Highest observed modeled win share')));
+    Outcomes.render(root,[batch([runUnresolved()])],{
+      deckKey:'necron_dynasties',deckHash:'a'.repeat(64),reviewerRoot:reviewer
+    });
+    assert.ok(walk(root).some(n=>n.textContent==='No completed wins or losses are available yet.'));
+    assert.ok(walk(reviewer).some(n=>n.className==='insight-turn-row'));
   }finally{global.document=before}
 });
 test('selecting an opponent scroll entry changes the one shown art card and per-opponent metrics',()=>{
@@ -477,7 +484,7 @@ test('featured card insight switches artwork, mana, metrics, and evidence with s
   const before=global.document;
   global.document={createElement:t=>new Node(t),createElementNS:(_,t)=>new Node(t)};
   try{
-    const make=(seed,card)=>run(seed,'unresolved',[
+    const make=(seed,card)=>run(seed,'win',[
       [40,40,40,40],[40,40,40,40],[40,40,40,40],[40,40,40,40]
     ],undefined,{
       opening_hand:[card],
@@ -537,11 +544,11 @@ test('featured card insight switches artwork, mana, metrics, and evidence with s
     assert.ok(walk(tracker).some(n=>n.className==='insight-turn-row'));
     const label=walk(tracker).find(n=>n.className==='insight-example-game-label');
     assert.ok(label);
-    assert.match(label.textContent,/Seed 1 · Unresolved/);
+    assert.match(label.textContent,/Seed 1 · Win/);
     metrics[1].onclick();
-    assert.match(label.textContent,/Seed 2 · Unresolved/);
+    assert.match(label.textContent,/Seed 2 · Win/);
     metrics[0].onclick();
-    assert.match(label.textContent,/Seed 1 · Unresolved/);
+    assert.match(label.textContent,/Seed 1 · Win/);
     const action=walk(tracker).find(n=>n.className.includes('insight-example-full-link'));
     assert.ok(action);
     assert.equal(action.textContent,'Open full reviewer ↗');
@@ -716,7 +723,7 @@ test('full-game reviewer uses same compact turn rows as insight evidence',()=>{
     createElementNS:(_,tag)=>new Node(tag)};
   try{
     const root=new Node('main'),reviewer=new Node('section'),openedTokens=[];
-    const withTurns={...runUnresolved(),opening_hand:['Grave Titan'],
+    const withTurns={...runWonThree(),opening_hand:['Grave Titan'],
       ui_observations:[
         {turn:1,hand:['Grave Titan'],battlefield:[],graveyard:[],
           actions:[{type:'creature_cast',card:'Grave Titan',seat:0}]},
@@ -806,7 +813,7 @@ test('tutor card insight panels only appear for confirmed named search resolutio
   const before=global.document;
   global.document={createElement:tag=>new Node(tag),
     createElementNS:(_,tag)=>new Node(tag)};
-  const make=actions=>({...runUnresolved(),ui_observations:[
+  const make=actions=>({...runWonThree(),ui_observations:[
     {turn:1,hand:[],actions},{turn:2,hand:[],actions:[]},
     {turn:3,hand:[],actions:[]}]});
   const walk=n=>[n,...n.children.flatMap(walk)];
@@ -850,7 +857,7 @@ test('selected card insight embeds relevant game turns and real life/zone change
     createElementNS:(_,tag)=>new Node(tag)};
   const walk=n=>[n,...n.children.flatMap(walk)];
   try{
-    const r={...runUnresolved(),ui_observations:[
+    const r={...runWonThree(),ui_observations:[
       {turn:1,hand:['Grave Titan'],battlefield:[],graveyard:[],
         actions:[{type:'draw',card:'Grave Titan',seat:0}]},
       {turn:2,hand:[],battlefield:['Grave Titan'],graveyard:[],
