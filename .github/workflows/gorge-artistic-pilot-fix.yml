@@ -1,0 +1,73 @@
+name: Test Artistic Refusal Convoke pilot correction on failing seed
+on:
+  push:
+    branches: [test/gorge-four-commander-token-qualification-20261106]
+    paths: [".github/workflows/gorge-artistic-pilot-fix.yml"]
+permissions: {contents: read}
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    timeout-minutes: 90
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Clone pinned Gorge and prepare experimental corrected pilot
+        run: |
+          mkdir -p "$RUNNER_TEMP/decks" "$RUNNER_TEMP/results/native"
+          python -m tools.export_gorge_decks --out "$RUNNER_TEMP/decks" --decks mortarion_current magnus_premium necron_dynasties wretched_ranks
+          python -m tools.fetch_gorge_precons --out "$RUNNER_TEMP/decks"
+          git clone --filter=blob:none https://github.com/adams-shaun/gorge.git "$RUNNER_TEMP/gorge"
+          git -C "$RUNNER_TEMP/gorge" checkout --detach b78e4c8b16078f6decbc48875bba953ce5535b85
+          python -m tools.patch_gorge_ward_blight --gorge "$RUNNER_TEMP/gorge"
+          python tools/gorge_trigger_cost_policy_patch.py "$RUNNER_TEMP/gorge/bots/botpolicy/policy.go"
+          python -m tools.patch_gorge_convoke_pilot_fallback --policy "$RUNNER_TEMP/gorge/bots/botpolicy/policy.go"
+      - uses: actions/setup-go@v5
+        with:
+          go-version-file: ${{ runner.temp }}/gorge/go.mod
+          cache: false
+      - name: Compile and check the generic Convoke policy
+        working-directory: ${{ runner.temp }}/gorge
+        run: |
+          make fetch-cards compile-cards
+          cp "$GITHUB_WORKSPACE/tools/gorge_commander_probe.go" commander_probe.go
+          go test ./bots/botpolicy -run 'TestConvoke' -count=1
+          go build -o "$RUNNER_TEMP/gorge-probe" ./commander_probe.go
+      - name: Reproduce exactly one offending source seed
+        shell: bash
+        run: |
+          set -euo pipefail
+          set +e
+          "$RUNNER_TEMP/gorge-probe" -corpus "$RUNNER_TEMP/gorge/.cards" -deck-dir "$RUNNER_TEMP/decks" \
+            -hero-deck magnus_premium -opponents necron_dynasties,wretched_ranks,cavalry-charge,science-pip,deadly-disguise,avengers-assemble \
+            -games 1 -seed 219200 -start-attempt 1 -max-turns 60 -pilot bot -verify=true \
+            -native-dir "$RUNNER_TEMP/results/native" -native-limit 1 \
+            > "$RUNNER_TEMP/results/runs.jsonl" 2> "$RUNNER_TEMP/results/stderr.txt"
+          status=$?
+          set -e
+          if [ "$status" != 0 ] && [ "$status" != 2 ]; then cat "$RUNNER_TEMP/results/stderr.txt";exit "$status";fi
+          python - <<'PY'
+          import json,os
+          from collections import Counter
+          from pathlib import Path
+          root=Path(os.environ["RUNNER_TEMP"])/"results"
+          r=json.loads((root/"runs.jsonl").read_text().strip())
+          raw=json.loads((root/"native"/f"gorge-seed-{r['seed']}.json").read_text())
+          notes=Counter(e.get("text") for e in raw["log"]["events"] if e.get("kind")==22)
+          counts={"seed":r["seed"],"verified":r["replay_verified"],"finished":r["finished"],
+            "cost_aborts":notes["cast aborted: cost no longer payable"],
+            "target_aborts":notes["cast aborted: no legal target"],"engine_error":r.get("error")}
+          (root/"artistic-pilot-result.json").write_text(json.dumps(counts,indent=2)+"\n")
+          print("ARTISTIC_PILOT_BEFORE",json.dumps({"cost_aborts":80,"target_aborts":16},sort_keys=True))
+          print("ARTISTIC_PILOT_AFTER",json.dumps(counts,sort_keys=True))
+          assert counts["verified"] and counts["finished"] and not counts["engine_error"]
+          assert counts["cost_aborts"]+counts["target_aborts"] < 96, "Pilot correction did not reduce 96 known failed casts"
+          PY
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: artistic-pilot-correction-seed-219201
+          path: ${{ runner.temp }}/results/
+          retention-days: 14
+          if-no-files-found: warn

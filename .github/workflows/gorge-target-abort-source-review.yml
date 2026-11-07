@@ -1,0 +1,31 @@
+name: Attribute target-abort candidates in four new Gorge batches
+on:
+  push:
+    branches: [test/gorge-four-commander-token-qualification-20261106]
+    paths: [".github/workflows/gorge-target-abort-source-review.yml"]
+permissions:
+  contents: read
+  actions: read
+jobs:
+  inspect:
+    strategy:
+      fail-fast: false
+      matrix:
+        hero: [mortarion_current, magnus_premium, necron_dynasties, wretched_ranks]
+    runs-on: ubuntu-latest
+    timeout-minutes: 12
+    steps:
+      - uses: actions/checkout@v4
+      - name: Download this branch's independently verified corrected test games
+        env:
+          GH_TOKEN: ${{ github.token }}
+          HERO: ${{ matrix.hero }}
+        run: |
+          mkdir -p "$RUNNER_TEMP/native"
+          gh run download 42297372712 --repo "$GITHUB_REPOSITORY" \
+            --name "gorge-rule-requalification-$HERO" --dir "$RUNNER_TEMP/native"
+      - name: Attribute remaining target failures to last proposed spell
+        env:
+          HERO: ${{ matrix.hero }}
+        run: |
+          python -m tools.gorge_target_abort_attribution --root "$RUNNER_TEMP/native" --hero "$HERO"
