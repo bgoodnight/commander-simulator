@@ -1,0 +1,67 @@
+name: Bootstrap isolated Gorge analytics Worker (private, no route)
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - ".github/workflows/gorge-r2-analytics-bootstrap.yml"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: gorge-private-analytics-bootstrap
+  cancel-in-progress: false
+
+jobs:
+  deploy-private-no-route:
+    if: github.ref == 'refs/heads/main'
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    env:
+      CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+      CLOUDFLARE_ACCOUNT_ID: ${{ secrets.GORGE_R2_ACCOUNT_ID }}
+    steps:
+      - name: Check out pinned analytics implementation, not production Worker
+        uses: actions/checkout@v4
+        with:
+          ref: 315c98ba5a38597a728c2ea794df9cd7d47f76da
+          persist-credentials: false
+      - name: Verify source pin and private deployment configuration
+        shell: bash
+        run: |
+          set -euo pipefail
+          test "$(git rev-parse HEAD)" = "315c98ba5a38597a728c2ea794df9cd7d47f76da"
+          config="workers/gorge-r2-analytics/wrangler.toml"
+          grep -qx 'name = "gorge-r2-analytics-private"' "$config"
+          grep -qx 'workers_dev = false' "$config"
+          grep -qx 'preview_urls = false' "$config"
+          grep -qx 'bucket_name = "gorge-simulations"' "$config"
+          if grep -Eq '^\s*(route|routes|custom_domain)\s*=' "$config"; then
+            echo "::error::Refusing to deploy Worker with a route/domain"
+            exit 1
+          fi
+          test -n "$CLOUDFLARE_API_TOKEN" || { echo "::error::Missing CLOUDFLARE_API_TOKEN"; exit 1; }
+          test -n "$CLOUDFLARE_ACCOUNT_ID" || { echo "::error::Missing GORGE_R2_ACCOUNT_ID"; exit 1; }
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+      - name: Install and run analytics-only Worker tests
+        working-directory: workers/gorge-r2-analytics
+        shell: bash
+        run: |
+          set -euo pipefail
+          npm install --ignore-scripts --no-audit --no-fund
+          npm test
+      - name: Deploy only the isolated private Worker
+        working-directory: workers/gorge-r2-analytics
+        shell: bash
+        run: |
+          set -euo pipefail
+          npx wrangler deploy --name gorge-r2-analytics-private
+      - name: Report deployment boundary
+        run: |
+          echo "Worker source: 315c98ba5a38597a728c2ea794df9cd7d47f76da" >> "$GITHUB_STEP_SUMMARY"
+          echo "Deployment: gorge-r2-analytics-private; no workers.dev, preview URL, or route." >> "$GITHUB_STEP_SUMMARY"
+          echo "No Access policy, bearer secret, or public hostname is created by this job." >> "$GITHUB_STEP_SUMMARY"
