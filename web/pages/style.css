@@ -2758,3 +2758,12 @@ body.r2-original-results-active #gorge-replay-panel{display:none!important}
 .game-outcome-stacked-bar .game-outcome-baseline{position:absolute;z-index:2;left:25%;top:-4px;width:2px;height:17px;background:#ead4a5;box-shadow:0 0 0 1px #152527;transform:translateX(-50%)}
 .game-outcome-stacked-bar .game-outcome-baseline:before{content:"";position:absolute;left:-2px;top:-3px;width:6px;height:6px;background:#ead4a5;transform:rotate(45deg);box-shadow:0 0 0 1px #152527}
 .game-outcome-value-qualifier{margin-left:.4em;font-size:.55em;font-weight:500;color:#cbd1c8;white-space:normal}
+
+/* Keep the clickable outcome heading visually consistent with its card. */
+.latest-insight-grid .game-outcome-hero .game-outcome-heading{background:transparent;border:0;box-shadow:none;text-align:left;font-family:Cinzel,Georgia,serif;color:#f2dfc1;padding:0;width:auto;align-self:start}
+.game-outcome-hero-highlight.has-commander-card{position:relative;min-height:76px;padding-right:60px}
+.game-outcome-matchup-card{position:absolute;right:8px;top:7px;bottom:7px;width:43px;height:calc(100% - 14px);max-height:76px;object-fit:contain;border-radius:4px}
+.game-outcome-matchup-card[hidden],.game-outcome-matchup-fallback[hidden]{display:none}
+.game-outcome-pod-art{position:absolute;inset:0;display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:2px;opacity:.58}
+.game-outcome-pod-art-member{overflow:hidden;background:#30433f}
+.game-outcome-pod-art-member img{width:100%;height:100%;object-fit:cover;object-position:center 30%;filter:saturate(.7) brightness(.78)}
