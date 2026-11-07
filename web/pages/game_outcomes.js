@@ -192,7 +192,7 @@
               .sort((a,b)=>a.id.localeCompare(b.id)||a.version.localeCompare(b.version))),
               label:opponents.map(d=>d.name).join(" / ")+" · recorded pod",
               title:opponents.map(d=>d.name).join(" / ")+" pod",
-              kind:"named_pod"}];
+              kind:"named_pod",portraitNames:opponents.map(d=>d.name)}];
           }else{
             names=opponents.map(d=>({id:"deck:"+d.id+":"+d.version,
               label:d.name+" · present in pod",title:d.name,
@@ -231,7 +231,7 @@
         for(const named of new Map(names.map(row=>[row.id,row])).values()){
           if(!buckets.has(named.id))buckets.set(named.id,{
             id:named.id,label:named.label,title:named.title,kind:named.kind,
-            portraitName:named.portraitName||null,archetype:named.archetype||null,
+            portraitName:named.portraitName||null,portraitNames:named.portraitNames||null,archetype:named.archetype||null,
             counts:Object.fromEntries(STATES.map(x=>[x,0])),games:0,runs:[]
           });
           const row=buckets.get(named.id);
@@ -393,8 +393,14 @@
         const value=create("strong",null,item.value);
         if(item.qualifier)value.appendChild(create("small","game-outcome-value-qualifier",item.qualifier));
         stat.append(create("span",null,item.label),value);
-        if(item.detail)stat.appendChild(create("small",null,item.detail));
-        stat.appendChild(create("span","game-outcome-hero-highlight-cue","Explore ↗"));
+        if(item.image){
+          stat.classList.add("has-commander-card");
+          const image=create("img","game-outcome-matchup-card");
+          image.src=item.image;image.alt="";image.loading="lazy";image.referrerPolicy="no-referrer";
+          const fallback=create("small","game-outcome-matchup-fallback",item.detail||"");
+          fallback.hidden=true;image.onerror=()=>{image.hidden=true;fallback.hidden=false};
+          stat.append(image,fallback);
+        }else if(item.detail)stat.appendChild(create("small",null,item.detail));
         stat.addEventListener("click",event=>{
           event.preventDefault();event.stopPropagation();
           options.onHighlightClick?.(item.key,stat);
@@ -475,7 +481,21 @@
         rows[index].scrollIntoView({block:"nearest"});
       portrait.replaceChildren();
       const art=typeof options.portraitFor==="function"?options.portraitFor(bucket):null;
-      if(art?.art){
+      if(bucket.kind==="named_pod"&&bucket.portraitNames?.length===3){
+        const strip=create("div","game-outcome-pod-art");
+        for(const name of bucket.portraitNames){
+          const cardImage=options.lookupRecordedCard?.(name)?.image||
+            "https://api.scryfall.com/cards/named?exact="+encodeURIComponent(name)+"&format=image&version=normal";
+          const frame=create("div","game-outcome-pod-art-member");
+          if(cardImage){
+            const image=create("img",null);image.src=cardImage;image.alt="";
+            image.loading="lazy";image.referrerPolicy="no-referrer";
+            image.onerror=()=>{image.hidden=true};frame.appendChild(image);
+          }
+          strip.appendChild(frame);
+        }
+        portrait.appendChild(strip);
+      }else if(art?.art){
         const img=create("img","game-outcome-opponent-art");
         img.src=art.art;img.alt=art.name+" card illustration";
         img.loading="lazy";img.referrerPolicy="no-referrer";
@@ -493,13 +513,14 @@
       }
       const caption=create("div","game-outcome-portrait-label");
       caption.append(create("strong",null,bucket.title||bucket.label),
-        create("small",null,art?.name?
+        create("small",null,bucket.kind==="named_pod"?
+          "Recorded opposing commanders":art?.name?
           art.name+(bucket.kind==="named"?" · recorded opposing commander":
             " · illustrative archetype portrait"):
           "No cached commander art"));
       portrait.appendChild(caption);
       caption.appendChild(create("span","game-outcome-portrait-kind",
-        bucket.kind==="named"?"Observed in pod":"Illustrative portrait"));
+        ["named","named_pod"].includes(bucket.kind)?"Observed in pod":"Illustrative portrait"));
       metrics.replaceChildren(
         metricTile("Games",values.games,"Observed"),
         metricTile("Win share",Math.round(values.winShare*100)+"%",
@@ -2523,7 +2544,10 @@
     const heroHighlights=[
       {key:"matchup",label:"Best matchup",value:bestMatchup?
         (100*bestMatchup.counts.win/Math.max(1,bestMatchup.games)).toFixed(1)+"%":"—",
-       detail:bestMatchup?.title||"No opponent groups"},
+       detail:bestMatchup?.title||"No opponent groups",
+       image:bestMatchup?.kind==="named"&&bestMatchup.portraitName?
+         (options.lookupRecordedCard?.(bestMatchup.portraitName)?.image||
+          "https://api.scryfall.com/cards/named?exact="+encodeURIComponent(bestMatchup.portraitName)+"&format=image&version=normal"):null},
       {key:"length",label:"Game length",value:finishedMedian===null?"—":nfmt(finishedMedian),
        qualifier:"median"},
       {key:"arrival",label:"Commander arrival",value:medianArrival===null?"N/A":nfmt(medianArrival),
