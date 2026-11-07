@@ -55,6 +55,17 @@ def test():
                 assert page.evaluate("(key)=>window.R2OriginalResults.ownsRenderedDeck(key)",DECK)
                 assert page.locator("#game-outcome-results .game-outcome-stacked-bar").count()>0
                 assert page.locator("#game-outcome-results .game-outcome-hero").count()==1
+                baseline=hero.locator(".game-outcome-baseline")
+                assert baseline.count()==1
+                offset=baseline.evaluate("e => (e.getBoundingClientRect().left + e.getBoundingClientRect().width/2 - e.parentElement.getBoundingClientRect().left)/e.parentElement.getBoundingClientRect().width")
+                assert abs(offset-.25)<.005
+                assert hero.locator(".game-outcome-buckets").count()==0
+                assert "Seeds " not in hero.inner_text()
+                hero.get_by_role("button",name="Game Outcomes · open life progression for wins and losses").click()
+                dialog=page.get_by_role("dialog",name="Game performance details")
+                assert dialog.is_visible()
+                assert dialog.get_by_text("Life Progression · Wins vs Losses").is_visible()
+                dialog.get_by_role("button",name="Close game performance details").click()
                 # Missing optional card-level insights are a legitimate placeholder.
                 # They must not suppress the source-backed outcome hero.
                 assert "No approved simulations match" not in hero.inner_text()
@@ -200,7 +211,10 @@ def test_materialized():
                 page.route(API+"/v1/ui/game?*",response)
                 page.goto(f"http://127.0.0.1:{server.server_port}/results.html?deck={DECK}&materializedResults=1",
                           wait_until="domcontentloaded")
-                page.get_by_text("201 games · complete cohort",exact=False).wait_for(timeout=60000)
+                page.locator("#game-outcome-results .game-outcome-hero-frame").wait_for(timeout=60000)
+                page.locator("#game-outcome-results .game-outcome-limits summary").click()
+                assert page.get_by_text("201 games · complete cohort",exact=False).is_visible()
+                page.locator("#game-outcome-results .game-outcome-limits summary").click()
                 assert page.evaluate("document.body.dataset.r2ResultsState")=="ready"
                 assert page.locator("#key-insights-panel").is_visible()
                 assert page.locator("#key-insights-grid").get_by_text(source_card,exact=False).first.is_visible()
@@ -236,7 +250,7 @@ def test_materialized():
                 assert page.locator("#turn-reviewer-results .insight-turn-row").count()>0
                 if one_batch["runs"][0].get("gorge_source",{}).get("opening_hand_boundary")=="first_pending_decision_of_turn":
                     assert page.get_by_text("First recorded hand",exact=False).first.is_visible()
-                assert page.get_by_text("201 games · complete cohort",exact=False).is_visible()
+                assert page.get_by_text("201 games · complete cohort",exact=False).count()==1
                 assert page.get_by_text(source_card,exact=False).first.is_visible()
                 # A selected replay must not render misleading one-game
                 # outcome statistics alongside the full-cohort dashboard.
