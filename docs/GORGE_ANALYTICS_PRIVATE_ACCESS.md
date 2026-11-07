@@ -22,3 +22,15 @@ No Cloudflare account permissions, Access policies, secrets, DNS routes, or Work
 
 ## Modeling
 Stage source-verified datasets in a separate restricted analytics workspace. Retain all attempts and native evidence; version each game by batch/hero/shard/seed, engine/rules/deck fingerprints, and source hash. Source availability and model eligibility are independent. Never train from sanitized UI pages or treat old versions as current card efficacy.
+
+## Deployment checklist (account-authorized operator)
+
+1. Run `workers/gorge-r2-analytics/bootstrap.sh` in a trusted checkout with `CLOUDFLARE_API_TOKEN`, `GORGE_R2_ACCOUNT_ID`, and a randomly generated `ANALYTICS_READ_TOKEN` in the environment. Use a Workers-edit capable Cloudflare token; do not place the credential in the repository. This deploys a Worker with no public route and stores the bearer token as a Worker secret.
+2. In Cloudflare **Workers & Pages → gorge-r2-analytics-private → Access**, protect this Worker (all traffic, not only previews). Allow only the intended analyst account or service-token identities. Access is an account configuration step, not Git branch metadata.
+3. Attach a dedicated Custom Domain to that Worker using **Settings → Domains & Routes**. Do not reuse the existing production Results Worker hostname. Verify that Access is active for the Worker before exposing the domain.
+4. Confirm an unauthenticated inventory request is rejected at Access or with HTTP 401; confirm an authorized request lists historical objects, and a raw native archive can be read in byte ranges. Verify that unauthenticated requests cannot retrieve raw or omniscient recordings.
+5. Configure a separate trusted analytics CI environment for the service credentials if automated extraction is required. GitHub branch protections, Cloudflare token permissions, and Access applications are distinct settings; updating repository files cannot grant them.
+
+**Status as committed:** code/configuration only. The ChatGPT GitHub connector cannot run Wrangler or administer Cloudflare Access, and the available plugins do not include a Cloudflare account connector. There is no claim that the Worker, route, Access policy, or secrets have been deployed.
+
+The private read bridge intentionally bypasses public cohort-approval filtering and has no R2 mutation endpoints. Even when simulation content contains no PII, authentication prevents unauthorized resource usage and accidental public release.
