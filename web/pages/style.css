@@ -2718,3 +2718,26 @@ body.r2-original-results-active #gorge-replay-panel{display:none!important}
  padding:0;flex:none;aspect-ratio:1 / 1;border-radius:50%;
  line-height:1
 }
+
+
+/* Compact board previews; expanded zones retain their full labelled tiles. */
+.insight-zone-expand-hint{margin-left:auto;color:#d8c39a;font-size:.68rem;font-weight:400}
+.insight-compact-preview{flex:0 0 100%;display:flex;flex-wrap:wrap;align-items:center;gap:3px;margin-top:4px;min-width:0}
+.insight-compact-preview[hidden]{display:none!important}
+.insight-compact-preview .insight-action-card.is-art-only{position:relative;display:inline-flex;padding:0;border:0;border-radius:3px;background:transparent;gap:0;min-width:0}
+.insight-compact-preview .insight-action-art,
+.insight-compact-preview .insight-token-card-image,
+.insight-compact-preview .insight-token-art{width:34px;height:46px;min-width:34px;object-fit:cover;border-radius:3px}
+.insight-compact-preview .is-token .insight-action-name{display:none}
+.insight-compact-preview .insight-token-quantity{top:-3px;right:-3px;padding:0 3px;font-size:.62rem;z-index:5}
+.insight-compact-preview.is-graveyard-stack{flex-wrap:nowrap;padding-left:0}
+.insight-compact-preview.is-graveyard-stack .insight-action-card{position:relative}
+.insight-compact-preview.is-graveyard-stack .insight-action-card:nth-child(1){z-index:3}
+.insight-compact-preview.is-graveyard-stack .insight-action-card:nth-child(2){z-index:2;margin-left:-25px}
+.insight-compact-preview.is-graveyard-stack .insight-action-card:nth-child(3){z-index:1;margin-left:-25px}
+@media(max-width:650px){
+ .insight-compact-preview .insight-action-art,
+ .insight-compact-preview .insight-token-card-image,
+ .insight-compact-preview .insight-token-art{width:30px;height:41px;min-width:30px}
+ .insight-compact-preview.is-graveyard-stack .insight-action-card:nth-child(n+2){margin-left:-22px}
+}
