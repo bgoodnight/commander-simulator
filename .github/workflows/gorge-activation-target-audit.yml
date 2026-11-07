@@ -46,6 +46,7 @@ jobs:
           python -m tools.patch_gorge_adeline_token_defender --gorge "$RUNNER_TEMP/gorge"
           python -m tools.patch_gorge_convoke_pilot_fallback --policy "$RUNNER_TEMP/gorge/bots/botpolicy/policy.go"
           python -m tools.patch_gorge_activation_target_diagnostic --gorge "$RUNNER_TEMP/gorge"
+          python -m tools.patch_gorge_dynamic_tap_x_choices --gorge "$RUNNER_TEMP/gorge"
       - uses: actions/setup-go@v5
         with:
           go-version-file: ${{ runner.temp }}/gorge/go.mod
