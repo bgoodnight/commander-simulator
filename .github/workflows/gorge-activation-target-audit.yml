@@ -1,10 +1,12 @@
 name: Diagnose Gorge activated-ability target aborts
 on:
   push:
-    branches: [fix/gorge-activation-target-audit-20261106]
-    paths:
-      - "tools/patch_gorge_activation_target_diagnostic.py"
-      - ".github/workflows/gorge-activation-target-audit.yml"
+    branches:
+      - 'fix/gorge-activation-target-audit-20261106'
+  pull_request:
+    branches:
+      - 'stage/omniscient-r2-release-check-20261106'
+    types: [opened, synchronize, reopened, ready_for_review]
   workflow_dispatch:
 permissions:
   contents: read
