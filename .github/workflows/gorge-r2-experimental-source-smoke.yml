@@ -102,10 +102,10 @@ jobs:
           import json, os, sys
           r=json.load(open(sys.argv[1]))
           with open(os.environ["GITHUB_STEP_SUMMARY"],"a") as f:
-              f.write("\\n## Private modeling-data contract\\n\\n")
+              f.write("\n## Private modeling-data contract\n\n")
               f.write(f"Game rows: {r['games']}; landmarks: {r['observed_landmarks']}/{r['expected_landmarks']}; ")
-              f.write(f"joined rows: {r['joined_rows']}; sparse card exposures: {r['sparse_card_rows']}.\\n\\n")
-              f.write("Validated count-only receipt; raw private model tables remain on the runner.\\n")
+              f.write(f"joined rows: {r['joined_rows']}; sparse card exposures: {r['sparse_card_rows']}.\n\n")
+              f.write("Validated count-only receipt; raw private model tables remain on the runner.\n")
           PY
       - name: Retain non-sensitive verification receipt only
         uses: actions/upload-artifact@v4
