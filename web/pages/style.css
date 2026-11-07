@@ -2775,3 +2775,6 @@ body.r2-original-results-active #gorge-replay-panel{display:none!important}
 .distribution-table{width:100%;border-collapse:collapse;font-variant-numeric:tabular-nums}
 .distribution-table th,.distribution-table td{text-align:left;padding:6px;border-bottom:1px solid #ffffff1c}
 .game-outcome-hero .game-outcome-heading{background:transparent!important;background-color:transparent!important;box-shadow:none!important;-webkit-tap-highlight-color:transparent}
+
+/* Two aligned outcome figures, using the available width on mobile too. */
+#pane-records .game-outcome-hero-stats{grid-template-columns:repeat(2,minmax(0,1fr))}
