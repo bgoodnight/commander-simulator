@@ -2516,13 +2516,14 @@
       }
       return null;
     };
-    const manaAtFive=run=>{
-      const row=(run.ui_observations||[]).find(x=>x.turn===5);
+    const manaAtTurn=(run,turn)=>{
+      const row=(run.ui_observations||[]).find(x=>x.turn===turn);
       if(!row||!row.mana_produced_by_color)return null;
       const values=Object.values(row.mana_produced_by_color);
-      if(!values.length||values.some(x=>!Number.isFinite(Number(x))))return null;
+      if(!values.length||values.some(x=>x===null||x===""||!Number.isFinite(Number(x))||Number(x)<0))return null;
       return values.reduce((sum,x)=>sum+Number(x),0);
     };
+    const manaAtFive=run=>manaAtTurn(run,5);
     // An uncast commander is a right-censored arrival, not an outlier
     // to discard. Include every game in the median's denominator, and
     // return N/A if the middle observation(s) have no observed cast turn.
@@ -2585,7 +2586,7 @@
         matchup:"Opponent Matchups",
         length:"Game Length",
         arrival:"Commander Arrival · Wins vs Losses",
-        ramp:"Turn Five Mana · Wins vs Losses",
+        ramp:"Mana by Turn · Wins vs Losses",
         winlife:"Life Progression · Wins vs Losses"
       })[key];
       detailContent.replaceChildren(panel);
@@ -2652,44 +2653,90 @@
         body.appendChild(stats);
         histogram(body,finished,groups[0].requestedRounds);
       }));
-    // Paired charts share one scale so red/green bar lengths are comparable.
-    const comparisonBarChart=(body,measure,format)=>{
-      const subsets=[
-        {name:"Wins",color:"#4dab76",runs:wins},
-        {name:"Losses",color:"#d66565",runs:runs.filter(r=>r.outcome.status==="loss")}
-      ];
-      const stats=subsets.map(group=>{
-        const values=group.runs.map(measure).filter(Number.isFinite);
-        return {...group,values,value:format==="median"?
-          arrivalMedian(group.runs):values.length?
-          values.reduce((a,b)=>a+b,0)/values.length:null};
-      });
-      const max=Math.max(1,...stats.map(group=>group.value||0));
-      for(const item of stats){
-        const line=create("div","game-outcome-seat-bar");
-        line.style.margin="14px 0";
-        line.appendChild(create("span",null,item.name+" · "+item.values.length+
-          "/"+item.runs.length+(format==="median"?" cast":" observed")));
-        const track=create("div","game-outcome-finish-track");
-        track.style.height="20px";
-        const bar=create("span","game-outcome-finish-fill");
-        bar.style.display="block";bar.style.height="100%";
-        bar.style.background=item.color;
-        bar.style.width=item.value===null?"0%":(100*item.value/max)+"%";
-        track.appendChild(bar);
-        line.append(track,create("strong",null,item.value===null?"N/A":
-          format==="mean"?item.value.toFixed(2):nfmt(item.value)));
-        body.appendChild(line);
+    const series=[{name:"Wins",color:"#4dab76",runs:wins},
+      {name:"Losses",color:"#d66565",runs:runs.filter(r=>r.outcome.status==="loss")}];
+    function legend(body){
+      const box=create("div","game-outcome-legend");
+      for(const group of series){const chip=create("span",null,group.name+" · "+group.runs.length+" games");
+        chip.style.borderColor=group.color;box.appendChild(chip)}
+      body.appendChild(box);
+    }
+    function tableDetails(body,headers,rows){
+      const disclosure=create("details","distribution-table-details");
+      disclosure.appendChild(create("summary",null,"View values and sample sizes"));
+      const table=create("table","distribution-table"),head=create("tr");
+      for(const text of headers)head.appendChild(create("th",null,text));
+      const thead=create("thead");thead.appendChild(head);table.appendChild(thead);
+      const tbody=create("tbody");
+      for(const values of rows){const tr=create("tr");for(const text of values)tr.appendChild(create("td",null,text));tbody.appendChild(tr)}
+      table.appendChild(tbody);disclosure.appendChild(table);body.appendChild(disclosure);
+    }
+    function chartFrame(body,label,maxX,maxY,yLabel){
+      const width=680,height=260,left=48,right=14,top=16,bottom=38;
+      const plotW=width-left-right,plotH=height-top-bottom;
+      const x=turn=>left+(turn-1)/Math.max(1,maxX-1)*plotW;
+      const y=value=>top+plotH-(value/maxY)*plotH;
+      const svg=svgNode("svg",{viewBox:`0 0 ${width} ${height}`,class:"distribution-chart",role:"img","aria-label":label});
+      for(const fraction of [0,.25,.5,.75,1]){
+        const value=maxY*fraction,yy=y(value);
+        svg.appendChild(svgNode("line",{x1:left,y1:yy,x2:width-right,y2:yy,stroke:"#7a817e","stroke-opacity":.3}));
+        const tick=svgNode("text",{x:left-7,y:yy+4,"text-anchor":"end",fill:"#c4cbbd","font-size":11});
+        tick.textContent=yLabel(value);svg.appendChild(tick);
       }
-    };
-    detailPanels.set("arrival",card("Commander Arrival","Median first cast turn",
-      medianArrival===null?"N/A":nfmt(medianArrival),
-      "All games included; N/A if the median cast turn was not observed",
-      body=>comparisonBarChart(body,commanderArrival,"median")));
-    detailPanels.set("ramp",card("Mana Ramp","Turn five mana generated",
-      averageMana===null?"—":averageMana.toFixed(2),
-      "Native positive mana production on your fifth turn; missing observations excluded",
-      body=>comparisonBarChart(body,manaAtFive,"mean")));
+      const stride=Math.max(1,Math.ceil(maxX/8));
+      for(let turn=1;turn<=maxX;turn++)if(turn===1||turn===maxX||turn%stride===0){
+        const tick=svgNode("text",{x:x(turn),y:height-15,"text-anchor":"middle",fill:"#c4cbbd","font-size":11});
+        tick.textContent=String(turn);svg.appendChild(tick);
+      }
+      const axis=svgNode("text",{x:left+plotW/2,y:height-1,"text-anchor":"middle",fill:"#c4cbbd","font-size":11});
+      axis.textContent="Turn";svg.appendChild(axis);body.appendChild(svg);
+      return {svg,x,y,plotW};
+    }
+    function arrivalDistribution(body){
+      legend(body);
+      const data=series.map(group=>({...group,values:group.runs.map(commanderArrival)}));
+      const maxTurn=Math.max(1,...data.flatMap(group=>group.values.filter(Number.isFinite)));
+      const rows=Array.from({length:maxTurn},(_,i)=>({turn:i+1,
+        counts:data.map(group=>group.values.filter(value=>value===i+1).length)}));
+      const maxPercent=Math.max(10,...rows.flatMap(row=>row.counts.map((count,i)=>data[i].runs.length?100*count/data[i].runs.length:0)));
+      const ceiling=Math.min(100,Math.ceil(maxPercent/10)*10);
+      const chart=chartFrame(body,"First recorded commander cast by turn, percentage of games in wins and losses",maxTurn,ceiling,value=>Math.round(value)+"%");
+      const groupWidth=Math.min(28,chart.plotW/Math.max(1,maxTurn)*.7),barWidth=groupWidth/2;
+      for(const row of rows)row.counts.forEach((count,i)=>{
+        const pct=data[i].runs.length?100*count/data[i].runs.length:0;
+        if(!count)return;
+        const rect=svgNode("rect",{x:chart.x(row.turn)-groupWidth/2+i*barWidth,y:chart.y(pct),width:Math.max(1,barWidth-1),height:chart.y(0)-chart.y(pct),fill:data[i].color,rx:2});
+        const title=svgNode("title");title.textContent=`Turn ${row.turn}: ${count} of ${data[i].runs.length} ${data[i].name.toLowerCase()} (${pct.toFixed(1)}%)`;rect.appendChild(title);chart.svg.appendChild(rect);
+      });
+      body.appendChild(create("p","micro",data.map(group=>group.name+": "+group.values.filter(x=>!Number.isFinite(x)).length+"/"+group.runs.length+" without a recorded cast").join(" · ")));
+      tableDetails(body,["Turn","Wins","Losses"],rows.map(row=>[String(row.turn),...row.counts.map((count,i)=>data[i].runs.length?count+" / "+data[i].runs.length+" ("+(100*count/data[i].runs.length).toFixed(1)+"%)":"—")]));
+    }
+    function manaTimeline(body){
+      legend(body);
+      const maxTurn=Math.max(1,...series.flatMap(group=>group.runs.flatMap(run=>(run.ui_observations||[]).map(row=>Number(row.turn)).filter(Number.isFinite))));
+      const rows=Array.from({length:maxTurn},(_,i)=>({turn:i+1,groups:series.map(group=>{
+        const values=group.runs.map(run=>manaAtTurn(run,i+1)).filter(Number.isFinite);
+        return {n:values.length,mean:values.length?values.reduce((a,b)=>a+b,0)/values.length:null};
+      })}));
+      const max=Math.max(1,...rows.flatMap(row=>row.groups.map(group=>group.mean||0)));
+      const ceiling=Math.max(2,Math.ceil(max/2)*2);
+      const chart=chartFrame(body,"Average recorded mana produced per turn for wins and losses",maxTurn,ceiling,value=>String(Math.round(value*10)/10));
+      series.forEach((group,index)=>{
+        let segment=[];
+        const flush=()=>{if(segment.length>1)chart.svg.appendChild(svgNode("polyline",{points:segment.join(" "),fill:"none",stroke:group.color,"stroke-width":3,"stroke-linejoin":"round","stroke-linecap":"round"}));segment=[]};
+        for(const row of rows){const item=row.groups[index];if(item.mean===null){flush();continue}
+          const px=chart.x(row.turn),py=chart.y(item.mean);segment.push(px+","+py);
+          const dot=svgNode("circle",{cx:px,cy:py,r:3.5,fill:group.color});
+          const title=svgNode("title");title.textContent=`${group.name}, turn ${row.turn}: ${item.mean.toFixed(2)} mana, ${item.n} observations`;dot.appendChild(title);chart.svg.appendChild(dot);
+        }flush();
+      });
+      body.appendChild(create("p","micro","Means use recorded mana generated on each turn; missing turns are gaps. Games ending earlier leave later averages, so sample sizes can change."));
+      tableDetails(body,["Turn","Wins: mean (n)","Losses: mean (n)"],rows.map(row=>[String(row.turn),...row.groups.map(item=>item.mean===null?"— (0)":item.mean.toFixed(2)+" ("+item.n+")")]));
+    }
+    detailPanels.set("arrival",card("Commander Arrival","First cast turn",medianArrival===null?"N/A":nfmt(medianArrival),
+      "Share of each outcome group by recorded first cast",arrivalDistribution));
+    detailPanels.set("ramp",card("Mana Ramp","Mana generated by turn",averageMana===null?"—":averageMana.toFixed(2),
+      "Average recorded mana by turn",manaTimeline));
     detailPanels.set("winlife",card("Life Progression","Wins vs losses",
       counts.win+" / "+counts.loss,
       "Median life by recorded round · green wins, red losses",

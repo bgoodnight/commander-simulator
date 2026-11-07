@@ -2767,3 +2767,11 @@ body.r2-original-results-active #gorge-replay-panel{display:none!important}
 .game-outcome-pod-art{position:absolute;inset:0;display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:2px;opacity:.58}
 .game-outcome-pod-art-member{overflow:hidden;background:#30433f}
 .game-outcome-pod-art-member img{width:100%;height:100%;object-fit:cover;object-position:center 30%;filter:saturate(.7) brightness(.78)}
+
+/* Compact charts with expandable values on narrow screens. */
+.distribution-chart{display:block;width:100%;height:auto;max-height:290px;overflow:visible}
+.distribution-table-details{margin-top:12px;color:#d8cfb9;font-size:.75rem}
+.distribution-table-details>summary{cursor:pointer;color:#e8c98f;padding:8px 0}
+.distribution-table{width:100%;border-collapse:collapse;font-variant-numeric:tabular-nums}
+.distribution-table th,.distribution-table td{text-align:left;padding:6px;border-bottom:1px solid #ffffff1c}
+.game-outcome-hero .game-outcome-heading{background:transparent!important;background-color:transparent!important;box-shadow:none!important;-webkit-tap-highlight-color:transparent}
