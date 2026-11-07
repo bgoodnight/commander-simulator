@@ -734,7 +734,7 @@ test('full-game reviewer uses same compact turn rows as insight evidence',()=>{
     assert.ok(walk(turns[3]).some(n=>n.textContent==='Swamp'));
     const token=walk(turns[2]).find(n=>n.tag==='button'&&n.attributes['aria-label']==='View Servo Token card details');
     assert.ok(token,'turn reviewer renders Servo token');
-    token.onclick();
+    token.onclick({preventDefault(){},stopPropagation(){}});
     assert.equal(openedTokens[0]?.name,'Servo Token');
     const insight=walk(root).find(n=>n.className.includes('insight-featured-panel')&&
       walk(n).some(x=>x.textContent==='Most played card'));
@@ -1233,9 +1233,9 @@ test('turn summaries and end state use actual mana pips and clickable typed card
     addEventListener(k,handler){this.events[k]=handler}
     get lastChild(){return this.children.at(-1)}
     querySelector(selector){
-      if(selector==='.insight-end-zone')return this.children.flatMap(
+      if(selector==='.insight-board-hand')return this.children.flatMap(
         function walk(n){return [n,...n.children.flatMap(walk)]}
-      ).find(n=>n.className==='insight-end-zone')||null;
+      ).find(n=>n.className.includes('insight-board-hand'))||null;
       return null;
     }
   }
