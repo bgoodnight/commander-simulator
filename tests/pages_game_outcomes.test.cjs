@@ -622,9 +622,9 @@ test('hero performance metrics open original details as modal panels, not grid d
     assert.ok(dialog);
     // The dedicated R2 Key Insights panel owns card rankings, not this hero.
     assert.equal(walk(grid).filter(n=>n.className.includes('game-outcome-hero')&&
-      n.tag==='details').length,1);
+      n.tag==='div'&&n.className.includes('game-outcome-card')).length,1);
     assert.equal(walk(grid).filter(n=>n.tag==='details'&&
-      n.className.includes('game-outcome-card')).length,1);
+      n.className.includes('game-outcome-card')).length,0);
     assert.ok(!walk(grid).some(n=>n.className==='game-outcome-title'&&
       ['Opponent Types','Game Length','Commander Arrival','Mana Ramp'].includes(n.textContent)));
     const tiles=walk(grid).filter(n=>n.className==='game-outcome-hero-highlight');
@@ -651,6 +651,9 @@ test('hero performance metrics open original details as modal panels, not grid d
     assert.ok(walk(dialog).some(n=>n.className==='game-length-histogram-bars'));
     const axis=walk(dialog).find(n=>n.className==='game-length-histogram-axis');
     assert.ok(axis&&axis.children.length<=5);
+    const outcomeHeading=walk(grid).find(n=>n.className==='game-outcome-title game-outcome-heading');
+    outcomeHeading.events.click();
+    assert.ok(walk(dialog).some(n=>n.tag==='svg'&&n.attributes['aria-label']?.includes('Median life progression for wins')));
     // Overall win percentage opens the two-outcome life progression.
     const winMetric=walk(grid).find(n=>n.className==='game-outcome-hero-stat is-win');
     assert.ok(winMetric);
@@ -1048,10 +1051,9 @@ test('results hero is compact with proportions below percentages and cohort foot
     hero.indexOf('copy.appendChild(bar)'));
   assert.ok(hero.indexOf('copy.appendChild(bar)')<
     hero.indexOf('if(options.heroHighlights?.length)'));
-  assert.match(hero,/game-outcome-hero-meta/);
-  assert.match(source,/outcomeMeta=total\+" games · "/);
-  assert.match(source,/opponent groups · "\+seedLabel/);
-  assert.match(source,/Seeds "/);
+  assert.doesNotMatch(hero,/game-outcome-hero-meta/);
+  assert.match(hero,/game-outcome-baseline/);
+  assert.match(source,/summaryNotes/);
   assert.ok(!app.includes('intro.appendChild(el("h1","Simulation Results"))'));
   assert.match(css,/insight-turn-row \.insight-turn-cover/);
   assert.match(css,/opacity:\.95/);
