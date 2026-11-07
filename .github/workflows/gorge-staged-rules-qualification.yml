@@ -10,6 +10,7 @@ on:
       - 'tools/gorge_changezone_anynumber_test.go'
       - 'tools/gorge_adeline_planeswalker_test.go'
       - 'tools/gorge_four_hero_token_audit.py'
+  workflow_dispatch:
 permissions:
   contents: read
 concurrency:
