@@ -18,8 +18,19 @@ on:
       source_ref:
         description: "Staging branch or immutable commit to preview"
         required: true
-        default: "stage/combined-ui-omniscient-r2-20261106"
+        default: "stage/results-insights-r2-combined-20261106"
         type: string
+  workflow_run:
+    workflows:
+      - "Check optional model-insights staging integration"
+      - "Verify materialized R2 Results"
+      - "Test direct R2 Gorge Worker"
+      - "Build and (when enabled) publish Deck Lab Pages"
+      - "Browser-verify gorge Commander replay UI"
+      - "Verify original Results projection from real corrected Gorge recordings"
+      - "Commander simulator regression tests"
+    types: [completed]
+    branches: [stage/results-insights-r2-combined-20261106]
   push:
     branches: [main]
     paths:
@@ -44,25 +55,81 @@ jobs:
           REQUESTED_REF: ${{ github.event.inputs.source_ref }}
         run: |
           set -euo pipefail
-          REF="${REQUESTED_REF:-stage/combined-ui-omniscient-r2-20261106}"
+          REF="${REQUESTED_REF:-stage/results-insights-r2-combined-20261106}"
           if [[ ! "$REF" =~ ^(stage/|work/stage-)[A-Za-z0-9._/-]+$ && ! "$REF" =~ ^[a-f0-9]{40}$ ]]; then
             echo "Only explicit staging refs or immutable commit SHAs may be previewed" >&2
             exit 1
           fi
           echo "ref=$REF" >> "$GITHUB_OUTPUT"
+      - name: Allow manual preview or verify all seven staging workflows
+        id: gate
+        shell: bash
+        env:
+          GH_TOKEN: ${{ github.token }}
+          TRIGGER_KIND: ${{ github.event_name }}
+          TRIGGER_BRANCH: ${{ github.event.workflow_run.head_branch }}
+          TRIGGER_EVENT: ${{ github.event.workflow_run.event }}
+          TRIGGER_SHA: ${{ github.event.workflow_run.head_sha }}
+          REPOSITORY: ${{ github.repository }}
+        run: |
+          set -euo pipefail
+          if [[ "$TRIGGER_KIND" != "workflow_run" ]]; then
+            echo "ready=true" >> "$GITHUB_OUTPUT"
+            exit 0
+          fi
+          if [[ "$TRIGGER_BRANCH" != "stage/results-insights-r2-combined-20261106" || "$TRIGGER_EVENT" != "push" || ! "$TRIGGER_SHA" =~ ^[a-f0-9]{40}$ ]]; then
+            echo "Automatic publication requires a push on the designated staging branch" >> "$GITHUB_STEP_SUMMARY"
+            exit 0
+          fi
+          LATEST="$(gh api "repos/$REPOSITORY/branches/$TRIGGER_BRANCH" --jq '.commit.sha')"
+          if [[ "$LATEST" != "$TRIGGER_SHA" ]]; then
+            echo "Skipping superseded staging commit $TRIGGER_SHA" >> "$GITHUB_STEP_SUMMARY"
+            exit 0
+          fi
+          gh api "repos/$REPOSITORY/actions/runs?branch=$TRIGGER_BRANCH&per_page=100" > "$RUNNER_TEMP/staging-workflow-runs.json"
+          python - <<'PY' >> "$GITHUB_OUTPUT"
+          import json, os
+          data=json.load(open(os.environ["RUNNER_TEMP"]+"/staging-workflow-runs.json"))
+          expected={
+              "Check optional model-insights staging integration",
+              "Verify materialized R2 Results",
+              "Test direct R2 Gorge Worker",
+              "Build and (when enabled) publish Deck Lab Pages",
+              "Browser-verify gorge Commander replay UI",
+              "Verify original Results projection from real corrected Gorge recordings",
+              "Commander simulator regression tests",
+          }
+          sha=os.environ["TRIGGER_SHA"]
+          runs={}
+          for run in data["workflow_runs"]:
+              if run.get("head_sha") != sha or run.get("event") != "push":
+                  continue
+              name=run.get("name")
+              if name in expected and name not in runs:
+                  runs[name]=run.get("conclusion")
+          print("ready="+str(set(runs)==expected and all(v=="success" for v in runs.values())).lower())
+          print("verified_sha="+sha)
+          PY
+      - name: Record automatic preview eligibility
+        if: steps.gate.outputs.ready != 'true'
+        run: echo "Preview unchanged; all seven staging checks must succeed on the same current commit." >> "$GITHUB_STEP_SUMMARY"
       - uses: actions/checkout@v4
+        if: steps.gate.outputs.ready == 'true'
         with:
-          ref: ${{ steps.source.outputs.ref }}
+          ref: ${{ github.event_name == 'workflow_run' && github.event.workflow_run.head_sha || steps.source.outputs.ref }}
           persist-credentials: false
           fetch-depth: 0
           path: staged
       - uses: actions/setup-python@v5
+        if: steps.gate.outputs.ready == 'true'
         with:
           python-version: "3.11"
       - name: Build staged static site
+        if: steps.gate.outputs.ready == 'true'
         working-directory: staged
         run: python tools/build_pages_deck_lab.py --output "$RUNNER_TEMP/staging-site"
       - name: Validate preview output and exclude secrets
+        if: steps.gate.outputs.ready == 'true'
         shell: bash
         run: |
           set -euo pipefail
@@ -80,12 +147,28 @@ jobs:
                   raise ValueError(f"Unsafe preview file: {p}")
           PY
       - name: Checkout publishing branch separately
+        if: steps.gate.outputs.ready == 'true'
         uses: actions/checkout@v4
         with:
           ref: main
           fetch-depth: 0
           path: published
+      - name: Refuse to publish a superseded automatic commit
+        if: steps.gate.outputs.ready == 'true' && github.event_name == 'workflow_run'
+        shell: bash
+        env:
+          GH_TOKEN: ${{ github.token }}
+          TRIGGER_SHA: ${{ github.event.workflow_run.head_sha }}
+          REPOSITORY: ${{ github.repository }}
+        run: |
+          set -euo pipefail
+          LATEST="$(gh api "repos/$REPOSITORY/branches/stage/results-insights-r2-combined-20261106" --jq '.commit.sha')"
+          if [[ "$LATEST" != "$TRIGGER_SHA" ]]; then
+            echo "New staging commit arrived during build; refusing stale preview publication." >&2
+            exit 1
+          fi
       - name: Publish preview folder only
+        if: steps.gate.outputs.ready == 'true'
         shell: bash
         working-directory: published
         run: |
@@ -110,5 +193,6 @@ jobs:
           git push origin HEAD:main
           echo "Preview: https://bgoodnight.github.io/commander-simulator/docs/preview/staging/results.html" >> "$GITHUB_STEP_SUMMARY"
       - name: Provide direct preview link
+        if: steps.gate.outputs.ready == 'true'
         run: |
           echo "https://bgoodnight.github.io/commander-simulator/docs/preview/staging/results.html" >> "$GITHUB_STEP_SUMMARY"
