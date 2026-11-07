@@ -1,6 +1,6 @@
 name: Publish reusable Commander staging preview
 # Refresh source-backed token zones and planeswalkers (PR #240).
-# Use verified original-layout omniscient staging branch (PR #243).
+# Stage combined current production UI and verified full-state R2 (PR #250).
 # Refresh preview with Live R2 diagnostics root removed, asset contract retained.
 # Publish combined token identity/art/stack integration from Results staging PR #236.
 # Refresh game-length histogram, player-only life and circular info icon (PR 231).
@@ -17,7 +17,7 @@ on:
       source_ref:
         description: "Staging branch or immutable commit to preview"
         required: true
-        default: "stage/omniscient-original-renderer-20261106"
+        default: "stage/combined-ui-omniscient-r2-20261106"
         type: string
   push:
     branches: [main]
@@ -43,7 +43,7 @@ jobs:
           REQUESTED_REF: ${{ github.event.inputs.source_ref }}
         run: |
           set -euo pipefail
-          REF="${REQUESTED_REF:-stage/omniscient-original-renderer-20261106}"
+          REF="${REQUESTED_REF:-stage/combined-ui-omniscient-r2-20261106}"
           if [[ ! "$REF" =~ ^(stage/|work/stage-)[A-Za-z0-9._/-]+$ && ! "$REF" =~ ^[a-f0-9]{40}$ ]]; then
             echo "Only explicit staging refs or immutable commit SHAs may be previewed" >&2
             exit 1
