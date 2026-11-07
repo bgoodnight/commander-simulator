@@ -78,7 +78,7 @@ jobs:
           rc=$?
           set -e
           if [[ "$rc" != 0 && "$rc" != 2 ]]; then cat "$RUNNER_TEMP/results/stderr.txt";exit "$rc";fi
-          grep -E 'GORGE_TARGET_(ABORT_DIAG|STAGE)' "$RUNNER_TEMP/results/stderr.txt" | sort | uniq -c | head -120 || true
+          grep -E 'GORGE_(TARGET_(ABORT_DIAG|STAGE)|AFFORD_DROP)' "$RUNNER_TEMP/results/stderr.txt" | sort | uniq -c | head -120 || true
           python -m tools.gorge_target_reversal_attribution --root "$RUNNER_TEMP/results" --hero "$HERO"
           python - <<'PY'
           import json,os
