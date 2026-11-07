@@ -1,0 +1,54 @@
+name: Inventory historical Gorge R2 sources (read only)
+on:
+  push:
+    branches: [analysis/r2-exploratory-elastic-net-20261105]
+    paths:
+      - "tools/gorge_inventory_r2.py"
+      - "tests/test_gorge_inventory_r2.py"
+      - ".github/workflows/gorge-r2-historical-inventory.yml"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  inventory:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    env:
+      ACCOUNT_ID: ${{ secrets.GORGE_R2_ACCOUNT_ID }}
+      AWS_ACCESS_KEY_ID: ${{ secrets.GORGE_R2_ACCESS_KEY_ID }}
+      AWS_SECRET_ACCESS_KEY: ${{ secrets.GORGE_R2_SECRET_ACCESS_KEY }}
+      AWS_DEFAULT_REGION: auto
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Test inventory collection with synthetic R2 responses
+        run: python -m unittest tests.test_gorge_inventory_r2 -v
+      - name: Inventory manifests and object metadata without reading gameplay
+        shell: bash
+        run: |
+          set -euo pipefail
+          test -n "$ACCOUNT_ID" && test -n "$AWS_ACCESS_KEY_ID" && test -n "$AWS_SECRET_ACCESS_KEY"
+          python -m tools.gorge_inventory_r2 --account-id "$ACCOUNT_ID" --output "$RUNNER_TEMP/gorge-r2-inventory.json"
+          python - "$RUNNER_TEMP/gorge-r2-inventory.json" <<'PY'
+          import json,os,sys
+          r=json.load(open(sys.argv[1]))
+          with open(os.environ["GITHUB_STEP_SUMMARY"],"a") as f:
+              f.write("# Historical R2 inventory (metadata only)\n\n")
+              f.write(f"Warehouse batches: {r['warehouse_batch_count']}; declared game rows across manifests: {r['warehouse_declared_games_total']}; native objects: {r['native_objects_total']}\n\n")
+              f.write("| Family | Objects | Stored bytes |\n|---|---:|---:|\n")
+              for name,item in r["families"].items():
+                  f.write(f"| {name} | {item['objects']} | {item['bytes']} |\n")
+              f.write("\nObject/manifest counts are not a deduplicated all-games count. No private game rows were accessed.\n")
+          PY
+      - name: Retain inventory report (metadata only)
+        uses: actions/upload-artifact@v4
+        if: success()
+        with:
+          name: gorge-r2-historical-inventory
+          path: ${{ runner.temp }}/gorge-r2-inventory.json
+          retention-days: 14
+          if-no-files-found: error
