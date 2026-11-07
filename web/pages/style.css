@@ -2741,3 +2741,7 @@ body.r2-original-results-active #gorge-replay-panel{display:none!important}
  .insight-compact-preview .insight-token-art{width:30px;height:41px;min-width:30px}
  .insight-compact-preview.is-graveyard-stack .insight-action-card:nth-child(n+2){margin-left:-22px}
 }
+
+/* Compact, touch-friendly filter and sort controls for insight rankings. */
+.insight-filter-select{width:auto;max-width:100%;min-width:0;padding:.4rem 2rem .4rem .65rem;cursor:pointer}
+.gorge-card-type-controls .insight-filter-select{height:auto;flex:0 1 auto}
