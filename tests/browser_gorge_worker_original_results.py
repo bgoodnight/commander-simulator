@@ -211,7 +211,10 @@ def test_materialized():
                 page.route(API+"/v1/ui/game?*",response)
                 page.goto(f"http://127.0.0.1:{server.server_port}/results.html?deck={DECK}&materializedResults=1",
                           wait_until="domcontentloaded")
-                page.get_by_text("201 games · complete cohort",exact=False).wait_for(timeout=60000)
+                page.locator("#game-outcome-results .game-outcome-hero-frame").wait_for(timeout=60000)
+                page.locator("#game-outcome-results .game-outcome-limits summary").click()
+                assert page.get_by_text("201 games · complete cohort",exact=False).is_visible()
+                page.locator("#game-outcome-results .game-outcome-limits summary").click()
                 assert page.evaluate("document.body.dataset.r2ResultsState")=="ready"
                 assert page.locator("#key-insights-panel").is_visible()
                 assert page.locator("#key-insights-grid").get_by_text(source_card,exact=False).first.is_visible()
@@ -247,7 +250,7 @@ def test_materialized():
                 assert page.locator("#turn-reviewer-results .insight-turn-row").count()>0
                 if one_batch["runs"][0].get("gorge_source",{}).get("opening_hand_boundary")=="first_pending_decision_of_turn":
                     assert page.get_by_text("First recorded hand",exact=False).first.is_visible()
-                assert page.get_by_text("201 games · complete cohort",exact=False).is_visible()
+                assert page.get_by_text("201 games · complete cohort",exact=False).count()==1
                 assert page.get_by_text(source_card,exact=False).first.is_visible()
                 # A selected replay must not render misleading one-game
                 # outcome statistics alongside the full-cohort dashboard.
