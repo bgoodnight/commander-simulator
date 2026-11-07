@@ -80,7 +80,8 @@
       lookupRecordedCard:window.GorgeDeckLabCardInfo,
       onReviewGame,
       renderMana:value=>window.GorgeDeckLabMana?.(value),
-      onOpenRecordedCard:name=>window.GorgeDeckLabOpenCard?.(name)
+      onOpenRecordedCard:name=>window.GorgeDeckLabOpenCard?.(name),
+      onOpenTokenCard:card=>window.GorgeDeckLabOpenTokenCard?.(card)
     });
     // Core section visibility is tied to result readiness, not card ranking count.
   }
@@ -450,7 +451,8 @@
             lookupRecordedCard:window.GorgeDeckLabCardInfo,
             deckCardNames:selected.cardNames,
             renderMana:value=>window.GorgeDeckLabMana?.(value),
-            onOpenRecordedCard:name=>window.GorgeDeckLabOpenCard?.(name)
+            onOpenRecordedCard:name=>window.GorgeDeckLabOpenCard?.(name),
+            onOpenTokenCard:card=>window.GorgeDeckLabOpenTokenCard?.(card)
           });
       }
       window.DeckGameOutcomes.render(root,[batch],{
