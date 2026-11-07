@@ -55,6 +55,17 @@ def test():
                 assert page.evaluate("(key)=>window.R2OriginalResults.ownsRenderedDeck(key)",DECK)
                 assert page.locator("#game-outcome-results .game-outcome-stacked-bar").count()>0
                 assert page.locator("#game-outcome-results .game-outcome-hero").count()==1
+                baseline=hero.locator(".game-outcome-baseline")
+                assert baseline.count()==1
+                offset=baseline.evaluate("e => (e.getBoundingClientRect().left + e.getBoundingClientRect().width/2 - e.parentElement.getBoundingClientRect().left)/e.parentElement.getBoundingClientRect().width")
+                assert abs(offset-.25)<.005
+                assert hero.locator(".game-outcome-buckets").count()==0
+                assert "Seeds " not in hero.inner_text()
+                hero.get_by_role("button",name="Game Outcomes · open life progression for wins and losses").click()
+                dialog=page.get_by_role("dialog",name="Game performance details")
+                assert dialog.is_visible()
+                assert dialog.get_by_text("Life Progression · Wins vs Losses").is_visible()
+                dialog.get_by_role("button",name="Close game performance details").click()
                 # Missing optional card-level insights are a legitimate placeholder.
                 # They must not suppress the source-backed outcome hero.
                 assert "No approved simulations match" not in hero.inner_text()
