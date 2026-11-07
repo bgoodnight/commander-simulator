@@ -646,6 +646,12 @@ test('hero performance metrics open original details as modal panels, not grid d
       assert.equal(dialog.open,false);
       assert.equal(tile.focused,true);
     }
+    tiles[2].events.click({preventDefault(){},stopPropagation(){}});
+    assert.ok(walk(dialog).some(n=>n.tag==='svg'&&n.attributes['aria-label']?.includes('First recorded commander cast')));
+    assert.ok(walk(dialog).some(n=>n.className==='distribution-table-details'));
+    tiles[3].events.click({preventDefault(){},stopPropagation(){}});
+    assert.ok(walk(dialog).some(n=>n.tag==='svg'&&n.attributes['aria-label']?.includes('Average recorded mana produced')));
+    assert.ok(walk(dialog).some(n=>n.textContent.includes('sample sizes can change')));
     // Game-length distribution is vertical with a sparse tick axis.
     tiles[1].events.click({preventDefault(){},stopPropagation(){}});
     assert.ok(walk(dialog).some(n=>n.className==='game-length-histogram-bars'));
