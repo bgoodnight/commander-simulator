@@ -1256,7 +1256,7 @@
     for(const [label,cards] of zones){
       if(!Array.isArray(cards))continue;
       const group=create("details","insight-end-zone insight-board-"+label.toLowerCase().replace(/[^a-z]+/g,"-"));
-      group.open=true;
+      group.open=label!=="Graveyard";
       const icon=({Hand:"▤","Command zone":"♛",Creatures:"♟",Lands:"◇",
         Artifacts:"⚙",Enchantments:"✦",Planeswalkers:"♛","Other permanents":"◈",
         Graveyard:"◆",Exile:"⊘"})[label]||"◈";
@@ -1264,6 +1264,32 @@
       trigger.append(create("span","insight-end-zone-icon",icon),
         create("span",null,label+" · "+cards.length));
       group.appendChild(trigger);
+      if(label==="Graveyard"&&cards.length){
+        // Keep a compact, inspectable preview visible while the zone is closed.
+        const preview=create("span","insight-graveyard-preview");
+        preview.style.display="flex";preview.style.flexWrap="wrap";
+        preview.style.gap="0.25rem";preview.style.marginTop="0.35rem";
+        const previewNames=cards.slice(-3).reverse();
+        previewNames.forEach((name,index)=>{
+          const tile=insightActionCard(name,options,{});
+          const inspect=tile.onclick;
+          tile.onclick=event=>{
+            event.preventDefault();event.stopPropagation();
+            if(index===0)inspect?.(event);
+            else group.open=true;
+          };
+          if(index>0){
+            tile.setAttribute("aria-label","Expand graveyard to see "+name);
+            tile.title="Expand graveyard";
+          }
+          preview.appendChild(tile);
+        });
+        const syncPreview=()=>{preview.hidden=group.open;
+          preview.style.display=group.open?"none":"flex";};
+        group.addEventListener("toggle",syncPreview);
+        trigger.appendChild(preview);
+        syncPreview();
+      }
       const list=create("div","insight-action-cards");
       const entries=byType.has(label)?
         groupedBattlefieldTokens(cards,options):cards.map(name=>({name,count:1}));
@@ -1707,9 +1733,7 @@
         {name,type_line:token.type,oracle_text:"",power:token.power??null,
          toughness:token.toughness??null});
         else options.onOpenRecordedCard?.(name)});
-    button.setAttribute("aria-label",token?
-      name+(Number.isInteger(token.power)?" "+token.power+"/"+token.toughness:""):
-      "View "+name+" card details");
+    button.setAttribute("aria-label","View "+name+" card details");
     if(token&&!display.textOnly){
       const tokenArt=create("span","insight-token-art",token.glyph);
       tokenArt.setAttribute("aria-hidden","true");
@@ -1734,15 +1758,9 @@
     if(!display.artOnly||token||!(typeof art==="string"&&/^https:\/\//.test(art))){
       const title=create("span","insight-action-name",name);
       button.appendChild(title);
-      if(token&&Number.isInteger(token.power)){
-        const stats=create("span","insight-token-stats",
-          token.power+"/"+token.toughness);
-        stats.title="Base token power/toughness; modifiers not exported";
-        button.appendChild(stats);
-      }
+
     }
-    if(token)button.title=token.type+
-      (Number.isInteger(token.power)?" · base "+token.power+"/"+token.toughness:"");
+    if(token)button.title=token.type;
     if(token&&display.count>1){
       const quantity=create("span","insight-token-quantity","×"+display.count);
       quantity.setAttribute("aria-label",display.count+" identical tokens");
