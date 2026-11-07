@@ -254,3 +254,36 @@ test('replay mana glyphs use existing Scryfall symbol artwork and safe readable 
     assert.equal(Replay.manaOutputSymbols([]).children[0].textContent,'Unreported');
   }finally{global.document=original}
 });
+
+test('recorded tokens open the shared card modal, never a same-name deck card',()=>{
+  class Node{
+    constructor(tag){this.tag=tag;this.children=[];this.className='';this.attributes={};this.textContent='';}
+    append(...children){this.children.push(...children)}
+    appendChild(child){this.children.push(child);return child}
+    setAttribute(name,value){this.attributes[name]=value}
+  }
+  const old=global.document;
+  global.document={createElement:tag=>new Node(tag)};
+  try{
+    const tokens=[],ordinary=[];
+    const round={snapshots:{'0':{zones:{battlefield:[
+      {name:'Servo Token',token:true,type_line:'Token Artifact Creature — Servo',
+       power:'1',toughness:'1'},
+      {name:'Swamp',token:false}
+    ]}}},actions:[]};
+    const inspector=Replay.zoneInspector(round,'creatures',name=>
+      ({name,oracle_id:'ordinary-id',type_line:'Creature',image:'https://example.invalid/art.png'}),
+      id=>ordinary.push(id),card=>tokens.push(card));
+    const walk=node=>[node,...node.children.flatMap(walk)];
+    const token=walk(inspector).find(node=>node.tag==='button'&&
+      node.className.includes('replay-zone-token'));
+    assert.ok(token,'recorded token must be an interactive button');
+    token.onclick();
+    assert.equal(ordinary.length,0);
+    assert.equal(tokens.length,1);
+    assert.equal(tokens[0].name,'Servo Token');
+    assert.equal(tokens[0].type_line,'Token Artifact Creature — Servo');
+    assert.equal(tokens[0].power,'1');
+    assert.equal(tokens[0].toughness,'1');
+  }finally{global.document=old}
+});

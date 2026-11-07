@@ -2718,3 +2718,70 @@ body.r2-original-results-active #gorge-replay-panel{display:none!important}
  padding:0;flex:none;aspect-ratio:1 / 1;border-radius:50%;
  line-height:1
 }
+
+
+/* Compact board previews; expanded zones retain their full labelled tiles. */
+.insight-zone-expand-hint{margin-left:auto;color:#d8c39a;font-size:.68rem;font-weight:400}
+.insight-compact-preview{flex:0 0 100%;display:flex;flex-wrap:wrap;align-items:center;gap:3px;margin-top:4px;min-width:0}
+.insight-compact-preview[hidden]{display:none!important}
+.insight-compact-preview .insight-action-card.is-art-only{position:relative;display:inline-flex;padding:0;border:0;border-radius:3px;background:transparent;gap:0;min-width:0}
+.insight-compact-preview .insight-action-art,
+.insight-compact-preview .insight-token-card-image,
+.insight-compact-preview .insight-token-art{width:34px;height:46px;min-width:34px;object-fit:cover;border-radius:3px}
+.insight-compact-preview .is-token .insight-action-name{display:none}
+.insight-compact-preview .insight-token-quantity{top:-3px;right:-3px;padding:0 3px;font-size:.62rem;z-index:5}
+.insight-compact-preview.is-graveyard-stack{flex-wrap:nowrap;padding-left:0}
+.insight-compact-preview.is-graveyard-stack .insight-action-card{position:relative}
+.insight-compact-preview.is-graveyard-stack .insight-action-card:nth-child(1){z-index:3}
+.insight-compact-preview.is-graveyard-stack .insight-action-card:nth-child(2){z-index:2;margin-left:-25px}
+.insight-compact-preview.is-graveyard-stack .insight-action-card:nth-child(3){z-index:1;margin-left:-25px}
+@media(max-width:650px){
+ .insight-compact-preview .insight-action-art,
+ .insight-compact-preview .insight-token-card-image,
+ .insight-compact-preview .insight-token-art{width:30px;height:41px;min-width:30px}
+ .insight-compact-preview.is-graveyard-stack .insight-action-card:nth-child(n+2){margin-left:-22px}
+}
+
+/* Compact, touch-friendly filter and sort controls for insight rankings. */
+.insight-filter-select{width:auto;max-width:100%;min-width:0;padding:.4rem 2rem .4rem .65rem;cursor:pointer}
+.gorge-card-type-controls .insight-filter-select{height:auto;flex:0 1 auto}
+
+/* Outcomes: equal alignment, unobtrusive interaction, and four-player reference. */
+.game-outcome-hero-heading,.game-outcome-hero-stat.is-win{appearance:none;background:transparent;border:0;padding:0;text-align:left;color:inherit;font:inherit;cursor:pointer}
+.game-outcome-hero-heading:focus-visible,.game-outcome-hero-stat.is-win:focus-visible{outline:2px solid var(--gold);outline-offset:4px;border-radius:3px}
+.game-outcome-hero-stat{align-content:start;justify-items:start;text-align:left}
+.game-outcome-hero-stats{align-items:start}
+.game-outcome-stacked-bar{position:relative;gap:0;overflow:visible}
+.game-outcome-stacked-bar>span:not(.game-outcome-baseline):first-child{border-radius:10px 0 0 10px}
+.game-outcome-stacked-bar>span:not(.game-outcome-baseline):nth-last-child(2){border-radius:0 10px 10px 0}
+.game-outcome-stacked-bar>span:not(.game-outcome-baseline):first-child:nth-last-child(2){border-radius:10px}
+.game-outcome-stacked-bar .game-outcome-baseline{position:absolute;z-index:2;left:25%;top:-4px;width:2px;height:17px;background:#ead4a5;box-shadow:0 0 0 1px #152527;transform:translateX(-50%)}
+.game-outcome-stacked-bar .game-outcome-baseline:before{content:"";position:absolute;left:-2px;top:-3px;width:6px;height:6px;background:#ead4a5;transform:rotate(45deg);box-shadow:0 0 0 1px #152527}
+.game-outcome-value-qualifier{margin-left:.4em;font-size:.55em;font-weight:500;color:#cbd1c8;white-space:normal}
+
+/* Keep the clickable outcome heading visually consistent with its card. */
+.latest-insight-grid .game-outcome-hero .game-outcome-heading{background:transparent;border:0;box-shadow:none;text-align:left;font-family:Cinzel,Georgia,serif;color:#f2dfc1;padding:0;width:auto;align-self:start}
+.game-outcome-hero-highlight.has-commander-card{position:relative;min-height:76px;padding-right:60px}
+.game-outcome-matchup-card{position:absolute;right:8px;top:7px;bottom:7px;width:43px;height:calc(100% - 14px);max-height:76px;object-fit:contain;border-radius:4px}
+.game-outcome-matchup-card[hidden],.game-outcome-matchup-fallback[hidden]{display:none}
+.game-outcome-pod-art{position:absolute;inset:0;display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:2px;opacity:.58}
+.game-outcome-pod-art-member{overflow:hidden;background:#30433f}
+.game-outcome-pod-art-member img{width:100%;height:100%;object-fit:cover;object-position:center 30%;filter:saturate(.7) brightness(.78)}
+
+/* Compact charts with expandable values on narrow screens. */
+.distribution-chart{display:block;width:100%;height:auto;max-height:290px;overflow:visible}
+.distribution-table-details{margin-top:12px;color:#d8cfb9;font-size:.75rem}
+.distribution-table-details>summary{cursor:pointer;color:#e8c98f;padding:8px 0}
+.distribution-table{width:100%;border-collapse:collapse;font-variant-numeric:tabular-nums}
+.distribution-table th,.distribution-table td{text-align:left;padding:6px;border-bottom:1px solid #ffffff1c}
+.game-outcome-hero .game-outcome-heading{background:transparent!important;background-color:transparent!important;box-shadow:none!important;-webkit-tap-highlight-color:transparent}
+
+/* Two aligned outcome figures, using the available width on mobile too. */
+#pane-records .game-outcome-hero-stats{grid-template-columns:repeat(2,minmax(0,1fr))}
+
+/* Match the section headings and let the overview fit its contents. */
+#pane-records .latest-insight-grid .game-outcome-hero-summary{min-height:0}
+#pane-records .latest-insight-grid .game-outcome-hero .game-outcome-title,
+#pane-records .key-insights-heading h2{font-family:Cinzel,Georgia,serif;font-size:clamp(1.5rem,3.1vw,2.35rem);font-weight:600;line-height:1.2;letter-spacing:normal;margin:0}
+#pane-records .game-outcome-hero-stat strong{font-size:clamp(2rem,4vw,2.6rem);line-height:1.05}
+#pane-records .game-outcome-hero-stat span{font-size:.76rem}

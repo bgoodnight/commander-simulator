@@ -58,6 +58,7 @@ test('Gorge tokens use source identity and permanent types for exclusive zones',
 const runWon=()=>run(0,'win',[
   [40,40,40,40],[36,26,28,29],[32,0,0,0]
 ]);
+const runWonThree=()=>run(1,'win',[[40,40,40,40],[35,38,39,40],[20,12,23,30],[18,0,0,0]]);
 const runUnresolved=()=>run(1,'unresolved',[
   [40,40,40,40],[35,38,39,40],[20,12,23,30],[18,9,20,26]
 ]);
@@ -221,8 +222,9 @@ test('modeled panels expose distinct outcome, life and matchup disclosures with 
     matchupTile.events.click({preventDefault(){},stopPropagation(){}});
     nodes=walk(root);
     assert.ok(nodes.some(n=>n.className==='game-outcome-matchup-view'));
-    assert.ok(nodes.some(n=>n.textContent==='Wins · 1/2'));
-    assert.ok(nodes.some(n=>n.textContent==='50%'));
+    assert.ok(nodes.some(n=>n.textContent==='Wins · 1/1'));
+    assert.ok(nodes.some(n=>n.textContent==='100%'));
+    assert.ok(!nodes.some(n=>String(n.textContent).toLowerCase().includes('unresolved')));
     assert.ok(nodes.some(n=>n.textContent==='Game Outcomes'));
     assert.ok(nodes.some(n=>String(n.textContent).includes('One opponent type recorded')));
     const rank=nodes.find(n=>n.tag==='button'&&n.className==='game-outcome-rank-row');
@@ -251,6 +253,11 @@ test('modeled panels expose distinct outcome, life and matchup disclosures with 
     assert.ok(nodes.some(n=>String(n.textContent).includes('One opponent type recorded')));
     assert.ok(!nodes.some(n=>String(n.textContent).includes(
       'Highest observed modeled win share')));
+    Outcomes.render(root,[batch([runUnresolved()])],{
+      deckKey:'necron_dynasties',deckHash:'a'.repeat(64),reviewerRoot:reviewer
+    });
+    assert.ok(walk(root).some(n=>n.textContent==='No completed wins or losses are available yet.'));
+    assert.ok(walk(reviewer).some(n=>n.className==='insight-turn-row'));
   }finally{global.document=before}
 });
 test('selecting an opponent scroll entry changes the one shown art card and per-opponent metrics',()=>{
@@ -477,7 +484,7 @@ test('featured card insight switches artwork, mana, metrics, and evidence with s
   const before=global.document;
   global.document={createElement:t=>new Node(t),createElementNS:(_,t)=>new Node(t)};
   try{
-    const make=(seed,card)=>run(seed,'unresolved',[
+    const make=(seed,card)=>run(seed,'win',[
       [40,40,40,40],[40,40,40,40],[40,40,40,40],[40,40,40,40]
     ],undefined,{
       opening_hand:[card],
@@ -537,11 +544,11 @@ test('featured card insight switches artwork, mana, metrics, and evidence with s
     assert.ok(walk(tracker).some(n=>n.className==='insight-turn-row'));
     const label=walk(tracker).find(n=>n.className==='insight-example-game-label');
     assert.ok(label);
-    assert.match(label.textContent,/Seed 1 · Unresolved/);
+    assert.match(label.textContent,/Seed 1 · Win/);
     metrics[1].onclick();
-    assert.match(label.textContent,/Seed 2 · Unresolved/);
+    assert.match(label.textContent,/Seed 2 · Win/);
     metrics[0].onclick();
-    assert.match(label.textContent,/Seed 1 · Unresolved/);
+    assert.match(label.textContent,/Seed 1 · Win/);
     const action=walk(tracker).find(n=>n.className.includes('insight-example-full-link'));
     assert.ok(action);
     assert.equal(action.textContent,'Open full reviewer ↗');
@@ -614,18 +621,23 @@ test('hero performance metrics open original details as modal panels, not grid d
     const root=new Node('main'),reviewer=new Node('section');
     Outcomes.render(root,[batch([runWon(),runUnresolved(),runLost()])],{
       deckKey:'necron_dynasties',deckHash:'a'.repeat(64),
-      reviewerRoot:reviewer
+      externalInsights:true,reviewerRoot:reviewer
     });
     const walk=n=>[n,...n.children.flatMap(walk)];
     const grid=root.children.find(n=>n.className.includes('latest-insight-grid'));
     const dialog=root.children.find(n=>n.tag==='dialog');
     assert.ok(dialog);
+    // The dedicated R2 Key Insights panel owns card rankings, not this hero.
+    assert.equal(walk(grid).filter(n=>n.className.includes('game-outcome-hero')&&
+      n.tag==='div'&&n.className.includes('game-outcome-card')).length,1);
+    assert.equal(walk(grid).filter(n=>n.tag==='details'&&
+      n.className.includes('game-outcome-card')).length,0);
     assert.ok(!walk(grid).some(n=>n.className==='game-outcome-title'&&
-      ['Opponent Types','Game Length','Eliminations','Life Progression'].includes(n.textContent)));
+      ['Opponent Types','Game Length','Commander Arrival','Mana Ramp'].includes(n.textContent)));
     const tiles=walk(grid).filter(n=>n.className==='game-outcome-hero-highlight');
     assert.deepEqual(tiles.map(n=>n.children[0].textContent),
-      ['Best matchup','Game length','Survival','Final life']);
-    const headings=['Opponent Types','Game Length','Eliminations','Life Progression'];
+      ['Best matchup','Game length','Commander arrival','Mana ramp']);
+    const headings=['Opponent Types','Game Length','Commander Arrival','Mana Ramp'];
     for(const [i,tile] of tiles.entries()){
       assert.equal(tile.tag,'button');
       assert.equal(tile.attributes['aria-haspopup'],'dialog');
@@ -641,19 +653,31 @@ test('hero performance metrics open original details as modal panels, not grid d
       assert.equal(dialog.open,false);
       assert.equal(tile.focused,true);
     }
+    tiles[2].events.click({preventDefault(){},stopPropagation(){}});
+    assert.ok(walk(dialog).some(n=>n.tag==='svg'&&n.attributes['aria-label']?.includes('First recorded commander cast')));
+    assert.ok(walk(dialog).some(n=>n.className==='distribution-table-details'));
+    tiles[3].events.click({preventDefault(){},stopPropagation(){}});
+    assert.ok(walk(dialog).some(n=>n.tag==='svg'&&n.attributes['aria-label']?.includes('Average recorded mana produced')));
+    assert.ok(walk(dialog).some(n=>n.textContent.includes('sample sizes can change')));
     // Game-length distribution is vertical with a sparse tick axis.
     tiles[1].events.click({preventDefault(){},stopPropagation(){}});
     assert.ok(walk(dialog).some(n=>n.className==='game-length-histogram-bars'));
     const axis=walk(dialog).find(n=>n.className==='game-length-histogram-axis');
     assert.ok(axis&&axis.children.length<=5);
-    // Life progression visualizes only seat 0, not all four opponents.
-    tiles[3].events.click({preventDefault(){},stopPropagation(){}});
+    const outcomeHeading=walk(grid).find(n=>n.className==='game-outcome-title game-outcome-heading');
+    outcomeHeading.events.click();
+    assert.ok(walk(dialog).some(n=>n.tag==='svg'&&n.attributes['aria-label']?.includes('Median life progression for wins')));
+    // Overall win percentage opens the two-outcome life progression.
+    const winMetric=walk(grid).find(n=>n.className==='game-outcome-hero-stat is-win');
+    assert.ok(winMetric);
+    assert.equal(winMetric.tag,'button');
+    assert.equal(winMetric.attributes['aria-haspopup'],'dialog');
+    winMetric.events.click({preventDefault(){},stopPropagation(){}});
     const life=walk(dialog).find(n=>n.tag==='svg'&&
-      n.attributes['aria-label']?.includes('Your median life'));
+      n.attributes['aria-label']?.includes('Median life progression for wins'));
     assert.ok(life);
-    assert.equal(walk(life).filter(n=>n.tag==='polyline').length,1);
+    assert.ok(walk(life).filter(n=>n.tag==='polyline').length>=1);
     assert.ok(!walk(dialog).some(n=>n.textContent==='Seat 2'));
-    assert.ok(walk(dialog).some(n=>n.className==='game-outcome-round-slider'));
   }finally{global.document=before}
 });
 test('dashboard modal CSS respects motion preferences and mobile size',()=>{
@@ -698,18 +722,18 @@ test('full-game reviewer uses same compact turn rows as insight evidence',()=>{
   global.document={createElement:tag=>new Node(tag),
     createElementNS:(_,tag)=>new Node(tag)};
   try{
-    const root=new Node('main'),reviewer=new Node('section');
-    const withTurns={...runUnresolved(),opening_hand:['Grave Titan'],
+    const root=new Node('main'),reviewer=new Node('section'),openedTokens=[];
+    const withTurns={...runWonThree(),opening_hand:['Grave Titan'],
       ui_observations:[
         {turn:1,hand:['Grave Titan'],battlefield:[],graveyard:[],
           actions:[{type:'creature_cast',card:'Grave Titan',seat:0}]},
-        {turn:2,hand:[],battlefield:['Grave Titan'],graveyard:[],
+        {turn:2,hand:[],battlefield:['Grave Titan','Servo Token'],graveyard:[],
           actions:[{type:'draw',card:'Plains',seat:0}]},
         {turn:3,hand:[],battlefield:['Grave Titan'],graveyard:[],
           actions:[{type:'land_play',card:'Swamp',seat:0}]}]};
     Outcomes.render(root,[batch([withTurns])],{
       deckKey:'necron_dynasties',deckHash:'a'.repeat(64),
-      reviewerRoot:reviewer,lookupRecordedCard:name=>({
+      reviewerRoot:reviewer,onOpenTokenCard:card=>openedTokens.push(card),lookupRecordedCard:name=>({
         name,art:'https://example.com/'+name.replaceAll(' ','-')+'.jpg'
       })
     });
@@ -724,6 +748,10 @@ test('full-game reviewer uses same compact turn rows as insight evidence',()=>{
     assert.equal(walk(opened).filter(n=>n.className.split(' ').includes('insight-board-seat')).length,4);
     assert.ok(walk(opened).some(n=>n.className.includes('insight-seat-life-delta is-loss')));
     assert.ok(walk(turns[3]).some(n=>n.textContent==='Swamp'));
+    const token=walk(turns[2]).find(n=>n.tag==='button'&&n.attributes['aria-label']==='View Servo Token card details');
+    assert.ok(token,'turn reviewer renders Servo token');
+    token.onclick({preventDefault(){},stopPropagation(){}});
+    assert.equal(openedTokens[0]?.name,'Servo Token');
     const insight=walk(root).find(n=>n.className.includes('insight-featured-panel')&&
       walk(n).some(x=>x.textContent==='Most played card'));
     assert.ok(insight);
@@ -785,7 +813,7 @@ test('tutor card insight panels only appear for confirmed named search resolutio
   const before=global.document;
   global.document={createElement:tag=>new Node(tag),
     createElementNS:(_,tag)=>new Node(tag)};
-  const make=actions=>({...runUnresolved(),ui_observations:[
+  const make=actions=>({...runWonThree(),ui_observations:[
     {turn:1,hand:[],actions},{turn:2,hand:[],actions:[]},
     {turn:3,hand:[],actions:[]}]});
   const walk=n=>[n,...n.children.flatMap(walk)];
@@ -829,7 +857,7 @@ test('selected card insight embeds relevant game turns and real life/zone change
     createElementNS:(_,tag)=>new Node(tag)};
   const walk=n=>[n,...n.children.flatMap(walk)];
   try{
-    const r={...runUnresolved(),ui_observations:[
+    const r={...runWonThree(),ui_observations:[
       {turn:1,hand:['Grave Titan'],battlefield:[],graveyard:[],
         actions:[{type:'draw',card:'Grave Titan',seat:0}]},
       {turn:2,hand:[],battlefield:['Grave Titan'],graveyard:[],
@@ -1036,10 +1064,9 @@ test('results hero is compact with proportions below percentages and cohort foot
     hero.indexOf('copy.appendChild(bar)'));
   assert.ok(hero.indexOf('copy.appendChild(bar)')<
     hero.indexOf('if(options.heroHighlights?.length)'));
-  assert.match(hero,/game-outcome-hero-meta/);
-  assert.match(source,/outcomeMeta=total\+" games · "/);
-  assert.match(source,/opponent groups · "\+seedLabel/);
-  assert.match(source,/Seeds "/);
+  assert.doesNotMatch(hero,/game-outcome-hero-meta/);
+  assert.match(hero,/game-outcome-baseline/);
+  assert.match(source,/summaryNotes/);
   assert.ok(!app.includes('intro.appendChild(el("h1","Simulation Results"))'));
   assert.match(css,/insight-turn-row \.insight-turn-cover/);
   assert.match(css,/opacity:\.95/);
@@ -1221,9 +1248,9 @@ test('turn summaries and end state use actual mana pips and clickable typed card
     addEventListener(k,handler){this.events[k]=handler}
     get lastChild(){return this.children.at(-1)}
     querySelector(selector){
-      if(selector==='.insight-end-zone')return this.children.flatMap(
+      if(selector==='.insight-board-hand')return this.children.flatMap(
         function walk(n){return [n,...n.children.flatMap(walk)]}
-      ).find(n=>n.className==='insight-end-zone')||null;
+      ).find(n=>n.className.includes('insight-board-hand'))||null;
       return null;
     }
   }
@@ -1264,6 +1291,10 @@ test('turn summaries and end state use actual mana pips and clickable typed card
     for(const text of ['Hand · 2','Creatures · 1','Lands · 1',
       'Artifacts · 1','Enchantments · 1','Graveyard · 1'])
       assert.ok(labels.some(x=>x.includes(text)),text);
+    assert.ok(zones.every(zone=>zone.open===false),'board zones start collapsed');
+    const graveyard=zones.find(zone=>zone.className.includes('insight-board-graveyard'));
+    assert.ok(walk(graveyard).some(n=>n.className.includes('insight-compact-preview')));
+    assert.ok(walk(graveyard).some(n=>n.attributes['aria-label']==='View Dead Card card details'));
     const hand=walk(summary).find(n=>n.className.includes('insight-hand-shortcut'));
     hand.onclick();
     assert.equal(turn.open,true);
@@ -1273,4 +1304,15 @@ test('turn summaries and end state use actual mana pips and clickable typed card
     assert.ok(walk(handZone).some(n=>n.tag==='button'&&
       String(n.attributes['aria-label']).includes('Dark Ritual')));
   }finally{global.document=old}
+});
+
+test('R2 insight panels forward token-detail handlers into nested recorded examples',()=>{
+  const adapter=fs.readFileSync('web/pages/r2_original_results.js','utf8');
+  const render=fs.readFileSync('web/pages/game_outcomes.js','utf8');
+  // Full-cohort rankings, observed-batch fallback, and per-game replay all
+  // share the token detail bridge. Leaving any out makes token tiles inert.
+  const callbacks=adapter.match(/onOpenTokenCard:card=>window\.GorgeDeckLabOpenTokenCard\?\.\(card\)/g)||[];
+  assert.ok(callbacks.length>=4,'every R2 insight and replay entrypoint needs token clicks');
+  assert.match(render,/onOpenTokenCard:options\.onOpenTokenCard,\s*example:entry\.group/);
+  assert.match(render,/if\(token\)options\.onOpenTokenCard\?\.\(/);
 });

@@ -55,6 +55,25 @@ def test():
                 assert page.evaluate("(key)=>window.R2OriginalResults.ownsRenderedDeck(key)",DECK)
                 assert page.locator("#game-outcome-results .game-outcome-stacked-bar").count()>0
                 assert page.locator("#game-outcome-results .game-outcome-hero").count()==1
+                assert "unresolved" not in hero.inner_text().lower()
+                assert hero.locator(".game-outcome-hero-stat").count()==2
+                assert page.get_by_text("Simulation takeaways",exact=True).count()==0
+                heading_size=hero.locator(".game-outcome-heading").evaluate("el => getComputedStyle(el).fontSize")
+                insights_size=page.locator("#key-insights-title").evaluate("el => getComputedStyle(el).fontSize")
+                assert heading_size==insights_size
+                bottom_gap=hero.locator(".game-outcome-hero-summary").evaluate("el => el.getBoundingClientRect().bottom - el.querySelector('.game-outcome-hero-highlights').getBoundingClientRect().bottom")
+                assert bottom_gap<=40
+                baseline=hero.locator(".game-outcome-baseline")
+                assert baseline.count()==1
+                offset=baseline.evaluate("e => (e.getBoundingClientRect().left + e.getBoundingClientRect().width/2 - e.parentElement.getBoundingClientRect().left)/e.parentElement.getBoundingClientRect().width")
+                assert abs(offset-.25)<.005
+                assert hero.locator(".game-outcome-buckets").count()==0
+                assert "Seeds " not in hero.inner_text()
+                hero.get_by_role("button",name="Game Outcomes · open life progression for wins and losses").click()
+                dialog=page.get_by_role("dialog",name="Game performance details")
+                assert dialog.is_visible()
+                assert dialog.get_by_text("Life Progression · Wins vs Losses").is_visible()
+                dialog.get_by_role("button",name="Close game performance details").click()
                 # Missing optional card-level insights are a legitimate placeholder.
                 # They must not suppress the source-backed outcome hero.
                 assert "No approved simulations match" not in hero.inner_text()
@@ -112,11 +131,23 @@ def test():
                         /^https:\\/\\/(api.scryfall.com|cards.scryfall.io)\\//.test(data.art));
                 }""")
                 matchup=page.locator("#game-outcome-results .game-outcome-hero-highlight").first
+                assert matchup.locator(".game-outcome-matchup-card").count()==1
+                assert "Explore" not in matchup.inner_text()
                 matchup.click()
                 art=page.locator("#game-outcome-results .game-outcome-detail-dialog .game-outcome-opponent-art")
                 art.wait_for(state="attached",timeout=15000)
                 assert art.get_attribute("src").startswith("https://")
+                page.get_by_label("Group opponent outcomes by").select_option("compositions")
+                assert page.locator(".game-outcome-pod-art-member").count()==3
+                assert page.locator(".game-outcome-pod-art-member img").count()==3
                 page.locator("#game-outcome-results .game-outcome-detail-close").click()
+                for title,chart_label in [("Commander arrival","First recorded commander cast"),("Mana ramp","Average recorded mana produced")]:
+                    page.get_by_role("button",name=title,exact=False).first.click()
+                    dialog=page.get_by_role("dialog",name="Game performance details")
+                    assert dialog.locator("svg.distribution-chart").get_attribute("aria-label").startswith(chart_label)
+                    dialog.get_by_text("View values and sample sizes").click()
+                    assert dialog.locator(".distribution-table tbody tr").count()>0
+                    dialog.get_by_role("button",name="Close game performance details").click()
                 # An open information popup overlays the nearby card, like
                 # the matching Overall Results control. Close before clicking.
                 page.locator("#key-insights-info .game-outcome-limits summary").click()
@@ -200,7 +231,10 @@ def test_materialized():
                 page.route(API+"/v1/ui/game?*",response)
                 page.goto(f"http://127.0.0.1:{server.server_port}/results.html?deck={DECK}&materializedResults=1",
                           wait_until="domcontentloaded")
-                page.get_by_text("201 games · complete cohort",exact=False).wait_for(timeout=60000)
+                page.locator("#game-outcome-results .game-outcome-hero-frame").wait_for(timeout=60000)
+                page.locator("#game-outcome-results .game-outcome-limits summary").click()
+                assert page.get_by_text("201 games · complete cohort",exact=False).is_visible()
+                page.locator("#game-outcome-results .game-outcome-limits summary").click()
                 assert page.evaluate("document.body.dataset.r2ResultsState")=="ready"
                 assert page.locator("#key-insights-panel").is_visible()
                 assert page.locator("#key-insights-grid").get_by_text(source_card,exact=False).first.is_visible()
@@ -236,7 +270,7 @@ def test_materialized():
                 assert page.locator("#turn-reviewer-results .insight-turn-row").count()>0
                 if one_batch["runs"][0].get("gorge_source",{}).get("opening_hand_boundary")=="first_pending_decision_of_turn":
                     assert page.get_by_text("First recorded hand",exact=False).first.is_visible()
-                assert page.get_by_text("201 games · complete cohort",exact=False).is_visible()
+                assert page.get_by_text("201 games · complete cohort",exact=False).count()==1
                 assert page.get_by_text(source_card,exact=False).first.is_visible()
                 # A selected replay must not render misleading one-game
                 # outcome statistics alongside the full-cohort dashboard.
@@ -303,7 +337,81 @@ def test_initial_worker_recovery():
     finally:
         server.shutdown()
 
+def test_omniscient_materialized_original_layout():
+    """The verified materialized R2 hand data must keep the ORIGINAL Results UI."""
+    assert DOCUMENT["status"]=="ready"
+    one_batch={**DOCUMENT["batch"],"runs":[DOCUMENT["batch"]["runs"][0]]}
+    run=one_batch["runs"][0]
+    assert run.get("gorge_source",{}).get("visibility")=="omniscient", (
+        "Browser source fixture must be an omniscient synthetic replay")
+    assert len(run.get("opening_hand",[]))==run["opening_hand_count"]
+    assert len(run.get("opening_hands_by_seat",[]))==3
+    server=ThreadingHTTPServer(("127.0.0.1",0),Handler)
+    Thread(target=server.serve_forever,daemon=True).start()
+    staging="https://gorge-r2-fullstate-staging-20261106.darbosama.workers.dev"
+    calls=[]
+    def fulfill(route):
+        parsed=urlparse(route.request.url)
+        query=parse_qs(parsed.query)
+        calls.append(parsed.path)
+        common={"schema":"gorge-r2-materialized-response-v1",
+                "deck":DECK,"version":VERSION,"status":"ready"}
+        if parsed.path.endswith("/catalog"):
+            payload={**common,"total":1,"page_count":1}
+        elif parsed.path.endswith("/insights"):
+            route.fulfill(status=404,content_type="application/json",
+                headers={"Access-Control-Allow-Origin":"*"},body="{}")
+            return
+        elif parsed.path.endswith("/page"):
+            assert query.get("page")==["0"]
+            payload={**common,"page":{"page":0,"total":1,"games":[{
+                "game_id":"verified-0","result":"loss","turns":run["completed_rounds"],
+                "opponent_decks":["fixture-a","fixture-b","fixture-c"]}]}}
+        elif parsed.path.endswith("/game"):
+            assert query.get("page")==["0"] and query.get("game_id")==["verified-0"]
+            payload={**common,"game":{"game_id":"verified-0","batch":one_batch}}
+        else:
+            raise AssertionError("Unexpected R2 route "+parsed.path)
+        route.fulfill(status=200,content_type="application/json",
+            headers={"Access-Control-Allow-Origin":"*"},body=json.dumps(payload))
+    try:
+        with sync_playwright() as p:
+            browser=p.chromium.launch(headless=True)
+            for mode,viewport in (("desktop",{"width":1440,"height":960}),
+                                  ("mobile",{"width":390,"height":844})):
+                calls.clear()
+                page=browser.new_page(viewport=viewport)
+                errors=[]
+                page.on("pageerror",lambda error: errors.append(str(error)))
+                page.route(staging+"/v1/ui/*",fulfill)
+                page.route(API+"/v1/ui/*",fulfill)
+                page.goto(f"http://127.0.0.1:{server.server_port}/results.html?deck={DECK}"
+                    f"&r2Api={staging}",wait_until="domcontentloaded")
+                page.locator("#game-outcome-results .game-outcome-hero-frame").wait_for(
+                    state="visible",timeout=60000)
+                assert page.evaluate("document.body.dataset.r2ResultsState")=="ready"
+                assert page.locator("#key-insights-panel").is_visible()
+                assert page.locator("#turn-reviewer-panel").is_visible()
+                assert page.locator("#game-outcome-results .r2-cohort-details").count()==0
+                assert page.locator("#game-outcome-results .game-outcome-hero").count()==1
+                assert page.locator("#turn-reviewer-results .insight-turn-row").count()>0
+                opening=page.locator("#turn-reviewer-results .insight-turn-row").first
+                assert "identities private" not in opening.inner_text().lower()
+                assert run["opening_hand"][0] in opening.inner_text()
+                opening.locator("summary.insight-turn-row-summary").click()
+                assert "The public replay does not include card identities" not in opening.inner_text()
+                assert "/v1/ui/batch" not in calls, calls
+                assert calls.count("/v1/ui/game")==1, calls
+                assert not errors,errors
+                page.screenshot(path=str(OUT/f"{DECK}-{mode}-omniscient-original-layout.png"),
+                    full_page=True)
+                page.close()
+            browser.close()
+    finally:
+        server.shutdown()
+
 if __name__=="__main__":
     test()
     test_materialized()
     test_initial_worker_recovery()
+    test_omniscient_materialized_original_layout()

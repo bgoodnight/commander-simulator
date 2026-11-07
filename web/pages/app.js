@@ -580,6 +580,7 @@ function renderLongGamePanel(){
     lookupRecordedCard:cardInfo,
     renderMana:manaSymbols,
     onOpenRecordedCard:name=>{const card=cardInfo(name);if(card?.oracle_id)showCard(card.oracle_id)},
+    onOpenTokenCard:card=>window.GorgeDeckLabOpenTokenCard?.(card),
     onShowRecordedActions:(target,example,run)=>{
       try{
         if(!window.CommanderReplay?.renderBoundedEvidence)
@@ -590,7 +591,7 @@ function renderLongGamePanel(){
           mode:"bounded_three_opponent_pressure"
         },{
           commanderName:selectedDeck().commander,lookup:cardInfo,
-          openCard:showCard,abstractOpponents:true,compact:true
+          openCard:showCard,openTokenCard:window.GorgeDeckLabOpenTokenCard,abstractOpponents:true,compact:true
         });
       }catch(e){target.textContent="Recorded actions unavailable: "+e.message}
     }
@@ -778,7 +779,7 @@ function renderReplay(){
     if(selected!==key||selectedDeck()?.deck_sha256!==hash)return;
     window.CommanderReplay.render(root,payload,{
       deckKey:key,deckHash:hash,commanderName:deck.commander,
-      lookup:cardInfo,openCard:showCard
+      lookup:cardInfo,openCard:showCard,openTokenCard:window.GorgeDeckLabOpenTokenCard
     });
     // Use the same pinned narrated payload. No duplicate replay download.
     const grid=$("key-insights-grid");
@@ -1162,13 +1163,13 @@ function openInsightEvidence(root,example,card){
         scenario:example.scenario,gameId:example.gameId,turn:example.turn,
         eventIndex:example.eventIndex,cardName:card.name,
         deckKey:selected,deckHash:deck.deck_sha256,
-        commanderName:deck.commander,lookup:cardInfo,openCard:showCard
+        commanderName:deck.commander,lookup:cardInfo,openCard:showCard,openTokenCard:window.GorgeDeckLabOpenTokenCard
       });
     }else{
       window.CommanderReplay.renderBoundedEvidence(root,example.run,{
         turn:example.turn,eventIndex:example.eventIndex,cardName:card.name,
         focusTopic:example.focusTopic||undefined,
-        commanderName:deck.commander,lookup:cardInfo,openCard:showCard
+        commanderName:deck.commander,lookup:cardInfo,openCard:showCard,openTokenCard:window.GorgeDeckLabOpenTokenCard
       });
     }
   }catch(error){
