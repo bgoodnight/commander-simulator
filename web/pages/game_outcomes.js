@@ -2474,7 +2474,7 @@
       const key=[group.pilotStyle,group.provisionalMode,group.requestedRounds].join("|");
       if(!cohorts.has(key))cohorts.set(key,{key,groups:[],games:0});
       const entry=cohorts.get(key);
-      entry.groups.push(group);entry.games+=group.total;
+      entry.groups.push(group);entry.games+=group.runs.filter(run=>["win","loss"].includes(run.outcome.status)).length;
     }
     const cohort=[...cohorts.values()].sort((a,b)=>
       b.games-a.games||a.key.localeCompare(b.key))[0];
