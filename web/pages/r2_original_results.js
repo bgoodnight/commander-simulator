@@ -456,7 +456,7 @@
       window.DeckGameOutcomes.render(root,[batch],{
         deckKey:key,deckHash:selected.sha,
         commanderName:selected.commander,commanderArt:selected.art,
-        isGorge:true,reviewerRoot:reviewer,reviewerPanel:panel,
+        isGorge:true,externalInsights:true,reviewerRoot:reviewer,reviewerPanel:panel,
         onReviewerReady:jump=>{reviewRecordedRun=jump},
         lookupRecordedCard:window.GorgeDeckLabCardInfo,
         portraitFor:bucket=>window.GorgeDeckLabOpponentPortrait?.(bucket),
