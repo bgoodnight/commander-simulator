@@ -248,7 +248,8 @@ def check():
                            wait_until="domcontentloaded",timeout=60000)
             omni_card=omni_page.locator("#game-outcome-results .insight-featured-panel").first
             omni_card.wait_for(state="visible",timeout=40000)
-            assert "omniscient" in omni_page.locator(".game-outcome-hero-meta").inner_text().lower()
+            omni_page.locator(".game-outcome-limits summary").first.click()
+            assert "omniscient" in omni_page.locator(".game-outcome-limits-content").first.inner_text().lower()
             omni_card.locator(".game-outcome-summary").click()
             omni_tracker=omni_card.locator(".insight-inline-tracker")
             omni_tracker.locator("summary").first.click()
