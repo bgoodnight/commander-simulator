@@ -890,7 +890,7 @@
 
       const timeline=el("div","replay-timeline");
       game.rounds.forEach((round,i)=>timeline.appendChild(
-        roundSection(round,game.rounds[i-1]||null,game.seats,lookup,openCard,i,commanderName)));
+        roundSection(round,game.rounds[i-1]||null,game.seats,lookup,openCard,options.openTokenCard,i,commanderName)));
       section.appendChild(timeline);
       section.appendChild(el("p","replay-endline",
         game.eliminated?"Seat 0 was eliminated during this sample.":
