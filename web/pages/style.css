@@ -2801,3 +2801,8 @@ body.r2-original-results-active #gorge-replay-panel{display:none!important}
 @media(max-width:720px){
   #pane-records .game-outcome-hero-stat strong{font-size:clamp(1.35rem,6vw,1.7rem)}
 }
+@media(max-width:720px){
+  #pane-records .game-outcome-hero-stat{flex-wrap:nowrap;gap:4px}
+  #pane-records .game-outcome-hero-stat strong{font-size:clamp(1.2rem,5vw,1.5rem);flex-shrink:0}
+  #pane-records .game-outcome-hero-stat span{font-size:.65rem;letter-spacing:0}
+}
