@@ -1,0 +1,12 @@
+name = "gorge-r2-analytics-private"
+main = "index.mjs"
+compatibility_date = "2026-11-05"
+workers_dev = false
+
+[[r2_buckets]]
+binding = "GORGE_R2"
+bucket_name = "gorge-simulations"
+
+# Deploy on an authenticated Cloudflare Access-protected custom route.
+# Set ANALYTICS_READ_TOKEN using wrangler secret put, never as a [vars] value.
+# No write/delete/list-all endpoints. No cohort-publication dependency.
