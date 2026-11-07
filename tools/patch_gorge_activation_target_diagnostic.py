@@ -28,6 +28,24 @@ def patch(root: Path):
 \t\t}
 \t\t// CR 601.2c: a proposal with fewer legal targets than its mandatory'''
     src = replace_once(src, old, new)
+    # Track each successive filter at the actual 601.2c target announcement.
+    # Only diagnostic: every target candidate and decision remains unchanged.
+    checkpoints = [
+        ('\\tcandidates = e.affordableTargetCandidates(pc, candidates)\\n', 'affordable'),
+        ('\\tcandidates = e.targetBoundCandidates(pc.player, pc.card, &pc.cost, pc.isAbility(), candidates)\\n', 'bound_cost'),
+        ('\\tcandidates, powerCap, powerCapped := e.totalPowerCappedCandidates(candidates, pc.player, pc.card, sa, pc.x)\\n', 'power_cap'),
+        ('\\tcandidates, cmcCap, cmcCapped := e.totalCMCCappedCandidates(candidates, pc.player, pc.card, sa, pc.x)\\n', 'cmc_cap'),
+    ]
+    for old, stage in checkpoints:
+        if src.count(old) != 1:
+            raise ValueError("Pinned target filter anchor changed: " + stage)
+        new = old + (
+            '\\tif pc.isAbility() && min > 0 {\\n'
+            '\\t\\tfmt.Fprintf(os.Stderr, "GORGE_TARGET_STAGE source=%d ability=%d x=%d stage=' + stage +
+            ' candidates=%d\\\\n", pc.card, pc.ability, pc.x, len(candidates))\\n'
+            '\\t}\\n'
+        )
+        src = replace_once(src, old, new)
     path.write_text(src)
 
 if __name__ == "__main__":
