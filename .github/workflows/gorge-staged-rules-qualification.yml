@@ -1,15 +1,12 @@
 name: Stage corrected Gorge pilot and rules (isolated)
 on:
   push:
-    branches: [stage/gorge-rules-qualification-20261107]
-    paths:
-      - '.github/workflows/gorge-staged-rules-qualification.yml'
-      - 'tools/patch_gorge_changezone_anynumber.py'
-      - 'tools/patch_gorge_adeline_token_defender.py'
-      - 'tools/patch_gorge_convoke_pilot_fallback.py'
-      - 'tools/gorge_changezone_anynumber_test.go'
-      - 'tools/gorge_adeline_planeswalker_test.go'
-      - 'tools/gorge_four_hero_token_audit.py'
+    branches:
+      - 'stage/gorge-rules-qualification-20261107'
+  pull_request:
+    branches:
+      - 'main'
+    types: [opened, synchronize, reopened, ready_for_review]
   workflow_dispatch:
 permissions:
   contents: read
