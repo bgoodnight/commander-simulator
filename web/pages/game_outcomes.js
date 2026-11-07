@@ -2694,6 +2694,9 @@
     // Gorge key insights must use a complete precomputed native-feature
     // cohort. Sampled replay events are evidence only; never the ranking
     // denominator. Historical non-Gorge renderers retain their own logic.
+    // R2's dedicated Key Insights section owns the card rankings.
+    // Preserve the legacy embedded insights only when explicitly needed.
+    if(!options.externalInsights){
     let signals;
     if(isGorge){
       const report=options.fullCardInsights;
@@ -2807,6 +2810,7 @@
       // another placeholder into the Results dashboard when data is absent.
       cards.appendChild(create("p","game-outcome-empty",
         "Card insights require named card and hand observations from the current published batch."));
+    }
     }
     // The regression story belongs after every game/card panel, immediately
     // above the independent turn reviewer.
