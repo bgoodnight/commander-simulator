@@ -55,6 +55,8 @@ def test():
                 assert page.evaluate("(key)=>window.R2OriginalResults.ownsRenderedDeck(key)",DECK)
                 assert page.locator("#game-outcome-results .game-outcome-stacked-bar").count()>0
                 assert page.locator("#game-outcome-results .game-outcome-hero").count()==1
+                assert "unresolved" not in hero.inner_text().lower()
+                assert hero.locator(".game-outcome-hero-stat").count()==2
                 baseline=hero.locator(".game-outcome-baseline")
                 assert baseline.count()==1
                 offset=baseline.evaluate("e => (e.getBoundingClientRect().left + e.getBoundingClientRect().width/2 - e.parentElement.getBoundingClientRect().left)/e.parentElement.getBoundingClientRect().width")
