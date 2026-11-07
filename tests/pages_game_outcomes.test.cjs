@@ -1276,6 +1276,10 @@ test('turn summaries and end state use actual mana pips and clickable typed card
     for(const text of ['Hand · 2','Creatures · 1','Lands · 1',
       'Artifacts · 1','Enchantments · 1','Graveyard · 1'])
       assert.ok(labels.some(x=>x.includes(text)),text);
+    assert.ok(zones.every(zone=>zone.open===false),'board zones start collapsed');
+    const graveyard=zones.find(zone=>zone.className.includes('insight-board-graveyard'));
+    assert.ok(walk(graveyard).some(n=>n.className.includes('insight-compact-preview')));
+    assert.ok(walk(graveyard).some(n=>n.attributes['aria-label']==='View Dead Card card details'));
     const hand=walk(summary).find(n=>n.className.includes('insight-hand-shortcut'));
     hand.onclick();
     assert.equal(turn.open,true);
