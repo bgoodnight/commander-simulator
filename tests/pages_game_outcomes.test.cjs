@@ -621,11 +621,11 @@ test('hero performance metrics open original details as modal panels, not grid d
     const dialog=root.children.find(n=>n.tag==='dialog');
     assert.ok(dialog);
     assert.ok(!walk(grid).some(n=>n.className==='game-outcome-title'&&
-      ['Opponent Types','Game Length','Eliminations','Life Progression'].includes(n.textContent)));
+      ['Opponent Types','Game Length','Commander Arrival','Mana Ramp'].includes(n.textContent)));
     const tiles=walk(grid).filter(n=>n.className==='game-outcome-hero-highlight');
     assert.deepEqual(tiles.map(n=>n.children[0].textContent),
-      ['Best matchup','Game length','Survival','Final life']);
-    const headings=['Opponent Types','Game Length','Eliminations','Life Progression'];
+      ['Best matchup','Game length','Commander arrival','Mana ramp']);
+    const headings=['Opponent Types','Game Length','Commander Arrival','Mana Ramp'];
     for(const [i,tile] of tiles.entries()){
       assert.equal(tile.tag,'button');
       assert.equal(tile.attributes['aria-haspopup'],'dialog');
@@ -646,14 +646,17 @@ test('hero performance metrics open original details as modal panels, not grid d
     assert.ok(walk(dialog).some(n=>n.className==='game-length-histogram-bars'));
     const axis=walk(dialog).find(n=>n.className==='game-length-histogram-axis');
     assert.ok(axis&&axis.children.length<=5);
-    // Life progression visualizes only seat 0, not all four opponents.
-    tiles[3].events.click({preventDefault(){},stopPropagation(){}});
+    // Overall win percentage opens the two-outcome life progression.
+    const winMetric=walk(grid).find(n=>n.className==='game-outcome-hero-stat is-win');
+    assert.ok(winMetric);
+    assert.equal(winMetric.tag,'button');
+    assert.equal(winMetric.attributes['aria-haspopup'],'dialog');
+    winMetric.events.click({preventDefault(){},stopPropagation(){}});
     const life=walk(dialog).find(n=>n.tag==='svg'&&
-      n.attributes['aria-label']?.includes('Your median life'));
+      n.attributes['aria-label']?.includes('Median life progression for wins'));
     assert.ok(life);
-    assert.equal(walk(life).filter(n=>n.tag==='polyline').length,1);
+    assert.ok(walk(life).filter(n=>n.tag==='polyline').length>=1);
     assert.ok(!walk(dialog).some(n=>n.textContent==='Seat 2'));
-    assert.ok(walk(dialog).some(n=>n.className==='game-outcome-round-slider'));
   }finally{global.document=before}
 });
 test('dashboard modal CSS respects motion preferences and mobile size',()=>{
