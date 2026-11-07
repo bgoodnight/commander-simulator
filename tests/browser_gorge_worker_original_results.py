@@ -57,6 +57,12 @@ def test():
                 assert page.locator("#game-outcome-results .game-outcome-hero").count()==1
                 assert "unresolved" not in hero.inner_text().lower()
                 assert hero.locator(".game-outcome-hero-stat").count()==2
+                assert page.get_by_text("Simulation takeaways",exact=True).count()==0
+                heading_size=hero.locator(".game-outcome-heading").evaluate("el => getComputedStyle(el).fontSize")
+                insights_size=page.locator("#key-insights-title").evaluate("el => getComputedStyle(el).fontSize")
+                assert heading_size==insights_size
+                bottom_gap=hero.locator(".game-outcome-hero-summary").evaluate("el => el.getBoundingClientRect().bottom - el.querySelector('.game-outcome-hero-highlights').getBoundingClientRect().bottom")
+                assert bottom_gap<=40
                 baseline=hero.locator(".game-outcome-baseline")
                 assert baseline.count()==1
                 offset=baseline.evaluate("e => (e.getBoundingClientRect().left + e.getBoundingClientRect().width/2 - e.parentElement.getBoundingClientRect().left)/e.parentElement.getBoundingClientRect().width")

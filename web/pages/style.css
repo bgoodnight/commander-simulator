@@ -2778,3 +2778,10 @@ body.r2-original-results-active #gorge-replay-panel{display:none!important}
 
 /* Two aligned outcome figures, using the available width on mobile too. */
 #pane-records .game-outcome-hero-stats{grid-template-columns:repeat(2,minmax(0,1fr))}
+
+/* Match the section headings and let the overview fit its contents. */
+#pane-records .latest-insight-grid .game-outcome-hero-summary{min-height:0}
+#pane-records .latest-insight-grid .game-outcome-hero .game-outcome-title,
+#pane-records .key-insights-heading h2{font-family:Cinzel,Georgia,serif;font-size:clamp(1.5rem,3.1vw,2.35rem);font-weight:600;line-height:1.2;letter-spacing:normal;margin:0}
+#pane-records .game-outcome-hero-stat strong{font-size:clamp(2rem,4vw,2.6rem);line-height:1.05}
+#pane-records .game-outcome-hero-stat span{font-size:.76rem}
