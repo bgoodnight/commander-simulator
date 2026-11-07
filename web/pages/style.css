@@ -2745,3 +2745,16 @@ body.r2-original-results-active #gorge-replay-panel{display:none!important}
 /* Compact, touch-friendly filter and sort controls for insight rankings. */
 .insight-filter-select{width:auto;max-width:100%;min-width:0;padding:.4rem 2rem .4rem .65rem;cursor:pointer}
 .gorge-card-type-controls .insight-filter-select{height:auto;flex:0 1 auto}
+
+/* Outcomes: equal alignment, unobtrusive interaction, and four-player reference. */
+.game-outcome-hero-heading,.game-outcome-hero-stat.is-win{appearance:none;background:transparent;border:0;padding:0;text-align:left;color:inherit;font:inherit;cursor:pointer}
+.game-outcome-hero-heading:focus-visible,.game-outcome-hero-stat.is-win:focus-visible{outline:2px solid var(--gold);outline-offset:4px;border-radius:3px}
+.game-outcome-hero-stat{align-content:start;justify-items:start;text-align:left}
+.game-outcome-hero-stats{align-items:start}
+.game-outcome-stacked-bar{position:relative;gap:0;overflow:visible}
+.game-outcome-stacked-bar>span:not(.game-outcome-baseline):first-child{border-radius:10px 0 0 10px}
+.game-outcome-stacked-bar>span:not(.game-outcome-baseline):nth-last-child(2){border-radius:0 10px 10px 0}
+.game-outcome-stacked-bar>span:not(.game-outcome-baseline):first-child:nth-last-child(2){border-radius:10px}
+.game-outcome-stacked-bar .game-outcome-baseline{position:absolute;z-index:2;left:25%;top:-4px;width:2px;height:17px;background:#ead4a5;box-shadow:0 0 0 1px #152527;transform:translateX(-50%)}
+.game-outcome-stacked-bar .game-outcome-baseline:before{content:"";position:absolute;left:-2px;top:-3px;width:6px;height:6px;background:#ead4a5;transform:rotate(45deg);box-shadow:0 0 0 1px #152527}
+.game-outcome-value-qualifier{margin-left:.4em;font-size:.55em;font-weight:500;color:#cbd1c8;white-space:normal}
