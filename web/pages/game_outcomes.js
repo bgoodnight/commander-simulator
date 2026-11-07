@@ -1422,7 +1422,7 @@
             event?.preventDefault?.();
             event?.stopPropagation?.();
             row.open=true;
-            const section=body.querySelector?.(".insight-end-zone");
+            const section=body.querySelector?.(".insight-board-hand");
             if(section)section.open=true;
           });
         handBadge.setAttribute("aria-label",Array.isArray(hand)?
