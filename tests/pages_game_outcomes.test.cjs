@@ -706,18 +706,18 @@ test('full-game reviewer uses same compact turn rows as insight evidence',()=>{
   global.document={createElement:tag=>new Node(tag),
     createElementNS:(_,tag)=>new Node(tag)};
   try{
-    const root=new Node('main'),reviewer=new Node('section');
+    const root=new Node('main'),reviewer=new Node('section'),openedTokens=[];
     const withTurns={...runUnresolved(),opening_hand:['Grave Titan'],
       ui_observations:[
         {turn:1,hand:['Grave Titan'],battlefield:[],graveyard:[],
           actions:[{type:'creature_cast',card:'Grave Titan',seat:0}]},
-        {turn:2,hand:[],battlefield:['Grave Titan'],graveyard:[],
+        {turn:2,hand:[],battlefield:['Grave Titan','Servo Token'],graveyard:[],
           actions:[{type:'draw',card:'Plains',seat:0}]},
         {turn:3,hand:[],battlefield:['Grave Titan'],graveyard:[],
           actions:[{type:'land_play',card:'Swamp',seat:0}]}]};
     Outcomes.render(root,[batch([withTurns])],{
       deckKey:'necron_dynasties',deckHash:'a'.repeat(64),
-      reviewerRoot:reviewer,lookupRecordedCard:name=>({
+      reviewerRoot:reviewer,onOpenTokenCard:card=>openedTokens.push(card),lookupRecordedCard:name=>({
         name,art:'https://example.com/'+name.replaceAll(' ','-')+'.jpg'
       })
     });
@@ -732,6 +732,10 @@ test('full-game reviewer uses same compact turn rows as insight evidence',()=>{
     assert.equal(walk(opened).filter(n=>n.className.split(' ').includes('insight-board-seat')).length,4);
     assert.ok(walk(opened).some(n=>n.className.includes('insight-seat-life-delta is-loss')));
     assert.ok(walk(turns[3]).some(n=>n.textContent==='Swamp'));
+    const token=walk(turns[2]).find(n=>n.tag==='button'&&n.attributes['aria-label']==='View Servo Token card details');
+    assert.ok(token,'turn reviewer renders Servo token');
+    token.onclick();
+    assert.equal(openedTokens[0]?.name,'Servo Token');
     const insight=walk(root).find(n=>n.className.includes('insight-featured-panel')&&
       walk(n).some(x=>x.textContent==='Most played card'));
     assert.ok(insight);
