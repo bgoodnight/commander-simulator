@@ -304,7 +304,7 @@
     panel.appendChild(body);
     return panel;
   }
-  function limitationsDisclosure(isGorge=false,isOmniscient=false){
+  function limitationsDisclosure(isGorge=false,isOmniscient=false,summaryNotes=[]){
     const details=create("details","game-outcome-limits");
     const trigger=create("summary",null,"ⓘ");
     trigger.setAttribute("aria-label","Model limitations and what improves accuracy");
@@ -324,13 +324,14 @@
       create("p",null,"Small samples, unfinished games, incomplete rules and automated pilot choices can change these results."),
       create("p",null,"The current opposing seats are abstract policies, not complete Commander decks. Archetype portraits are illustrative unless a real opposing commander was recorded."),
       create("p",null,"Next improvements: more matched seeds, fuller card rules, improved piloting, and validated opposing deck simulations."));
+    for(const note of summaryNotes)content.appendChild(create("p",null,note));
     details.append(trigger,content);
     return details;
   }
-  function outcomeCard(group,options,childBuilder){
+  function outcomeCard(group,options){
     const wrapper=create("div","game-outcome-hero-frame");
-    const panel=create("details","board-report game-outcome-card game-outcome-hero");
-    const summary=create("summary","game-outcome-summary game-outcome-hero-summary");
+    const panel=create("div","board-report game-outcome-card game-outcome-hero");
+    const summary=create("div","game-outcome-summary game-outcome-hero-summary");
     if(typeof options.commanderArt==="string"&&options.commanderArt){
       const art=create("img","game-outcome-hero-art");
       art.src=options.commanderArt;
@@ -340,7 +341,13 @@
       summary.appendChild(art);
     }
     const copy=create("div","game-outcome-hero-copy");
-    copy.appendChild(create("strong","game-outcome-title","Game Outcomes"));
+    const heading=create(options.onHighlightClick?"button":"strong","game-outcome-title game-outcome-heading","Game Outcomes");
+    if(options.onHighlightClick){
+      heading.type="button";heading.setAttribute("aria-haspopup","dialog");
+      heading.setAttribute("aria-label","Game Outcomes · open life progression for wins and losses");
+      heading.addEventListener("click",()=>options.onHighlightClick("winlife",heading));
+    }
+    copy.appendChild(heading);
     const numbers=create("div","game-outcome-hero-stats");
     const short=[["win","Wins"],["loss","Losses"],["unresolved","Unresolved"]];
     for(const [state,label] of short){
@@ -371,6 +378,10 @@
       segment.style.width=(100*group.counts[state]/group.total)+"%";
       bar.appendChild(segment);
     }
+    const baseline=create("span","game-outcome-baseline");
+    baseline.setAttribute("aria-label","25 percent equal-chance four-player baseline");
+    baseline.title="25% equal-chance four-player baseline";
+    bar.appendChild(baseline);
     copy.appendChild(bar);
     if(options.heroHighlights?.length){
       const highlights=create("div","game-outcome-hero-highlights");
@@ -378,13 +389,12 @@
         const stat=create("button","game-outcome-hero-highlight");
         stat.type="button";
         stat.setAttribute("aria-haspopup","dialog");
-        stat.setAttribute("aria-label",item.label+": "+item.value+". Open detailed analysis");
-        stat.append(create("span",null,item.label),
-          create("strong",null,item.value),
-          create("small",null,item.detail),
-          create("span","game-outcome-hero-highlight-cue","Explore ↗"));
-        // The tiles live inside a <summary>; clicking them must not toggle
-        // the surrounding outcome disclosure.
+        stat.setAttribute("aria-label",item.label+": "+item.value+(item.qualifier?" "+item.qualifier:"")+(item.detail?" · "+item.detail:"")+". Open detailed analysis");
+        const value=create("strong",null,item.value);
+        if(item.qualifier)value.appendChild(create("small","game-outcome-value-qualifier",item.qualifier));
+        stat.append(create("span",null,item.label),value);
+        if(item.detail)stat.appendChild(create("small",null,item.detail));
+        stat.appendChild(create("span","game-outcome-hero-highlight-cue","Explore ↗"));
         stat.addEventListener("click",event=>{
           event.preventDefault();event.stopPropagation();
           options.onHighlightClick?.(item.key,stat);
@@ -393,15 +403,9 @@
       }
       copy.appendChild(highlights);
     }
-    copy.appendChild(create("span","game-outcome-hero-meta",
-      options.outcomeMeta||group.total+" games"));
     summary.appendChild(copy);
     panel.appendChild(summary);
-    const body=create("div","game-outcome-body");
-    childBuilder(body);
-    panel.appendChild(body);
-    // The icon is a sibling so it remains operable while the game card is closed.
-    wrapper.append(panel,limitationsDisclosure(options.isGorge,options.isOmniscient));
+    wrapper.append(panel,limitationsDisclosure(options.isGorge,options.isOmniscient,options.summaryNotes));
     return wrapper;
   }
   function metricTile(label,value,detail){
@@ -2521,11 +2525,11 @@
         (100*bestMatchup.counts.win/Math.max(1,bestMatchup.games)).toFixed(1)+"%":"—",
        detail:bestMatchup?.title||"No opponent groups"},
       {key:"length",label:"Game length",value:finishedMedian===null?"—":nfmt(finishedMedian),
-       detail:"Median finished rounds"},
+       qualifier:"median"},
       {key:"arrival",label:"Commander arrival",value:medianArrival===null?"N/A":nfmt(medianArrival),
-       detail:"Median across all "+total+" games · "+arrivalSamples.length+" casts"},
+       qualifier:"median"},
       {key:"ramp",label:"Mana ramp",value:averageMana===null?"—":averageMana.toFixed(2),
-       detail:"Avg. mana generated on turn 5 · "+rampSamples.length+"/"+total+" recorded"}
+       qualifier:"avg by turn 5"}
     ];
     // The overview tiles are buttons, not duplicate expanding cards.
     // Each opens its original detailed analysis in a focus-managed dialog.
@@ -2570,33 +2574,17 @@
     detailDialog.addEventListener("click",event=>{
       if(event.target===detailDialog)closeDialog();
     });
-    const seedList=[...new Set(runs.map(run=>run.seed))]
-      .filter(Number.isInteger).sort((a,b)=>a-b);
-    const seedLabel=seedList.length?
-      "Seeds "+(seedList[0]===seedList.at(-1)?seedList[0]:
-        seedList[0]+"–"+seedList.at(-1)):"Seeds unavailable";
-    const outcomeMeta=total+" games · "+groups[0].requestedRounds+
-      " rounds · "+groups.length+" opponent groups · "+seedLabel+
-      (runs.some(r=>r.gorge_source?.visibility==="omniscient")?
-        " · Omniscient simulated hands":"");
+    const summaryNotes=[
+      total+" games · "+groups[0].requestedRounds+" rounds · "+groups.length+" opponent groups.",
+      "Game length is the median among finished games. Commander arrival is the median across all games, including uncast commanders ("+arrivalSamples.length+" casts observed).",
+      "Mana ramp is average mana generated on turn 5 ("+rampSamples.length+" of "+total+" games recorded).",
+      "The gold marker is the 25% equal-chance reference for a four-player game."
+    ];
     cards.appendChild(outcomeCard({
       counts,total,terminal:finished.length,
       terminalRounds:finished.map(run=>run.completed_rounds)
     },{...options,isGorge,isOmniscient:runs.some(r=>r.gorge_source?.visibility==="omniscient"),
-       heroHighlights,outcomeMeta,onHighlightClick:openDetail},body=>{
-      const buckets=create("div","game-outcome-buckets");
-      for(const state of STATES){
-        if(!counts[state])continue;
-        const row=create("div","game-outcome-bucket is-"+state);
-        row.append(create("strong",null,stateLabel(state)),
-          create("span",null,counts[state]+" / "+total));
-        const bar=create("span","game-outcome-bucket-bar");
-        bar.style.width=(counts[state]/total*100)+"%";
-        row.appendChild(bar);buckets.appendChild(row);
-      }
-      body.appendChild(buckets);
-
-    }));
+       heroHighlights,summaryNotes,onHighlightClick:openDetail}));
     const best=matchup[0];
     detailPanels.set("matchup",card("Opponent Types","Types & table compositions",
       best?(100*best.counts.win/Math.max(1,best.games)).toFixed(1)+"%":"—",
@@ -2873,7 +2861,7 @@
     const best=opponents.filter(x=>Number.isFinite(x.win_rate)).sort((a,b)=>b.win_rate-a.win_rate)[0];
     const highlights=[
       {key:"matchup",label:"Best matchup",value:best?(100*best.win_rate).toFixed(1)+"%":"—",detail:best?.name||"Not available"},
-      {key:"length",label:"Game length",value:Number.isFinite(summary.median_game_turns)?nfmt(summary.median_game_turns):"—",detail:"Median recorded turns"},
+      {key:"length",label:"Game length",value:Number.isFinite(summary.median_game_turns)?nfmt(summary.median_game_turns):"—",qualifier:"median"},
       {key:"arrival",label:"Commander arrival",value:"—",detail:"Turn data unavailable"},
       {key:"ramp",label:"Mana ramp",value:"—",detail:"Turn-five mana data unavailable"}
     ];
