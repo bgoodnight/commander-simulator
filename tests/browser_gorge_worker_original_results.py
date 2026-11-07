@@ -133,6 +133,13 @@ def test():
                 assert page.locator(".game-outcome-pod-art-member").count()==3
                 assert page.locator(".game-outcome-pod-art-member img").count()==3
                 page.locator("#game-outcome-results .game-outcome-detail-close").click()
+                for title,chart_label in [("Commander arrival","First recorded commander cast"),("Mana ramp","Average recorded mana produced")]:
+                    page.get_by_role("button",name=title,exact=False).first.click()
+                    dialog=page.get_by_role("dialog",name="Game performance details")
+                    assert dialog.locator("svg.distribution-chart").get_attribute("aria-label").startswith(chart_label)
+                    dialog.get_by_text("View values and sample sizes").click()
+                    assert dialog.locator(".distribution-table tbody tr").count()>0
+                    dialog.get_by_role("button",name="Close game performance details").click()
                 # An open information popup overlays the nearby card, like
                 # the matching Overall Results control. Close before clicking.
                 page.locator("#key-insights-info .game-outcome-limits summary").click()
