@@ -2265,7 +2265,12 @@
       .sort((a,b)=>(ascending?a.score-b.score:b.score-a.score)||a.name.localeCompare(b.name));
     const panel=cardPerformancePanel(kind,items,coverage,groups,options,onReviewRun);
     if(!panel)return null;
+    // Lightweight renderer contract tests provide a non-DOM stand-in for
+    // insight panels; preserve the panel when DOM drilldown controls cannot
+    // be attached. Actual browser panels always support querySelector.
+    if(typeof panel.querySelector!=="function")return panel;
     const body=panel.querySelector(".game-outcome-body");
+    if(!body)return panel;
     const controls=create("div","gorge-card-type-controls");
     controls.setAttribute("role","group");
     controls.setAttribute("aria-label","Filter and sort "+insightCategoryLabel(kind));
