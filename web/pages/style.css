@@ -2798,3 +2798,6 @@ body.r2-original-results-active #gorge-replay-panel{display:none!important}
 }
 .gorge-card-type-controls select.insight-filter-select option{background:#172b2e;color:#f4e9cf}
 .gorge-card-type-controls select.insight-filter-select:focus-visible{outline:2px solid #ebd5a1;outline-offset:2px}
+@media(max-width:720px){
+  #pane-records .game-outcome-hero-stat strong{font-size:clamp(1.35rem,6vw,1.7rem)}
+}
