@@ -2236,6 +2236,54 @@
     if(initialSelect)initialSelect();
     return panel;
   }
+  // Card-based rankings share one compact, labelled set of controls.
+  // Filter only using recorded card metadata, never by guessing from names.
+  function filteredInsightPanel(kind,source,coverage,groups,options,onReviewRun,
+                               type="all",ascending=false){
+    const types=[
+      ["all","All",()=>true],
+      ["creature","Creature",t=>/\bcreature\b/.test(t)],
+      ["artifact","Artifact",t=>/\bartifact\b/.test(t)],
+      ["enchantment","Enchantment",t=>/\benchantment\b/.test(t)],
+      ["spell","Instant / Sorcery",t=>/\b(instant|sorcery)\b/.test(t)],
+      ["land","Land",t=>/\bland\b/.test(t)]
+    ];
+    const typed=item=>String(options.lookupRecordedCard?.(item.name)?.type_line||options.lookupRecordedCard?.(item.name)?.type||"").toLowerCase();
+    const available=types.filter(([id,,match])=>id==="all"||
+      source.some(item=>{const t=typed(item);return t&&match(t)}));
+    const predicate=(available.find(([id])=>id===type)||available[0])[2];
+    const items=source.filter(item=>type==="all"||predicate(typed(item))).slice()
+      .sort((a,b)=>(ascending?a.score-b.score:b.score-a.score)||a.name.localeCompare(b.name));
+    const panel=cardPerformancePanel(kind,items,coverage,groups,options,onReviewRun);
+    if(!panel)return null;
+    const body=panel.querySelector(".game-outcome-body");
+    const controls=create("div","gorge-card-type-controls");
+    controls.setAttribute("role","group");
+    controls.setAttribute("aria-label","Filter and sort "+insightCategoryLabel(kind));
+    const change=(next,order,label)=>{
+      const replacement=filteredInsightPanel(kind,source,coverage,groups,options,onReviewRun,next,order);
+      if(replacement){replacement.open=true;panel.replaceWith(replacement);
+        [...replacement.querySelectorAll("button")].find(button=>button.getAttribute("aria-label")===label)?.focus();}
+    };
+    for(const [id,label] of available){
+      const button=textButton(label,"gorge-icon-button",()=>change(id,ascending,"Filter: "+label));
+      button.style.width="auto";button.style.padding="0.4rem 0.65rem";
+      button.title="Filter: "+label;button.setAttribute("aria-label","Filter: "+label);
+      button.setAttribute("aria-pressed",String(id===type));controls.appendChild(button);
+    }
+    const nextLabel=ascending?"Show highest first":"Show lowest first";
+    const order=textButton(ascending?"Lowest ↑":"Highest ↓","gorge-icon-button gorge-sort-button",
+      ()=>change(type,!ascending,ascending?"Show lowest first":"Show highest first"));
+    order.style.width="auto";order.style.padding="0.4rem 0.65rem";
+    order.title=nextLabel;order.setAttribute("aria-label",nextLabel);controls.appendChild(order);
+    if(ascending)panel.querySelector(".game-outcome-title").textContent=
+      insightCategoryLabel(kind).replace(/^Most /,"Least ").replace(/^Longest /,"Shortest ");
+    const heading=body.querySelector(".insight-featured-chart-title");
+    if(heading)heading.textContent=(ascending?"Lowest":"Highest")+" recorded cards"+
+      (kind==="longest"?" · mean rounds held":"");
+    body.prepend(controls);
+    return panel;
+  }
   function readablePredictor(feature){
     const name=String(feature||"");
     if(typeof window!=="undefined"&&window.DeckDisplayNames&&
@@ -2633,13 +2681,13 @@
         for(const type of types){
           if(!signals.ranked[type]?.length)continue;
           const [icon,label]=typesMeta[type];
-          const button=textButton(icon,"gorge-icon-button",()=>render(type,ascending,label));
-          button.title=label;button.setAttribute("aria-label",label);button.setAttribute("aria-pressed",String(type===kind));controls.appendChild(button);
+          const button=textButton(icon+" "+label,"gorge-icon-button",()=>render(type,ascending,label));
+          button.style.width="auto";button.style.padding="0.4rem 0.65rem";button.title=label;button.setAttribute("aria-label",label);button.setAttribute("aria-pressed",String(type===kind));controls.appendChild(button);
         }
         if(types===playedTypes){
           const label=ascending?"Show most played first":"Show least played first";
-          const order=textButton(ascending?"↑":"↓","gorge-icon-button gorge-sort-button",()=>render(kind,!ascending,ascending?"Show least played first":"Show most played first"));
-          order.title=label;order.setAttribute("aria-label",label);order.setAttribute("aria-pressed",String(ascending));controls.appendChild(order);
+          const order=textButton(ascending?"Least ↑":"Most ↓","gorge-icon-button gorge-sort-button",()=>render(kind,!ascending,ascending?"Show least played first":"Show most played first"));
+          order.style.width="auto";order.style.padding="0.4rem 0.65rem";order.title=label;order.setAttribute("aria-label",label);order.setAttribute("aria-pressed",String(ascending));controls.appendChild(order);
           if(ascending)panel.querySelector(".game-outcome-title").textContent="Least played "+(kind==="played"?"card":typesMeta[kind][1].toLowerCase());
           const note=create("p","micro","Least-played rankings include recorded candidates in this snapshot; cards without recorded plays may be absent.");
           note.hidden=!ascending;body.prepend(note);
@@ -2660,7 +2708,7 @@
           if(panel)cards.appendChild(panel);
           continue;
         }
-        const panel=cardPerformancePanel(kind,signals.ranked[kind]||[],
+        const panel=filteredInsightPanel(kind,signals.ranked[kind]||[],
           signals.coverage,groups,
           {...options,isGorge,tutorSearchCount:signals.confirmedTutors},onReviewRun);
         if(panel)cards.appendChild(panel);
@@ -2724,14 +2772,14 @@
       for(const type of playedInsightKinds){
         if(!rankings[type]?.length)continue;
         const [icon,label]=insightTypes[type];
-        const button=textButton(icon,"gorge-icon-button",()=>change(type,ascending,label));
-        button.title=label;button.setAttribute("aria-label",label);
+        const button=textButton(icon+" "+label,"gorge-icon-button",()=>change(type,ascending,label));
+        button.style.width="auto";button.style.padding="0.4rem 0.65rem";button.title=label;button.setAttribute("aria-label",label);
         button.setAttribute("aria-pressed",String(type===kind));controls.appendChild(button);
       }
       const label=ascending?"Show most played first":"Show least played first";
-      const order=textButton(ascending?"↑":"↓","gorge-icon-button gorge-sort-button",()=>
+      const order=textButton(ascending?"Least ↑":"Most ↓","gorge-icon-button gorge-sort-button",()=>
         change(kind,!ascending,ascending?"Show least played first":"Show most played first"));
-      order.title=label;order.setAttribute("aria-label",label);controls.appendChild(order);
+      order.style.width="auto";order.style.padding="0.4rem 0.65rem";order.title=label;order.setAttribute("aria-label",label);controls.appendChild(order);
       if(ascending)panel.querySelector(".game-outcome-title").textContent="Least played "+
         (kind==="played"?"card":insightTypes[kind][1].toLowerCase());
       body.prepend(controls);return panel;
@@ -2739,7 +2787,7 @@
     const played=grouped("played");if(played)grid.appendChild(played);
     for(const kind of ["longest","activated","triggered","removal","creatureKills","damage","finisher","tutorFound","tutorUsed"]){
       if((kind==="tutorFound"||kind==="tutorUsed")&&!options.tutorSearchCount)continue;
-      const panel=cardPerformancePanel(kind,rankings[kind]||[],coverage,groups,options,onReviewRun);
+      const panel=filteredInsightPanel(kind,rankings[kind]||[],coverage,groups,options,onReviewRun);
       if(panel)grid.appendChild(panel);
     }
   }
