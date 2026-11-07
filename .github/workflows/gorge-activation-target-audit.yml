@@ -1,0 +1,101 @@
+name: Diagnose Gorge activated-ability target aborts
+on:
+  push:
+    branches:
+      - 'fix/gorge-activation-target-audit-20261106'
+  pull_request:
+    branches:
+      - 'stage/omniscient-r2-release-check-20261106'
+    types: [opened, synchronize, reopened, ready_for_review]
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  target-audit:
+    runs-on: ubuntu-latest
+    timeout-minutes: 80
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - hero: necron_dynasties
+            seed: 229300
+          - hero: necron_dynasties
+            seed: 229301
+          - hero: magnus_premium
+            seed: 229200
+          - hero: mortarion_current
+            seed: 229101
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Prepare pinned replay with experimental source fixes and diagnostic
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p "$RUNNER_TEMP/decks" "$RUNNER_TEMP/results/native"
+          python -m tools.export_gorge_decks --out "$RUNNER_TEMP/decks" --decks mortarion_current magnus_premium necron_dynasties wretched_ranks
+          python -m tools.fetch_gorge_precons --out "$RUNNER_TEMP/decks"
+          git clone --filter=blob:none https://github.com/adams-shaun/gorge.git "$RUNNER_TEMP/gorge"
+          git -C "$RUNNER_TEMP/gorge" checkout --detach b78e4c8b16078f6decbc48875bba953ce5535b85
+          python -m tools.patch_gorge_ward_blight --gorge "$RUNNER_TEMP/gorge"
+          python tools/gorge_trigger_cost_policy_patch.py "$RUNNER_TEMP/gorge/bots/botpolicy/policy.go"
+          python -m tools.patch_gorge_changezone_anynumber --gorge "$RUNNER_TEMP/gorge"
+          python -m tools.patch_gorge_adeline_token_defender --gorge "$RUNNER_TEMP/gorge"
+          python -m tools.patch_gorge_convoke_pilot_fallback --policy "$RUNNER_TEMP/gorge/bots/botpolicy/policy.go"
+          python -m tools.patch_gorge_activation_target_diagnostic --gorge "$RUNNER_TEMP/gorge"
+          python -m tools.patch_gorge_dynamic_tap_x_choices --gorge "$RUNNER_TEMP/gorge"
+      - uses: actions/setup-go@v5
+        with:
+          go-version-file: ${{ runner.temp }}/gorge/go.mod
+          cache: false
+      - name: Compile pinned native simulator
+        working-directory: ${{ runner.temp }}/gorge
+        shell: bash
+        run: |
+          set -euo pipefail
+          make fetch-cards compile-cards
+          cp "$GITHUB_WORKSPACE/tools/gorge_commander_probe.go" commander_probe.go
+          go build -o "$RUNNER_TEMP/gorge-probe" ./commander_probe.go
+      - name: Replay exact failing seed and report target diagnostics
+        env:
+          HERO: ${{ matrix.hero }}
+          SEED: ${{ matrix.seed }}
+          PYTHONPATH: ${{ github.workspace }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          case "$HERO" in
+            mortarion_current|magnus_premium) opponents=necron_dynasties,wretched_ranks,cavalry-charge,science-pip,deadly-disguise,avengers-assemble ;;
+            necron_dynasties) opponents=wretched_ranks,cavalry-charge,science-pip,deadly-disguise,avengers-assemble ;;
+          esac
+          set +e
+          "$RUNNER_TEMP/gorge-probe" -corpus "$RUNNER_TEMP/gorge/.cards" -deck-dir "$RUNNER_TEMP/decks" \
+            -hero-deck "$HERO" -opponents "$opponents" -games 1 -seed "$SEED" -max-turns 60 \
+            -pilot bot -verify=true -native-dir "$RUNNER_TEMP/results/native" -native-limit 1 \
+            > "$RUNNER_TEMP/results/runs.jsonl" 2> "$RUNNER_TEMP/results/stderr.txt"
+          rc=$?
+          set -e
+          if [[ "$rc" != 0 && "$rc" != 2 ]]; then cat "$RUNNER_TEMP/results/stderr.txt";exit "$rc";fi
+          grep -E 'GORGE_(TARGET_(ABORT_DIAG|STAGE)|AFFORD_DROP)' "$RUNNER_TEMP/results/stderr.txt" | sort | uniq -c | head -120 || true
+          python -m tools.gorge_target_reversal_attribution --root "$RUNNER_TEMP/results" --hero "$HERO"
+          python - <<'PY'
+          import json,os
+          from pathlib import Path
+          root=Path(os.environ["RUNNER_TEMP"])/"results"
+          runs=[json.loads(x) for x in (root/"runs.jsonl").read_text().splitlines() if x.strip()]
+          assert len(runs)==1 and runs[0]["finished"] and runs[0]["replay_verified"] and not runs[0].get("error")
+          native=json.loads((root/"native"/f"gorge-seed-{runs[0]['seed']}.json").read_text())
+          aborts=[e for e in native["log"]["events"] if e.get("kind")==22 and e.get("text")=="cast aborted: no legal target"]
+          print("DYNAMIC_X_TARGET_REGRESSION",json.dumps({"hero":os.environ["HERO"],"seed":runs[0]["seed"],"abort_count":len(aborts),"verified":runs[0]["replay_verified"]}))
+          assert len(aborts)==0, f"{len(aborts)} cast target reversals remain after dynamic X repair"
+          PY
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: activation-target-audit-${{ matrix.hero }}-${{ matrix.seed }}
+          path: ${{ runner.temp }}/results/
+          retention-days: 14
+          if-no-files-found: warn
