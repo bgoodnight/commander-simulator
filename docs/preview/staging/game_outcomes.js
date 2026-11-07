@@ -349,7 +349,7 @@
     }
     copy.appendChild(heading);
     const numbers=create("div","game-outcome-hero-stats");
-    const short=[["win","Wins"],["loss","Losses"],["unresolved","Unresolved"]];
+    const short=[["win","Wins"],["loss","Losses"]];
     for(const [state,label] of short){
       const metric=create(state==="win"&&options.onHighlightClick?"button":"div","game-outcome-hero-stat is-"+state);
       if(state==="win"&&options.onHighlightClick){
@@ -370,9 +370,9 @@
     // Keep the outcome proportions with the percentages they describe.
     const bar=create("div","game-outcome-stacked-bar");
     bar.setAttribute("role","img");
-    bar.setAttribute("aria-label",STATES.map(state=>
+    bar.setAttribute("aria-label",["win","loss"].map(state=>
       stateLabel(state)+" "+group.counts[state]+" of "+group.total).join(", "));
-    for(const state of STATES){
+    for(const state of ["win","loss"]){
       if(!group.counts[state])continue;
       const segment=create("span","is-"+state);
       segment.style.width=(100*group.counts[state]/group.total)+"%";
@@ -524,7 +524,7 @@
       metrics.replaceChildren(
         metricTile("Games",values.games,"Observed"),
         metricTile("Win share",Math.round(values.winShare*100)+"%",
-          values.wins+" win · "+values.losses+" loss · "+values.unresolved+" unresolved"+
+          values.wins+" win · "+values.losses+" loss"+
           (values.draws?" · "+values.draws+" draw":"")),
         metricTile("Median finish",values.medianFinishRound,
           values.finishedGames+" completed"),
@@ -2474,11 +2474,22 @@
       const key=[group.pilotStyle,group.provisionalMode,group.requestedRounds].join("|");
       if(!cohorts.has(key))cohorts.set(key,{key,groups:[],games:0});
       const entry=cohorts.get(key);
-      entry.groups.push(group);entry.games+=group.total;
+      entry.groups.push(group);entry.games+=group.runs.filter(run=>["win","loss"].includes(run.outcome.status)).length;
     }
     const cohort=[...cohorts.values()].sort((a,b)=>
       b.games-a.games||a.key.localeCompare(b.key))[0];
-    const groups=cohort.groups;
+    // Outcome analytics use decided wins and losses. Keep all recorded games
+    // in the reviewer, but do not put unresolved or drawn games in rates.
+    const reviewerGroups=cohort.groups;
+    const groups=reviewerGroups.map(group=>({...group,
+      runs:group.runs.filter(run=>["win","loss"].includes(run.outcome.status))
+    })).filter(group=>group.runs.length);
+    if(!groups.length){
+      root.appendChild(create("p","game-outcome-empty","No completed wins or losses are available yet."));
+      const select=options.reviewerRoot?turnReviewer(options.reviewerRoot,reviewerGroups,options):null;
+      if(typeof options.onReviewerReady==="function")options.onReviewerReady(select);
+      return report;
+    }
     const all=groups.flatMap(group=>group.runs.map(run=>({run,group})));
     const runs=all.map(x=>x.run);
     const isGorge=runs[0]?.batch?.engine==="gorge";
@@ -2648,8 +2659,7 @@
         stats.append(
           metricTile("Finished",finished.length,total+" games"),
           metricTile("Victory round",quantile(wins.map(r=>r.completed_rounds),.5),
-            wins.length+" wins"),
-          metricTile("Unresolved",counts.unresolved,total+" games"));
+            wins.length+" wins"));
         body.appendChild(stats);
         histogram(body,finished,groups[0].requestedRounds);
       }));
@@ -2917,7 +2927,7 @@
     if(!isGorge&&!options.externalInsights)
       cards.appendChild(elasticNetPanel(options.discoveryReport,options));
     if(options.reviewerRoot){
-      jumpToReview=turnReviewer(options.reviewerRoot,groups,options);
+      jumpToReview=turnReviewer(options.reviewerRoot,reviewerGroups,options);
     }
     if(typeof options.onReviewerReady==="function")options.onReviewerReady(jumpToReview);
     return report;
