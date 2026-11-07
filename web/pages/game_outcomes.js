@@ -1986,6 +1986,7 @@
       const {group,run}=item.entry;
       runDetails(evidence,run,{example:group.exampleBySeed.get(run.seed),
         onShowRecordedActions:options.onShowRecordedActions,onOpenRecordedCard:options.onOpenRecordedCard,
+        onOpenTokenCard:options.onOpenTokenCard,
         lookupRecordedCard:options.lookupRecordedCard,renderMana:options.renderMana,
         focusTurn:turn,displayGameLabel:options.displayGameLabel||item.label});
     },{controlsHost:headerNav});
