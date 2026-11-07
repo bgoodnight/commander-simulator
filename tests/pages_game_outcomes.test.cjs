@@ -621,7 +621,7 @@ test('hero performance metrics open original details as modal panels, not grid d
     const dialog=root.children.find(n=>n.tag==='dialog');
     assert.ok(dialog);
     // The dedicated R2 Key Insights panel owns card rankings, not this hero.
-    assert.equal(walk(grid).filter(n=>n.className==='game-outcome-card').length,1);
+    assert.equal(walk(grid).filter(n=>n.className.includes('game-outcome-card')).length,1);
     assert.ok(!walk(grid).some(n=>n.className==='game-outcome-title'&&
       ['Opponent Types','Game Length','Commander Arrival','Mana Ramp'].includes(n.textContent)));
     const tiles=walk(grid).filter(n=>n.className==='game-outcome-hero-highlight');
