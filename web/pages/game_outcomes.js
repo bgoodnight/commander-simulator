@@ -2405,9 +2405,22 @@
       if(!values.length||values.some(x=>!Number.isFinite(Number(x))))return null;
       return values.reduce((sum,x)=>sum+Number(x),0);
     };
+    // An uncast commander is a right-censored arrival, not an outlier
+    // to discard. Include every game in the median's denominator, and
+    // return N/A if the middle observation(s) have no observed cast turn.
+    const arrivalMedian=entries=>{
+      if(!entries.length)return null;
+      const sorted=entries.map(commanderArrival)
+        .map(value=>Number.isFinite(value)?value:Infinity)
+        .sort((a,b)=>a-b);
+      const low=sorted[Math.floor((sorted.length-1)/2)];
+      const high=sorted[Math.floor(sorted.length/2)];
+      return Number.isFinite(low)&&Number.isFinite(high)?
+        (low+high)/2:null;
+    };
     const arrivalSamples=runs.map(commanderArrival).filter(Number.isFinite);
     const rampSamples=runs.map(manaAtFive).filter(Number.isFinite);
-    const medianArrival=quantile(arrivalSamples,.5);
+    const medianArrival=arrivalMedian(runs);
     const averageMana=rampSamples.length?
       rampSamples.reduce((a,b)=>a+b,0)/rampSamples.length:null;
     const heroHighlights=[
@@ -2416,8 +2429,8 @@
        detail:bestMatchup?.title||"No opponent groups"},
       {key:"length",label:"Game length",value:finishedMedian===null?"—":nfmt(finishedMedian),
        detail:"Median finished rounds"},
-      {key:"arrival",label:"Commander arrival",value:medianArrival===null?"—":nfmt(medianArrival),
-       detail:"Median first cast turn · "+arrivalSamples.length+"/"+total+" recorded"},
+      {key:"arrival",label:"Commander arrival",value:medianArrival===null?"N/A":nfmt(medianArrival),
+       detail:"Median across all "+total+" games · "+arrivalSamples.length+" casts"},
       {key:"ramp",label:"Mana ramp",value:averageMana===null?"—":averageMana.toFixed(2),
        detail:"Avg. mana generated on turn 5 · "+rampSamples.length+"/"+total+" recorded"}
     ];
@@ -2542,16 +2555,16 @@
       ];
       const stats=subsets.map(group=>{
         const values=group.runs.map(measure).filter(Number.isFinite);
-        return {...group,values, value:values.length?
-          (format==="median"?quantile(values,.5):
-            values.reduce((a,b)=>a+b,0)/values.length):null};
+        return {...group,values,value:format==="median"?
+          arrivalMedian(group.runs):values.length?
+          values.reduce((a,b)=>a+b,0)/values.length:null};
       });
       const max=Math.max(1,...stats.map(group=>group.value||0));
       for(const item of stats){
         const line=create("div","game-outcome-seat-bar");
         line.style.margin="14px 0";
         line.appendChild(create("span",null,item.name+" · "+item.values.length+
-          "/"+item.runs.length+" observed"));
+          "/"+item.runs.length+(format==="median"?" cast":" observed")));
         const track=create("div","game-outcome-finish-track");
         track.style.height="20px";
         const bar=create("span","game-outcome-finish-fill");
@@ -2559,14 +2572,14 @@
         bar.style.background=item.color;
         bar.style.width=item.value===null?"0%":(100*item.value/max)+"%";
         track.appendChild(bar);
-        line.append(track,create("strong",null,item.value===null?"—":
+        line.append(track,create("strong",null,item.value===null?"N/A":
           format==="mean"?item.value.toFixed(2):nfmt(item.value)));
         body.appendChild(line);
       }
     };
     detailPanels.set("arrival",card("Commander Arrival","Median first cast turn",
-      medianArrival===null?"—":nfmt(medianArrival),
-      "Recorded commander casts only; uncast games excluded from median",
+      medianArrival===null?"N/A":nfmt(medianArrival),
+      "All games included; N/A if the median cast turn was not observed",
       body=>comparisonBarChart(body,commanderArrival,"median")));
     detailPanels.set("ramp",card("Mana Ramp","Turn five mana generated",
       averageMana===null?"—":averageMana.toFixed(2),
