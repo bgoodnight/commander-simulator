@@ -1,0 +1,33 @@
+name: Check optional model-insights staging integration
+on:
+  push:
+    branches: [feature/model-insights-staging-contract-20261106]
+    paths:
+      - "web/pages/model_insights.js"
+      - "web/pages/r2_original_results.js"
+      - "web/pages/index.html"
+      - "tests/model_insights.test.cjs"
+      - ".github/workflows/model-insights-contract-check.yml"
+  pull_request:
+    paths:
+      - "web/pages/model_insights.js"
+      - "web/pages/r2_original_results.js"
+      - "web/pages/index.html"
+      - "tests/model_insights.test.cjs"
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  contract:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+      - name: Test model report gates and JS syntax
+        run: |
+          node --check web/pages/model_insights.js
+          node --check web/pages/r2_original_results.js
+          node --test tests/model_insights.test.cjs
