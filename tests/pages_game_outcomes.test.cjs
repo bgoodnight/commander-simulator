@@ -1282,3 +1282,14 @@ test('turn summaries and end state use actual mana pips and clickable typed card
       String(n.attributes['aria-label']).includes('Dark Ritual')));
   }finally{global.document=old}
 });
+
+test('R2 insight panels forward token-detail handlers into nested recorded examples',()=>{
+  const adapter=fs.readFileSync('web/pages/r2_original_results.js','utf8');
+  const render=fs.readFileSync('web/pages/game_outcomes.js','utf8');
+  // Full-cohort rankings, observed-batch fallback, and per-game replay all
+  // share the token detail bridge. Leaving any out makes token tiles inert.
+  const callbacks=adapter.match(/onOpenTokenCard:card=>window\.GorgeDeckLabOpenTokenCard\?\.\(card\)/g)||[];
+  assert.ok(callbacks.length>=4,'every R2 insight and replay entrypoint needs token clicks');
+  assert.match(render,/onOpenTokenCard:options\.onOpenTokenCard,\s*example:entry\.group/);
+  assert.match(render,/if\(token\)options\.onOpenTokenCard\?\.\(/);
+});
