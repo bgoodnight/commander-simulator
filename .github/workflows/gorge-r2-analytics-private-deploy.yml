@@ -1,0 +1,60 @@
+name: Deploy isolated private analytics R2 Worker (no public route)
+on:
+  push:
+    branches: [analysis/r2-exploratory-elastic-net-20261105]
+    paths:
+      - ".github/workflows/gorge-r2-analytics-private-deploy.yml"
+      - "workers/gorge-r2-analytics/**"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: gorge-r2-analytics-private-only
+  cancel-in-progress: false
+
+jobs:
+  deploy-private:
+    if: github.ref == 'refs/heads/analysis/r2-exploratory-elastic-net-20261105'
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    env:
+      CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+      CLOUDFLARE_ACCOUNT_ID: ${{ secrets.GORGE_R2_ACCOUNT_ID }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+      - name: Require existing Cloudflare deploy credentials
+        shell: bash
+        run: |
+          set -euo pipefail
+          [[ -n "$CLOUDFLARE_API_TOKEN" && -n "$CLOUDFLARE_ACCOUNT_ID" ]] || {
+            echo "::error::Missing existing scoped Cloudflare deployment credentials"
+            exit 1
+          }
+      - name: Test isolated analytics Worker
+        working-directory: workers/gorge-r2-analytics
+        run: npm test
+      - name: Install Wrangler and verify no public route
+        working-directory: workers/gorge-r2-analytics
+        shell: bash
+        run: |
+          set -euo pipefail
+          grep -qx 'workers_dev = false' wrangler.toml
+          grep -qx 'preview_urls = false' wrangler.toml
+          if grep -Eq '^\s*(route|routes|custom_domain)\s*=' wrangler.toml; then
+            echo "::error::Refusing public route or domain in private analytics deploy"
+            exit 1
+          fi
+          npm install --ignore-scripts --no-audit --no-fund
+      - name: Deploy private Worker without public routes
+        working-directory: workers/gorge-r2-analytics
+        run: npx wrangler deploy --name gorge-r2-analytics-private
+      - name: Require explicit Access setup before enabling access
+        run: |
+          echo "Private Worker deployment attempted with workers_dev=false and preview_urls=false."
+          echo "No route, Access application, or bearer token has been configured by this workflow."
+          echo "Access protection and authentication secret are separate account-authorized steps."
