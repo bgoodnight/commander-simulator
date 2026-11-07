@@ -2,6 +2,7 @@ name = "gorge-r2-analytics-private"
 main = "index.mjs"
 compatibility_date = "2026-11-05"
 workers_dev = false
+preview_urls = false
 
 [[r2_buckets]]
 binding = "GORGE_R2"
