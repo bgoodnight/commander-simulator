@@ -1266,12 +1266,16 @@
       group.appendChild(trigger);
       if(label==="Graveyard"&&cards.length){
         // Keep a compact, inspectable preview visible while the zone is closed.
+        trigger.style.flexWrap="wrap";
         const preview=create("span","insight-graveyard-preview");
+        preview.style.flexBasis="100%";
         preview.style.display="flex";preview.style.flexWrap="wrap";
         preview.style.gap="0.25rem";preview.style.marginTop="0.35rem";
         const previewNames=cards.slice(-3).reverse();
         previewNames.forEach((name,index)=>{
           const tile=insightActionCard(name,options,{});
+          if(index>0)tile.style.marginLeft="-0.6rem";
+          tile.style.position="relative";tile.style.zIndex=String(previewNames.length-index);
           const inspect=tile.onclick;
           tile.onclick=event=>{
             event.preventDefault();event.stopPropagation();
