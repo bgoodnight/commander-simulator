@@ -69,6 +69,7 @@ jobs:
           TRIGGER_KIND: ${{ github.event_name }}
           TRIGGER_BRANCH: ${{ github.event.workflow_run.head_branch }}
           TRIGGER_EVENT: ${{ github.event.workflow_run.event }}
+          TRIGGER_REPOSITORY: ${{ github.event.workflow_run.head_repository.full_name }}
           TRIGGER_SHA: ${{ github.event.workflow_run.head_sha }}
           REPOSITORY: ${{ github.repository }}
         run: |
@@ -77,8 +78,8 @@ jobs:
             echo "ready=true" >> "$GITHUB_OUTPUT"
             exit 0
           fi
-          if [[ "$TRIGGER_BRANCH" != "stage/results-insights-r2-combined-20261106" || "$TRIGGER_EVENT" != "push" || ! "$TRIGGER_SHA" =~ ^[a-f0-9]{40}$ ]]; then
-            echo "Automatic publication requires a push on the designated staging branch" >> "$GITHUB_STEP_SUMMARY"
+          if [[ "$TRIGGER_BRANCH" != "stage/results-insights-r2-combined-20261106" || "$TRIGGER_REPOSITORY" != "$REPOSITORY" || ( "$TRIGGER_EVENT" != "push" && "$TRIGGER_EVENT" != "pull_request" ) || ! "$TRIGGER_SHA" =~ ^[a-f0-9]{40}$ ]]; then
+            echo "Automatic publication requires a same-repository push or PR check on the designated staging branch" >> "$GITHUB_STEP_SUMMARY"
             exit 0
           fi
           LATEST="$(gh api "repos/$REPOSITORY/branches/$TRIGGER_BRANCH" --jq '.commit.sha')"
@@ -102,7 +103,7 @@ jobs:
           sha=os.environ["TRIGGER_SHA"]
           runs={}
           for run in data["workflow_runs"]:
-              if run.get("head_sha") != sha or run.get("event") != "push":
+              if run.get("head_sha") != sha or run.get("event") not in ("push", "pull_request") or run.get("head_branch") != os.environ["TRIGGER_BRANCH"]:
                   continue
               name=run.get("name")
               if name in expected and name not in runs:
