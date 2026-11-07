@@ -42,9 +42,15 @@ def attach_identity(row: dict, *, batch: str, deck: str, shard: int=0,
         raise ValueError("Missing source seed")
     if row.get("deck") not in (None,deck) or row.get("hero") not in (None,deck):
         raise ValueError("Mismatched deck identity")
+    for field, expected in (("batch_id", batch), ("shard", shard),
+                            ("cohort_id", cohort_id)):
+        if row.get(field) is not None and row[field] != expected:
+            raise ValueError(f"Mismatched {field} identity")
     if row.get("game_id") not in (None,game_id(batch,deck,shard,row["seed"])):
         raise ValueError("Mismatched game ID")
     if source_sha256 is not None and (not isinstance(source_sha256,str) or not _SHA.fullmatch(source_sha256)):
+        raise ValueError("Invalid source hash")
+    if row.get("source_sha256") is not None and (not isinstance(row["source_sha256"],str) or not _SHA.fullmatch(row["source_sha256"])):
         raise ValueError("Invalid source hash")
     if (row.get("source_sha256") is not None and source_sha256 is not None
         and row["source_sha256"] != source_sha256):
