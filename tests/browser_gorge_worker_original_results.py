@@ -303,7 +303,81 @@ def test_initial_worker_recovery():
     finally:
         server.shutdown()
 
+def test_omniscient_materialized_original_layout():
+    """The verified materialized R2 hand data must keep the ORIGINAL Results UI."""
+    assert DOCUMENT["status"]=="ready"
+    one_batch={**DOCUMENT["batch"],"runs":[DOCUMENT["batch"]["runs"][0]]}
+    run=one_batch["runs"][0]
+    assert run.get("gorge_source",{}).get("visibility")=="omniscient", (
+        "Browser source fixture must be an omniscient synthetic replay")
+    assert len(run.get("opening_hand",[]))==run["opening_hand_count"]
+    assert len(run.get("opening_hands_by_seat",[]))==3
+    server=ThreadingHTTPServer(("127.0.0.1",0),Handler)
+    Thread(target=server.serve_forever,daemon=True).start()
+    staging="https://gorge-r2-fullstate-staging-20261106.darbosama.workers.dev"
+    calls=[]
+    def fulfill(route):
+        parsed=urlparse(route.request.url)
+        query=parse_qs(parsed.query)
+        calls.append(parsed.path)
+        common={"schema":"gorge-r2-materialized-response-v1",
+                "deck":DECK,"version":VERSION,"status":"ready"}
+        if parsed.path.endswith("/catalog"):
+            payload={**common,"total":1,"page_count":1}
+        elif parsed.path.endswith("/insights"):
+            route.fulfill(status=404,content_type="application/json",
+                headers={"Access-Control-Allow-Origin":"*"},body="{}")
+            return
+        elif parsed.path.endswith("/page"):
+            assert query.get("page")==["0"]
+            payload={**common,"page":{"page":0,"total":1,"games":[{
+                "game_id":"verified-0","result":"loss","turns":run["completed_rounds"],
+                "opponent_decks":["fixture-a","fixture-b","fixture-c"]}]}}
+        elif parsed.path.endswith("/game"):
+            assert query.get("page")==["0"] and query.get("game_id")==["verified-0"]
+            payload={**common,"game":{"game_id":"verified-0","batch":one_batch}}
+        else:
+            raise AssertionError("Unexpected R2 route "+parsed.path)
+        route.fulfill(status=200,content_type="application/json",
+            headers={"Access-Control-Allow-Origin":"*"},body=json.dumps(payload))
+    try:
+        with sync_playwright() as p:
+            browser=p.chromium.launch(headless=True)
+            for mode,viewport in (("desktop",{"width":1440,"height":960}),
+                                  ("mobile",{"width":390,"height":844})):
+                calls.clear()
+                page=browser.new_page(viewport=viewport)
+                errors=[]
+                page.on("pageerror",lambda error: errors.append(str(error)))
+                page.route(staging+"/v1/ui/*",fulfill)
+                page.route(API+"/v1/ui/*",fulfill)
+                page.goto(f"http://127.0.0.1:{server.server_port}/results.html?deck={DECK}"
+                    f"&r2Api={staging}",wait_until="domcontentloaded")
+                page.locator("#game-outcome-results .game-outcome-hero-frame").wait_for(
+                    state="visible",timeout=60000)
+                assert page.evaluate("document.body.dataset.r2ResultsState")=="ready"
+                assert page.locator("#key-insights-panel").is_visible()
+                assert page.locator("#turn-reviewer-panel").is_visible()
+                assert page.locator("#game-outcome-results .r2-cohort-details").count()==0
+                assert page.locator("#game-outcome-results .game-outcome-hero").count()==1
+                assert page.locator("#turn-reviewer-results .insight-turn-row").count()>0
+                opening=page.locator("#turn-reviewer-results .insight-turn-row").first
+                assert "identities private" not in opening.inner_text().lower()
+                assert run["opening_hand"][0] in opening.inner_text()
+                opening.locator("summary.insight-turn-row-summary").click()
+                assert "The public replay does not include card identities" not in opening.inner_text()
+                assert "/v1/ui/batch" not in calls, calls
+                assert calls.count("/v1/ui/game")==1, calls
+                assert not errors,errors
+                page.screenshot(path=str(OUT/f"{DECK}-{mode}-omniscient-original-layout.png"),
+                    full_page=True)
+                page.close()
+            browser.close()
+    finally:
+        server.shutdown()
+
 if __name__=="__main__":
     test()
     test_materialized()
     test_initial_worker_recovery()
+    test_omniscient_materialized_original_layout()
