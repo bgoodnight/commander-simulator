@@ -51,5 +51,21 @@ class MultiBatchAssemblerTests(unittest.TestCase):
         with self.assertRaisesRegex(ValueError,"deck identity"):
             assemble_batches([src])
 
+    def test_conflicting_source_context_rejected(self):
+        for field, value in (("batch_id", "42143344244-1"),
+                             ("shard", 1), ("cohort_id", "other")):
+            for collection in ("games", "landmarks", "events"):
+                with self.subTest(field=field, collection=collection):
+                    src = batch("42143344243-1")
+                    src[collection][0][field] = value
+                    with self.assertRaisesRegex(ValueError, "Mismatched"):
+                        assemble_batches([src])
+
+    def test_malformed_embedded_hash_rejected(self):
+        src = batch("42143344243-1")
+        src["games"][0]["source_sha256"] = "not-a-sha256"
+        with self.assertRaisesRegex(ValueError, "Invalid source hash"):
+            assemble_batches([src])
+
 
 if __name__=="__main__":unittest.main()
