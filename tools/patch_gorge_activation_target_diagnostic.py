@@ -45,6 +45,51 @@ def patch(root: Path):
             '\t}\n'
         )
         src = replace_once(src, old, new)
+    # Pinpoint why an ability target was dropped by the 601.2c affordability
+    # check; no payment, candidate selection, or engine state is modified.
+    pricing = root / "engine/rules/cast_pricing.go"
+    full = pricing.read_text()
+    start = full.index("func (e *Engine) affordableTargetCandidates(")
+    end = full.index("\n// manaToPay", start)
+    body = full[start:end]
+    before = body
+    checks = [
+        ('if !pay.NonManaCastable(asPayer(e), pc.player, pc.card, cost, pc.isAbility(), tapCostSAKind(e.pcAbility(pc))) {\n\t\t\tcontinue',
+         'nonmana'),
+        ('if cost.Life > 0 && cost.Life > pl.Life {\n\t\t\tcontinue',
+         'life'),
+        ('if !cost.HasManaPayment() {\n\t\t\tcontinue',
+         'no_mana_payment'),
+        ('if !targetDiscount && !e.hasUntappedManaSource(pc.player) {\n\t\t\tcontinue',
+         'no_mana_source'),
+    ]
+    for old, reason in checks:
+        new = old.replace('\n\t\t\tcontinue',
+            '\n\t\t\tif pc.isAbility() { fmt.Fprintf(os.Stderr, "GORGE_AFFORD_DROP source=%d x=%d target=%d reason=' +
+            reason + ' generic=%d life=%d\\n", pc.card, pc.x, candidate.obj, cost.Generic, cost.Life) }\n\t\t\tcontinue')
+        body = replace_once(body, old, new)
+    anchor_reach = (
+        'out = append(out, candidate)\n'
+        '\t\t\t}\n'
+        '\t\t} else {\n'
+        '\t\t\tout = append(out, candidate)\n'
+        '\t\t}\n'
+    )
+    if body.count(anchor_reach) != 1:
+        raise ValueError("Pinned affordability window branch changed")
+    newer_reach = (
+        'out = append(out, candidate)\n'
+        '\t\t\t} else if pc.isAbility() {\n'
+        '\t\t\t\tfmt.Fprintf(os.Stderr, "GORGE_AFFORD_DROP source=%d x=%d target=%d reason=window_unreachable generic=%d life=%d census=%t discount=%t\\n", pc.card, pc.x, candidate.obj, cost.Generic, cost.Life, censusComplete, targetDiscount)\n'
+        '\t\t\t}\n'
+        '\t\t} else {\n'
+        '\t\t\tout = append(out, candidate)\n'
+        '\t\t}\n'
+    )
+    body = replace_once(body, anchor_reach, newer_reach)
+    full = full[:start] + body + full[end:]
+    full = replace_once(full, '\t"fmt"\n', '\t"fmt"\n\t"os"\n')
+    pricing.write_text(full)
     path.write_text(src)
 
 if __name__ == "__main__":
