@@ -123,10 +123,15 @@ def test():
                         /^https:\\/\\/(api.scryfall.com|cards.scryfall.io)\\//.test(data.art));
                 }""")
                 matchup=page.locator("#game-outcome-results .game-outcome-hero-highlight").first
+                assert matchup.locator(".game-outcome-matchup-card").count()==1
+                assert "Explore" not in matchup.inner_text()
                 matchup.click()
                 art=page.locator("#game-outcome-results .game-outcome-detail-dialog .game-outcome-opponent-art")
                 art.wait_for(state="attached",timeout=15000)
                 assert art.get_attribute("src").startswith("https://")
+                page.get_by_label("Group opponent outcomes by").select_option("compositions")
+                assert page.locator(".game-outcome-pod-art-member").count()==3
+                assert page.locator(".game-outcome-pod-art-member img").count()==3
                 page.locator("#game-outcome-results .game-outcome-detail-close").click()
                 # An open information popup overlays the nearby card, like
                 # the matching Overall Results control. Close before clicking.
