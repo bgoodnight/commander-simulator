@@ -614,12 +614,14 @@ test('hero performance metrics open original details as modal panels, not grid d
     const root=new Node('main'),reviewer=new Node('section');
     Outcomes.render(root,[batch([runWon(),runUnresolved(),runLost()])],{
       deckKey:'necron_dynasties',deckHash:'a'.repeat(64),
-      reviewerRoot:reviewer
+      externalInsights:true,reviewerRoot:reviewer
     });
     const walk=n=>[n,...n.children.flatMap(walk)];
     const grid=root.children.find(n=>n.className.includes('latest-insight-grid'));
     const dialog=root.children.find(n=>n.tag==='dialog');
     assert.ok(dialog);
+    // The dedicated R2 Key Insights panel owns card rankings, not this hero.
+    assert.equal(walk(grid).filter(n=>n.className==='game-outcome-card').length,1);
     assert.ok(!walk(grid).some(n=>n.className==='game-outcome-title'&&
       ['Opponent Types','Game Length','Commander Arrival','Mana Ramp'].includes(n.textContent)));
     const tiles=walk(grid).filter(n=>n.className==='game-outcome-hero-highlight');
