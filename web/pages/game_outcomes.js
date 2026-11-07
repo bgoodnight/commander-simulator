@@ -2867,7 +2867,7 @@
     ];
     const grid=create("div","board-grid game-outcome-grid latest-insight-grid");
     const hero=outcomeCard({counts,total:summary.n,terminal:summary.n,terminalRounds:[]},
-      {...options,isGorge:true,heroHighlights:highlights,outcomeMeta:summary.n+" games · complete cohort"},
+      {...options,isGorge:true,heroHighlights:highlights,summaryNotes:[summary.n+" games · complete cohort"]},
       body=>body.appendChild(create("p","micro","Complete cohort results from the Worker.")));
     // These values are visual summaries, not the former drilldown panels.
     // Make them non-interactive until the complete-cohort drilldowns exist.
