@@ -1,0 +1,32 @@
+name: Test isolated private R2 analytics bridge
+on:
+  push:
+    branches: [analysis/r2-exploratory-elastic-net-20261105]
+    paths:
+      - "workers/gorge-r2-analytics/**"
+      - "docs/GORGE_ANALYTICS_PRIVATE_ACCESS.md"
+      - ".github/workflows/gorge-r2-analytics-access-tests.yml"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+      - name: Run isolated Worker access-control and historical retrieval tests
+        working-directory: workers/gorge-r2-analytics
+        run: npm test
+      - name: Verify Worker is not exposed on workers.dev
+        shell: bash
+        run: |
+          set -euo pipefail
+          grep -q '^workers_dev = false$' workers/gorge-r2-analytics/wrangler.toml
+          ! grep -q '^routes\?\s*=' workers/gorge-r2-analytics/wrangler.toml
+          echo "Bridge is test-only. Account Access policy, secrets, private route, and deployment are separate."

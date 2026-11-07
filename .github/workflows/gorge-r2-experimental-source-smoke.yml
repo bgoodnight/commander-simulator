@@ -1,0 +1,117 @@
+name: Verify fresh experimental Gorge R2 sources and feature extraction
+on:
+  push:
+    branches: [analysis/r2-exploratory-elastic-net-20261105]
+    paths:
+      - "tools/gorge_r2_experiment_ingest.py"
+      - "tools/gorge_landmark_features.py"
+      - "tools/gorge_event_features.py"
+      - "tools/gorge_native_schema_audit.py"
+      - "tools/gorge_sparse_card_features.py"
+      - "tools/gorge_validate_private_extraction.py"
+      - "tests/test_gorge_validate_private_extraction.py"
+      - "tests/test_gorge_sparse_card_features.py"
+      - "tools/gorge_assemble_model_table.py"
+      - "tools/gorge_hero_ebm_prototype.py"
+      - "tests/test_gorge_assemble_model_table.py"
+      - "tests/test_gorge_event_features.py"
+      - "tests/test_gorge_r2_experiment_ingest.py"
+      - ".github/workflows/gorge-r2-experimental-source-smoke.yml"
+  workflow_dispatch:
+    inputs:
+      run_attempt:
+        required: true
+        default: "42143344243-1"
+        type: string
+
+permissions:
+  contents: read
+
+jobs:
+  source-test:
+    strategy:
+      fail-fast: false
+      matrix:
+        hero: [mortarion_current, magnus_premium]
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    env:
+      ACCOUNT: ${{ secrets.GORGE_R2_ACCOUNT_ID }}
+      AWS_ACCESS_KEY_ID: ${{ secrets.GORGE_R2_ACCESS_KEY_ID }}
+      AWS_SECRET_ACCESS_KEY: ${{ secrets.GORGE_R2_SECRET_ACCESS_KEY }}
+      AWS_DEFAULT_REGION: auto
+      HERO: ${{ matrix.hero }}
+      RUN_ATTEMPT: ${{ inputs.run_attempt || '42143344243-1' }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Run private R2 acquisition contract tests
+        run: python -m unittest tests.test_gorge_r2_experiment_ingest tests.test_gorge_event_features tests.test_gorge_assemble_model_table tests.test_gorge_sparse_card_features tests.test_gorge_validate_private_extraction -v
+      - name: Verify exact R2 experimental archive and derive landmark observations
+        shell: bash
+        run: |
+          set -euo pipefail
+          test -n "$ACCOUNT" && test -n "$AWS_ACCESS_KEY_ID" && test -n "$AWS_SECRET_ACCESS_KEY"
+          python -m tools.gorge_r2_experiment_ingest --run-attempt "$RUN_ATTEMPT" \
+            --hero "$HERO" --account-id "$ACCOUNT" --destination "$RUNNER_TEMP/source"
+          python -m tools.gorge_landmark_features --native-root "$RUNNER_TEMP/source/extracted/results" \
+            --hero "$HERO" --output "$RUNNER_TEMP/landmarks.jsonl"
+          python -m tools.gorge_native_schema_audit --native-root "$RUNNER_TEMP/source/extracted/results" --hero "$HERO" --output "$RUNNER_TEMP/native-schema-audit.json"
+          python - "$RUNNER_TEMP/native-schema-audit.json" <<'PY'
+          import json,sys
+          d=json.load(open(sys.argv[1]))
+          print("SOURCE_SCHEMA_FIELDS",json.dumps({k:sorted(v) for k,v in d["fields"].items()},sort_keys=True))
+          print("SOURCE_EVENT_KINDS",json.dumps(sorted(d["event_kinds"],key=int)))
+          PY
+          python -m tools.gorge_event_features --native-root "$RUNNER_TEMP/source/extracted/results" \
+            --hero "$HERO" --output "$RUNNER_TEMP/event-features.jsonl"
+          python tools/gorge_hero_ebm_prototype.py --source "$RUNNER_TEMP/source/extracted/results" --hero "$HERO" --output "$RUNNER_TEMP/private-analytics"
+          python tools/gorge_assemble_model_table.py --games "$RUNNER_TEMP/private-analytics/hero_features.jsonl" --landmarks "$RUNNER_TEMP/landmarks.jsonl" --events "$RUNNER_TEMP/event-features.jsonl" --output "$RUNNER_TEMP/private-analytics/analytic_features.jsonl"
+          python -m tools.gorge_sparse_card_features --native-root "$RUNNER_TEMP/source/extracted/results" --hero "$HERO" --run-attempt "$RUN_ATTEMPT" --output "$RUNNER_TEMP/private-analytics/card-features"
+          python - "$RUNNER_TEMP/source/acquisition-report.json" "$RUNNER_TEMP/landmarks.jsonl" "$RUNNER_TEMP/event-features.jsonl" <<'PY'
+          import json,os,sys
+          d=json.load(open(sys.argv[1]))
+          rows=[json.loads(s) for s in open(sys.argv[2]) if s.strip()]
+          events=[json.loads(x) for x in open(sys.argv[3]) if x.strip()]
+          assert len(rows)==d["attempts"]*3
+          assert len(events)==len(rows)
+          assert all(e["landmark_global_turn"]==r["landmark_global_turn"] and e["seed"]==r["seed"] for e,r in zip(events,rows))
+          assert len({x["seed"] for x in rows})==d["attempts"]
+          with open(os.environ["GITHUB_STEP_SUMMARY"],"a") as f:
+              f.write("# Private R2 experimental acquisition verified\n\n")
+              f.write("Hero: "+d["hero"]+"; source: "+d["run_attempt"]+"\n\n")
+              f.write("Attempts: "+str(d["attempts"])+"; completed: "+str(d["completed"])+"; replay-verified: "+str(d["replay_verified"])+"\n\n")
+              f.write("Native recordings available: "+str(d["native_available"])+"; landmark records: "+str(len(rows))+"\n\n")
+              f.write("Experimental only. No R2 writes, UI publication, model inference, or source artifact upload.\n")
+          PY
+      - name: Validate complete private feature extraction and emit count-only receipt
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p "$RUNNER_TEMP/private-receipt"
+          cp "$RUNNER_TEMP/source/acquisition-report.json" "$RUNNER_TEMP/private-analytics/acquisition-report.json"
+          cp "$RUNNER_TEMP/landmarks.jsonl" "$RUNNER_TEMP/private-analytics/landmarks.jsonl"
+          cp "$RUNNER_TEMP/event-features.jsonl" "$RUNNER_TEMP/private-analytics/event-features.jsonl"
+          cp "$RUNNER_TEMP/private-analytics/card-features/card_exposures.jsonl" "$RUNNER_TEMP/private-analytics/card_exposures.jsonl"
+          python -m tools.gorge_validate_private_extraction \
+            --root "$RUNNER_TEMP/private-analytics" --run-attempt "$RUN_ATTEMPT" \
+            --hero "$HERO" --report "$RUNNER_TEMP/private-receipt/validation.json"
+          python - "$RUNNER_TEMP/private-receipt/validation.json" <<'PY'
+          import json, os, sys
+          r=json.load(open(sys.argv[1]))
+          with open(os.environ["GITHUB_STEP_SUMMARY"],"a") as f:
+              f.write("\n## Private modeling-data contract\n\n")
+              f.write(f"Game rows: {r['games']}; landmarks: {r['observed_landmarks']}/{r['expected_landmarks']}; ")
+              f.write(f"joined rows: {r['joined_rows']}; sparse card exposures: {r['sparse_card_rows']}.\n\n")
+              f.write("Validated count-only receipt; raw private model tables remain on the runner.\n")
+          PY
+      - name: Retain non-sensitive verification receipt only
+        uses: actions/upload-artifact@v4
+        if: success()
+        with:
+          name: r2-private-analytics-receipt-${{ matrix.hero }}
+          path: ${{ runner.temp }}/private-receipt/validation.json
+          if-no-files-found: error
+          retention-days: 14

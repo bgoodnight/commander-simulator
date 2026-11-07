@@ -1,0 +1,50 @@
+name: Probe deployed Gorge Worker routes for analytics readiness
+on:
+  push:
+    branches: [analysis/r2-exploratory-elastic-net-20261105]
+    paths: [.github/workflows/gorge-worker-analytics-api-probe.yml]
+permissions:
+  contents: read
+jobs:
+  probe:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - name: Query each route independently and report response schemas
+        env:
+          API: https://gorge-r2-direct-api-preview.darbosama.workers.dev
+        shell: bash
+        run: |
+          set -euo pipefail
+          for deck in mortarion_current magnus_premium; do
+            for route in summary ui/overview; do
+              filename="$(echo "$route" | tr '/' '-')"
+              curl --silent --show-error --retry 2 --max-time 25 \
+                --write-out '%{http_code}' "$API/v1/$route?deck=$deck" \
+                > "$RUNNER_TEMP/$deck-$filename-response.txt"
+            done
+          done
+          curl --silent --show-error --max-time 25 --write-out '%{http_code}' \
+            "$API/v1/analytics/cohorts?hero=mortarion_current" \
+            > "$RUNNER_TEMP/analytics-response.txt"
+          python - <<'PY'
+          import json,os
+          from pathlib import Path
+          root=Path(os.environ["RUNNER_TEMP"])
+          with open(os.environ["GITHUB_STEP_SUMMARY"],"a") as w:
+              w.write("# Deployed Worker API response matrix\n\n")
+              w.write("| Deck | Route | HTTP | Schema/error |\n|---|---|---:|---|\n")
+              for deck in ("mortarion_current","magnus_premium"):
+                  for route in ("summary","ui-overview"):
+                      value=(root/f"{deck}-{route}-response.txt").read_text()
+                      code=value[-3:]
+                      body=value[:-3]
+                      parsed=json.loads(body) if body.strip().startswith("{") else {}
+                      w.write(f"| {deck} | {route} | {code} | {parsed.get('schema',parsed.get('error','unavailable'))} |\n")
+                      if route=="summary":
+                          assert code=="200" and parsed.get("schema")=="gorge-r2-live-summary-v1"
+              response=(root/"analytics-response.txt").read_text()
+              w.write(f"\nPrivate analytics cohort endpoint: HTTP {response[-3:]} (not an authenticated analysis pull).\n")
+          PY
+          echo "API response statuses:"
+          for file in "$RUNNER_TEMP"/*-response.txt; do printf "%s " "$(basename "$file")"; tail -c 3 "$file"; echo; done
