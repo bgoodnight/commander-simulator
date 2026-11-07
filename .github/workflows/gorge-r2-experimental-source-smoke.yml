@@ -94,6 +94,7 @@ jobs:
           cp "$RUNNER_TEMP/source/acquisition-report.json" "$RUNNER_TEMP/private-analytics/acquisition-report.json"
           cp "$RUNNER_TEMP/landmarks.jsonl" "$RUNNER_TEMP/private-analytics/landmarks.jsonl"
           cp "$RUNNER_TEMP/event-features.jsonl" "$RUNNER_TEMP/private-analytics/event-features.jsonl"
+          cp "$RUNNER_TEMP/private-analytics/card-features/card_exposures.jsonl" "$RUNNER_TEMP/private-analytics/card_exposures.jsonl"
           python -m tools.gorge_validate_private_extraction \
             --root "$RUNNER_TEMP/private-analytics" --run-attempt "$RUN_ATTEMPT" \
             --hero "$HERO" --report "$RUNNER_TEMP/private-receipt/validation.json"
