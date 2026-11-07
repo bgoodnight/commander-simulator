@@ -1256,7 +1256,7 @@
     for(const [label,cards] of zones){
       if(!Array.isArray(cards))continue;
       const group=create("details","insight-end-zone insight-board-"+label.toLowerCase().replace(/[^a-z]+/g,"-"));
-      group.open=label!=="Graveyard";
+      group.open=false;
       const icon=({Hand:"▤","Command zone":"♛",Creatures:"♟",Lands:"◇",
         Artifacts:"⚙",Enchantments:"✦",Planeswalkers:"♛","Other permanents":"◈",
         Graveyard:"◆",Exile:"⊘"})[label]||"◈";
@@ -1264,35 +1264,42 @@
       trigger.append(create("span","insight-end-zone-icon",icon),
         create("span",null,label+" · "+cards.length));
       group.appendChild(trigger);
-      if(label==="Graveyard"&&cards.length){
-        // Keep a compact, inspectable preview visible while the zone is closed.
+      if(cards.length){
+        // The summary stays visible while closed; the zone body contains
+        // the ordinary labelled cards and remains the expanded view.
         trigger.style.flexWrap="wrap";
-        const preview=create("span","insight-graveyard-preview");
-        preview.style.flexBasis="100%";
-        preview.style.display="flex";preview.style.flexWrap="wrap";
-        preview.style.gap="0.25rem";preview.style.marginTop="0.35rem";
-        const previewNames=cards.slice(-3).reverse();
-        previewNames.forEach((name,index)=>{
-          const tile=insightActionCard(name,options,{});
-          if(index>0)tile.style.marginLeft="-0.6rem";
-          tile.style.position="relative";tile.style.zIndex=String(previewNames.length-index);
+        const hint=create("span","insight-zone-expand-hint",
+          label==="Graveyard"&&cards.length>3?
+            "Showing 3 of "+cards.length+" · Expand":"Expand");
+        trigger.appendChild(hint);
+        const preview=create("span","insight-compact-preview"+
+          (label==="Graveyard"?" is-graveyard-stack":""));
+        const entries=label==="Graveyard"?
+          cards.slice(-3).reverse().map(name=>({name,count:1})):
+          byType.has(label)?groupedBattlefieldTokens(cards,options):
+            cards.map(name=>({name,count:1}));
+        entries.forEach((item,index)=>{
+          const tile=insightActionCard(item.name,options,
+            {artOnly:true,count:item.count});
           const inspect=tile.onclick;
           tile.onclick=event=>{
             event.preventDefault();event.stopPropagation();
-            if(index===0)inspect?.(event);
-            else group.open=true;
+            if(label==="Graveyard"&&index>0)group.open=true;
+            else inspect?.(event);
           };
-          if(index>0){
-            tile.setAttribute("aria-label","Expand graveyard to see "+name);
+          if(label==="Graveyard"&&index>0){
+            tile.setAttribute("aria-label","Expand graveyard to see "+item.name);
             tile.title="Expand graveyard";
           }
           preview.appendChild(tile);
         });
-        const syncPreview=()=>{preview.hidden=group.open;
-          preview.style.display=group.open?"none":"flex";};
-        group.addEventListener("toggle",syncPreview);
+        const sync=()=>{preview.hidden=group.open;
+          hint.textContent=group.open?"Collapse":
+            label==="Graveyard"&&cards.length>3?
+              "Showing 3 of "+cards.length+" · Expand":"Expand";};
+        group.addEventListener("toggle",sync);
         trigger.appendChild(preview);
-        syncPreview();
+        sync();
       }
       const list=create("div","insight-action-cards");
       const entries=byType.has(label)?
