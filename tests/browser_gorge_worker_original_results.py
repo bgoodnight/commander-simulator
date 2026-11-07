@@ -57,6 +57,8 @@ def test():
                 assert page.locator("#game-outcome-results .game-outcome-hero").count()==1
                 assert "unresolved" not in hero.inner_text().lower()
                 assert hero.locator(".game-outcome-hero-stat").count()==2
+                for stat in hero.locator(".game-outcome-hero-stat").all():
+                    assert stat.evaluate("el => el.querySelector('span').getBoundingClientRect().left >= el.querySelector('strong').getBoundingClientRect().right - 1")
                 assert page.get_by_text("Simulation takeaways",exact=True).count()==0
                 heading_size=hero.locator(".game-outcome-heading").evaluate("el => getComputedStyle(el).fontSize")
                 insights_size=page.locator("#key-insights-title").evaluate("el => getComputedStyle(el).fontSize")
@@ -155,6 +157,10 @@ def test():
                 if first.count():
                     first.locator("summary").first.click()
                     assert first.get_by_role("group",name="Card type and ranking").is_visible()
+                    selector=first.get_by_label("Card type filter")
+                    assert selector.input_value()=="played"
+                    assert selector.evaluate("el => el.getBoundingClientRect().width >= 120 && getComputedStyle(el).backgroundImage !== 'none'")
+                    assert "All cards" in selector.locator("option:checked").inner_text()
                     link=first.get_by_role("button",name="View an example game",exact=False)
                     if link.count():
                         link.click()
