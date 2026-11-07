@@ -344,7 +344,16 @@
     const numbers=create("div","game-outcome-hero-stats");
     const short=[["win","Wins"],["loss","Losses"],["unresolved","Unresolved"]];
     for(const [state,label] of short){
-      const metric=create("div","game-outcome-hero-stat is-"+state);
+      const metric=create(state==="win"&&options.onHighlightClick?"button":"div","game-outcome-hero-stat is-"+state);
+      if(state==="win"&&options.onHighlightClick){
+        metric.type="button";metric.title="Overall win rate · compare life progression in wins and losses";
+        metric.setAttribute("aria-label","Overall win rate · open life progression for wins and losses");
+        metric.setAttribute("aria-haspopup","dialog");
+        metric.addEventListener("click",event=>{
+          event.preventDefault();event.stopPropagation();
+          options.onHighlightClick("winlife",metric);
+        });
+      }
       const share=(100*group.counts[state]/group.total);
       metric.append(create("strong",null,Number(share.toFixed(1))+"%"),
         create("span",null,label+" · "+group.counts[state]+"/"+group.total));
@@ -2376,18 +2385,41 @@
     };
     const bestMatchup=matchup[0];
     const finishedMedian=quantile(finished.map(run=>run.completed_rounds),.5);
-    const finalLifeMedian=quantile(lastLife,.5);
+    // Use source-observed events. Never infer mana capacity from land counts or
+    // treat a missing turn-five observation as zero mana.
+    const commanderName=String(options.commanderName||"").trim().toLowerCase();
+    const commanderArrival=run=>{
+      if(!commanderName)return null;
+      for(const row of run.ui_observations||[]){
+        if((row.actions||[]).some(action=>
+          Number(action.seat??0)===0&&
+          String(action.card||"").trim().toLowerCase()===commanderName&&
+          /cast/.test(String(action.type||""))))return row.turn;
+      }
+      return null;
+    };
+    const manaAtFive=run=>{
+      const row=(run.ui_observations||[]).find(x=>x.turn===5);
+      if(!row||!row.mana_produced_by_color)return null;
+      const values=Object.values(row.mana_produced_by_color);
+      if(!values.length||values.some(x=>!Number.isFinite(Number(x))))return null;
+      return values.reduce((sum,x)=>sum+Number(x),0);
+    };
+    const arrivalSamples=runs.map(commanderArrival).filter(Number.isFinite);
+    const rampSamples=runs.map(manaAtFive).filter(Number.isFinite);
+    const medianArrival=quantile(arrivalSamples,.5);
+    const averageMana=rampSamples.length?
+      rampSamples.reduce((a,b)=>a+b,0)/rampSamples.length:null;
     const heroHighlights=[
       {key:"matchup",label:"Best matchup",value:bestMatchup?
         (100*bestMatchup.counts.win/Math.max(1,bestMatchup.games)).toFixed(1)+"%":"—",
        detail:bestMatchup?.title||"No opponent groups"},
       {key:"length",label:"Game length",value:finishedMedian===null?"—":nfmt(finishedMedian),
        detail:"Median finished rounds"},
-      {key:"survival",label:"Survival",value:(100*runs.filter(run=>
-          aliveAt(run.life_history.at(-1),0)).length/total).toFixed(1)+"%",
-       detail:"Alive at last recorded round"},
-      {key:"life",label:"Final life",value:finalLifeMedian===null?"—":nfmt(finalLifeMedian),
-       detail:"Median final recorded life"}
+      {key:"arrival",label:"Commander arrival",value:medianArrival===null?"—":nfmt(medianArrival),
+       detail:"Median first cast turn · "+arrivalSamples.length+"/"+total+" recorded"},
+      {key:"ramp",label:"Mana ramp",value:averageMana===null?"—":averageMana.toFixed(2),
+       detail:"Avg. mana generated on turn 5 · "+rampSamples.length+"/"+total+" recorded"}
     ];
     // The overview tiles are buttons, not duplicate expanding cards.
     // Each opens its original detailed analysis in a focus-managed dialog.
@@ -2418,8 +2450,9 @@
       detailHeading.textContent=({
         matchup:"Opponent Matchups",
         length:"Game Length",
-        survival:"Eliminations & Survival",
-        life:"Life Progression"
+        arrival:"Commander Arrival · Wins vs Losses",
+        ramp:"Turn Five Mana · Wins vs Losses",
+        winlife:"Life Progression · Wins vs Losses"
       })[key];
       detailContent.replaceChildren(panel);
       panel.open=true;
@@ -2501,55 +2534,93 @@
         body.appendChild(stats);
         histogram(body,finished,groups[0].requestedRounds);
       }));
-    detailPanels.set("survival",card("Eliminations","Survival",
-      (100*knocked.length/total).toFixed(1)+"%",
-      "Our seat eliminated · "+knocked.length+" of "+total+" games",
+    // Paired charts share one scale so red/green bar lengths are comparable.
+    const comparisonBarChart=(body,measure,format)=>{
+      const subsets=[
+        {name:"Wins",color:"#4dab76",runs:wins},
+        {name:"Losses",color:"#d66565",runs:runs.filter(r=>r.outcome.status==="loss")}
+      ];
+      const stats=subsets.map(group=>{
+        const values=group.runs.map(measure).filter(Number.isFinite);
+        return {...group,values, value:values.length?
+          (format==="median"?quantile(values,.5):
+            values.reduce((a,b)=>a+b,0)/values.length):null};
+      });
+      const max=Math.max(1,...stats.map(group=>group.value||0));
+      for(const item of stats){
+        const line=create("div","game-outcome-seat-bar");
+        line.style.margin="14px 0";
+        line.appendChild(create("span",null,item.name+" · "+item.values.length+
+          "/"+item.runs.length+" observed"));
+        const track=create("div","game-outcome-finish-track");
+        track.style.height="20px";
+        const bar=create("span","game-outcome-finish-fill");
+        bar.style.display="block";bar.style.height="100%";
+        bar.style.background=item.color;
+        bar.style.width=item.value===null?"0%":(100*item.value/max)+"%";
+        track.appendChild(bar);
+        line.append(track,create("strong",null,item.value===null?"—":
+          format==="mean"?item.value.toFixed(2):nfmt(item.value)));
+        body.appendChild(line);
+      }
+    };
+    detailPanels.set("arrival",card("Commander Arrival","Median first cast turn",
+      medianArrival===null?"—":nfmt(medianArrival),
+      "Recorded commander casts only; uncast games excluded from median",
+      body=>comparisonBarChart(body,commanderArrival,"median")));
+    detailPanels.set("ramp",card("Mana Ramp","Turn five mana generated",
+      averageMana===null?"—":averageMana.toFixed(2),
+      "Native positive mana production on your fifth turn; missing observations excluded",
+      body=>comparisonBarChart(body,manaAtFive,"mean")));
+    detailPanels.set("winlife",card("Life Progression","Wins vs losses",
+      counts.win+" / "+counts.loss,
+      "Median life by recorded round · green wins, red losses",
       body=>{
-        const stats=create("div","game-outcome-insight-grid");
-        stats.append(
-          metricTile("Our knockout",quantile(knocked,.5),
-            knocked.length+" recorded"),
-          metricTile("Opponent knockouts",enemyOut.length,
-            "Across all three seats"),
-          metricTile("Opponent knockout round",quantile(enemyOut,.5),
-            enemyOut.length+" eliminations"),
-          metricTile("Still alive",runs.filter(run=>
-            aliveAt(run.life_history.at(-1),0)).length,total+" runs"));
-        body.appendChild(stats);
-        const bySeat=create("div","game-outcome-seat-bars");
-        for(const seat of SEATS){
-          const n=runs.filter(run=>knockoutRound(run,seat)!==null).length;
-          const bar=create("div","game-outcome-seat-bar");
-          bar.append(create("span",null,seat===0?"You":"Seat "+(seat+1)));
-          const track=create("div","game-outcome-finish-track");
-          const fill=create("span","game-outcome-finish-fill");
-          fill.style.width=(n/total*100)+"%";
-          track.appendChild(fill);
-          bar.append(track,create("strong",null,n+"/"+total));
-          bySeat.appendChild(bar);
-        }
-        body.appendChild(bySeat);
-      }));
-    detailPanels.set("life",card("Life Progression","Your life",
-      quantile(lastLife,.5)===null?"—":nfmt(quantile(lastLife,.5)),
-      "Your median final recorded life",
-      body=>{
+        const categories=[
+          {name:"Wins",color:"#4dab76",data:lifeTrend(wins,groups[0].requestedRounds)},
+          {name:"Losses",color:"#d66565",data:lifeTrend(
+            runs.filter(r=>r.outcome.status==="loss"),groups[0].requestedRounds)}
+        ];
         const legend=create("div","game-outcome-legend");
-        for(const seat of [0]){
-          const chip=create("span",null,"You");
-          chip.style.borderColor=SEAT_COLORS[seat];legend.appendChild(chip);
+        for(const item of categories){
+          const chip=create("span",null,item.name);
+          chip.style.borderColor=item.color;legend.appendChild(chip);
         }
-        body.append(legend,lifePlot(life));
-        const slider=create("input","game-outcome-round-slider");
-        slider.type="range";slider.min="0";
-        slider.max=String(life.length-1);
-        slider.value=String(Math.min(6,life.length-1));
-        const detail=create("div","game-outcome-round-detail");
-        const displayRound=()=>roundTrendDetail(detail,{
-          ...life[Number(slider.value)],total
-        });
-        slider.addEventListener("input",displayRound);
-        body.append(slider,detail);displayRound();
+        body.appendChild(legend);
+        const width=680,height=240,left=42,right=16,top=15,bottom=34;
+        const plotW=width-left-right,plotH=height-top-bottom;
+        const maxRound=Math.max(1,...categories.flatMap(c=>c.data.map(r=>r.round)));
+        const maxLife=Math.max(40,...categories.flatMap(c=>c.data.map(r=>
+          r.seats[0]?.p75||0)));
+        const ceiling=Math.ceil(maxLife/10)*10;
+        const x=round=>left+round/maxRound*plotW;
+        const y=life=>top+plotH-Math.max(0,life)/ceiling*plotH;
+        const svg=svgNode("svg",{viewBox:"0 0 "+width+" "+height,
+          role:"img","aria-label":"Median life progression for wins in green and losses in red"});
+        for(const frac of [0,.25,.5,.75,1]){
+          const value=Math.round(ceiling*frac);
+          svg.appendChild(svgNode("line",{x1:left,y1:y(value),x2:width-right,
+            y2:y(value),stroke:"#7a817e","stroke-opacity":.3}));
+          const tick=svgNode("text",{x:7,y:y(value)+4,fill:"#c4cbbd","font-size":11});
+          tick.textContent=String(value);svg.appendChild(tick);
+        }
+        for(const item of categories){
+          const points=item.data.filter(r=>Number.isFinite(r.seats[0]?.median));
+          if(!points.length)continue;
+          svg.appendChild(svgNode("polyline",{
+            points:points.map(r=>x(r.round)+","+y(r.seats[0].median)).join(" "),
+            fill:"none",stroke:item.color,"stroke-width":3,
+            "stroke-linecap":"round","stroke-linejoin":"round"}));
+        }
+        for(const round of [0,Math.round(maxRound/2),maxRound]){
+          const tick=svgNode("text",{x:x(round),y:height-8,
+            "text-anchor":"middle",fill:"#c4cbbd","font-size":11});
+          tick.textContent="R"+round;svg.appendChild(tick);
+        }
+        body.appendChild(svg);
+        body.appendChild(create("p","micro",
+          "Each round includes only games with an observed snapshot at that round. "+
+          "Survivorship can change the plotted cohort over time."));
       }));
     // Game detail panels are now reached from the four overview tiles.
     // Card-specific discoveries follow the commander dashboard.
@@ -2693,8 +2764,8 @@
     const highlights=[
       {key:"matchup",label:"Best matchup",value:best?(100*best.win_rate).toFixed(1)+"%":"—",detail:best?.name||"Not available"},
       {key:"length",label:"Game length",value:Number.isFinite(summary.median_game_turns)?nfmt(summary.median_game_turns):"—",detail:"Median recorded turns"},
-      {key:"survival",label:"Survival",value:"—",detail:"Not yet available"},
-      {key:"life",label:"Final life",value:"—",detail:"Not yet available"}
+      {key:"arrival",label:"Commander arrival",value:"—",detail:"Turn data unavailable"},
+      {key:"ramp",label:"Mana ramp",value:"—",detail:"Turn-five mana data unavailable"}
     ];
     const grid=create("div","board-grid game-outcome-grid latest-insight-grid");
     const hero=outcomeCard({counts,total:summary.n,terminal:summary.n,terminalRounds:[]},
