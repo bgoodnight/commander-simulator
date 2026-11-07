@@ -87,6 +87,10 @@ jobs:
           root=Path(os.environ["RUNNER_TEMP"])/"results"
           runs=[json.loads(x) for x in (root/"runs.jsonl").read_text().splitlines() if x.strip()]
           assert len(runs)==1 and runs[0]["finished"] and runs[0]["replay_verified"] and not runs[0].get("error")
+          native=json.loads((root/"native"/f"gorge-seed-{runs[0]['seed']}.json").read_text())
+          aborts=[e for e in native["log"]["events"] if e.get("kind")==22 and e.get("text")=="cast aborted: no legal target"]
+          print("DYNAMIC_X_TARGET_REGRESSION",json.dumps({"hero":os.environ["HERO"],"seed":runs[0]["seed"],"abort_count":len(aborts),"verified":runs[0]["replay_verified"]}))
+          assert len(aborts)==0, f"{len(aborts)} cast target reversals remain after dynamic X repair"
           PY
       - uses: actions/upload-artifact@v4
         if: always()
