@@ -5,6 +5,7 @@ on:
     paths:
       - "tools/patch_gorge_activation_target_diagnostic.py"
       - ".github/workflows/gorge-activation-target-audit.yml"
+  workflow_dispatch:
 permissions:
   contents: read
 jobs:
