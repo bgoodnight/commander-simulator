@@ -2816,7 +2816,10 @@
     // above the independent turn reviewer.
     // Gorge cohort regression comes exclusively from all verified outcomes
     // in the precomputed report; never show a replay-sample regression here.
-    if(!isGorge)cards.appendChild(elasticNetPanel(options.discoveryReport,options));
+    // When an external insights panel is authoritative, no secondary
+    // analytics card belongs under the Results summary.
+    if(!isGorge&&!options.externalInsights)
+      cards.appendChild(elasticNetPanel(options.discoveryReport,options));
     if(options.reviewerRoot){
       jumpToReview=turnReviewer(options.reviewerRoot,groups,options);
     }
