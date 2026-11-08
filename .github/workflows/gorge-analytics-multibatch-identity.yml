@@ -1,0 +1,30 @@
+name: Validate isolated cross-batch Gorge analytic identities
+on:
+  push:
+    branches: [analysis/r2-multibatch-identity-20261106]
+    paths:
+      - "tools/gorge_analytic_identity.py"
+      - "tools/gorge_assemble_multibatch.py"
+      - "tests/test_gorge_analytic_identity.py"
+      - "tests/test_gorge_assemble_multibatch.py"
+      - ".github/workflows/gorge-analytics-multibatch-identity.yml"
+  pull_request:
+    paths:
+      - "tools/gorge_analytic_identity.py"
+      - "tools/gorge_assemble_multibatch.py"
+      - "tests/test_gorge_analytic_identity.py"
+      - "tests/test_gorge_assemble_multibatch.py"
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  unit:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Validate legacy and cross-batch joins
+        run: python -m unittest tests.test_gorge_analytic_identity tests.test_gorge_assemble_multibatch tests.test_gorge_assemble_model_table -v
