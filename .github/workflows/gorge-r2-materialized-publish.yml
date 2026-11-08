@@ -1,0 +1,251 @@
+name: Publish complete approved Gorge Results snapshot
+# Manual-only production change. The 24 approved synthetic recordings are
+# re-derived from immutable native GitHub artifacts; never publish public-only
+# projections or experimental source.
+on:
+  workflow_dispatch:
+    inputs:
+      confirm_verified_source:
+        description: "I authorize publishing only the reviewed 24-game omniscient source cohort"
+        required: true
+        type: boolean
+        default: false
+permissions:
+  contents: read
+  actions: read
+concurrency:
+  group: gorge-materialized-current-publication
+  cancel-in-progress: false
+jobs:
+  publish:
+    if: inputs.confirm_verified_source == true && github.ref == 'refs/heads/main'
+    environment: r2-results-production
+    runs-on: ubuntu-latest
+    timeout-minutes: 90
+    env:
+      ACCOUNT: ${{ secrets.GORGE_R2_ACCOUNT_ID }}
+      ACCESS: ${{ secrets.GORGE_R2_ACCESS_KEY_ID }}
+      SECRET: ${{ secrets.GORGE_R2_SECRET_ACCESS_KEY }}
+      BATCHES: ''
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+      - name: Install pinned Parquet reader
+        run: pip install 'pyarrow==21.0.0'
+      - name: Download prior published provenance and approved source batch list
+        shell: bash
+        run: |
+          set -euo pipefail
+          test -n "$ACCOUNT" && test -n "$ACCESS" && test -n "$SECRET"
+          export AWS_ACCESS_KEY_ID="$ACCESS" AWS_SECRET_ACCESS_KEY="$SECRET" AWS_DEFAULT_REGION=auto
+          endpoint="https://$ACCOUNT.r2.cloudflarestorage.com"
+          prefix="s3://gorge-simulations/results/materialized/v1"
+          mkdir -p "$RUNNER_TEMP/previous" "$RUNNER_TEMP/source"
+          if aws --endpoint-url "$endpoint" s3 cp "$prefix/current.json" "$RUNNER_TEMP/previous/current.json" --no-progress; then
+            version="$(python -c 'import json,os; p=os.environ["RUNNER_TEMP"]+"/previous/current.json"; print(json.load(open(p))["version"])')"
+            [[ "$version" =~ ^[a-f0-9]{64}$ ]]
+            aws --endpoint-url "$endpoint" s3 cp "$prefix/versions/$version/manifest.json" "$RUNNER_TEMP/previous/manifest.json" --no-progress
+          fi
+          python - <<'PY'
+          import hashlib,json,os,re
+          from pathlib import Path
+          home=Path(os.environ["RUNNER_TEMP"])/"previous"
+          raw=os.environ["BATCHES"]
+          batches=set(raw.split(",")) if raw else set()
+          if any(not re.fullmatch(r"[0-9]+-[0-9]+", x) for x in batches):
+              raise ValueError("Invalid new batch IDs")
+          registry=json.loads(Path("data/gorge_analytics_cohort_registry_v1.json").read_text())
+          batches.update(c["source_batch"] for c in registry["cohorts"]
+                         if c.get("approved") is True and c.get("source_batch"))
+          if (home/"current.json").exists():
+              pointer=json.loads((home/"current.json").read_text())
+              payload=(home/"manifest.json").read_bytes()
+              if hashlib.sha256(payload).hexdigest()!=pointer["manifest_sha256"]:
+                  raise ValueError("Prior published manifest digest mismatch")
+              old=json.loads(payload)
+              if old.get("version")!=pointer["version"]:
+                  raise ValueError("Prior version mismatch")
+              batches.update(s["batch"] for s in old["source_shards"])
+          (home/"batch-list.txt").write_text("\n".join(sorted(batches))+"\n")
+          print(f"Rebuilding complete approved cohort from {len(batches)} source batches")
+          PY
+          while IFS= read -r batch; do
+            mkdir -p "$RUNNER_TEMP/source/$batch"
+            aws --endpoint-url "$endpoint" s3 cp \
+              "s3://gorge-simulations/warehouse/v1/$batch/" \
+              "$RUNNER_TEMP/source/$batch/" --recursive --no-progress \
+              --exclude "*" --include "*/manifest.json" \
+              --include "*/games.parquet" --include "*/events.parquet" --include "*/ui-original.v1.json" \
+              --include "*/card-insights.v1.json" --include "*/card-insights.v2.json"
+          done < "$RUNNER_TEMP/previous/batch-list.txt"
+      - name: Validate reviewed complete shard inventory before materialization
+        shell: bash
+        run: |
+          set -euo pipefail
+          python -m tools.gorge_r2_source_inventory \\
+            --inventory data/gorge_r2_source_inventory_v1.json \\
+            --registry data/gorge_analytics_cohort_registry_v1.json \\
+            --batches-file "$RUNNER_TEMP/previous/batch-list.txt" \\
+            --out "$RUNNER_TEMP/expected-shards.json"
+      - name: Reconstruct only the 24 approved omniscient replays from immutable native recordings
+        shell: bash
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          set -euo pipefail
+          # No auto-approved new batch, no stale public-only projections.
+          python - <<'PY'
+          import json,os
+          from pathlib import Path
+          registry=json.loads(Path("data/gorge_analytics_cohort_registry_v1.json").read_text())
+          cohorts=[c for c in registry["cohorts"] if c.get("approved") is True and c.get("status")=="current"]
+          assert len(cohorts)==2
+          assert {(c["deck"],c["source_batch"]) for c in cohorts}=={
+              ("mortarion_current","42143344243-1"),
+              ("magnus_premium","42143344243-1")}
+          inventory=json.loads(Path("data/gorge_r2_source_inventory_v1.json").read_text())
+          assert len(inventory["batches"])==1
+          entry=inventory["batches"][0]
+          assert entry["batch"]=="42143344243-1"
+          assert {(s["deck"],s["shard"],s["games"]) for s in entry["shards"]}=={
+              ("mortarion_current",0,12),("magnus_premium",0,12)}
+          batches=(Path(os.environ["RUNNER_TEMP"])/"previous"/"batch-list.txt").read_text().splitlines()
+          assert batches==["42143344243-1"], "Unexpected or unreviewed source batch in production publication"
+          PY
+          batch=42143344243-1
+          for deck in mortarion_current magnus_premium; do
+            native="$RUNNER_TEMP/native/$deck"
+            dest="$RUNNER_TEMP/source/$batch/$deck/0"
+            mkdir -p "$native" "$dest"
+            gh run download 42143344243 --repo "$GITHUB_REPOSITORY" \
+              --name "gorge-corrected-fresh-candidate-$deck" --dir "$native"
+            test -f "$native/results/source-manifest.json"
+            test -f "$native/results/runs.jsonl"
+            test -d "$native/results/native"
+            DECK="$deck" NATIVE="$native" DEST="$dest" python - <<'PY'
+          import json,os
+          from pathlib import Path
+          native=Path(os.environ["NATIVE"])/"results"
+          source=json.loads((native/"source-manifest.json").read_text())
+          catalog=json.loads(Path("docs/deck-lab/decks.json").read_text())
+          deck=os.environ["DECK"]
+          entries=[d for d in catalog["decks"] if d["key"]==deck]
+          assert len(entries)==1
+          (Path(os.environ["DEST"])/"ui-deck-sha.txt").write_text(entries[0]["deck_sha256"])
+          PY
+            deck_sha="$(cat "$dest/ui-deck-sha.txt")"
+            rm "$dest/ui-deck-sha.txt"
+            python -m tools.gorge_original_ui_shard \
+              --source-dir "$native/results" --deck "$deck" \
+              --batch "$batch" --shard 0 --ui-deck-sha "$deck_sha" \
+              --out "$dest/ui-original.v1.json"
+            DECK="$deck" DEST="$dest" python - <<'PY'
+          import json,os
+          from pathlib import Path
+          projection=json.loads((Path(os.environ["DEST"])/"ui-original.v1.json").read_text())
+          assert projection["deck"]==os.environ["DECK"] and len(projection["games"])==12
+          for item in projection["games"]:
+              run=item["run"]
+              source=run["gorge_source"]
+              assert source["visibility"]=="omniscient"
+              assert source["synthetic_simulation_only"] is True
+              assert source["opening_hand_boundary"]=="first_pending_decision_of_turn"
+              assert len(run["opening_hand"])==run["opening_hand_count"]
+              assert len(run["opening_hands_by_seat"])==3
+              assert all(isinstance(x.get("hand"),list) and
+                         isinstance(x.get("opponent_hands"),list)
+                         for x in run["ui_observations"])
+              assert all(isinstance(x.get("library"),list)
+                         for x in run["opening_board_states"])
+          print("Verified 12 native omniscient source recordings for",os.environ["DECK"])
+          PY
+            python -m tools.gorge_r2_insight_evidence \
+              --native-source "$native/results" --shard "$dest" \
+              --out "$dest/card-insights.v2.json"
+          done
+      - name: Assemble and validate complete immutable snapshot offline
+        shell: bash
+        run: |
+          set -euo pipefail
+          python -m tools.gorge_r2_materialized_results \
+            --source "$RUNNER_TEMP/source" \
+            --registry data/gorge_analytics_cohort_registry_v1.json \
+            --expected-batches-file "$RUNNER_TEMP/previous/batch-list.txt" \
+            --expected-shards-file "$RUNNER_TEMP/expected-shards.json" \
+            --out "$RUNNER_TEMP/build" > "$RUNNER_TEMP/build-report.json"
+          cat "$RUNNER_TEMP/build-report.json" >> "$GITHUB_STEP_SUMMARY"
+      - name: Publish immutable version contents, then atomic current pointer last
+        shell: bash
+        run: |
+          set -euo pipefail
+          export AWS_ACCESS_KEY_ID="$ACCESS" AWS_SECRET_ACCESS_KEY="$SECRET" AWS_DEFAULT_REGION=auto
+          endpoint="https://$ACCOUNT.r2.cloudflarestorage.com"
+          prefix="s3://gorge-simulations/results/materialized/v1"
+          version="$(python -c 'import json,os; print(json.load(open(os.environ["RUNNER_TEMP"]+"/build/current.json"))["version"])')"
+          [[ "$version" =~ ^[a-f0-9]{64}$ ]]
+          # Manifest-last within the immutable version, and pointer-last globally.
+          # Refuse republishing a version with different bytes.
+          if aws --endpoint-url "$endpoint" s3 cp "$prefix/versions/$version/manifest.json" "$RUNNER_TEMP/existing-manifest.json" --no-progress; then
+            cmp "$RUNNER_TEMP/build/versions/$version/manifest.json" "$RUNNER_TEMP/existing-manifest.json"
+          fi
+          aws --endpoint-url "$endpoint" s3 cp \
+            "$RUNNER_TEMP/build/versions/$version/" "$prefix/versions/$version/" \
+            --recursive --exclude "manifest.json" --no-progress
+          aws --endpoint-url "$endpoint" s3 cp \
+            "$RUNNER_TEMP/build/versions/$version/manifest.json" \
+            "$prefix/versions/$version/manifest.json" --no-progress
+          # Read back EVERY referenced object to verify the snapshot, not only its manifest.
+          python - <<'PY'
+          import json,os
+          from pathlib import Path
+          manifest=json.loads((Path(os.environ["RUNNER_TEMP"])/"build/current.json").read_text())
+          version=manifest["version"]
+          index=json.loads((Path(os.environ["RUNNER_TEMP"])/"build/versions"/version/"manifest.json").read_text())
+          paths=["manifest.json"]
+          for deck,record in index["decks"].items():
+              paths.append(f"{deck}/summary.json")
+              if record.get("insights"):
+                  paths.append(f"{deck}/insights.json")
+              paths += [f"{deck}/{p['path']}" for p in record["pages"]]
+              for game in (Path(os.environ["RUNNER_TEMP"])/"build/versions"/version/deck/"games").glob("*.json"):
+                  paths.append(f"{deck}/games/{game.name}")
+              for part in (Path(os.environ["RUNNER_TEMP"])/"build/versions"/version/deck/"events").glob("*/*.json"):
+                  paths.append(f"{deck}/events/{part.parent.name}/{part.name}")
+          (Path(os.environ["RUNNER_TEMP"])/"verify-paths.txt").write_text("\n".join(paths)+"\n")
+          PY
+          while IFS= read -r path; do
+            mkdir -p "$RUNNER_TEMP/readback/$(dirname "$path")"
+            aws --endpoint-url "$endpoint" s3 cp "$prefix/versions/$version/$path" \
+              "$RUNNER_TEMP/readback/$path" --no-progress >/dev/null
+            cmp "$RUNNER_TEMP/build/versions/$version/$path" "$RUNNER_TEMP/readback/$path"
+          done < "$RUNNER_TEMP/verify-paths.txt"
+          # A concurrent change by a different publisher must not be hidden.
+          if test -f "$RUNNER_TEMP/previous/current.json"; then
+            aws --endpoint-url "$endpoint" s3 cp "$prefix/current.json" \
+              "$RUNNER_TEMP/current-before-switch.json" --no-progress
+            cmp "$RUNNER_TEMP/previous/current.json" "$RUNNER_TEMP/current-before-switch.json"
+          else
+            if aws --endpoint-url "$endpoint" s3 cp "$prefix/current.json" \
+                 "$RUNNER_TEMP/unexpected-current.json" --no-progress; then
+              echo "A new current pointer appeared; aborting" >&2
+              exit 1
+            fi
+          fi
+          aws --endpoint-url "$endpoint" s3 cp "$RUNNER_TEMP/build/current.json" \
+            "$prefix/current.json" --content-type application/json --cache-control "no-store" --no-progress
+          aws --endpoint-url "$endpoint" s3 cp "$prefix/current.json" \
+            "$RUNNER_TEMP/published-current.json" --no-progress
+          cmp "$RUNNER_TEMP/build/current.json" "$RUNNER_TEMP/published-current.json"
+          echo "Published verified current version $version" >> "$GITHUB_STEP_SUMMARY"
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: gorge-materialized-publication-audit
+          path: ${{ runner.temp }}/build-report.json
+          if-no-files-found: warn
+          retention-days: 30
