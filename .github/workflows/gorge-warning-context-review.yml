@@ -1,0 +1,40 @@
+name: Review source context of Gorge rule warnings
+on:
+  push:
+    branches: [test/gorge-four-commander-token-qualification-20261106]
+    paths: [".github/workflows/gorge-warning-context-review.yml"]
+permissions:
+  contents: read
+  actions: read
+jobs:
+  review:
+    strategy:
+      fail-fast: false
+      matrix:
+        hero: [mortarion_current, magnus_premium, necron_dynasties, wretched_ranks]
+    runs-on: ubuntu-latest
+    timeout-minutes: 12
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Retrieve all original source recordings
+        env:
+          GH_TOKEN: ${{ github.token }}
+          HERO: ${{ matrix.hero }}
+        run: |
+          mkdir -p "$RUNNER_TEMP/native"
+          gh run download 42292766033 --repo "$GITHUB_REPOSITORY" \
+            --name "gorge-token-qualification-$HERO" --dir "$RUNNER_TEMP/native"
+      - name: Read event and rule-warning contexts
+        env:
+          HERO: ${{ matrix.hero }}
+        run: |
+          python -m tools.gorge_warning_context_review --root "$RUNNER_TEMP/native" \
+            --hero "$HERO" --output "$RUNNER_TEMP/warnings.json"
+      - uses: actions/upload-artifact@v4
+        with:
+          name: source-rule-warning-context-${{ matrix.hero }}
+          path: ${{ runner.temp }}/warnings.json
+          retention-days: 14

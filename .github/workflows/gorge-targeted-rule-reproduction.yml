@@ -1,0 +1,80 @@
+name: Reproduce Technomancer and Artistic Refusal with patched Gorge
+on:
+  push:
+    branches: [test/gorge-four-commander-token-qualification-20261106]
+    paths: [".github/workflows/gorge-targeted-rule-reproduction.yml"]
+permissions:
+  contents: read
+jobs:
+  reproduce:
+    strategy:
+      fail-fast: false
+      matrix:
+        attempt: [0, 1]
+    runs-on: ubuntu-latest
+    timeout-minutes: 90
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Prepare four-deck pinned matchup
+        run: |
+          mkdir -p "$RUNNER_TEMP/decks" "$RUNNER_TEMP/results/native"
+          python -m tools.export_gorge_decks --out "$RUNNER_TEMP/decks" --decks mortarion_current magnus_premium necron_dynasties wretched_ranks
+          python -m tools.fetch_gorge_precons --out "$RUNNER_TEMP/decks"
+          git clone --filter=blob:none https://github.com/adams-shaun/gorge.git "$RUNNER_TEMP/gorge"
+          git -C "$RUNNER_TEMP/gorge" checkout --detach b78e4c8b16078f6decbc48875bba953ce5535b85
+          python -m tools.patch_gorge_ward_blight --gorge "$RUNNER_TEMP/gorge"
+          python -m tools.patch_gorge_changezone_anynumber --gorge "$RUNNER_TEMP/gorge"
+          python tools/gorge_trigger_cost_policy_patch.py "$RUNNER_TEMP/gorge/bots/botpolicy/policy.go"
+      - uses: actions/setup-go@v5
+        with:
+          go-version-file: ${{ runner.temp }}/gorge/go.mod
+          cache: false
+      - name: Compile corrected experimental probe and corpus
+        working-directory: ${{ runner.temp }}/gorge
+        run: |
+          make fetch-cards compile-cards
+          cp "$GITHUB_WORKSPACE/tools/gorge_commander_probe.go" commander_probe.go
+          go build -o "$RUNNER_TEMP/gorge-probe" ./commander_probe.go
+      - name: Replay same Magnus match-up and audit warnings
+        env:
+          ATTEMPT: ${{ matrix.attempt }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          set +e
+          "$RUNNER_TEMP/gorge-probe" -corpus "$RUNNER_TEMP/gorge/.cards" -deck-dir "$RUNNER_TEMP/decks" \
+            -hero-deck magnus_premium -opponents necron_dynasties,wretched_ranks,cavalry-charge,science-pip,deadly-disguise,avengers-assemble \
+            -games 1 -seed 219200 -start-attempt "$ATTEMPT" -max-turns 60 \
+            -pilot bot -verify=true -native-dir "$RUNNER_TEMP/results/native" -native-limit 1 \
+            > "$RUNNER_TEMP/results/runs.jsonl" 2> "$RUNNER_TEMP/results/stderr.txt"
+          rc=$?
+          set -e
+          if [[ "$rc" != 0 && "$rc" != 2 ]]; then cat "$RUNNER_TEMP/results/stderr.txt";exit "$rc";fi
+          python - <<'PY'
+          import json,os
+          from pathlib import Path
+          root=Path(os.environ["RUNNER_TEMP"])/"results"
+          run=json.loads((root/"runs.jsonl").read_text().strip())
+          native=json.loads((root/"native"/f"gorge-seed-{run['seed']}.json").read_text())
+          from collections import Counter
+          warnings=Counter(str(e.get("text") or "") for e in native["log"]["events"] if e["kind"]==22)
+          result={"seed":run["seed"],"replay_verified":run["replay_verified"],"finished":run["finished"],
+            "technomancer_ignored_anynumber":warnings["ChangeZone ignores unread parameter(s) AnyNumber$"],
+            "artistic_refusal_cost_aborts":warnings["cast aborted: cost no longer payable"],
+            "artistic_refusal_target_aborts":warnings["cast aborted: no legal target"],
+            "engine_error":run.get("error")}
+          print("RULE_REPRODUCTION",json.dumps(result,sort_keys=True))
+          (root/"rule-reproduction.json").write_text(json.dumps(result,indent=2)+"\n")
+          assert result["technomancer_ignored_anynumber"]==0
+          assert result["replay_verified"] and result["finished"] and not result["engine_error"]
+          PY
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: gorge-rules-reproduction-attempt-${{ matrix.attempt }}
+          path: ${{ runner.temp }}/results/
+          retention-days: 14
+          if-no-files-found: warn

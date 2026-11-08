@@ -1,0 +1,41 @@
+name: Diagnose Gorge token semantics in retained game recordings
+on:
+  push:
+    branches: [test/gorge-four-commander-token-qualification-20261106]
+    paths: [".github/workflows/gorge-token-semantic-diagnostics.yml"]
+permissions:
+  contents: read
+  actions: read
+jobs:
+  inspect:
+    strategy:
+      fail-fast: false
+      matrix:
+        hero: [mortarion_current, magnus_premium, necron_dynasties, wretched_ranks]
+    runs-on: ubuntu-latest
+    timeout-minutes: 12
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Download retained token game recordings
+        env:
+          GH_TOKEN: ${{ github.token }}
+          HERO: ${{ matrix.hero }}
+        run: |
+          mkdir -p "$RUNNER_TEMP/source"
+          gh run download 42292766033 --repo "$GITHUB_REPOSITORY" \
+            --name "gorge-token-qualification-$HERO" --dir "$RUNNER_TEMP/source"
+      - name: Inspect actor, event and object token evidence
+        env:
+          HERO: ${{ matrix.hero }}
+        run: |
+          python -m tools.gorge_token_semantic_diagnostics \
+            --root "$RUNNER_TEMP/source" --hero "$HERO" \
+            --output "$RUNNER_TEMP/semantics.json"
+      - uses: actions/upload-artifact@v4
+        with:
+          name: token-semantic-evidence-${{ matrix.hero }}
+          path: ${{ runner.temp }}/semantics.json
+          retention-days: 14

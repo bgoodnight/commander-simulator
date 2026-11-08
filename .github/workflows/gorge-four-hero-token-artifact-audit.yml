@@ -1,0 +1,63 @@
+name: Audit retained four-commander Gorge token traces
+on:
+  push:
+    branches: [test/gorge-four-commander-token-qualification-20261106]
+    paths: [".github/workflows/gorge-four-hero-token-artifact-audit.yml"]
+  workflow_dispatch:
+permissions:
+  contents: read
+  actions: read
+jobs:
+  inspect:
+    strategy:
+      fail-fast: false
+      matrix:
+        hero: [mortarion_current, magnus_premium, necron_dynasties, wretched_ranks]
+    runs-on: ubuntu-latest
+    timeout-minutes: 12
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Download original full-native traces without rerunning Gorge
+        env:
+          GH_TOKEN: ${{ github.token }}
+          HERO: ${{ matrix.hero }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p "$RUNNER_TEMP/source"
+          gh run download 42292766033 --repo "$GITHUB_REPOSITORY" \
+            --name "gorge-token-qualification-$HERO" --dir "$RUNNER_TEMP/source"
+          test -f "$RUNNER_TEMP/source/runs.jsonl"
+          test -d "$RUNNER_TEMP/source/native"
+      - name: Extract token/board audit and per-game evidence
+        env:
+          HERO: ${{ matrix.hero }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          python -m tools.gorge_four_hero_token_audit --root "$RUNNER_TEMP/source" \
+            --hero "$HERO" --output "$RUNNER_TEMP/token-audit.json"
+          python - <<'PY'
+          import json,os
+          from pathlib import Path
+          data=json.loads((Path(os.environ["RUNNER_TEMP"])/"token-audit.json").read_text())
+          assert data["games"]==4
+          print("TOKEN_AUDIT_SUMMARY",json.dumps({k:v for k,v in data.items() if k!="by_game"},sort_keys=True))
+          for row in data["by_game"]:
+              print("TOKEN_AUDIT_GAME",json.dumps({k:v for k,v in row.items() if k!="event_kinds"},sort_keys=True))
+          with open(os.environ["GITHUB_STEP_SUMMARY"],"a") as w:
+              w.write("# "+data["hero"]+": source-backed token audit\n\n")
+              for name in ("games","replay_verified","token_creation_events","minted_token_objects","tokens_observed_on_board","rules_risk_flags"):
+                  w.write(f"- {name}: {data[name]}\n")
+              w.write("\nInterpretation is provisional: token creation counts need source-specific Oracle/trigger semantics. Never approve merely from this audit.\n")
+          PY
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: token-audit-report-${{ matrix.hero }}
+          path: ${{ runner.temp }}/token-audit.json
+          if-no-files-found: warn
+          retention-days: 14

@@ -1,0 +1,34 @@
+name: Test isolated Technomancer AnyNumber Gorge rule fix
+on:
+  push:
+    branches: [test/gorge-four-commander-token-qualification-20261106]
+    paths:
+      - "tools/patch_gorge_changezone_anynumber.py"
+      - "tools/gorge_changezone_anynumber_test.go"
+      - ".github/workflows/gorge-technomancer-rule-fix.yml"
+permissions:
+  contents: read
+jobs:
+  rules:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Fetch exact pinned Gorge rules implementation
+        run: |
+          git clone --filter=blob:none https://github.com/adams-shaun/gorge.git "$RUNNER_TEMP/gorge"
+          git -C "$RUNNER_TEMP/gorge" checkout --detach b78e4c8b16078f6decbc48875bba953ce5535b85
+          python -m tools.patch_gorge_changezone_anynumber --gorge "$RUNNER_TEMP/gorge"
+          cp tools/gorge_changezone_anynumber_test.go "$RUNNER_TEMP/gorge/engine/effects/experimental_anynumber_test.go"
+      - uses: actions/setup-go@v5
+        with:
+          go-version-file: ${{ runner.temp }}/gorge/go.mod
+          cache: false
+      - name: Compile patched effects and run focused and existing zone tests
+        working-directory: ${{ runner.temp }}/gorge
+        run: |
+          go test ./engine/effects -run 'TestExperimentalTechnomancerAnyNumberCompiled|TestChangeZoneKnownKeysSorted|TestCompileChangeZone' -count=1 -v
+          go test ./engine/rules -run 'TestChangeZoneKnownKeysMatchTheCensus' -count=1 -v

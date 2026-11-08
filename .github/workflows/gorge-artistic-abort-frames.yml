@@ -1,0 +1,30 @@
+name: Inspect Artistic Refusal abort event frames
+on:
+  push:
+    branches: [test/gorge-four-commander-token-qualification-20261106]
+    paths: [".github/workflows/gorge-artistic-abort-frames.yml"]
+permissions: {contents: read, actions: read}
+jobs:
+  inspect:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - name: Download Magnus source trace
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          mkdir -p "$RUNNER_TEMP/src"
+          gh run download 42292766033 --repo "$GITHUB_REPOSITORY" --name gorge-token-qualification-magnus_premium --dir "$RUNNER_TEMP/src"
+      - name: Output small event slices around reversed card
+        run: |
+          python - <<'PY'
+          import json,os
+          from pathlib import Path
+          x=json.loads((Path(os.environ["RUNNER_TEMP"])/"src/native/gorge-seed-219201.json").read_text())
+          es=x["log"]["events"]
+          for a,b in ((4445,4460),(4489,4503),(4536,4550)):
+              print("ARTISTIC_FRAME",a,json.dumps([
+                {k:e.get(k) for k in ("seq","kind","player","obj","text","amount","ids","from","to")}
+                for e in es if a<=e["seq"]<=b],separators=(",",":")))
+          PY
