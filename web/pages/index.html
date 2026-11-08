@@ -7,6 +7,8 @@
   <meta name="description" content="Commander Deck Lab: explore cached Commander decklists, card art and precomputed early-turn observations.">
   <title>Commander Deck Lab — The Arcane Table</title>
   <link rel="stylesheet" href="./style.css?v=gorge-to-original-20261104">
+  <!-- Isolated staging preview only; production continues using its own R2 Worker. -->
+  <script>if(location.hostname!=="127.0.0.1"&&location.hostname!=="localhost")window.GORGE_R2_API_BASE="https://gorge-r2-fullstate-staging-20261106.darbosama.workers.dev";</script>
   <script src="https://cdn.jsdelivr.net/npm/d3@7/dist/d3.min.js" defer></script>
   <script src="./results_insights.js?v=20261101h1" defer></script>
   <script src="./brackets.js?v=20261101bracket" defer></script>
@@ -21,6 +23,7 @@
   <script src="./app.js?v=player-seat-results-20261104" defer></script>
   <script src="./r2_live.js?v=r2-direct-preview-v1" defer></script>
   <script src="./r2_original_results.js?v=worker-original-results-v1" defer></script>
+  <script src="./model_insights.js?v=20261106-m1" defer></script>
 </head>
 <body>
 <main class="wide-wrap" id="app">
@@ -133,12 +136,13 @@
       </section>
       <section id="key-insights-panel" class="panel key-insights-panel" aria-labelledby="key-insights-title">
         <div class="key-insights-heading">
-          <div><span class="eyebrow">Simulation takeaways</span><h2 id="key-insights-title">Key insights</h2></div>
+          <div><h2 id="key-insights-title">Key insights</h2></div>
           <div id="key-insights-info" class="key-insights-info"></div>
         </div>
         <div id="key-insights-grid" class="board-grid"></div>
         <p id="key-insights-empty" class="small" hidden></p>
       </section>
+      <section id="model-insights-panel" class="panel" aria-label="Modeling insights" hidden></section>
       <section id="turn-reviewer-panel" class="latest-turn-reviewer" aria-labelledby="turn-reviewer-heading">
         <div class="turn-reviewer-heading-row">
           <h2 id="turn-reviewer-heading">Turn reviewer</h2>

@@ -38,6 +38,7 @@
       reviewer.style.setProperty("display",ready?"block":"none","important");
     }
     if(!ready){
+      document.dispatchEvent(new Event("gorge:results-reset"));
       $("r2-game-picker")?.remove();
       $("key-insights-grid")?.replaceChildren();
       $("key-insights-info")?.replaceChildren();
@@ -79,7 +80,8 @@
       lookupRecordedCard:window.GorgeDeckLabCardInfo,
       onReviewGame,
       renderMana:value=>window.GorgeDeckLabMana?.(value),
-      onOpenRecordedCard:name=>window.GorgeDeckLabOpenCard?.(name)
+      onOpenRecordedCard:name=>window.GorgeDeckLabOpenCard?.(name),
+      onOpenTokenCard:card=>window.GorgeDeckLabOpenTokenCard?.(card)
     });
     // Core section visibility is tied to result readiness, not card ranking count.
   }
@@ -348,6 +350,9 @@
         if(live())replayHeading.textContent="Some games could not be loaded: "+String(err.message||err);
       }
     };
+    document.dispatchEvent(new CustomEvent("gorge:cohort-ready",{detail:{
+      deck:key,version:catalog.version,total:catalog.total
+    }}));
     const loadingGames=loadGames();
     showCohortInsights(verifiedInsights,summary.n,catalog.version,async(gameId,turn)=>{
       await loadingGames;
@@ -446,13 +451,14 @@
             lookupRecordedCard:window.GorgeDeckLabCardInfo,
             deckCardNames:selected.cardNames,
             renderMana:value=>window.GorgeDeckLabMana?.(value),
-            onOpenRecordedCard:name=>window.GorgeDeckLabOpenCard?.(name)
+            onOpenRecordedCard:name=>window.GorgeDeckLabOpenCard?.(name),
+            onOpenTokenCard:card=>window.GorgeDeckLabOpenTokenCard?.(card)
           });
       }
       window.DeckGameOutcomes.render(root,[batch],{
         deckKey:key,deckHash:selected.sha,
         commanderName:selected.commander,commanderArt:selected.art,
-        isGorge:true,reviewerRoot:reviewer,reviewerPanel:panel,
+        isGorge:true,externalInsights:true,reviewerRoot:reviewer,reviewerPanel:panel,
         onReviewerReady:jump=>{reviewRecordedRun=jump},
         lookupRecordedCard:window.GorgeDeckLabCardInfo,
         portraitFor:bucket=>window.GorgeDeckLabOpponentPortrait?.(bucket),

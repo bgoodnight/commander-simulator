@@ -95,8 +95,9 @@ def check():
                     dialog.get_by_label('Close details').click()
                 insight = page.locator('#game-outcome-results .insight-featured-panel').first
                 insight.locator('summary').first.click()
-                assert insight.get_by_role('button', name='All cards').get_attribute('aria-pressed') == 'true'
-                insight.get_by_role('button', name='Creatures').click()
+                selector = insight.get_by_label('Card type filter')
+                assert selector.input_value() == 'played'
+                selector.select_option('creature')
                 replacement = page.locator('#game-outcome-results .insight-featured-panel').first
                 assert 'Most played creature' in replacement.locator('summary').first.inner_text()
                 replacement.get_by_role('button', name='Show least played first').click()

@@ -1,0 +1,83 @@
+# Magnus Physical v1.2 — Card Kingdom upgrades (TCGplayer pending)
+# Source: physical starter v1.1 + October 30 Card Kingdom order #167025032.
+# Assumes original physical-starter cards remain owned; does not include pending TCGplayer purchases.
+# Starter color-identity correction: Narset's Rebuke replaced with one basic Island.
+# 100 cards including commander; sideboard/swap candidates not included.
+Commander
+1 Magnus the Red
+
+Library
+1 Abrade
+1 Archmage Emeritus
+1 Artistic Refusal
+1 Ashnod's Altar
+1 Brainstorm
+1 Brotherhood's End
+1 Cascade Bluffs
+1 Chaos Mutation
+1 Chaos Warp
+1 Command Tower
+1 Consider
+1 Cyclonic Rift
+1 Disdainful Stroke
+1 Exalted Flamer of Tzeentch
+1 Exotic Orchard
+1 Fabled Passage
+1 Fabricate
+1 Faithless Looting
+1 Fanning the Flames
+1 Firebrand Archer
+1 Forbid
+1 Gitaxian Probe
+1 Goblin Electromancer
+1 Great Hall of the Biblioplex
+1 Hard Evidence
+1 Harmonic Prodigy
+1 Heralds of Tzeentch
+1 High Tide
+16 Island
+1 Izzet Signet
+1 Jeska's Will
+1 Let the Galaxy Burn
+1 Lord of Change
+1 Mathemagics
+1 Merchant Scroll
+1 Mocking Sprite
+11 Mountain
+1 Mutalith Vortex Beast
+1 Mystic Sanctuary
+1 Of One Mind
+1 Passionate Archaeologist
+1 Path of Ancestry
+1 Phyrexian Altar
+1 Pink Horror
+1 Ponder
+1 Preordain
+1 Prismari Charm
+1 Pyretic Ritual
+1 Reiterate
+1 Return the Favor
+1 Rewind
+1 Riverglide Pathway
+1 Saheeli, Sublime Artificer
+1 Searing Touch
+1 Shivan Reef
+1 Sleight of Hand
+1 Spell Burst
+1 Spell Pierce
+1 Spell Snare
+1 Springleaf Drum
+1 Step Through
+1 Storm-Kiln Artist
+1 Stormcarved Coast
+1 Stormcatch Mentor
+1 Stormsplitter
+1 Strike It Rich
+1 Talisman of Creativity
+1 The Lost and the Damned
+1 Thermo-Alchemist
+1 Think Twice
+1 Tyrite Sanctum
+1 Veyran, Voice of Duality
+1 Whispers of the Muse
+1 Young Pyromancer

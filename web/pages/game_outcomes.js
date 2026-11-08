@@ -192,7 +192,7 @@
               .sort((a,b)=>a.id.localeCompare(b.id)||a.version.localeCompare(b.version))),
               label:opponents.map(d=>d.name).join(" / ")+" · recorded pod",
               title:opponents.map(d=>d.name).join(" / ")+" pod",
-              kind:"named_pod"}];
+              kind:"named_pod",portraitNames:opponents.map(d=>d.name)}];
           }else{
             names=opponents.map(d=>({id:"deck:"+d.id+":"+d.version,
               label:d.name+" · present in pod",title:d.name,
@@ -231,7 +231,7 @@
         for(const named of new Map(names.map(row=>[row.id,row])).values()){
           if(!buckets.has(named.id))buckets.set(named.id,{
             id:named.id,label:named.label,title:named.title,kind:named.kind,
-            portraitName:named.portraitName||null,archetype:named.archetype||null,
+            portraitName:named.portraitName||null,portraitNames:named.portraitNames||null,archetype:named.archetype||null,
             counts:Object.fromEntries(STATES.map(x=>[x,0])),games:0,runs:[]
           });
           const row=buckets.get(named.id);
@@ -304,7 +304,7 @@
     panel.appendChild(body);
     return panel;
   }
-  function limitationsDisclosure(isGorge=false,isOmniscient=false){
+  function limitationsDisclosure(isGorge=false,isOmniscient=false,summaryNotes=[]){
     const details=create("details","game-outcome-limits");
     const trigger=create("summary",null,"ⓘ");
     trigger.setAttribute("aria-label","Model limitations and what improves accuracy");
@@ -324,13 +324,14 @@
       create("p",null,"Small samples, unfinished games, incomplete rules and automated pilot choices can change these results."),
       create("p",null,"The current opposing seats are abstract policies, not complete Commander decks. Archetype portraits are illustrative unless a real opposing commander was recorded."),
       create("p",null,"Next improvements: more matched seeds, fuller card rules, improved piloting, and validated opposing deck simulations."));
+    for(const note of summaryNotes)content.appendChild(create("p",null,note));
     details.append(trigger,content);
     return details;
   }
-  function outcomeCard(group,options,childBuilder){
+  function outcomeCard(group,options){
     const wrapper=create("div","game-outcome-hero-frame");
-    const panel=create("details","board-report game-outcome-card game-outcome-hero");
-    const summary=create("summary","game-outcome-summary game-outcome-hero-summary");
+    const panel=create("div","board-report game-outcome-card game-outcome-hero");
+    const summary=create("div","game-outcome-summary game-outcome-hero-summary");
     if(typeof options.commanderArt==="string"&&options.commanderArt){
       const art=create("img","game-outcome-hero-art");
       art.src=options.commanderArt;
@@ -340,11 +341,26 @@
       summary.appendChild(art);
     }
     const copy=create("div","game-outcome-hero-copy");
-    copy.appendChild(create("strong","game-outcome-title","Game Outcomes"));
+    const heading=create(options.onHighlightClick?"button":"strong","game-outcome-title game-outcome-heading","Game Outcomes");
+    if(options.onHighlightClick){
+      heading.type="button";heading.setAttribute("aria-haspopup","dialog");
+      heading.setAttribute("aria-label","Game Outcomes · open life progression for wins and losses");
+      heading.addEventListener("click",()=>options.onHighlightClick("winlife",heading));
+    }
+    copy.appendChild(heading);
     const numbers=create("div","game-outcome-hero-stats");
-    const short=[["win","Wins"],["loss","Losses"],["unresolved","Unresolved"]];
+    const short=[["win","Wins"],["loss","Losses"]];
     for(const [state,label] of short){
-      const metric=create("div","game-outcome-hero-stat is-"+state);
+      const metric=create(state==="win"&&options.onHighlightClick?"button":"div","game-outcome-hero-stat is-"+state);
+      if(state==="win"&&options.onHighlightClick){
+        metric.type="button";metric.title="Overall win rate · compare life progression in wins and losses";
+        metric.setAttribute("aria-label","Overall win rate · open life progression for wins and losses");
+        metric.setAttribute("aria-haspopup","dialog");
+        metric.addEventListener("click",event=>{
+          event.preventDefault();event.stopPropagation();
+          options.onHighlightClick("winlife",metric);
+        });
+      }
       const share=(100*group.counts[state]/group.total);
       metric.append(create("strong",null,Number(share.toFixed(1))+"%"),
         create("span",null,label+" · "+group.counts[state]+"/"+group.total));
@@ -354,14 +370,18 @@
     // Keep the outcome proportions with the percentages they describe.
     const bar=create("div","game-outcome-stacked-bar");
     bar.setAttribute("role","img");
-    bar.setAttribute("aria-label",STATES.map(state=>
+    bar.setAttribute("aria-label",["win","loss"].map(state=>
       stateLabel(state)+" "+group.counts[state]+" of "+group.total).join(", "));
-    for(const state of STATES){
+    for(const state of ["win","loss"]){
       if(!group.counts[state])continue;
       const segment=create("span","is-"+state);
       segment.style.width=(100*group.counts[state]/group.total)+"%";
       bar.appendChild(segment);
     }
+    const baseline=create("span","game-outcome-baseline");
+    baseline.setAttribute("aria-label","25 percent equal-chance four-player baseline");
+    baseline.title="25% equal-chance four-player baseline";
+    bar.appendChild(baseline);
     copy.appendChild(bar);
     if(options.heroHighlights?.length){
       const highlights=create("div","game-outcome-hero-highlights");
@@ -369,13 +389,18 @@
         const stat=create("button","game-outcome-hero-highlight");
         stat.type="button";
         stat.setAttribute("aria-haspopup","dialog");
-        stat.setAttribute("aria-label",item.label+": "+item.value+". Open detailed analysis");
-        stat.append(create("span",null,item.label),
-          create("strong",null,item.value),
-          create("small",null,item.detail),
-          create("span","game-outcome-hero-highlight-cue","Explore ↗"));
-        // The tiles live inside a <summary>; clicking them must not toggle
-        // the surrounding outcome disclosure.
+        stat.setAttribute("aria-label",item.label+": "+item.value+(item.qualifier?" "+item.qualifier:"")+(item.detail?" · "+item.detail:"")+". Open detailed analysis");
+        const value=create("strong",null,item.value);
+        if(item.qualifier)value.appendChild(create("small","game-outcome-value-qualifier",item.qualifier));
+        stat.append(create("span",null,item.label),value);
+        if(item.image){
+          stat.classList.add("has-commander-card");
+          const image=create("img","game-outcome-matchup-card");
+          image.src=item.image;image.alt="";image.loading="lazy";image.referrerPolicy="no-referrer";
+          const fallback=create("small","game-outcome-matchup-fallback",item.detail||"");
+          fallback.hidden=true;image.onerror=()=>{image.hidden=true;fallback.hidden=false};
+          stat.append(image,fallback);
+        }else if(item.detail)stat.appendChild(create("small",null,item.detail));
         stat.addEventListener("click",event=>{
           event.preventDefault();event.stopPropagation();
           options.onHighlightClick?.(item.key,stat);
@@ -384,15 +409,9 @@
       }
       copy.appendChild(highlights);
     }
-    copy.appendChild(create("span","game-outcome-hero-meta",
-      options.outcomeMeta||group.total+" games"));
     summary.appendChild(copy);
     panel.appendChild(summary);
-    const body=create("div","game-outcome-body");
-    childBuilder(body);
-    panel.appendChild(body);
-    // The icon is a sibling so it remains operable while the game card is closed.
-    wrapper.append(panel,limitationsDisclosure(options.isGorge,options.isOmniscient));
+    wrapper.append(panel,limitationsDisclosure(options.isGorge,options.isOmniscient,options.summaryNotes));
     return wrapper;
   }
   function metricTile(label,value,detail){
@@ -462,7 +481,21 @@
         rows[index].scrollIntoView({block:"nearest"});
       portrait.replaceChildren();
       const art=typeof options.portraitFor==="function"?options.portraitFor(bucket):null;
-      if(art?.art){
+      if(bucket.kind==="named_pod"&&bucket.portraitNames?.length===3){
+        const strip=create("div","game-outcome-pod-art");
+        for(const name of bucket.portraitNames){
+          const cardImage=options.lookupRecordedCard?.(name)?.image||
+            "https://api.scryfall.com/cards/named?exact="+encodeURIComponent(name)+"&format=image&version=normal";
+          const frame=create("div","game-outcome-pod-art-member");
+          if(cardImage){
+            const image=create("img",null);image.src=cardImage;image.alt="";
+            image.loading="lazy";image.referrerPolicy="no-referrer";
+            image.onerror=()=>{image.hidden=true};frame.appendChild(image);
+          }
+          strip.appendChild(frame);
+        }
+        portrait.appendChild(strip);
+      }else if(art?.art){
         const img=create("img","game-outcome-opponent-art");
         img.src=art.art;img.alt=art.name+" card illustration";
         img.loading="lazy";img.referrerPolicy="no-referrer";
@@ -480,17 +513,18 @@
       }
       const caption=create("div","game-outcome-portrait-label");
       caption.append(create("strong",null,bucket.title||bucket.label),
-        create("small",null,art?.name?
+        create("small",null,bucket.kind==="named_pod"?
+          "Recorded opposing commanders":art?.name?
           art.name+(bucket.kind==="named"?" · recorded opposing commander":
             " · illustrative archetype portrait"):
           "No cached commander art"));
       portrait.appendChild(caption);
       caption.appendChild(create("span","game-outcome-portrait-kind",
-        bucket.kind==="named"?"Observed in pod":"Illustrative portrait"));
+        ["named","named_pod"].includes(bucket.kind)?"Observed in pod":"Illustrative portrait"));
       metrics.replaceChildren(
         metricTile("Games",values.games,"Observed"),
         metricTile("Win share",Math.round(values.winShare*100)+"%",
-          values.wins+" win · "+values.losses+" loss · "+values.unresolved+" unresolved"+
+          values.wins+" win · "+values.losses+" loss"+
           (values.draws?" · "+values.draws+" draw":"")),
         metricTile("Median finish",values.medianFinishRound,
           values.finishedGames+" completed"),
@@ -1247,7 +1281,7 @@
     for(const [label,cards] of zones){
       if(!Array.isArray(cards))continue;
       const group=create("details","insight-end-zone insight-board-"+label.toLowerCase().replace(/[^a-z]+/g,"-"));
-      group.open=true;
+      group.open=false;
       const icon=({Hand:"▤","Command zone":"♛",Creatures:"♟",Lands:"◇",
         Artifacts:"⚙",Enchantments:"✦",Planeswalkers:"♛","Other permanents":"◈",
         Graveyard:"◆",Exile:"⊘"})[label]||"◈";
@@ -1255,6 +1289,43 @@
       trigger.append(create("span","insight-end-zone-icon",icon),
         create("span",null,label+" · "+cards.length));
       group.appendChild(trigger);
+      if(cards.length){
+        // The summary stays visible while closed; the zone body contains
+        // the ordinary labelled cards and remains the expanded view.
+        trigger.style.flexWrap="wrap";
+        const hint=create("span","insight-zone-expand-hint",
+          label==="Graveyard"&&cards.length>3?
+            "Showing 3 of "+cards.length+" · Expand":"Expand");
+        trigger.appendChild(hint);
+        const preview=create("span","insight-compact-preview"+
+          (label==="Graveyard"?" is-graveyard-stack":""));
+        const entries=label==="Graveyard"?
+          cards.slice(-3).reverse().map(name=>({name,count:1})):
+          byType.has(label)?groupedBattlefieldTokens(cards,options):
+            cards.map(name=>({name,count:1}));
+        entries.forEach((item,index)=>{
+          const tile=insightActionCard(item.name,options,
+            {artOnly:true,count:item.count});
+          const inspect=tile.onclick;
+          tile.onclick=event=>{
+            event.preventDefault();event.stopPropagation();
+            if(label==="Graveyard"&&index>0)group.open=true;
+            else inspect?.(event);
+          };
+          if(label==="Graveyard"&&index>0){
+            tile.setAttribute("aria-label","Expand graveyard to see "+item.name);
+            tile.title="Expand graveyard";
+          }
+          preview.appendChild(tile);
+        });
+        const sync=()=>{preview.hidden=group.open;
+          hint.textContent=group.open?"Collapse":
+            label==="Graveyard"&&cards.length>3?
+              "Showing 3 of "+cards.length+" · Expand":"Expand";};
+        group.addEventListener("toggle",sync);
+        trigger.appendChild(preview);
+        sync();
+      }
       const list=create("div","insight-action-cards");
       const entries=byType.has(label)?
         groupedBattlefieldTokens(cards,options):cards.map(name=>({name,count:1}));
@@ -1376,7 +1447,7 @@
             event?.preventDefault?.();
             event?.stopPropagation?.();
             row.open=true;
-            const section=body.querySelector?.(".insight-end-zone");
+            const section=body.querySelector?.(".insight-board-hand");
             if(section)section.open=true;
           });
         handBadge.setAttribute("aria-label",Array.isArray(hand)?
@@ -1698,9 +1769,7 @@
         {name,type_line:token.type,oracle_text:"",power:token.power??null,
          toughness:token.toughness??null});
         else options.onOpenRecordedCard?.(name)});
-    button.setAttribute("aria-label",token?
-      name+(Number.isInteger(token.power)?" "+token.power+"/"+token.toughness:""):
-      "View "+name+" card details");
+    button.setAttribute("aria-label","View "+name+" card details");
     if(token&&!display.textOnly){
       const tokenArt=create("span","insight-token-art",token.glyph);
       tokenArt.setAttribute("aria-hidden","true");
@@ -1725,15 +1794,9 @@
     if(!display.artOnly||token||!(typeof art==="string"&&/^https:\/\//.test(art))){
       const title=create("span","insight-action-name",name);
       button.appendChild(title);
-      if(token&&Number.isInteger(token.power)){
-        const stats=create("span","insight-token-stats",
-          token.power+"/"+token.toughness);
-        stats.title="Base token power/toughness; modifiers not exported";
-        button.appendChild(stats);
-      }
+
     }
-    if(token)button.title=token.type+
-      (Number.isInteger(token.power)?" · base "+token.power+"/"+token.toughness:"");
+    if(token)button.title=token.type;
     if(token&&display.count>1){
       const quantity=create("span","insight-token-quantity","×"+display.count);
       quantity.setAttribute("aria-label",display.count+" identical tokens");
@@ -1955,6 +2018,7 @@
       const {group,run}=item.entry;
       runDetails(evidence,run,{example:group.exampleBySeed.get(run.seed),
         onShowRecordedActions:options.onShowRecordedActions,onOpenRecordedCard:options.onOpenRecordedCard,
+        onOpenTokenCard:options.onOpenTokenCard,
         lookupRecordedCard:options.lookupRecordedCard,renderMana:options.renderMana,
         focusTurn:turn,displayGameLabel:options.displayGameLabel||item.label});
     },{controlsHost:headerNav});
@@ -2079,6 +2143,7 @@
               lookupRecordedCard:options.lookupRecordedCard,
               renderMana:options.renderMana,
               onOpenRecordedCard:options.onOpenRecordedCard,
+              onOpenTokenCard:options.onOpenTokenCard,
               example:entry.group.exampleBySeed?.get(entry.run.seed),
               onShowRecordedActions:options.onShowRecordedActions
             });
@@ -2236,6 +2301,68 @@
     if(initialSelect)initialSelect();
     return panel;
   }
+  // A native selector keeps long filter lists compact and works with touch,
+  // keyboard and assistive technology without a custom popup.
+  function insightFilterControl(entries,current,onChange){
+    const select=create("select","gorge-icon-button insight-filter-select");
+    select.setAttribute("aria-label","Card type filter");
+    for(const [id,label] of entries){
+      const option=create("option",null,label);
+      option.value=id;option.selected=id===current;select.appendChild(option);
+    }
+    select.value=current;
+    select.addEventListener("change",()=>onChange(select.value));
+    return select;
+  }
+  // Card-based rankings share one compact, labelled set of controls.
+  // Filter only using recorded card metadata, never by guessing from names.
+  function filteredInsightPanel(kind,source,coverage,groups,options,onReviewRun,
+                               type="all",ascending=false){
+    const types=[
+      ["all","All",()=>true],
+      ["creature","Creature",t=>/\bcreature\b/.test(t)],
+      ["artifact","Artifact",t=>/\bartifact\b/.test(t)],
+      ["enchantment","Enchantment",t=>/\benchantment\b/.test(t)],
+      ["spell","Instant / Sorcery",t=>/\b(instant|sorcery)\b/.test(t)],
+      ["land","Land",t=>/\bland\b/.test(t)]
+    ];
+    const typed=item=>String(options.lookupRecordedCard?.(item.name)?.type_line||options.lookupRecordedCard?.(item.name)?.type||"").toLowerCase();
+    const available=types.filter(([id,,match])=>id==="all"||
+      source.some(item=>{const t=typed(item);return t&&match(t)}));
+    const predicate=(available.find(([id])=>id===type)||available[0])[2];
+    const items=source.filter(item=>type==="all"||predicate(typed(item))).slice()
+      .sort((a,b)=>(ascending?a.score-b.score:b.score-a.score)||a.name.localeCompare(b.name));
+    const panel=cardPerformancePanel(kind,items,coverage,groups,options,onReviewRun);
+    if(!panel)return null;
+    // Lightweight renderer contract tests provide a non-DOM stand-in for
+    // insight panels; preserve the panel when DOM drilldown controls cannot
+    // be attached. Actual browser panels always support querySelector.
+    if(typeof panel.querySelector!=="function")return panel;
+    const body=panel.querySelector(".game-outcome-body");
+    if(!body)return panel;
+    const controls=create("div","gorge-card-type-controls");
+    controls.setAttribute("role","group");
+    controls.setAttribute("aria-label","Filter and sort "+insightCategoryLabel(kind));
+    const change=(next,order,label)=>{
+      const replacement=filteredInsightPanel(kind,source,coverage,groups,options,onReviewRun,next,order);
+      if(replacement){replacement.open=true;panel.replaceWith(replacement);
+        [...replacement.querySelectorAll("button, select")].find(button=>button.getAttribute("aria-label")===label)?.focus();}
+    };
+    controls.appendChild(insightFilterControl(available.map(([id,label])=>[id,label]),type,
+      next=>change(next,ascending,"Card type filter")));
+    const nextLabel=ascending?"Show highest first":"Show lowest first";
+    const order=textButton(ascending?"Lowest ↑":"Highest ↓","gorge-icon-button gorge-sort-button",
+      ()=>change(type,!ascending,ascending?"Show lowest first":"Show highest first"));
+    order.style.width="auto";order.style.padding="0.4rem 0.65rem";
+    order.title=nextLabel;order.setAttribute("aria-label",nextLabel);controls.appendChild(order);
+    if(ascending)panel.querySelector(".game-outcome-title").textContent=
+      insightCategoryLabel(kind).replace(/^Most /,"Least ").replace(/^Longest /,"Shortest ");
+    const heading=body.querySelector(".insight-featured-chart-title");
+    if(heading)heading.textContent=(ascending?"Lowest":"Highest")+" recorded cards"+
+      (kind==="longest"?" · mean rounds held":"");
+    body.prepend(controls);
+    return panel;
+  }
   function readablePredictor(feature){
     const name=String(feature||"");
     if(typeof window!=="undefined"&&window.DeckDisplayNames&&
@@ -2347,11 +2474,22 @@
       const key=[group.pilotStyle,group.provisionalMode,group.requestedRounds].join("|");
       if(!cohorts.has(key))cohorts.set(key,{key,groups:[],games:0});
       const entry=cohorts.get(key);
-      entry.groups.push(group);entry.games+=group.total;
+      entry.groups.push(group);entry.games+=group.runs.filter(run=>["win","loss"].includes(run.outcome.status)).length;
     }
     const cohort=[...cohorts.values()].sort((a,b)=>
       b.games-a.games||a.key.localeCompare(b.key))[0];
-    const groups=cohort.groups;
+    // Outcome analytics use decided wins and losses. Keep all recorded games
+    // in the reviewer, but do not put unresolved or drawn games in rates.
+    const reviewerGroups=cohort.groups;
+    const groups=reviewerGroups.map(group=>({...group,
+      runs:group.runs.filter(run=>["win","loss"].includes(run.outcome.status))
+    })).filter(group=>group.runs.length);
+    if(!groups.length){
+      root.appendChild(create("p","game-outcome-empty","No completed wins or losses are available yet."));
+      const select=options.reviewerRoot?turnReviewer(options.reviewerRoot,reviewerGroups,options):null;
+      if(typeof options.onReviewerReady==="function")options.onReviewerReady(select);
+      return report;
+    }
     const all=groups.flatMap(group=>group.runs.map(run=>({run,group})));
     const runs=all.map(x=>x.run);
     const isGorge=runs[0]?.batch?.engine==="gorge";
@@ -2376,18 +2514,58 @@
     };
     const bestMatchup=matchup[0];
     const finishedMedian=quantile(finished.map(run=>run.completed_rounds),.5);
-    const finalLifeMedian=quantile(lastLife,.5);
+    // Use source-observed events. Never infer mana capacity from land counts or
+    // treat a missing turn-five observation as zero mana.
+    const commanderName=String(options.commanderName||"").trim().toLowerCase();
+    const commanderArrival=run=>{
+      if(!commanderName)return null;
+      for(const row of run.ui_observations||[]){
+        if((row.actions||[]).some(action=>
+          Number(action.seat??0)===0&&
+          String(action.card||"").trim().toLowerCase()===commanderName&&
+          /cast/.test(String(action.type||""))))return row.turn;
+      }
+      return null;
+    };
+    const manaAtTurn=(run,turn)=>{
+      const row=(run.ui_observations||[]).find(x=>x.turn===turn);
+      if(!row||!row.mana_produced_by_color)return null;
+      const values=Object.values(row.mana_produced_by_color);
+      if(!values.length||values.some(x=>x===null||x===""||!Number.isFinite(Number(x))||Number(x)<0))return null;
+      return values.reduce((sum,x)=>sum+Number(x),0);
+    };
+    const manaAtFive=run=>manaAtTurn(run,5);
+    // An uncast commander is a right-censored arrival, not an outlier
+    // to discard. Include every game in the median's denominator, and
+    // return N/A if the middle observation(s) have no observed cast turn.
+    const arrivalMedian=entries=>{
+      if(!entries.length)return null;
+      const sorted=entries.map(commanderArrival)
+        .map(value=>Number.isFinite(value)?value:Infinity)
+        .sort((a,b)=>a-b);
+      const low=sorted[Math.floor((sorted.length-1)/2)];
+      const high=sorted[Math.floor(sorted.length/2)];
+      return Number.isFinite(low)&&Number.isFinite(high)?
+        (low+high)/2:null;
+    };
+    const arrivalSamples=runs.map(commanderArrival).filter(Number.isFinite);
+    const rampSamples=runs.map(manaAtFive).filter(Number.isFinite);
+    const medianArrival=arrivalMedian(runs);
+    const averageMana=rampSamples.length?
+      rampSamples.reduce((a,b)=>a+b,0)/rampSamples.length:null;
     const heroHighlights=[
       {key:"matchup",label:"Best matchup",value:bestMatchup?
         (100*bestMatchup.counts.win/Math.max(1,bestMatchup.games)).toFixed(1)+"%":"—",
-       detail:bestMatchup?.title||"No opponent groups"},
+       detail:bestMatchup?.title||"No opponent groups",
+       image:bestMatchup?.kind==="named"&&bestMatchup.portraitName?
+         (options.lookupRecordedCard?.(bestMatchup.portraitName)?.image||
+          "https://api.scryfall.com/cards/named?exact="+encodeURIComponent(bestMatchup.portraitName)+"&format=image&version=normal"):null},
       {key:"length",label:"Game length",value:finishedMedian===null?"—":nfmt(finishedMedian),
-       detail:"Median finished rounds"},
-      {key:"survival",label:"Survival",value:(100*runs.filter(run=>
-          aliveAt(run.life_history.at(-1),0)).length/total).toFixed(1)+"%",
-       detail:"Alive at last recorded round"},
-      {key:"life",label:"Final life",value:finalLifeMedian===null?"—":nfmt(finalLifeMedian),
-       detail:"Median final recorded life"}
+       qualifier:"median"},
+      {key:"arrival",label:"Commander arrival",value:medianArrival===null?"N/A":nfmt(medianArrival),
+       qualifier:"median"},
+      {key:"ramp",label:"Mana ramp",value:averageMana===null?"—":averageMana.toFixed(2),
+       qualifier:"avg by turn 5"}
     ];
     // The overview tiles are buttons, not duplicate expanding cards.
     // Each opens its original detailed analysis in a focus-managed dialog.
@@ -2418,8 +2596,9 @@
       detailHeading.textContent=({
         matchup:"Opponent Matchups",
         length:"Game Length",
-        survival:"Eliminations & Survival",
-        life:"Life Progression"
+        arrival:"Commander Arrival · Wins vs Losses",
+        ramp:"Mana by Turn · Wins vs Losses",
+        winlife:"Life Progression · Wins vs Losses"
       })[key];
       detailContent.replaceChildren(panel);
       panel.open=true;
@@ -2431,33 +2610,17 @@
     detailDialog.addEventListener("click",event=>{
       if(event.target===detailDialog)closeDialog();
     });
-    const seedList=[...new Set(runs.map(run=>run.seed))]
-      .filter(Number.isInteger).sort((a,b)=>a-b);
-    const seedLabel=seedList.length?
-      "Seeds "+(seedList[0]===seedList.at(-1)?seedList[0]:
-        seedList[0]+"–"+seedList.at(-1)):"Seeds unavailable";
-    const outcomeMeta=total+" games · "+groups[0].requestedRounds+
-      " rounds · "+groups.length+" opponent groups · "+seedLabel+
-      (runs.some(r=>r.gorge_source?.visibility==="omniscient")?
-        " · Omniscient simulated hands":"");
+    const summaryNotes=[
+      total+" games · "+groups[0].requestedRounds+" rounds · "+groups.length+" opponent groups.",
+      "Game length is the median among finished games. Commander arrival is the median across all games, including uncast commanders ("+arrivalSamples.length+" casts observed).",
+      "Mana ramp is average mana generated on turn 5 ("+rampSamples.length+" of "+total+" games recorded).",
+      "The gold marker is the 25% equal-chance reference for a four-player game."
+    ];
     cards.appendChild(outcomeCard({
       counts,total,terminal:finished.length,
       terminalRounds:finished.map(run=>run.completed_rounds)
     },{...options,isGorge,isOmniscient:runs.some(r=>r.gorge_source?.visibility==="omniscient"),
-       heroHighlights,outcomeMeta,onHighlightClick:openDetail},body=>{
-      const buckets=create("div","game-outcome-buckets");
-      for(const state of STATES){
-        if(!counts[state])continue;
-        const row=create("div","game-outcome-bucket is-"+state);
-        row.append(create("strong",null,stateLabel(state)),
-          create("span",null,counts[state]+" / "+total));
-        const bar=create("span","game-outcome-bucket-bar");
-        bar.style.width=(counts[state]/total*100)+"%";
-        row.appendChild(bar);buckets.appendChild(row);
-      }
-      body.appendChild(buckets);
-
-    }));
+       heroHighlights,summaryNotes,onHighlightClick:openDetail}));
     const best=matchup[0];
     detailPanels.set("matchup",card("Opponent Types","Types & table compositions",
       best?(100*best.counts.win/Math.max(1,best.games)).toFixed(1)+"%":"—",
@@ -2496,60 +2659,143 @@
         stats.append(
           metricTile("Finished",finished.length,total+" games"),
           metricTile("Victory round",quantile(wins.map(r=>r.completed_rounds),.5),
-            wins.length+" wins"),
-          metricTile("Unresolved",counts.unresolved,total+" games"));
+            wins.length+" wins"));
         body.appendChild(stats);
         histogram(body,finished,groups[0].requestedRounds);
       }));
-    detailPanels.set("survival",card("Eliminations","Survival",
-      (100*knocked.length/total).toFixed(1)+"%",
-      "Our seat eliminated · "+knocked.length+" of "+total+" games",
+    const series=[{name:"Wins",color:"#4dab76",runs:wins},
+      {name:"Losses",color:"#d66565",runs:runs.filter(r=>r.outcome.status==="loss")}];
+    function legend(body){
+      const box=create("div","game-outcome-legend");
+      for(const group of series){const chip=create("span",null,group.name+" · "+group.runs.length+" games");
+        chip.style.borderColor=group.color;box.appendChild(chip)}
+      body.appendChild(box);
+    }
+    function tableDetails(body,headers,rows){
+      const disclosure=create("details","distribution-table-details");
+      disclosure.appendChild(create("summary",null,"View values and sample sizes"));
+      const table=create("table","distribution-table"),head=create("tr");
+      for(const text of headers)head.appendChild(create("th",null,text));
+      const thead=create("thead");thead.appendChild(head);table.appendChild(thead);
+      const tbody=create("tbody");
+      for(const values of rows){const tr=create("tr");for(const text of values)tr.appendChild(create("td",null,text));tbody.appendChild(tr)}
+      table.appendChild(tbody);disclosure.appendChild(table);body.appendChild(disclosure);
+    }
+    function chartFrame(body,label,maxX,maxY,yLabel){
+      const width=680,height=260,left=48,right=14,top=16,bottom=38;
+      const plotW=width-left-right,plotH=height-top-bottom;
+      const x=turn=>left+(turn-1)/Math.max(1,maxX-1)*plotW;
+      const y=value=>top+plotH-(value/maxY)*plotH;
+      const svg=svgNode("svg",{viewBox:`0 0 ${width} ${height}`,class:"distribution-chart",role:"img","aria-label":label});
+      for(const fraction of [0,.25,.5,.75,1]){
+        const value=maxY*fraction,yy=y(value);
+        svg.appendChild(svgNode("line",{x1:left,y1:yy,x2:width-right,y2:yy,stroke:"#7a817e","stroke-opacity":.3}));
+        const tick=svgNode("text",{x:left-7,y:yy+4,"text-anchor":"end",fill:"#c4cbbd","font-size":11});
+        tick.textContent=yLabel(value);svg.appendChild(tick);
+      }
+      const stride=Math.max(1,Math.ceil(maxX/8));
+      for(let turn=1;turn<=maxX;turn++)if(turn===1||turn===maxX||turn%stride===0){
+        const tick=svgNode("text",{x:x(turn),y:height-15,"text-anchor":"middle",fill:"#c4cbbd","font-size":11});
+        tick.textContent=String(turn);svg.appendChild(tick);
+      }
+      const axis=svgNode("text",{x:left+plotW/2,y:height-1,"text-anchor":"middle",fill:"#c4cbbd","font-size":11});
+      axis.textContent="Turn";svg.appendChild(axis);body.appendChild(svg);
+      return {svg,x,y,plotW};
+    }
+    function arrivalDistribution(body){
+      legend(body);
+      const data=series.map(group=>({...group,values:group.runs.map(commanderArrival)}));
+      const maxTurn=Math.max(1,...data.flatMap(group=>group.values.filter(Number.isFinite)));
+      const rows=Array.from({length:maxTurn},(_,i)=>({turn:i+1,
+        counts:data.map(group=>group.values.filter(value=>value===i+1).length)}));
+      const maxPercent=Math.max(10,...rows.flatMap(row=>row.counts.map((count,i)=>data[i].runs.length?100*count/data[i].runs.length:0)));
+      const ceiling=Math.min(100,Math.ceil(maxPercent/10)*10);
+      const chart=chartFrame(body,"First recorded commander cast by turn, percentage of games in wins and losses",maxTurn,ceiling,value=>Math.round(value)+"%");
+      const groupWidth=Math.min(28,chart.plotW/Math.max(1,maxTurn)*.7),barWidth=groupWidth/2;
+      for(const row of rows)row.counts.forEach((count,i)=>{
+        const pct=data[i].runs.length?100*count/data[i].runs.length:0;
+        if(!count)return;
+        const rect=svgNode("rect",{x:chart.x(row.turn)-groupWidth/2+i*barWidth,y:chart.y(pct),width:Math.max(1,barWidth-1),height:chart.y(0)-chart.y(pct),fill:data[i].color,rx:2});
+        const title=svgNode("title");title.textContent=`Turn ${row.turn}: ${count} of ${data[i].runs.length} ${data[i].name.toLowerCase()} (${pct.toFixed(1)}%)`;rect.appendChild(title);chart.svg.appendChild(rect);
+      });
+      body.appendChild(create("p","micro",data.map(group=>group.name+": "+group.values.filter(x=>!Number.isFinite(x)).length+"/"+group.runs.length+" without a recorded cast").join(" · ")));
+      tableDetails(body,["Turn","Wins","Losses"],rows.map(row=>[String(row.turn),...row.counts.map((count,i)=>data[i].runs.length?count+" / "+data[i].runs.length+" ("+(100*count/data[i].runs.length).toFixed(1)+"%)":"—")]));
+    }
+    function manaTimeline(body){
+      legend(body);
+      const maxTurn=Math.max(1,...series.flatMap(group=>group.runs.flatMap(run=>(run.ui_observations||[]).map(row=>Number(row.turn)).filter(Number.isFinite))));
+      const rows=Array.from({length:maxTurn},(_,i)=>({turn:i+1,groups:series.map(group=>{
+        const values=group.runs.map(run=>manaAtTurn(run,i+1)).filter(Number.isFinite);
+        return {n:values.length,mean:values.length?values.reduce((a,b)=>a+b,0)/values.length:null};
+      })}));
+      const max=Math.max(1,...rows.flatMap(row=>row.groups.map(group=>group.mean||0)));
+      const ceiling=Math.max(2,Math.ceil(max/2)*2);
+      const chart=chartFrame(body,"Average recorded mana produced per turn for wins and losses",maxTurn,ceiling,value=>String(Math.round(value*10)/10));
+      series.forEach((group,index)=>{
+        let segment=[];
+        const flush=()=>{if(segment.length>1)chart.svg.appendChild(svgNode("polyline",{points:segment.join(" "),fill:"none",stroke:group.color,"stroke-width":3,"stroke-linejoin":"round","stroke-linecap":"round"}));segment=[]};
+        for(const row of rows){const item=row.groups[index];if(item.mean===null){flush();continue}
+          const px=chart.x(row.turn),py=chart.y(item.mean);segment.push(px+","+py);
+          const dot=svgNode("circle",{cx:px,cy:py,r:3.5,fill:group.color});
+          const title=svgNode("title");title.textContent=`${group.name}, turn ${row.turn}: ${item.mean.toFixed(2)} mana, ${item.n} observations`;dot.appendChild(title);chart.svg.appendChild(dot);
+        }flush();
+      });
+      body.appendChild(create("p","micro","Means use recorded mana generated on each turn; missing turns are gaps. Games ending earlier leave later averages, so sample sizes can change."));
+      tableDetails(body,["Turn","Wins: mean (n)","Losses: mean (n)"],rows.map(row=>[String(row.turn),...row.groups.map(item=>item.mean===null?"— (0)":item.mean.toFixed(2)+" ("+item.n+")")]));
+    }
+    detailPanels.set("arrival",card("Commander Arrival","First cast turn",medianArrival===null?"N/A":nfmt(medianArrival),
+      "Share of each outcome group by recorded first cast",arrivalDistribution));
+    detailPanels.set("ramp",card("Mana Ramp","Mana generated by turn",averageMana===null?"—":averageMana.toFixed(2),
+      "Average recorded mana by turn",manaTimeline));
+    detailPanels.set("winlife",card("Life Progression","Wins vs losses",
+      counts.win+" / "+counts.loss,
+      "Median life by recorded round · green wins, red losses",
       body=>{
-        const stats=create("div","game-outcome-insight-grid");
-        stats.append(
-          metricTile("Our knockout",quantile(knocked,.5),
-            knocked.length+" recorded"),
-          metricTile("Opponent knockouts",enemyOut.length,
-            "Across all three seats"),
-          metricTile("Opponent knockout round",quantile(enemyOut,.5),
-            enemyOut.length+" eliminations"),
-          metricTile("Still alive",runs.filter(run=>
-            aliveAt(run.life_history.at(-1),0)).length,total+" runs"));
-        body.appendChild(stats);
-        const bySeat=create("div","game-outcome-seat-bars");
-        for(const seat of SEATS){
-          const n=runs.filter(run=>knockoutRound(run,seat)!==null).length;
-          const bar=create("div","game-outcome-seat-bar");
-          bar.append(create("span",null,seat===0?"You":"Seat "+(seat+1)));
-          const track=create("div","game-outcome-finish-track");
-          const fill=create("span","game-outcome-finish-fill");
-          fill.style.width=(n/total*100)+"%";
-          track.appendChild(fill);
-          bar.append(track,create("strong",null,n+"/"+total));
-          bySeat.appendChild(bar);
-        }
-        body.appendChild(bySeat);
-      }));
-    detailPanels.set("life",card("Life Progression","Your life",
-      quantile(lastLife,.5)===null?"—":nfmt(quantile(lastLife,.5)),
-      "Your median final recorded life",
-      body=>{
+        const categories=[
+          {name:"Wins",color:"#4dab76",data:lifeTrend(wins,groups[0].requestedRounds)},
+          {name:"Losses",color:"#d66565",data:lifeTrend(
+            runs.filter(r=>r.outcome.status==="loss"),groups[0].requestedRounds)}
+        ];
         const legend=create("div","game-outcome-legend");
-        for(const seat of [0]){
-          const chip=create("span",null,"You");
-          chip.style.borderColor=SEAT_COLORS[seat];legend.appendChild(chip);
+        for(const item of categories){
+          const chip=create("span",null,item.name);
+          chip.style.borderColor=item.color;legend.appendChild(chip);
         }
-        body.append(legend,lifePlot(life));
-        const slider=create("input","game-outcome-round-slider");
-        slider.type="range";slider.min="0";
-        slider.max=String(life.length-1);
-        slider.value=String(Math.min(6,life.length-1));
-        const detail=create("div","game-outcome-round-detail");
-        const displayRound=()=>roundTrendDetail(detail,{
-          ...life[Number(slider.value)],total
-        });
-        slider.addEventListener("input",displayRound);
-        body.append(slider,detail);displayRound();
+        body.appendChild(legend);
+        const width=680,height=240,left=42,right=16,top=15,bottom=34;
+        const plotW=width-left-right,plotH=height-top-bottom;
+        const maxRound=Math.max(1,...categories.flatMap(c=>c.data.map(r=>r.round)));
+        const maxLife=Math.max(40,...categories.flatMap(c=>c.data.map(r=>
+          r.seats[0]?.p75||0)));
+        const ceiling=Math.ceil(maxLife/10)*10;
+        const x=round=>left+round/maxRound*plotW;
+        const y=life=>top+plotH-Math.max(0,life)/ceiling*plotH;
+        const svg=svgNode("svg",{viewBox:"0 0 "+width+" "+height,
+          role:"img","aria-label":"Median life progression for wins in green and losses in red"});
+        for(const frac of [0,.25,.5,.75,1]){
+          const value=Math.round(ceiling*frac);
+          svg.appendChild(svgNode("line",{x1:left,y1:y(value),x2:width-right,
+            y2:y(value),stroke:"#7a817e","stroke-opacity":.3}));
+          const tick=svgNode("text",{x:7,y:y(value)+4,fill:"#c4cbbd","font-size":11});
+          tick.textContent=String(value);svg.appendChild(tick);
+        }
+        for(const item of categories){
+          const points=item.data.filter(r=>Number.isFinite(r.seats[0]?.median));
+          if(!points.length)continue;
+          svg.appendChild(svgNode("polyline",{
+            points:points.map(r=>x(r.round)+","+y(r.seats[0].median)).join(" "),
+            fill:"none",stroke:item.color,"stroke-width":3,
+            "stroke-linecap":"round","stroke-linejoin":"round"}));
+        }
+        for(const round of [0,Math.round(maxRound/2),maxRound]){
+          const tick=svgNode("text",{x:x(round),y:height-8,
+            "text-anchor":"middle",fill:"#c4cbbd","font-size":11});
+          tick.textContent="R"+round;svg.appendChild(tick);
+        }
+        body.appendChild(svg);
+        body.appendChild(create("p","micro",
+          "Each round includes only games with an observed snapshot at that round. "+
+          "Survivorship can change the plotted cohort over time."));
       }));
     // Game detail panels are now reached from the four overview tiles.
     // Card-specific discoveries follow the commander dashboard.
@@ -2557,6 +2803,9 @@
     // Gorge key insights must use a complete precomputed native-feature
     // cohort. Sampled replay events are evidence only; never the ranking
     // denominator. Historical non-Gorge renderers retain their own logic.
+    // R2's dedicated Key Insights section owns the card rankings.
+    // Preserve the legacy embedded insights only when explicitly needed.
+    if(!options.externalInsights){
     let signals;
     if(isGorge){
       const report=options.fullCardInsights;
@@ -2630,16 +2879,13 @@
           if(replacement){replacement.open=true;panel.replaceWith(replacement);
             replacement.querySelector('[aria-label="'+focusLabel+'"]')?.focus();}
         };
-        for(const type of types){
-          if(!signals.ranked[type]?.length)continue;
-          const [icon,label]=typesMeta[type];
-          const button=textButton(icon,"gorge-icon-button",()=>render(type,ascending,label));
-          button.title=label;button.setAttribute("aria-label",label);button.setAttribute("aria-pressed",String(type===kind));controls.appendChild(button);
-        }
+        controls.appendChild(insightFilterControl(types.filter(type=>signals.ranked[type]?.length)
+          .map(type=>[type,typesMeta[type][0]+" "+typesMeta[type][1]]),kind,
+          next=>render(next,ascending,"Card type filter")));
         if(types===playedTypes){
           const label=ascending?"Show most played first":"Show least played first";
-          const order=textButton(ascending?"↑":"↓","gorge-icon-button gorge-sort-button",()=>render(kind,!ascending,ascending?"Show least played first":"Show most played first"));
-          order.title=label;order.setAttribute("aria-label",label);order.setAttribute("aria-pressed",String(ascending));controls.appendChild(order);
+          const order=textButton(ascending?"Least ↑":"Most ↓","gorge-icon-button gorge-sort-button",()=>render(kind,!ascending,ascending?"Show least played first":"Show most played first"));
+          order.style.width="auto";order.style.padding="0.4rem 0.65rem";order.title=label;order.setAttribute("aria-label",label);order.setAttribute("aria-pressed",String(ascending));controls.appendChild(order);
           if(ascending)panel.querySelector(".game-outcome-title").textContent="Least played "+(kind==="played"?"card":typesMeta[kind][1].toLowerCase());
           const note=create("p","micro","Least-played rankings include recorded candidates in this snapshot; cards without recorded plays may be absent.");
           note.hidden=!ascending;body.prepend(note);
@@ -2660,7 +2906,7 @@
           if(panel)cards.appendChild(panel);
           continue;
         }
-        const panel=cardPerformancePanel(kind,signals.ranked[kind]||[],
+        const panel=filteredInsightPanel(kind,signals.ranked[kind]||[],
           signals.coverage,groups,
           {...options,isGorge,tutorSearchCount:signals.confirmedTutors},onReviewRun);
         if(panel)cards.appendChild(panel);
@@ -2671,13 +2917,17 @@
       cards.appendChild(create("p","game-outcome-empty",
         "Card insights require named card and hand observations from the current published batch."));
     }
+    }
     // The regression story belongs after every game/card panel, immediately
     // above the independent turn reviewer.
     // Gorge cohort regression comes exclusively from all verified outcomes
     // in the precomputed report; never show a replay-sample regression here.
-    if(!isGorge)cards.appendChild(elasticNetPanel(options.discoveryReport,options));
+    // When an external insights panel is authoritative, no secondary
+    // analytics card belongs under the Results summary.
+    if(!isGorge&&!options.externalInsights)
+      cards.appendChild(elasticNetPanel(options.discoveryReport,options));
     if(options.reviewerRoot){
-      jumpToReview=turnReviewer(options.reviewerRoot,groups,options);
+      jumpToReview=turnReviewer(options.reviewerRoot,reviewerGroups,options);
     }
     if(typeof options.onReviewerReady==="function")options.onReviewerReady(jumpToReview);
     return report;
@@ -2692,13 +2942,13 @@
     const best=opponents.filter(x=>Number.isFinite(x.win_rate)).sort((a,b)=>b.win_rate-a.win_rate)[0];
     const highlights=[
       {key:"matchup",label:"Best matchup",value:best?(100*best.win_rate).toFixed(1)+"%":"—",detail:best?.name||"Not available"},
-      {key:"length",label:"Game length",value:Number.isFinite(summary.median_game_turns)?nfmt(summary.median_game_turns):"—",detail:"Median recorded turns"},
-      {key:"survival",label:"Survival",value:"—",detail:"Not yet available"},
-      {key:"life",label:"Final life",value:"—",detail:"Not yet available"}
+      {key:"length",label:"Game length",value:Number.isFinite(summary.median_game_turns)?nfmt(summary.median_game_turns):"—",qualifier:"median"},
+      {key:"arrival",label:"Commander arrival",value:"—",detail:"Turn data unavailable"},
+      {key:"ramp",label:"Mana ramp",value:"—",detail:"Turn-five mana data unavailable"}
     ];
     const grid=create("div","board-grid game-outcome-grid latest-insight-grid");
     const hero=outcomeCard({counts,total:summary.n,terminal:summary.n,terminalRounds:[]},
-      {...options,isGorge:true,heroHighlights:highlights,outcomeMeta:summary.n+" games · complete cohort"},
+      {...options,isGorge:true,heroHighlights:highlights,summaryNotes:[summary.n+" games · complete cohort"]},
       body=>body.appendChild(create("p","micro","Complete cohort results from the Worker.")));
     // These values are visual summaries, not the former drilldown panels.
     // Make them non-interactive until the complete-cohort drilldowns exist.
@@ -2721,17 +2971,13 @@
       const change=(next,order,label)=>{const replacement=grouped(next,order);if(replacement){
         replacement.open=true;panel.replaceWith(replacement);
         replacement.querySelector('[aria-label="'+label+'"]')?.focus();}};
-      for(const type of playedInsightKinds){
-        if(!rankings[type]?.length)continue;
-        const [icon,label]=insightTypes[type];
-        const button=textButton(icon,"gorge-icon-button",()=>change(type,ascending,label));
-        button.title=label;button.setAttribute("aria-label",label);
-        button.setAttribute("aria-pressed",String(type===kind));controls.appendChild(button);
-      }
+      controls.appendChild(insightFilterControl(playedInsightKinds.filter(type=>rankings[type]?.length)
+        .map(type=>[type,insightTypes[type][0]+" "+insightTypes[type][1]]),kind,
+        next=>change(next,ascending,"Card type filter")));
       const label=ascending?"Show most played first":"Show least played first";
-      const order=textButton(ascending?"↑":"↓","gorge-icon-button gorge-sort-button",()=>
+      const order=textButton(ascending?"Least ↑":"Most ↓","gorge-icon-button gorge-sort-button",()=>
         change(kind,!ascending,ascending?"Show least played first":"Show most played first"));
-      order.title=label;order.setAttribute("aria-label",label);controls.appendChild(order);
+      order.style.width="auto";order.style.padding="0.4rem 0.65rem";order.title=label;order.setAttribute("aria-label",label);controls.appendChild(order);
       if(ascending)panel.querySelector(".game-outcome-title").textContent="Least played "+
         (kind==="played"?"card":insightTypes[kind][1].toLowerCase());
       body.prepend(controls);return panel;
@@ -2739,7 +2985,7 @@
     const played=grouped("played");if(played)grid.appendChild(played);
     for(const kind of ["longest","activated","triggered","removal","creatureKills","damage","finisher","tutorFound","tutorUsed"]){
       if((kind==="tutorFound"||kind==="tutorUsed")&&!options.tutorSearchCount)continue;
-      const panel=cardPerformancePanel(kind,rankings[kind]||[],coverage,groups,options,onReviewRun);
+      const panel=filteredInsightPanel(kind,rankings[kind]||[],coverage,groups,options,onReviewRun);
       if(panel)grid.appendChild(panel);
     }
   }

@@ -1,0 +1,22 @@
+{
+  "schema": "gorge-r2-approved-source-inventory-v1",
+  "notes": "Reviewed source-run job matrix: corrected-pilot 12 games each, two hero jobs, one shard (0) per hero. Publication independently checks exact warehouse game counts and approval fingerprints. Additional batches require explicit reviewed inventory changes.",
+  "batches": [
+    {
+      "batch": "42143344243-1",
+      "completion_ref": "github:bgoodnight/commander-simulator/actions/runs/42143344243; two successful hero jobs, 12 configured games each; approved through registry audit run 42154033809",
+      "shards": [
+        {
+          "deck": "mortarion_current",
+          "shard": 0,
+          "games": 12
+        },
+        {
+          "deck": "magnus_premium",
+          "shard": 0,
+          "games": 12
+        }
+      ]
+    }
+  ]
+}
