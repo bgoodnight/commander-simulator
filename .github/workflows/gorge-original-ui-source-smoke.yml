@@ -21,7 +21,7 @@ permissions:
 jobs:
   source-backed-ui:
     name: Real Gorge -> Worker batch -> original Results validator (${{ matrix.hero }})
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     timeout-minutes: 20
     strategy:
       fail-fast: false
