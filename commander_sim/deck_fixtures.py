@@ -71,4 +71,6 @@ EXPERIMENTAL_FIXTURES = (
 USER_FIXTURES = (
     DeckFixture("magnus_v1_7", "Magnus the Red",
                 "decklists/magnus_v1_7_simulation.txt", "user_supplied"),
+    DeckFixture("mortarion_v2_3", "Mortarion, Daemon Primarch",
+                "decklists/mortarion_v2_3_simulation.txt", "user_supplied"),
 )
