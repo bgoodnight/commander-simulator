@@ -1,0 +1,63 @@
+name: Gorge latest user decks smoke
+on:
+  pull_request:
+    paths:
+      - '.github/workflows/gorge-user-decks-smoke.yml'
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  smoke:
+    runs-on: ubuntu-latest
+    timeout-minutes: 100
+    strategy:
+      fail-fast: false
+      matrix:
+        deck: [magnus_v1_7, mortarion_v2_3]
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - uses: actions/setup-go@v5
+        with:
+          go-version: '1.25.8'
+      - name: Prepare pinned decks and stock opponents
+        run: |
+          mkdir -p "$RUNNER_TEMP/decks" "$RUNNER_TEMP/results/native"
+          python -m tools.export_gorge_decks --out "$RUNNER_TEMP/decks" --decks magnus_v1_7 mortarion_v2_3
+          python -m tools.fetch_gorge_precons --out "$RUNNER_TEMP/decks"
+      - name: Build pinned Gorge with reviewed repairs
+        run: |
+          git clone --filter=blob:none https://github.com/adams-shaun/gorge.git "$RUNNER_TEMP/gorge"
+          git -C "$RUNNER_TEMP/gorge" checkout --detach b78e4c8b16078f6decbc48875bba953ce5535b85
+          python -m tools.patch_gorge_ward_blight --gorge "$RUNNER_TEMP/gorge"
+          python tools/gorge_trigger_cost_policy_patch.py "$RUNNER_TEMP/gorge/bots/botpolicy/policy.go"
+          cp tools/gorge_trigger_cost_policy_test.go "$RUNNER_TEMP/gorge/bots/botpolicy/trigger_cost_pilot_experiment_test.go"
+          (cd "$RUNNER_TEMP/gorge" && go test ./bots/botpolicy -run '^TestTriggerCostXAndPayPilot$' -count=1)
+          (cd "$RUNNER_TEMP/gorge" && make fetch-cards compile-cards)
+          cp tools/gorge_commander_probe.go "$RUNNER_TEMP/gorge/commander_probe.go"
+          (cd "$RUNNER_TEMP/gorge" && go build -o "$RUNNER_TEMP/gorge-probe" ./commander_probe.go)
+      - name: Run four fully recorded games
+        env:
+          DECK: ${{ matrix.deck }}
+        run: |
+          set -euo pipefail
+          cd "$RUNNER_TEMP/gorge"
+          "$RUNNER_TEMP/gorge-probe" -corpus "$RUNNER_TEMP/gorge/.cards" \
+            -deck-dir "$RUNNER_TEMP/decks" -hero-deck "$DECK" \
+            -opponents avengers-assemble,cavalry-charge,deadly-disguise,science-pip \
+            -games 4 -seed 219000 -max-turns 60 -pilot bot -hero-pilot forge-heuristic \
+            -verify=true -retry-unverified=true -max-attempts 20 \
+            -native-dir "$RUNNER_TEMP/results/native" -native-limit 4 \
+            > "$RUNNER_TEMP/results/runs.jsonl"
+          cd "$GITHUB_WORKSPACE"
+          python -m tools.gorge_patched_pilot_results --root "$RUNNER_TEMP/results" \
+            --deck "$DECK" --policy forge-heuristic --games 4 --out "$RUNNER_TEMP/results/results.json"
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: latest-deck-smoke-${{ matrix.deck }}
+          path: ${{ runner.temp }}/results/
+          retention-days: 14
+          if-no-files-found: warn
