@@ -10,7 +10,7 @@ import json
 from pathlib import Path
 import re
 
-from commander_sim.deck_fixtures import FIXTURES
+from commander_sim.deck_fixtures import FIXTURES, EXPERIMENTAL_FIXTURES, USER_FIXTURES
 
 _LINE = re.compile(r"^(\d+)\s+(.+?)\s*$")
 
@@ -64,7 +64,10 @@ def export_all(directory,deck_keys=None):
     root=Path(directory)
     root.mkdir(parents=True,exist_ok=True)
     keys=set(deck_keys) if deck_keys is not None else None
-    fixtures=[f for f in FIXTURES if keys is None or f.key in keys]
+    # Explicitly selected revisions are available without changing the
+    # historical default set used by existing workflows.
+    available = FIXTURES if keys is None else FIXTURES + EXPERIMENTAL_FIXTURES + USER_FIXTURES
+    fixtures=[f for f in available if keys is None or f.key in keys]
     if keys is not None and len(fixtures)!=len(keys):
         raise ValueError("Unknown fixture key")
     result={}

@@ -65,3 +65,10 @@ EXPERIMENTAL_FIXTURES = (
                 "decklists/mortarion_physical_final_v1_0_2026_11_01.txt",
                 "physical_locked_metadata_pending"),
 )
+
+# A user-supplied revision, available for explicit export without changing
+# the historical experimental audit and published fixture populations.
+USER_FIXTURES = (
+    DeckFixture("magnus_v1_7", "Magnus the Red",
+                "decklists/magnus_v1_7_simulation.txt", "user_supplied"),
+)

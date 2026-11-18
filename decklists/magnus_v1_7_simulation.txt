@@ -1,0 +1,85 @@
+Commander
+1 Magnus the Red
+
+Library
+1 Baral, Chief of Compliance
+1 Harmonic Prodigy
+1 Young Pyromancer
+1 Guttersnipe
+1 Imperial Recruiter
+1 Poppet Stitcher
+1 Spellseeker
+1 Veyran, Voice of Duality
+1 Archmage Emeritus
+1 Aspiring Champion
+1 Chaos Terminator Lord
+1 Dark Apostle
+1 Exalted Flamer of Tzeentch
+1 Storm-Kiln Artist
+1 Talrand, Sky Summoner
+1 Tzaangor Shaman
+1 Urabrask
+1 Heralds of Tzeentch
+1 Pink Horror
+1 Mutalith Vortex Beast
+1 Lord of Change
+1 Brainstorm
+1 Consider
+1 Faithless Looting
+1 Gamble
+1 Gitaxian Probe
+1 Hard Evidence
+1 Mystical Tutor
+1 Ponder
+1 Preordain
+1 Searing Touch
+1 Battle Hymn
+1 Crackle with Power
+1 Cyclonic Rift
+1 Fanning the Flames
+1 Mathemagics
+1 Muddle the Mixture
+1 Ral's Reinforcements
+1 Reality Shift
+1 Reverberate
+1 Snap
+1 Capsize
+1 Chaos Warp
+1 Deflecting Swat
+1 Fabricate
+1 Frantic Search
+1 Reiterate
+1 Seething Song
+1 Solve the Equation
+1 Meeting of Minds
+1 Past in Flames
+1 Chaos Mutation
+1 Step Through
+1 Artistic Refusal
+1 Let the Galaxy Burn
+1 Skullclamp
+1 Sol Ring
+1 Arcane Signet
+1 Izzet Signet
+1 Talisman of Creativity
+1 Phyrexian Altar
+1 Underworld Breach
+1 The Lost and the Damned
+1 Saheeli, Sublime Artificer
+1 Cascade Bluffs
+1 Command Tower
+1 Exotic Orchard
+1 Fabled Passage
+1 Fiery Islet
+12 Island
+1 Lindblum, Industrial Regency
+8 Mountain
+1 Mystic Sanctuary
+1 Riptide Laboratory
+1 Riverglide Pathway
+1 Shivan Reef
+1 Sokenzan, Crucible of Defiance
+1 Spirebluff Canal
+1 Steam Vents
+1 Stormcarved Coast
+1 Sulfur Falls

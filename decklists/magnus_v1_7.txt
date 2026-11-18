@@ -1,0 +1,83 @@
+1 Baral, Chief of Compliance (TSR) 306
+1 Harmonic Prodigy (SOC) 123
+1 Young Pyromancer (2X2) 131
+1 Guttersnipe (FDN) 716
+1 Imperial Recruiter (2XM) 131
+1 Poppet Stitcher (MID) 71
+1 Spellseeker (CMM) 120
+1 Veyran, Voice of Duality (SOC) 337
+1 Archmage Emeritus (STX) 37
+1 Aspiring Champion (40K) 71
+1 Chaos Terminator Lord (40K) 74
+1 Dark Apostle (40K) 75
+1 Exalted Flamer of Tzeentch (40K) 119
+1 Storm-Kiln Artist (STX) 115
+1 Talrand, Sky Summoner (2X2) 64
+1 Tzaangor Shaman (40K) 146
+1 Urabrask (MOM) 169
+1 Heralds of Tzeentch (40K) 23
+1 Pink Horror (40K) 136
+1 Mutalith Vortex Beast (40K) 134
+1 Lord of Change (40K) 24
+1 Brainstorm (40K) 192
+1 Consider (CLU) 84
+1 Faithless Looting (INR) 151
+1 Gamble (DMR) 121
+1 Gitaxian Probe (PLST) NPH-35
+1 Hard Evidence (PLST) MH2-46
+1 Mystical Tutor (DMR) 289
+1 Ponder (TSR) 315
+1 Preordain (PLST) C15-101
+1 Searing Touch (TMP) 201
+1 Battle Hymn (PLST) AVR-128
+1 Crackle with Power (STX) 95
+1 Cyclonic Rift (RVR) 40
+1 Fanning the Flames (PLST) STH-80
+1 Mathemagics (SOS) 58
+1 Muddle the Mixture (RVR) 50
+1 Ral's Reinforcements (MOM) 158
+1 Reality Shift (PLST) C19-92
+1 Reverberate (40K) 207
+1 Snap (DDS) 10
+1 Capsize (TMP) 55
+1 Chaos Warp (40K) 205
+1 Deflecting Swat (CMM) 698
+1 Fabricate (40K) 181
+1 Frantic Search (C20) 111
+1 Reiterate (TSR) 182
+1 Seething Song (PLST) C21-179
+1 Solve the Equation (STX) 54
+1 Meeting of Minds (MOM) 66
+1 Past in Flames (40K) 206
+1 Chaos Mutation (40K) 111
+1 Step Through (MH2) 66
+1 Artistic Refusal (MOM) 46
+1 Let the Galaxy Burn (40K) 81
+1 Skullclamp (40K) 248
+1 Sol Ring (40K) 250
+1 Arcane Signet (40K) 229
+1 Izzet Signet (RVR) 261
+1 Talisman of Creativity (40K) 253
+1 Phyrexian Altar (SLC) 16
+1 Underworld Breach (THB) 161
+1 The Lost and the Damned (40K) 129
+1 Saheeli, Sublime Artificer (WAR) 234
+1 Cascade Bluffs (PLST) 2XM-313
+1 Command Tower (40K) 271
+1 Exotic Orchard (40K) 278
+1 Fabled Passage (TMC) 67
+1 Fiery Islet (ACR) 112
+12 Island (40K) 308
+1 Lindblum, Industrial Regency (FIN) 285
+8 Mountain (40K) 315
+1 Mystic Sanctuary (TSR) 408
+1 Riptide Laboratory (PLST) ONS-322
+1 Riverglide Pathway (PLST) ZNR-264
+1 Shivan Reef (DMU) 255
+1 Sokenzan, Crucible of Defiance (NEO) 276
+1 Spirebluff Canal (OTJ) 270
+1 Steam Vents (TRK) 298
+1 Stormcarved Coast (SOS) 263
+1 Sulfur Falls (DMR) 258
+
+1 Magnus the Red (40K) 131
