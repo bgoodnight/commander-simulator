@@ -2665,6 +2665,8 @@
           {...options,isGorge,tutorSearchCount:signals.confirmedTutors},onReviewRun);
         if(panel)cards.appendChild(panel);
       }
+      if(isGorge)castActivityPanels(cards,options.fullCardInsights?.cast_activity,
+        signals.coverage,options);
     }else if(!isGorge){
       // The R2 adapter owns the optional Key Insights panel. Do not inject
       // another placeholder into the Results dashboard when data is absent.
@@ -2709,6 +2711,35 @@
   }
   const playedInsightKinds=["played","creature","artifact","enchantment","instant","spell","land"];
   const insightTypes={played:["▣","All cards"],creature:["♞","Creatures"],artifact:["⚙","Artifacts"],enchantment:["✦","Enchantments"],instant:["ϟ","Instants"],spell:["✧","Instants and sorceries"],land:["♜","Nonbasic lands"]};
+  function castActivityPanels(grid,activity,total,options){
+    if(!activity||activity.games!==total)return;
+    for(const [key,title,medianValue,rows] of [
+      ["spells","Spells cast",activity.median_spells,activity.spells],
+      ["creatures","Creatures cast",activity.median_creatures,activity.creatures]
+    ]){
+      if(!Number.isFinite(medianValue))continue;
+      const panel=card(title,"Median per game",nfmt(medianValue),
+        total+" recorded games",body=>{
+          body.appendChild(create("p","micro","Card rankings show the share of games cast; repeated casts are included in the count."));
+          const list=create("div","insight-featured-bars");
+          for(const item of rows||[]){
+            const button=textButton("","insight-featured-bar",()=>options.onOpenRecordedCard?.(item.name));
+            button.setAttribute("aria-label","View "+item.name+" card details");
+            const caption=create("span","insight-featured-bar-caption");
+            caption.append(create("span",null,item.name),create("strong",null,
+              (100*item.games/total).toFixed(1)+"% · "+item.casts+" casts"));
+            const track=create("span","insight-featured-bar-track"),fill=create("span","insight-featured-bar-fill");
+            fill.style.width=(100*item.games/total)+"%";
+            track.appendChild(fill);button.append(caption,track);list.appendChild(button);
+          }
+          if(!rows)body.appendChild(create("p","micro","Card breakdown unavailable for this cohort."));
+          else if(!rows.length)body.appendChild(create("p","micro","No "+key+" were cast."));
+          body.appendChild(list);
+        });
+      panel.className+=" insight-card-with-evidence insight-featured-panel";
+      grid.appendChild(panel);
+    }
+  }
   function insightPanels(grid,rankings,coverage,groups,options,onReviewRun){
     function grouped(kind,ascending=false){
       const items=(rankings[kind]||[]).slice().sort((a,b)=>
@@ -2776,6 +2807,7 @@
     for(const [kind,items] of Object.entries(report.categories||{}))
       if(Array.isArray(items))rankings[kind]=items.map(item=>({...item,events:[],seen:new Set()}));
     insightPanels(grid,rankings,total,[],{...options,isGorge:true,tutorSearchCount:report.confirmed_tutors||0},()=>{});
+    castActivityPanels(grid,report.cast_activity,total,options);
     if(!grid.children.length)grid.appendChild(create("p","game-outcome-empty","No recorded card insights."));
     const info=insightMethodologyDisclosure(
       "Card rankings use the complete verified cohort of "+total+

@@ -32,6 +32,40 @@ def shard(seeds, casts):
 
 
 class CardInsightCoverage(unittest.TestCase):
+    def test_cast_activity_medians_include_zero_games_and_commander(self):
+        seeds = [30001, 30002, 30003, 30004]
+        data = shard(seeds, {})
+        data["cast_activity"] = [
+            {"seed": s, "spells": n, "creatures": n, "named_casts_complete": True,
+             "cards": [{"name": "Mortarion, Daemon Primarch", "casts": n, "creature": True}] if n else []}
+            for s, n in zip(seeds, [0, 1, 2, 3])]
+        with TemporaryDirectory() as tmp:
+            path = Path(tmp) / "shard.json"
+            path.write_text(json.dumps(data))
+            result = merge_shards([path], [row(s, "chain-"+str(s)) for s in seeds])
+        activity = result["decks"]["mortarion_current"]["cast_activity"]
+        self.assertEqual(activity["median_spells"], 1.5)
+        self.assertEqual(activity["median_creatures"], 1.5)
+        self.assertEqual(activity["creatures"][0]["games"], 3)
+        self.assertEqual(activity["creatures"][0]["casts"], 6)
+
+    def test_missing_type_and_legacy_shard_do_not_invent_metrics(self):
+        data = shard([30001], {})
+        data["cast_activity"] = [{"seed":30001, "spells":1, "creatures":None,
+                                  "named_casts_complete":False, "cards":[]}]
+        with TemporaryDirectory() as tmp:
+            path = Path(tmp) / "shard.json"
+            path.write_text(json.dumps(data))
+            result = merge_shards([path], [row(30001, "chain-30001")])
+            activity = result["decks"]["mortarion_current"]["cast_activity"]
+            self.assertEqual(activity["median_spells"], 1)
+            self.assertIsNone(activity["median_creatures"])
+            self.assertIsNone(activity["spells"])
+            del data["cast_activity"]
+            path.write_text(json.dumps(data))
+            result = merge_shards([path], [row(30001, "chain-30001")])
+            self.assertNotIn("cast_activity", result["decks"]["mortarion_current"])
+
     def test_full_cohort_not_biased_by_replay_sample(self):
         seeds=[30001,30002,30003,30004]
         with TemporaryDirectory() as tmp:
