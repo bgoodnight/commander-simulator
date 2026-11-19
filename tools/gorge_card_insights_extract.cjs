@@ -2,6 +2,7 @@
 const fs=require("node:fs"),path=require("node:path"),assert=require("node:assert/strict");
 const adapter=require("../web/pages/gorge_legacy_adapter.js");
 const renderer=require("../web/pages/game_outcomes.js");
+const castActivity=require("./gorge_cast_activity.cjs");
 function extract(dir,summary,podFile,catalogFile,target){
   const rows=fs.readFileSync(summary,"utf8").trim().split("\n").map(JSON.parse);
   const pod=JSON.parse(fs.readFileSync(podFile,"utf8"));
@@ -43,7 +44,8 @@ function extract(dir,summary,podFile,catalogFile,target){
     schema:"gorge-card-insights-shard-v1",deck:pod.hero,
     deck_sha256:pod.deck_sha256[pod.hero],completed_verified_games:rows.length,
     seed_chains:rows.map(row=>[row.seed,row.replay_chain]),
-    confirmed_tutors:stats.confirmedTutors,categories
+    confirmed_tutors:stats.confirmedTutors,categories,
+    cast_activity:games.map(g=>castActivity.extract(g,g.player_seat,cards))
   })+"\n");
   console.log("Verified card features",pod.hero,rows.length,"games");
 }

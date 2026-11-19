@@ -1,0 +1,72 @@
+1 Shambling Ghast (AFR) 119
+1 Blood Artist (INR) 97
+1 Jadar, Ghoulcaller of Nephalia (MID) 108
+1 Reassembling Skeleton (FDN) 182
+1 Crypt Rats (PLST) VIS-55
+1 Morbid Opportunist (INR) 124
+1 Ophiomancer (SOC) 118
+1 Plague Spitter (PLST) INV-119
+1 Poxwalkers (40K) 49
+1 Tallyman of Nurgle (40K) 60
+1 Vito, Thorn of the Dusk Rose (M21) 127
+1 Crypt Ghast (RVR) 70
+1 Mirkwood Bats (LTR) 95
+1 Pitiless Plunderer (PLST) RIX-81
+1 Plague Drone (40K) 47
+1 Sangromancer (MBS) 53
+1 Sloppity Bilepiper (40K) 59
+1 Venomcrawler (40K) 68
+1 Great Unclean One (40K) 35
+1 Syr Konrad, the Grim (PLST) ELD-107
+1 Thrashing Wumpus (MMQ) 166
+1 Massacre Wurm (FDN) 714
+1 Soul of New Phyrexia (PLST) M15-231
+1 K'rrik, Son of Yawgmoth (PLST) C19-18
+1 Pestilence Demon (ROE) 124
+1 Vilis, Broker of Blood (M20) 122
+1 Dark Ritual (40K) 196
+1 Bile Blight (40K) 195
+1 Diabolic Intent (BBD) 141
+1 Exsanguinate (FDN) 173
+1 Feed the Swarm (BRC) 106
+1 Plumb the Forbidden (STX) 81
+1 Toxic Deluge (2XM) 110
+1 Beseech the Mirror (WOE) 82
+1 Mandate of Abaddon (40K) 40
+1 Blight Grenade (40K) 31
+1 Nurgle's Conscription (40K) 44
+1 Decree of Pain (40K) 198
+1 Basilisk Collar (FDN) 669
+1 Skullclamp (40K) 248
+1 Sol Ring (40K) 250
+1 Wayfarer's Bauble (40K) 261
+1 Arcane Signet (40K) 229
+1 Charcoal Diamond (CLB) 305
+1 Mind Stone (40K) 244
+1 Ashnod's Altar (PLST) EMA-218
+1 Worn Powerstone (40K) 263
+1 Sceptre of Eternal Glory (40K) 166
+1 Whip of Erebos (PIO) 119
+1 Eldrazi Monument (PLST) CMA-216
+1 Caged Sun (40K) 231
+1 Nurgle's Rot (40K) 45
+1 Phyrexian Reclamation (PLST) C15-133
+1 Bastion of Remembrance (BLC) 179
+1 Black Market Connections (PLST) LCC-181
+1 Demonic Embrace (M21) 95
+1 Unspeakable Symbol (PLST) SCG-79
+1 Greed (C13) 79
+1 Pestilence (5ED) 186
+1 Black Market (PIP) 183
+1 Liliana's Contract (M19) 107
+1 Barren Moor (40K) 266
+1 Cabal Coffers (TOR) 139
+1 Cabal Stronghold (DOM) 238
+1 Leechridden Swamp (SHM) 273
+1 Mortuary Mire (BFZ) 240
+1 Myriad Landscape (40K) 285
+30 Swamp (40K) 312
+1 Temple of the False God (40K) 300
+1 War Room (PLST) CMR-361
+
+1 Mortarion, Daemon Primarch (40K) 41

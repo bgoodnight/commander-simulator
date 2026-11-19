@@ -27,7 +27,8 @@ def merge_shards(paths, authoritative_games):
         raise ValueError("Duplicate authoritative game seed")
     feature_seeds = set()
     decks = defaultdict(lambda: {"seed_chains": {}, "shards": [], "cards": {
-        kind: {} for kind in KINDS}, "confirmed_tutors": 0, "deck_sha256": None})
+        kind: {} for kind in KINDS}, "confirmed_tutors": 0, "deck_sha256": None,
+        "cast_activity": {}, "activity_complete": True})
     for filename in paths:
         shard = json.loads(Path(filename).read_text(encoding="utf-8"))
         deck = shard.get("deck")
@@ -53,6 +54,26 @@ def merge_shards(paths, authoritative_games):
         group["deck_sha256"] = sha
         group["shards"].append(set(s for s, _ in pairs))
         group["seed_chains"].update(dict(pairs))
+        activity = shard.get("cast_activity")
+        if activity is None:
+            group["activity_complete"] = False
+        else:
+            if not isinstance(activity, list) or {x.get("seed") for x in activity} != {s for s, _ in pairs} or len(activity) != len(pairs):
+                raise ValueError("Incomplete cast activity")
+            for item in activity:
+                seed, spells, creatures = item["seed"], item.get("spells"), item.get("creatures")
+                cards = item.get("cards")
+                if (type(spells) is not int or spells < 0 or
+                    (creatures is not None and (type(creatures) is not int or not 0 <= creatures <= spells)) or
+                    not isinstance(item.get("named_casts_complete"), bool) or not isinstance(cards, list) or
+                    any(not isinstance(c.get("name"), str) or not c["name"].strip() or
+                        type(c.get("casts")) is not int or c["casts"] <= 0 or
+                        not isinstance(c.get("creature"), bool) for c in cards) or
+                    len({c["name"] for c in cards}) != len(cards) or
+                    sum(c["casts"] for c in cards) > spells or
+                    (item["named_casts_complete"] and sum(c["casts"] for c in cards) != spells)):
+                    raise ValueError("Invalid cast activity")
+                group["cast_activity"][seed] = item
         group["confirmed_tutors"] += shard.get("confirmed_tutors", 0)
         categories = shard.get("categories")
         if not isinstance(categories, dict) or set(categories) != set(KINDS):
@@ -137,6 +158,28 @@ def merge_shards(paths, authoritative_games):
             "coverage": {"numerator": n, "denominator": n,
                          "level": "full-cohort", "missing": 0}
         }
+        activity = list(group["cast_activity"].values())
+        if group["activity_complete"] and len(activity) == n:
+            def card_ranking(creature_only):
+                cards = defaultdict(lambda: {"casts": 0, "games": 0})
+                for game in activity:
+                    for item in game["cards"]:
+                        if creature_only and not item["creature"]:
+                            continue
+                        stats = cards[item["name"]]
+                        stats["casts"] += item["casts"]
+                        stats["games"] += 1
+                return sorted(({"name": name, **stats} for name, stats in cards.items()),
+                              key=lambda x: (-x["games"], -x["casts"], x["name"]))
+            all_named = all(x["named_casts_complete"] for x in activity)
+            all_typed = all(x["creatures"] is not None for x in activity)
+            payload["decks"][deck]["cast_activity"] = {
+                "games": n,
+                "median_spells": median(x["spells"] for x in activity),
+                "median_creatures": median(x["creatures"] for x in activity) if all_typed else None,
+                "spells": card_ranking(False) if all_named else None,
+                "creatures": card_ranking(True) if all_named and all_typed else None,
+            }
     return payload
 
 
