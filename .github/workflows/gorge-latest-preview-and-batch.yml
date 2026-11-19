@@ -1,0 +1,149 @@
+name: Verify preliminary latest decks and run analysis batch
+on:
+  pull_request:
+    paths:
+      - '.github/workflows/gorge-latest-preview-and-batch.yml'
+  workflow_dispatch:
+permissions:
+  contents: read
+  actions: read
+jobs:
+  preview:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 35
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Download the two verified smoke cohorts
+        env:
+          GH_TOKEN: ${{ github.token }}
+          GH_REPO: ${{ github.repository }}
+        run: |
+          mkdir -p "$RUNNER_TEMP/source/magnus_v1_7" "$RUNNER_TEMP/source/mortarion_v2_3"
+          gh run download 44396822306 --name latest-deck-smoke-magnus_v1_7 --dir "$RUNNER_TEMP/source/magnus_v1_7"
+          gh run download 44396822306 --name latest-deck-smoke-mortarion_v2_3 --dir "$RUNNER_TEMP/source/mortarion_v2_3"
+      - name: Build preview from complete verified recordings
+        run: python -m tools.build_latest_deck_preview --source "$RUNNER_TEMP/source" --out "$RUNNER_TEMP/preview"
+      - name: Verify both decks in desktop and mobile Chromium
+        env:
+          BROWSER_SITE_DIR: ${{ runner.temp }}/preview
+          BROWSER_ARTIFACT_DIR: ${{ runner.temp }}/screenshots
+        run: |
+          python -m pip install 'playwright==1.56.0'
+          python -m playwright install --with-deps chromium
+          python tests/browser_latest_deck_preview.py
+      - uses: actions/upload-artifact@v4
+        with:
+          name: latest-decks-preliminary-preview
+          path: ${{ runner.temp }}/preview/
+          retention-days: 30
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: latest-decks-preview-browser-evidence
+          path: ${{ runner.temp }}/screenshots/
+          if-no-files-found: warn
+          retention-days: 30
+  publish-preview:
+    needs: preview
+    if: github.event_name == 'workflow_dispatch' || (github.event.pull_request.head.repo.full_name == github.repository && github.event.pull_request.head.ref == 'work/magnus-v1-7-insights-20261118')
+    runs-on: ubuntu-24.04
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: main
+          fetch-depth: 0
+      - uses: actions/download-artifact@v4
+        with:
+          name: latest-decks-preliminary-preview
+          path: ${{ runner.temp }}/preview
+      - name: Publish a new isolated preview folder
+        run: |
+          set -euo pipefail
+          target="docs/preview/latest-user-${GITHUB_RUN_ID}"
+          test ! -e "$target"
+          mkdir -p "$target"
+          cp -a "$RUNNER_TEMP/preview/." "$target/"
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add "$target"
+          git commit -m "Publish isolated latest-decks preliminary preview"
+          git fetch origin main
+          test "$(git rev-parse HEAD^)" = "$(git rev-parse origin/main)"
+          git push origin HEAD:main
+          echo "Preview: https://bgoodnight.github.io/commander-simulator/$target/results.html?deck=magnus_v1_7" >> "$GITHUB_STEP_SUMMARY"
+  simulate:
+    needs: publish-preview
+    runs-on: ubuntu-24.04
+    timeout-minutes: 120
+    strategy:
+      fail-fast: false
+      matrix:
+        deck: [magnus_v1_7, mortarion_v2_3]
+    env:
+      DECK: ${{ matrix.deck }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - uses: actions/setup-go@v5
+        with:
+          go-version: '1.25.8'
+      - name: Prepare the current deck revisions and stock precons
+        run: |
+          mkdir -p "$RUNNER_TEMP/decks" "$RUNNER_TEMP/results/native"
+          python -m tools.export_gorge_decks --out "$RUNNER_TEMP/decks" --decks magnus_v1_7 mortarion_v2_3
+          python -m tools.fetch_gorge_precons --out "$RUNNER_TEMP/decks"
+      - name: Build pinned Gorge and checked trigger-cost pilot
+        run: |
+          git clone --filter=blob:none https://github.com/adams-shaun/gorge.git "$RUNNER_TEMP/gorge"
+          git -C "$RUNNER_TEMP/gorge" checkout --detach b78e4c8b16078f6decbc48875bba953ce5535b85
+          python -m tools.patch_gorge_ward_blight --gorge "$RUNNER_TEMP/gorge"
+          python tools/gorge_trigger_cost_policy_patch.py "$RUNNER_TEMP/gorge/bots/botpolicy/policy.go"
+          cp tools/gorge_trigger_cost_policy_test.go "$RUNNER_TEMP/gorge/bots/botpolicy/trigger_cost_pilot_experiment_test.go"
+          (cd "$RUNNER_TEMP/gorge" && go test ./bots/botpolicy -run '^TestTriggerCostXAndPayPilot$' -count=1)
+          (cd "$RUNNER_TEMP/gorge" && make fetch-cards compile-cards)
+          cp tools/gorge_commander_probe.go "$RUNNER_TEMP/gorge/commander_probe.go"
+          (cd "$RUNNER_TEMP/gorge" && go build -o "$RUNNER_TEMP/gorge-probe" ./commander_probe.go)
+      - name: Run 24 new fully recorded games
+        run: |
+          set -euo pipefail
+          cd "$RUNNER_TEMP/gorge"
+          "$RUNNER_TEMP/gorge-probe" -corpus "$RUNNER_TEMP/gorge/.cards" \
+            -deck-dir "$RUNNER_TEMP/decks" -hero-deck "$DECK" \
+            -opponents avengers-assemble,cavalry-charge,deadly-disguise,science-pip \
+            -games 24 -seed 230000 -max-turns 60 -pilot bot -hero-pilot forge-heuristic \
+            -verify=true -retry-unverified=true -max-attempts 120 \
+            -native-dir "$RUNNER_TEMP/results/native" -native-limit 24 \
+            > "$RUNNER_TEMP/results/runs.jsonl"
+          cd "$GITHUB_WORKSPACE"
+          python -m tools.gorge_patched_pilot_results --root "$RUNNER_TEMP/results" \
+            --deck "$DECK" --policy forge-heuristic --games 24 --out "$RUNNER_TEMP/results/results.json"
+          python -m tools.validate_gorge_enrichment --native-dir "$RUNNER_TEMP/results/native" --output "$RUNNER_TEMP/results/enrichment.json"
+          cp "$RUNNER_TEMP/decks/$DECK.json" "$RUNNER_TEMP/results/deck.json"
+      - name: Archive recorded analysis games to a new R2 batch
+        env:
+          R2_ACCOUNT_ID: ${{ secrets.GORGE_R2_ACCOUNT_ID }}
+          AWS_ACCESS_KEY_ID: ${{ secrets.GORGE_R2_ACCESS_KEY_ID }}
+          AWS_SECRET_ACCESS_KEY: ${{ secrets.GORGE_R2_SECRET_ACCESS_KEY }}
+          AWS_DEFAULT_REGION: auto
+        run: |
+          set -euo pipefail
+          test -n "$R2_ACCOUNT_ID" && test -n "$AWS_ACCESS_KEY_ID" && test -n "$AWS_SECRET_ACCESS_KEY"
+          tar -czf "$RUNNER_TEMP/$DECK.tar.gz" -C "$RUNNER_TEMP/results" .
+          sha256sum "$RUNNER_TEMP/$DECK.tar.gz" > "$RUNNER_TEMP/results/archive.sha256"
+          aws --endpoint-url "https://$R2_ACCOUNT_ID.r2.cloudflarestorage.com" s3 cp \
+            "$RUNNER_TEMP/$DECK.tar.gz" \
+            "s3://gorge-simulations/analysis-batches/v1/${GITHUB_RUN_ID}-${GITHUB_RUN_ATTEMPT}/$DECK.tar.gz" --no-progress
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: latest-decks-analysis-${{ matrix.deck }}
+          path: ${{ runner.temp }}/results/
+          retention-days: 30
+          if-no-files-found: warn
