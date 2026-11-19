@@ -74,7 +74,7 @@ def build(source: Path, out: Path):
     (out / "preliminary-data.js").write_text('''(() => {
  const original=window.fetch.bind(window);
  window.fetch=async(input,options)=>{
-  const u=new URL(typeof input==="string"?input:input.url,location.href);
+  const u=new URL(typeof input==="string"?input:(input instanceof URL?input.href:input.url),location.href);
   if(u.hostname==="gorge-r2-direct-api-preview.darbosama.workers.dev" && u.pathname.startsWith("/v1/ui/")){
    if(u.pathname!=="/v1/ui/batch")return new Response("{}",{status:404});
    const deck=u.searchParams.get("deck");
