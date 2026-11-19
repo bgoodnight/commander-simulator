@@ -20,7 +20,13 @@ try:
                 page=browser.new_page(viewport=viewport);errors=[]
                 page.on("pageerror",lambda err:errors.append(str(err)))
                 page.goto(f"http://127.0.0.1:{server.server_port}/results.html?deck={deck}",wait_until="domcontentloaded")
-                page.wait_for_function("key => window.R2OriginalResults?.ownsRenderedDeck(key)",arg=deck,timeout=60000)
+                try:
+                    page.wait_for_function("key => window.R2OriginalResults?.ownsRenderedDeck(key)",arg=deck,timeout=20000)
+                except Exception:
+                    print("Preview did not render",deck,mode,"errors",errors,flush=True)
+                    print("Visible page:",page.locator("body").inner_text()[:5000],flush=True)
+                    page.screenshot(path=str(out/f"{deck}-{mode}-failure.png"),full_page=True)
+                    raise
                 assert "PRELIMINARY" in page.locator("body").inner_text()
                 assert "4 preliminary native Gorge games" in page.locator("#game-outcome-status").inner_text()
                 assert page.locator("#game-outcome-results .game-outcome-hero").count()==1
