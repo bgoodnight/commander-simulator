@@ -1,0 +1,160 @@
+{
+  "baseline_method": "smoothed empirical win share by three-opponent composition",
+  "bootstrap_repetitions": 16,
+  "candidate_interactions": 104,
+  "candidate_main_effects": 34,
+  "deck_key": "mortarion_physical_final",
+  "deck_sha256": "303562ea9325e36f7031840ef1b902eafae321ec4a4ecc4e3bf28259b4141ba6",
+  "engine_commit": "9fe843bbc8fd7b0137c6a663f9362e8fb6c6fdba",
+  "findings": [
+    {
+      "coefficient": -0.25627,
+      "direction": "negative",
+      "direction_consistency": 1.0,
+      "feature": "opponent_count:combo",
+      "interaction_parents": [],
+      "observed_games": 200,
+      "observed_seeds": 100,
+      "selection_frequency": 1.0
+    },
+    {
+      "coefficient": -0.25627,
+      "direction": "negative",
+      "direction_consistency": 1.0,
+      "feature": "opponent_present:combo",
+      "interaction_parents": [],
+      "observed_games": 200,
+      "observed_seeds": 100,
+      "selection_frequency": 1.0
+    },
+    {
+      "coefficient": 0.16313,
+      "direction": "positive",
+      "direction_consistency": 1.0,
+      "feature": "opponent_count:value",
+      "interaction_parents": [],
+      "observed_games": 400,
+      "observed_seeds": 100,
+      "selection_frequency": 1.0
+    },
+    {
+      "coefficient": 0.16313,
+      "direction": "positive",
+      "direction_consistency": 1.0,
+      "feature": "opponent_present:value",
+      "interaction_parents": [],
+      "observed_games": 400,
+      "observed_seeds": 100,
+      "selection_frequency": 1.0
+    },
+    {
+      "coefficient": -0.11033,
+      "direction": "negative",
+      "direction_consistency": 1.0,
+      "feature": "opening:Pitiless Plunderer",
+      "interaction_parents": [],
+      "observed_games": 45,
+      "observed_seeds": 9,
+      "selection_frequency": 0.812
+    },
+    {
+      "coefficient": -0.03989,
+      "direction": "negative",
+      "direction_consistency": 1.0,
+      "feature": "opening:Plague Spitter",
+      "interaction_parents": [],
+      "observed_games": 40,
+      "observed_seeds": 8,
+      "selection_frequency": 0.812
+    },
+    {
+      "coefficient": -0.17335,
+      "direction": "negative",
+      "direction_consistency": 1.0,
+      "feature": "opening:Wayfarer's Bauble",
+      "interaction_parents": [],
+      "observed_games": 45,
+      "observed_seeds": 9,
+      "selection_frequency": 0.75
+    },
+    {
+      "coefficient": -0.07712,
+      "direction": "negative",
+      "direction_consistency": 1.0,
+      "feature": "opening:Sign in Blood",
+      "interaction_parents": [],
+      "observed_games": 40,
+      "observed_seeds": 8,
+      "selection_frequency": 0.562
+    },
+    {
+      "coefficient": 0.085,
+      "direction": "positive",
+      "direction_consistency": 1.0,
+      "feature": "opening:Mind Stone",
+      "interaction_parents": [],
+      "observed_games": 55,
+      "observed_seeds": 11,
+      "selection_frequency": 0.438
+    },
+    {
+      "coefficient": -0.05276,
+      "direction": "negative",
+      "direction_consistency": 1.0,
+      "feature": "opening:Worn Powerstone",
+      "interaction_parents": [],
+      "observed_games": 50,
+      "observed_seeds": 10,
+      "selection_frequency": 0.438
+    },
+    {
+      "coefficient": 0.05229,
+      "direction": "positive",
+      "direction_consistency": 1.0,
+      "feature": "opponent_count:control",
+      "interaction_parents": [],
+      "observed_games": 400,
+      "observed_seeds": 100,
+      "selection_frequency": 0.375
+    },
+    {
+      "coefficient": -0.00343,
+      "direction": "negative",
+      "direction_consistency": 1.0,
+      "feature": "opening:Massacre Wurm",
+      "interaction_parents": [],
+      "observed_games": 65,
+      "observed_seeds": 13,
+      "selection_frequency": 0.375
+    },
+    {
+      "coefficient": 0.0299,
+      "direction": "positive",
+      "direction_consistency": 1.0,
+      "feature": "opening:Sloppity Bilepiper",
+      "interaction_parents": [],
+      "observed_games": 40,
+      "observed_seeds": 8,
+      "selection_frequency": 0.312
+    }
+  ],
+  "format": "commander-elastic-net-discovery-v1",
+  "games": 500,
+  "hierarchy": "Interactions lacking either selected parent main effect are discarded and the elastic net is refit",
+  "holdout_brier": 0.12735,
+  "independent_seeds": 100,
+  "landmark_round": 0,
+  "limitations": "Exploratory simulated-game associations, not causal effects or real Commander win rates.",
+  "method": "hierarchical_elastic_net_logistic",
+  "nonwin_count": 82,
+  "opponent_baseline_brier": 0.12817,
+  "outer_test_games": 125,
+  "outer_test_seed_groups": 25,
+  "schema_version": 1,
+  "selected_predictors": 13,
+  "status": "ready",
+  "tuned_C": 0.1,
+  "tuned_l1_ratio": 0.8,
+  "validation": "Whole seed groups held out across scenarios; CV performed only on training seeds",
+  "win_count": 418
+}
